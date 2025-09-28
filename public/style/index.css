@@ -1,0 +1,44 @@
+body.index > main {
+    height: 100%;
+}
+
+.banner,
+.form {
+    width: 50%;
+}
+
+.banner {
+    gap: var(--space);
+}
+
+.form {
+    padding: 0 10rem;
+    gap: var(--space);
+}
+
+.form > .line-divider {
+    font-weight: 800;
+    height: 3px; 
+    background-color: var(--black);
+}
+
+.called-form-container {
+    width: 100%;
+}
+
+.called-form-container > .index-form {
+    gap: 1rem;
+}
+
+.called-form-container input {
+    border: 1px solid var(--black);
+}
+
+.form > .index-redirect {
+    line-height: 1.6rem;
+}
+
+.form > .index-redirect a:hover {
+    text-decoration: underline;
+}
+
