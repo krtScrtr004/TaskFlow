@@ -7,7 +7,7 @@ class SingleFormController implements Controller
             'title' => 'Reset Your Password',
             'description' => 'Enter your email address below and we will send you a link to reset your password.',
             'form'  => 'forgetPassword',
-            'script' => null
+            'script' => ['single-form/forget-password/send-link']
         ]
     ];
 

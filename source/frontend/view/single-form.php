@@ -34,8 +34,10 @@
 
     <script type="module" src="<?= EVENT_PATH . 'back-button.js' ?>" defer></script>
     <?php if ($scripts): ?>
-        <?php foreach ($scripts as $script): ?>
-            <script type="module" src="<?= EVENT_PATH . $script . '.js' ?>" defer></script>
+        <?php foreach ($scripts as $script): 
+            $scriptPath = EVENT_PATH . $script . '.js';    
+        ?>
+            <script type="module" src="<?= $scriptPath ?>" defer></script>
         <?php endforeach; ?>
     <?php endif; ?>
 

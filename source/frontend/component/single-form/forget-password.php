@@ -3,5 +3,5 @@
 
     <input type="email" name="email" id="email" placeholder="Enter your email" required>
 
-    <button type="button" class="blue-bg white-text">Send Reset Link</button>
+    <button id="send_link_button" type="button" class="blue-bg white-text">Send Reset Link</button>
 </form>
