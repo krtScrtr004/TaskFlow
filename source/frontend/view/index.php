@@ -47,12 +47,15 @@ if (!$component) {
                 <?php if (strcasecmp($page, 'login') === 0): ?>
                     <p class="center-text"><a href="#">Forget Password</a></p>
                     <p class="center-text">Don't have an account? <a class="blue-text" href="#">Sign up</a></p>
+                <?php elseif (strcasecmp($page, 'register') === 0): ?>
+                    <p class="center-text">Already have an account? <a class="blue-text" href="#">Log in</a></p>
                 <?php endif ?>
             </div>
         </section>
     </main>
 
     <script type="module" src="<?= EVENT_PATH . 'toggle-password.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'check-date-validity.js' ?>" defer></script>
 </body>
 
 </html>

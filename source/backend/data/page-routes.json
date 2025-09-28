@@ -1,6 +1,7 @@
 {
 	"GET": {
 		"TaskFlow/": "IndexController",
-		"TaskFlow/login": "IndexController"
+		"TaskFlow/login": "IndexController",
+		"TaskFlow/register": "IndexController"
 	}
 }
