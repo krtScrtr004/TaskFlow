@@ -8,7 +8,13 @@ class SingleFormController implements Controller
             'description' => 'Enter your email address below and we will send you a link to reset your password.',
             'form'  => 'forgetPassword',
             'script' => ['single-form/forget-password/send-link']
-        ]
+        ],
+        'changePassword' => [
+            'title' => 'Set Your Password',
+            'description' => 'Create a new password.',
+            'form'  => 'changePassword',
+            'script' => ['password-list-validator']
+        ],
     ];
 
     private function __construct() {}

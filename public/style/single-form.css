@@ -13,3 +13,11 @@
 .single-form-form form {
     gap: var(--space)
 }
+
+#change_password_form .password-list-validator {
+	gap: 1rem;
+}
+
+#change_password_form .password-list-validator > li {
+	max-width: 40ch;
+}
