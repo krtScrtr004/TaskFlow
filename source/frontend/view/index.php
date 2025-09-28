@@ -40,7 +40,7 @@ if (!$component) {
             <hr class="line-divider">
 
             <div class="called-form-container">
-                <?php call_user_func($component['form'], $component) ?>
+                <?php include_once COMPONENT_PATH . 'index/' . $component['form'] . '.php' ?>
             </div>
 
             <div class="index-redirect">
