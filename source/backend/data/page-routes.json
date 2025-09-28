@@ -5,6 +5,8 @@
 		"TaskFlow/register": "IndexController",
 
 		"TaskFlow/forget-password": "SingleFormController",
-		"TaskFlow/change-password": "SingleFormController"
+		"TaskFlow/change-password": "SingleFormController",
+
+		"TaskFlow/project": "ProjectController"
 	}
 }
