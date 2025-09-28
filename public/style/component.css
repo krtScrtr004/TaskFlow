@@ -1,3 +1,13 @@
+.unset-button {
+	all: unset; /* removes all default styles */
+	font: inherit;
+	color: inherit;
+	padding: 0;
+	margin: 0;
+	background-color: transparent;
+	border: none;
+	outline: none;
+}
 
 .line-divider > hr {
 	width: 100%;
@@ -22,5 +32,23 @@
 	right: 8px;
 	transform: translate(0, -50%);
 	z-index: 10;
+	cursor: pointer;
+}
+
+/* --------------- HEADER WITH BACK BUTTON --------------- */
+.header-w-back {
+	position: relative;
+}
+
+.header-w-back > h1,
+.header-w-back > h3 {
+	text-align: center;
+}
+
+.header-w-back > button {
+	position: absolute;
+	top: 50%;
+	left: -25px;
+	transform: translate(0, -50%);
 	cursor: pointer;
 }

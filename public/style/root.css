@@ -2,10 +2,10 @@
 	--white: #fffefe;
 	--dark-white: #f5f5f5;
 	--light-blue: #89d6fb;
-	--blue: #007BFF;
+	--blue: #007bff;
 	--light-black: #403b3b;
-	--black: #1E1E1E;
-	--red: #DC3545;
+	--black: #1e1e1e;
+	--red: #dc3545;
 	--green: #38ff5d;
 	--yellow: #ffb61e;
 
@@ -87,7 +87,6 @@ button {
 	display: block;
 	width: 100%;
 	padding: 8px;
-	border: 1px solid transparent;
 	border-radius: var(--border-radius);
 	font-size: 1rem;
 }
@@ -105,11 +104,16 @@ textarea::placeholder {
 	opacity: 0.9;
 }
 
+input {
+	border: 1px solid var(--black);
+}
+
 select {
 	width: fit-content;
 }
 
 button {
+	border: 1px solid transparent;
 	font-weight: 800;
 }
 
