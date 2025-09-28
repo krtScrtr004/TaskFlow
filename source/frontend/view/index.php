@@ -45,10 +45,15 @@ if (!$component) {
 
             <div class="index-redirect">
                 <?php if (strcasecmp($page, 'login') === 0): ?>
-                    <p class="center-text"><a href="#">Forget Password</a></p>
-                    <p class="center-text">Don't have an account? <a class="blue-text" href="#">Sign up</a></p>
+                    <p class="center-text">
+                        <a href="<?= REDIRECT_PATH . 'forget-password' ?>">Forget Password</a>
+                    </p>
+                    <p class="center-text">Don't have an account? 
+                        <a class="blue-text" href="<?= REDIRECT_PATH . 'register' ?>">Sign up</a>
+                    </p>
                 <?php elseif (strcasecmp($page, 'register') === 0): ?>
-                    <p class="center-text">Already have an account? <a class="blue-text" href="#">Log in</a></p>
+                    <p class="center-text">Already have an account? 
+                        <a class="blue-text" href="<?= REDIRECT_PATH . 'login' ?>">Log in</a>
                 <?php endif ?>
             </div>
         </section>
