@@ -4,6 +4,7 @@ class Project implements Entity {
     private $id;
     private string $name;
     private string $description;
+    private User $manager;
     private int $budget; // In cents to avoid floating point issues
     private DateTime $startDateTime;
     private DateTime $completionDateTime;
@@ -15,6 +16,7 @@ class Project implements Entity {
         int $id,
         string $name,
         string $description,
+        User $manager,
         int $budget,
         DateTime $startDateTime,
         DateTime $completionDateTime,
@@ -25,6 +27,7 @@ class Project implements Entity {
         $this->id = $id;
         $this->name = $name;
         $this->description = $description;
+        $this->manager = $manager;
         $this->budget = $budget;
         $this->startDateTime = $startDateTime;
         $this->completionDateTime = $completionDateTime;
@@ -45,6 +48,10 @@ class Project implements Entity {
 
     public function getDescription(): string {
         return $this->description;
+    }
+
+    public function getManager(): User {
+        return $this->manager;
     }
 
     public function getBudget(): int {
@@ -81,6 +88,10 @@ class Project implements Entity {
         $this->description = $description;
     }
 
+    public function setManager(User $manager): void {
+        $this->manager = $manager;
+    }
+
     public function setBudget(int $budget): void {
         $this->budget = $budget;
     }
@@ -112,6 +123,7 @@ class Project implements Entity {
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
+            'manager' => $this->manager->toArray(),
             'budget' => $this->budget,
             'startDateTime' => $this->startDateTime->format(DateTime::ATOM),
             'completionDateTime' => $this->completionDateTime->format(DateTime::ATOM),
@@ -126,6 +138,7 @@ class Project implements Entity {
             $data['id'],
             $data['name'],
             $data['description'],
+            User::fromArray($data['manager']),
             $data['budget'],
             new DateTime($data['startDateTime']),
             new DateTime($data['completionDateTime']),
