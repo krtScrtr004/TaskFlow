@@ -4,7 +4,7 @@
  * Role enum for user role management
  */
 enum Role: string {
-    case PROJECT_MANAGER = 'project_manager';
+    case PROJECT_MANAGER = 'projectManager';
     case WORKER = 'worker';
 
     /**
@@ -12,8 +12,8 @@ enum Role: string {
      */
     public function getDisplayName(): string {
         return match($this) {
-            self::PROJECT_MANAGER => kebabToSentenceCase(self::PROJECT_MANAGER->value),
-            self::WORKER => kebabToSentenceCase(self::WORKER->value)
+            self::PROJECT_MANAGER => camelToSentenceCase(self::PROJECT_MANAGER->value),
+            self::WORKER => camelToSentenceCase(self::WORKER->value)
         };
     }
 
