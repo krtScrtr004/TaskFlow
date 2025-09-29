@@ -6,21 +6,23 @@ class Project implements Entity {
     private string $description;
     private User $manager;
     private int $budget; // In cents to avoid floating point issues
+    private ?TaskContainer $tasks;
     private DateTime $startDateTime;
     private DateTime $completionDateTime;
-    private DateTime $actualCompletionDateTime;
+    private ?DateTime $actualCompletionDateTime;
     private ProjectTaskStatus $status;
     private DateTime $createdDateTime;
 
     public function __construct(
-        int $id,
+        $id,
         string $name,
         string $description,
         User $manager,
         int $budget,
+        ?TaskContainer $tasks,
         DateTime $startDateTime,
         DateTime $completionDateTime,
-        DateTime $actualCompletionDateTime,
+        ?DateTime $actualCompletionDateTime,
         ProjectTaskStatus $status,
         DateTime $createdDateTime
     ) {
@@ -29,6 +31,7 @@ class Project implements Entity {
         $this->description = $description;
         $this->manager = $manager;
         $this->budget = $budget;
+        $this->tasks = $tasks;
         $this->startDateTime = $startDateTime;
         $this->completionDateTime = $completionDateTime;
         $this->actualCompletionDateTime = $actualCompletionDateTime;
@@ -38,7 +41,7 @@ class Project implements Entity {
 
     // Getters 
 
-    public function getId(): int {
+    public function getId() {
         return $this->id;
     }
     
@@ -48,6 +51,10 @@ class Project implements Entity {
 
     public function getDescription(): string {
         return $this->description;
+    }
+
+    public function getTasks(): ?TaskContainer {
+        return $this->tasks;
     }
 
     public function getManager(): User {
@@ -66,7 +73,7 @@ class Project implements Entity {
         return $this->completionDateTime;
     }
 
-    public function getActualCompletionDateTime(): DateTime {
+    public function getActualCompletionDateTime(): ?DateTime {
         return $this->actualCompletionDateTime;
     }
 
@@ -96,6 +103,10 @@ class Project implements Entity {
         $this->budget = $budget;
     }
 
+    public function setTasks(?TaskContainer $tasks): void {
+        $this->tasks = $tasks;
+    }
+
     public function setStartDateTime(DateTime $startDateTime): void {
         $this->startDateTime = $startDateTime;
     }
@@ -104,7 +115,7 @@ class Project implements Entity {
         $this->completionDateTime = $completionDateTime;
     }
 
-    public function setActualCompletionDateTime(DateTime $actualCompletionDateTime): void {
+    public function setActualCompletionDateTime(?DateTime $actualCompletionDateTime): void {
         $this->actualCompletionDateTime = $actualCompletionDateTime;
     }
 
@@ -125,6 +136,7 @@ class Project implements Entity {
             'description' => $this->description,
             'manager' => $this->manager->toArray(),
             'budget' => $this->budget,
+            'tasks' => $this->tasks->toArray(),
             'startDateTime' => $this->startDateTime->format(DateTime::ATOM),
             'completionDateTime' => $this->completionDateTime->format(DateTime::ATOM),
             'actualCompletionDateTime' => $this->actualCompletionDateTime->format(DateTime::ATOM),
@@ -140,6 +152,7 @@ class Project implements Entity {
             $data['description'],
             User::fromArray($data['manager']),
             $data['budget'],
+            TaskContainer::fromArray($data['tasks']),
             new DateTime($data['startDateTime']),
             new DateTime($data['completionDateTime']),
             new DateTime($data['actualCompletionDateTime']),
