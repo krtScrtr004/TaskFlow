@@ -7,6 +7,7 @@ class Project implements Entity {
     private User $manager;
     private int $budget; // In cents to avoid floating point issues
     private ?TaskContainer $tasks;
+    private ProjectWorkerContainer $workers;
     private DateTime $startDateTime;
     private DateTime $completionDateTime;
     private ?DateTime $actualCompletionDateTime;
@@ -20,6 +21,7 @@ class Project implements Entity {
         User $manager,
         int $budget,
         ?TaskContainer $tasks,
+        ProjectWorkerContainer $workers,
         DateTime $startDateTime,
         DateTime $completionDateTime,
         ?DateTime $actualCompletionDateTime,
@@ -32,6 +34,7 @@ class Project implements Entity {
         $this->manager = $manager;
         $this->budget = $budget;
         $this->tasks = $tasks;
+        $this->workers = $workers;
         $this->startDateTime = $startDateTime;
         $this->completionDateTime = $completionDateTime;
         $this->actualCompletionDateTime = $actualCompletionDateTime;
@@ -55,6 +58,10 @@ class Project implements Entity {
 
     public function getTasks(): ?TaskContainer {
         return $this->tasks;
+    }
+
+    public function getWorkers(): ProjectWorkerContainer {
+        return $this->workers;
     }
 
     public function getManager(): User {
@@ -107,6 +114,10 @@ class Project implements Entity {
         $this->tasks = $tasks;
     }
 
+    public function setWorkers(ProjectWorkerContainer $workers): void {
+        $this->workers = $workers;
+    }
+
     public function setStartDateTime(DateTime $startDateTime): void {
         $this->startDateTime = $startDateTime;
     }
@@ -137,6 +148,7 @@ class Project implements Entity {
             'manager' => $this->manager->toArray(),
             'budget' => $this->budget,
             'tasks' => $this->tasks->toArray(),
+            'workers' => $this->workers->toArray(),
             'startDateTime' => $this->startDateTime->format(DateTime::ATOM),
             'completionDateTime' => $this->completionDateTime->format(DateTime::ATOM),
             'actualCompletionDateTime' => $this->actualCompletionDateTime->format(DateTime::ATOM),
@@ -153,6 +165,7 @@ class Project implements Entity {
             User::fromArray($data['manager']),
             $data['budget'],
             TaskContainer::fromArray($data['tasks']),
+            ProjectWorkerContainer::fromArray($data['workers']),
             new DateTime($data['startDateTime']),
             new DateTime($data['completionDateTime']),
             new DateTime($data['actualCompletionDateTime']),
