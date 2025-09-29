@@ -7,3 +7,4 @@ interface Entity extends JsonSerializable {
 
     public static function fromArray(array $data): self;
 }
+
