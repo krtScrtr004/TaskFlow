@@ -1,7 +1,7 @@
-<aside class="sidenav black-bg">
+<aside class="sidenav flex-col sticky black-bg">
     <nav>
         <!-- Project -->
-        <a class="" href="">
+        <a class="" href="<?= REDIRECT_PATH . 'project' ?>">
             <div class="text-w-icon">
                 <img
                     src="<?= ICON_PATH . 'project_w.svg' ?>"
@@ -61,4 +61,14 @@
             </div>
         </a>
     </nav>
+
+    <div class="logo flex-col-reverse">
+        <img 
+            class="fit-contain"
+            src="<?= IMAGE_PATH . 'logo-light.svg' ?>" 
+            alt="TaskFlow"
+            title="TaskFlow"
+            height="100"
+            >
+    </div>
 </aside>

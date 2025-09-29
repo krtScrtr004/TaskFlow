@@ -158,3 +158,21 @@
 .notification-wrapper.fail > div {
 	background-color: var(--red);
 }
+
+/* -------------------- TEXT WITH ICON -------------------- */
+
+.text-w-icon,
+.text-w-icon > * {
+	display: flex;
+	align-items: center;
+}
+
+.text-w-icon > * {
+	justify-content: center;
+	align-items: center;
+}
+
+.text-w-icon img {
+	margin-right: 10px;
+}
+

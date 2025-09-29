@@ -43,6 +43,10 @@ body {
 	scroll-behavior: smooth;
 }
 
+body {
+	display: flex;
+}
+
 header,
 main,
 footer {
@@ -62,6 +66,7 @@ header {
 
 main {
 	position: relative;
+	width: 100%;
 }
 
 footer {

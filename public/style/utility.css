@@ -92,6 +92,11 @@
 	flex-direction: column;
 }
 
+.flex-col-reverse {
+	display: flex;
+	flex-direction: column-reverse;
+}
+
 .flex-inline {
 	display: inline-flex;
 }
