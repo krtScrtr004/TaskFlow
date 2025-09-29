@@ -7,13 +7,13 @@ class User implements Entity {
     private string $firstName;
     private string $middleName;
     private string $lastName;
-    private string $gender;
+    private Gender $gender;
     private DateTime $birthDate;
     private Role $role;
     private string $contactNumber;
     private string $email;
-    private string $bio;
-    private string $profileLink;
+    private ?string $bio;
+    private ?string $profileLink;
     private DateTime $joinedDateTime;
 
 
@@ -22,13 +22,13 @@ class User implements Entity {
         string $firstName,
         string $middleName,
         string $lastName,
-        string $gender,
+        Gender $gender,
         DateTime $birthDate,
         Role $role,
         string $contactNumber,
         string $email,
-        string $bio,
-        string $profileLink,
+        ?string $bio,
+        ?string $profileLink,
         DateTime $joinedDateTime
     ) {
         $this->id = $id;
@@ -62,7 +62,7 @@ class User implements Entity {
         return $this->lastName;
     }
 
-    public function getGender(): string {
+    public function getGender(): Gender {
         return $this->gender;
     }
 
@@ -107,7 +107,7 @@ class User implements Entity {
         $this->lastName = $lastName;
     }
 
-    public function setGender(string $gender): void {
+    public function setGender(Gender $gender): void {
         $this->gender = $gender;
     }
 
@@ -127,11 +127,11 @@ class User implements Entity {
         $this->email = $email;
     }
 
-    public function setBio(string $bio): void {
+    public function setBio(?string $bio): void {
         $this->bio = $bio;
     }
 
-    public function setProfileLink(string $profileLink): void {
+    public function setProfileLink(?string $profileLink): void {
         $this->profileLink = $profileLink;
     }
 
@@ -145,7 +145,7 @@ class User implements Entity {
             'firstName' => $this->firstName,
             'middleName' => $this->middleName,
             'lastName' => $this->lastName,
-            'gender' => $this->gender,
+            'gender' => $this->gender->getDisplayName(),
             'birthDate' => $this->birthDate->format('Y-m-d'),
             'role' => $this->role,
             'contactNumber' => $this->contactNumber,
