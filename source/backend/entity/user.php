@@ -156,7 +156,7 @@ class User implements Entity {
         ];
     }   
 
-    public static function fromArray(array $data): User {
+    public static function fromArray(array $data): self {
         return new User(
             $data['id'],
             $data['firstName'],

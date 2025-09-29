@@ -12,8 +12,8 @@ enum Role: string {
      */
     public function getDisplayName(): string {
         return match($this) {
-            self::PROJECT_MANAGER => 'Project Manager',
-            self::WORKER => 'Worker'
+            self::PROJECT_MANAGER => kebabToSentenceCase(self::PROJECT_MANAGER->value),
+            self::WORKER => kebabToSentenceCase(self::WORKER->value)
         };
     }
 
