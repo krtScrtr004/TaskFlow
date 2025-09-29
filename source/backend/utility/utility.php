@@ -45,3 +45,11 @@ function sentenceToKebabCase(string $string): string
     // Converts sentence case to kebab-case
     return strtolower(str_replace(' ', '-', trim($string)));
 }
+    
+function formatBudgetToCents(float $amount): int {
+    return (int) round($amount * 100);
+}
+
+function formatBudgetToPesos(int $amountInCents): float {
+    return (float) $amountInCents / 100;
+}
