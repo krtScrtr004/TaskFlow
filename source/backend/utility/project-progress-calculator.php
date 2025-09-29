@@ -30,9 +30,10 @@ class ProjectProgressCalculator
      * @param array $tasks Array of tasks with 'status' and 'priority' keys
      * @return array Progress data with percentage, breakdown, and insights
      */
-    public static function calculateProjectProgress(TaskContainer $tasks): array
+    public static function calculateProjectProgress(TaskContainer $taskContainer): array
     {
-        if (empty($tasks)) {
+        $totalTasks = $taskContainer->getTaskCount();
+        if ($totalTasks === 0) {
             return [
                 'progressPercentage' => 0.0,
                 'totalTasks' => 0,
@@ -48,9 +49,9 @@ class ProjectProgressCalculator
         $priorityCounts = [];
         $totalWeightedProgress = 0.0;
         $totalWeight = 0.0;
-        $totalTasks = count($tasks);
 
         // Process each task
+        $tasks = $taskContainer->getTasks();
         foreach ($tasks as $task) {
             $status = $task->getStatus()->value;
             $priority = $task->getPriority()->value;
