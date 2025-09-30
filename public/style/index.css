@@ -1,0 +1,78 @@
+body.index > main {
+    height: 100%;
+}
+
+.banner,
+.form {
+    width: 50%;
+}
+
+.banner {
+    gap: var(--space);
+}
+
+.form {
+    padding: 0 10rem;
+    gap: var(--space);
+}
+
+.form > .line-divider {
+    font-weight: 800;
+    height: 3px; 
+    background-color: var(--black);
+}
+
+.called-form-container {
+    width: 100%;
+}
+
+.called-form-container > .index-form {
+    gap: 1rem;
+}
+
+.called-form-container input {
+    border: 1px solid var(--black);
+}
+
+.form > .index-redirect {
+    line-height: 1.6rem;
+}
+
+.form > .index-redirect a:hover {
+    text-decoration: underline;
+}
+
+/* Register Form */
+#register_form .separated-name-input {
+    gap: 1rem;
+}
+
+#register_form > .gender-radio {
+    gap: 1rem;
+}
+
+#register_form > .gender-radio > div {
+    gap: 0.5rem;
+}
+
+#register_form > .gender-radio > div > label {
+    font-size: 1.2rem;
+}
+
+#register_form > .gender-radio > div > input[type="radio"] {
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+#register_form .birth-date,
+#register_form .birth-date .date-inputs {
+    gap: 0.5rem;
+}
+
+#register_form .invalid-date-result-box {
+    margin-bottom: 0.3rem;
+}
+
+#register_form .birth-date .date-inputs > select {
+    border: 1px solid var(--black);
+}

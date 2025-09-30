@@ -1,5 +1,10 @@
 {
 	"GET": {
+		"TaskFlow/": "IndexController",
+		"TaskFlow/login": "IndexController",
+		"TaskFlow/register": "IndexController",
 
+		"TaskFlow/forget-password": "SingleFormController",
+		"TaskFlow/change-password": "SingleFormController"
 	}
 }

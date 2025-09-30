@@ -1,0 +1,160 @@
+.unset-button {
+	all: unset; /* removes all default styles */
+	font: inherit;
+	color: inherit;
+	padding: 0;
+	margin: 0;
+	background-color: transparent;
+	border: none;
+	outline: none;
+}
+
+.line-divider > hr {
+	width: 100%;
+}
+
+.line-divider > p {
+	top: -13px;
+	left: 50%;
+	transform: translate(-50%, 0);
+	padding: 5px;
+}
+
+/* ---------------- PASSWORD TOGGLE WRAPPER ---------------- */
+.password-toggle-wrapper {
+	position: relative;
+}
+
+.password-toggle-wrapper > img {
+	display: none;
+	position: absolute;
+	top: 50%;
+	right: 8px;
+	transform: translate(0, -50%);
+	z-index: 10;
+	cursor: pointer;
+}
+
+/* --------------- HEADER WITH BACK BUTTON --------------- */
+.header-w-back {
+	position: relative;
+}
+
+.header-w-back > h1,
+.header-w-back > h3 {
+	text-align: center;
+}
+
+.header-w-back > button {
+	position: absolute;
+	top: 50%;
+	left: -25px;
+	transform: translate(0, -50%);
+	cursor: pointer;
+}
+
+/* ------------------------ MODAL ------------------------ */
+
+.modal-wrapper,
+.modal-wrapper::before {
+	height: 100%;
+	width: 100%;
+	position: fixed;
+	top: 0;
+	left: 0;
+	z-index: 1000;
+}
+
+.modal-wrapper,
+.modal-wrapper > * {
+	z-index: 1100;
+}
+
+.modal-wrapper,
+.modal-wrapper > section.dialog {
+	justify-content: center;
+	align-items: center;
+	gap: 1rem;
+}
+
+.modal-wrapper {
+	background-color: transparent;
+}
+
+.modal-wrapper::before {
+	content: '';
+	background-color: var(--black);
+	opacity: 0.5;
+}
+
+.modal-wrapper h1 {
+	font-size: 2rem;
+	font-weight: 800;
+    margin-bottom: 0.3rem;
+}
+
+.modal-wrapper p {
+	font-weight: 300;
+}
+
+.modal-wrapper > section {
+	box-sizing: content-box;
+	padding: var(--space);
+	box-shadow: 0 0 1px 1px var(--light-black);
+}
+
+.modal-wrapper .close-button:hover p {
+	color: var(--red);
+}
+
+/* --------------------- NOTIFICATION --------------------- */
+
+@keyframes slide-down {
+	0% {
+		margin-top: -50px;
+	}
+
+	100% {
+		margin-top: 0;
+	}
+}
+.slide-down {
+	animation: slide-down 0.3s ease-in;
+}
+
+@keyframes slide-up {
+	0% {
+		margin-top: 0;
+	}
+
+	100% {
+		margin-top: -10%;
+	}
+}
+.slide-up {
+	animation: slide-up 0.3s ease-in;
+}
+
+.notification-wrapper,
+.notification-wrapper > * {
+	z-index: 1000;
+}
+
+.notification-wrapper {
+	width: 100%;
+	top: 0;
+	left: 50%;
+	transform: translate(-50%, 0);
+	padding: 0;
+	overflow: hidden;
+}
+
+.notification-wrapper > div {
+	width: 100%;
+	padding: 0.8rem var(--space);
+	font-weight: 500;
+}
+
+.notification-wrapper.fail > div {
+	background-color: var(--red);
+}

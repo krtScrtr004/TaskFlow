@@ -1,0 +1,6 @@
+RewriteEngine On
+
+# If the request is not a file or folder, route it to index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ public/index.php [QSA,L]

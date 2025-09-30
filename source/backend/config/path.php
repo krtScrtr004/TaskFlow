@@ -1,7 +1,7 @@
 <?php
 
 define('ABS_PATH', dirname(__DIR__, 2) . '/');
-define('REDIRECT_PATH', 'http://localhost/Techstock/');
+define('REDIRECT_PATH', 'http://localhost/TaskFlow/');
 
 // Absolute paths
 define('BACKEND_PATH', ABS_PATH . 'backend' . DS);
@@ -32,7 +32,7 @@ define('BE_UTILITY_PATH', BACKEND_PATH . 'utility' . DS);
 define('FE_UTILITY_PATH', FRONTEND_PATH . 'utility' . DS);
 
 // Relative paths
-define('PUBLIC_PATH', DS . 'Techstock' . DS . 'public' . DS);
+define('PUBLIC_PATH', DS . 'TaskFlow' . DS . 'public' . DS);
 
 define('ASSET_PATH', 'asset' . DS);
 define('SCRIPT_PATH', 'script' . DS);

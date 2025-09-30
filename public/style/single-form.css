@@ -1,0 +1,23 @@
+.single-form-form {
+	width: 500px;
+	box-shadow: 0 0 10px 10px var(--dark-white);
+	border-radius: var(--border-radius);
+	gap: 2rem;
+	padding: 3rem 3.5rem;
+}
+
+.single-form-form h3 {
+	font-size: 2rem;
+}
+
+.single-form-form form {
+    gap: var(--space)
+}
+
+#change_password_form .password-list-validator {
+	gap: 1rem;
+}
+
+#change_password_form .password-list-validator > li {
+	max-width: 40ch;
+}
