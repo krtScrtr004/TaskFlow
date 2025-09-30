@@ -16,7 +16,7 @@ passwordElement?.addEventListener('input', () => {
         } else if (rule.id === 'upper_case') {
             rule.style.color = (upperCase) ? green : red
         } else if (rule.id === 'count') {
-            rule.style.color = (count > 8 && count < 255) ? green : red
+            rule.style.color = (count >= 8 && count <= 255) ? green : red
         } else if (rule.id === 'characters') {
             rule.style.color = (characters) ? red : green
         }
