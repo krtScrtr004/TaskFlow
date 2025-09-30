@@ -2,39 +2,41 @@
 
 class ProjectController implements Controller
 {
-    private function __construct() {}
+    private function __construct()
+    {
+    }
 
     public static function index(): void
     {
         // TODO: Dummy
 
         $workers = new WorkerContainer([
-            new User(
+            new Worker(
                 uniqid(),
                 'Alice',
                 'B.',
                 'Smith',
                 Gender::FEMALE,
                 new DateTime('1990-05-15'),
-                Role::WORKER,
                 '123-456-7890',
                 'alice@example.com',
                 'Experienced developer',
                 null,
+                WorkerStatus::ACTIVE,
                 new DateTime('2020-01-10')
             ),
-            new User(
+            new Worker(
                 uniqid(),
                 'Bob',
                 'C.',
                 'Johnson',
                 Gender::MALE,
                 new DateTime('1985-08-22'),
-                Role::WORKER,
                 '987-654-3210',
                 'bob@example.com',
                 'Skilled designer',
                 null,
+                WorkerStatus::TERMINATED,
                 new DateTime('2019-03-25')
             )
         ]);

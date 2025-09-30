@@ -1,11 +1,7 @@
 <?php
 
-function workerListCard(User $worker): string
+function workerListCard(Worker $worker): string
 {
-    if (!Role::isWorker($worker)) {
-        throw new InvalidArgumentException('The provided user is not a worker.');
-    }
-
     $profileLink =
         htmlspecialchars($worker->getProfileLink()) ?:
         ICON_PATH . 'profile_b.svg';

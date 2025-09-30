@@ -1,18 +1,42 @@
 <?php
 
 class Worker extends User {
-    private User $worker;
     private WorkerStatus $status;
 
-    public function __construct(User $worker, WorkerStatus $status) {
-        $this->worker = $worker;
+    public function __construct( $id,
+        string $firstName,
+        string $middleName,
+        string $lastName,
+        Gender $gender,
+        DateTime $birthDate,
+        string $contactNumber,
+        string $email,
+        ?string $bio,
+        ?string $profileLink,
+        WorkerStatus $status,
+        DateTime $joinedDateTime
+    ) {
+        parent::__construct(
+            $id,
+            $firstName,
+            $middleName,
+            $lastName,
+            $gender,
+            $birthDate,
+            Role::WORKER,
+            $contactNumber,
+            $email,
+            $bio,
+            $profileLink,
+            $joinedDateTime
+        );
         $this->status = $status;
     }
 
     // Getters 
 
     public function getWorker(): User {
-        return $this->worker;
+        return $this;
     }
 
     public function getStatus(): WorkerStatus {
@@ -21,10 +45,6 @@ class Worker extends User {
 
     // Setter
 
-    public function setWorker(User $worker): void {
-        $this->worker = $worker;
-    }
-
     public function setStatus(WorkerStatus $status): void {
         $this->status = $status;
     }
@@ -32,16 +52,27 @@ class Worker extends User {
     // Other methods
 
     public function toArray(): array {
-        return [
-            'worker' => $this->worker->toArray(),
-            'status' => $this->status->value
-        ];
+        $worker = parent::toArray();
+        $worker['role'] = Role::WORKER->value;
+        
+        return $worker;
     }
 
     public static function fromArray(array $data): self {
+        $user = User::fromArray($data['worker']);
         return new Worker(
-            User::fromArray($data['worker']),
-            WorkerStatus::from($data['status'])
+            $user->getId(),
+            $user->getFirstName(),
+            $user->getMiddleName(),
+            $user->getLastName(),
+            $user->getGender(),
+            $user->getBirthDate(),
+            $user->getContactNumber(),
+            $user->getEmail(),
+            $user->getBio(),
+            $user->getProfileLink(),
+            WorkerStatus::from($data['status']),
+            $user->getJoinedDateTime()
         );
     }
 
