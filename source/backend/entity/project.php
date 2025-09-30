@@ -8,6 +8,7 @@ class Project implements Entity {
     private int $budget; // In cents to avoid floating point issues
     private ?TaskContainer $tasks;
     private ProjectWorkerContainer $workers;
+    private ?ProjectPhaseContainer $phases;
     private DateTime $startDateTime;
     private DateTime $completionDateTime;
     private ?DateTime $actualCompletionDateTime;
@@ -22,6 +23,7 @@ class Project implements Entity {
         int $budget,
         ?TaskContainer $tasks,
         ProjectWorkerContainer $workers,
+        ?ProjectPhaseContainer $phases,
         DateTime $startDateTime,
         DateTime $completionDateTime,
         ?DateTime $actualCompletionDateTime,
@@ -35,6 +37,7 @@ class Project implements Entity {
         $this->budget = $budget;
         $this->tasks = $tasks;
         $this->workers = $workers;
+        $this->phases = $phases;
         $this->startDateTime = $startDateTime;
         $this->completionDateTime = $completionDateTime;
         $this->actualCompletionDateTime = $actualCompletionDateTime;
@@ -62,6 +65,10 @@ class Project implements Entity {
 
     public function getWorkers(): ProjectWorkerContainer {
         return $this->workers;
+    }
+
+    public function getPhases(): ?ProjectPhaseContainer {
+        return $this->phases;
     }
 
     public function getManager(): User {
@@ -118,6 +125,10 @@ class Project implements Entity {
         $this->workers = $workers;
     }
 
+    public function setPhases(?ProjectPhaseContainer $phases): void {
+            $this->phases = $phases;
+    }
+
     public function setStartDateTime(DateTime $startDateTime): void {
         $this->startDateTime = $startDateTime;
     }
@@ -141,14 +152,17 @@ class Project implements Entity {
     // Other methods
 
     public function toArray(): array {
+        echo $this->id;
+
         return [
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
             'manager' => $this->manager->toArray(),
             'budget' => $this->budget,
-            'tasks' => $this->tasks->toArray(),
-            'workers' => $this->workers->toArray(),
+            'tasks' => $this->tasks->toArray() ?? [],
+            'workers' => $this->workers->toArray() ?? [],
+            'phases' => $this->phases->toArray() ?? [],
             'startDateTime' => $this->startDateTime->format(DateTime::ATOM),
             'completionDateTime' => $this->completionDateTime->format(DateTime::ATOM),
             'actualCompletionDateTime' => $this->actualCompletionDateTime->format(DateTime::ATOM),
@@ -166,6 +180,7 @@ class Project implements Entity {
             $data['budget'],
             TaskContainer::fromArray($data['tasks']),
             ProjectWorkerContainer::fromArray($data['workers']),
+            ProjectPhaseContainer::fromArray($data['phases']),
             new DateTime($data['startDateTime']),
             new DateTime($data['completionDateTime']),
             new DateTime($data['actualCompletionDateTime']),
