@@ -28,7 +28,6 @@ if (!$component) {
                 alt="TaskFlow"
                 title="TaskFlow"
                 height="200">
-            x
             <h1 class="white-text center-text">IT Project Management Platform</h1>
         </section>
 
