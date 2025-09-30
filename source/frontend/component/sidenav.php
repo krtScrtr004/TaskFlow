@@ -61,14 +61,4 @@
             </div>
         </a>
     </nav>
-
-    <div class="logo flex-col-reverse">
-        <img 
-            class="fit-contain"
-            src="<?= IMAGE_PATH . 'logo-light.svg' ?>" 
-            alt="TaskFlow"
-            title="TaskFlow"
-            height="100"
-            >
-    </div>
 </aside>
