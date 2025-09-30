@@ -45,17 +45,15 @@ enum WorkStatus: string
             self::CANCELLED => 'red-bg'
         };
         $textColor = match ($this) {
-            self::PENDING, self::DELAYED => 'black-text',
-            self::ON_GOING, self::COMPLETED, self::CANCELLED => 'white-text'
+            self::PENDING => 'black-text',
+            self::ON_GOING, self::COMPLETED, self::DELAYED, self::CANCELLED => 'white-text'
         };
 
-        ob_start();
-?>
-        <div class="status-badge <?= $backgroundColor . ' ' . $textColor ?>">
-            <?= $statusName ?>
+        return <<<HTML
+        <div class="status-badge $backgroundColor">
+            <p class="center-text $textColor">$statusName</p>
         </div>
-<?php
-        return ob_get_clean();
+        HTML;
     }
 
     public static function fromString(string $value): WorkStatus

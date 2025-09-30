@@ -14,7 +14,7 @@ class Me extends User
             lastName: 'Yang',
             gender: Gender::MALE,
             birthDate: new DateTime('2000-01-01'),
-            role: Role::WORKER,
+            role: Role::PROJECT_MANAGER,
             contactNumber: '123-456-7890',
             email: 'zing.zang@example.com',
             bio: null,

@@ -6,19 +6,22 @@ class Phase implements Entity {
     private DateTime $startDateTime;
     private DateTime $completionDateTime;
     private ?DateTime $actualCompletionDateTime;
+    private WorkStatus $status;
 
     public function __construct(
         string $name,
         string $description,
         DateTime $startDateTime,
         DateTime $completionDateTime,
-        ?DateTime $actualCompletionDateTime
+        ?DateTime $actualCompletionDateTime,
+        WorkStatus $status
     ) {
         $this->name = $name;
         $this->description = $description;
         $this->startDateTime = $startDateTime;
         $this->completionDateTime = $completionDateTime;
         $this->actualCompletionDateTime = $actualCompletionDateTime;
+        $this->status = $status;
     }
 
     // Getters
@@ -43,6 +46,10 @@ class Phase implements Entity {
         return $this->actualCompletionDateTime;
     }
 
+    public function getStatus(): WorkStatus {
+        return $this->status;
+    }
+
     // Setters
 
     public function setName(string $name): void {
@@ -65,6 +72,10 @@ class Phase implements Entity {
         $this->actualCompletionDateTime = $actualCompletionDateTime;
     }
 
+    public function setStatus(WorkStatus $status): void {
+        $this->status = $status;
+    }
+
     // Other methods
 
     public function toArray(): array {
@@ -73,7 +84,8 @@ class Phase implements Entity {
             'description' => $this->description,
             'startDateTime' => $this->startDateTime->format(DateTime::ATOM),
             'completionDateTime' => $this->completionDateTime->format(DateTime::ATOM),
-            'actualCompletionDateTime' => $this->actualCompletionDateTime->format(DateTime::ATOM)
+            'actualCompletionDateTime' => $this->actualCompletionDateTime->format(DateTime::ATOM),
+            'status' => $this->status->value
         ];
     }
 
@@ -83,7 +95,8 @@ class Phase implements Entity {
             $data['description'],
             new DateTime($data['startDateTime']),
             new DateTime($data['completionDateTime']),
-            new DateTime($data['actualCompletionDateTime'])
+            new DateTime($data['actualCompletionDateTime']),
+            $data['status']
         );
     }
 

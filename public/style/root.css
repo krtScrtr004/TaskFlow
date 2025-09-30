@@ -1,13 +1,14 @@
 :root {
 	--white: #fffefe;
-	--dark-white: #f5f5f5;
+	--dark-white: #eaeaea;
 	--light-blue: #89d6fb;
 	--blue: #007bff;
 	--light-black: #403b3b;
 	--black: #1e1e1e;
-	--red: rgb(220, 53, 69);
+	--red: #dc3545;
 	--green: #38ff5d;
 	--yellow: #ffb61e;
+	--orange: #cb5835;
 
 	--space: 1.5rem;
 
@@ -64,9 +65,15 @@ header {
 	z-index: 100;
 }
 
+aside {
+	padding: 3rem 0;
+}
+
 main {
+	flex: 1;
 	position: relative;
 	width: 100%;
+	overflow: auto;
 }
 
 footer {

@@ -1,3 +1,7 @@
+main.main-page {
+	padding: var(--space)
+}
+
 .unset-button {
 	all: unset; /* removes all default styles */
 	font: inherit;
@@ -176,3 +180,9 @@
 	margin-right: 10px;
 }
 
+/* ---------------- STATUS BADGE ---------------- */
+.status-badge {
+	width: 13ch;
+	padding: 0.3rem 0.8rem;
+	border-radius: 5rem;
+}

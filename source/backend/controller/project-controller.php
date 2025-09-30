@@ -91,21 +91,24 @@ class ProjectController implements Controller
                 'Lorem123',
                 new DateTime('2024-12-23'),
                 new DateTime('2024-12-25'),
-                new DateTime('2024-12-30')
+                new DateTime('2024-12-30'),
+                WorkStatus::COMPLETED
             ),
             new Phase(
                 'Phase 2',
                 'Lorem123',
                 new DateTime('2024-12-23'),
                 new DateTime('2024-12-25'),
-                new DateTime('2024-12-30')
+                null,
+                WorkStatus::ON_GOING
             ),
             new Phase(
                 'Phase 3',
                 'Lorem123',
                 new DateTime('2024-12-23'),
                 new DateTime('2024-12-25'),
-                new DateTime('2024-12-30')
+                new DateTime('2024-12-30'),
+                WorkStatus::DELAYED
             )
         ]);
         $project->setPhases($phases);

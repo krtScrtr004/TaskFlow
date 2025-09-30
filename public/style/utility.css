@@ -31,6 +31,10 @@
 	color: var(--green);
 }
 
+.orang-text {
+	color: var(--orange);
+}
+
 /* --------BG COLOR-------- */
 
 .transparent-bg {
@@ -57,6 +61,14 @@
 	background-color: var(--red);
 }
 
+.green-bg {
+	background-color: var(--green);
+}
+
+.orange-bg {
+	background-color: var(--orange);
+}
+
 /* --------DISPLAY-------- */
 
 .no-display {
@@ -65,6 +77,10 @@
 
 .inline {
 	display: inline;
+}
+
+.inline-block {
+	display: inline-block;
 }
 
 .block {

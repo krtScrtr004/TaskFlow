@@ -1,0 +1,175 @@
+.main-project-content .content-section-block {
+	padding: var(--space);
+	border-radius: var(--border-radius);
+	overflow: hidden;
+}
+
+.content-section-block > .heading-title {
+	margin-bottom: 1rem;
+}
+
+.main-project-content,
+.main-sub-content,
+.project-secondary-info {
+	gap: var(--space);
+}
+
+.project-name {
+	max-width: 50ch;
+	margin-right: 1rem;
+	font-size: 1.5rem;
+}
+
+.edit-project:hover,
+.delete-project:hover {
+	opacity: 0.7;
+}
+
+.edit-project {
+	margin-right: 0.5rem;
+}
+
+.project-id {
+	font-weight: 300;
+}
+
+.project-description {
+	margin-top: 1rem;
+}
+
+.main-sub-content {
+	flex: 1;
+}
+
+.project-statistics > * {
+	flex: 1;
+}
+
+.project-statistics > .left {
+	grid-template-columns: 1fr 1fr;
+	gap: 0.5rem;
+	overflow: hidden;
+}
+
+.progress-percentage {
+	font-size: 2rem;
+	font-weight: 800;
+    margin-bottom: 0.3rem;
+}
+
+.progress-container {
+	width: 80%;
+	max-width: 400px;
+	background: #e0e0e0;
+	border-radius: 5rem;
+	overflow: hidden;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.progress-container > .progress-bar {
+	height: 30px;
+	width: 0%;
+	background: linear-gradient(90deg, #4caf50, #81c784);
+	text-align: center;
+	line-height: 30px;
+	color: white;
+	font-weight: bold;
+	transition: width 0.8s ease;
+}
+
+
+.task-statistics > .heading {
+    margin-bottom: var(--space);
+	gap: 0.8rem;
+}
+
+.task-statistics > .heading > a:hover {
+	text-decoration: underline;
+}
+
+.task-statistics-chart {
+    gap: var(--space);
+}
+
+.chart-container {
+	width: 300px !important;
+	height: 300px !important;
+}
+
+.project-workers {
+    height: fit-content;
+    width: 20rem;
+}
+
+.project-workers > .worker-list {
+    gap: 1rem;
+}
+
+.worker-list-card {
+    display: flex;
+    gap: 0.5rem;
+    border-radius: var(--border-radius);
+}
+
+.worker-list-card:hover {
+    opacity: 0.7;
+}
+
+.worker-list-card h4, 
+.worker-list-card p {
+    max-width: 15ch;
+}
+
+.worker-list-card p {
+    font-size: 0.8rem;
+    font-weight: 300;
+}
+
+.worker-list #add_worker_button {
+    width: 18ch;
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+}
+
+.phase-list {
+	gap: 1rem;	
+}
+
+.phase-list-card {
+	gap: 0.3rem;
+}
+
+.phase-list-card .phase-description {
+	font-size: 0.9rem;
+	font-weight: 300;
+	max-width: 40ch;
+}
+
+.phase-list-card .phase-dates {
+	font-size: 0.8rem;
+	font-weight: 200;
+}
+
+.phase-list-card .project-schedule {
+	gap: 0.5rem;
+	margin-top: 0.2rem
+}
+
+.phase-list-card .text-w-icon > img {
+	margin-right: 0.3rem
+}
+
+.project-actions {
+	padding-top: 0 !important;
+	padding-bottom: 0 !important;
+}
+
+.project-actions > a {
+	width: fit-content;
+	padding: 0.5rem 0;
+	font-weight: 500;
+}
+
+.project-actions > a:hover {
+	text-decoration: underline;
+} 

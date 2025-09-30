@@ -47,4 +47,12 @@ enum Role: string {
     public static function isValid(string $value): bool {
         return self::tryFrom($value) !== null;
     }
+
+    public static function isProjectManager(User $user): bool {
+        return $user->getRole() === self::PROJECT_MANAGER;
+    }
+
+    public static function isWorker(User $user): bool {
+        return $user->getRole() === self::WORKER;
+    }
 }
