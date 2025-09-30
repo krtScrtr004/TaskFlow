@@ -61,7 +61,7 @@ class ProjectController implements Controller
         );
 
         $tasks = new TaskContainer();
-        $tasks->addTask(new Task(
+        $tasks->add(new Task(
             uniqid(),
             'Task 1',
             'This is the first task.',
@@ -72,7 +72,7 @@ class ProjectController implements Controller
             WorkStatus::ON_GOING,
             new DateTime('2023-01-05 10:00:00'),
         ));
-        $tasks->addTask(new Task(
+        $tasks->add(new Task(
             uniqid(),
             'Task 2',
             'This is the second task.',

@@ -1,9 +1,7 @@
 <?php
 
-class TaskContainer
+class TaskContainer extends Container
 {
-    private array $tasks;
-    private int $totalTask = 0;
     private array $taskCountByStatus = [
         WorkStatus::PENDING->value => 0,
         WorkStatus::ON_GOING->value => 0,
@@ -24,26 +22,33 @@ class TaskContainer
                 throw new InvalidArgumentException("All elements of tasks array must be instances of Task.");
             }
 
-            $this->addTask($task);
+            $this->add($task);
             $this->updateTaskCount($task);
         }
     }
 
-    public function addTask($task): void
+    public function add($task): void
     {
-        $this->tasks[] = $task;
-        $this->totalTask++;
+        if (!$task instanceof Task) {
+            throw new InvalidArgumentException("Only Task instances can be added to TaskContainer.");
+        }
+        $this->items[] = $task;
     }
 
-    public function getTasks(): array
+    public function remove($item): void
     {
-        return $this->tasks;
+        if (!$item instanceof Task) {
+            throw new InvalidArgumentException('Only Task instances can be removed from TaskContainer.');
+        }
+
+        $index = array_search($item, $this->items, true);
+        if ($index !== false) {
+            array_splice($this->items, $index, 1);
+        }
     }
 
     public function updateTaskCount(Task $task): void
     {
-        $this->totalTask++;
-
         $status = $task->getStatus()->value;
         if (array_key_exists($status, $this->taskCountByStatus)) {
             $this->taskCountByStatus[$status]++;
@@ -53,11 +58,6 @@ class TaskContainer
         if (array_key_exists($priority, $this->taskCountByPriority)) {
             $this->taskCountByPriority[$priority]++;
         }
-    }
-
-    public function getTaskCount(): int
-    {
-        return $this->totalTask;
     }
 
     public function getTaskCountByStatus(WorkStatus $status): int
@@ -84,7 +84,7 @@ class TaskContainer
 
     public function toArray(): array
     {
-        return array_map(fn($task) => $task->toArray(), $this->tasks);
+        return array_map(fn($task) => $task->toArray(), $this->items);
     }
 
     public static function fromArray(array $data): TaskContainer

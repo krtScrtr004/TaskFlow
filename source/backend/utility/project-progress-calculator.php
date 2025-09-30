@@ -32,7 +32,7 @@ class ProjectProgressCalculator
      */
     public static function calculateProjectProgress(TaskContainer $taskContainer): array
     {
-        $totalTasks = $taskContainer->getTaskCount();
+        $totalTasks = $taskContainer->count();
         if ($totalTasks === 0) {
             return [
                 'progressPercentage' => 0.0,
@@ -51,7 +51,7 @@ class ProjectProgressCalculator
         $totalWeight = 0.0;
 
         // Process each task
-        $tasks = $taskContainer->getTasks();
+        $tasks = $taskContainer->getItems();
         foreach ($tasks as $task) {
             $status = $task->getStatus()->value;
             $priority = $task->getPriority()->value;

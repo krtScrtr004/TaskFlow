@@ -1,42 +1,45 @@
 <?php
 
-class PhaseContainer
+class PhaseContainer extends Container
 {
-    private array $phases;
-
     public function __construct(array $phases = [])
     {
         foreach ($phases as $phase) {
             if (!$phase instanceof Phase) {
                 throw new InvalidArgumentException('All elements of tasks array must be instances of Task.');
             }
-            $this->addPhase($phase);
+            $this->add($phase);
         }
     }
 
-    public function addPhase(Phase $phase): void
+    public function add($item): void
     {
-        $this->phases[] = $phase;
+        if (!$item instanceof Phase) {
+            throw new InvalidArgumentException('Only Phase instances can be added to PhaseContainer.');
+        }
+        $this->items[] = $item;
     }
 
-    public function getPhases(): array
+    public function remove($item): void
     {
-        return $this->phases;
+        if ($item instanceof Phase) {
+            throw new InvalidArgumentException('Only Phase instances can be added to PhaseContainer.');
+        }
+
+        $index = array_search($item, $this->items, true);
+        if ($index !== false) {
+            array_splice($this->items, $index, 1);
+        }
     }
 
-    public function getPhasesCount(): int
-    {
-        return count($this->phases);
-    }
-
-    public function toArray(): array
-    {
-        return array_map(fn($phase) => $phase->toArray(), $this->phases);
-    }
-
-    public static function fromArray(array $data): PhaseContainer
+    public static function fromArray(array $data): mixed
     {
         $phases = array_map(fn($phaseData) => Phase::fromArray($phaseData), $data);
         return new PhaseContainer($phases);
+    }
+
+    public function jsonSerialize(): array
+    {
+        return $this->toArray();
     }
 }
