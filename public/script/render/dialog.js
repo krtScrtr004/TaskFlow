@@ -74,8 +74,8 @@ export const Dialog = (() => {
         reportResult: function (status) {
             const title = 'Report ' + ((status) ? 'Success' : 'Failed')
             const message = (status)
-                ? 'There was a problem submitting your report. Please try again later.'
-                : 'Your report was submitted successfully.'
+                ? 'Your report was submitted successfully.'
+                : 'There was a problem submitting your report. Please try again later.'
 
             render(
                 status,
