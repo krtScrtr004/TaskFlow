@@ -1,6 +1,6 @@
 <?php
 
-class ProjectPhase implements Entity {
+class Phase implements Entity {
     private string $name;
     private string $description;
     private DateTime $startDateTime;

@@ -1,6 +1,6 @@
 <?php 
 
-class ProjectWorkerContainer {
+class WorkerContainer {
     private array $workers;
 
     public function __construct(array $workers = []) {
@@ -31,7 +31,7 @@ class ProjectWorkerContainer {
         return $this->workers;
     }
 
-    public static function fromArray(array $workersArray): ProjectWorkerContainer {
-        return new ProjectWorkerContainer($workersArray);
+    public static function fromArray(array $workersArray): WorkerContainer {
+        return new WorkerContainer($workersArray);
     }
 }

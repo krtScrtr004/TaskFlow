@@ -5,11 +5,11 @@ class TaskContainer
     private array $tasks;
     private int $totalTask = 0;
     private array $taskCountByStatus = [
-        ProjectTaskStatus::PENDING->value => 0,
-        ProjectTaskStatus::ON_GOING->value => 0,
-        ProjectTaskStatus::COMPLETED->value => 0,
-        ProjectTaskStatus::DELAYED->value => 0,
-        ProjectTaskStatus::CANCELLED->value => 0,
+        WorkStatus::PENDING->value => 0,
+        WorkStatus::ON_GOING->value => 0,
+        WorkStatus::COMPLETED->value => 0,
+        WorkStatus::DELAYED->value => 0,
+        WorkStatus::CANCELLED->value => 0,
     ];
     private array $taskCountByPriority = [
         TaskPriority::LOW->value => 0,
@@ -37,7 +37,7 @@ class TaskContainer
 
     public function getTasks(): array
     {
-        return $this->toArray();
+        return $this->tasks;
     }
 
     public function updateTaskCount(Task $task): void
@@ -60,7 +60,7 @@ class TaskContainer
         return $this->totalTask;
     }
 
-    public function getTaskCountByStatus(ProjectTaskStatus $status): int
+    public function getTaskCountByStatus(WorkStatus $status): int
     {
         $statusValue = $status->value;
         return $this->taskCountByStatus[$statusValue] ?? 0;

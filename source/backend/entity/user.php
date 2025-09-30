@@ -1,24 +1,24 @@
 <?php
 
-require_once __DIR__ . '/../core/role.php';
+require_once ENUM_PATH . 'role.php';
 
 class User implements Entity {
     private $id;
-    private string $firstName;
-    private string $middleName;
-    private string $lastName;
-    private Gender $gender;
-    private DateTime $birthDate;
-    private Role $role;
-    private string $contactNumber;
-    private string $email;
-    private ?string $bio;
-    private ?string $profileLink;
-    private DateTime $joinedDateTime;
+    protected string $firstName;
+    protected string $middleName;
+    protected string $lastName;
+    protected Gender $gender;
+    protected DateTime $birthDate;
+    protected Role $role;
+    protected string $contactNumber;
+    protected string $email;
+    protected ?string $bio;
+    protected ?string $profileLink;
+    protected DateTime $joinedDateTime;
 
 
     public function __construct(
-        int $id,
+        $id,
         string $firstName,
         string $middleName,
         string $lastName,
@@ -46,7 +46,7 @@ class User implements Entity {
     }
 
     // Getters
-    public function getId(): int {
+    public function getId() {
         return $this->id;
     }
 
@@ -86,7 +86,7 @@ class User implements Entity {
         return $this->bio;
     }
 
-    public function getProfileLink(): string {
+    public function getProfileLink(): ?string {
         return $this->profileLink;
     }
 

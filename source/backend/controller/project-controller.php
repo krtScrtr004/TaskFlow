@@ -8,7 +8,7 @@ class ProjectController implements Controller
     {
         // TODO: Dummy
 
-        $workers = new ProjectWorkerContainer([
+        $workers = new WorkerContainer([
             new User(
                 uniqid(),
                 'Alice',
@@ -42,7 +42,7 @@ class ProjectController implements Controller
         $start = new DateTime('2023-01-01 12:00:00');
         $end = new DateTime('2023-12-31 23:59:59');
         $completed = new DateTime('2023-11-30 18:30:00');
-        $status = ProjectTaskStatus::getStatusFromDates($start, $end);
+        $status = WorkStatus::getStatusFromDates($start, $end);
 
         $project = new Project(
             uniqid(),
@@ -69,7 +69,7 @@ class ProjectController implements Controller
             new DateTime('2023-01-04 17:00:00'),
             new DateTime('2023-01-12 16:00:00'),
             TaskPriority::HIGH,
-            ProjectTaskStatus::ON_GOING,
+            WorkStatus::ON_GOING,
             new DateTime('2023-01-05 10:00:00'),
         ));
         $tasks->addTask(new Task(
@@ -80,27 +80,27 @@ class ProjectController implements Controller
             new DateTime('2023-02-05 17:00:00'),
             new DateTime('2023-02-06 14:00:00'),
             TaskPriority::MEDIUM,
-            ProjectTaskStatus::PENDING,
+            WorkStatus::PENDING,
             new DateTime('2023-01-15 11:00:00'),
         ));
         $project->setTasks($tasks);
 
-        $phases = new ProjectPhaseContainer([
-            new ProjectPhase(
+        $phases = new PhaseContainer([
+            new Phase(
                 'Phase 1',
                 'Lorem123',
                 new DateTime('2024-12-23'),
                 new DateTime('2024-12-25'),
                 new DateTime('2024-12-30')
             ),
-            new ProjectPhase(
+            new Phase(
                 'Phase 2',
                 'Lorem123',
                 new DateTime('2024-12-23'),
                 new DateTime('2024-12-25'),
                 new DateTime('2024-12-30')
             ),
-            new ProjectPhase(
+            new Phase(
                 'Phase 3',
                 'Lorem123',
                 new DateTime('2024-12-23'),

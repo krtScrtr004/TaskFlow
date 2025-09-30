@@ -1,6 +1,6 @@
 <?php
 
-require_once ENUM_PATH . 'project-task-status.php';
+require_once ENUM_PATH . 'work-status.php';
 require_once ENUM_PATH . 'task-priority.php';
 
 /**
@@ -17,11 +17,11 @@ class ProjectProgressCalculator
 
     // Completion percentage for each status
     private const STATUS_COMPLETION = [
-        ProjectTaskStatus::PENDING->value => 0.0,
-        ProjectTaskStatus::ON_GOING->value => 50.0,
-        ProjectTaskStatus::COMPLETED->value => 100.0,
-        ProjectTaskStatus::DELAYED->value => 25.0,  // Partial progress assumed
-        ProjectTaskStatus::CANCELLED->value => 0.0  // No progress counted
+        WorkStatus::PENDING->value => 0.0,
+        WorkStatus::ON_GOING->value => 50.0,
+        WorkStatus::COMPLETED->value => 100.0,
+        WorkStatus::DELAYED->value => 25.0,  // Partial progress assumed
+        WorkStatus::CANCELLED->value => 0.0  // No progress counted
     ];
 
     /**
@@ -90,7 +90,7 @@ class ProjectProgressCalculator
      */
     private static function calculateSimpleProgress(array $statusCounts, int $totalTasks): float
     {
-        $completedTasks = $statusCounts[ProjectTaskStatus::COMPLETED->value] ?? 0;
+        $completedTasks = $statusCounts[WorkStatus::COMPLETED->value] ?? 0;
         return $totalTasks > 0 ? ($completedTasks / $totalTasks) * 100 : 0.0;
     }
 
@@ -101,7 +101,7 @@ class ProjectProgressCalculator
     {
         $breakdown = [];
         
-        foreach (ProjectTaskStatus::cases() as $status) {
+        foreach (WorkStatus::cases() as $status) {
             $count = $statusCounts[$status->value] ?? 0;
             $percentage = $totalTasks > 0 ? ($count / $totalTasks) * 100 : 0.0;
             
@@ -158,28 +158,28 @@ class ProjectProgressCalculator
         }
 
         // Delayed tasks warning
-        $delayedTasks = $statusCounts[ProjectTaskStatus::DELAYED->value] ?? 0;
+        $delayedTasks = $statusCounts[WorkStatus::DELAYED->value] ?? 0;
         if ($delayedTasks > 0) {
             $delayedPercentage = ($delayedTasks / $totalTasks) * 100;
             $insights[] = "Warning: {$delayedTasks} tasks ({$delayedPercentage}%) are delayed.";
         }
 
         // Cancelled tasks notice
-        $cancelledTasks = $statusCounts[ProjectTaskStatus::CANCELLED->value] ?? 0;
+        $cancelledTasks = $statusCounts[WorkStatus::CANCELLED->value] ?? 0;
         if ($cancelledTasks > 0) {
             $insights[] = "Note: {$cancelledTasks} tasks have been cancelled.";
         }
 
         // High priority tasks status
         $highPriorityTasks = $priorityCounts[TaskPriority::HIGH->value] ?? 0;
-        $completedTasks = $statusCounts[ProjectTaskStatus::COMPLETED->value] ?? 0;
+        $completedTasks = $statusCounts[WorkStatus::COMPLETED->value] ?? 0;
         
         if ($highPriorityTasks > $completedTasks) {
             $insights[] = "Focus needed: {$highPriorityTasks} high-priority tasks require attention.";
         }
 
         // Pending tasks
-        $pendingTasks = $statusCounts[ProjectTaskStatus::PENDING->value] ?? 0;
+        $pendingTasks = $statusCounts[WorkStatus::PENDING->value] ?? 0;
         if ($pendingTasks > ($totalTasks * 0.3)) {
             $insights[] = "Many tasks are still pending - consider resource allocation.";
         }
@@ -197,9 +197,9 @@ class ProjectProgressCalculator
     {
         $recommendations = [];
         
-        $ongoingTasks = $statusCounts[ProjectTaskStatus::ON_GOING->value] ?? 0;
-        $pendingTasks = $statusCounts[ProjectTaskStatus::PENDING->value] ?? 0;
-        $delayedTasks = $statusCounts[ProjectTaskStatus::DELAYED->value] ?? 0;
+        $ongoingTasks = $statusCounts[WorkStatus::ON_GOING->value] ?? 0;
+        $pendingTasks = $statusCounts[WorkStatus::PENDING->value] ?? 0;
+        $delayedTasks = $statusCounts[WorkStatus::DELAYED->value] ?? 0;
         $highPriorityTasks = $priorityCounts[TaskPriority::HIGH->value] ?? 0;
 
         // Resource allocation

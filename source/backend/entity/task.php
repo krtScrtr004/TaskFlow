@@ -8,7 +8,7 @@ class Task implements Entity {
     private DateTime $completionDateTime;
     private DateTime $actualCompletionDateTime;
     private TaskPriority $priority;
-    private ProjectTaskStatus $status;
+    private WorkStatus $status;
     private DateTime $createdDateTime;
 
     public function __construct(
@@ -19,7 +19,7 @@ class Task implements Entity {
         DateTime $completionDateTime,
         DateTime $actualCompletionDateTime,
         TaskPriority $priority,
-        ProjectTaskStatus $status,
+        WorkStatus $status,
         DateTime $createdDateTime
     ) {
         $this->id = $id;
@@ -62,7 +62,7 @@ class Task implements Entity {
     public function getPriority(): TaskPriority {
         return $this->priority;
     }
-    public function getStatus(): ProjectTaskStatus {
+    public function getStatus(): WorkStatus {
         return $this->status;
     }
 
@@ -100,7 +100,7 @@ class Task implements Entity {
         $this->priority = $priority;
     }
 
-    public function setStatus(ProjectTaskStatus $status): void {
+    public function setStatus(WorkStatus $status): void {
         $this->status = $status;
     }
 

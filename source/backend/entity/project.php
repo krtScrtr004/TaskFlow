@@ -7,12 +7,12 @@ class Project implements Entity {
     private User $manager;
     private int $budget; // In cents to avoid floating point issues
     private ?TaskContainer $tasks;
-    private ProjectWorkerContainer $workers;
-    private ?ProjectPhaseContainer $phases;
+    private WorkerContainer $workers;
+    private ?PhaseContainer $phases;
     private DateTime $startDateTime;
     private DateTime $completionDateTime;
     private ?DateTime $actualCompletionDateTime;
-    private ProjectTaskStatus $status;
+    private WorkStatus $status;
     private DateTime $createdDateTime;
 
     public function __construct(
@@ -22,12 +22,12 @@ class Project implements Entity {
         User $manager,
         int $budget,
         ?TaskContainer $tasks,
-        ProjectWorkerContainer $workers,
-        ?ProjectPhaseContainer $phases,
+        WorkerContainer $workers,
+        ?PhaseContainer $phases,
         DateTime $startDateTime,
         DateTime $completionDateTime,
         ?DateTime $actualCompletionDateTime,
-        ProjectTaskStatus $status,
+        WorkStatus $status,
         DateTime $createdDateTime
     ) {
         $this->id = $id;
@@ -63,11 +63,11 @@ class Project implements Entity {
         return $this->tasks;
     }
 
-    public function getWorkers(): ProjectWorkerContainer {
+    public function getWorkers(): WorkerContainer {
         return $this->workers;
     }
 
-    public function getPhases(): ?ProjectPhaseContainer {
+    public function getPhases(): ?PhaseContainer {
         return $this->phases;
     }
 
@@ -91,7 +91,7 @@ class Project implements Entity {
         return $this->actualCompletionDateTime;
     }
 
-    public function getStatus(): ProjectTaskStatus {
+    public function getStatus(): WorkStatus {
         return $this->status;
     }
 
@@ -121,11 +121,11 @@ class Project implements Entity {
         $this->tasks = $tasks;
     }
 
-    public function setWorkers(ProjectWorkerContainer $workers): void {
+    public function setWorkers(WorkerContainer $workers): void {
         $this->workers = $workers;
     }
 
-    public function setPhases(?ProjectPhaseContainer $phases): void {
+    public function setPhases(?PhaseContainer $phases): void {
             $this->phases = $phases;
     }
 
@@ -141,7 +141,7 @@ class Project implements Entity {
         $this->actualCompletionDateTime = $actualCompletionDateTime;
     }
 
-    public function setStatus(ProjectTaskStatus $status): void {
+    public function setStatus(WorkStatus $status): void {
         $this->status = $status;
     }
 
@@ -179,12 +179,12 @@ class Project implements Entity {
             User::fromArray($data['manager']),
             $data['budget'],
             TaskContainer::fromArray($data['tasks']),
-            ProjectWorkerContainer::fromArray($data['workers']),
-            ProjectPhaseContainer::fromArray($data['phases']),
+            WorkerContainer::fromArray($data['workers']),
+            PhaseContainer::fromArray($data['phases']),
             new DateTime($data['startDateTime']),
             new DateTime($data['completionDateTime']),
             new DateTime($data['actualCompletionDateTime']),
-            ProjectTaskStatus::fromString($data['status']),
+            WorkStatus::fromString($data['status']),
             new DateTime($data['createdDateTime'])
         );
     }

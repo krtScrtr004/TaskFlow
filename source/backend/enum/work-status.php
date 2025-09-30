@@ -1,6 +1,6 @@
 <?php
 
-enum ProjectTaskStatus: string
+enum WorkStatus: string
 {
     case PENDING = 'pending';
     case ON_GOING = 'onGoing';
@@ -19,7 +19,7 @@ enum ProjectTaskStatus: string
         };
     }
 
-    public static function getStatusFromDates(DateTime $startDate, DateTime $completionDate): ProjectTaskStatus
+    public static function getStatusFromDates(DateTime $startDate, DateTime $completionDate): WorkStatus
     {
         $now = new DateTime();
 
@@ -58,7 +58,7 @@ enum ProjectTaskStatus: string
         return ob_get_clean();
     }
 
-    public static function fromString(string $value): ProjectTaskStatus
+    public static function fromString(string $value): WorkStatus
     {
         return self::from($value); // This throws ValueError if invalid
     }
