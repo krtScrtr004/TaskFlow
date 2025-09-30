@@ -1,22 +1,19 @@
 <?php
 
 class ProjectPhase implements Entity {
-    private Project $project;
     private string $name;
     private string $description;
     private DateTime $startDateTime;
     private DateTime $completionDateTime;
-    private DateTime $actualCompletionDateTime;
+    private ?DateTime $actualCompletionDateTime;
 
     public function __construct(
-        Project $project,
         string $name,
         string $description,
         DateTime $startDateTime,
         DateTime $completionDateTime,
-        DateTime $actualCompletionDateTime
+        ?DateTime $actualCompletionDateTime
     ) {
-        $this->project = $project;
         $this->name = $name;
         $this->description = $description;
         $this->startDateTime = $startDateTime;
@@ -25,10 +22,6 @@ class ProjectPhase implements Entity {
     }
 
     // Getters
-
-    public function getProject(): Project {
-        return $this->project;
-    }
 
     public function getName(): string {
         return $this->name;
@@ -46,7 +39,7 @@ class ProjectPhase implements Entity {
         return $this->completionDateTime;
     }
 
-    public function getActualCompletionDateTime(): DateTime {
+    public function getActualCompletionDateTime(): ?DateTime {
         return $this->actualCompletionDateTime;
     }
 
@@ -76,7 +69,6 @@ class ProjectPhase implements Entity {
 
     public function toArray(): array {
         return [
-            'project' => $this->project->toArray(),
             'name' => $this->name,
             'description' => $this->description,
             'startDateTime' => $this->startDateTime->format(DateTime::ATOM),
@@ -87,7 +79,6 @@ class ProjectPhase implements Entity {
 
     public static function fromArray(array $data): self {
         return new self(
-            Project::fromArray($data['project']),
             $data['name'],
             $data['description'],
             new DateTime($data['startDateTime']),

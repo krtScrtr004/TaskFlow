@@ -1,21 +1,15 @@
 <?php
 
-class TaskWorker implements Entity {
-    private Task $task;
+class TaskWorker extends User {
     private User $worker;
     private WorkerStatus $status;
 
-    public function __construct(Task $task, User $worker, WorkerStatus $status) {
-        $this->task = $task;
+    public function __construct(User $worker, WorkerStatus $status) {
         $this->worker = $worker;
         $this->status = $status;
     }
 
-    // Getters 
-
-    public function getTask(): Task {
-        return $this->task;
-    }
+    // Getters
 
     public function getWorker(): User {
         return $this->worker;
@@ -26,10 +20,6 @@ class TaskWorker implements Entity {
     }
 
     // Setter
-
-    public function setTask(Task $task): void {
-        $this->task = $task;
-    }
 
     public function setWorker(User $worker): void {
         $this->worker = $worker;
@@ -43,7 +33,6 @@ class TaskWorker implements Entity {
 
     public function toArray(): array {
         return [
-            'task' => $this->task->toArray(),
             'worker' => $this->worker->toArray(),
             'status' => $this->status->value
         ];
@@ -51,7 +40,6 @@ class TaskWorker implements Entity {
 
     public static function fromArray(array $data): self {
         return new TaskWorker(
-            Task::fromArray($data['task']),
             User::fromArray($data['worker']),
             WorkerStatus::from($data['status'])
         );

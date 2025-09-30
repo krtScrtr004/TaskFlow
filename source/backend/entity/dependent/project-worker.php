@@ -1,21 +1,15 @@
 <?php
 
-class ProjectWorker implements Entity {
-    private Project $project;
+class ProjectWorker extends User {
     private User $worker;
     private WorkerStatus $status;
 
-    public function __construct(Project $project, User $worker, WorkerStatus $status) {
-        $this->project = $project;
+    public function __construct(User $worker, WorkerStatus $status) {
         $this->worker = $worker;
         $this->status = $status;
     }
 
     // Getters 
-
-    public function getProject(): Project {
-        return $this->project;
-    }
 
     public function getWorker(): User {
         return $this->worker;
@@ -26,10 +20,6 @@ class ProjectWorker implements Entity {
     }
 
     // Setter
-
-    public function setProject(Project $project): void {
-        $this->project = $project;
-    }
 
     public function setWorker(User $worker): void {
         $this->worker = $worker;
@@ -43,7 +33,6 @@ class ProjectWorker implements Entity {
 
     public function toArray(): array {
         return [
-            'project' => $this->project->toArray(),
             'worker' => $this->worker->toArray(),
             'status' => $this->status->value
         ];
@@ -51,7 +40,6 @@ class ProjectWorker implements Entity {
 
     public static function fromArray(array $data): self {
         return new ProjectWorker(
-            Project::fromArray($data['project']),
             User::fromArray($data['worker']),
             WorkerStatus::from($data['status'])
         );
