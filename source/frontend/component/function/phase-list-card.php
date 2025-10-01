@@ -59,7 +59,7 @@ function phaseListCard(Phase $phase): string
         </div>
 
         <!-- Phase Status -->
-        <div class=center-child>
+        <div class="center-child">
             $statusBadge
         </div>
     </div>
