@@ -6,7 +6,7 @@ class PhaseContainer extends Container
     {
         foreach ($phases as $phase) {
             if (!$phase instanceof Phase) {
-                throw new InvalidArgumentException('All elements of tasks array must be instances of Task.');
+                throw new InvalidArgumentException('All elements of phases array must be instances of Phase.');
             }
             $this->add($phase);
         }
