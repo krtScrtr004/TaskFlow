@@ -152,7 +152,6 @@ class Project implements Entity {
     // Other methods
 
     public function toArray(): array {
-        echo $this->id;
 
         return [
             'id' => $this->id,
