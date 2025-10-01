@@ -1,7 +1,7 @@
 <?php
 if (!$component) {
     throw new Error('Component is not defined');
-}   
+}
 ?>
 
 <!DOCTYPE html>
@@ -19,6 +19,7 @@ if (!$component) {
     <link rel="stylesheet" href="<?= STYLE_PATH . 'component.css' ?>">
 
     <link rel="stylesheet" href="<?= STYLE_PATH . 'single-form.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'edit-project.css' ?>">
 </head>
 
 <body class="single-form">
@@ -34,15 +35,16 @@ if (!$component) {
                 </button>
             </div>
 
-            <?php require_once COMPONENT_PATH . $form ?>
+            <div> <?php require_once COMPONENT_PATH . $form ?>
+            </div>
         </div>
     </main>
 
     <script type="module" src="<?= EVENT_PATH . 'back-button.js' ?>" defer></script>
     <?php if ($scripts): ?>
-        <?php foreach ($scripts as $script): 
-            $scriptPath = EVENT_PATH . $script . '.js';    
-        ?>
+        <?php foreach ($scripts as $script):
+            $scriptPath = EVENT_PATH . $script . '.js';
+            ?>
             <script type="module" src="<?= $scriptPath ?>" defer></script>
         <?php endforeach; ?>
     <?php endif; ?>

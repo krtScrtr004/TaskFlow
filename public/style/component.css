@@ -180,9 +180,32 @@ main.main-page {
 	margin-right: 10px;
 }
 
+.text-w-icon h1,
+.text-w-icon h3,
+.text-w-icon h6,
+.text-w-icon p {
+	white-space: nowrap;
+}
+
+button > .text-w-icon {
+	justify-content: center;
+}
+
 /* ---------------- STATUS BADGE ---------------- */
 .status-badge {
 	width: 13ch;
 	padding: 0.3rem 0.8rem;
 	border-radius: 5rem;
+}
+
+/* ---------------- INPUT LABEL CONTAINER ---------------- */
+.input-label-container {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem
+}
+
+.input-label-container > label {
+	font-size: 1.2rem;
+	font-weight: 700;
 }

@@ -6,6 +6,7 @@
 
 		"TaskFlow/forget-password": "SingleFormController",
 		"TaskFlow/change-password": "SingleFormController",
+		"TaskFlow/edit-project/{projectId:[\\w+_-]+}": "SingleFormController",
 
 		"TaskFlow/project": "ProjectController"
 	}

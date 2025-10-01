@@ -1,0 +1,85 @@
+.single-form:has(.edit-project) > main {
+    padding: 3rem 0;
+}
+
+.single-form:has(.edit-project) .single-form-form {
+    width: fit-content;
+    height: 100%;
+    overflow: auto;
+}
+
+.edit-project {
+    height: 100%;
+    gap: var(--space);
+}
+
+.edit-project .heading {
+    line-height: 1.6;
+}
+
+.edit-project .heading > .title {
+    gap: 0.7rem
+}
+
+.edit-project .heading .project-id {
+    font-size: 1.1rem;
+    font-weight: 300;
+}
+
+.edit-project .heading > p {
+    font-weight: 500;
+}
+
+#editable_project_details {
+    gap: 1rem;
+}
+
+#editable_project_details > fieldset {
+    flex: 1;
+    height: fit-content;
+    gap: 0.8rem;
+    font-weight: 600;
+}
+
+#editable_project_details .project-secondary-info input,
+#editable_project_details .phase-secondary-info input {
+    height: 100%;
+}
+
+.project-secondary-info {
+    gap: 1rem;
+}
+
+.project-secondary-info > * {
+    flex: 1;
+}
+
+.phase-details {
+    gap: var(--space);
+}
+
+.phase-details legend {
+    font-size: 1.7rem;
+    margin-bottom: 1rem;
+} 
+
+.phase-name {
+    font-size: 1.5rem !important;
+    margin-bottom: 0.3rem;
+}
+
+.phase-details-form,
+.phase-secondary-info {
+    gap: 1rem;
+}
+
+#save_project_info_button {
+    width: fit-content;
+    padding-right: 1rem;
+    padding-left: 1rem;
+    margin-top: 1rem;
+}
+
+#save_project_info_button h3 {
+    font-size: 1.3rem;
+}

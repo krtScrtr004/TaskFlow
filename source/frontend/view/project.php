@@ -72,7 +72,7 @@
                             <?php if (Role::isProjectManager(Me::getInstance())): ?>
                                 <div>
                                     <!-- Edit Project -->
-                                    <a class="edit-project" href="">
+                                    <a class="edit-project" href="<?= REDIRECT_PATH . 'edit-project/' . $projectId ?>">
                                         <img 
                                             src="<?= ICON_PATH . 'edit_b.svg' ?>" 
                                             alt="Edit Project"

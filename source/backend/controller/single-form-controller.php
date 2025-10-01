@@ -15,11 +15,18 @@ class SingleFormController implements Controller
             'form'  => 'changePassword',
             'script' => ['password-list-validator']
         ],
+        'editProject' => [
+            'title' => 'Edit Project Details',
+            'description' => 'Modify the details of your project below.',
+            'form'  => 'editProject',
+            'script' => null,
+            // 'script' => ['project-form-validator']
+        ]
     ];
 
     private function __construct() {}
 
-    public static function index(): void
+    public static function index(array $args = []): void
     {
         $instance = new self();
         $components = $instance->components;
