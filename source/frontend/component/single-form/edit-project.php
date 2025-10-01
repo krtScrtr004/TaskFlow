@@ -22,6 +22,7 @@ $projectCompletionDate = $project->getCompletionDateTime()->format('Y-m-d');
 $projectHasStarted = $project->getStartDateTime() <= new DateTime() ? 'disabled' : '';
 $projectIsCompleted = $project->getCompletionDateTime() < new DateTime() ? 'disabled' : '';
 
+$projectStatus = $project->getStatus();
 $projectPhases = $project->getPhases();
 ?>
 
@@ -30,6 +31,10 @@ $projectPhases = $project->getPhases();
 
     <!-- Heading -->
     <section class="heading">
+        <div class="cannot-edit-warning">
+            <p class="white-text">Editing unavailable. Project has been completed or cancelled.</p>
+        </div>
+
         <div class="title flex-row flex-child-center-h">
             <div class="project-name text-w-icon">
                 <img src="<?= ICON_PATH . 'project_b.svg' ?>" alt="<?= $projectName ?>" title="<?= $projectName ?>"
@@ -201,14 +206,17 @@ $projectPhases = $project->getPhases();
         </fieldset>
 
         <!-- Save Button -->
-        <button id="save_project_info_button" type="button" class="center-child float-right blue-bg white-text" <?= $projectIsCompleted ?>>
-            <div class="text-w-icon">
-                <img src="<?= ICON_PATH . 'save_w.svg' ?>" alt="Save Project Info" title="Save Project Info"
-                    height="20">
+        <?php if (!$projectStatus === WorkStatus::COMPLETED && !$projectStatus === WorkStatus::CANCELLED) : ?>
+            <button id="save_project_info_button" type="button" class="center-child float-right blue-bg white-text"
+                <?= $projectIsCompleted ?>>
+                <div class="text-w-icon">
+                    <img src="<?= ICON_PATH . 'save_w.svg' ?>" alt="Save Project Info" title="Save Project Info"
+                        height="20">
 
-                <p class="white-text">Save Info</p>
-            </div>
-        </button>
+                    <p class="white-text">Save Info</p>
+                </div>
+            </button>
+        <?php endif; ?>
 
     </form>
 </section>
