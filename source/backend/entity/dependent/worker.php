@@ -51,11 +51,49 @@ class Worker extends User {
 
     // Other methods
 
+    public static function toUser(Worker $worker): User {
+        return new User(
+            $worker->getId(),
+            $worker->getFirstName(),
+            $worker->getMiddleName(),
+            $worker->getLastName(),
+            $worker->getGender(),
+            $worker->getBirthDate(),
+            Role::WORKER,
+            $worker->getContactNumber(),
+            $worker->getEmail(),
+            $worker->getBio(),
+            $worker->getProfileLink(),
+            $worker->getJoinedDateTime()
+        );
+    }
+
     public function toArray(): array {
         $worker = parent::toArray();
         $worker['role'] = Role::WORKER->value;
         
         return $worker;
+    }
+
+    public static function fromUser(User $user): Worker {
+        if (!Role::isWorker($user)) {
+            throw new InvalidArgumentException('User must have the Worker role to be converted to Worker.');
+        }
+
+        return new Worker(
+            $user->getId(),
+            $user->getFirstName(),
+            $user->getMiddleName(),
+            $user->getLastName(),
+            $user->getGender(),
+            $user->getBirthDate(),
+            $user->getContactNumber(),
+            $user->getEmail(),
+            $user->getBio(),
+            $user->getProfileLink(),
+            WorkerStatus::ACTIVE,
+            $user->getJoinedDateTime()
+        );
     }
 
     public static function fromArray(array $data): self {
