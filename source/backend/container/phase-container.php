@@ -22,8 +22,8 @@ class PhaseContainer extends Container
 
     public function remove($item): void
     {
-        if ($item instanceof Phase) {
-            throw new InvalidArgumentException('Only Phase instances can be added to PhaseContainer.');
+        if (!$item instanceof Phase) {
+            throw new InvalidArgumentException('Only Phase instances can be removed from PhaseContainer.');
         }
 
         $index = array_search($item, $this->items, true);
