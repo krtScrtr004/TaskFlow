@@ -22,10 +22,10 @@ async function createWorkerInfoCard(workerId) {
     Loader.full(workerInfoCardTemplate.querySelector('.worker-info-card'))
 
     const worker = await fetchWorkerInfo(workerId)
-    if (!worker) {
+    if (!worker || !worker[0]) {
         throw new Error('Worker data not found!')
     }
-    addInfoToCard(workerInfoCardTemplate, worker)
+    addInfoToCard(workerInfoCardTemplate, worker[0])
 
     Loader.delete()
 }
@@ -93,7 +93,7 @@ function getCardDomElements(card) {
     }
 }
 
-const workerList = document.querySelector('.worker-list')
+const workerList = document.querySelector('.project-workers > .worker-list')
 if (!workerList) {
     console.error('Worker list container not found!')
 } else {
