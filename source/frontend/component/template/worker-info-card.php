@@ -31,20 +31,29 @@
         <section class="worker-statistics-container flex-row">
 
             <!-- Total Tasks -->
-            <div class="worker-total-tasks worker-statistic">
-                <p class="center-text">Total Tasks</p>
+            <div class="worker-total-tasks worker-statistic flex-col flex-child-center-h">
+                <div class="text-w-icon">
+                    <img src="<?= ICON_PATH . 'task_b.svg' ?>" alt="Total Tasks" title="Total Tasks" height="20">
+                    <p class="center-text">Total Tasks</p>
+                </div>
                 <h4 class="center-text"></h4>
             </div>
 
             <!-- Completed Tasks -->
-            <div class="worker-completed-tasks worker-statistic">
-                <p class="center-text">Completed Tasks</p>
+            <div class="worker-completed-tasks worker-statistic flex-col flex-child-center-h">
+                <div class="text-w-icon">
+                    <img src="<?= ICON_PATH . 'complete_b.svg' ?>" alt="Completed Tasks" title="Completed Tasks" height="20">
+                    <p class="center-text">Completed Tasks</p>
+                </div>
                 <h4 class="center-text"></h4>
             </div>
 
             <!-- Performance -->
-            <div class="worker-performance worker-statistic">
-                <p class="center-text">Performance</p>
+            <div class="worker-performance worker-statistic flex-col flex-child-center-h">
+                <div class="text-w-icon">
+                    <img src="<?= ICON_PATH . 'progress_b.svg' ?>" alt="Performance" title="Performance" height="20">
+                    <p class="center-text">Performance</p>
+                </div>
                 <h4 class="center-text"></h4>
             </div>
         </section>

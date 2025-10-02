@@ -1,3 +1,51 @@
+.worker-info-card {
+	min-height: 20rem;
+	max-height: 70vh;
+	padding: var(--space);
+	border: var(--border-radius);
+	gap: var(--space);
+}
+
+.worker-info-card .worker-profile-picture {
+	margin-right: 0.5rem
+}
+
+.worker-info-card .worker-name {
+	font-size: 1.5rem;
+	font-weight: 600;
+}
+
+.worker-info-card .worker-id {
+	font-size: 1.2rem;
+}
+
+.worker-info-card > .worker-bio {
+	width: 60ch;
+	font-size: 1rem;
+}
+
+.worker-info-card > .worker-statistics-container > * {
+	flex: 1;
+}
+
+.worker-statistic > .text-w-icon {
+	font-size: 1.1rem;
+	margin-bottom: 0.3rem;
+}
+
+.worker-statistic > h4 {
+	font-size: 1.8rem;
+}
+
+.worker-info-card > .contact-info {
+	gap: 0.3rem;
+} 
+
+.worker-info-card > #terminate_worker_button {
+	width: fit-content;
+	padding: 0.5rem 1rem;
+}
+
 .main-project-content .content-section-block {
 	padding: var(--space);
 	border-radius: var(--border-radius);

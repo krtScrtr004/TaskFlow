@@ -20,7 +20,6 @@ class SingleFormController implements Controller
             'description' => 'Modify the details of your project below.',
             'form'  => 'editProject',
             'script' => null,
-            // 'script' => ['project-form-validator']
         ]
     ];
 

@@ -1,9 +1,13 @@
 <?php
 
-class Response {
-    private function __construct() {}
+class Response
+{
+    private function __construct()
+    {
+    }
 
-    public static function success($data, $message, $statusCode = 200): void {
+    public static function success($data, $message, $statusCode = 200): void
+    {
         self::sendResponse($statusCode, [
             'status' => 'success',
             'message' => $message,
@@ -11,7 +15,8 @@ class Response {
         ]);
     }
 
-    public static function error($message, $statusCode = 400, $errors = []): void {
+    public static function error($message, $statusCode = 400, $errors = []): void
+    {
         self::sendResponse($statusCode, [
             'status' => 'error',
             'message' => $message,
@@ -19,7 +24,8 @@ class Response {
         ]);
     }
 
-    private static function sendResponse($statusCode, $body) {
+    private static function sendResponse($statusCode, $body)
+    {
         http_response_code($statusCode);
         header('Content-Type: application/json');
         ob_clean();
