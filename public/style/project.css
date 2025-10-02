@@ -1,3 +1,5 @@
+/* Worker Info Card */
+
 .worker-info-card {
 	min-height: 20rem;
 	max-height: 70vh;
@@ -16,7 +18,7 @@
 }
 
 .worker-info-card .worker-id {
-	font-size: 1.2rem;
+	font-size: 1rem;
 }
 
 .worker-info-card > .worker-bio {
@@ -45,6 +47,55 @@
 	width: fit-content;
 	padding: 0.5rem 1rem;
 }
+
+/* Add Worker */
+
+.add-worker-modal {
+	width: 25rem;
+	padding: 2rem;
+	gap: 1rem;
+}
+
+.add-worker-modal > .heading > .text-w-icon {
+	margin-bottom: 0.8rem;
+}
+
+.add-worker-modal .title {
+	font-size: 1.7rem;
+}
+
+.add-worker-modal .worker-list {
+	min-height: 10rem;
+	max-height: 15rem;
+	gap: 0.8rem;
+	overflow: auto;
+}
+
+.add-worker-modal .worker-list-card h4, 
+.add-worker-modal .worker-list-card p {
+	max-width: 23ch;
+}
+
+.add-worker-modal .worker-list-card h4 {
+	font-size: 1.1rem;
+}
+
+.add-worker-modal .worker-checkbox > input[type="checkbox"] {
+	height: 16px;
+	width: 16px;
+	margin-right: 0.5rem;
+}
+
+.add-worker-modal > .buttons {
+	gap: 0.5rem;
+}
+
+.add-worker-modal > .buttons > * {
+	width: 13ch;
+}
+
+
+/* Main */
 
 .main-project-content .content-section-block {
 	padding: var(--space);
@@ -159,12 +210,12 @@
     border-radius: var(--border-radius);
 }
 
-.worker-list-card:hover {
+.project-workers .worker-list-card:hover {
     opacity: 0.7;
 }
 
-.worker-list-card h4, 
-.worker-list-card p {
+.project-workers .worker-list-card h4, 
+.project-workers .worker-list-card p {
     max-width: 15ch;
 }
 

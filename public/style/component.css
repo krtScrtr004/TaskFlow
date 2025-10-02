@@ -209,3 +209,30 @@ button > .text-w-icon {
 	font-size: 1.2rem;
 	font-weight: 700;
 }
+
+/* ---------------- SEARCH BAR ---------------- */
+
+.search-bar {
+	display: flex;
+	border: 1px solid var(--light-black);
+	border-radius: var(--border-radius);
+	align-items: center;
+	background-color: transparent;
+}
+
+.search-bar > input {
+	flex: 1;
+	font-size: 0.8rem;
+	border: none;
+}
+
+.search-bar > input:focus,
+.search-bar > input:hover,
+.search-bar > input:active {
+	outline: none;
+}
+
+.search-bar > button {
+	width: fit-content;
+	padding: 0.3rem;
+}

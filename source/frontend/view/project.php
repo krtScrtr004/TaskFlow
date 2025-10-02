@@ -23,6 +23,7 @@
     require_once COMPONENT_PATH . 'sidenav.php';
     
     require_once COMPONENT_PATH . 'template/worker-info-card.php';
+    require_once COMPONENT_PATH . 'template/add-worker-to-project.php';
     ?>
     
     <main class="main-page">
@@ -346,6 +347,10 @@
     <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'progress-bar.js' ?>"></script>
     <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'task-chart.js' ?>"></script>
     <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'worker-card.js' ?>"></script>
+
+    <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'add-worker-modal' . DS . 'open.js' ?>"></script>
+    <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'add-worker-modal' . DS . 'close.js' ?>"></script>
+    <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'add-worker-modal' . DS . 'search.js' ?>"></script>
 </body>
 
 </html>
