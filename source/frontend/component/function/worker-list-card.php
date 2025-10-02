@@ -10,7 +10,7 @@ function workerListCard(Worker $worker): string
 
     return <<<HTML
     <!-- Worker List Card -->
-    <button class="worker-list-card unset-button">
+    <button class="worker-list-card unset-button" data-id="$id">
         <img
             src="$profileLink"
             alt="$name"
