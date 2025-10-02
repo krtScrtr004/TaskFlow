@@ -1,0 +1,5 @@
+{
+    "GET": {
+        "TaskFlow/get-worker-info/{workerId:[\\w+_-]+}": ["WorkerController", "getWorkerInfo"]
+    }
+}
