@@ -139,6 +139,23 @@ class User implements Entity {
         $this->joinedDateTime = $joinedDateTime;
     }
 
+    public function toWorker(): Worker {
+        return new Worker(
+            $this->id,
+            $this->firstName,
+            $this->middleName,
+            $this->lastName,
+            $this->gender,
+            $this->birthDate,
+            $this->contactNumber,
+            $this->email,
+            $this->bio,
+            $this->profileLink,
+            WorkerStatus::ACTIVE,
+            new DateTime()
+        );
+    }
+
     public function toArray(): array {
         return [
             'id' => $this->id,
