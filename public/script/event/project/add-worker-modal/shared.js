@@ -1,0 +1,82 @@
+import { Http } from '../../../utility/http.js'
+
+export const selectedUsers = []
+let isLoading = false
+
+const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
+
+export async function fetchWorkers(key = null) {
+    if (isLoading) return
+    isLoading = true
+
+    const param = (key) ? key : ''
+    const response = await Http.GET('get-worker-info/' + param)
+    if (!response) {
+        throw new Error('Workers data not found!')
+    }
+
+    isLoading = false
+    return response.data
+}
+
+export function createWorkerListCard(worker) {
+    const ICON_PATH = 'asset/image/icon/'
+
+    const workerList = addWorkerModalTemplate.querySelector('.worker-list')
+
+    const html = `
+        <div class="worker-checkbox flex-row flex-child-center-h">
+            <input type="checkbox" name="${worker.id}" id="${worker.id}">
+
+            <label for="${worker.id}" class="worker-list-card" data-id="${worker.id}">
+                <img src="${worker.profilePicture || ICON_PATH + 'profile_b.svg'}" alt="${worker.name}" title="${worker.name}" height="40">
+
+                <div>
+                    <h4 class="wrap-text">${worker.name}</h4>
+                    <p><em>${worker.id}</em></p>
+                </div>
+            </label>
+        </div>`
+    workerList.insertAdjacentHTML('afterbegin', html)
+}
+
+let isSelectWorkerEventInitialized = false
+export function selectWorker() {
+    if (isSelectWorkerEventInitialized) return 
+    
+    const workerList = addWorkerModalTemplate.querySelector('.worker-list')
+    
+    // Use event delegation but be more specific about what triggers the action
+    workerList.addEventListener('click', e => {
+        // Only proceed if clicked on checkbox, label, or worker-checkbox div
+        const workerCheckbox = e.target.closest('.worker-checkbox')
+        if (!workerCheckbox) return
+        
+        // Prevent multiple triggers
+        e.stopPropagation()
+        e.preventDefault()
+        
+        const checkbox = workerCheckbox.querySelector('input[type="checkbox"]')
+        if (!checkbox) return
+
+        // Toggle the checkbox state
+        const wasChecked = checkbox.checked
+        checkbox.checked = !wasChecked
+
+        // Update selectedUsers array
+        const workerId = checkbox.id
+        if (checkbox.checked) {
+            if (!selectedUsers.includes(workerId)) {
+                selectedUsers.push(workerId)
+            }
+        } else {
+            const index = selectedUsers.indexOf(workerId)
+            if (index > -1) {
+                selectedUsers.splice(index, 1)
+            }
+        }
+        console.table(selectedUsers)
+    })
+    
+    isSelectWorkerEventInitialized = true
+}
