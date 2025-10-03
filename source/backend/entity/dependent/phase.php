@@ -91,7 +91,7 @@ class Phase implements Entity {
 
     public function toArray(): array {
         return [
-            'id' => $this->id,
+            'id' => $this->id ?? uniqid(),
             'name' => $this->name,
             'description' => $this->description,
             'startDateTime' => $this->startDateTime->format(DateTime::ATOM),

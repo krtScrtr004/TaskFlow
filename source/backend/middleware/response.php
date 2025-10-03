@@ -15,7 +15,7 @@ class Response
         ]);
     }
 
-    public static function error($message, $statusCode = 400, $errors = []): void
+    public static function error($message, $errors = [], $statusCode = 400): void
     {
         self::sendResponse($statusCode, [
             'status' => 'error',
@@ -24,7 +24,7 @@ class Response
         ]);
     }
 
-    private static function sendResponse($statusCode, $body)
+    private static function sendResponse($statusCode, $body = [])
     {
         http_response_code($statusCode);
         header('Content-Type: application/json');
