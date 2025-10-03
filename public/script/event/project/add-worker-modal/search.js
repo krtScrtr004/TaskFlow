@@ -9,15 +9,34 @@ if (addWorkerModalTemplate) {
 
     async function searchForWorker() {
         const workerList = addWorkerModalTemplate.querySelector('.worker-list')
+        const noWorkersWall = workerList.parentElement.querySelector('.no-workers-wall')
+
         workerList.textContent = ''
+
+        // Hide no workers message and show worker list
+        noWorkersWall.classList.remove('flex-col')
+        noWorkersWall.classList.add('no-display')
+
+        workerList.classList.add('flex-col')
+        workerList.classList.remove('no-display')
 
         Loader.full(workerList)
 
-        const input = searchBarForm.querySelector('input[type="text"]')
+        const searchTerm = searchBarForm.querySelector('input[type="text"]').value.trim()
 
         try {
-            const workers = await fetchWorkers(input.value.trim())
-            workers.forEach(worker => createWorkerListCard(worker))
+            const workers = await fetchWorkers(searchTerm)
+
+            if (workers && workers.length > 0) {
+                workers.forEach(worker => createWorkerListCard(worker))
+            } else {
+                // Show no workers message if no results
+                noWorkersWall.classList.add('flex-col')
+                noWorkersWall.classList.remove('no-display')
+
+                workerList.classList.remove('flex-col')
+                workerList.classList.add('no-display')
+            }
         } catch (error) {
             console.error(error.message)
         } finally {

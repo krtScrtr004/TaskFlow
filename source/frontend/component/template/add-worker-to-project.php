@@ -24,7 +24,15 @@
         </section>
 
         <!-- Worker List -->
-        <section class="worker-list flex-col"></section>
+        <section class="worker-list flex-col">
+        </section>
+
+        <!-- No Workers Wall -->
+        <div class="no-workers-wall no-content-wall no-display">
+            <img src="<?= ICON_PATH . 'empty_b.svg' ?>" alt="No workers assigned" title="No workers assigned"
+                height="70">
+            <h3 class="center-text">No workers found.</h3>
+        </div>
 
         <!-- Buttons -->
         <section class="buttons flex-row flex-child-end-v">

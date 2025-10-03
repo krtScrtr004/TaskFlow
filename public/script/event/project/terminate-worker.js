@@ -45,6 +45,12 @@ if (workerInfoCardTemplate) {
                 'The worker has been successfully terminated from the project.'
             )
             targetWorker.remove()
+            const remainingWorkerListCard = workerList.querySelectorAll('.worker-list-card')
+            if (remainingWorkerListCard.length === 0) {
+                const noWorkersWall = workerList.querySelector('.no-workers-wall')
+                noWorkersWall.classList.remove('no-display')
+                noWorkersWall.classList.add('flex-col')
+            }
 
             const closeButton = workerInfoCardTemplate.querySelector('#worker_info_card_close_button')
             closeButton.click() 

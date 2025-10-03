@@ -37,7 +37,7 @@
             }
             ?>
             <!-- No project -->
-            <section class="no-project-wall full-body-content flex-col flex-child-center-h flex-child-center-v">
+            <section class="no-project-wall no-content-wall full-body-content flex-col">
                 <img src="<?= ICON_PATH . 'empty_b.svg' ?>" alt="No active project found" title="No active project found"
                     height="150">
                 <h3>No active project found. <?= $createProject ?></h3>
@@ -310,16 +310,29 @@
                         <div class="worker-list flex-col">
                             <?php
                             $projectWorkers = $project->getWorkers();
+                            $hasWorker = $projectWorkers->count() > 0;
+
                             foreach ($projectWorkers as $worker) {
                                 // Worker List Card
                                 echo workerListCard($worker);
                             }
+
+                            $noWorkersWallClass = $hasWorker ? 'no-display' : 'flex-col';
                             ?>
+
+                            <!-- No Workers Wall -->
+                            <div
+                                class="no-workers-wall no-content-wall <?= $noWorkersWallClass ?> ">
+                                <img src="<?= ICON_PATH . 'empty_b.svg' ?>" alt="No workers assigned"
+                                    title="No workers assigned" height="70">
+                                <h3 class="center-text">No workers assigned to this project.</h3>
+                            </div>
 
                             <!-- Add Worker Button -->
                             <?php if (Role::isProjectManager(Me::getInstance())): ?>
                                 <div class="">
-                                    <button id="add_worker_button" type="button" class="float-right blue-bg" data-projectId="<?= $projectId ?>">
+                                    <button id="add_worker_button" type="button" class="float-right blue-bg"
+                                        data-projectId="<?= $projectId ?>">
                                         <div class="heading-title text-w-icon center-child">
                                             <img src="<?= ICON_PATH . 'add_w.svg' ?>" alt="Add Worker" title="Add Worker"
                                                 height="18">

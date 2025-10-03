@@ -206,6 +206,10 @@
     gap: 1rem;
 }
 
+.no-workers-wall {
+	min-height: 13rem;
+}
+
 .worker-list-card {
     display: flex;
     gap: 0.5rem;
