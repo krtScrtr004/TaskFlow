@@ -2,5 +2,9 @@
     "GET": {
         "TaskFlow/get-worker-info/": ["WorkerController", "getWorkerInfo"],
         "TaskFlow/get-worker-info/{key:[\\w+\\s_-]+}": ["WorkerController", "getWorkerInfo"]
+    },
+
+    "POST": {
+        "TaskFlow/add-phase/": ["PhaseController", "addPhase"]
     }
 }
