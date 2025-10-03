@@ -14,7 +14,7 @@ function phaseListCard(Phase $phase): string
     );
     $status = $phase->getStatus();
 
-    $statusBadge = $status->badge();
+    $statusBadge = WorkStatus::badge($status);
 
     return <<<HTML
     <hr>

@@ -18,9 +18,6 @@ if (editableProjectDetailsForm) {
         addPhaseModal.classList.add('flex-row')
         addPhaseModal.classList.remove('no-display')
     })
-
-    // TODO: If the form is submitted, submit it to the BE and add the new phase to the list of phases
-
 } else {
     console.error('Editable Project Details form is not found.')
 }

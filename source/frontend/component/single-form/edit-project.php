@@ -169,7 +169,7 @@ include_once COMPONENT_PATH . 'template/add-phase-modal.php';
                                     <h3 class="phase-name wrap-text"><?= $phaseName ?></h3>
                                 </div>
 
-                                <?= $phaseStatus->badge() ?>
+                                <?= WorkStatus::badge($phaseStatus) ?>
                             </div>
 
                             <?php if ($phaseStatus === WorkStatus::PENDING || $phaseStatus === WorkStatus::ON_GOING): ?>
@@ -193,7 +193,7 @@ include_once COMPONENT_PATH . 'template/add-phase-modal.php';
                                         </div>
                                     </label>
                                 </label>
-                                <textarea name="<?= $phaseName ?>_description" id="<?= $phaseName ?>_description" rows="5"
+                                <textarea class="phase-description" name="<?= $phaseName ?>_description" id="<?= $phaseName ?>_description" rows="5"
                                     cols="10" <?= $phaseIsCompleted ?>><?= $phaseDescription ?></textarea>
                             </div>
 
@@ -210,7 +210,7 @@ include_once COMPONENT_PATH . 'template/add-phase-modal.php';
                                             <p>Start Date</p>
                                         </div>
                                     </label>
-                                    <input type="date" name="<?= $phaseName ?>_start_date" id="<?= $phaseName ?>_start_date"
+                                    <input type="date" class="phase-start-datetime" name="<?= $phaseName ?>_start_date" id="<?= $phaseName ?>_start_date"
                                         value="<?= $phaseStartDate ?>" <?= $phaseHasStarted ?> required>
                                 </div>
 
@@ -224,7 +224,7 @@ include_once COMPONENT_PATH . 'template/add-phase-modal.php';
                                             <p>Completion Date</p>
                                         </div>
                                     </label>
-                                    <input type="date" name="<?= $phaseName ?>_completion_date" id="<?= $phaseName ?>_completion_date"
+                                    <input type="date" class="phase-completion-datetime" name="<?= $phaseName ?>_completion_date" id="<?= $phaseName ?>_completion_date"
                                         value="<?= $phaseCompletionDate ?>" <?= $phaseIsCompleted ?> required>
                                 </div>
                             </div>

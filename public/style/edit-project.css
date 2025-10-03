@@ -10,7 +10,6 @@
 }
 
 #add_phase_modal #add_new_phase_button {
-    width: fit-content;
     padding-right: 1rem;
     padding-left: 1rem;
 }
@@ -126,7 +125,6 @@
 }
 
 #add_phase_button {
-    width: fit-content;
     padding-right: 1rem;
     padding-left: 1rem;
     margin-top: 1rem;
@@ -143,4 +141,8 @@
 
 #add_phase_button h3 {
     font-size: 1.2rem;
+}
+
+#save_project_info_button {
+    width: 100% !important;
 }

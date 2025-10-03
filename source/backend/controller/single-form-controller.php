@@ -19,7 +19,10 @@ class SingleFormController implements Controller
             'title' => 'Edit Project Details',
             'description' => 'Modify the details of your project below.',
             'form'  => 'editProject',
-            'script' => ['single-form/edit-project/add-phase'],
+            'script' => [
+                'single-form/edit-project/add-phase',
+                'single-form/edit-project/send-phase',
+            ],
         ]
     ];
 

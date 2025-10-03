@@ -13,6 +13,10 @@ main.main-page {
 	outline: none;
 }
 
+button:has(.text-w-icon) {
+	width: 20ch;
+}
+
 .line-divider > hr {
 	width: 100%;
 }
@@ -71,14 +75,19 @@ main.main-page {
 
 .modal-wrapper,
 .modal-wrapper > * {
-	z-index: 1100;
+	z-index: 1000;
 }
 
 .modal-wrapper,
 .modal-wrapper > section.dialog {
+	min-width: 20rem;
 	justify-content: center;
 	align-items: center;
 	gap: 1rem;
+}
+
+.modal-wrapper:has(.dialog) {
+	z-index: 1100 !important;
 }
 
 .modal-wrapper {

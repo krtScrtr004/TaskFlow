@@ -1,6 +1,7 @@
 <?php
 
-class Phase implements Entity {
+class Phase implements Entity
+{
     private $id;
     private string $name;
     private string $description;
@@ -29,67 +30,82 @@ class Phase implements Entity {
 
     // Getters
 
-    public function getId() {
+    public function getId()
+    {
         return $this->id;
     }
 
-    public function getName(): string {
+    public function getName(): string
+    {
         return $this->name;
     }
 
-    public function getDescription(): string {
+    public function getDescription(): string
+    {
         return $this->description;
     }
 
-    public function getStartDateTime(): DateTime {
+    public function getStartDateTime(): DateTime
+    {
         return $this->startDateTime;
     }
 
-    public function getCompletionDateTime(): DateTime {
+    public function getCompletionDateTime(): DateTime
+    {
         return $this->completionDateTime;
     }
 
-    public function getActualCompletionDateTime(): ?DateTime {
+    public function getActualCompletionDateTime(): ?DateTime
+    {
         return $this->actualCompletionDateTime;
     }
 
-    public function getStatus(): WorkStatus {
+    public function getStatus(): WorkStatus
+    {
         return $this->status;
     }
 
     // Setters
 
-    public function setId($id): void {
+    public function setId($id): void
+    {
         $this->id = $id;
     }
 
-    public function setName(string $name): void {
+    public function setName(string $name): void
+    {
         $this->name = $name;
     }
 
-    public function setDescription(string $description): void {
+    public function setDescription(string $description): void
+    {
         $this->description = $description;
     }
 
-    public function setStartDateTime(DateTime $startDateTime): void {
+    public function setStartDateTime(DateTime $startDateTime): void
+    {
         $this->startDateTime = $startDateTime;
     }
 
-    public function setCompletionDateTime(DateTime $completionDateTime): void {
+    public function setCompletionDateTime(DateTime $completionDateTime): void
+    {
         $this->completionDateTime = $completionDateTime;
     }
 
-    public function setActualCompletionDateTime(DateTime $actualCompletionDateTime): void {
+    public function setActualCompletionDateTime(DateTime $actualCompletionDateTime): void
+    {
         $this->actualCompletionDateTime = $actualCompletionDateTime;
     }
 
-    public function setStatus(WorkStatus $status): void {
+    public function setStatus(WorkStatus $status): void
+    {
         $this->status = $status;
     }
 
     // Other methods
 
-    public function toArray(): array {
+    public function toArray(): array
+    {
         return [
             'id' => $this->id ?? uniqid(),
             'name' => $this->name,
@@ -101,19 +117,35 @@ class Phase implements Entity {
         ];
     }
 
-    public static function fromArray(array $data): self {
+    public static function fromArray(array $data): self
+    {
+        $startDateTime = $data['startDateTime'] instanceof DateTime
+            ? $data['startDateTime']
+            : new DateTime($data['startDateTime']);
+        $completionDateTime = $data['completionDateTime'] instanceof DateTime
+            ? $data['completionDateTime']
+            : new DateTime($data['completionDateTime']);
+        $actualCompletionDateTime = $data['actualCompletionDateTime'] instanceof DateTime
+            || $data['actualCompletionDateTime'] === null
+            ? $data['actualCompletionDateTime']
+            : new DateTime($data['actualCompletionDateTime']);
+        $status = $data['status'] instanceof WorkStatus
+            ? $data['status']
+            : WorkStatus::fromString($data['status']);
+
         return new self(
             $data['id'],
             $data['name'],
             $data['description'],
-            new DateTime($data['startDateTime']),
-            new DateTime($data['completionDateTime']),
-            new DateTime($data['actualCompletionDateTime']),
-            $data['status']
+            $startDateTime,
+            $completionDateTime,
+            $actualCompletionDateTime,
+            $status
         );
     }
 
-    public function jsonSerialize(): array {
+    public function jsonSerialize(): array
+    {
         return $this->toArray();
     }
 }

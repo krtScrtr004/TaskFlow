@@ -34,17 +34,17 @@ enum WorkStatus: string
         }
     }
 
-    public function badge(): string
+    public static function badge(WorkStatus $status): string
     {
-        $statusName = $this->getDisplayName();
-        $backgroundColor = match ($this) {
+        $statusName = $status->getDisplayName();
+        $backgroundColor = match ($status) {
             self::PENDING => 'yellow-bg',
             self::ON_GOING => 'green-bg',
             self::COMPLETED => 'blue-bg',
             self::DELAYED => 'orange-bg',
             self::CANCELLED => 'red-bg'
         };
-        $textColor = match ($this) {
+        $textColor = match ($status) {
             self::PENDING => 'black-text',
             self::ON_GOING, self::COMPLETED, self::DELAYED, self::CANCELLED => 'white-text'
         };

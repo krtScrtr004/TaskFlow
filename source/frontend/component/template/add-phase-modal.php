@@ -45,7 +45,7 @@
             <div class="phase-secondary-info flex-row">
                 <!-- Start Date -->
                 <div class="input-label-container">
-                    <label for="phase_start_date">
+                    <label for="phase_start_datetime">
                         <div class="text-w-icon">
                             <img src="<?= ICON_PATH . 'start_b.svg' ?>" alt="Phase Start Date"
                                 title="Phase Start Date" height="20">
@@ -53,13 +53,13 @@
                             <p>Start Date</p>
                         </div>
                     </label>
-                    <input type="date" name="phase_start_date" id="phase__start_date"
+                    <input type="date" name="phase_start_datetime" id="phase_start_datetime"
                         value="<?= (new DateTime())->format('Y-m-d') ?>" required>
                 </div>
 
                 <!-- Completion Date -->
                 <div class="input-label-container">
-                    <label for="phase__completion_date">
+                    <label for="phase_completion_datetime">
                         <div class="text-w-icon">
                             <img src="<?= ICON_PATH . 'complete_b.svg' ?>" alt="Phase Completion Date"
                                 title="Phase Completion Date" height="20">
@@ -67,11 +67,12 @@
                             <p>Completion Date</p>
                         </div>
                     </label>
-                    <input type="date" name="phase_completion_date" id="phase__completion_date"
+                    <input type="date" name="phase_completion_datetime" id="phase_completion_datetime"
                         value="<?= (new DateTime())->format('Y-m-d') ?>" required>
                 </div>
             </div>
 
+            <!-- Add New Phase Button -->
             <button id="add_new_phase_button" type="button" class="blue-bg">
                 <div class="text-w-icon">
                     <img src="<?= ICON_PATH . 'add_w.svg' ?>" alt="Add New Phase" title="Add New Phase" height="20">

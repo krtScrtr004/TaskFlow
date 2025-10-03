@@ -2,9 +2,13 @@
 
 class PhaseController implements Controller
 {
-    private function __construct() {}
+    private function __construct()
+    {
+    }
 
-    public static function index(): void {}
+    public static function index(): void
+    {
+    }
 
     public static function addPhase(): void
     {
@@ -16,12 +20,18 @@ class PhaseController implements Controller
         // TODO: Validate data
 
         $newPhase = Phase::fromArray([
+            'id' => uniqid(), // TODO: Generate a UUIDv4 for the new phase
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
-            'startDateTime' => $data['startDateTime'],
-            'completionDateTime' => $data['completionDateTime'],
+            'startDateTime' => new DateTime($data['startDateTime']),
+            'completionDateTime' => new DateTime($data['completionDateTime']),
             'actualCompletionDateTime' => $data['actualCompletionDateTime'] ?? null,
-            'status' => WorkStatus::from($data['status']) ?? WorkStatus::getStatusFromDates($data['startDateTime'], $data['completionDateTime']),
+            'status' => $data['status']
+                ? WorkStatus::from($data['status'])
+                : WorkStatus::getStatusFromDates(
+                    new DateTime($data['startDateTime']),
+                    new DateTime($data['completionDateTime'])
+                ),
         ]);
         if (!$newPhase) {
             Response::error('Invalid phase data.');
@@ -29,6 +39,8 @@ class PhaseController implements Controller
 
         // TODO: Save to database
 
-        Response::success([], 'Phase added successfully.', 201);
+        Response::success([
+            'id' => $newPhase->getId()
+        ], 'Phase added successfully.', 201);
     }
 }

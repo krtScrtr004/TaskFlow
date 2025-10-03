@@ -69,6 +69,10 @@
 	background-color: var(--orange);
 }
 
+.yellow-bg {
+	background-color: var(--yellow);
+}
+
 /* --------DISPLAY-------- */
 
 .no-display {

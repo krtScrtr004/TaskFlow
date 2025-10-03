@@ -46,8 +46,8 @@ export const Loader = (() => {
         /**
          * 
          * @param {HTMLElement} elementToPatch - If the elementToPatch is a plain text, 
-         * use the button.firstChild as the argument Otherwise, use the element inside 
-         * the button as the argument
+         * use the elem.firstChild as the argument Otherwise, use the element inside 
+         * the element as the argument
          */
         patch: function (elementToPatch) {
             patchedElem = {
@@ -77,11 +77,12 @@ export const Loader = (() => {
 
                 elemHeight = parentRec.height - (paddingWidth + borderWidth)
             }
+            const parentElemWidth = patchedElem.parent.clientWidth
 
             const loaderElem = `
                 <div 
                     class="loader-wrapper center-child transparent-bg" 
-                    style="height:fit-content;">
+                    style="height:fit-content">
                         <span class="loader" style="height:${elemHeight}px; width:${elemHeight}px"></span>
                 </div>`
 
