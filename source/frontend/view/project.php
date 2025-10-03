@@ -77,12 +77,6 @@
                                         <img src="<?= ICON_PATH . 'edit_b.svg' ?>" alt="Edit Project" title="Edit Project"
                                             height="24">
                                     </a>
-
-                                    <!-- Delete Project -->
-                                    <button id="delete_project_button" type="button" class="delete-project unset-button">
-                                        <img src="<?= ICON_PATH . 'delete_b.svg' ?>" alt="Delete Project" title="Delete Project"
-                                            height="24">
-                                    </button>
                                 </div>
                             <?php endif; ?>
                         </div>

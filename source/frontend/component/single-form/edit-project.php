@@ -19,11 +19,17 @@ $projectBudget = htmlspecialchars(formatBudgetToPesos($project->getBudget()));
 $projectStartDate = $project->getStartDateTime()->format('Y-m-d');
 $projectCompletionDate = $project->getCompletionDateTime()->format('Y-m-d');
 
-$projectHasStarted = $project->getStartDateTime() <= new DateTime() ? 'disabled' : '';
-$projectIsCompleted = $project->getCompletionDateTime() < new DateTime() ? 'disabled' : '';
-
+$project->setStatus(WorkStatus::ON_GOING);
 $projectStatus = $project->getStatus();
 $projectPhases = $project->getPhases();
+
+$projectHasStarted = $projectStatus === WorkStatus::PENDING ? '' : 'disabled';
+$projectIsCompleted = $projectStatus === WorkStatus::COMPLETED
+    || $projectStatus === WorkStatus::CANCELLED
+    || $projectStatus === WorkStatus::DELAYED
+    ? 'disabled' : '';
+
+include_once COMPONENT_PATH . 'template/add-phase-modal.php';
 ?>
 
 <!-- Edit Project -->
@@ -31,9 +37,11 @@ $projectPhases = $project->getPhases();
 
     <!-- Heading -->
     <section class="heading">
-        <div class="cannot-edit-warning">
-            <p class="white-text">Editing unavailable. Project has been completed or cancelled.</p>
-        </div>
+        <?php if ($projectStatus === WorkStatus::COMPLETED || $projectStatus === WorkStatus::CANCELLED): ?>
+            <div class="cannot-edit-warning">
+                <p class="white-text">Editing unavailable. Project has been completed or cancelled.</p>
+            </div>
+        <?php endif; ?>
 
         <div class="title flex-row flex-child-center-h">
             <div class="project-name text-w-icon">
@@ -56,7 +64,7 @@ $projectPhases = $project->getPhases();
     <form id="editable_project_details" class="flex-col" action="" method="POST">
 
         <!-- Main Details Field -->
-        <fieldset class="main-details-field flex-col">
+        <fieldset class="main-details-field flex-col" <?= $projectIsCompleted ?>>
 
             <!-- Project Description -->
             <div class="input-label-container">
@@ -68,7 +76,8 @@ $projectPhases = $project->getPhases();
                         <p>Description</p>
                     </div>
                 </label>
-                <textarea name="project-description" id="project_description" rows="5" cols="10" <?= $projectHasStarted ?>><?= $projectDescription ?></textarea>
+                <textarea name="project-description" id="project_description" rows="5"
+                    cols="10"><?= $projectDescription ?></textarea>
             </div>
 
             <!-- Project Secondary Info -->
@@ -86,7 +95,7 @@ $projectPhases = $project->getPhases();
                         </label>
                     </label>
                     <input type="number" name="project-budget" id="project_budget" value="<?= $projectBudget ?>" min="0"
-                        max="9999999999" required <?= $projectIsCompleted ?>>
+                        max="9999999999" <?= $projectHasStarted ?> required>
                 </div>
 
                 <!-- Start Date -->
@@ -100,7 +109,7 @@ $projectPhases = $project->getPhases();
                         </div>
                     </label>
                     <input type="date" name="project-start-date" id="project_start_date"
-                        value="<?= $projectStartDate ?>" required <?= $projectHasStarted ?>>
+                        value="<?= $projectStartDate ?>" <?= $projectHasStarted ?> required>
                 </div>
 
                 <!-- Completion Date -->
@@ -114,7 +123,7 @@ $projectPhases = $project->getPhases();
                         </div>
                     </label>
                     <input type="date" name="project-completion-date" id="project_completion_date"
-                        value="<?= $projectCompletionDate ?>" required <?= $projectIsCompleted ?>>
+                        value="<?= $projectCompletionDate ?>" required>
                 </div>
             </div>
 
@@ -123,99 +132,131 @@ $projectPhases = $project->getPhases();
         <hr>
 
         <!-- Phase Details -->
-        <fieldset class="phase-details flex-col">
+        <fieldset class="phase-details flex-col" <?= $projectIsCompleted ?>>
             <!-- Heading -->
             <section class="heading">
                 <h3>Project Phases</h3>
                 <p>Modify the details of each phase as needed.</p>
             </section>
 
-            <?php
-            foreach ($projectPhases as $phase):
-                $phaseName = htmlspecialchars($phase->getName());
-                $phaseDescription = htmlspecialchars($phase->getDescription());
+            <section class="phases flex-col">
 
-                $phaseStartDate = $phase->getStartDateTime()->format('Y-m-d');
-                $phaseCompletionDate = $phase->getCompletionDateTime()->format('Y-m-d');
+                <?php
+                foreach ($projectPhases as $phase):
+                    $phaseId = htmlspecialchars($phase->getId());
+                    $phaseName = htmlspecialchars($phase->getName());
+                    $phaseDescription = htmlspecialchars($phase->getDescription());
 
-                $phaseHasStarted = $phase->getStartDateTime() <= new DateTime() ? 'disabled' : '';
-                $phaseIsCompleted = $phase->getCompletionDateTime() < new DateTime() ? 'disabled' : ''
-                    ?>
-                <section class="phase">
-                    <div class="text-w-icon">
-                        <img src="<?= ICON_PATH . 'phase_b.svg' ?>" alt="<?= $phaseName ?>" title="<?= $phaseName ?>"
-                            height="20">
+                    $phaseStartDate = $phase->getStartDateTime()->format('Y-m-d');
+                    $phaseCompletionDate = $phase->getCompletionDateTime()->format('Y-m-d');
+                    $phaseStatus = $phase->getStatus();
 
-                        <h3 class="phase-name"><?= $phaseName ?></h3>
-                    </div>
+                    $phaseHasStarted = $phaseStatus === WorkStatus::PENDING ? '' : 'disabled';
+                    $phaseIsCompleted = $phaseStatus === WorkStatus::COMPLETED
+                        || $phaseStatus === WorkStatus::CANCELLED 
+                        || $phaseStatus === WorkStatus::DELAYED
+                        ? 'disabled' : '';
+                ?>
+                    <section class="phase" data-id="<?= $phaseId ?>">
 
-                    <div class="phase-details-form flex-col">
+                        <!-- Phase Name -->
+                        <div class="flex-row flex-child-center-h flex-space-between">
+                            <div class="flex-col">
+                                <div class="text-w-icon">
+                                    <img src="<?= ICON_PATH . 'phase_b.svg' ?>" alt="<?= $phaseName ?>" title="<?= $phaseName ?>"
+                                        height="22">
 
-                        <!-- Phase Description -->
-                        <div class="input-label-container">
-                            <label for="phase_description">
-                                <label for="project_description">
-                                    <div class="text-w-icon">
-                                        <img src="<?= ICON_PATH . 'description_b.svg' ?>" alt="Project Description"
-                                            title="Project Description" height="20">
+                                    <h3 class="phase-name wrap-text"><?= $phaseName ?></h3>
+                                </div>
 
-                                        <p>Description</p>
-                                    </div>
-                                </label>
-                            </label>
-                            <textarea name="phase-description" id="phase_description" rows="5" cols="10"
-                                <?= $phaseIsCompleted ?>><?= $phaseDescription ?></textarea>
-                        </div>
-
-                        <!-- Phase Secondary Info -->
-                        <div class="phase-secondary-info flex-row">
-
-                            <!-- Start Date -->
-                            <div class="input-label-container">
-                                <label for="phase_start_date">
-                                    <div class="text-w-icon">
-                                        <img src="<?= ICON_PATH . 'start_b.svg' ?>" alt="Project Start Date"
-                                            title="Project Start Date" height="20">
-
-                                        <p>Start Date</p>
-                                    </div>
-                                </label>
-                                <input type="date" name="phase-start-date" id="phase_start_date"
-                                    value="<?= $phaseStartDate ?>" required <?= $phaseHasStarted ?>>
+                                <?= $phaseStatus->badge() ?>
                             </div>
 
-                            <!-- Completion Date -->
-                            <div class="input-label-container">
-                                <label for="phase_completion_date">
-                                    <div class="text-w-icon">
-                                        <img src="<?= ICON_PATH . 'complete_b.svg' ?>" alt="Project Completion Date"
-                                            title="Project Completion Date" height="20">
-
-                                        <p>Completion Date</p>
-                                    </div>
-                                </label>
-                                <input type="date" name="phase-completion-date" id="phase_completion_date"
-                                    value="<?= $phaseCompletionDate ?>" required <?= $phaseIsCompleted ?>>
-                            </div>
+                            <?php if ($phaseStatus === WorkStatus::PENDING || $phaseStatus === WorkStatus::ON_GOING): ?>
+                                <button type="button" class="unset-button">
+                                    <img src="<?= ICON_PATH . 'delete_r.svg' ?>" alt="Cancel <?= $phaseName ?>" title="Cancel <?= $phaseName ?>" height="20">
+                                </button>
+                            <?php endif; ?>
                         </div>
 
-                    </div>
-                </section>
-            <?php endforeach; ?>
+                        <div class="phase-details-form flex-col">
+
+                            <!-- Phase Description -->
+                            <div class="input-label-container">
+                                <label for="phase_description">
+                                    <label for="<?= $phaseName ?>_description">
+                                        <div class="text-w-icon">
+                                            <img src="<?= ICON_PATH . 'description_b.svg' ?>" alt="Project Description"
+                                                title="Project Description" height="20">
+
+                                            <p>Description</p>
+                                        </div>
+                                    </label>
+                                </label>
+                                <textarea name="<?= $phaseName ?>_description" id="<?= $phaseName ?>_description" rows="5"
+                                    cols="10" <?= $phaseIsCompleted ?>><?= $phaseDescription ?></textarea>
+                            </div>
+
+                            <!-- Phase Secondary Info -->
+                            <div class="phase-secondary-info flex-row">
+
+                                <!-- Start Date -->
+                                <div class="input-label-container">
+                                    <label for="<?= $phaseName ?>_start_date">
+                                        <div class="text-w-icon">
+                                            <img src="<?= ICON_PATH . 'start_b.svg' ?>" alt="Project Start Date"
+                                                title="Project Start Date" height="20">
+
+                                            <p>Start Date</p>
+                                        </div>
+                                    </label>
+                                    <input type="date" name="<?= $phaseName ?>_start_date" id="<?= $phaseName ?>_start_date"
+                                        value="<?= $phaseStartDate ?>" <?= $phaseHasStarted ?> required>
+                                </div>
+
+                                <!-- Completion Date -->
+                                <div class="input-label-container">
+                                    <label for="<?= $phaseName ?>_completion_date">
+                                        <div class="text-w-icon">
+                                            <img src="<?= ICON_PATH . 'complete_b.svg' ?>" alt="Project Completion Date"
+                                                title="Project Completion Date" height="20">
+
+                                            <p>Completion Date</p>
+                                        </div>
+                                    </label>
+                                    <input type="date" name="<?= $phaseName ?>_completion_date" id="<?= $phaseName ?>_completion_date"
+                                        value="<?= $phaseCompletionDate ?>" <?= $phaseIsCompleted ?> required>
+                                </div>
+                            </div>
+
+                        </div>
+                    </section>
+                <?php endforeach; ?>
+
+            </section>
+
+            <button id="add_phase_button" type="button" class="transparent-bg">
+                <div class="text-w-icon">
+                    <img src="<?= ICON_PATH . 'add_b.svg' ?>" alt="Add Phase" title="Add Phase" height="20">
+                    <h3 class="black-text">Add Phase</h3>
+                </div>
+            </button>
 
         </fieldset>
 
         <!-- Save Button -->
-        <?php if (!$projectStatus === WorkStatus::COMPLETED && !$projectStatus === WorkStatus::CANCELLED) : ?>
-            <button id="save_project_info_button" type="button" class="center-child float-right blue-bg white-text"
-                <?= $projectIsCompleted ?>>
-                <div class="text-w-icon">
-                    <img src="<?= ICON_PATH . 'save_w.svg' ?>" alt="Save Project Info" title="Save Project Info"
-                        height="20">
+        <?php if ($projectStatus !== WorkStatus::COMPLETED && $projectStatus !== WorkStatus::CANCELLED): ?>
+            <div>
+                <button id="save_project_info_button" type="button" class="center-child float-right blue-bg white-text"
+                    <?= $projectIsCompleted ?>>
+                    <div class="text-w-icon">
+                        <img src="<?= ICON_PATH . 'save_w.svg' ?>" alt="Save Project Info" title="Save Project Info"
+                            height="20">
 
-                    <p class="white-text">Save Info</p>
-                </div>
-            </button>
+                        <h3 class="white-text">Save Info</h3>
+                    </div>
+                </button>
+            </div>
         <?php endif; ?>
 
     </form>

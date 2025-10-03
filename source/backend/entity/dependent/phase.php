@@ -1,6 +1,7 @@
 <?php
 
 class Phase implements Entity {
+    private $id;
     private string $name;
     private string $description;
     private DateTime $startDateTime;
@@ -9,6 +10,7 @@ class Phase implements Entity {
     private WorkStatus $status;
 
     public function __construct(
+        $id,
         string $name,
         string $description,
         DateTime $startDateTime,
@@ -16,6 +18,7 @@ class Phase implements Entity {
         ?DateTime $actualCompletionDateTime,
         WorkStatus $status
     ) {
+        $this->id = $id;
         $this->name = $name;
         $this->description = $description;
         $this->startDateTime = $startDateTime;
@@ -25,6 +28,10 @@ class Phase implements Entity {
     }
 
     // Getters
+
+    public function getId() {
+        return $this->id;
+    }
 
     public function getName(): string {
         return $this->name;
@@ -51,6 +58,10 @@ class Phase implements Entity {
     }
 
     // Setters
+
+    public function setId($id): void {
+        $this->id = $id;
+    }
 
     public function setName(string $name): void {
         $this->name = $name;
@@ -80,6 +91,7 @@ class Phase implements Entity {
 
     public function toArray(): array {
         return [
+            'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
             'startDateTime' => $this->startDateTime->format(DateTime::ATOM),
@@ -91,6 +103,7 @@ class Phase implements Entity {
 
     public static function fromArray(array $data): self {
         return new self(
+            $data['id'],
             $data['name'],
             $data['description'],
             new DateTime($data['startDateTime']),
