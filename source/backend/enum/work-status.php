@@ -50,7 +50,7 @@ enum WorkStatus: string
         };
 
         return <<<HTML
-        <div class="status-badge $backgroundColor">
+        <div class="status-badge center-child $backgroundColor">
             <p class="center-text $textColor">$statusName</p>
         </div>
         HTML;

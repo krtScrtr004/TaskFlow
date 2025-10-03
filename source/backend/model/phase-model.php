@@ -19,6 +19,7 @@ class PhaseModel implements Model {
     public static function all(): PhaseContainer {
         $phases = new PhaseContainer([
             new Phase(
+                uniqid(),
                 'Phase 1',
                 'Lorem123',
                 new DateTime('2024-12-23'),
@@ -27,6 +28,7 @@ class PhaseModel implements Model {
                 WorkStatus::COMPLETED
             ),
             new Phase(
+                uniqid(),
                 'Phase 2',
                 'Lorem123',
                 new DateTime('2024-12-23'),
@@ -35,6 +37,7 @@ class PhaseModel implements Model {
                 WorkStatus::ON_GOING
             ),
             new Phase(
+                uniqid(),
                 'Phase 3',
                 'Lorem123',
                 new DateTime('2024-12-23'),

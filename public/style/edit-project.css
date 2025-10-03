@@ -1,3 +1,25 @@
+#add_phase_modal > .modal {
+    width: 30rem;
+    padding: var(--space);
+    gap: 1rem;
+    border-radius: var(--border-radius);
+}
+
+#add_phase_modal .title {
+    font-size: 1.5rem;
+}
+
+#add_phase_modal #add_new_phase_button {
+    width: fit-content;
+    padding-right: 1rem;
+    padding-left: 1rem;
+}
+
+#add_phase_modal #add_new_phase_button h3 {
+    font-size: 1rem;
+}
+
+
 .single-form:has(.edit-project) > main {
     padding: 3rem 0;
 }
@@ -74,7 +96,8 @@
     flex: 1;
 }
 
-.phase-details {
+.phase-details,
+.phase-details .phases {
     gap: var(--space);
 }
 
@@ -83,9 +106,18 @@
     margin-bottom: 1rem;
 } 
 
+.phase .status-badge {
+    font-size: 0.9rem;
+    margin-top: 0.3rem;
+    margin-bottom: 0.5rem;
+}
+
 .phase-name {
+    max-width: 35ch;
     font-size: 1.5rem !important;
+    margin-right: 1rem;
     margin-bottom: 0.3rem;
+    white-space: break-spaces !important;
 }
 
 .phase-details-form,
@@ -93,13 +125,22 @@
     gap: 1rem;
 }
 
-#save_project_info_button {
+#add_phase_button {
     width: fit-content;
     padding-right: 1rem;
     padding-left: 1rem;
     margin-top: 1rem;
 }
 
+#add_phase_button h3,
 #save_project_info_button h3 {
     font-size: 1.3rem;
+}
+
+#add_phase_button {
+    border: 1px solid var(--black);
+}
+
+#add_phase_button h3 {
+    font-size: 1.2rem;
 }
