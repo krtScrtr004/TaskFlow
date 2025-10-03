@@ -63,7 +63,7 @@ class WorkerController implements Controller
             Response::error('Project ID is required');
         }
 
-        if (!isset($data['workerIds'])) {
+        if (!isset($data['workerIds']) || !is_array($data['workerIds']) || count($data['workerIds']) < 1) {
             Response::error('Worker IDs are required');
         }
 
@@ -72,5 +72,27 @@ class WorkerController implements Controller
         Response::success([
             'message' => 'Worker added successfully'
         ], 'Worker added successfully');
+    }
+
+    public static function terminateWorker(): void
+    {
+        $data = decodeData('php://input');
+        if (!$data) {
+            Response::error('Invalid data provided');
+        }
+
+        if (!isset($data['projectId'])) {
+            Response::error('Project ID is required');
+        }
+
+        if (!isset($data['workerIds']) || !is_array($data['workerIds']) || count($data['workerIds']) < 1) {
+            Response::error('Worker IDs are required');
+        }
+
+        // TODO: Terminate worker from project logic
+
+        Response::success([
+            'message' => 'Worker terminated successfully'
+        ], 'Worker terminated successfully');
     }
 }

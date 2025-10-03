@@ -19,6 +19,8 @@ async function createWorkerInfoCard(workerId) {
     workerInfoCardTemplate.classList.add('flex-col')
     workerInfoCardTemplate.classList.remove('no-display')
 
+    workerInfoCardTemplate.setAttribute('data-workerid', workerId)
+
     Loader.full(workerInfoCardTemplate.querySelector('.worker-info-card'))
 
     const worker = await fetchWorkerInfo(workerId)

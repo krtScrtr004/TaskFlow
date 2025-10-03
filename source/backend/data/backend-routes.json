@@ -6,6 +6,7 @@
 
     "POST": {
         "TaskFlow/add-worker": ["WorkerController", "addWorker"],
+        "TaskFlow/terminate-worker": ["WorkerController", "terminateWorker"],
         "TaskFlow/add-phase": ["PhaseController", "addPhase"],
         "TaskFlow/cancel-phase": ["PhaseController", "cancelPhase"]
     }
