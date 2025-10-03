@@ -110,14 +110,29 @@ button:has(.text-w-icon) {
 	font-weight: 300;
 }
 
+.modal-wrapper > div,
 .modal-wrapper > section {
+	max-width: 25rem;
 	box-sizing: content-box;
 	padding: var(--space);
-	box-shadow: 0 0 1px 1px var(--light-black);
 }
 
 .modal-wrapper .close-button:hover p {
 	color: var(--red);
+}
+
+.confirmation-dialog {
+	padding: var(--space);
+	gap: var(--space);
+}
+
+.confirmation-dialog > .buttons {
+	width: 100%;
+	gap: 0.5rem;
+}
+
+.confirmation-dialog > .buttons > * {
+	flex: 1;
 }
 
 /* --------------------- NOTIFICATION --------------------- */

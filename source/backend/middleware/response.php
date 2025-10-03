@@ -6,7 +6,7 @@ class Response
     {
     }
 
-    public static function success($data, $message, $statusCode = 200): void
+    public static function success(array $data, string $message, int $statusCode = 200): void
     {
         self::sendResponse($statusCode, [
             'status' => 'success',
@@ -15,7 +15,7 @@ class Response
         ]);
     }
 
-    public static function error($message, $errors = [], $statusCode = 400): void
+    public static function error(string $message, array $errors = [], int $statusCode = 400): void
     {
         self::sendResponse($statusCode, [
             'status' => 'error',
@@ -24,7 +24,7 @@ class Response
         ]);
     }
 
-    private static function sendResponse($statusCode, $body = [])
+    private static function sendResponse(int $statusCode, array $body = [])
     {
         http_response_code($statusCode);
         header('Content-Type: application/json');

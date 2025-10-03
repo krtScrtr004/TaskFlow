@@ -19,13 +19,13 @@
 </head>
 
 <body>
-    <?php 
+    <?php
     require_once COMPONENT_PATH . 'sidenav.php';
-    
+
     require_once COMPONENT_PATH . 'template/worker-info-card.php';
     require_once COMPONENT_PATH . 'template/add-worker-to-project.php';
     ?>
-    
+
     <main class="main-page">
         <?php
         if (!isset($project)):
@@ -67,7 +67,7 @@
                                     <h3 class="project-name wrap-text"><?= $projectName ?></h3>
                                 </div>
 
-                                <?= $projectStatus->badge() ?>
+                                <?= WorkStatus::badge($projectStatus) ?>
                             </div>
 
                             <?php if (Role::isProjectManager(Me::getInstance())): ?>

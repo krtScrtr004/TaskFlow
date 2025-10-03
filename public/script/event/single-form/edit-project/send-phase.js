@@ -93,7 +93,7 @@ function createCancelButton(parentElement, phaseName) {
 const addPhaseModal = document.querySelector('#add_phase_modal')
 if (addPhaseModal) {
     const addNewPhaseButton = addPhaseModal.querySelector('#add_new_phase_button')
-    addNewPhaseButton.addEventListener('click', async () => {
+    addNewPhaseButton.addEventListener('click', debounce(async () => {
         const addPhaseForm = addPhaseModal.querySelector('#add_phase_form')
 
         const nameInput = addPhaseForm.querySelector('#phase_name')
@@ -142,7 +142,7 @@ if (addPhaseModal) {
             Dialog.errorOccurred('Failed to add new phase. Please try again.')
             Loader.delete()
         } 
-    })
+    }, 300))
 } else {
     console.error('Add Phase Modal not found')
 }

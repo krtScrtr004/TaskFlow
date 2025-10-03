@@ -5,6 +5,7 @@
     },
 
     "POST": {
-        "TaskFlow/add-phase": ["PhaseController", "addPhase"]
+        "TaskFlow/add-phase": ["PhaseController", "addPhase"],
+        "TaskFlow/cancel-phase": ["PhaseController", "cancelPhase"]
     }
 }

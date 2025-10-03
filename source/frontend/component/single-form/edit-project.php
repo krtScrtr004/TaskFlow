@@ -172,8 +172,9 @@ include_once COMPONENT_PATH . 'template/add-phase-modal.php';
                                 <?= WorkStatus::badge($phaseStatus) ?>
                             </div>
 
+                            <!-- Delete Button -->
                             <?php if ($phaseStatus === WorkStatus::PENDING || $phaseStatus === WorkStatus::ON_GOING): ?>
-                                <button type="button" class="unset-button">
+                                <button type="button" class="cancel-phase-button unset-button">
                                     <img src="<?= ICON_PATH . 'delete_r.svg' ?>" alt="Cancel <?= $phaseName ?>" title="Cancel <?= $phaseName ?>" height="20">
                                 </button>
                             <?php endif; ?>

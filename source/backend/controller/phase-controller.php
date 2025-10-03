@@ -43,4 +43,21 @@ class PhaseController implements Controller
             'id' => $newPhase->getId()
         ], 'Phase added successfully.', 201);
     }
+
+    public static function cancelPhase(): void
+    {
+        $data = decodeData('php://input');
+        if (!$data) {
+            Response::error('Cannot decode data.');
+        }
+
+        $phaseId = $data['phaseId'];
+        if (empty($phaseId)) {
+            Response::error('Invalid phase ID.');
+        }
+
+        // TODO: Delete phase from database using $phaseId
+
+        Response::success([], 'Phase cancelled successfully.');
+    }
 }
