@@ -319,7 +319,7 @@
                             <!-- Add Worker Button -->
                             <?php if (Role::isProjectManager(Me::getInstance())): ?>
                                 <div class="">
-                                    <button id="add_worker_button" type="button" class="float-right blue-bg">
+                                    <button id="add_worker_button" type="button" class="float-right blue-bg" data-projectId="<?= $projectId ?>">
                                         <div class="heading-title text-w-icon center-child">
                                             <img src="<?= ICON_PATH . 'add_w.svg' ?>" alt="Add Worker" title="Add Worker"
                                                 height="18">
@@ -345,6 +345,7 @@
     <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'add-worker-modal' . DS . 'open.js' ?>"></script>
     <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'add-worker-modal' . DS . 'close.js' ?>"></script>
     <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'add-worker-modal' . DS . 'search.js' ?>"></script>
+    <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'add-worker-modal' . DS . 'add.js' ?>"></script>
 </body>
 
 </html>

@@ -51,4 +51,26 @@ class WorkerController implements Controller
             ], 'Worker info retrieved successfully');
         }
     }
+
+    public static function addWorker(): void
+    {
+        $data = decodeData('php://input');
+        if (!$data) {
+            Response::error('Invalid data provided');
+        }
+
+        if (!isset($data['projectId'])) {
+            Response::error('Project ID is required');
+        }
+
+        if (!isset($data['workerIds'])) {
+            Response::error('Worker IDs are required');
+        }
+
+        // TODO: Add worker to project logic
+
+        Response::success([
+            'message' => 'Worker added successfully'
+        ], 'Worker added successfully');
+    }
 }

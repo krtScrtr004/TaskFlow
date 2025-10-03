@@ -2,6 +2,8 @@
 
 .worker-info-card {
 	min-height: 20rem;
+	width: 28rem !important;
+	max-width: unset !important;
 	max-height: 70vh;
 	padding: var(--space);
 	border: var(--border-radius);
@@ -22,7 +24,7 @@
 }
 
 .worker-info-card > .worker-bio {
-	width: 60ch;
+	width: 100%;
 	font-size: 1rem;
 }
 

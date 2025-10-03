@@ -9,7 +9,8 @@ if (addWorkerButton) {
         addWorkerModalTemplate.classList.remove('no-display')
 
         try {
-            Loader.full(addWorkerModalTemplate.querySelector('.worker-list'))
+            const workerList = addWorkerModalTemplate.querySelector('.worker-list')
+            Loader.full(workerList)
 
             const workers = await fetchWorkers()
             workers.forEach(worker => createWorkerListCard(worker))
