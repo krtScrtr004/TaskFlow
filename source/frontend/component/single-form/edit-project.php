@@ -12,7 +12,7 @@ if (!$project) {
 }
 
 $projectData = [
-    'id' => htmlspecialchars($project->getId()),
+    'id' => htmlspecialchars($project->getPublicId()),
     'name' => htmlspecialchars($project->getName()),
     'description' => htmlspecialchars($project->getDescription()),
     'budget' => htmlspecialchars(formatBudgetToPesos($project->getBudget())),
@@ -129,7 +129,7 @@ include_once COMPONENT_PATH . 'template/add-phase-modal.php';
             <section class="phases flex-col">
                 <?php foreach ($projectData['phases'] as $phase):
                     $phaseData = [
-                        'id' => htmlspecialchars($phase->getId()),
+                        'id' => htmlspecialchars($phase->getPublicId()),
                         'name' => htmlspecialchars($phase->getName()),
                         'description' => htmlspecialchars($phase->getDescription()),
                         'startDate' => $phase->getStartDateTime()->format('Y-m-d'),

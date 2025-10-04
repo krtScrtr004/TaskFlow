@@ -1,7 +1,8 @@
 <?php
 
 class Project implements Entity {
-    private $id;
+    private int $id;
+    private $publicId;
     private string $name;
     private string $description;
     private User $manager;
@@ -16,7 +17,8 @@ class Project implements Entity {
     private DateTime $createdDateTime;
 
     public function __construct(
-        $id,
+        int $id,
+        $publicId,
         string $name,
         string $description,
         User $manager,
@@ -31,6 +33,7 @@ class Project implements Entity {
         DateTime $createdDateTime
     ) {
         $this->id = $id;
+        $this->publicId = $publicId;
         $this->name = $name;
         $this->description = $description;
         $this->manager = $manager;
@@ -49,6 +52,10 @@ class Project implements Entity {
 
     public function getId() {
         return $this->id;
+    }
+
+    public function getPublicId() {
+        return $this->publicId;
     }
     
     public function getName(): string {
@@ -100,6 +107,14 @@ class Project implements Entity {
     }
 
     // Setters
+
+    public function setId(int $id): void {
+        $this->id = $id;
+    }
+
+    public function setPublicId($publicId): void {
+        $this->publicId = $publicId;
+    }
 
     public function setName(string $name): void {
         $this->name = $name;
@@ -154,7 +169,7 @@ class Project implements Entity {
     public function toArray(): array {
 
         return [
-            'id' => $this->id,
+            'id' => $this->publicId,
             'name' => $this->name,
             'description' => $this->description,
             'manager' => $this->manager->toArray(),
@@ -173,6 +188,7 @@ class Project implements Entity {
     public static function fromArray(array $data): self {
         return new Project(
             $data['id'],
+            $data['publicId'],
             $data['name'],
             $data['description'],
             User::fromArray($data['manager']),

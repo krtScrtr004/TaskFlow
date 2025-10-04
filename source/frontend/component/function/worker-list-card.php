@@ -6,7 +6,7 @@ function workerListCard(Worker $worker): string
         htmlspecialchars($worker->getProfileLink()) ?:
         ICON_PATH . 'profile_b.svg';
     $name = htmlspecialchars($worker->getFirstName() . ' ' . $worker->getLastName());
-    $id = htmlspecialchars($worker->getId());
+    $id = htmlspecialchars($worker->getPublicId());
 
     return <<<HTML
     <!-- Worker List Card -->

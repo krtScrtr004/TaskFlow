@@ -8,7 +8,8 @@ class Me extends User
     {
         // TODO: Implement actual user session retrieval logic
         parent::__construct(
-            id: uniqid(),
+            id: random_int(1, 1000),
+            publicId: uniqid(),
             firstName: 'Zing',
             middleName: 'Zang',
             lastName: 'Yang',

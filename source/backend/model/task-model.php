@@ -19,6 +19,7 @@ class TaskModel implements Model {
     public static function all(): TaskContainer {
         $tasks = new TaskContainer();
         $tasks->add(new Task(
+                            random_int(1, 1000),
             uniqid(),
             'Task 1',
             'This is the first task.',
@@ -30,6 +31,7 @@ class TaskModel implements Model {
             new DateTime('2023-01-05 10:00:00'),
         ));
         $tasks->add(new Task(
+                            random_int(1, 1000),
             uniqid(),
             'Task 2',
             'This is the second task.',

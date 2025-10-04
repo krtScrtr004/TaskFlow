@@ -2,6 +2,7 @@
 
 class Task implements Entity {
     private $id;
+    private $publicId;
     private string $name;
     private string $description;
     private DateTime $startDateTime;
@@ -12,7 +13,8 @@ class Task implements Entity {
     private DateTime $createdDateTime;
 
     public function __construct(
-        $id,
+        int $id,
+        $publicId,
         string $name,
         string $description,
         DateTime $startDateTime,
@@ -23,6 +25,7 @@ class Task implements Entity {
         DateTime $createdDateTime
     ) {
         $this->id = $id;
+        $this->publicId = $publicId;
         $this->name = $name;
         $this->description = $description;
         $this->startDateTime = $startDateTime;
@@ -38,6 +41,10 @@ class Task implements Entity {
     public function getId() {
         return $this->id;
     }   
+
+    public function getPublicId() {
+        return $this->publicId;
+    }
 
     public function getName(): string {
         return $this->name;
@@ -76,6 +83,10 @@ class Task implements Entity {
         $this->id = $id;
     }
 
+    public function setPublicId($publicId): void {
+        $this->publicId = $publicId;
+    }
+
     public function setName(string $name): void {
         $this->name = $name;
     }
@@ -112,7 +123,7 @@ class Task implements Entity {
 
     public function toArray(): array {
         return [
-            'id' => $this->id,
+            'id' => $this->publicId,
             'name' => $this->name,
             'description' => $this->description,
             'startDateTime' => $this->startDateTime->format(DateTime::ATOM),
@@ -127,6 +138,7 @@ class Task implements Entity {
     public static function fromArray(array $data): self {
         return new Task(
             $data['id'],
+            $data['publicId'],
             $data['name'],
             $data['description'],
             new DateTime($data['startDateTime']),

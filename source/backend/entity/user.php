@@ -3,7 +3,8 @@
 require_once ENUM_PATH . 'role.php';
 
 class User implements Entity {
-    private $id;
+    private int $id;
+    private $publicId;
     protected string $firstName;
     protected string $middleName;
     protected string $lastName;
@@ -18,7 +19,8 @@ class User implements Entity {
 
 
     public function __construct(
-        $id,
+        int $id,
+        $publicId,
         string $firstName,
         string $middleName,
         string $lastName,
@@ -32,6 +34,7 @@ class User implements Entity {
         DateTime $joinedDateTime
     ) {
         $this->id = $id;
+        $this->publicId = $publicId;
         $this->firstName = $firstName;
         $this->middleName = $middleName;
         $this->lastName = $lastName;
@@ -48,6 +51,10 @@ class User implements Entity {
     // Getters
     public function getId() {
         return $this->id;
+    }
+
+    public function getPublicId() {
+        return $this->publicId;
     }
 
     public function getFirstName(): string {
@@ -95,6 +102,14 @@ class User implements Entity {
     }
 
     // Setters
+    public function setId(int $id): void {
+        $this->id = $id;
+    }
+
+    public function setPublicId($publicId): void {
+        $this->publicId = $publicId;
+    }
+
     public function setFirstName(string $firstName): void {
         $this->firstName = $firstName;
     }
@@ -142,6 +157,7 @@ class User implements Entity {
     public function toWorker(): Worker {
         return new Worker(
             $this->id,
+            $this->publicId,
             $this->firstName,
             $this->middleName,
             $this->lastName,
@@ -158,7 +174,7 @@ class User implements Entity {
 
     public function toArray(): array {
         return [
-            'id' => $this->id,
+            'id' => $this->publicId,
             'firstName' => $this->firstName,
             'middleName' => $this->middleName,
             'lastName' => $this->lastName,
@@ -176,6 +192,7 @@ class User implements Entity {
     public static function fromArray(array $data): self {
         return new User(
             $data['id'],
+            $data['publicId'],
             $data['firstName'],
             $data['middleName'],
             $data['lastName'],

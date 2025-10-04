@@ -1,24 +1,30 @@
 <?php
 
-class PhaseModel implements Model {
+class PhaseModel implements Model
+{
 
-    public function save(): bool {
+    public function save(): bool
+    {
         return true;
     }
 
-    public function delete(): bool {
+    public function delete(): bool
+    {
         return true;
     }
 
-    public static function create(mixed $data): void {
+    public static function create(mixed $data): void
+    {
         if ($data instanceof self) {
             throw new InvalidArgumentException('Expected instance of PhaseModel');
         }
     }
 
-    public static function all(): PhaseContainer {
+    public static function all(): PhaseContainer
+    {
         $phases = new PhaseContainer([
             new Phase(
+                random_int(1, 1000),
                 uniqid(),
                 'Phase 1',
                 'Lorem123',
@@ -28,6 +34,7 @@ class PhaseModel implements Model {
                 WorkStatus::COMPLETED
             ),
             new Phase(
+                random_int(1, 1000),
                 uniqid(),
                 'Phase 2',
                 'Lorem123',
@@ -37,6 +44,7 @@ class PhaseModel implements Model {
                 WorkStatus::ON_GOING
             ),
             new Phase(
+                random_int(1, 1000),
                 uniqid(),
                 'Phase 3',
                 'Lorem123',
@@ -49,7 +57,8 @@ class PhaseModel implements Model {
         return $phases;
     }
 
-    public static function find($id): ?self {
+    public static function find($id): ?self
+    {
         return null;
     }
 

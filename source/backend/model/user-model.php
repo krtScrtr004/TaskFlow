@@ -24,6 +24,7 @@ class UserModel implements Model
     {
         $users = [
             new User(
+                random_int(1, 1000),
                 uniqid(),
                 'Alice',
                 'B.',
@@ -38,6 +39,7 @@ class UserModel implements Model
                 new DateTime('2020-01-10')
             ),
             new User(
+                random_int(1, 1000),
                 uniqid(),
                 'Bob',
                 'C.',

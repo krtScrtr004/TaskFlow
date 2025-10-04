@@ -3,7 +3,9 @@
 class Worker extends User {
     private WorkerStatus $status;
 
-    public function __construct( $id,
+    public function __construct( 
+        int $id,
+        $publicId,
         string $firstName,
         string $middleName,
         string $lastName,
@@ -18,6 +20,7 @@ class Worker extends User {
     ) {
         parent::__construct(
             $id,
+            $publicId,
             $firstName,
             $middleName,
             $lastName,
@@ -54,6 +57,7 @@ class Worker extends User {
     public static function toUser(Worker $worker): User {
         return new User(
             $worker->getId(),
+            $worker->getPublicId(),
             $worker->getFirstName(),
             $worker->getMiddleName(),
             $worker->getLastName(),
@@ -82,6 +86,7 @@ class Worker extends User {
 
         return new Worker(
             $user->getId(),
+            $user->getPublicId(),
             $user->getFirstName(),
             $user->getMiddleName(),
             $user->getLastName(),
@@ -100,6 +105,7 @@ class Worker extends User {
         $user = User::fromArray($data['worker']);
         return new Worker(
             $user->getId(),
+            $user->getPublicId(),
             $user->getFirstName(),
             $user->getMiddleName(),
             $user->getLastName(),

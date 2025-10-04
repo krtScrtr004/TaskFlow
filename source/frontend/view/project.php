@@ -45,7 +45,7 @@
             <?php
         else:
             $projectData = [
-                'id' => htmlspecialchars($project->getId()),
+                'id' => htmlspecialchars($project->getPublicId()),
                 'name' => htmlspecialchars($project->getName()),
                 'description' => htmlspecialchars($project->getDescription()),
                 'budget' => htmlspecialchars(formatNumber(formatBudgetToPesos($project->getBudget()))),

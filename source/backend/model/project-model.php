@@ -39,6 +39,7 @@ class ProjectModel implements Model
         $status = WorkStatus::getStatusFromDates($start, $end);
 
         $project = new Project(
+                            random_int(1, 1000),
             uniqid(),
             'New Project',
             'This is a new project created for testing purposes.',
