@@ -50,6 +50,6 @@ if (birthDate) {
         elem.addEventListener('change', debounce(() => {
             const result = evaluateDate(`${daySelect.value} ${monthSelect.value} ${yearSelect.value}`)
             invalidDateResultBox.textContent = (!result) ? 'Invalid date! Please enter a valid date.' : ''
-        }), 300)
+        }, 300))
     })
 }
