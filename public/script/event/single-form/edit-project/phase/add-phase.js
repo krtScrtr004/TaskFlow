@@ -21,6 +21,9 @@ export function addPhase(params = {}) {
     }
     addNewPhaseButton.addEventListener('click', debounce(async () => {
         const addPhaseForm = addPhaseModal.querySelector('#add_phase_form')
+        if (!addPhaseForm) {
+            throw new Error('Add Phase Form not found.')
+        }
 
         const nameInput = addPhaseForm.querySelector('#phase_name')
         const descriptionInput = addPhaseForm.querySelector('#phase_description')
@@ -65,13 +68,9 @@ export function addPhase(params = {}) {
             clonePhaseListCard(body, allowDisable)
 
             // Reset form fields
-            nameInput.value = ''
-            descriptionInput.value = ''
-            startDateTimeInput.value = ''
-            completionDateTimeInput.value = ''
+            addPhaseForm.reset()
         } catch (error) {
             throw new Error(error)
-            Loader.delete()
         }
     }, 300))
 }

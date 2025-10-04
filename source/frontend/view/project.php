@@ -28,7 +28,6 @@
 
     <main class="main-page">
         <?php
-        $project = null;
         if (!isset($project)):
             $createProject = '';
 
@@ -334,7 +333,7 @@
 
         <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'progress-bar.js' ?>"></script>
         <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'task-chart.js' ?>"></script>
-        <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'worker-card.js' ?>"></script>
+        <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'create-worker-card.js' ?>"></script>
         <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'terminate-worker.js' ?>"></script>
 
         <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'add-worker-modal' . DS . 'open.js' ?>"></script>

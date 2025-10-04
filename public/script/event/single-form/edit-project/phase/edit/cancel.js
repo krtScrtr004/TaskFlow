@@ -35,9 +35,7 @@ phaseDetails?.addEventListener('click', async (e) => {
     e.stopPropagation()
 
     const cancelButton = e.target.closest('.cancel-phase-button')
-    if (!cancelButton) {
-        return
-    }
+    if (!cancelButton) return
 
     if (!await confirmationDialog(
         'Cancel Phase',

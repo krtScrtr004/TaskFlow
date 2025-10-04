@@ -24,6 +24,11 @@ if (phaseDetails) {
             if (closeButton) {
                 addPhaseModal.classList.remove('flex-row')
                 addPhaseModal.classList.add('no-display')
+
+                const addPhaseForm = addPhaseModal.querySelector('#add_phase_form')
+                if (addPhaseForm) {
+                    addPhaseForm.reset()
+                }
             }
         })
     }

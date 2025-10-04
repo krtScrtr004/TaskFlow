@@ -22,8 +22,7 @@ class SingleFormController implements Controller
             'script' => [
                 'single-form/edit-project/phase/open',
                 'single-form/edit-project/phase/create/add',
-                // 'single-form/edit-project/send-phase',
-                // 'single-form/edit-project/cancel-phase',
+                'single-form/edit-project/phase/create/cancel',
             ]
         ],
         'editProject' => [
