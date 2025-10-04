@@ -15,7 +15,7 @@ class PhaseModel implements Model
 
     public static function create(mixed $data): void
     {
-        if ($data instanceof self) {
+        if (!($data instanceof self)) {
             throw new InvalidArgumentException('Expected instance of PhaseModel');
         }
     }
