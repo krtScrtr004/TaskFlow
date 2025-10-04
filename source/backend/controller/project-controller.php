@@ -15,4 +15,9 @@ class ProjectController implements Controller
 
         require_once VIEW_PATH . 'project.php';
     }
+
+    public static function getProjectToEdit($projectId)
+    {
+
+    }
 }

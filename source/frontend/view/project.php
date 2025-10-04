@@ -42,38 +42,45 @@
                     height="150">
                 <h3>No active project found. <?= $createProject ?></h3>
             </section>
-        <?php else: ?>
+            <?php
+        else:
+            $projectData = [
+                'id' => htmlspecialchars($project->getId()),
+                'name' => htmlspecialchars($project->getName()),
+                'description' => htmlspecialchars($project->getDescription()),
+                'budget' => htmlspecialchars(formatNumber(formatBudgetToPesos($project->getBudget()))),
+                'startDateTime' => htmlspecialchars(formatDateTime($project->getStartDateTime())),
+                'completionDateTime' => htmlspecialchars(formatDateTime($project->getCompletionDateTime())),
+                'status' => $project->getStatus(),
+                'tasks' => $project->getTasks(),
+                'phases' => $project->getPhases(),
+                'workers' => $project->getWorkers(),
+            ];
+            ?>
             <!-- Main Content -->
             <section class="main-project-content flex-col">
 
                 <!-- Project Primary Info -->
                 <section class="project-primary-info content-section-block dark-white-bg">
-                    <?php
-                    $projectId = htmlspecialchars($project->getId());
-                    $projectName = htmlspecialchars($project->getName());
-                    $projectDescription = htmlspecialchars($project->getDescription());
-                    $projectStatus = $project->getStatus();
-                    ?>
-
                     <div class="">
                         <div class="flex-row flex-space-between">
 
                             <!-- Project Name and Status -->
                             <div class="main flex-row">
                                 <div class="first-col text-w-icon">
-                                    <img src="<?= ICON_PATH . 'project_b.svg' ?>" alt="<?= $projectName ?>"
-                                        title="<?= $projectName ?>" height="24">
+                                    <img src="<?= ICON_PATH . 'project_b.svg' ?>" alt="<?= $projectData['name'] ?>"
+                                        title="<?= $projectData['name'] ?>" height="24">
 
-                                    <h3 class="project-name wrap-text"><?= $projectName ?></h3>
+                                    <h3 class="project-name wrap-text"><?= $projectData['name'] ?></h3>
                                 </div>
 
-                                <?= WorkStatus::badge($projectStatus) ?>
+                                <?= WorkStatus::badge($projectData['status']) ?>
                             </div>
 
                             <?php if (Role::isProjectManager(Me::getInstance())): ?>
                                 <div>
                                     <!-- Edit Project -->
-                                    <a class="edit-project" href="<?= REDIRECT_PATH . 'edit-project/' . $projectId ?>">
+                                    <a class="edit-project" href="<?= REDIRECT_PATH . 'edit-project/' . $projectData['id'] ?>">
                                         <img src="<?= ICON_PATH . 'edit_b.svg' ?>" alt="Edit Project" title="Edit Project"
                                             height="24">
                                     </a>
@@ -81,11 +88,11 @@
                             <?php endif; ?>
                         </div>
 
-                        <p class="project-id"><em><?= $projectId ?></em></p>
+                        <p class="project-id"><em><?= $projectData['id'] ?></em></p>
                     </div>
 
                     <p class="project-description start-text">
-                        <?= $projectDescription ?>
+                        <?= $projectData['description'] ?>
                     </p>
                 </section>
 
@@ -101,19 +108,6 @@
 
                             <!-- Left Side -->
                             <div class="left grid">
-                                <?php
-                                $startDate = htmlspecialchars(
-                                    formatDateTime($project->getStartDateTime())
-                                );
-                                $completionDate = htmlspecialchars(
-                                    formatDateTime($project->getCompletionDateTime())
-                                );
-                                $budget = htmlspecialchars(
-                                    formatNumber(
-                                        formatBudgetToPesos($project->getBudget())
-                                    )
-                                );
-                                ?>
 
                                 <div class="first-col text-w-icon">
                                     <img src="<?= ICON_PATH . 'start_b.svg' ?>" alt="Start Date" title="Start Date"
@@ -121,7 +115,7 @@
 
                                     <h3>Start Date</h3>
                                 </div>
-                                <p class="second-col"><?= $startDate ?></p>
+                                <p class="second-col"><?= $projectData['startDateTime'] ?></p>
 
                                 <div class="first-col text-w-icon">
                                     <img src="<?= ICON_PATH . 'deadline_b.svg' ?>" alt="Completion Date"
@@ -129,13 +123,11 @@
 
                                     <h3>Completion Date</h3>
                                 </div>
-                                <p class="second-col"><?= $completionDate ?></p>
+                                <p class="second-col"><?= $projectData['completionDateTime'] ?></p>
 
                                 <?php
-                                if ($projectStatus === WorkStatus::COMPLETED):
-                                    $actualCompletionDate = htmlspecialchars(
-                                        formatDateTime($project->getActualCompletionDateTime())
-                                    );
+                                if ($projectData['status'] === WorkStatus::COMPLETED):
+                                    $actualCompletionDate = htmlspecialchars(formatDateTime($project->getActualCompletionDateTime()));
                                     ?>
                                     <div class="first-col text-w-icon">
                                         <img src="<?= ICON_PATH . 'complete_b.svg' ?>" alt="Completed At" title="Completed At"
@@ -151,16 +143,14 @@
 
                                     <h3>Budget</h3>
                                 </div>
-                                <p class="second-col"><?= PESO_SIGN . ' ' . $budget ?></p>
+                                <p class="second-col"><?= PESO_SIGN . ' ' . $projectData['budget'] ?></p>
                             </div>
 
                             <!-- Right Side -->
                             <div class="right">
                                 <?php
-                                $projectProgress = ProjectProgressCalculator::calculateProjectProgress($project->getTasks());
-                                $progressPercentage = htmlspecialchars(
-                                    formatNumber($projectProgress['progressPercentage'])
-                                );
+                                $projectProgress = ProjectProgressCalculator::calculateProjectProgress($projectData['tasks']);
+                                $progressPercentage = htmlspecialchars(formatNumber($projectProgress['progressPercentage']));
                                 ?>
 
                                 <div class="text-w-icon">
@@ -200,16 +190,21 @@
                                 <div class="task-status-chart chart-container">
                                     <?php
                                     $statusBreakdown = $projectProgress['statusBreakdown'];
-                                    $pendingPercentage = $statusBreakdown[WorkStatus::PENDING->value]['percentage'] ?? 0;
-                                    $onGoingPercentage = $statusBreakdown[WorkStatus::ON_GOING->value]['percentage'] ?? 0;
-                                    $completedPercentage = $statusBreakdown[WorkStatus::COMPLETED->value]['percentage'] ?? 0;
-                                    $delayedPercentage = $statusBreakdown[WorkStatus::DELAYED->value]['percentage'] ?? 0;
-                                    $cancelledPercentage = $statusBreakdown[WorkStatus::CANCELLED->value]['percentage'] ?? 0;
+                                    $statusPercentages = [
+                                        'pending' => $statusBreakdown[WorkStatus::PENDING->value]['percentage'] ?? 0,
+                                        'ongoing' => $statusBreakdown[WorkStatus::ON_GOING->value]['percentage'] ?? 0,
+                                        'completed' => $statusBreakdown[WorkStatus::COMPLETED->value]['percentage'] ?? 0,
+                                        'delayed' => $statusBreakdown[WorkStatus::DELAYED->value]['percentage'] ?? 0,
+                                        'cancelled' => $statusBreakdown[WorkStatus::CANCELLED->value]['percentage'] ?? 0,
+                                    ];
+
                                     ?>
-                                    <div data-pending="<?= $pendingPercentage ?>" data-onGoing="<?= $onGoingPercentage ?>"
-                                        data-completed="<?= $completedPercentage ?>"
-                                        data-delayed="<?= $delayedPercentage ?>"
-                                        data-cancelled="<?= $cancelledPercentage ?>" class="status-percentage no-display">
+                                    <div data-pending="<?= $statusPercentages['pending'] ?>"
+                                        data-ongoing="<?= $statusPercentages['ongoing'] ?>"
+                                        data-completed="<?= $statusPercentages['completed'] ?>"
+                                        data-delayed="<?= $statusPercentages['delayed'] ?>"
+                                        data-cancelled="<?= $statusPercentages['cancelled'] ?>"
+                                        class="status-percentage no-display">
                                     </div>
 
                                     <div class="first-col text-w-icon">
@@ -225,13 +220,16 @@
                                 <div class="task-priority-chart chart-container">
                                     <?php
                                     $priorityBreakdown = $projectProgress['priorityBreakdown'];
-                                    $lowPriorityPercentage = $priorityBreakdown[TaskPriority::LOW->value]['percentage'] ?? 0;
-                                    $mediumPriorityPercentage = $priorityBreakdown[TaskPriority::MEDIUM->value]['percentage'] ?? 0;
-                                    $highPriorityPercentage = $priorityBreakdown[TaskPriority::HIGH->value]['percentage'] ?? 0;
+                                    $priorityPercentages = [
+                                        'low' => $priorityBreakdown[TaskPriority::LOW->value]['percentage'] ?? 0,
+                                        'medium' => $priorityBreakdown[TaskPriority::MEDIUM->value]['percentage'] ?? 0,
+                                        'high' => $priorityBreakdown[TaskPriority::HIGH->value]['percentage'] ?? 0,
+                                    ];
                                     ?>
-                                    <div data-low="<?= $lowPriorityPercentage ?>"
-                                        data-medium="<?= $mediumPriorityPercentage ?>"
-                                        data-high="<?= $highPriorityPercentage ?>" class="priority-percentage no-display">
+                                    <div data-low="<?= $priorityPercentages['low'] ?>"
+                                        data-medium="<?= $priorityPercentages['medium'] ?>"
+                                        data-high="<?= $priorityPercentages['high'] ?>"
+                                        class="priority-percentage no-display">
                                     </div>
 
                                     <div class="first-col text-w-icon">
@@ -257,22 +255,10 @@
 
                             <!-- Phases List -->
                             <div class="phase-list flex-col">
-                                <?php
-                                $projectPhases = $project->getPhases();
-                                foreach ($projectPhases as $phase) {
-                                    $name = htmlspecialchars($phase->getName());
-                                    $description = htmlspecialchars($phase->getDescription());
-                                    $startDateTime = htmlspecialchars(
-                                        simplifyDate($phase->getStartDateTime())
-                                    );
-                                    $completionDateTime = htmlspecialchars(
-                                        simplifyDate($phase->getCompletionDateTime())
-                                    );
-
+                                <?php foreach ($projectData['phases'] as $phase) {
                                     // Phase List Card
                                     echo phaseListCard($phase);
-                                }
-                                ?>
+                                } ?>
 
                                 <hr>
                             </div>
@@ -308,21 +294,14 @@
 
                         <!-- Worker List -->
                         <div class="worker-list flex-col">
-                            <?php
-                            $projectWorkers = $project->getWorkers();
-                            $hasWorker = $projectWorkers->count() > 0;
-
-                            foreach ($projectWorkers as $worker) {
+                            <?php foreach ($projectData['workers'] as $worker) {
                                 // Worker List Card
                                 echo workerListCard($worker);
-                            }
-
-                            $noWorkersWallClass = $hasWorker ? 'no-display' : 'flex-col';
-                            ?>
+                            } ?>
 
                             <!-- No Workers Wall -->
                             <div
-                                class="no-workers-wall no-content-wall <?= $noWorkersWallClass ?> ">
+                                class="no-workers-wall no-content-wall <?= $projectData['workers']->count() > 0 ? 'no-display' : 'flex-col' ?>">
                                 <img src="<?= ICON_PATH . 'empty_b.svg' ?>" alt="No workers assigned"
                                     title="No workers assigned" height="70">
                                 <h3 class="center-text">No workers assigned to this project.</h3>
