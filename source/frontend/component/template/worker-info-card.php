@@ -7,12 +7,20 @@
             <div class="flex-row flex-child-center-v">
                 <img class="worker-profile-picture circle fit-contain" src="" alt="" height="60" width="60">
 
-                <div class="flex-col flex-child-center-v">
-                    <h4 class="worker-name"></h4>
-                    <p class="worker-id">
-                        <em></em>
-                    </p>
+                <div class="flex-col">
+                    <div class="flex-col flex-child-center-v">
+                        <h4 class="worker-name"></h4>
+                        <p class="worker-id">
+                            <em></em>
+                        </p>
+                    </div>
+
+                    <div class="worker-job-titles flex-row flex-wrap">
+                        
+
+                    </div>
                 </div>
+
             </div>
 
             <div class="flex-col flex-child-start-v">
@@ -23,7 +31,7 @@
         </section>
 
         <!-- Worker Bio -->
-        <p class="worker-bio"></p>
+            <p class="worker-bio">!</p>
 
         <hr>
 
@@ -42,7 +50,8 @@
             <!-- Completed Tasks -->
             <div class="worker-completed-tasks worker-statistic flex-col flex-child-center-h">
                 <div class="text-w-icon">
-                    <img src="<?= ICON_PATH . 'complete_b.svg' ?>" alt="Completed Tasks" title="Completed Tasks" height="20">
+                    <img src="<?= ICON_PATH . 'complete_b.svg' ?>" alt="Completed Tasks" title="Completed Tasks"
+                        height="20">
                     <p class="center-text">Completed Tasks</p>
                 </div>
                 <h4 class="center-text"></h4>
@@ -67,14 +76,14 @@
             <div class="text-w-icon">
                 <img src="<?= ICON_PATH . 'email_b.svg' ?>" alt="Email" title="Email" height="24">
 
-                <p class="worker-email"></p>
+                <p class="worker-email wrap-text"></p>
             </div>
 
             <!-- Contact Number -->
             <div class="text-w-icon">
                 <img src="<?= ICON_PATH . 'contact_b.svg' ?>" alt="Contact" title="Contact" height="24">
 
-                <p class="worker-contact"></p>
+                <p class="worker-contact wrap-text"></p>
             </div>
         </section>
 

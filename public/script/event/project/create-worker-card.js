@@ -40,13 +40,16 @@ function addInfoToCard(card, worker) {
     const {
         workerProfilePicture, workerName, workerId, workerBio,
         workerTotalTasks, workerCompletedTasks, workerPerformance,
-        workerEmail, workerContact
+        workerEmail, workerContact, workerJobTitles
     } = domElements
 
     // Add worker info to card
     workerProfilePicture.src = worker.profilePicture || `${ICON_PATH}profile_b.svg`
     workerName.textContent = worker.name || 'Unknown'
     workerId.textContent = worker.id || 'N/A'
+    workerJobTitles.innerHTML = worker.jobTitles.map(title =>
+        `<span class="job-title-chip">${title}</span>`
+    ).join('')
     workerBio.textContent = worker.bio || 'No bio available'
     workerTotalTasks.textContent = worker.totalTasks || 0
     workerCompletedTasks.textContent = worker.completedTasks || 0
@@ -87,6 +90,7 @@ function getCardDomElements(card) {
         workerProfilePicture: card.querySelector('.worker-profile-picture'),
         workerName: card.querySelector('.worker-name'),
         workerId: card.querySelector('.worker-id'),
+        workerJobTitles: card.querySelector('.worker-job-titles'),
         workerBio: card.querySelector('.worker-bio'),
         workerTotalTasks: card.querySelector('.worker-total-tasks h4'),
         workerCompletedTasks: card.querySelector('.worker-completed-tasks h4'),

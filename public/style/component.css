@@ -268,7 +268,7 @@ button > .text-w-icon {
 	min-height: 10rem;
 }
 
-/*  */
+/* ---------------- JOB TITLE CHIP ---------------- */
 .job-title-chip {
 	background-color: var(--white);
 	color: var(--black);

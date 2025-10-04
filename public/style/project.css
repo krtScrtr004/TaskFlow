@@ -2,12 +2,14 @@
 
 .worker-info-card {
 	min-height: 20rem;
+	height: fit-content;
 	width: 28rem !important;
 	max-width: unset !important;
 	max-height: 70vh;
 	padding: var(--space);
 	border: var(--border-radius);
 	gap: var(--space);
+	overflow: auto;
 }
 
 .worker-info-card .worker-profile-picture {
@@ -21,6 +23,11 @@
 
 .worker-info-card .worker-id {
 	font-size: 1rem;
+}
+
+.worker-info-card .worker-job-titles {
+	margin-top: 0.3rem;
+	gap: 0.3rem;
 }
 
 .worker-info-card > .worker-bio {
@@ -43,6 +50,10 @@
 
 .worker-info-card > .contact-info {
 	gap: 0.3rem;
+}
+
+.worker-info-card > .contact-info p {
+	white-space: pre-wrap;
 }
 
 .worker-info-card > #terminate_worker_button {
