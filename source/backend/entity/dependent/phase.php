@@ -125,7 +125,7 @@ class Phase implements Entity
             'description' => $this->description,
             'startDateTime' => $this->startDateTime->format(DateTime::ATOM),
             'completionDateTime' => $this->completionDateTime->format(DateTime::ATOM),
-            'actualCompletionDateTime' => $this->actualCompletionDateTime->format(DateTime::ATOM) ?? null,
+            'actualCompletionDateTime' => $this->actualCompletionDateTime ? $this->actualCompletionDateTime->format(DateTime::ATOM) : null,
             'status' => $this->status->value
         ];
     }

@@ -15,7 +15,7 @@ class UserModel implements Model
 
     public static function create(mixed $user): void
     {
-        if ($user instanceof self) {
+        if (!($user instanceof self)) {
             throw new InvalidArgumentException('Expected instance of UserModel');
         }
     }
