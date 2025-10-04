@@ -11,7 +11,7 @@ async function sendToBackend(projectId) {
     }
     isLoading = true
 
-    const response = await Http.post('cancel-project', projectId)
+    const response = await Http.POST('cancel-project', { projectId: projectId })
     if (!response) {
         throw new Error('No response from the server.')
     }
