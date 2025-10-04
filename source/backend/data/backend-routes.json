@@ -5,6 +5,7 @@
     },
 
     "POST": {
+        "TaskFlow/cancel-project": ["ProjectController", "cancelProject"],
         "TaskFlow/add-worker": ["WorkerController", "addWorker"],
         "TaskFlow/terminate-worker": ["WorkerController", "terminateWorker"],
         "TaskFlow/add-phase": ["PhaseController", "addPhase"],

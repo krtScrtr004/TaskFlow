@@ -269,12 +269,14 @@
 	padding-bottom: 0 !important;
 }
 
-.project-actions > a {
+#cancel_project_button {
 	width: fit-content;
+	color: var(--red);
 	padding: 0.5rem 0;
 	font-weight: 500;
 }
 
-.project-actions > a:hover {
+#cancel_project_button:hover {
+	opacity: 1;
 	text-decoration: underline;
 } 

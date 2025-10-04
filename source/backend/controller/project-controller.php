@@ -1,5 +1,7 @@
 <?php
 
+use LDAP\Result;
+
 class ProjectController implements Controller
 {
     private function __construct()
@@ -16,8 +18,20 @@ class ProjectController implements Controller
         require_once VIEW_PATH . 'project.php';
     }
 
-    public static function getProjectToEdit($projectId)
+    public static function cancelProject(): void
     {
+        $data = decodeData('php://input');
+        if (!$data) {
+            Response::error('Cannot decode data.');
+        }
 
+        $projectId = $data['projectId'] ?? null;
+        if (!$projectId) {
+            Response::error('Project ID is required.');
+        }
+
+        // TODO: Validate projectId
+
+        Response::success([], 'Project cancelled successfully.');
     }
 }

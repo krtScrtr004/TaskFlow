@@ -58,7 +58,7 @@
             ];
             ?>
             <!-- Main Content -->
-            <section class="main-project-content flex-col">
+            <section class="main-project-content flex-col" data-projectid="<?= $projectData['id'] ?>">
 
                 <!-- Project Primary Info -->
                 <section class="project-primary-info content-section-block dark-white-bg">
@@ -276,9 +276,9 @@
 
                                 <hr>
 
-                                <a class="inline-block red-text" href="">
+                                <button id="cancel_project_button" type="button" class="unset-button" href="">
                                     Cancel This Project
-                                </a>
+                                </button>
                             </section>
                         <?php endif; ?>
                     </div>
@@ -335,6 +335,7 @@
         <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'task-chart.js' ?>"></script>
         <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'create-worker-card.js' ?>"></script>
         <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'terminate-worker.js' ?>"></script>
+        <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'cancel.js' ?>"></script>
 
         <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'add-worker-modal' . DS . 'open.js' ?>"></script>
         <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'add-worker-modal' . DS . 'close.js' ?>"></script>
