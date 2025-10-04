@@ -57,6 +57,15 @@ export const Dialog = (() => {
             )
         },
 
+        somethingWentWrong: function () {
+            render(
+                false,
+                'something_went_wrong_dialog',
+                'Something Went Wrong',
+                'An unexpected error occurred. Please try again later.'
+            )
+        },
+
         changePassword: function (status) {
             const id = 'change-password-' + ((status) ? 'success' : 'error') + '_dialog'
             const message = (status)

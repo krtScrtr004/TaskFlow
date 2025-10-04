@@ -20,34 +20,41 @@ async function sendToBackend(projectId, workerIds) {
 const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
 if (addWorkerModalTemplate) {
     const confirmAddWorkerButton = addWorkerModalTemplate.querySelector('#confirm_add_worker_button')
-    confirmAddWorkerButton.addEventListener('click', async () => {
-        if (selectedUsers.length === 0) {
-            Dialog.errorOccurred('No workers selected. Please select at least one worker to add.')
-            return
-        }
+    if (!confirmAddWorkerButton) {
+        console.error('Confirm Add Worker button not found.')
+        Dialog.somethingWentWrong()
+    } else {
+        confirmAddWorkerButton.addEventListener('click', async () => {
+            if (selectedUsers.length === 0) {
+                Dialog.errorOccurred('No workers selected. Please select at least one worker to add.')
+                return
+            }
 
-        if (!await confirmationDialog(
-            'Add Workers',
-            `Are you sure you want to add ${selectedUsers.length} worker(s) to this project?`,
-        )) return
+            if (!await confirmationDialog(
+                'Add Workers',
+                `Are you sure you want to add ${selectedUsers.length} worker(s) to this project?`,
+            )) return
 
-        const addWorkerButton = document.querySelector('#add_worker_button')
-        const projectId = addWorkerButton.dataset.projectid
-        if (!projectId) {
-            console.error('Project ID not found in modal dataset.')
-            return
-        }
+            const addWorkerButton = document.querySelector('#add_worker_button')
+            const projectId = addWorkerButton.dataset.projectid
+            if (!projectId) {
+                console.error('Project ID not found in modal dataset.')
+                Dialog.somethingWentWrong()
+                return
+            }
 
-        Loader.patch(confirmAddWorkerButton.querySelector('.text-w-icon'))
-        try {
-            await sendToBackend(projectId, selectedUsers)
-        } catch (error) {
-            console.error(error)
-            Dialog.errorOccurred('An error occurred while adding workers. Please try again.')
-        } finally {
-            Loader.delete()
-        }
-    })
+            Loader.patch(confirmAddWorkerButton.querySelector('.text-w-icon'))
+            try {
+                await sendToBackend(projectId, selectedUsers)
+            } catch (error) {
+                console.error(error)
+                Dialog.errorOccurred('An error occurred while adding workers. Please try again.')
+            } finally {
+                Loader.delete()
+            }
+        })
+    }
 } else {
     console.error('Add Worker Modal template not found.')
+    Dialog.somethingWentWrong()
 }

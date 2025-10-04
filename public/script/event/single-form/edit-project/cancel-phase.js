@@ -36,7 +36,6 @@ phaseDetails?.addEventListener('click', async (e) => {
 
     const cancelButton = e.target.closest('.cancel-phase-button')
     if (!cancelButton) {
-        console.error('Cancel button not found.')
         return
     }
 
@@ -49,6 +48,7 @@ phaseDetails?.addEventListener('click', async (e) => {
     const phaseId = phase.dataset.id
     if (!phaseId) {
         console.error('Phase ID not found.')
+        Dialog.somethingWentWrong()
         return
     }
 

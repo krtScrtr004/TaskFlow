@@ -1,4 +1,5 @@
 import { Http } from '../../../utility/http.js'
+import { Dialog } from '../../../render/dialog.js'
 
 export const selectedUsers = []
 let isLoading = false
@@ -45,7 +46,12 @@ export function selectWorker() {
     if (isSelectWorkerEventInitialized) return 
     
     const workerList = addWorkerModalTemplate.querySelector('.worker-list')
-    
+    if (!workerList) {
+        console.error('Worker list container not found.')
+        Dialog.somethingWentWrong()
+        return
+    }
+
     // Use event delegation but be more specific about what triggers the action
     workerList.addEventListener('click', e => {
         // Only proceed if clicked on checkbox, label, or worker-checkbox div

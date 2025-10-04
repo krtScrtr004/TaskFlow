@@ -22,7 +22,6 @@ async function sendToBackend(data) {
 }
 
 function clonePhaseDom(data) {
-
     const phases = document.querySelector('.phase-details > .phases')
     let phaseClone = phases.querySelectorAll('.phase').item(0).cloneNode(true)
 
@@ -34,12 +33,19 @@ function clonePhaseDom(data) {
     const completionDateTime = phaseClone.querySelector('.phase-completion-datetime')
     const statusBadge = phaseClone.querySelector('.status-badge')
 
+    if (!name || !description || !startDateTime || !completionDateTime || !statusBadge) {
+        console.error('One or more required elements are missing in the phase template.')
+        Dialog.somethingWentWrong()
+        Loader.delete()
+        return
+    }
+
     // Remove disabled attribute from all inputs
     const allInputs = phaseClone.querySelectorAll('input, textarea, select');
     allInputs.forEach(input => input.removeAttribute('disabled'));
-    
+
     // Disable startDateTime if it's already in progress (current date is after start date)
-    const startDate = new Date(startDateTime);
+    const startDate = new Date(data.startDateTime);
     const hasStarted = startDate < new Date();
     if (hasStarted) {
         const startDateTimeInput = phaseClone.querySelector('.phase-start-datetime input');
@@ -47,7 +53,7 @@ function clonePhaseDom(data) {
             startDateTimeInput.setAttribute('disabled', 'disabled');
         }
     }
-    
+
     phaseClone.dataset.id = data.id
     name.textContent = data.name
     description.textContent = data.description || 'No description provided.'
@@ -70,15 +76,20 @@ function clonePhaseDom(data) {
 
     phases.appendChild(phaseClone)
 
-    phases.scrollTo({ top: phases.scrollHeight, behavior: 'smooth' })   
+    phases.scrollTo({ top: phases.scrollHeight, behavior: 'smooth' })
 
     Loader.delete()
 }
 
 function createCancelButton(parentElement, phaseName) {
+    if (!parentElement || !phaseName) {
+        console.error('Parent element or phase name is missing for creating cancel button.')
+        return
+    }
+
     const button = document.createElement('button')
     button.type = 'button'
-    button.className = 'unset-button'
+    button.className = 'cancel-phase-button unset-button'
 
     const icon = document.createElement('img')
     icon.src = 'asset/image/icon/delete_r.svg'
@@ -93,56 +104,62 @@ function createCancelButton(parentElement, phaseName) {
 const addPhaseModal = document.querySelector('#add_phase_modal')
 if (addPhaseModal) {
     const addNewPhaseButton = addPhaseModal.querySelector('#add_new_phase_button')
-    addNewPhaseButton.addEventListener('click', debounce(async () => {
-        const addPhaseForm = addPhaseModal.querySelector('#add_phase_form')
+    if (!addNewPhaseButton) {
+        console.error('Add New Phase button not found')
+        Dialog.somethingWentWrong()
+    } else {
+        addNewPhaseButton.addEventListener('click', debounce(async () => {
+            const addPhaseForm = addPhaseModal.querySelector('#add_phase_form')
 
-        const nameInput = addPhaseForm.querySelector('#phase_name')
-        const descriptionInput = addPhaseForm.querySelector('#phase_description')
-        const startDateTimeInput = addPhaseForm.querySelector('#phase_start_datetime')
-        const completionDateTimeInput = addPhaseForm.querySelector('#phase_completion_datetime')
+            const nameInput = addPhaseForm.querySelector('#phase_name')
+            const descriptionInput = addPhaseForm.querySelector('#phase_description')
+            const startDateTimeInput = addPhaseForm.querySelector('#phase_start_datetime')
+            const completionDateTimeInput = addPhaseForm.querySelector('#phase_completion_datetime')
 
-        const name = nameInput.value.trim()
-        const description = descriptionInput.value.trim()
-        const startDateTime = startDateTimeInput.value.trim()
-        const completionDateTime = completionDateTimeInput.value.trim()
+            const name = nameInput.value.trim()
+            const description = descriptionInput.value.trim()
+            const startDateTime = startDateTimeInput.value.trim()
+            const completionDateTime = completionDateTimeInput.value.trim()
 
-        // Check required fields
-        if (!name || !startDateTime || !completionDateTime) {
-            Dialog.errorOccurred('Name, start date and completion date fields are required. Please fill in all fields.')
-            return
-        }
-
-        Loader.patch(addNewPhaseButton.querySelector('.text-w-icon'))
-        try {
-            const body = {
-                'name': name,
-                'description': description,
-                'startDateTime': startDateTime,
-                'completionDateTime': completionDateTime,
+            // Check required fields
+            if (!name || !startDateTime || !completionDateTime) {
+                Dialog.errorOccurred('Name, start date and completion date fields are required. Please fill in all fields.')
+                return
             }
-            const phaseId = await sendToBackend(body)
-            body.id = phaseId
 
-            // Simulate a click on the close button to close the modal
-            const closeButton = addPhaseModal.querySelector('#add_phase_close_button')
-            closeButton.click()
+            Loader.patch(addNewPhaseButton.querySelector('.text-w-icon'))
+            try {
+                const body = {
+                    'name': name,
+                    'description': description,
+                    'startDateTime': startDateTime,
+                    'completionDateTime': completionDateTime,
+                }
+                const phaseId = await sendToBackend(body)
+                body.id = phaseId
 
-            Loader.delete()
+                // Simulate a click on the close button to close the modal
+                const closeButton = addPhaseModal.querySelector('#add_phase_close_button')
+                closeButton.click()
 
-            Dialog.operationSuccess('Phase Added', 'New phase added successfully.')
-            clonePhaseDom(body)
+                Loader.delete()
 
-            // Reset form fields
-            nameInput.value = ''
-            descriptionInput.value = ''
-            startDateTimeInput.value = ''
-            completionDateTimeInput.value = ''
-        } catch (error) {
-            console.error('Error adding new phase:', error)
-            Dialog.errorOccurred('Failed to add new phase. Please try again.')
-            Loader.delete()
-        } 
-    }, 300))
+                Dialog.operationSuccess('Phase Added', 'New phase added successfully.')
+                clonePhaseDom(body)
+
+                // Reset form fields
+                nameInput.value = ''
+                descriptionInput.value = ''
+                startDateTimeInput.value = ''
+                completionDateTimeInput.value = ''
+            } catch (error) {
+                console.error('Error adding new phase:', error)
+                Dialog.errorOccurred('Failed to add new phase. Please try again.')
+                Loader.delete()
+            }
+        }, 300))
+    }
 } else {
     console.error('Add Phase Modal not found')
+    Dialog.somethingWentWrong()
 }

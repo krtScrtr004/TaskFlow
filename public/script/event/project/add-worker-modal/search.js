@@ -1,21 +1,31 @@
 import { fetchWorkers, createWorkerListCard } from './shared.js'
 import { debounce } from '../../../utility/debounce.js'
 import { Loader } from '../../../render/loader.js'
+import { Dialog } from '../../../render/dialog.js'
 
 const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
 if (addWorkerModalTemplate) {
     const searchBarForm = addWorkerModalTemplate.querySelector('form.search-bar')
     const button = searchBarForm.querySelector('button')
+    if (!button) {
+        console.error('Search bar or button not found.')
+        Dialog.somethingWentWrong()
+    }
 
     async function searchForWorker() {
         const workerList = addWorkerModalTemplate.querySelector('.worker-list')
+        if (!workerList) {
+            console.error('Worker list container not found.')
+            Dialog.somethingWentWrong()
+            return
+        }
         const noWorkersWall = workerList.parentElement.querySelector('.no-workers-wall')
 
         workerList.textContent = ''
 
         // Hide no workers message and show worker list
-        noWorkersWall.classList.remove('flex-col')
-        noWorkersWall.classList.add('no-display')
+        noWorkersWall?.classList.remove('flex-col')
+        noWorkersWall?.classList.add('no-display')
 
         workerList.classList.add('flex-col')
         workerList.classList.remove('no-display')
@@ -31,14 +41,15 @@ if (addWorkerModalTemplate) {
                 workers.forEach(worker => createWorkerListCard(worker))
             } else {
                 // Show no workers message if no results
-                noWorkersWall.classList.add('flex-col')
-                noWorkersWall.classList.remove('no-display')
+                noWorkersWall?.classList.add('flex-col')
+                noWorkersWall?.classList.remove('no-display')
 
                 workerList.classList.remove('flex-col')
                 workerList.classList.add('no-display')
             }
         } catch (error) {
             console.error(error.message)
+            Dialog.errorOccurred('Failed to load workers. Please try again.')
         } finally {
             Loader.delete()
         }
