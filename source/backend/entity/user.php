@@ -11,6 +11,7 @@ class User implements Entity {
     protected Gender $gender;
     protected DateTime $birthDate;
     protected Role $role;
+    protected JobTitleContainer $jobTitles;
     protected string $contactNumber;
     protected string $email;
     protected ?string $bio;
@@ -27,6 +28,7 @@ class User implements Entity {
         Gender $gender,
         DateTime $birthDate,
         Role $role,
+        JobTitleContainer $jobTitles,
         string $contactNumber,
         string $email,
         ?string $bio,
@@ -41,6 +43,7 @@ class User implements Entity {
         $this->gender = $gender;    
         $this->birthDate = $birthDate;
         $this->role = $role;
+        $this->jobTitles = $jobTitles;
         $this->contactNumber = $contactNumber;
         $this->email = $email;
         $this->bio = $bio;
@@ -79,6 +82,10 @@ class User implements Entity {
 
     public function getRole(): Role {
         return $this->role;
+    }
+
+    public function getJobTitles(): JobTitleContainer {
+        return $this->jobTitles;
     }
 
     public function getContactNumber(): string {
@@ -134,6 +141,10 @@ class User implements Entity {
         $this->role = $role;
     }
 
+    public function setJobTitles(JobTitleContainer $jobTitles): void {
+        $this->jobTitles = $jobTitles;
+    }
+
     public function setContactNumber(string $contactNumber): void {
         $this->contactNumber = $contactNumber;
     }
@@ -163,6 +174,7 @@ class User implements Entity {
             $this->lastName,
             $this->gender,
             $this->birthDate,
+            $this->jobTitles,
             $this->contactNumber,
             $this->email,
             $this->bio,
@@ -181,6 +193,7 @@ class User implements Entity {
             'gender' => $this->gender->getDisplayName(),
             'birthDate' => $this->birthDate->format('Y-m-d'),
             'role' => $this->role,
+            'jobTitles' => $this->jobTitles->toArray(),
             'contactNumber' => $this->contactNumber,
             'email' => $this->email,
             'bio' => $this->bio,
@@ -199,6 +212,7 @@ class User implements Entity {
             $data['gender'],
             new DateTime($data['birthDate']),
             $data['role'],
+            JobTitleContainer::fromArray($data['jobTitles']),
             $data['contactNumber'],
             $data['email'],
             $data['bio'],

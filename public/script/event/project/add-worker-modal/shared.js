@@ -26,15 +26,25 @@ export function createWorkerListCard(worker) {
     const workerList = addWorkerModalTemplate.querySelector('.worker-list')
 
     const html = `
-        <div class="worker-checkbox flex-row flex-child-center-h">
+        <div class="worker-checkbox flex-row flex-child-center-h ">
             <input type="checkbox" name="${worker.id}" id="${worker.id}">
 
             <label for="${worker.id}" class="worker-list-card" data-id="${worker.id}">
-                <img src="${worker.profilePicture || ICON_PATH + 'profile_b.svg'}" alt="${worker.name}" title="${worker.name}" height="40">
+                <div class="flex-col flex-child-center-v">
+                    <img src="${worker.profilePicture || ICON_PATH + 'profile_b.svg'}" alt="${worker.name}" title="${worker.name}" height="40">
+                </div>
 
-                <div>
-                    <h4 class="wrap-text">${worker.name}</h4>
-                    <p><em>${worker.id}</em></p>
+                <div class="flex-col">
+                    <div>
+                        <h4 class="wrap-text">${worker.name}</h4>
+                        <p><em>${worker.id}</em></p>
+                    </div>
+
+                    <div class="job-titles flex-row flex-wrap">
+                        ${(worker.jobTitles && worker.jobTitles.length > 0) 
+                            ? worker.jobTitles.map(title => `<span class="job-title-chip">${title}</span>`).join(' ') 
+                            : '<span class="no-job-title-badge">No Job Titles</span>'}
+                    </div>
                 </div>
             </label>
         </div>`
@@ -43,8 +53,8 @@ export function createWorkerListCard(worker) {
 
 let isSelectWorkerEventInitialized = false
 export function selectWorker() {
-    if (isSelectWorkerEventInitialized) return 
-    
+    if (isSelectWorkerEventInitialized) return
+
     const workerList = addWorkerModalTemplate.querySelector('.worker-list')
     if (!workerList) {
         console.error('Worker list container not found.')
@@ -57,11 +67,11 @@ export function selectWorker() {
         // Only proceed if clicked on checkbox, label, or worker-checkbox div
         const workerCheckbox = e.target.closest('.worker-checkbox')
         if (!workerCheckbox) return
-        
+
         // Prevent multiple triggers
         e.stopPropagation()
         e.preventDefault()
-        
+
         const checkbox = workerCheckbox.querySelector('input[type="checkbox"]')
         if (!checkbox) return
 
@@ -83,6 +93,6 @@ export function selectWorker() {
         }
         console.table(selectedUsers)
     })
-    
+
     isSelectWorkerEventInitialized = true
 }

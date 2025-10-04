@@ -16,6 +16,7 @@ class Me extends User
             gender: Gender::MALE,
             birthDate: new DateTime('2000-01-01'),
             role: Role::PROJECT_MANAGER,
+            jobTitles: new JobTitleContainer(['Project Manager']),
             contactNumber: '123-456-7890',
             email: 'zing.zang@example.com',
             bio: null,

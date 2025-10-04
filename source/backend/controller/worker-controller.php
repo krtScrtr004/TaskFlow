@@ -24,13 +24,14 @@ class WorkerController implements Controller
             $tasks = TaskModel::all();
             $workerPerformanceTask = WorkerPerformanceCalculator::calculateWorkerPerformance($tasks);
             return [
-                'id' => $worker->getId(),
+                'id' => $worker->getPublicId(),
                 'name' => $worker->getFirstName() . ' ' . $worker->getLastName(),
                 'profilePicture' => $worker->getProfileLink(),
                 'bio' => $worker->getBio(),
                 'email' => $worker->getEmail(),
                 'contactNumber' => $worker->getContactNumber(),
                 'role' => $worker->getRole()->value,
+                'jobTitles' => $worker->getJobTitles()->toArray(),
                 'totalTasks' => count($tasks),
                 'completedTasks' => $tasks->getTaskCountByStatus(WorkStatus::COMPLETED),
                 'performance' => $workerPerformanceTask['overallScore'],

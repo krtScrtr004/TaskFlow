@@ -267,3 +267,14 @@ button > .text-w-icon {
 	align-items: center;
 	min-height: 10rem;
 }
+
+/*  */
+.job-title-chip {
+	background-color: var(--white);
+	color: var(--black);
+	padding: 0.2rem 0.5rem;
+	border: 1px solid var(--black);
+	border-radius: 5rem;
+	font-size: 0.9rem;
+	margin: 0.1rem;
+}

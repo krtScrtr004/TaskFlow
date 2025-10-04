@@ -293,7 +293,7 @@
                         </div>
 
                         <!-- Worker List -->
-                        <div class="worker-list flex-col">
+                        <div class="worker-list">
                             <?php foreach ($projectData['workers'] as $worker) {
                                 // Worker List Card
                                 echo workerListCard($worker);
@@ -306,22 +306,22 @@
                                     title="No workers assigned" height="70">
                                 <h3 class="center-text">No workers assigned to this project.</h3>
                             </div>
-
-                            <!-- Add Worker Button -->
-                            <?php if (Role::isProjectManager(Me::getInstance())): ?>
-                                <div class="">
-                                    <button id="add_worker_button" type="button" class="float-right blue-bg"
-                                        data-projectId="<?= $projectId ?>">
-                                        <div class="heading-title text-w-icon center-child">
-                                            <img src="<?= ICON_PATH . 'add_w.svg' ?>" alt="Add Worker" title="Add Worker"
-                                                height="18">
-
-                                            <h3 class="white-text">Add Worker</h3>
-                                        </div>
-                                    </button>
-                                </div>
-                            <?php endif; ?>
                         </div>
+
+                        <!-- Add Worker Button -->
+                        <?php if (Role::isProjectManager(Me::getInstance())): ?>
+                            <div class="">
+                                <button id="add_worker_button" type="button" class="float-right blue-bg"
+                                    data-projectId="<?= $projectId ?>">
+                                    <div class="heading-title text-w-icon center-child">
+                                        <img src="<?= ICON_PATH . 'add_w.svg' ?>" alt="Add Worker" title="Add Worker"
+                                            height="18">
+
+                                        <h3 class="white-text">Add Worker</h3>
+                                    </div>
+                                </button>
+                            </div>
+                        <?php endif; ?>
                     </section>
                 </div>
             </section>
