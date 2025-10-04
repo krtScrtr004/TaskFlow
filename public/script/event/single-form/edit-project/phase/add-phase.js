@@ -19,7 +19,7 @@ export function addPhase(params = {}) {
     if (!addNewPhaseButton) {
         throw new Error('Add New Phase Button not found.')
     }
-    addNewPhaseButton.addEventListener('click', async () => {
+    addNewPhaseButton.addEventListener('click', debounce(async () => {
         const addPhaseForm = addPhaseModal.querySelector('#add_phase_form')
 
         const nameInput = addPhaseForm.querySelector('#phase_name')
@@ -47,7 +47,10 @@ export function addPhase(params = {}) {
                 'completionDateTime': completionDateTime,
             }
             if (params.action && typeof params.action === 'function') {
-                body = await params.action(body)
+                const returnValue = await params.action(body)
+                if (returnValue !== undefined) {
+                    body = returnValue
+                }
             }
 
             // Simulate a click on the close button to close the modal
@@ -70,5 +73,5 @@ export function addPhase(params = {}) {
             throw new Error(error)
             Loader.delete()
         }
-    })
+    }, 300))
 }

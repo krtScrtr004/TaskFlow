@@ -28,6 +28,7 @@
 
     <main class="main-page">
         <?php
+        $project = null;
         if (!isset($project)):
             $createProject = '';
 
@@ -328,17 +329,19 @@
         <?php endif; ?>
     </main>
 
-    <script src="<?= PUBLIC_PATH . 'chart.umd.min.js' ?>"></script>
+    <?php if (isset($project)): ?>
+        <script src="<?= PUBLIC_PATH . 'chart.umd.min.js' ?>"></script>
 
-    <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'progress-bar.js' ?>"></script>
-    <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'task-chart.js' ?>"></script>
-    <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'worker-card.js' ?>"></script>
-    <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'terminate-worker.js' ?>"></script>
+        <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'progress-bar.js' ?>"></script>
+        <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'task-chart.js' ?>"></script>
+        <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'worker-card.js' ?>"></script>
+        <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'terminate-worker.js' ?>"></script>
 
-    <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'add-worker-modal' . DS . 'open.js' ?>"></script>
-    <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'add-worker-modal' . DS . 'close.js' ?>"></script>
-    <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'add-worker-modal' . DS . 'search.js' ?>"></script>
-    <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'add-worker-modal' . DS . 'add.js' ?>"></script>
+        <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'add-worker-modal' . DS . 'open.js' ?>"></script>
+        <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'add-worker-modal' . DS . 'close.js' ?>"></script>
+        <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'add-worker-modal' . DS . 'search.js' ?>"></script>
+        <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'add-worker-modal' . DS . 'add.js' ?>"></script>
+    <?php endif; ?>
 </body>
 
 </html>

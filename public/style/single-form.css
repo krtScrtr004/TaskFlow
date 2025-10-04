@@ -1,3 +1,15 @@
+.single-form:has(.create-project) > main,
+.single-form:has(.edit-project) > main {
+    padding: 3rem 0;
+}
+
+.single-form:has(.create-project) .single-form-form,
+.single-form:has(.edit-project) .single-form-form {
+    width: fit-content;
+    height: 100%;
+    overflow: auto;
+}
+
 .single-form-form {
 	width: 500px;
 	box-shadow: 0 0 10px 10px var(--dark-white);

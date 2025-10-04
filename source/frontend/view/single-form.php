@@ -20,7 +20,7 @@ if (!$component) {
     <link rel="stylesheet" href="<?= STYLE_PATH . 'loader.css' ?>">
 
     <link rel="stylesheet" href="<?= STYLE_PATH . 'single-form.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'edit-project.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'create-edit-project.css' ?>">
 </head>
 
 <body class="single-form">

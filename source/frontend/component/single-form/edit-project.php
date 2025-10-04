@@ -1,5 +1,4 @@
 <?php
-// ====== DATA PREPARATION SECTION ======
 $projectId = $args['projectId'] ?? null;
 if (!$projectId) {
     throw new ErrorException('Project ID is required to edit a project.');
@@ -12,7 +11,6 @@ if (!$project) {
     throw new ErrorException('Project data is required to edit a project.');
 }
 
-// Prepare project data for template
 $projectData = [
     'id' => htmlspecialchars($project->getId()),
     'name' => htmlspecialchars($project->getName()),
@@ -20,7 +18,7 @@ $projectData = [
     'budget' => htmlspecialchars(formatBudgetToPesos($project->getBudget())),
     'startDate' => $project->getStartDateTime()->format('Y-m-d'),
     'completionDate' => $project->getCompletionDateTime()->format('Y-m-d'),
-    'status' => $project->getStatus(),
+    'status' => WorkStatus::PENDING,
     'phases' => $project->getPhases()
 ];
 
@@ -32,19 +30,9 @@ $uiState = [
     'showWarning' => in_array($projectData['status'], [WorkStatus::COMPLETED, WorkStatus::CANCELLED])
 ];
 
-// Prepare icons and paths
-$icons = [
-    'project' => ICON_PATH . 'project_b.svg',
-    'description' => ICON_PATH . 'description_b.svg',
-    'budget' => ICON_PATH . 'budget_b.svg',
-    'start' => ICON_PATH . 'start_b.svg',
-    'complete' => ICON_PATH . 'complete_b.svg'
-];
-
 include_once COMPONENT_PATH . 'template/add-phase-modal.php';
 ?>
 
-<!-- ====== HTML TEMPLATE SECTION ====== -->
 <!-- Edit Project -->
 <section class="edit-project flex-col">
 
@@ -58,7 +46,7 @@ include_once COMPONENT_PATH . 'template/add-phase-modal.php';
 
         <div class="title flex-row flex-child-center-h">
             <div class="project-name text-w-icon">
-                <img src="<?= $icons['project'] ?>" alt="<?= $projectData['name'] ?>" title="<?= $projectData['name'] ?>" height="40">
+                <img src="<?= ICON_PATH . 'project_b.svg' ?>" alt="<?= $projectData['name'] ?>" title="<?= $projectData['name'] ?>" height="40">
                 <h1><?= $projectData['name'] ?></h1>
             </div>
 
@@ -80,7 +68,7 @@ include_once COMPONENT_PATH . 'template/add-phase-modal.php';
             <div class="input-label-container">
                 <label for="project_description">
                     <div class="text-w-icon">
-                        <img src="<?= $icons['description'] ?>" alt="Project Description" title="Project Description" height="20">
+                        <img src="<?= ICON_PATH . 'description_b.svg' ?>" alt="Project Description" title="Project Description" height="20">
                         <p>Description</p>
                     </div>
                 </label>
@@ -93,36 +81,36 @@ include_once COMPONENT_PATH . 'template/add-phase-modal.php';
                 <div class="input-label-container">
                     <label for="project_budget">
                         <div class="text-w-icon">
-                            <img src="<?= $icons['budget'] ?>" alt="Project Budget" title="Project Budget" height="20">
+                            <img src="<?= ICON_PATH . 'budget_b.svg' ?>" alt="Project Budget" title="Project Budget" height="20">
                             <p>Budget</p>
                         </div>
                     </label>
-                    <input type="number" name="project-budget" id="project_budget" value="<?= $projectData['budget'] ?>" 
-                           min="0" max="9999999999" <?= $uiState['projectHasStarted'] ?> required>
+                    <input type="number" name="project-budget" id="project_budget" value="<?= $projectData['budget'] ?>"
+                        min="0" max="9999999999" <?= $uiState['projectHasStarted'] ?> required>
                 </div>
 
                 <!-- Start Date -->
                 <div class="input-label-container">
                     <label for="project_start_date">
                         <div class="text-w-icon">
-                            <img src="<?= $icons['start'] ?>" alt="Project Start Date" title="Project Start Date" height="20">
+                            <img src="<?= ICON_PATH . 'start_b.svg' ?>" alt="Project Start Date" title="Project Start Date" height="20">
                             <p>Start Date</p>
                         </div>
                     </label>
-                    <input type="date" name="project-start-date" id="project_start_date" 
-                           value="<?= $projectData['startDate'] ?>" <?= $uiState['projectHasStarted'] ?> required>
+                    <input type="date" name="project-start-date" id="project_start_date"
+                        value="<?= $projectData['startDate'] ?>" <?= $uiState['projectHasStarted'] ?> required>
                 </div>
 
                 <!-- Completion Date -->
                 <div class="input-label-container">
                     <label for="project_completion_date">
                         <div class="text-w-icon">
-                            <img src="<?= $icons['complete'] ?>" alt="Project Completion Date" title="Project Completion Date" height="20">
+                            <img src="<?= ICON_PATH . 'complete_b.svg' ?>" alt="Project Completion Date" title="Project Completion Date" height="20">
                             <p>Completion Date</p>
                         </div>
                     </label>
-                    <input type="date" name="project-completion-date" id="project_completion_date" 
-                           value="<?= $projectData['completionDate'] ?>" required>
+                    <input type="date" name="project-completion-date" id="project_completion_date"
+                        value="<?= $projectData['completionDate'] ?>" required>
                 </div>
             </div>
 
@@ -139,7 +127,7 @@ include_once COMPONENT_PATH . 'template/add-phase-modal.php';
             </section>
 
             <section class="phases flex-col">
-                <?php foreach ($projectData['phases'] as $phase): 
+                <?php foreach ($projectData['phases'] as $phase):
                     $phaseData = [
                         'id' => htmlspecialchars($phase->getId()),
                         'name' => htmlspecialchars($phase->getName()),
@@ -155,6 +143,7 @@ include_once COMPONENT_PATH . 'template/add-phase-modal.php';
                     ];
                 ?>
 
+                    <!-- Phases -->
                     <section class="phase" data-id="<?= $phaseData['id'] ?>">
 
                         <!-- Phase Name -->
@@ -245,7 +234,7 @@ include_once COMPONENT_PATH . 'template/add-phase-modal.php';
         <?php if (!in_array($projectData['status'], [WorkStatus::COMPLETED, WorkStatus::CANCELLED])): ?>
             <div>
                 <button id="save_project_info_button" type="button" class="center-child float-right blue-bg white-text"
-                    <?= $projectIsCompleted ?>>
+                    <?= $uiState['projectIsCompleted'] ?>>
                     <div class="text-w-icon">
                         <img src="<?= ICON_PATH . 'save_w.svg' ?>" alt="Save Project Info" title="Save Project Info"
                             height="20">

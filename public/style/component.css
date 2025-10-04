@@ -265,4 +265,5 @@ button > .text-w-icon {
 .no-content-wall {
 	justify-content: center;
 	align-items: center;
+	min-height: 10rem;
 }
