@@ -1,13 +1,14 @@
 :root {
 	--white: #fffefe;
-	--dark-white: #f5f5f5;
+	--dark-white: #eaeaea;
 	--light-blue: #89d6fb;
 	--blue: #007bff;
 	--light-black: #403b3b;
 	--black: #1e1e1e;
-	--red: rgb(220, 53, 69);
+	--red: #dc3545;
 	--green: #38ff5d;
 	--yellow: #ffb61e;
+	--orange: #cb5835;
 
 	--space: 1.5rem;
 
@@ -43,6 +44,10 @@ body {
 	scroll-behavior: smooth;
 }
 
+body {
+	display: flex;
+}
+
 header,
 main,
 footer {
@@ -60,8 +65,15 @@ header {
 	z-index: 100;
 }
 
+aside {
+	padding: 3rem 0;
+}
+
 main {
+	flex: 1;
 	position: relative;
+	width: 100%;
+	overflow: auto;
 }
 
 footer {
@@ -104,7 +116,15 @@ textarea::placeholder {
 	opacity: 0.9;
 }
 
-input {
+input:disabled,
+textarea:disabled,
+button:disabled,
+button:hover {
+	opacity: 0.7;
+}
+
+input,
+textarea {
 	border: 1px solid var(--black);
 }
 
@@ -124,4 +144,18 @@ button:hover {
 button:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
+}
+
+fieldset {
+	border: none;
+	padding: 0;
+	margin: 0;
+}
+
+textarea {
+	padding: 0.5rem;
+	border-radius: var(--border-radius);
+	resize: none;
+	font-family: inherit;
+	font-size: 1rem;
 }

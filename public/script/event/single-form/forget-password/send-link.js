@@ -35,5 +35,9 @@ if (forgetPasswordForm) {
 
     const sendLinkButton = forgetPasswordForm.querySelector('#send_link_button')
     sendLinkButton.addEventListener('click', sendLink)
+  
     forgetPasswordForm.addEventListener('submit', e => { e.preventDefault(); sendLink(); })
+} else {
+    console.error('Forget Password form not found.')
+    Dialog.somethingWentWrong()
 }

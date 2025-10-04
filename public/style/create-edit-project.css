@@ -1,0 +1,151 @@
+#add_phase_modal > .modal {
+    width: 30rem;
+    padding: var(--space);
+    gap: 1rem;
+    border-radius: var(--border-radius);
+}
+
+#add_phase_modal .title {
+    font-size: 1.5rem;
+}
+
+#add_phase_modal #add_new_phase_button {
+    padding-right: 1rem;
+    padding-left: 1rem;
+}
+
+#add_phase_modal #add_new_phase_button h3 {
+    font-size: 1rem;
+}
+
+.project-details {
+    gap: var(--space);
+}
+
+.edit-project {
+    height: 100%;
+    gap: var(--space);
+}
+
+.create-project .heading,
+.edit-project .heading {
+    line-height: 1.6;
+}
+
+.create-project .heading > .title,
+.edit-project .heading > .title {
+    gap: 0.7rem
+}
+
+.edit-project .heading .project-id {
+    font-size: 1.1rem;
+    font-weight: 300;
+}
+
+.cannot-edit-warning {
+    position: relative;
+    width: 100%;
+    padding: 0.5rem 0.8rem;
+    border-radius: var(--border-radius);
+}
+
+.cannot-edit-warning::before {
+    content: '';
+    background-color: var(--red);
+    opacity: 0.7;
+    position: absolute; 
+    top: 0;
+    left: 0;
+    width: 100%; 
+    height: 100%;
+    z-index: -1; 
+    border-radius: var(--border-radius);
+}
+
+.create-project .heading > p,
+.edit-project .heading > p {
+    font-weight: 500;
+}
+
+#editable_project_details {
+    gap: 1rem;
+}
+
+#create_project_form > fieldset,
+#editable_project_details > fieldset {
+    flex: 1;
+    height: fit-content;
+    gap: 0.8rem;
+    font-weight: 600;
+}
+
+#editable_project_details .project-secondary-info input,
+#editable_project_details .phase-secondary-info input {
+    height: 100%;
+}
+
+.project-secondary-info {
+    gap: 1rem;
+}
+
+.project-secondary-info > * {
+    flex: 1;
+}
+
+.phase-details,
+.phase-details .phases {
+    gap: var(--space);
+}
+
+.no-phases-wall h4 {
+    font-size: 1.3rem;
+}
+
+.phase-details legend {
+    font-size: 1.7rem;
+    margin-bottom: 1rem;
+} 
+
+.phase .status-badge {
+    font-size: 0.9rem;
+    margin-top: 0.3rem;
+    margin-bottom: 0.5rem;
+}
+
+.phase-name {
+    max-width: 35ch;
+    font-size: 1.5rem !important;
+    margin-right: 1rem;
+    margin-bottom: 0.3rem;
+    white-space: break-spaces !important;
+}
+
+.phase-details-form,
+.phase-secondary-info {
+    gap: 1rem;
+}
+
+#add_phase_button {
+    padding-right: 1rem;
+    padding-left: 1rem;
+    margin-top: 1rem;
+}
+
+#submit_project_button h3,
+#add_phase_button h3,
+#save_project_info_button h3 {
+    font-size: 1.3rem;
+}
+
+#add_phase_button {
+    border: 1px solid var(--black);
+}
+
+#add_phase_button h3 {
+    font-size: 1.2rem;
+}
+
+#submit_project_button,
+#save_project_info_button {
+    width: 100% !important;
+}

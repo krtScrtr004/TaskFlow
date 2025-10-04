@@ -5,6 +5,10 @@
 		"TaskFlow/register": "IndexController",
 
 		"TaskFlow/forget-password": "SingleFormController",
-		"TaskFlow/change-password": "SingleFormController"
+		"TaskFlow/change-password": "SingleFormController",
+		"TaskFlow/create-project": "SingleFormController",
+		"TaskFlow/edit-project/{projectId:[\\w+_-]+}": "SingleFormController",
+
+		"TaskFlow/project": "ProjectController"
 	}
 }

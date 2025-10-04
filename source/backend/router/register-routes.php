@@ -3,7 +3,7 @@
 try {
     $router = Router::getRouter();
 
-    $fileNames = ['page-routes.json'];
+    $fileNames = ['page-routes.json', 'backend-routes.json'];
     foreach ($fileNames as $fileName) {
         $routesFile = DATA_PATH . $fileName;
         $routes = decodeData($routesFile);

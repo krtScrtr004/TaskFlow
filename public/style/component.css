@@ -1,3 +1,7 @@
+main.main-page {
+	padding: var(--space)
+}
+
 .unset-button {
 	all: unset; /* removes all default styles */
 	font: inherit;
@@ -7,6 +11,10 @@
 	background-color: transparent;
 	border: none;
 	outline: none;
+}
+
+button:has(.text-w-icon) {
+	width: 20ch;
 }
 
 .line-divider > hr {
@@ -67,14 +75,19 @@
 
 .modal-wrapper,
 .modal-wrapper > * {
-	z-index: 1100;
+	z-index: 1000;
 }
 
 .modal-wrapper,
 .modal-wrapper > section.dialog {
+	min-width: 20rem;
 	justify-content: center;
 	align-items: center;
 	gap: 1rem;
+}
+
+.modal-wrapper:has(.dialog) {
+	z-index: 1100 !important;
 }
 
 .modal-wrapper {
@@ -97,14 +110,29 @@
 	font-weight: 300;
 }
 
+.modal-wrapper > div,
 .modal-wrapper > section {
+	max-width: 25rem;
 	box-sizing: content-box;
 	padding: var(--space);
-	box-shadow: 0 0 1px 1px var(--light-black);
 }
 
 .modal-wrapper .close-button:hover p {
 	color: var(--red);
+}
+
+.confirmation-dialog {
+	padding: var(--space);
+	gap: var(--space);
+}
+
+.confirmation-dialog > .buttons {
+	width: 100%;
+	gap: 0.5rem;
+}
+
+.confirmation-dialog > .buttons > * {
+	flex: 1;
 }
 
 /* --------------------- NOTIFICATION --------------------- */
@@ -157,4 +185,96 @@
 
 .notification-wrapper.fail > div {
 	background-color: var(--red);
+}
+
+/* -------------------- TEXT WITH ICON -------------------- */
+
+.text-w-icon,
+.text-w-icon > * {
+	display: flex;
+	align-items: center;
+}
+
+.text-w-icon > * {
+	justify-content: center;
+	align-items: center;
+}
+
+.text-w-icon img {
+	margin-right: 10px;
+}
+
+.text-w-icon h1,
+.text-w-icon h3,
+.text-w-icon h6,
+.text-w-icon p {
+	white-space: nowrap;
+}
+
+button > .text-w-icon {
+	justify-content: center;
+}
+
+/* ---------------- STATUS BADGE ---------------- */
+.status-badge {
+	width: 13ch;
+	padding: 0.3rem 0.8rem;
+	border-radius: 5rem;
+}
+
+/* ---------------- INPUT LABEL CONTAINER ---------------- */
+.input-label-container {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem
+}
+
+.input-label-container > label {
+	font-size: 1.2rem;
+	font-weight: 300;
+}
+
+/* ---------------- SEARCH BAR ---------------- */
+
+.search-bar {
+	display: flex;
+	border: 1px solid var(--light-black);
+	border-radius: var(--border-radius);
+	align-items: center;
+	background-color: transparent;
+}
+
+.search-bar > input {
+	flex: 1;
+	font-size: 0.8rem;
+	border: none;
+}
+
+.search-bar > input:focus,
+.search-bar > input:hover,
+.search-bar > input:active {
+	outline: none;
+}
+
+.search-bar > button {
+	width: fit-content;
+	padding: 0.3rem;
+}
+
+/* ---------------- NO CONTENT WALL ---------------- */
+.no-content-wall {
+	justify-content: center;
+	align-items: center;
+	min-height: 10rem;
+}
+
+/* ---------------- JOB TITLE CHIP ---------------- */
+.job-title-chip {
+	background-color: var(--white);
+	color: var(--black);
+	padding: 0.2rem 0.5rem;
+	border: 1px solid var(--black);
+	border-radius: 5rem;
+	font-size: 0.9rem;
+	margin: 0.1rem;
 }

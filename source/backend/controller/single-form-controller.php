@@ -6,20 +6,42 @@ class SingleFormController implements Controller
         'forgetPassword' => [
             'title' => 'Reset Your Password',
             'description' => 'Enter your email address below and we will send you a link to reset your password.',
-            'form'  => 'forgetPassword',
+            'form' => 'forgetPassword',
             'script' => ['single-form/forget-password/send-link']
         ],
         'changePassword' => [
             'title' => 'Set Your Password',
             'description' => 'Create a new password.',
-            'form'  => 'changePassword',
+            'form' => 'changePassword',
             'script' => ['password-list-validator']
         ],
+        'createProject' => [
+            'title' => 'Create New Project',
+            'description' => 'Fill in the details below to create a new project.',
+            'form' => 'createProject',
+            'script' => [
+                'single-form/edit-project/phase/open',
+                'single-form/edit-project/phase/create/add',
+                'single-form/edit-project/phase/create/cancel',
+            ]
+        ],
+        'editProject' => [
+            'title' => 'Edit Project Details',
+            'description' => 'Modify the details of your project below.',
+            'form' => 'editProject',
+            'script' => [
+                'single-form/edit-project/phase/open',
+                'single-form/edit-project/phase/edit/cancel',
+                'single-form/edit-project/phase/edit/add',
+            ],
+        ]
     ];
 
-    private function __construct() {}
+    private function __construct()
+    {
+    }
 
-    public static function index(): void
+    public static function index(array $args = []): void
     {
         $instance = new self();
         $components = $instance->components;

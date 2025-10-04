@@ -1,0 +1,14 @@
+{
+    "GET": {
+        "TaskFlow/get-worker-info": ["WorkerController", "getWorkerInfo"],
+        "TaskFlow/get-worker-info/{key:[\\w+\\s_-]+}": ["WorkerController", "getWorkerInfo"]
+    },
+
+    "POST": {
+        "TaskFlow/cancel-project": ["ProjectController", "cancelProject"],
+        "TaskFlow/add-worker": ["WorkerController", "addWorker"],
+        "TaskFlow/terminate-worker": ["WorkerController", "terminateWorker"],
+        "TaskFlow/add-phase": ["PhaseController", "addPhase"],
+        "TaskFlow/cancel-phase": ["PhaseController", "cancelPhase"]
+    }
+}
