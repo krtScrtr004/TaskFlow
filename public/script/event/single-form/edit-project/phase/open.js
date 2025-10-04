@@ -1,8 +1,7 @@
-import { Dialog } from '../../../render/dialog.js'
+import { Dialog } from '../../../../render/dialog.js'
 
-const editableProjectDetailsForm = document.querySelector('#editable_project_details')
-if (editableProjectDetailsForm) {
-    const phaseDetails = editableProjectDetailsForm.querySelector('.phase-details')
+const phaseDetails = document.querySelector('.phase-details')
+if (phaseDetails) {
 
     const addPhaseButton = phaseDetails.querySelector('#add_phase_button')
     if (!addPhaseButton) {
@@ -29,6 +28,6 @@ if (editableProjectDetailsForm) {
         })
     }
 } else {
-    console.error('Editable Project Details form is not found.')
+    console.error('Project Details form is not found.')
     Dialog.somethingWentWrong()
 }
