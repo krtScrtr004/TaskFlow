@@ -33,7 +33,7 @@
             ?>
             <!-- No project -->
             <div class="no-project-wall no-content-wall full-body-content flex-col">
-                <img src="<?= ICON_PATH . 'empty_b.svg' ?>" alt="No active project found" title="No active project found"
+                <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No active project found" title="No active project found"
                     height="150">
                 <h3>No active project found. <?= $createProject ?></h3>
             </div>

@@ -2,12 +2,12 @@
 <section id="add_worker_modal_template" class="modal-wrapper no-display">
 
     <!-- Modal Content -->
-    <div class="add-worker-modal modal flex-col white-bg">
+    <div class="add-worker-modal modal flex-col black-bg">
 
         <!-- Heading -->
         <section class="heading">
             <div class="text-w-icon">
-                <img src="<?= ICON_PATH . 'worker_b.svg' ?>" alt="Add Worker To Project" title="Add Worker To Project"
+                <img src="<?= ICON_PATH . 'worker_w.svg' ?>" alt="Add Worker To Project" title="Add Worker To Project"
                     height="28">
 
                 <h3 class="title">Add Worker To Project</h3>
@@ -15,11 +15,14 @@
 
             <!-- Search Bar -->
             <form class="search-bar" action="" method="POST">
-                <input type="text" name="search_worker" id="search_worker" placeholder="Search by Name or ID" min="1"
-                    max="255" autocomplete="on" required>
-                <button id="search_worker_button" type="button" class="transparent-bg">
-                    <img src="<?= ICON_PATH . 'search_b.svg' ?>" alt="Search Worker" title="Search Worker" height="20">
-                </button>
+                <div>
+                    <input type="text" name="search_worker" id="search_worker" placeholder="Search by Name or ID"
+                        min="1" max="255" autocomplete="on" required>
+                    <button id="search_worker_button" type="button" class="transparent-bg">
+                        <img src="<?= ICON_PATH . 'search_w.svg' ?>" alt="Search Worker" title="Search Worker"
+                            height="20">
+                    </button>
+                </div>
             </form>
         </section>
 
@@ -29,7 +32,7 @@
 
         <!-- No Workers Wall -->
         <div class="no-workers-wall no-content-wall no-display">
-            <img src="<?= ICON_PATH . 'empty_b.svg' ?>" alt="No workers assigned" title="No workers assigned"
+            <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No workers assigned" title="No workers assigned"
                 height="70">
             <h3 class="center-text">No workers found.</h3>
         </div>

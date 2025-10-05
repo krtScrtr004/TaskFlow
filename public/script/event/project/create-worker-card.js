@@ -44,7 +44,7 @@ function addInfoToCard(card, worker) {
     } = domElements
 
     // Add worker info to card
-    workerProfilePicture.src = worker.profilePicture || `${ICON_PATH}profile_b.svg`
+    workerProfilePicture.src = worker.profilePicture || `${ICON_PATH}profile_w.svg`
     workerName.textContent = worker.name || 'Unknown'
     workerId.textContent = worker.id || 'N/A'
     workerJobTitles.innerHTML = worker.jobTitles.map(title =>

@@ -1,37 +1,42 @@
 <?php
 
-class TaskModel implements Model {
+class TaskModel implements Model
+{
 
-    public function save(): bool {
+    public function save(): bool
+    {
         return true;
     }
 
-    public function delete(): bool {
+    public function delete(): bool
+    {
         return true;
     }
 
-    public static function create(mixed $data): void {
+    public static function create(mixed $data): void
+    {
         if (!($data instanceof self)) {
             throw new InvalidArgumentException('Expected instance of TaskModel');
         }
     }
 
-    public static function all(): TaskContainer {
+    public static function all(): TaskContainer
+    {
         $tasks = new TaskContainer();
         $tasks->add(new Task(
-                            random_int(1, 1000),
+            random_int(1, 1000),
             uniqid(),
             'Task 1',
-            'This is the first task.',
+            'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
             new DateTime('2023-01-02 09:00:00'),
             new DateTime('2023-01-04 17:00:00'),
             new DateTime('2023-01-12 16:00:00'),
             TaskPriority::HIGH,
-            WorkStatus::DELAYED,
+            WorkStatus::COMPLETED,
             new DateTime('2023-01-05 10:00:00'),
         ));
         $tasks->add(new Task(
-                            random_int(1, 1000),
+            random_int(1, 1000),
             uniqid(),
             'Task 2',
             'This is the second task.',
@@ -42,10 +47,59 @@ class TaskModel implements Model {
             WorkStatus::DELAYED,
             new DateTime('2023-01-15 11:00:00'),
         ));
+        $tasks->add(new Task(
+            random_int(1, 1000),
+            uniqid(),
+            'Task 3',
+            'Lorem ipsum dolor sit amet. consectetur adipiscing elit. Lorem ipsum dolor sit amet. consectetur adipiscing elit. Lorem ipsum dolor sit amet. consectetur adipiscing elit.',
+            new DateTime('2023-03-10 09:00:00'),
+            new DateTime('2023-03-15 17:00:00'),
+            null,
+            TaskPriority::LOW,
+            WorkStatus::ON_GOING,
+            new DateTime('2023-03-01 12:00:00'),
+        ));
+        $tasks->add(new Task(
+            random_int(1, 1000),
+            uniqid(),
+            'Task 4',
+            'This is the fourth task.',
+            new DateTime('2023-04-01 09:00:00'),
+            new DateTime('2023-04-10 17:00:00'),
+            null,
+            TaskPriority::HIGH,
+            WorkStatus::PENDING,
+            new DateTime('2023-03-20 13:00:00'),
+        ));
+        $tasks->add(new Task(
+            random_int(1, 1000),
+            uniqid(),
+            'Task 5',
+            'This is the fifth task.',
+            new DateTime('2023-05-01 09:00:00'),
+            new DateTime('2023-05-07 17:00:00'),
+            null,
+            TaskPriority::MEDIUM,
+            WorkStatus::CANCELLED,
+            new DateTime('2023-04-25 14:00:00'),
+        ));
+        $tasks->add(new Task(
+            random_int(1, 1000),
+            uniqid(),
+            'Task 6',
+            'This is the sixth task.',
+            new DateTime('2023-06-01 09:00:00'),
+            new DateTime('2023-06-05 17:00:00'),
+            null,
+            TaskPriority::HIGH,
+            WorkStatus::DELAYED,
+            new DateTime('2023-05-20 15:00:00'),
+        ));
         return $tasks;
     }
 
-    public static function find($id): ?self {
+    public static function find($id): ?self
+    {
         return null;
     }
 

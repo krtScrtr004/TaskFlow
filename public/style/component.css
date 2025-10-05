@@ -1,5 +1,5 @@
 main.main-page {
-	padding: var(--space)
+	padding: var(--space);
 }
 
 .unset-button {
@@ -73,6 +73,14 @@ button:has(.text-w-icon) {
 	z-index: 1000;
 }
 
+.modal-wrapper::before {
+	content: '';
+	background-color: var(--black);
+	opacity: 0.5;
+	backdrop-filter: blur(10px);
+	-webkit-backdrop-filter: blur(10px); /* For Safari support */
+}
+
 .modal-wrapper,
 .modal-wrapper > * {
 	z-index: 1000;
@@ -103,7 +111,7 @@ button:has(.text-w-icon) {
 .modal-wrapper h1 {
 	font-size: 2rem;
 	font-weight: 800;
-    margin-bottom: 0.3rem;
+	margin-bottom: 0.3rem;
 }
 
 .modal-wrapper p {
@@ -216,8 +224,9 @@ button > .text-w-icon {
 }
 
 /* ---------------- STATUS BADGE ---------------- */
-.status-badge {
+.badge {
 	width: 13ch;
+	height: fit-content;
 	padding: 0.3rem 0.8rem;
 	border-radius: 5rem;
 }
@@ -226,7 +235,7 @@ button > .text-w-icon {
 .input-label-container {
 	display: flex;
 	flex-direction: column;
-	gap: 0.5rem
+	gap: 0.5rem;
 }
 
 .input-label-container > label {
@@ -238,27 +247,46 @@ button > .text-w-icon {
 
 .search-bar {
 	display: flex;
-	border: 1px solid var(--light-black);
-	border-radius: var(--border-radius);
 	align-items: center;
 	background-color: transparent;
 }
 
-.search-bar > input {
+.search-bar > div:first-child {
+	width: 100%;
+	display: flex;
+	border: 1px solid var(--white);
+	border-radius: var(--border-radius);
+}
+
+.search-bar input {
 	flex: 1;
 	font-size: 0.8rem;
 	border: none;
 }
 
-.search-bar > input:focus,
-.search-bar > input:hover,
-.search-bar > input:active {
+.search-bar input:focus,
+.search-bar input:hover,
+.search-bar input:active,
+.search-bar > select:focus,
+.search-bar > select:hover,
+.search-bar > select:active  {
 	outline: none;
 }
 
-.search-bar > button {
+.search-bar button {
 	width: fit-content;
 	padding: 0.3rem;
+}
+
+.search-bar button:hover {
+	box-shadow: none;
+	transform: unset;
+	opacity: 0.7;
+}
+
+.search-bar > select {
+	border: none;
+	margin-right: 0.5rem;
 }
 
 /* ---------------- NO CONTENT WALL ---------------- */
@@ -270,10 +298,10 @@ button > .text-w-icon {
 
 /* ---------------- JOB TITLE CHIP ---------------- */
 .job-title-chip {
-	background-color: var(--white);
-	color: var(--black);
+	background-color: transparent;
+	color: var(--white);
 	padding: 0.2rem 0.5rem;
-	border: 1px solid var(--black);
+	border: 1px solid var(--white);
 	border-radius: 5rem;
 	font-size: 0.9rem;
 	margin: 0.1rem;

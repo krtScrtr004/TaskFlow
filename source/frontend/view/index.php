@@ -1,9 +1,5 @@
-<?php
-if (!$component) {
-    throw new Error('Component is not defined');
-}
-?>
-
+<?php if (!$component) throw new Error('Component is not defined') ?>
+    
 <!DOCTYPE html>
 <html lang="en">
 

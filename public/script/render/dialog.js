@@ -13,7 +13,7 @@ function render(
 ) {
     const html = `
         <section id="${id}_wrapper" class="modal-wrapper flex-col">
-            <section class="dialog white-bg flex-col">
+            <section class="dialog black-bg flex-col">
                 <img 
                     src="${ICON_PATH + statusIcon}" 
                     alt="Result icon" 

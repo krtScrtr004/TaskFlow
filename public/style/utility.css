@@ -229,8 +229,8 @@
 
 .multi-line-ellipsis {
 	display: -webkit-box;
-	-webkit-line-clamp: 2; /* Number of lines */
-	line-clamp: 2; /* Standard property for compatibility */
+	-webkit-line-clamp: 3; /* Number of lines */
+	line-clamp: 3; /* Standard property for compatibility */
 	-webkit-box-orient: vertical;
 	overflow: hidden;
 }

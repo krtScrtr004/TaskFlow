@@ -20,7 +20,8 @@ class PhaseController implements Controller
         // TODO: Validate data
 
         $newPhase = Phase::fromArray([
-            'id' => uniqid(), // TODO: Generate a UUIDv4 for the new phase
+            'id' => rand(1, 9999), // TODO: Generate a proper unique ID for the new phase
+            'publicId' => uniqid(), // TODO: Generate a UUIDv4 for the new phase
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
             'startDateTime' => new DateTime($data['startDateTime']),

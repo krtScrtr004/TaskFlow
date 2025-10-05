@@ -42,7 +42,7 @@ function createPhaseElement(data) {
     nameDiv.className = 'text-w-icon';
     
     const phaseIcon = document.createElement('img');
-    phaseIcon.src = 'asset/image/icon/phase_b.svg';
+    phaseIcon.src = 'asset/image/icon/phase_w.svg';
     phaseIcon.alt = data.name;
     phaseIcon.title = data.name;
     phaseIcon.height = 22;
@@ -153,7 +153,7 @@ function createInputContainer(iconType, labelText, inputType, value, inputId, di
     labelDiv.className = 'text-w-icon';
     
     const icon = document.createElement('img');
-    icon.src = `asset/image/icon/${iconType}_b.svg`;
+    icon.src = `asset/image/icon/${iconType}_w.svg`;
     icon.alt = labelText;
     icon.title = labelText;
     icon.height = 20;

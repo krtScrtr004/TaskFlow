@@ -13,8 +13,8 @@ export async function confirmationDialog(
 
         const HTML = `
             <section id="${id}" class="modal-wrapper flex-col">
-                <div class="confirmation-dialog dialog white-bg flex-col flex-child-center-h">
-                    <img src="${ICON_PATH}info_b.svg" alt="Confirm" title="Confirm" height="69" width="69">
+                <div class="confirmation-dialog dialog black-bg flex-col flex-child-center-h">
+                    <img src="${ICON_PATH}info_w.svg" alt="Confirm" title="Confirm" height="69" width="69">
 
                     <div>
                         <h1 class="center-text">${title}</h1>
@@ -22,7 +22,7 @@ export async function confirmationDialog(
                     </div>
 
                     <div class="buttons flex-row">
-                        <button id="cancel_confirmation_button" class="red-bg">
+                        <button id="cancel_confirmation_wutton" class="red-bg">
                             <div class="text-w-icon ">
                                 <img src="${ICON_PATH}delete_w.svg" alt="" title="" height="20">
 
@@ -30,7 +30,7 @@ export async function confirmationDialog(
                             </div>
                         </button>
 
-                        <button id="confirm_confirmation_button" class="blue-bg">
+                        <button id="confirm_confirmation_wutton" class="blue-bg">
                             <div class="text-w-icon ">
                                 <img src="${ICON_PATH}complete_w.svg" alt="" title="" height="20">
 
@@ -51,8 +51,8 @@ export async function confirmationDialog(
             return
         }
         
-        const cancelButton = modalWrapper.querySelector('#cancel_confirmation_button')
-        const confirmButton = modalWrapper.querySelector('#confirm_confirmation_button')
+        const cancelButton = modalWrapper.querySelector('#cancel_confirmation_wutton')
+        const confirmButton = modalWrapper.querySelector('#confirm_confirmation_wutton')
 
         // Function to clean up and resolve
         const cleanup = (result) => {

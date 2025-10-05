@@ -46,7 +46,7 @@ include_once COMPONENT_PATH . 'template/add-phase-modal.php';
 
         <div class="title flex-row flex-child-center-h">
             <div class="project-name text-w-icon">
-                <img src="<?= ICON_PATH . 'project_b.svg' ?>" alt="<?= $projectData['name'] ?>" title="<?= $projectData['name'] ?>" height="40">
+                <img src="<?= ICON_PATH . 'project_w.svg' ?>" alt="<?= $projectData['name'] ?>" title="<?= $projectData['name'] ?>" height="40">
                 <h1><?= $projectData['name'] ?></h1>
             </div>
 
@@ -68,7 +68,7 @@ include_once COMPONENT_PATH . 'template/add-phase-modal.php';
             <div class="input-label-container">
                 <label for="project_description">
                     <div class="text-w-icon">
-                        <img src="<?= ICON_PATH . 'description_b.svg' ?>" alt="Project Description" title="Project Description" height="20">
+                        <img src="<?= ICON_PATH . 'description_w.svg' ?>" alt="Project Description" title="Project Description" height="20">
                         <p>Description</p>
                     </div>
                 </label>
@@ -81,7 +81,7 @@ include_once COMPONENT_PATH . 'template/add-phase-modal.php';
                 <div class="input-label-container">
                     <label for="project_budget">
                         <div class="text-w-icon">
-                            <img src="<?= ICON_PATH . 'budget_b.svg' ?>" alt="Project Budget" title="Project Budget" height="20">
+                            <img src="<?= ICON_PATH . 'budget_w.svg' ?>" alt="Project Budget" title="Project Budget" height="20">
                             <p>Budget</p>
                         </div>
                     </label>
@@ -93,7 +93,7 @@ include_once COMPONENT_PATH . 'template/add-phase-modal.php';
                 <div class="input-label-container">
                     <label for="project_start_date">
                         <div class="text-w-icon">
-                            <img src="<?= ICON_PATH . 'start_b.svg' ?>" alt="Project Start Date" title="Project Start Date" height="20">
+                            <img src="<?= ICON_PATH . 'start_w.svg' ?>" alt="Project Start Date" title="Project Start Date" height="20">
                             <p>Start Date</p>
                         </div>
                     </label>
@@ -105,7 +105,7 @@ include_once COMPONENT_PATH . 'template/add-phase-modal.php';
                 <div class="input-label-container">
                     <label for="project_completion_date">
                         <div class="text-w-icon">
-                            <img src="<?= ICON_PATH . 'complete_b.svg' ?>" alt="Project Completion Date" title="Project Completion Date" height="20">
+                            <img src="<?= ICON_PATH . 'complete_w.svg' ?>" alt="Project Completion Date" title="Project Completion Date" height="20">
                             <p>Completion Date</p>
                         </div>
                     </label>
@@ -150,7 +150,7 @@ include_once COMPONENT_PATH . 'template/add-phase-modal.php';
                         <div class="flex-row flex-child-center-h flex-space-between">
                             <div class="flex-col">
                                 <div class="text-w-icon">
-                                    <img src="<?= ICON_PATH . 'phase_b.svg' ?>" alt="<?= $phaseData['name'] ?>" title="<?= $phaseData['name'] ?>"
+                                    <img src="<?= ICON_PATH . 'phase_w.svg' ?>" alt="<?= $phaseData['name'] ?>" title="<?= $phaseData['name'] ?>"
                                         height="22">
 
                                     <h3 class="phase-name wrap-text"><?= $phaseData['name'] ?></h3>
@@ -173,7 +173,7 @@ include_once COMPONENT_PATH . 'template/add-phase-modal.php';
                             <div class="input-label-container">
                                 <label for="<?= $phaseData['name'] ?>_description">
                                     <div class="text-w-icon">
-                                        <img src="<?= ICON_PATH . 'description_b.svg' ?>" alt="Project Description"
+                                        <img src="<?= ICON_PATH . 'description_w.svg' ?>" alt="Project Description"
                                             title="Project Description" height="20">
 
                                         <p>Description</p>
@@ -190,7 +190,7 @@ include_once COMPONENT_PATH . 'template/add-phase-modal.php';
                                 <div class="input-label-container">
                                     <label for="<?= $phaseData['name'] ?>_start_date">
                                         <div class="text-w-icon">
-                                            <img src="<?= ICON_PATH . 'start_b.svg' ?>" alt="Project Start Date"
+                                            <img src="<?= ICON_PATH . 'start_w.svg' ?>" alt="Project Start Date"
                                                 title="Project Start Date" height="20">
 
                                             <p>Start Date</p>
@@ -204,7 +204,7 @@ include_once COMPONENT_PATH . 'template/add-phase-modal.php';
                                 <div class="input-label-container">
                                     <label for="<?= $phaseData['name'] ?>_completion_date">
                                         <div class="text-w-icon">
-                                            <img src="<?= ICON_PATH . 'complete_b.svg' ?>" alt="Project Completion Date"
+                                            <img src="<?= ICON_PATH . 'complete_w.svg' ?>" alt="Project Completion Date"
                                                 title="Project Completion Date" height="20">
 
                                             <p>Completion Date</p>
@@ -223,8 +223,8 @@ include_once COMPONENT_PATH . 'template/add-phase-modal.php';
 
             <button id="add_phase_button" type="button" class="transparent-bg">
                 <div class="text-w-icon">
-                    <img src="<?= ICON_PATH . 'add_b.svg' ?>" alt="Add Phase" title="Add Phase" height="20">
-                    <h3 class="black-text">Add Phase</h3>
+                    <img src="<?= ICON_PATH . 'add_w.svg' ?>" alt="Add Phase" title="Add Phase" height="20">
+                    <h3>Add Phase</h3>
                 </div>
             </button>
 

@@ -23,13 +23,13 @@ $projectData = [
 <section class="main-project-content flex-col" data-projectid="<?= $projectData['id'] ?>">
 
     <!-- Project Primary Info -->
-    <section class="project-primary-info content-section-block dark-white-bg">
+    <section class="project-primary-info content-section-block">
         <div class="">
             <div class="flex-row flex-space-between">
 
                 <!-- Project Name and Status -->
                 <div class="main flex-row">
-                    <div class=" first-col text-w-icon"> <img src="<?= ICON_PATH . 'project_b.svg' ?>"
+                    <div class=" first-col text-w-icon"> <img src="<?= ICON_PATH . 'project_w.svg' ?>"
                             alt="<?= $projectData['name'] ?>" title="<?= $projectData['name'] ?>" height="24">
 
                         <h3 class=" project-name wrap-text">
@@ -44,7 +44,7 @@ $projectData = [
                     <div>
                         <!-- Edit Project -->
                         <a class="edit-project" href="<?= REDIRECT_PATH . 'edit-project/' . $projectData['id'] ?>">
-                            <img src="<?= ICON_PATH . 'edit_b.svg' ?>" alt="Edit Project" title="Edit Project" height="24">
+                            <img src="<?= ICON_PATH . 'edit_w.svg' ?>" alt="Edit Project" title="Edit Project" height="24">
                         </a>
                     </div>
                 <?php endif; ?>
@@ -67,13 +67,13 @@ $projectData = [
         <div class="main-sub-content flex-col">
 
             <!-- Project Statistics -->
-            <section class="project-statistics content-section-block flex-row flex-child-center-h dark-white-bg">
+            <section class="project-statistics content-section-block flex-row flex-child-center-h">
 
                 <!-- Left Side -->
                 <div class="left grid">
 
                     <div class="first-col text-w-icon">
-                        <img src="<?= ICON_PATH . 'start_b.svg' ?>" alt="Start Date" title="Start Date" height="20">
+                        <img src="<?= ICON_PATH . 'start_w.svg' ?>" alt="Start Date" title="Start Date" height="20">
 
                         <h3>Start Date</h3>
                     </div>
@@ -82,7 +82,7 @@ $projectData = [
                     </p>
 
                     <div class="first-col text-w-icon">
-                        <img src="<?= ICON_PATH . 'deadline_b.svg' ?>" alt="Completion Date" title="Completion Date"
+                        <img src="<?= ICON_PATH . 'deadline_w.svg' ?>" alt="Completion Date" title="Completion Date"
                             height="20">
 
                         <h3>Completion Date</h3>
@@ -94,7 +94,7 @@ $projectData = [
                         $actualCompletionDate = htmlspecialchars(formatDateTime($project->getActualCompletionDateTime()));
                         ?>
                         <div class="first-col text-w-icon">
-                            <img src="<?= ICON_PATH . 'complete_b.svg' ?>" alt="Completed At" title="Completed At"
+                            <img src="<?= ICON_PATH . 'complete_w.svg' ?>" alt="Completed At" title="Completed At"
                                 height="20">
 
                             <h3>Completed At</h3>
@@ -105,7 +105,7 @@ $projectData = [
                     <?php endif; ?>
 
                     <div class="first-col text-w-icon">
-                        <img src="<?= ICON_PATH . 'budget_b.svg' ?>" alt="Budget" title="Budget" height="20">
+                        <img src="<?= ICON_PATH . 'budget_w.svg' ?>" alt="Budget" title="Budget" height="20">
 
                         <h3>Budget</h3>
                     </div>
@@ -122,7 +122,7 @@ $projectData = [
                     ?>
 
                     <div class="text-w-icon">
-                        <img src="<?= ICON_PATH . 'progress_b.svg' ?>" alt="Project Progress" title="Project Progress"
+                        <img src="<?= ICON_PATH . 'progress_w.svg' ?>" alt="Project Progress" title="Project Progress"
                             height="20">
 
                         <h3>Project Progress</h3>
@@ -139,16 +139,16 @@ $projectData = [
             </section>
 
             <!-- Task Statistics -->
-            <section class="task-statistics content-section-block flex-col dark-white-bg">
+            <section class="task-statistics content-section-block flex-col">
                 <div class="heading flex-row flex-space-between">
                     <div class=" heading-title text-w-icon">
-                        <img src="<?= ICON_PATH . 'task_b.svg' ?>" alt="Task Statistics" title="Task Statistics"
+                        <img src="<?= ICON_PATH . 'task_w.svg' ?>" alt="Task Statistics" title="Task Statistics"
                             height="20">
 
                         <h3>Task Statistics</h3>
                     </div>
                     <!-- TODO: Add redirect link -->
-                    <a href="#" class="blue-text">See All</a>
+                    <a href="<?= REDIRECT_PATH . 'project' . DS . $projectData['id'] . DS . 'task' ?>" class="blue-text">See All</a>
                 </div>
 
                 <!-- Task Statistics Chart -->
@@ -176,7 +176,7 @@ $projectData = [
                         </div>
 
                         <div class="first-col text-w-icon">
-                            <img src="<?= ICON_PATH . 'status_b.svg' ?>" alt="Task Status Distribution"
+                            <img src="<?= ICON_PATH . 'status_w.svg' ?>" alt="Task Status Distribution"
                                 title="Task Status Distribution" height="20">
 
                             <h3>Task Status Distribution</h3>
@@ -200,7 +200,7 @@ $projectData = [
                         </div>
 
                         <div class="first-col text-w-icon">
-                            <img src="<?= ICON_PATH . 'priority_b.svg' ?>" alt="Task Priority Distribution"
+                            <img src="<?= ICON_PATH . 'priority_w.svg' ?>" alt="Task Priority Distribution"
                                 title="Task Priority Distribution" height="20">
 
                             <h3>Task Priority Distribution</h3>
@@ -212,9 +212,9 @@ $projectData = [
             </section>
 
             <!-- Project Phases -->
-            <section class="project-phases content-section-block flex-col dark-white-bg">
+            <section class="project-phases content-section-block flex-col">
                 <div class="heading-title text-w-icon">
-                    <img src="<?= ICON_PATH . 'phase_b.svg' ?>" alt="Project Phases" title="Project Phases" height="20">
+                    <img src="<?= ICON_PATH . 'phase_w.svg' ?>" alt="Project Phases" title="Project Phases" height="20">
 
                     <h3>Project Phases</h3>
                 </div>
@@ -232,9 +232,9 @@ $projectData = [
 
             <?php if (Role::isProjectManager(Me::getInstance())): ?>
                 <!-- Project Actions -->
-                <section class="project-actions content-section-block white-bg">
+                <section class="project-actions content-section-block">
                     <div class="heading-title text-w-icon">
-                        <img src="<?= ICON_PATH . 'action_b.svg' ?>" alt="Project Actions" title="Project Actions"
+                        <img src="<?= ICON_PATH . 'action_w.svg' ?>" alt="Project Actions" title="Project Actions"
                             height="20">
 
                         <h3>Actions</h3>
@@ -250,9 +250,9 @@ $projectData = [
         </div>
 
         <!-- Project Workers -->
-        <section class="project-workers content-section-block flex-col dark-white-bg">
+        <section class="project-workers content-section-block flex-col">
             <div class="heading-title text-w-icon">
-                <img src="<?= ICON_PATH . 'worker_b.svg' ?>" alt="Assigned Workers" title="Assigned Workers"
+                <img src="<?= ICON_PATH . 'worker_w.svg' ?>" alt="Assigned Workers" title="Assigned Workers"
                     height="20">
 
                 <h3>Assigned Workers</h3>
@@ -268,7 +268,7 @@ $projectData = [
                 <!-- No Workers Wall -->
                 <div
                     class="no-workers-wall no-content-wall <?= $projectData['workers']->count() > 0 ? 'no-display' : 'flex-col' ?>">
-                    <img src="<?= ICON_PATH . 'empty_b.svg' ?>" alt="No workers assigned" title="No workers assigned"
+                    <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No workers assigned" title="No workers assigned"
                         height="70">
                     <h3 class="center-text">No workers assigned to this project.</h3>
                 </div>

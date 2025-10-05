@@ -31,7 +31,7 @@
                     <input type="text" name="search_task" id="search_task" placeholder="Search by Name or ID" min="1"
                         max="255" autocomplete="on" required>
                     <button id="search_task_button" type="button" class="transparent-bg">
-                        <img src="<?= ICON_PATH . 'search_b.svg' ?>" alt="Search Task" title="Search Task" height="20">
+                        <img src="<?= ICON_PATH . 'search_w.svg' ?>" alt="Search Task" title="Search Task" height="20">
                     </button>
                 </div>
 
@@ -70,7 +70,7 @@
             <section class="task-grid grid">
                 <?php if (Role::isProjectManager(Me::getInstance())): ?>
                     <button id="add_task_button" type="button" class="task-grid-card unset-button">
-                        <img src="<?= ICON_PATH . 'add_b.svg' ?>" alt="Add New Task" title="Add New Task" height="90">
+                        <img src="<?= ICON_PATH . 'add_w.svg' ?>" alt="Add New Task" title="Add New Task" height="90">
                         <h3>Add New Task</h3>
                     </button>
                 <?php endif; ?>
@@ -91,7 +91,7 @@
                         <a class="flex-col full-body-content" href="">
                             <section>
                                 <div class="text-w-icon">
-                                    <img src="<?= ICON_PATH . 'task_b.svg' ?>" alt="Task" title="Task" height="24">
+                                    <img src="<?= ICON_PATH . 'task_w.svg' ?>" alt="Task" title="Task" height="24">
                                     <h3 class="task-name"><?= $taskDetails['name'] ?></h3>
                                 </div>
                                 <p class="task-id"><em><?= $taskDetails['id'] ?></em></p>
@@ -107,7 +107,7 @@
                                 <!-- Start Date -->
                                 <div class="flex-row">
                                     <div class="text-w-icon">
-                                        <img src="<?= ICON_PATH . 'start_b.svg' ?>" alt="Start Date" title="Start Date"
+                                        <img src="<?= ICON_PATH . 'start_w.svg' ?>" alt="Start Date" title="Start Date"
                                             height="20">
                                         <p>Start: </p>
                                     </div>
@@ -118,7 +118,7 @@
                                 <!-- Completion Date -->
                                 <div class="flex-row">
                                     <div class="text-w-icon">
-                                        <img src="<?= ICON_PATH . 'complete_b.svg' ?>" alt="Completion Date"
+                                        <img src="<?= ICON_PATH . 'complete_w.svg' ?>" alt="Completion Date"
                                             title="Completion Date" height="20">
                                         <p>End: </p>
                                     </div>

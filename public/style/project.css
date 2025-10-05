@@ -98,6 +98,10 @@
 	font-size: 1.1rem;
 }
 
+.add-worker-modal .worker-checkbox:hover {
+	opacity: 0.7;
+}
+
 .add-worker-modal .worker-checkbox input[type='checkbox'] {
 	height: 16px;
 	width: 16px;
@@ -116,6 +120,7 @@
 
 .main-project-content .content-section-block {
 	padding: var(--space);
+	border: 1px solid rgba(0, 0, 0, 0.3);
 	border-radius: var(--border-radius);
 	overflow: hidden;
 }
@@ -237,10 +242,6 @@
 	overflow: hidden;
 }
 
-.project-workers .worker-list-card:hover {
-	opacity: 0.7;
-}
-
 .project-workers .worker-list-card h4,
 .project-workers .worker-list-card p {
 	max-width: 15ch;
@@ -288,11 +289,6 @@
 
 .phase-list-card .text-w-icon > img {
 	margin-right: 0.3rem;
-}
-
-.project-actions {
-	padding-top: 0 !important;
-	padding-bottom: 0 !important;
 }
 
 #cancel_project_button {

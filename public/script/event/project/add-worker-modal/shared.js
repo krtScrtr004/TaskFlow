@@ -31,7 +31,7 @@ export function createWorkerListCard(worker) {
 
             <label for="${worker.id}" class="worker-list-card" data-id="${worker.id}">
                 <div class="flex-col flex-child-center-v">
-                    <img src="${worker.profilePicture || ICON_PATH + 'profile_b.svg'}" alt="${worker.name}" title="${worker.name}" height="40">
+                    <img src="${worker.profilePicture || ICON_PATH + 'profile_w.svg'}" alt="${worker.name}" title="${worker.name}" height="40">
                 </div>
 
                 <div class="flex-col">

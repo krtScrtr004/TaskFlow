@@ -35,7 +35,7 @@ function phaseListCard(Phase $phase): string
                     <div class="text-w-icon">
                         <!-- Start Date -->
                         <img
-                            src="{$ICON_PATH}start_b.svg"
+                            src="{$ICON_PATH}start_w.svg"
                             alt="Phase Schedule"
                             title="Phase Schedule"
                             height="14">
@@ -46,7 +46,7 @@ function phaseListCard(Phase $phase): string
                     <div class="text-w-icon">
                         <!-- Completion Date -->
                         <img
-                            src="{$ICON_PATH}complete_b.svg"
+                            src="{$ICON_PATH}complete_w.svg"
                             alt="Phase Schedule"
                             title="Phase Schedule"
                             height="14">

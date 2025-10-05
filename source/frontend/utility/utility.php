@@ -85,8 +85,8 @@ function simplifyDate(DateTime $date): string
     }
 }
 
-function formatDateTime(DateTime $dateTime): string {
-    return $dateTime->format('o-m-d H:i:s');
+function formatDateTime(DateTime $dateTime, string $format = 'o-m-d H:i:s'): string {
+    return $dateTime->format($format);
 }
 
 function formatNumber(int|float $number): string

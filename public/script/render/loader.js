@@ -16,7 +16,7 @@ export const Loader = (() => {
             const parentHeight = parentElem.offsetHeight
             const loaderElem = `
                 <div 
-                    class="loader-wrapper padded center-child absolute white-bg" 
+                    class="loader-wrapper padded center-child absolute transparent-bg" 
                     style="height:${parentHeight}; top:0; left:0; right:0; bottom:0;">
                         <span class="loader"></span>
                 </div>`

@@ -4,7 +4,7 @@ function workerListCard(Worker $worker): string
 {
     $profileLink =
         htmlspecialchars($worker->getProfileLink()) ?:
-        ICON_PATH . 'profile_b.svg';
+        ICON_PATH . 'profile_w.svg';
     $name = htmlspecialchars($worker->getFirstName() . ' ' . $worker->getLastName());
     $id = htmlspecialchars($worker->getPublicId());
     $jobTitles = $worker->getJobTitles();
