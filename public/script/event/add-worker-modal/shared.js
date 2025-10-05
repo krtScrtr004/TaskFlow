@@ -1,5 +1,5 @@
-import { Http } from '../../../utility/http.js'
-import { Dialog } from '../../../render/dialog.js'
+import { Http } from '../../utility/http.js'
+import { Dialog } from '../../render/dialog.js'
 
 export const selectedUsers = []
 let isLoading = false

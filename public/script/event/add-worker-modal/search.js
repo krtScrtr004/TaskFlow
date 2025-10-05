@@ -1,7 +1,7 @@
 import { fetchWorkers, createWorkerListCard } from './shared.js'
-import { debounce } from '../../../utility/debounce.js'
-import { Loader } from '../../../render/loader.js'
-import { Dialog } from '../../../render/dialog.js'
+import { debounce } from '../../utility/debounce.js'
+import { Loader } from '../../render/loader.js'
+import { Dialog } from '../../render/dialog.js'
 
 const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
 if (addWorkerModalTemplate) {

@@ -1,6 +1,6 @@
 import { fetchWorkers, createWorkerListCard, selectWorker } from './shared.js'
-import { Loader } from '../../../render/loader.js'
-import { Dialog } from '../../../render/dialog.js'
+import { Loader } from '../../render/loader.js'
+import { Dialog } from '../../render/dialog.js'
 
 const addWorkerButton = document.querySelector('#add_worker_button')
 if (addWorkerButton) {

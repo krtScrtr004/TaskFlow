@@ -1,8 +1,8 @@
 import { selectedUsers } from './shared.js'
-import { Http } from '../../../utility/http.js'
-import { Dialog } from '../../../render/dialog.js'
-import { Loader } from '../../../render/loader.js'
-import { confirmationDialog } from '../../../render/confirmation-dialog.js'
+import { Http } from '../../utility/http.js'
+import { Dialog } from '../../render/dialog.js'
+import { Loader } from '../../render/loader.js'
+import { confirmationDialog } from '../../render/confirmation-dialog.js'
 
 let isLoading = false
 async function sendToBackend(projectId, workerIds) {
