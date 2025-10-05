@@ -34,6 +34,12 @@ class SingleFormController implements Controller
                 'single-form/edit-project/phase/edit/cancel',
                 'single-form/edit-project/phase/edit/add',
             ],
+        ],
+        'addTask' => [
+            'title' => 'Add New Task',
+            'description' => 'Fill in the details below to add a new task.',
+            'form' => 'addTask',
+            'script' => []
         ]
     ];
 
