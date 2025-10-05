@@ -8,7 +8,7 @@
 		"TaskFlow/change-password": "SingleFormController",
 		"TaskFlow/create-project": "SingleFormController",
 		"TaskFlow/edit-project/{projectId:[\\w+_-]+}": "SingleFormController",
-		"TaskFlow/create-task/{projectId:[\\w+_-]+}": "SingleFormController",
+		"TaskFlow/add-task/{projectId:[\\w+_-]+}": "SingleFormController",
 
 		"TaskFlow/project": "ProjectController",
 		"TaskFlow/project/{projectId:[\\w+_-]+}/task": "TaskController"
