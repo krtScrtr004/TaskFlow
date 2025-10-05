@@ -1,14 +1,16 @@
 import { Http } from '../../utility/http.js'
 import { Dialog } from '../../render/dialog.js'
+import { Loader } from '../../render/loader.js'
+import { confirmationDialog } from '../../render/confirmation-dialog.js'
 
 export const selectedUsers = []
-let isLoading = false
 
 const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
 
+let isFetchingWorkers = false
 export async function fetchWorkers(key = null) {
-    if (isLoading) return
-    isLoading = true
+    if (isFetchingWorkers) return
+    isFetchingWorkers = true
 
     const param = (key) ? key : ''
     const response = await Http.GET('get-worker-info/' + param)
@@ -16,7 +18,7 @@ export async function fetchWorkers(key = null) {
         throw new Error('Workers data not found!')
     }
 
-    isLoading = false
+    isFetchingWorkers = false
     return response.data
 }
 
@@ -41,9 +43,9 @@ export function createWorkerListCard(worker) {
                     </div>
 
                     <div class="job-titles flex-row flex-wrap">
-                        ${(worker.jobTitles && worker.jobTitles.length > 0) 
-                            ? worker.jobTitles.map(title => `<span class="job-title-chip">${title}</span>`).join(' ') 
-                            : '<span class="no-job-title-badge">No Job Titles</span>'}
+                        ${(worker.jobTitles && worker.jobTitles.length > 0)
+            ? worker.jobTitles.map(title => `<span class="job-title-chip">${title}</span>`).join(' ')
+            : '<span class="no-job-title-badge">No Job Titles</span>'}
                     </div>
                 </div>
             </label>
@@ -95,4 +97,64 @@ export function selectWorker() {
     })
 
     isSelectWorkerEventInitialized = true
+}
+
+let isSendingToBackend = false
+async function sendToBackend(projectId, workerIds) {
+    if (isSendingToBackend) return
+    isSendingToBackend = true
+
+    const response = await Http.POST('add-worker', { projectId, workerIds })
+    if (!response) {
+        throw new Error('Failed to add workers to project.')
+    }
+
+    isSendingToBackend = false
+}
+
+export async function addWorker(action = () => {}) {
+    const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
+    if (!addWorkerModalTemplate) {
+        console.error('Add Worker Modal template not found.')
+        Dialog.somethingWentWrong()
+        return
+    }
+
+    const confirmAddWorkerButton = addWorkerModalTemplate.querySelector('#confirm_add_worker_button')
+    if (!confirmAddWorkerButton) {
+        console.error('Confirm Add Worker button not found.')
+        Dialog.somethingWentWrong()
+        return
+    }
+
+    confirmAddWorkerButton.addEventListener('click', async () => {
+        if (selectedUsers.length === 0) {
+            Dialog.errorOccurred('No workers selected. Please select at least one worker to add.')
+            return
+        }
+
+        if (!await confirmationDialog(
+            'Add Workers',
+            `Are you sure you want to add ${selectedUsers.length} worker(s) to this project?`,
+        )) return
+
+        const addWorkerButton = document.querySelector('#add_worker_button')
+        const projectId = addWorkerButton.dataset.projectid
+        if (!projectId) {
+            console.error('Project ID not found in modal dataset.')
+            Dialog.somethingWentWrong()
+            return
+        }
+
+        Loader.patch(confirmAddWorkerButton.querySelector('.text-w-icon'))
+        try {
+            await sendToBackend(projectId, selectedUsers)
+            if (typeof action === 'function') action()
+        } catch (error) {
+            console.error(error)
+            Dialog.errorOccurred('An error occurred while adding workers. Please try again.')
+        } finally {
+            Loader.delete()
+        }
+    })
 }
