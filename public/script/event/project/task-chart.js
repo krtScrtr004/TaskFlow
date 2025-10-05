@@ -79,7 +79,7 @@ createChart('#task_priority_chart',
         parseFloat(priorityPercentage.dataset.medium) || 0,
         parseFloat(priorityPercentage.dataset.high) || 0
     ],
-    ['#ffb61e', '#38ff5d', '#007bff'],
+    ['#38ff5d', '#ffb61e', '#dc3545'],
     300,  // width
     300   // height
 );

@@ -81,13 +81,13 @@ function createStatusBadge(hasStarted, isCompleted) {
     const statusBadge = document.createElement('div');
     
     if (isCompleted) {
-        statusBadge.className = 'status-badge center-child red-bg';
+        statusBadge.className = 'status-badge badge center-child red-bg';
         statusBadge.innerHTML = '<p class="center-text white-text">Completed</p>';
     } else if (hasStarted) {
-        statusBadge.className = 'status-badge center-child green-bg';
+        statusBadge.className = 'status-badge badge center-child green-bg';
         statusBadge.innerHTML = '<p class="center-text white-text">On Going</p>';
     } else {
-        statusBadge.className = 'status-badge center-child yellow-bg';
+        statusBadge.className = 'status-badge badge center-child yellow-bg';
         statusBadge.innerHTML = '<p class="center-text black-text">Pending</p>';
     }
     
