@@ -1,0 +1,72 @@
+.task {
+	gap: var(--space);
+}
+
+.task .search-bar {
+	width: 60ch;
+}
+
+.task-grid {
+	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+	gap: 1rem;
+}
+
+.task-grid-card {
+	aspect-ratio: 1 / 1;
+	background-color: var(--dark-white);
+	color: var(--black);
+	border-radius: var(--border-radius);
+}
+
+.task-grid-card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
+}
+
+.task-grid-card > a {
+	padding: 1rem;
+	gap: 0.7rem;
+}
+
+.task-grid-card .task-name {
+	font-size: 1.5rem;
+	font-weight: 600;
+}
+
+.task-grid-card .task-id {
+	font-size: 0.9rem;
+	font-weight: 300;
+}
+
+.task-grid-card .task-description {
+	display: -webkit-box;
+	-webkit-line-clamp: 4;
+	line-clamp: 4;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.task-grid-card .task-schedule {
+	gap: 0.5rem;
+}
+
+.task-grid-card .task-schedule > div {
+	gap: 0.3rem;
+}
+
+.task-grid-card .task-badge {
+	flex: 1;
+	gap: 0.3rem;
+}
+
+#add_task_button {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+}
+
+#add_task_button h3 {
+	font-size: 1.5rem;
+}

@@ -7,7 +7,7 @@ class Task implements Entity {
     private string $description;
     private DateTime $startDateTime;
     private DateTime $completionDateTime;
-    private DateTime $actualCompletionDateTime;
+    private ?DateTime $actualCompletionDateTime;
     private TaskPriority $priority;
     private WorkStatus $status;
     private DateTime $createdDateTime;
@@ -19,7 +19,7 @@ class Task implements Entity {
         string $description,
         DateTime $startDateTime,
         DateTime $completionDateTime,
-        DateTime $actualCompletionDateTime,
+        ?DateTime $actualCompletionDateTime,
         TaskPriority $priority,
         WorkStatus $status,
         DateTime $createdDateTime
@@ -62,7 +62,7 @@ class Task implements Entity {
         return $this->completionDateTime;
     }
 
-    public function getActualCompletionDateTime(): DateTime {
+    public function getActualCompletionDateTime(): ?DateTime {
         return $this->actualCompletionDateTime;
     }
 
@@ -103,7 +103,7 @@ class Task implements Entity {
         $this->completionDateTime = $completionDateTime;
     }
 
-    public function setActualCompletionDateTime(DateTime $actualCompletionDateTime): void {
+    public function setActualCompletionDateTime(?DateTime $actualCompletionDateTime): void {
         $this->actualCompletionDateTime = $actualCompletionDateTime;
     }
 
