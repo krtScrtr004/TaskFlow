@@ -36,10 +36,15 @@ class SingleFormController implements Controller
             ],
         ],
         'addTask' => [
-            'title' => 'Add New Task',
+            'title' => '',
             'description' => 'Fill in the details below to add a new task.',
             'form' => 'addTask',
-            'script' => []
+            'script' => [
+                'add-worker-modal/add-to-task',
+                'add-worker-modal/close',
+                'add-worker-modal/open',
+                'add-worker-modal/search',
+            ]
         ]
     ];
 

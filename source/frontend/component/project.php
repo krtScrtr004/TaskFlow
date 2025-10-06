@@ -4,7 +4,7 @@ if (!$project) {
 }
 
 require_once COMPONENT_PATH . 'template/worker-info-card.php';
-require_once COMPONENT_PATH . 'template/add-worker-to-project.php';
+require_once COMPONENT_PATH . 'template/add-worker-modal.php';
 
 $projectData = [
     'id' => htmlspecialchars($project->getPublicId()),

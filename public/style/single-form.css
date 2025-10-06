@@ -1,10 +1,12 @@
 .single-form:has(.create-project) > main,
-.single-form:has(.edit-project) > main {
+.single-form:has(.edit-project) > main, 
+.single-form:has(.add-task) > main {
     padding: 3rem 0;
 }
 
 .single-form:has(.create-project) .single-form-form,
-.single-form:has(.edit-project) .single-form-form {
+.single-form:has(.edit-project) .single-form-form,
+.single-form:has(.add-task) .single-form-form {
     width: fit-content;
     height: 100%;
     overflow: auto;
