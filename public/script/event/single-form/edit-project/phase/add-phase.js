@@ -16,7 +16,7 @@ export function addPhase(params = {}) {
         throw new Error('Add Phase Modal not found.')
     }
 
-    async function submitForm() {
+    function submitForm() {
         const addPhaseForm = addPhaseModal.querySelector('#add_phase_form')
         if (!addPhaseForm) {
             throw new Error('Add Phase Form not found.')
@@ -48,16 +48,12 @@ export function addPhase(params = {}) {
                 'startDateTime': startDateTime,
                 'completionDateTime': completionDateTime,
             }
-            if (params.action && typeof params.action === 'function') {
-                const returnValue = await params.action(body)
-                if (returnValue !== undefined) {
-                    body = returnValue
-                }
-            }
+            if (params.action && typeof params.action === 'function') 
+                params.action(body)
 
             // Simulate a click on the close button to close the modal
             const closeButton = addPhaseModal.querySelector('#add_phase_close_button')
-            closeButton.click()
+            closeButton?.click()
 
             Loader.delete()
 
@@ -77,17 +73,17 @@ export function addPhase(params = {}) {
     if (!addNewPhaseButton) {
         throw new Error('Add New Phase Button not found.')
     }
-    addNewPhaseButton.addEventListener('click', debounce(async (e) => {
+    addNewPhaseButton.addEventListener('click', debounce(e => {
         e.preventDefault()
-        await submitForm()
+        submitForm()
     }, 300))
 
     const addPhaseForm = addPhaseModal.querySelector('#add_phase_form')
     if (!addPhaseForm) {
         throw new Error('Add Phase Form not found.')
     }
-    addPhaseForm.addEventListener('submit', debounce(async (e) => {
+    addPhaseForm.addEventListener('submit', debounce(e => {
         e.preventDefault()
-        await submitForm()
+        submitForm()
     }, 300))
 }

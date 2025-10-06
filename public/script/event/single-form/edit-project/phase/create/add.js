@@ -2,13 +2,11 @@ import { addPhase } from '../add-phase.js';
 
 try {
     addPhase({
-        allowDisable: false, 
+        allowDisable: false,
         action: function () {
             const noPhasesWall = document.querySelector('.no-phases-wall')
-            if (noPhasesWall) {
-                noPhasesWall.classList.remove('flex-col')
-                noPhasesWall.classList.add('no-display')
-            }
+            noPhasesWall?.classList.remove('flex-col')
+            noPhasesWall?.classList.add('no-display')
         }
     })
 } catch (error) {

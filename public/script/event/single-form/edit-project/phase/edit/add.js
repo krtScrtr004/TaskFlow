@@ -1,40 +1,14 @@
 import { addPhase } from '../add-phase.js'
-import { Http } from '../../../../../utility/http.js'
 import { Dialog } from '../../../../../render/dialog.js'
 
-let isLoading = false
-async function sendToBackend(data) {
-    if (isLoading) return
-    isLoading = true
-
-    const editableProjectDetails = document.querySelector('#editable_project_details')
-    const projectId = editableProjectDetails.dataset.projectid
-    if (!projectId) {
-        isLoading = false
-        throw new Error('Project ID not found in form dataset.')
-    }
-
-    const response = await Http.POST(`add-phase/${projectId}`, data)
-    if (!response) {
-        throw new Error('No response from server')
-    }
-
-    if (!response.data?.id) {
-        throw new Error('Invalid response from server')
-    }
-
-    isLoading = false
-    return response.data
-}
-
-async function action(data) {
-    const response = await sendToBackend(data)
-    data.id = response.id
-    return data
-}
-
+// List of phases to add when edit form is submitted
+export const phaseToAdd = new Map()
 try {
-    addPhase({ action: action })
+    addPhase({
+        action: function (data) {
+            phaseToAdd.set(data.name, data)
+        }
+    })
 } catch (error) {
     console.error('Error initializing addPhase:', error)
     Dialog.errorOccurred('Failed to initialize add phase functionality. Please refresh the page and try again.')
