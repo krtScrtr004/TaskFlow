@@ -81,38 +81,27 @@ export function selectWorker() {
         const wasChecked = checkbox.checked
         checkbox.checked = !wasChecked
 
-        // Update selectedUsers array
+        // Update selectedUsers map
         const workerId = checkbox.id
         if (checkbox.checked) {
-            if (!selectedUsers.includes(workerId)) {
-                selectedUsers.push(workerId)
-            }
+            selectedUsers.push(workerId )
         } else {
             const index = selectedUsers.indexOf(workerId)
-            if (index > -1) {
+            if (index !== -1) {
                 selectedUsers.splice(index, 1)
             }
         }
-        console.table(selectedUsers)
     })
 
     isSelectWorkerEventInitialized = true
 }
 
-let isSendingToBackend = false
-async function sendToBackend(projectId, workerIds) {
-    if (isSendingToBackend) return
-    isSendingToBackend = true
-
-    const response = await Http.POST('add-worker', { projectId, workerIds })
-    if (!response) {
-        throw new Error('Failed to add workers to project.')
+export async function addWorker(asyncFunction, action = () => { }) {
+    if (!asyncFunction || typeof asyncFunction !== 'function') {
+        console.error('Invalid asyncFunction provided to addWorker.')
+        return
     }
 
-    isSendingToBackend = false
-}
-
-export async function addWorker(action = () => {}) {
     const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
     if (!addWorkerModalTemplate) {
         console.error('Add Worker Modal template not found.')
@@ -148,8 +137,12 @@ export async function addWorker(action = () => {}) {
 
         Loader.patch(confirmAddWorkerButton.querySelector('.text-w-icon'))
         try {
-            await sendToBackend(projectId, selectedUsers)
-            if (typeof action === 'function') action()
+            const result = await asyncFunction(projectId, selectedUsers)
+            if (typeof action === 'function') action(result)
+
+            // Close the modal
+            const cancelButton = addWorkerModalTemplate.querySelector('#cancel_add_worker_button')
+            if (cancelButton) cancelButton.click()
         } catch (error) {
             console.error(error)
             Dialog.errorOccurred('An error occurred while adding workers. Please try again.')

@@ -3,9 +3,13 @@
 class WorkerController implements Controller
 {
 
-    private function __construct() {}
+    private function __construct()
+    {
+    }
 
-    public static function index(): void {}
+    public static function index(): void
+    {
+    }
 
     // Used to fetch single worker info by ID (eg. /get-worker-info/1)
     public static function getWorkerInfoById($args = []): void
@@ -17,7 +21,9 @@ class WorkerController implements Controller
         $workerId = $args['workerId'];
         $worker = UserModel::all()[0];
         Response::success(
-            self::createResponseArrayData($worker->toWorker()),
+            [
+                self::createResponseArrayData($worker->toWorker())
+            ],
             'Worker info retrieved successfully'
         );
     }

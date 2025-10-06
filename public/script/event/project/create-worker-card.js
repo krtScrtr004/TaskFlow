@@ -5,7 +5,7 @@ import { Dialog } from '../../render/dialog.js'
 import { Notification } from '../../render/notification.js'
 
 async function fetchWorkerInfo(workerId) {
-    const response = await Http.GET('get-worker-info?ids=' + workerId)
+    const response = await Http.GET('get-worker-info/' + workerId)
     if (!response) {
         throw new Error('No response from server')
     }
