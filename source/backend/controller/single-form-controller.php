@@ -44,6 +44,7 @@ class SingleFormController implements Controller
                 'add-worker-modal/close',
                 'add-worker-modal/open',
                 'add-worker-modal/search',
+                'single-form/add-task/submit',
             ]
         ]
     ];

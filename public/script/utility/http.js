@@ -9,7 +9,7 @@ export const Http = (() => {
                     throw new Error(`HTTP error! Status: ${request.status} ${request.statusText}`);
                 }
 
-                if (request.status === 204) {
+                if (request.status === 204 || request.status === 302) {
                     return true
                 }
 
@@ -35,7 +35,7 @@ export const Http = (() => {
                     throw new Error(`HTTP error! Status: ${request.status} ${request.statusText}`)
                 }
 
-                if (request.status === 204) {
+                if (request.status === 204 || request.status === 302) {
                     return true
                 }
 

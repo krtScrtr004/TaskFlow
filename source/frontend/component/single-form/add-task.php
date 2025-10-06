@@ -7,7 +7,7 @@ include_once COMPONENT_PATH . 'template' . DS . 'add-worker-modal.php';
 ?>
 
 <!-- Add Task Form -->
-<form id="add_task_form" class="add-task flex-row" action="" method="POST">
+<form id="add_task_form" class="add-task flex-row" action="" method="POST" data-projectid="<?= $projectId ?>">
 
     <!-- Task Details -->
     <fieldset class="task-detail flex-col">
@@ -78,8 +78,8 @@ include_once COMPONENT_PATH . 'template' . DS . 'add-worker-modal.php';
                 </div>
             </label>
 
-            <textarea name="task_description" id="task_description" rows="4" placeholder="Enter task description"
-                required></textarea>
+            <textarea name="task_description" id="task_description" rows="4"
+                placeholder="Enter task description"></textarea>
         </div>
 
         <!-- Task Priority -->

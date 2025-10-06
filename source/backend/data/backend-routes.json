@@ -1,15 +1,24 @@
 {
-    "GET": {
-        "TaskFlow/get-worker-info": ["WorkerController", "getWorkerInfoByKey"],
-        "TaskFlow/get-worker-info/{workerId:[\\w+_-]+}": ["WorkerController", "getWorkerInfoById"],
-        "TaskFlow/get-worker-info?(?:[\\w+\\s_=\\/\\?,%&@-]+)+": ["WorkerController", "getWorkerInfoByKey"]
-    },
+	"GET": {
+		"TaskFlow/get-worker-info": ["WorkerController", "getWorkerInfoByKey"],
+		"TaskFlow/get-worker-info/{workerId:[\\w+_-]+}": [
+			"WorkerController",
+			"getWorkerInfoById"
+		],
+		"TaskFlow/get-worker-info?(?:[\\w+\\s_=\\/\\?,%&@-]+)+": [
+			"WorkerController",
+			"getWorkerInfoByKey"
+		]
+	},
 
-    "POST": {
-        "TaskFlow/cancel-project": ["ProjectController", "cancelProject"],
-        "TaskFlow/add-worker": ["WorkerController", "addWorker"],
-        "TaskFlow/terminate-worker": ["WorkerController", "terminateWorker"],
-        "TaskFlow/add-phase": ["PhaseController", "addPhase"],
-        "TaskFlow/cancel-phase": ["PhaseController", "cancelPhase"]
-    }
+	"POST": {
+		"TaskFlow/add-worker": ["WorkerController", "addWorker"],
+		"TaskFlow/add-phase/{projectId:[\\w+_-]+}": ["PhaseController", "addPhase"],
+        "TaskFlow/add-task/{projectId:[\\w+_-]+}": ["TaskController", "addTask"],
+
+		"TaskFlow/cancel-project": ["ProjectController", "cancelProject"],
+		"TaskFlow/cancel-phase": ["PhaseController", "cancelPhase"],
+
+		"TaskFlow/terminate-worker": ["WorkerController", "terminateWorker"]
+	}
 }

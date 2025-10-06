@@ -2,7 +2,7 @@ import { addWorker } from './shared.js'
 import { Dialog } from '../../render/dialog.js'
 import { Http } from '../../utility/http.js'
 
-const assignedWorkers = []
+export const assignedWorkers = {}
 const noAssignedWorkerWall = document.querySelector('.no-assigned-worker-wall')
 
 /**
@@ -225,7 +225,7 @@ const action = (workersData) => {
             noAssignedWorkerWall.classList.add('no-display')
             noAssignedWorkerWall.classList.remove('flex-col')
         }
-        assignedWorkers.push(workerData.id)
+        assignedWorkers[workerData.id] = workerData
     })
 }
 
@@ -247,9 +247,9 @@ try {
             if (!workerCard)
                 throw new Error('Worker card element not found.')
 
-            assignedWorkers.splice(assignedWorkers.indexOf(workerCard.dataset.id), 1)
+            delete assignedWorkers[workerCard.dataset.id]
             workerCard.remove()
-            if (assignedWorkers.length === 0 && noAssignedWorkerWall) {
+            if (Object.keys(assignedWorkers).length === 0 && noAssignedWorkerWall) {
                 noAssignedWorkerWall.classList.remove('no-display')
                 noAssignedWorkerWall.classList.add('flex-col')
             }
