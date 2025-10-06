@@ -1,5 +1,11 @@
-<?php if (!isset($tasks))
-    throw new Error('Tasks data is required.'); ?>
+<?php 
+if (!$project) 
+    throw new Error('Project data is required.');
+$projectId = $project->getPublicId();
+
+if (!isset($tasks))
+    throw new Error('Tasks data is required.'); 
+?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -69,10 +75,10 @@
 
             <section class="task-grid grid">
                 <?php if (Role::isProjectManager(Me::getInstance())): ?>
-                    <button id="add_task_button" type="button" class="task-grid-card unset-button">
+                    <a href="<?=REDIRECT_PATH . "add-task/$projectId" ?>" class="task-grid-card flex-col flex-child-center-h flex-child-center-v">
                         <img src="<?= ICON_PATH . 'add_w.svg' ?>" alt="Add New Task" title="Add New Task" height="90">
                         <h3>Add New Task</h3>
-                    </button>
+                    </a>
                 <?php endif; ?>
 
                 <?php

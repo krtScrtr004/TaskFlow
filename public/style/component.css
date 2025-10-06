@@ -173,7 +173,7 @@ button:has(.text-w-icon) {
 
 .notification-wrapper,
 .notification-wrapper > * {
-	z-index: 1000;
+	z-index: 1005;
 }
 
 .notification-wrapper {

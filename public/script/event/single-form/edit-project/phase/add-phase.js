@@ -1,3 +1,4 @@
+import { validateInputs } from './validator.js'
 import { clonePhaseListCard } from './clone-phase-list-card.js'
 import { Loader } from '../../../../render/loader.js'
 import { Dialog } from '../../../../render/dialog.js'
@@ -15,11 +16,7 @@ export function addPhase(params = {}) {
         throw new Error('Add Phase Modal not found.')
     }
 
-    const addNewPhaseButton = addPhaseModal.querySelector('#add_new_phase_button')
-    if (!addNewPhaseButton) {
-        throw new Error('Add New Phase Button not found.')
-    }
-    addNewPhaseButton.addEventListener('click', debounce(async () => {
+    async function submitForm() {
         const addPhaseForm = addPhaseModal.querySelector('#add_phase_form')
         if (!addPhaseForm) {
             throw new Error('Add Phase Form not found.')
@@ -36,10 +33,12 @@ export function addPhase(params = {}) {
         const completionDateTime = completionDateTimeInput.value.trim()
 
         // Check required fields
-        if (!name || !startDateTime || !completionDateTime) {
-            Dialog.errorOccurred('Name, start date and completion date fields are required. Please fill in all fields.')
-            return
-        }
+        if (!validateInputs({
+            name,
+            description,
+            startDateTime,
+            completionDateTime
+        })) return
 
         Loader.patch(addNewPhaseButton.querySelector('.text-w-icon'))
         try {
@@ -72,5 +71,23 @@ export function addPhase(params = {}) {
         } catch (error) {
             throw new Error(error)
         }
+    }
+
+    const addNewPhaseButton = addPhaseModal.querySelector('#add_new_phase_button')
+    if (!addNewPhaseButton) {
+        throw new Error('Add New Phase Button not found.')
+    }
+    addNewPhaseButton.addEventListener('click', debounce(async (e) => {
+        e.preventDefault()
+        await submitForm()
+    }, 300))
+
+    const addPhaseForm = addPhaseModal.querySelector('#add_phase_form')
+    if (!addPhaseForm) {
+        throw new Error('Add Phase Form not found.')
+    }
+    addPhaseForm.addEventListener('submit', debounce(async (e) => {
+        e.preventDefault()
+        await submitForm()
     }, 300))
 }

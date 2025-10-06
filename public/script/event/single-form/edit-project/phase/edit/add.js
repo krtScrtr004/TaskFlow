@@ -1,5 +1,4 @@
 import { addPhase } from '../add-phase.js'
-
 import { Http } from '../../../../../utility/http.js'
 import { Dialog } from '../../../../../render/dialog.js'
 
@@ -8,7 +7,14 @@ async function sendToBackend(data) {
     if (isLoading) return
     isLoading = true
 
-    const response = await Http.POST('add-phase', data)
+    const editableProjectDetails = document.querySelector('#editable_project_details')
+    const projectId = editableProjectDetails.dataset.projectid
+    if (!projectId) {
+        isLoading = false
+        throw new Error('Project ID not found in form dataset.')
+    }
+
+    const response = await Http.POST(`add-phase/${projectId}`, data)
     if (!response) {
         throw new Error('No response from server')
     }
@@ -28,7 +34,7 @@ async function action(data) {
 }
 
 try {
-    addPhase({action: action})
+    addPhase({ action: action })
 } catch (error) {
     console.error('Error initializing addPhase:', error)
     Dialog.errorOccurred('Failed to initialize add phase functionality. Please refresh the page and try again.')

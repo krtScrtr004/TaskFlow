@@ -6,9 +6,9 @@ class TaskController implements Controller
     {
         // TODO
 
-        if (!isset($args['projectId'])) {
+        $projectId = $args['projectId'] ?? null; // Temporary placeholder   
+        if (!$projectId) 
             throw new InvalidArgumentException('Project ID is required.');
-        }
 
         // TODO: 
         // Fetch tasks for the given project ID if PM;

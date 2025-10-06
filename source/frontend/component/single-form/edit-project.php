@@ -59,7 +59,7 @@ include_once COMPONENT_PATH . 'template/add-phase-modal.php';
     </section>
 
     <!-- Editable Details Form -->
-    <form id="editable_project_details" class="flex-col" action="" method="POST">
+    <form id="editable_project_details" class="flex-col" action="" method="POST" data-projectId="<?= $projectData['id'] ?>">
 
         <!-- Main Details Field -->
         <fieldset class="main-details-field flex-col" <?= $uiState['projectIsCompleted'] ?>>
