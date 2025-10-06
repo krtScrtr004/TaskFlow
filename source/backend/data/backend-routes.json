@@ -1,7 +1,8 @@
 {
     "GET": {
-        "TaskFlow/get-worker-info": ["WorkerController", "getWorkerInfo"],
-        "TaskFlow/get-worker-info/{key:[\\w+\\s_-]+}": ["WorkerController", "getWorkerInfo"]
+        "TaskFlow/get-worker-info": ["WorkerController", "getWorkerInfoByKey"],
+        "TaskFlow/get-worker-info/{workerId:[\\w+_-]+}": ["WorkerController", "getWorkerInfoById"],
+        "TaskFlow/get-worker-info?(?:[\\w+\\s_=\\/\\?,%&@-]+)+": ["WorkerController", "getWorkerInfoByKey"]
     },
 
     "POST": {

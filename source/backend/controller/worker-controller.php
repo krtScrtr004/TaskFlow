@@ -3,56 +3,67 @@
 class WorkerController implements Controller
 {
 
-    private function __construct()
+    private function __construct() {}
+
+    public static function index(): void {}
+
+    // Used to fetch single worker info by ID (eg. /get-worker-info/1)
+    public static function getWorkerInfoById($args = []): void
     {
+        if (!isset($args['workerId'])) {
+            Response::error('Worker ID is required');
+        }
+
+        $workerId = $args['workerId'];
+        $worker = UserModel::all()[0];
+        Response::success(
+            self::createResponseArrayData($worker->toWorker()),
+            'Worker info retrieved successfully'
+        );
     }
 
-    public static function index(): void
-    {
-    }
-
-    public static function getWorkerInfo(): void
+    // Used to fetch multiple workers by IDs or name filter (eg. /get-worker-info?ids=1,2,3 or /get-worker-info?name=John)
+    public static function getWorkerInfoByKey(): void
     {
         $workers = UserModel::all();
 
-        function createResponseArrayData(Worker $worker): array
-        {
-            $worker->setRole(Role::WORKER);
-            $tasks = TaskModel::all();
-            $workerPerformanceTask = WorkerPerformanceCalculator::calculateWorkerPerformance($tasks);
-            return [
-                'id' => $worker->getPublicId(),
-                'name' => $worker->getFirstName() . ' ' . $worker->getLastName(),
-                'profilePicture' => $worker->getProfileLink(),
-                'bio' => $worker->getBio(),
-                'email' => $worker->getEmail(),
-                'contactNumber' => $worker->getContactNumber(),
-                'role' => $worker->getRole()->value,
-                'jobTitles' => $worker->getJobTitles()->toArray(),
-                'totalTasks' => count($tasks),
-                'completedTasks' => $tasks->getTaskCountByStatus(WorkStatus::COMPLETED),
-                'performance' => $workerPerformanceTask['overallScore'],
-            ];
-        }
-
         $workerIds = isset($_GET['ids']) ? explode(',', $_GET['ids']) : [];
         $name = $_GET['name'] ?? null;
-        
+
         $return = [];
-        
         // If both ID and name filters are empty, return all workers
         if (empty($workerIds) && empty($name)) {
             foreach ($workers as $worker) {
-                $return[] = createResponseArrayData($worker->toWorker());
+                $return[] = self::createResponseArrayData($worker->toWorker());
             }
         } else {
             // TODO: Fetch workers by IDs and/or name from the database
             foreach ($workers as $worker) {
-                $return[] = createResponseArrayData($worker->toWorker());                
+                $return[] = self::createResponseArrayData($worker->toWorker());
             }
         }
-        
+
         Response::success($return, 'Worker info retrieved successfully');
+    }
+
+    private static function createResponseArrayData(Worker $worker): array
+    {
+        $worker->setRole(Role::WORKER);
+        $tasks = TaskModel::all();
+        $workerPerformanceTask = WorkerPerformanceCalculator::calculateWorkerPerformance($tasks);
+        return [
+            'id' => $worker->getPublicId(),
+            'name' => $worker->getFirstName() . ' ' . $worker->getLastName(),
+            'profilePicture' => $worker->getProfileLink(),
+            'bio' => $worker->getBio(),
+            'email' => $worker->getEmail(),
+            'contactNumber' => $worker->getContactNumber(),
+            'role' => $worker->getRole()->value,
+            'jobTitles' => $worker->getJobTitles()->toArray(),
+            'totalTasks' => count($tasks),
+            'completedTasks' => $tasks->getTaskCountByStatus(WorkStatus::COMPLETED),
+            'performance' => $workerPerformanceTask['overallScore'],
+        ];
     }
 
     public static function addWorker(): void
