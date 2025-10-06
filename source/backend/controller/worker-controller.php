@@ -11,11 +11,8 @@ class WorkerController implements Controller
     {
     }
 
-    public static function getWorkerInfo($args = []): void
+    public static function getWorkerInfo(): void
     {
-        $key = $args['key'] ? trim($args['key']) : null;
-
-        // TODO: Dummy
         $workers = UserModel::all();
 
         function createResponseArrayData(Worker $worker): array
@@ -38,19 +35,24 @@ class WorkerController implements Controller
             ];
         }
 
-        // If no key (Name / ID) provided - return all
-        if (!$key || empty($key)) {
-            $return = [];
+        $workerIds = isset($_GET['ids']) ? explode(',', $_GET['ids']) : [];
+        $name = $_GET['name'] ?? null;
+        
+        $return = [];
+        
+        // If both ID and name filters are empty, return all workers
+        if (empty($workerIds) && empty($name)) {
             foreach ($workers as $worker) {
                 $return[] = createResponseArrayData($worker->toWorker());
             }
-            Response::success($return, 'Worker info retrieved successfully');
         } else {
-            $worker = $workers[0];
-            Response::success([
-                createResponseArrayData($worker->toWorker())
-            ], 'Worker info retrieved successfully');
+            // TODO: Fetch workers by IDs and/or name from the database
+            foreach ($workers as $worker) {
+                $return[] = createResponseArrayData($worker->toWorker());                
+            }
         }
+        
+        Response::success($return, 'Worker info retrieved successfully');
     }
 
     public static function addWorker(): void
@@ -64,15 +66,40 @@ class WorkerController implements Controller
             Response::error('Project ID is required');
         }
 
+        $workerIds = $data['workerIds'] ?? null;
         if (!isset($data['workerIds']) || !is_array($data['workerIds']) || count($data['workerIds']) < 1) {
             Response::error('Worker IDs are required');
         }
 
+        $returnData = $data['returnData'] ?? false;
+
         // TODO: Add worker to project logic
 
-        Response::success([
-            'message' => 'Worker added successfully'
-        ], 'Worker added successfully');
+        $returnDataArray = [];
+        if ($returnData) {
+            foreach ($workerIds as $workerId) {
+                // TODO: Fetch User
+                $user = UserModel::all()[0];
+
+                $userPerformance = WorkerPerformanceCalculator::calculateWorkerPerformance(TaskModel::all());
+                $returnDataArray[] = [
+                    'id' => $user->getPublicId(),
+                    'name' => $user->getFirstName() . ' ' . $user->getLastName(),
+                    'profilePicture' => $user->getProfileLink(),
+                    'bio' => $user->getBio(),
+                    'email' => $user->getEmail(),
+                    'contactNumber' => $user->getContactNumber(),
+                    'role' => $user->getRole()->value,
+                    'jobTitles' => $user->getJobTitles()->toArray(),
+                    'totalTasks' => count(TaskModel::all()),
+                    'completedTasks' => TaskModel::all()->getTaskCountByStatus(WorkStatus::COMPLETED),
+                    'performance' => $userPerformance['overallScore'],
+                ];
+            }
+
+        }
+
+        Response::success($returnDataArray, 'Worker added successfully');
     }
 
     public static function terminateWorker(): void

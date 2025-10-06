@@ -2,9 +2,10 @@
 import { Http } from '../../utility/http.js'
 import { Loader } from '../../render/loader.js'
 import { Dialog } from '../../render/dialog.js'
+import { Notification } from '../../render/notification.js'
 
 async function fetchWorkerInfo(workerId) {
-    const response = await Http.GET('get-worker-info/' + workerId)
+    const response = await Http.GET('get-worker-info?ids=' + workerId)
     if (!response) {
         throw new Error('No response from server')
     }
@@ -25,9 +26,16 @@ async function createWorkerInfoCard(workerId) {
     Loader.full(workerInfoCardTemplate.querySelector('.worker-info-card'))
 
     const worker = await fetchWorkerInfo(workerId)
-    if (!worker || !worker[0]) {
-        throw new Error('Worker data not found!')
+    if (!worker || worker.length === 0) {
+        Loader.delete()
+        Notification.error('Failed to fetch worker information. Please try again later.', 3000)
+
+        workerInfoCardTemplate.classList.remove('flex-col')
+        workerInfoCardTemplate.classList.add('no-display')
+
+        return
     }
+
     addInfoToCard(workerInfoCardTemplate, worker[0])
 
     Loader.delete()
@@ -44,18 +52,18 @@ function addInfoToCard(card, worker) {
     } = domElements
 
     // Add worker info to card
-    workerProfilePicture.src = worker.profilePicture || `${ICON_PATH}profile_w.svg`
-    workerName.textContent = worker.name || 'Unknown'
-    workerId.textContent = worker.id || 'N/A'
+    workerProfilePicture.src = worker.profilePicture ?? `${ICON_PATH}profile_w.svg`
+    workerName.textContent = worker.name ?? 'Unknown'
+    workerId.textContent = worker.id ?? 'N/A'
     workerJobTitles.innerHTML = worker.jobTitles.map(title =>
         `<span class="job-title-chip">${title}</span>`
     ).join('')
-    workerBio.textContent = worker.bio || 'No bio available'
-    workerTotalTasks.textContent = worker.totalTasks || 0
-    workerCompletedTasks.textContent = worker.completedTasks || 0
-    workerPerformance.textContent = (worker.performance || 0) + '%'
-    workerEmail.textContent = worker.email || 'N/A'
-    workerContact.textContent = worker.contactNumber || 'N/A'
+    workerBio.textContent = worker.bio ?? 'No bio available'
+    workerTotalTasks.textContent = worker.totalTasks ?? 0
+    workerCompletedTasks.textContent = worker.completedTasks ?? 0
+    workerPerformance.textContent = (worker.performance ?? 0) + '%'
+    workerEmail.textContent = worker.email ?? 'N/A'
+    workerContact.textContent = worker.contactNumber ?? 'N/A'
 
     closeWorkerInfoCard(card)
 }
