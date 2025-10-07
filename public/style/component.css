@@ -140,6 +140,27 @@ button:has(.text-w-icon):not(.unset-button) {
 	color: var(--red);
 }
 
+.modal.modal-form {
+	width: 30rem;
+    padding: var(--space);
+    gap: 1rem;
+    border-radius: var(--border-radius);
+}
+
+.modal.modal-form .title {
+	font-size: 1.5rem;
+}
+
+.modal.modal-form form {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space);
+}
+
+.modal.modal-form form > button h3 {
+	font-size: 1rem;
+}
+
 .confirmation-dialog {
 	padding: var(--space);
 	gap: var(--space);

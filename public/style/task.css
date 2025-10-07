@@ -142,3 +142,11 @@
 .assigned-workers #add_worker_button {
 	border: 1px solid var(--white);
 }
+
+#edit_task_form .task-secondary-info {
+	gap: 1rem;
+}
+
+#edit_task_form #task_priority {
+	width: 18ch;
+}

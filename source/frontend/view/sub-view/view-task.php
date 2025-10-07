@@ -38,7 +38,10 @@ $taskData = [
 </head>
 
 <body>
-    <?php require_once COMPONENT_PATH . 'sidenav.php' ?>
+    <?php
+    require_once COMPONENT_PATH . 'sidenav.php';
+    include_once COMPONENT_PATH . 'template/edit-task-modal.php';
+    ?>
 
     <main class="view-task-info main-page flex-col">
 
@@ -81,7 +84,14 @@ $taskData = [
 
                     <p>Completion Date: <?= $taskData['completionDateTime'] ?></p>
                 </div>
+
             </div>
+
+            <!-- Task Priority -->
+            <div class="task-priority">
+                <?= TaskPriority::badge($taskData['priority']) ?>
+            </div>
+
 
             <!-- Buttons -->
             <section class="action-buttons flex-row flex-child-end-v">

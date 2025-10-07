@@ -1,5 +1,5 @@
 <section id="add_phase_modal" class="modal-wrapper no-display">
-    <div class="modal flex-col black-bg">
+    <div class="modal-form modal flex-col black-bg">
         <!-- Heading -->
         <section class="flex-row flex-space-between">
             <div class="text-w-icon">

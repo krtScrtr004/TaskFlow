@@ -136,11 +136,15 @@ select {
 }
 
 input::placeholder,
+textarea::placeholder {
+	font-style: italic;
+}
+
+input::placeholder,
 input:active,
 textarea::placeholder,
 textarea:active {
 	color: var(--white);
-	font-style: italic;
 	opacity: 0.9;
 }
 
