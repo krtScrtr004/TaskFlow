@@ -5,6 +5,7 @@ class Task implements Entity {
     private $publicId;
     private string $name;
     private string $description;
+    private WorkerContainer $workers;
     private DateTime $startDateTime;
     private DateTime $completionDateTime;
     private ?DateTime $actualCompletionDateTime;
@@ -17,6 +18,7 @@ class Task implements Entity {
         $publicId,
         string $name,
         string $description,
+        WorkerContainer $workers,
         DateTime $startDateTime,
         DateTime $completionDateTime,
         ?DateTime $actualCompletionDateTime,
@@ -28,6 +30,7 @@ class Task implements Entity {
         $this->publicId = $publicId;
         $this->name = $name;
         $this->description = $description;
+        $this->workers = $workers;
         $this->startDateTime = $startDateTime;
         $this->completionDateTime = $completionDateTime;
         $this->actualCompletionDateTime = $actualCompletionDateTime;
@@ -52,6 +55,10 @@ class Task implements Entity {
 
     public function getDescription(): string {
         return $this->description;
+    }
+
+    public function getWorkers(): WorkerContainer {
+        return $this->workers;
     }
 
     public function getStartDateTime(): DateTime {
@@ -95,6 +102,10 @@ class Task implements Entity {
         $this->description = $description;
     }
 
+    public function setWorkers(WorkerContainer $workers): void {
+        $this->workers = $workers;
+    }
+
     public function setStartDateTime(DateTime $startDateTime): void {
         $this->startDateTime = $startDateTime;
     }
@@ -121,14 +132,19 @@ class Task implements Entity {
 
     // Other methods
 
+    public function addWorker(Worker $worker): void {
+        $this->workers->add($worker);
+    }
+
     public function toArray(): array {
         return [
             'id' => $this->publicId,
             'name' => $this->name,
             'description' => $this->description,
+            'workers' => $this->workers->toArray(),
             'startDateTime' => $this->startDateTime->format(DateTime::ATOM),
             'completionDateTime' => $this->completionDateTime->format(DateTime::ATOM),
-            'actualCompletionDateTime' => $this->actualCompletionDateTime->format(DateTime::ATOM),
+            'actualCompletionDateTime' => $this->actualCompletionDateTime?->format(DateTime::ATOM),
             'priority' => $this->priority->getDisplayName(),
             'status' => $this->status->getDisplayName(),
             'createdDateTime' => $this->createdDateTime->format(DateTime::ATOM)
@@ -141,6 +157,7 @@ class Task implements Entity {
             $data['publicId'],
             $data['name'],
             $data['description'],
+            WorkerContainer::fromArray($data['workers']),
             new DateTime($data['startDateTime']),
             new DateTime($data['completionDateTime']),
             new DateTime($data['actualCompletionDateTime']),
