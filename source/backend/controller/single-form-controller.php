@@ -23,6 +23,7 @@ class SingleFormController implements Controller
                 'single-form/edit-project/phase/open',
                 'single-form/edit-project/phase/create/add',
                 'single-form/edit-project/phase/create/cancel',
+                'single-form/edit-project/phase/create/submit',
             ]
         ],
         'editProject' => [

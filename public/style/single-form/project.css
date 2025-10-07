@@ -84,6 +84,7 @@
     height: 100%;
 }
 
+#create_project_form #project_budget,
 #editable_project_details #project_budget {
     width: 20ch;
 }

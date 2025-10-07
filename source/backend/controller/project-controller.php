@@ -20,6 +20,21 @@ class ProjectController implements Controller
 
     public static function createProject(): void
     {
+        /**
+         * Requirements:
+         * Project:
+         * - Name: string
+         * - Description: string
+         * - Budget: float
+         * - Start Date: string (YYYY-MM-DD)
+         * - Completion Date: string (YYYY-MM-DD)
+         * 
+         * Phases: Array
+         * - Name: string
+         * - Description: string
+         * - Start Date: string (YYYY-MM-DD)
+         * - Completion Date: string (YYYY-MM-DD)
+         */
         $data = decodeData('php://input');
         if (!$data)
             Response::error('Cannot decode data.');
