@@ -7,7 +7,7 @@ class TaskController implements Controller
         // TODO
 
         $projectId = $args['projectId'] ?? null; // Temporary placeholder   
-        if (!$projectId) 
+        if (!$projectId)
             throw new InvalidArgumentException('Project ID is required.');
 
         // TODO: 
@@ -18,6 +18,18 @@ class TaskController implements Controller
         $tasks = $project->getTasks();
 
         require_once VIEW_PATH . 'task.php';
+    }
+
+    public static function viewTask(array $args = []): void
+    {
+        $projectId = $args['projectId'] ?? null;
+        if (!$projectId)
+            throw new InvalidArgumentException('Project ID is required.');
+        $taskId = $args['taskId'] ?? null;
+        if (!$taskId)
+            throw new InvalidArgumentException('Task ID is required.');
+
+        require_once VIEW_PATH . 'view-task.php';
     }
 
     public static function addTask(array $args = []): void

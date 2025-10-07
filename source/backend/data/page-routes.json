@@ -11,6 +11,7 @@
 		"TaskFlow/add-task/{projectId:[\\w+_-]+}": "SingleFormController",
 
 		"TaskFlow/project": "ProjectController",
-		"TaskFlow/project/{projectId:[\\w+_-]+}/task": "TaskController"
+		"TaskFlow/project/{projectId:[\\w+_-]+}/task": "TaskController",
+		"TaskFlow/project/{projectId:[\\w+_-]+}/task/{taskId:[\\w+_-]+}": ["TaskController", "viewTask"]
 	}
 }
