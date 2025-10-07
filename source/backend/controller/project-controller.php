@@ -31,6 +31,17 @@ class ProjectController implements Controller
 
     public static function editProject(array $args = []): void
     {
+        /** 
+         * Requirements :
+         * Project
+         * - Project : ID, Description, Budget, Start Date, Completion Date
+         * 
+         * Phases
+         * - Edited Phases : ID, Description, Start Date, Completion Date
+         * - New Phases :Name, Description, Start Date, Completion Date
+         * - Cancelled Phases : ID
+         * */ 
+
         $projectId = $args['projectId'] ?? null; // Temporary placeholder
         if (!$projectId)
             throw new InvalidArgumentException('Project ID is required.');

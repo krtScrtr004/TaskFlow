@@ -1,24 +1,12 @@
-import { Http } from '../../../../../utility/http.js'
 import { Dialog } from '../../../../../render/dialog.js'
 import { confirmationDialog } from '../../../../../render/confirmation-dialog.js'
 
-let isLoading = false
-async function sendToBackend(phaseId) {
-    if (isLoading) return
-    isLoading = true
-
-    const response = await Http.POST('cancel-phase', { phaseId })
-    if (!response) {
-        throw new Error('Failed to cancel phase.')
-    }
-
-    isLoading = false
-}
+export const phaseToCancel = new Set()
 
 function updateBadgeToCancelled(phaseElement) {
     const statusBadge = phaseElement.querySelector('.status-badge')
     if (statusBadge) {
-        statusBadge.className = 'status-badge center-child red-bg'
+        statusBadge.className = 'status-badge badge center-child red-bg'
         const statusBadgeChild = statusBadge.querySelector('p')
         statusBadgeChild.textContent = 'Cancelled'
         statusBadgeChild.className = 'center-text white-text'
@@ -51,7 +39,8 @@ phaseDetails?.addEventListener('click', async (e) => {
     }
 
     try {
-        await sendToBackend(phaseId)
+        phaseToCancel.add(phaseId)
+
         updateBadgeToCancelled(phase)
         disableInputs(phase)
 

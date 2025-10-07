@@ -9,15 +9,14 @@ export function debounce(callback, delay = 300) {
     }
 }
 
-export function debounceAsync(fn, delay) {
+export function debounceAsync(callback, delay) {
     let timer
     let pendingReject
 
     return function (...args) {
         // Cancel previous pending Promise
-        if (pendingReject) {
+        if (pendingReject)
             pendingReject(new Error('Debounced'))
-        }
 
         return new Promise((resolve, reject) => {
             pendingReject = reject
@@ -25,7 +24,7 @@ export function debounceAsync(fn, delay) {
 
             timer = setTimeout(async () => {
                 try {
-                    const result = await fn.apply(this, args)
+                    const result = await callback.apply(this, args)
                     resolve(result)
                 } catch (err) {
                     reject(err)

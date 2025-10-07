@@ -27,7 +27,7 @@ function createPhaseElement(data) {
     // Create main phase section
     const phaseSection = document.createElement('section');
     phaseSection.className = 'phase';
-    phaseSection.dataset.id = data.id || null;
+    phaseSection.dataset.phaseid = data.id || '';
     
     // Create phase header
     const headerDiv = document.createElement('div');

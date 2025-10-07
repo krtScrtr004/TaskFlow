@@ -84,6 +84,10 @@
     height: 100%;
 }
 
+#editable_project_details #project_budget {
+    width: 20ch;
+}
+
 .project-secondary-info {
     gap: 1rem;
 }

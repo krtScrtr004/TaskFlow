@@ -5,23 +5,23 @@ import { Notification } from '../render/notification.js'
  * @returns {Array} Array of validation rule objects
  */
 export function defaultValidationRules() {
-    return [
-        {
+    return {
+        'name': {
             // Name validation
             condition: (inputs) => !inputs.name || inputs.name.trim().length < 3 || inputs.name.trim().length > 255,
             message: 'Name must be between 3 and 255 characters long.'
         },
-        {
+        'description': {
             // Description validation (optional)
             condition: (inputs) => inputs.description && (inputs.description.trim().length < 5 || inputs.description.trim().length > 500),
             message: 'Description must be between 5 and 500 characters long.'
         },
-        {
+        'budget': {
             // Budget validation
             condition: (inputs) => !inputs.budget && (isNaN(inputs.budget) || inputs.budget < 0 || inputs.budget > 1000000),
             message: 'Budget must be a number between 0 and 1,000,000.'
         },
-        {
+        'startDateTime': {
             // Priority validation
             condition: (inputs) => {
                 const startDate = new Date(inputs.startDateTime);
@@ -29,7 +29,7 @@ export function defaultValidationRules() {
             },
             message: 'Invalid start date and time.'
         },
-        {
+        'startDateTime': {
             // Start date cannot be in the past
             condition: (inputs) => {
                 const startDate = new Date(inputs.startDateTime);
@@ -38,7 +38,7 @@ export function defaultValidationRules() {
             },
             message: 'Start date cannot be in the past.'
         },
-        {
+        'completionDateTime': {
             // Completion date validation
             condition: (inputs) => {
                 const completionDate = new Date(inputs.completionDateTime);
@@ -46,7 +46,7 @@ export function defaultValidationRules() {
             },
             message: 'Invalid completion date and time.'
         },
-        {
+        'completionDateTime': {
             // Completion date must be after start date
             condition: (inputs) => {
                 const startDate = new Date(inputs.startDateTime);
@@ -55,7 +55,7 @@ export function defaultValidationRules() {
             },
             message: 'Completion date must be after the start date.'
         }
-    ];
+    }
 }
 
 /**
@@ -68,8 +68,9 @@ export function defaultValidationRules() {
  */
 export function validateInputs(inputs = {}, validationRules = defaultValidationRules()) {
     // Check all validations
-    for (const validation of validationRules) {
-        if (validation.condition(inputs)) {
+    for (const inputKey in inputs) {
+        const validation = validationRules[inputKey];
+        if (validation && validation.condition(inputs)) {
             Notification.error(validation.message, 3000);
             console.error('Validation failed:', validation.message);
             return false;

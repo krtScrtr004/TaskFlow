@@ -85,7 +85,7 @@ include_once COMPONENT_PATH . 'template/add-phase-modal.php';
                             <p>Budget</p>
                         </div>
                     </label>
-                    <input type="number" name="project-budget" id="project_budget" value="<?= $projectData['budget'] ?>"
+                    <input type="number" name="project_budget" id="project_budget" value="<?= $projectData['budget'] ?>"
                         min="0" max="9999999999" <?= $uiState['projectHasStarted'] ?> required>
                 </div>
 
@@ -144,7 +144,7 @@ include_once COMPONENT_PATH . 'template/add-phase-modal.php';
                 ?>
 
                     <!-- Phases -->
-                    <section class="phase" data-id="<?= $phaseData['id'] ?>">
+                    <section class="phase" data-phaseid="<?= $phaseData['id'] ?>">
 
                         <!-- Phase Name -->
                         <div class="flex-row flex-child-center-h flex-space-between">
@@ -233,7 +233,7 @@ include_once COMPONENT_PATH . 'template/add-phase-modal.php';
         <!-- Save Button -->
         <?php if (!in_array($projectData['status'], [WorkStatus::COMPLETED, WorkStatus::CANCELLED])): ?>
             <div>
-                <button id="save_project_info_button" type="button" class="center-child float-right blue-bg white-text"
+                <button id="save_project_info_button" type="submit" class="center-child float-right blue-bg white-text"
                     <?= $uiState['projectIsCompleted'] ?>>
                     <div class="text-w-icon">
                         <img src="<?= ICON_PATH . 'save_w.svg' ?>" alt="Save Project Info" title="Save Project Info"
