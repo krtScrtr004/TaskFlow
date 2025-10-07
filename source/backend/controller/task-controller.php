@@ -29,7 +29,9 @@ class TaskController implements Controller
         if (!$taskId)
             throw new InvalidArgumentException('Task ID is required.');
 
-        require_once VIEW_PATH . 'view-task.php';
+        $task = TaskModel::all()->getItems()[0]; // Temporary placeholder
+
+        require_once SUB_VIEW_PATH . 'view-task.php';
     }
 
     public static function addTask(array $args = []): void

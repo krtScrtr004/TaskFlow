@@ -22,12 +22,19 @@ class TaskModel implements Model
 
     public static function all(): TaskContainer
     {
+        $workers = UserModel::all();
+        $workerContainer = new WorkerContainer();
+        foreach ($workers as $worker) {
+            $workerContainer->add($worker->toWorker());
+        }
+
         $tasks = new TaskContainer();
         $tasks->add(new Task(
             random_int(1, 1000),
             uniqid(),
             'Task 1',
             'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+            $workerContainer,
             new DateTime('2023-01-02 09:00:00'),
             new DateTime('2023-01-04 17:00:00'),
             new DateTime('2023-01-12 16:00:00'),
@@ -40,6 +47,7 @@ class TaskModel implements Model
             uniqid(),
             'Task 2',
             'This is the second task.',
+            $workerContainer,
             new DateTime('2023-02-01 09:00:00'),
             new DateTime('2023-02-05 17:00:00'),
             new DateTime('2023-02-06 14:00:00'),
@@ -52,6 +60,7 @@ class TaskModel implements Model
             uniqid(),
             'Task 3',
             'Lorem ipsum dolor sit amet. consectetur adipiscing elit. Lorem ipsum dolor sit amet. consectetur adipiscing elit. Lorem ipsum dolor sit amet. consectetur adipiscing elit.',
+            $workerContainer,
             new DateTime('2023-03-10 09:00:00'),
             new DateTime('2023-03-15 17:00:00'),
             null,
@@ -64,6 +73,7 @@ class TaskModel implements Model
             uniqid(),
             'Task 4',
             'This is the fourth task.',
+            $workerContainer,
             new DateTime('2023-04-01 09:00:00'),
             new DateTime('2023-04-10 17:00:00'),
             null,
@@ -76,6 +86,7 @@ class TaskModel implements Model
             uniqid(),
             'Task 5',
             'This is the fifth task.',
+            $workerContainer,
             new DateTime('2023-05-01 09:00:00'),
             new DateTime('2023-05-07 17:00:00'),
             null,
@@ -88,6 +99,7 @@ class TaskModel implements Model
             uniqid(),
             'Task 6',
             'This is the sixth task.',
+            $workerContainer,
             new DateTime('2023-06-01 09:00:00'),
             new DateTime('2023-06-05 17:00:00'),
             null,

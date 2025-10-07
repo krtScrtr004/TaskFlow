@@ -12,4 +12,12 @@ enum WorkerStatus: string {
             self::TERMINATED => ucwords(camelToSentenceCase(self::TERMINATED->value))
         };
     }
+
+    public static function badge(self $status): string {
+        return match($status) {
+            self::ACTIVE => '<span class="worker-badge badge red-bg white-text">Active</span>',
+            self::ON_LEAVE => '<span class="worker-badge badge orange-bg white-text">On Leave</span>',
+            self::TERMINATED => '<span class="worker-badge badge red-bg white-text">Terminated</span>'
+        };
+    }
 }

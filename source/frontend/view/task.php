@@ -92,9 +92,10 @@ if (!isset($tasks))
                         'status' => $task->getStatus(),
                         'priority' => $task->getPriority()
                     ];
+                    $redirect = REDIRECT_PATH . 'project' . DS . $projectId . DS . 'task' . DS . $taskDetails['id'];
                     ?>
                     <div class="task-grid-card">
-                        <a class="flex-col full-body-content" href="">
+                        <a class="flex-col full-body-content" href="<?= $redirect ?>">
                             <section>
                                 <div class="text-w-icon">
                                     <img src="<?= ICON_PATH . 'task_w.svg' ?>" alt="Task" title="Task" height="24">

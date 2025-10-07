@@ -2,6 +2,17 @@ main.main-page {
 	padding: var(--space);
 }
 
+.content-section-block {
+	padding: var(--space);
+	border: 1px solid rgba(0, 0, 0, 0.3);
+	border-radius: var(--border-radius);
+}
+
+.content-section-block > .heading-title {
+	margin-bottom: 1rem;
+}
+
+
 .unset-button {
 	all: unset; /* removes all default styles */
 	font: inherit;
@@ -13,7 +24,7 @@ main.main-page {
 	outline: none;
 }
 
-button:has(.text-w-icon) {
+button:has(.text-w-icon):not(.unset-button) {
 	width: 20ch;
 }
 
