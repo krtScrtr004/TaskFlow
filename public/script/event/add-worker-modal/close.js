@@ -1,5 +1,4 @@
 import { selectedUsers } from './shared.js'
-import { Dialog } from '../../render/dialog.js'
 
 const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
 const cancelButton = addWorkerModalTemplate?.querySelector('#cancel_add_worker_button')
@@ -13,5 +12,5 @@ if (cancelButton) {
         selectedUsers.length = 0
     })
 } else {
-    console.warn('Cancel button not found.')
+    console.error('Cancel button not found.')
 }

@@ -144,6 +144,8 @@ $taskData = [
 
         </section>
     </main>
+
+    <script type="module" src="<?= EVENT_PATH . 'edit-task-modal' . DS . 'open.js' ?>" defer></script>
 </body>
 
 </html>

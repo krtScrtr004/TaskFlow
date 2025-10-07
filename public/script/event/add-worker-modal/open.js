@@ -25,7 +25,6 @@ if (addWorkerModalTemplate) {
     })
 } else {
     console.error('Add Worker modal template not found.')
-    Dialog.somethingWentWrong()
 }
 
 
