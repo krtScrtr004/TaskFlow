@@ -12,9 +12,13 @@
 	},
 
 	"POST": {
+		"TaskFlow/create-project": ["ProjectController", "createProject"],
+
 		"TaskFlow/add-worker": ["WorkerController", "addWorker"],
 		"TaskFlow/add-phase/{projectId:[\\w+_-]+}": ["PhaseController", "addPhase"],
         "TaskFlow/add-task/{projectId:[\\w+_-]+}": ["TaskController", "addTask"],
+
+		"TaskFlow/edit-project/{projectId:[\\w+_-]+}": ["ProjectController", "editProject"],
 
 		"TaskFlow/cancel-project": ["ProjectController", "cancelProject"],
 		"TaskFlow/cancel-phase": ["PhaseController", "cancelPhase"],

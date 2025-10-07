@@ -18,6 +18,35 @@ class ProjectController implements Controller
         require_once VIEW_PATH . 'project.php';
     }
 
+    public static function createProject(): void
+    {
+        $data = decodeData('php://input');
+        if (!$data)
+            Response::error('Cannot decode data.');
+
+        // TODO: Validate and sanitize $data
+
+        Response::success([], 'Project created successfully.', 201);
+    }
+
+    public static function editProject(array $args = []): void
+    {
+        $projectId = $args['projectId'] ?? null; // Temporary placeholder
+        if (!$projectId)
+            throw new InvalidArgumentException('Project ID is required.');
+
+        $data = decodeData('php://input');
+        if (!$data)
+            Response::error('Cannot decode data.');
+
+        // TODO: Validate and sanitize $data
+
+        $phasesToAdd = $data['phasesToAdd'] ?? [];
+        // TODO: Use PhaseController to add phases and get their IDs
+
+        Response::success([], 'Project edited successfully.');
+    }
+
     public static function cancelProject(): void
     {
         $data = decodeData('php://input');

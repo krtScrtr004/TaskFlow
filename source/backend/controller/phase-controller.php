@@ -34,9 +34,8 @@ class PhaseController implements Controller
                     new DateTime($data['completionDateTime'])
                 ),
         ]);
-        if (!$newPhase) {
+        if (!$newPhase)
             Response::error('Invalid phase data.');
-        }
 
         // TODO: Save to database
 
