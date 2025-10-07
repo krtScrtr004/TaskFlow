@@ -5,6 +5,67 @@ import { confirmationDialog } from '../../../render/confirmation-dialog.js'
 import { Notification } from '../../../render/notification.js'
 import { assignedWorkers } from '../../add-worker-modal/add-to-task.js'
 import { validateInputs } from '../../../utility/validator.js'
+import { debounceAsync } from '../../../utility/debounce.js'
+
+let isLoading = false
+
+const addTaskForm = document.querySelector('#add_task_form')
+const addTaskButton = addTaskForm?.querySelector('#add_new_task_button')
+if (addTaskButton) {
+    const add = debounceAsync(e => submitForm(e), 300)
+    addTaskButton.addEventListener('click', e => add(e))
+    addTaskForm.addEventListener('submit', e => add(e))
+} else {
+    console.error('Add Task button not found.')
+    Dialog.somethingWentWrong()
+}
+
+async function submitForm(e) {
+    e.preventDefault()
+
+    if (!await confirmationDialog(
+        'Confirm Add Task',
+        'Are you sure you want to add this task?'
+    )) return
+
+    Loader.patch(addTaskButton.querySelector('.text-w-icon'))
+    try {
+        const nameInput = addTaskForm.querySelector('#task_name')
+        const startDateInput = addTaskForm.querySelector('#task_start_date')
+        const completionDateInput = addTaskForm.querySelector('#task_completion_date')
+        const descriptionInput = addTaskForm.querySelector('#task_description')
+        const prioritySelect = addTaskForm.querySelector('#task_priority')
+        if (!nameInput || !startDateInput || !completionDateInput || !descriptionInput || !prioritySelect) {
+            throw new Error('One or more form inputs not found.')
+        }
+
+        const params = {
+            name: nameInput ? nameInput.value : '',
+            startDateTime: startDateInput ? startDateInput.value : '',
+            completionDateTime: completionDateInput ? completionDateInput.value : '',
+            description: descriptionInput ? descriptionInput.value : '',
+            priority: prioritySelect ? prioritySelect.value : '',
+            assignedWorkers: assignedWorkers ? assignedWorkers : {}
+        }
+
+        if (!validateInputs(params)) return
+
+        const projectId = addTaskForm.dataset.projectid
+        if (!projectId) {
+            throw new Error('Project ID not found in form dataset.')
+        }
+        await sendToBackend(params, projectId)
+        Dialog.operationSuccess('Task Added.', 'The task has been added to the project.')
+
+        // TODO:
+    } catch (error) {
+        console.error('Error submitting form:', error)
+        Dialog.somethingWentWrong()
+        return
+    } finally {
+        Loader.delete()
+    }
+}
 
 /**
  * 
@@ -17,7 +78,6 @@ import { validateInputs } from '../../../utility/validator.js'
  * @param {Object} inputs.assignedWorkers - Object of assigned workers
  * @returns {Promise<void>} - Resolves when the task is successfully added
  */
-let isLoading = false
 async function sendToBackend(inputs = {}, projectId) {
     if (isLoading) return
     isLoading = true
@@ -43,67 +103,4 @@ async function sendToBackend(inputs = {}, projectId) {
         throw new Error('No response from server.')
 
     isLoading = false
-}
-
-const addTaskForm = document.querySelector('#add_task_form')
-if (addTaskForm) {
-    const addTaskButton = addTaskForm.querySelector('#add_new_task_button')
-    if (!addTaskButton) {
-        console.error('Add Task button not found.')
-        Dialog.somethingWentWrong()
-    } else {
-        async function submitForm() {
-            if (!await confirmationDialog(
-                'Confirm Add Task',
-                'Are you sure you want to add this task?'
-            )) return
-
-            Loader.patch(addTaskButton.querySelector('.text-w-icon'))
-            try {
-                const nameInput = addTaskForm.querySelector('#task_name')
-                const startDateInput = addTaskForm.querySelector('#task_start_date')
-                const completionDateInput = addTaskForm.querySelector('#task_completion_date')
-                const descriptionInput = addTaskForm.querySelector('#task_description')
-                const prioritySelect = addTaskForm.querySelector('#task_priority')
-
-                const params = {
-                    name: nameInput ? nameInput.value : '',
-                    startDateTime: startDateInput ? startDateInput.value : '',
-                    completionDateTime: completionDateInput ? completionDateInput.value : '',
-                    description: descriptionInput ? descriptionInput.value : '',
-                    priority: prioritySelect ? prioritySelect.value : '',
-                    assignedWorkers: assignedWorkers ? assignedWorkers : {}
-                }
-
-                if (!validateInputs(params)) return
-
-                const projectId = addTaskForm.dataset.projectid
-                if (!projectId) {
-                    throw new Error('Project ID not found in form dataset.')
-                }
-                await sendToBackend(params, projectId)
-                Dialog.operationSuccess('Task Added.', 'The task has been added to the project.')
-
-                // TODO:
-            } catch (error) {
-                console.error('Error submitting form:', error)
-                Dialog.somethingWentWrong()
-                return                
-            } finally {
-                Loader.delete()
-            }
-        }
-
-        addTaskButton.addEventListener('click', async e => {
-            e.preventDefault()
-            await submitForm()
-        })
-        addTaskForm.addEventListener('submit', async e => {
-            e.preventDefault()
-            await submitForm()
-        })
-    }
-} else {
-    console.error('Add Task form not found.')
-    Dialog.somethingWentWrong()
 }

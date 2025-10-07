@@ -4,6 +4,24 @@ import { Loader } from '../../render/loader.js'
 import { Dialog } from '../../render/dialog.js'
 import { Notification } from '../../render/notification.js'
 
+const workerList = document.querySelector('.project-workers > .worker-list')
+if (workerList) {
+    const workerListCards = workerList.querySelectorAll('.worker-list-card')
+    workerListCards.forEach(card => {
+        card.addEventListener('click', () => {
+            const workerId = card.getAttribute('data-id')
+            try {
+                createWorkerInfoCard(workerId)
+            } catch (error) {
+                console.error(`Error fetching worker info: ${error.message}`)
+            }
+        })
+    })
+} else {
+    console.error('Worker list container not found!')
+    Dialog.somethingWentWrong()
+}
+
 async function fetchWorkerInfo(workerId) {
     const response = await Http.GET('get-worker-info/' + workerId)
     if (!response) {
@@ -106,23 +124,5 @@ function getCardDomElements(card) {
         workerEmail: card.querySelector('.worker-email'),
         workerContact: card.querySelector('.worker-contact')
     }
-}
-
-const workerList = document.querySelector('.project-workers > .worker-list')
-if (!workerList) {
-    console.error('Worker list container not found!')
-    Dialog.somethingWentWrong()
-} else {
-    const workerListCards = workerList.querySelectorAll('.worker-list-card')
-    workerListCards.forEach(card => {
-        card.addEventListener('click', () => {
-            const workerId = card.getAttribute('data-id')
-            try {
-                createWorkerInfoCard(workerId)
-            } catch (error) {
-                console.error(`Error fetching worker info: ${error.message}`)
-            }
-        })
-    })
 }
 

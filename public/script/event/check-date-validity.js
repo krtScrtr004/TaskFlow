@@ -1,5 +1,24 @@
 import { debounce } from '../utility/debounce.js'
 
+const birthDate = document.querySelector('.birth-date')
+if (birthDate) {
+    const invalidDateResultBox = birthDate.querySelector('.invalid-date-result-box > p')
+
+    const daySelect = birthDate.querySelector('#day_of_birth')
+    const monthSelect = birthDate.querySelector('#month_of_birth')
+    const yearSelect = birthDate.querySelector('#year_of_birth')
+
+    const parts = [daySelect, monthSelect, yearSelect]
+    parts.forEach(elem => {
+        elem.addEventListener('change', debounce(() => {
+            const result = evaluateDate(`${daySelect.value} ${monthSelect.value} ${yearSelect.value}`)
+            invalidDateResultBox.textContent = (!result) ? 'Invalid date! Please enter a valid date.' : ''
+        }, 300))
+    })
+} else {
+    console.warn('Birth date element not found.')
+}
+
 function evaluateDate(dateString) {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) {
@@ -35,21 +54,4 @@ function evaluateDate(dateString) {
         reconstructed.getMonth() === months[monthStr] &&
         reconstructed.getFullYear() === year
     )
-}
-
-const birthDate = document.querySelector('.birth-date')
-if (birthDate) {
-    const invalidDateResultBox = birthDate.querySelector('.invalid-date-result-box > p')
-
-    const daySelect = birthDate.querySelector('#day_of_birth')
-    const monthSelect = birthDate.querySelector('#month_of_birth')
-    const yearSelect = birthDate.querySelector('#year_of_birth')
-
-    const parts = [daySelect, monthSelect, yearSelect]
-    parts.forEach(elem => {
-        elem.addEventListener('change', debounce(() => {
-            const result = evaluateDate(`${daySelect.value} ${monthSelect.value} ${yearSelect.value}`)
-            invalidDateResultBox.textContent = (!result) ? 'Invalid date! Please enter a valid date.' : ''
-        }, 300))
-    })
 }

@@ -2,15 +2,16 @@ import { Http } from '../../utility/http.js'
 import { Dialog } from '../../render/dialog.js'
 import { Loader } from '../../render/loader.js'
 import { confirmationDialog } from '../../render/confirmation-dialog.js'
+import { debounceAsync } from '../../utility/debounce.js'
 
+let isLoading = false
+let isSelectWorkerEventInitialized = false
 export const selectedUsers = []
-
 const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
 
-let isFetchingWorkers = false
 export async function fetchWorkers(key = null) {
-    if (isFetchingWorkers) return
-    isFetchingWorkers = true
+    if (isLoading) return
+    isLoading = true
 
     const param = (key) ? key : ''
     const response = await Http.GET('get-worker-info/' + param)
@@ -18,7 +19,7 @@ export async function fetchWorkers(key = null) {
         throw new Error('Workers data not found!')
     }
 
-    isFetchingWorkers = false
+    isLoading = false
     return response.data
 }
 
@@ -53,7 +54,6 @@ export function createWorkerListCard(worker) {
     workerList.insertAdjacentHTML('afterbegin', html)
 }
 
-let isSelectWorkerEventInitialized = false
 export function selectWorker() {
     if (isSelectWorkerEventInitialized) return
 
@@ -84,7 +84,7 @@ export function selectWorker() {
         // Update selectedUsers map
         const workerId = checkbox.id
         if (checkbox.checked) {
-            selectedUsers.push(workerId )
+            selectedUsers.push(workerId)
         } else {
             const index = selectedUsers.indexOf(workerId)
             if (index !== -1) {
@@ -96,7 +96,7 @@ export function selectWorker() {
     isSelectWorkerEventInitialized = true
 }
 
-export async function addWorker(asyncFunction, action = () => { }) {
+export async function addWorker(asyncFunction, action = () => {}) {
     if (!asyncFunction || typeof asyncFunction !== 'function') {
         console.error('Invalid asyncFunction provided to addWorker.')
         return
@@ -116,38 +116,42 @@ export async function addWorker(asyncFunction, action = () => { }) {
         return
     }
 
-    confirmAddWorkerButton.addEventListener('click', async () => {
-        if (selectedUsers.length === 0) {
-            Dialog.errorOccurred('No workers selected. Please select at least one worker to add.')
-            return
-        }
+    confirmAddWorkerButton.addEventListener('click', e => debounceAsync(addWorkerButtonEvent(e, confirmAddWorkerButton, asyncFunction, action), 300))
+}
 
-        if (!await confirmationDialog(
-            'Add Workers',
-            `Are you sure you want to add ${selectedUsers.length} worker(s) to this project?`,
-        )) return
+async function addWorkerButtonEvent(e, confirmAddWorkerButton, asyncFunction, action) {
+    e.preventDefault()
+    
+    if (selectedUsers.length === 0) {
+        Dialog.errorOccurred('No workers selected. Please select at least one worker to add.')
+        return
+    }
 
-        const addWorkerButton = document.querySelector('#add_worker_button')
-        const projectId = addWorkerButton.dataset.projectid
-        if (!projectId) {
-            console.error('Project ID not found in modal dataset.')
-            Dialog.somethingWentWrong()
-            return
-        }
+    if (!await confirmationDialog(
+        'Add Workers',
+        `Are you sure you want to add ${selectedUsers.length} worker(s) to this project?`,
+    )) return
 
-        Loader.patch(confirmAddWorkerButton.querySelector('.text-w-icon'))
-        try {
-            const result = await asyncFunction(projectId, selectedUsers)
-            if (typeof action === 'function') action(result)
+    const addWorkerButton = document.querySelector('#add_worker_button')
+    const projectId = addWorkerButton.dataset.projectid
+    if (!projectId) {
+        console.error('Project ID not found in modal dataset.')
+        Dialog.somethingWentWrong()
+        return
+    }
 
-            // Close the modal
-            const cancelButton = addWorkerModalTemplate.querySelector('#cancel_add_worker_button')
-            if (cancelButton) cancelButton.click()
-        } catch (error) {
-            console.error(error)
-            Dialog.errorOccurred('An error occurred while adding workers. Please try again.')
-        } finally {
-            Loader.delete()
-        }
-    })
+    Loader.patch(confirmAddWorkerButton.querySelector('.text-w-icon'))
+    try {
+        const result = await asyncFunction(projectId, selectedUsers)
+        if (typeof action === 'function') action(result)
+
+        // Close the modal
+        const cancelButton = addWorkerModalTemplate.querySelector('#cancel_add_worker_button')
+        cancelButton?.click()
+    } catch (error) {
+        console.error(error)
+        Dialog.errorOccurred('An error occurred while adding workers. Please try again.')
+    } finally {
+        Loader.delete()
+    }
 }

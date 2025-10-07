@@ -2,6 +2,10 @@ import { addWorker } from './shared.js'
 import { Http } from '../../utility/http.js'
 
 let isLoading = false
+
+// Just add workers with default behavior
+await addWorker(async (projectId, workerIds) => await sendToBackend(projectId, workerIds))
+
 async function sendToBackend(projectId, workerIds) {
     if (isLoading) return
     isLoading = true
@@ -13,6 +17,3 @@ async function sendToBackend(projectId, workerIds) {
 
     isLoading = false
 }
-
-// Just add workers with default behavior
-await addWorker(async (projectId, workerIds) => await sendToBackend(projectId, workerIds))

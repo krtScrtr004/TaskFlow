@@ -132,7 +132,7 @@ button {
 label,
 input,
 select {
-	color: var(--black);
+	color: var(--white);
 }
 
 input::placeholder,

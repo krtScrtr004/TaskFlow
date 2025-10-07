@@ -2,8 +2,40 @@ import { addWorker } from './shared.js'
 import { Dialog } from '../../render/dialog.js'
 import { Http } from '../../utility/http.js'
 
+let isLoading = false
 export const assignedWorkers = {}
 const noAssignedWorkerWall = document.querySelector('.no-assigned-worker-wall')
+
+try {
+    await addWorker(
+        async (projectId, workersId) => sendToBackend(projectId, workersId),
+        (workersData) => action(workersData)
+    )
+
+    const taskWorkerList = document.querySelector('#add_task_form .task-worker > .list')
+    if (taskWorkerList) {
+        taskWorkerList.addEventListener('click', e => {
+            e.preventDefault()
+
+            const removeWorkerButton = e.target.closest('#remove_worker_button')
+            if (!removeWorkerButton) return
+
+            const workerCard = removeWorkerButton.closest('.task-worker-card')
+            if (!workerCard)
+                throw new Error('Worker card element not found.')
+
+            delete assignedWorkers[workerCard.dataset.id]
+            workerCard.remove()
+            if (Object.keys(assignedWorkers).length === 0 && noAssignedWorkerWall) {
+                noAssignedWorkerWall.classList.remove('no-display')
+                noAssignedWorkerWall.classList.add('flex-col')
+            }
+        })
+    }
+} catch (error) {
+    console.error('Error adding worker:', error)
+    Dialog.somethingWentWrong()
+}
 
 /**
  * Renders a task worker card element
@@ -199,8 +231,7 @@ function createStatisticItem(iconSrc, iconAlt, text) {
  * @param {string[]} workerIds - Array of worker IDs to add to the project
  * @returns {Promise<Object[]>} Resolves with array of worker data objects on success
  */
-let isLoading = false
-const sendToBackend = async (projectId, workerIds) => {
+async function sendToBackend(projectId, workerIds) {
     if (isLoading) return
     isLoading = true
 
@@ -214,48 +245,16 @@ const sendToBackend = async (projectId, workerIds) => {
     return response.data
 }
 
-const action = (workersData) => {
+function action(workersData) {
     workersData.forEach(workerData => {
         const taskWorkerCard = createTaskWorkerCard(workerData)
         const taskWorkerList = document.querySelector('#add_task_form .task-worker > .list')
         if (!taskWorkerList) throw new Error('Task worker list container not found.')
 
         taskWorkerList.appendChild(taskWorkerCard)
-        if (noAssignedWorkerWall) {
-            noAssignedWorkerWall.classList.add('no-display')
-            noAssignedWorkerWall.classList.remove('flex-col')
-        }
+        noAssignedWorkerWall?.classList.add('no-display')
+        noAssignedWorkerWall?.classList.remove('flex-col')
         assignedWorkers[workerData.id] = workerData
     })
 }
 
-try {
-    await addWorker(
-        async (projectId, workersId) => sendToBackend(projectId, workersId),
-        (workersData) => action(workersData)
-    )
-
-    const taskWorkerList = document.querySelector('#add_task_form .task-worker > .list')
-    if (taskWorkerList) {
-        taskWorkerList.addEventListener('click', e => {
-            e.preventDefault()
-
-            const removeWorkerButton = e.target.closest('#remove_worker_button')
-            if (!removeWorkerButton) return
-
-            const workerCard = removeWorkerButton.closest('.task-worker-card')
-            if (!workerCard)
-                throw new Error('Worker card element not found.')
-
-            delete assignedWorkers[workerCard.dataset.id]
-            workerCard.remove()
-            if (Object.keys(assignedWorkers).length === 0 && noAssignedWorkerWall) {
-                noAssignedWorkerWall.classList.remove('no-display')
-                noAssignedWorkerWall.classList.add('flex-col')
-            }
-        })
-    }
-} catch (error) {
-    console.error('Error adding worker:', error)
-    Dialog.somethingWentWrong()
-}
