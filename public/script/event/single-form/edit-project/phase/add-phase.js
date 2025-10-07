@@ -1,4 +1,4 @@
-import { validateInputs } from './validator.js'
+import { validateInputs } from '../../../../utility/validator.js'
 import { clonePhaseListCard } from './clone-phase-list-card.js'
 import { Loader } from '../../../../render/loader.js'
 import { Dialog } from '../../../../render/dialog.js'
