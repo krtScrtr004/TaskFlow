@@ -29,6 +29,7 @@ class TaskController implements Controller
         if (!$taskId)
             throw new InvalidArgumentException('Task ID is required.');
 
+        $project = ProjectModel::all()[0]; // Temporary placeholder
         $task = TaskModel::all()->getItems()[0]; // Temporary placeholder
 
         require_once SUB_VIEW_PATH . 'view-task.php';
@@ -58,5 +59,21 @@ class TaskController implements Controller
         Response::success([
             'redirectUrl' => REDIRECT_PATH . "project/$projectId/task"
         ], 'Task added successfully.');
+    }
+
+    public static function editTask(array $args = []): void
+    {
+        $projectId = $args['projectId'] ?? null; // Temporary placeholder
+        if ($projectId === null)
+            throw new InvalidArgumentException('Project ID is required to edit a task.');
+        $taskId = $args['taskId'] ?? null; // Temporary placeholder
+        if ($taskId === null)
+            throw new InvalidArgumentException('Task ID is required to edit a task.');
+
+        $data = decodeData('php://input');
+        if (!$data)
+            Response::error('Cannot decode data.');
+
+        Response::success([], 'Task updated successfully.');
     }
 }

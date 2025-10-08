@@ -1,6 +1,14 @@
 <?php
+
+if (!isset($project) || !$project instanceof Project)
+    throw new InvalidArgumentException('Project is not defined.');
+
 if (!isset($task) || !$task instanceof Task)
     throw new InvalidArgumentException('Task is not defined.');
+
+$projectData = [
+    'id' => htmlspecialchars($project->getPublicId())
+];
 
 $taskData = [
     'id' => htmlspecialchars($task->getPublicId()),
@@ -43,7 +51,7 @@ $taskData = [
     include_once COMPONENT_PATH . 'template/edit-task-modal.php';
     ?>
 
-    <main class="view-task-info main-page flex-col">
+    <main class="view-task-info main-page flex-col" data-projectid="<?= $projectData['id'] ?>" data-taskid="<?= $taskData['id'] ?>">
 
         <!-- Task Info -->
         <section class="task-info content-section-block flex-col">
@@ -146,6 +154,7 @@ $taskData = [
     </main>
 
     <script type="module" src="<?= EVENT_PATH . 'edit-task-modal' . DS . 'open.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'edit-task-modal' . DS . 'submit.js' ?>" defer></script>
 </body>
 
 </html>

@@ -18,7 +18,7 @@ $taskData = [
 ]
 ?>
 
-<section id="edit_task_modal_template" class="modal-wrapper no-display">
+<section id="edit_task_modal_template" class="modal-wrapper no-display" data-taskid="<?= $taskData['id'] ?> ">
 
     <div class="modal-form modal flex-col black-bg">
         <!-- Heading -->
@@ -116,7 +116,7 @@ $taskData = [
             </div>
 
             <!-- Add New Task Button -->
-            <button id="add_new_task_button" type="button" class="blue-bg">
+            <button id="edit_task_button" type="button" class="blue-bg">
                 <div class="text-w-icon">
                     <img src="<?= ICON_PATH . 'add_w.svg' ?>" alt="Add New Task" title="Add New Task" height="20">
                     <h3 class="white-text">Add New Task</h3>

@@ -34,7 +34,7 @@ export function defaultValidationRules() {
             condition: (inputs) => {
                 const startDate = new Date(inputs.startDateTime);
                 const currentDate = new Date();
-                return startDate.getDate() < currentDate.getDate();
+                return startDate < currentDate;
             },
             message: 'Start date cannot be in the past.'
         },
@@ -51,7 +51,7 @@ export function defaultValidationRules() {
             condition: (inputs) => {
                 const startDate = new Date(inputs.startDateTime);
                 const completionDate = new Date(inputs.completionDateTime);
-                return completionDate.getDate() <= startDate.getDate();
+                return completionDate <= startDate;
             },
             message: 'Completion date must be after the start date.'
         }

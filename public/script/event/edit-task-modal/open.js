@@ -1,4 +1,5 @@
-const editTaskButton = document.querySelector('#edit_task_button')
+const viewTaskInfo = document.querySelector('.view-task-info')
+const editTaskButton = viewTaskInfo?.querySelector('#edit_task_button')
 const editTaskModalTemplate = document.querySelector('#edit_task_modal_template')
 
 if (editTaskButton) {
