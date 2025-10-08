@@ -1,21 +1,38 @@
 {
 	"GET": {
-		"TaskFlow/projects/{projectId:[\\w+_-]+}/workers": ["WorkerController", "getWorkerInfoByKey"],
+		"TaskFlow/users": ["UserController", "getUserByKey"],
+		"TaskFlow/users/{userId:[\\w+_-]+}": ["UserController", "getUserById"],
+		"TaskFlow/users?(?:[\\w+\\s_=\\/\\?,%&@-]+)+": [
+			"UserController",
+			"getUserByKey"
+		],
+
+		"TaskFlow/workers": ["WorkerController", "getWorkerByKey"],
+		"TaskFlow/workers/{workerId:[\\w+_-]+}": [
+			"WorkerController",
+			"getWorkerById"
+		],
+		"TaskFlow/workers?(?:[\\w+\\s_=\\/\\?,%&@-]+)+": [
+			"WorkerController",
+			"getWorkerByKey"
+		],
+
+		"TaskFlow/projects/{projectId:[\\w+_-]+}/workers": [
+			"WorkerController",
+			"getWorkerByKey"
+		],
 		"TaskFlow/projects/{projectId:[\\w+_-]+}/workers/{workerId:[\\w+_-]+}": [
 			"WorkerController",
-			"getWorkerInfoById"
+			"getWorkerById"
 		],
 		"TaskFlow/projects/{projectId:[\\w+_-]+}/workers?(?:[\\w+\\s_=\\/\\?,%&@-]+)+": [
 			"WorkerController",
-			"getWorkerInfoByKey"
+			"getWorkerByKey"
 		]
 	},
 
 	"POST": {
-		"TaskFlow/projects": [
-			"ProjectController", 
-			"createProject"
-		],
+		"TaskFlow/projects": ["ProjectController", "createProject"],
 		"TaskFlow/projects/{projectId:[\\w+_-]+}/workers": [
 			"WorkerController",
 			"addWorker"
@@ -44,7 +61,7 @@
 			"editWorker"
 		]
 	},
-	
+
 	"PATCH": {
 		"TaskFlow/projects/{projectId:[\\w+_-]+}": [
 			"ProjectController",
