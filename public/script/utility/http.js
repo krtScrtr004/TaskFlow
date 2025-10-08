@@ -7,7 +7,7 @@ export const Http = (() => {
                 method 
             }
             
-            if (body !== null && ['POST', 'PUT'].includes(method)) {
+            if (body !== null && ['POST', 'PUT', 'PATCH'].includes(method)) {
                 options.body = serialize ? JSON.stringify(body) : body
             }
             
@@ -31,7 +31,8 @@ export const Http = (() => {
             
             return true
         } catch (error) {
-            console.log(error)
+            console.error(error)
+            throw new Error('Error: ' + error.message)
         }
     }
     
@@ -39,6 +40,7 @@ export const Http = (() => {
         GET: (endpoint) => makeRequest(endpoint, 'GET'),
         POST: (endpoint, body = null, serialize = true) => makeRequest(endpoint, 'POST', body, serialize),
         PUT: (endpoint, body = null, serialize = true) => makeRequest(endpoint, 'PUT', body, serialize),
+        PATCH: (endpoint, body = null, serialize = true) => makeRequest(endpoint, 'PATCH', body, serialize),
         DELETE: (endpoint) => makeRequest(endpoint, 'DELETE')
     }
 })()

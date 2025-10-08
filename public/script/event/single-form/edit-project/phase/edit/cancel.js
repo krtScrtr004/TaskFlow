@@ -17,15 +17,17 @@ if (phaseDetails) {
         )) return
 
         const phase = cancelButton.closest('.phase')
-        const phaseId = phase.dataset.id
+        const phaseId = phase.dataset.phaseid
         if (!phaseId) {
             console.error('Phase ID not found.')
             Dialog.somethingWentWrong()
             return
         }
 
+        if (phaseId) phaseToCancel.add(phaseId)
+        else phase.remove()
+
         try {
-            phaseToCancel.add(phaseId)
 
             updateBadgeToCancelled(phase)
             disableInputs(phase)

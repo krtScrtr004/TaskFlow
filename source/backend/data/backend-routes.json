@@ -1,28 +1,63 @@
 {
 	"GET": {
-		"TaskFlow/get-worker-info": ["WorkerController", "getWorkerInfoByKey"],
-		"TaskFlow/get-worker-info/{workerId:[\\w+_-]+}": [
+		"TaskFlow/projects/{projectId:[\\w+_-]+}/workers": ["WorkerController", "getWorkerInfoByKey"],
+		"TaskFlow/projects/{projectId:[\\w+_-]+}/workers/{workerId:[\\w+_-]+}": [
 			"WorkerController",
 			"getWorkerInfoById"
 		],
-		"TaskFlow/get-worker-info?(?:[\\w+\\s_=\\/\\?,%&@-]+)+": [
+		"TaskFlow/projects/{projectId:[\\w+_-]+}/workers?(?:[\\w+\\s_=\\/\\?,%&@-]+)+": [
 			"WorkerController",
 			"getWorkerInfoByKey"
 		]
 	},
 
 	"POST": {
-		"TaskFlow/create-project": ["ProjectController", "createProject"],
+		"TaskFlow/projects": [
+			"ProjectController", 
+			"createProject"
+		],
+		"TaskFlow/projects/{projectId:[\\w+_-]+}/workers": [
+			"WorkerController",
+			"addWorker"
+		],
+		"TaskFlow/projects/{projectId:[\\w+_-]+}/phases": [
+			"PhaseController",
+			"addPhase"
+		],
+		"TaskFlow/projects/{projectId:[\\w+_-]+}/tasks": [
+			"TaskController",
+			"addTask"
+		]
+	},
 
-		"TaskFlow/add-worker": ["WorkerController", "addWorker"],
-		"TaskFlow/add-phase/{projectId:[\\w+_-]+}": ["PhaseController", "addPhase"],
-        "TaskFlow/add-task/{projectId:[\\w+_-]+}": ["TaskController", "addTask"],
-
-		"TaskFlow/edit-project/{projectId:[\\w+_-]+}": ["ProjectController", "editProject"],
-
-		"TaskFlow/cancel-project": ["ProjectController", "cancelProject"],
-		"TaskFlow/cancel-phase": ["PhaseController", "cancelPhase"],
-
-		"TaskFlow/terminate-worker": ["WorkerController", "terminateWorker"]
+	"PUT": {
+		"TaskFlow/projects/{projectId:[\\w+_-]+}": [
+			"ProjectController",
+			"editProject"
+		],
+		"TaskFlow/projects/{projectId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}": [
+			"TaskController",
+			"editTask"
+		],
+		"TaskFlow/projects/{projectId:[\\w+_-]+}/workers/{workerId:[\\w+_-]+}": [
+			"WorkerController",
+			"editWorker"
+		]
+	},
+	
+	"PATCH": {
+		"TaskFlow/projects/{projectId:[\\w+_-]+}": [
+			"ProjectController",
+			"editProject"
+		],
+		"TaskFlow/users/{userId:[\\w+_-]+}": ["UserController", "editUser"],
+		"TaskFlow/projects/{projectId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}": [
+			"TaskController",
+			"editTask"
+		],
+		"TaskFlow/projects/{projectId:[\\w+_-]+}/workers/{workerId:[\\w+_-]+}": [
+			"WorkerController",
+			"editWorker"
+		]
 	}
 }

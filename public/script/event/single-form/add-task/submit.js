@@ -2,7 +2,6 @@ import { Dialog } from '../../../render/dialog.js'
 import { Http } from '../../../utility/http.js'
 import { Loader } from '../../../render/loader.js'
 import { confirmationDialog } from '../../../render/confirmation-dialog.js'
-import { Notification } from '../../../render/notification.js'
 import { assignedWorkers } from '../../add-worker-modal/add-to-task.js'
 import { validateInputs } from '../../../utility/validator.js'
 import { debounceAsync } from '../../../utility/debounce.js'
@@ -91,7 +90,7 @@ async function sendToBackend(inputs = {}, projectId) {
         assignedWorkers
     } = inputs
 
-    const response = await Http.POST(`add-task/${projectId}`, {
+    const response = await Http.POST(`projects/${projectId}/tasks`, {
         name: name.trim(),
         description: description.trim(),
         startDateTime,

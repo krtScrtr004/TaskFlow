@@ -17,17 +17,14 @@ if (!saveProjectInfoButton) {
     console.error('Save Project Info button not found within the Editable Project Details form.')
     Dialog.errorOccurred('Save Project Info button not found. Please refresh the page and try again.')
 } else {
-    const submit = debounceAsync(e => {
-        e.preventDefault()
-        submitForm()
-    }, 300)
-
     // Submit form on button click or form submit
-    saveProjectInfoButton.addEventListener('click', e => submit(e))
-    editableProjectDetailsForm?.addEventListener('submit', e => submit(e))
+    saveProjectInfoButton.addEventListener('click', e => debounceAsync(submitForm(e), 300))
+    editableProjectDetailsForm?.addEventListener('submit', e => debounceAsync(submitForm(e), 300))
 }
 
-async function submitForm() {
+async function submitForm(e) {
+    e.preventDefault()
+
     if (!await confirmationDialog(
         'Save Changes',
         'Are you sure you want to save these changes to the project?'
@@ -113,7 +110,7 @@ async function sendToBackend(projectId, data) {
     if (isLoading) return
     isLoading = true
 
-    const response = await Http.POST(`edit-project/${projectId}`, data)
+    const response = await Http.PUT(`projects/${projectId}`, data)
     if (!response) {
         throw new Error('No response from server.')
     }

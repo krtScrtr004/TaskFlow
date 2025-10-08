@@ -6,31 +6,39 @@ import { Notification } from '../../render/notification.js'
 
 const workerList = document.querySelector('.project-workers > .worker-list')
 if (workerList) {
-    const workerListCards = workerList.querySelectorAll('.worker-list-card')
-    workerListCards.forEach(card => {
-        card.addEventListener('click', () => {
-            const workerId = card.getAttribute('data-id')
-            try {
-                createWorkerInfoCard(workerId)
-            } catch (error) {
-                console.error(`Error fetching worker info: ${error.message}`)
-            }
+    const projectContainer = document.querySelector('.project-container')
+    const projectId = projectContainer.dataset.projectid
+    if (!projectId || projectId.trim() === '') {
+        console.error('Project ID is missing.')
+        Dialog.somethingWentWrong()
+    } else {
+        const workerListCards = workerList.querySelectorAll('.worker-list-card')
+        workerListCards.forEach(card => {
+            card.addEventListener('click', () => {
+                const workerId = card.getAttribute('data-id')
+                try {
+                    createWorkerInfoCard(projectId, workerId)
+                } catch (error) {
+                    console.error(`Error fetching worker info: ${error.message}`)
+                }
+            })
         })
-    })
+    }
+
 } else {
     console.error('Worker list container not found!')
     Dialog.somethingWentWrong()
 }
 
-async function fetchWorkerInfo(workerId) {
-    const response = await Http.GET('get-worker-info/' + workerId)
+async function fetchWorkerInfo(projectId, workerId) {
+    const response = await Http.GET(`projects/${projectId}/workers/${workerId}`)
     if (!response) {
         throw new Error('No response from server')
     }
     return response.data
 }
 
-async function createWorkerInfoCard(workerId) {
+async function createWorkerInfoCard(projectId, workerId) {
     const workerInfoCardTemplate = document.querySelector('#worker_info_card_template')
     if (!workerInfoCardTemplate) {
         throw new Error('Worker Info Card template not found!')
@@ -43,7 +51,7 @@ async function createWorkerInfoCard(workerId) {
 
     Loader.full(workerInfoCardTemplate.querySelector('.worker-info-card'))
 
-    const worker = await fetchWorkerInfo(workerId)
+    const worker = await fetchWorkerInfo(projectId, workerId)
     if (!worker || worker.length === 0) {
         Loader.delete()
         Notification.error('Failed to fetch worker information. Please try again later.', 3000)

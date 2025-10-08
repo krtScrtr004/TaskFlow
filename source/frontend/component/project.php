@@ -20,7 +20,7 @@ $projectData = [
 ];
 ?>
 <!-- Main Content -->
-<section class="main-project-content flex-col" data-projectid="<?= $projectData['id'] ?>">
+<section class="project-container main-project-content flex-col" data-projectid="<?= $projectData['id'] ?>">
 
     <!-- Project Primary Info -->
     <section class="project-primary-info content-section-block">
@@ -278,7 +278,7 @@ $projectData = [
             <?php if (Role::isProjectManager(Me::getInstance())): ?>
                 <div class="">
                     <button id="add_worker_button" type="button" class="float-right blue-bg"
-                        data-projectId="<?= $projectId ?>">
+                        data-projectId="<?= $projectData['id'] ?>">
                         <div class="heading-title text-w-icon center-child">
                             <img src="<?= ICON_PATH . 'add_w.svg' ?>" alt="Add Worker" title="Add Worker" height="18">
 

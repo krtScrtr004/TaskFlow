@@ -72,14 +72,14 @@ class WorkerController implements Controller
         ];
     }
 
-    public static function addWorker(): void
+    public static function addWorker(array $args = []): void
     {
         $data = decodeData('php://input');
         if (!$data) {
             Response::error('Invalid data provided');
         }
 
-        if (!isset($data['projectId'])) {
+        if (!isset($args['projectId'])) {
             Response::error('Project ID is required');
         }
 
@@ -117,6 +117,16 @@ class WorkerController implements Controller
         }
 
         Response::success($returnDataArray, 'Worker added successfully');
+    }
+
+    public static function editWorker(array $args = []): void
+    {
+        $data = decodeData('php://input');
+        if (!$data) {
+            Response::error('Invalid data provided');
+        }
+
+        Response::success([], 'Worker updated successfully');
     }
 
     public static function terminateWorker(): void

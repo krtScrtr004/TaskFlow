@@ -39,10 +39,18 @@ async function searchForWorker() {
 
     Loader.full(workerList)
 
+    const projectContainer = document.querySelector('.project-container')
+    const projectId = projectContainer.dataset.projectid
+    if (!projectId || projectId.trim() === '') {
+        console.error('Project ID is missing.')
+        Dialog.somethingWentWrong()
+        return
+    }
+
     const searchTerm = searchBarForm.querySelector('input[type="text"]').value.trim()
 
     try {
-        const workers = await fetchWorkers(searchTerm)
+        const workers = await fetchWorkers(projectId, searchTerm)
 
         if (workers && workers.length > 0) {
             workers.forEach(worker => createWorkerListCard(worker))

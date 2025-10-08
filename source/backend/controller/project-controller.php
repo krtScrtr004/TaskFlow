@@ -72,21 +72,4 @@ class ProjectController implements Controller
 
         Response::success([], 'Project edited successfully.');
     }
-
-    public static function cancelProject(): void
-    {
-        $data = decodeData('php://input');
-        if (!$data) {
-            Response::error('Cannot decode data.');
-        }
-
-        $projectId = $data['projectId'] ?? null;
-        if (!$projectId) {
-            Response::error('Project ID is required.');
-        }
-
-        // TODO: Validate projectId
-
-        Response::success([], 'Project cancelled successfully.');
-    }
 }

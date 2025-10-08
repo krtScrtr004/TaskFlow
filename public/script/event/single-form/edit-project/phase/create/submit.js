@@ -13,18 +13,15 @@ const submitProjectButton = createProjectForm?.querySelector('#submit_project_bu
 if (!submitProjectButton) {
     console.error('Submit Project button not found within the Create Project form.')
     Dialog.errorOccurred('Submit Project button not found. Please refresh the page and try again.')
-} else {
-    const submit = debounceAsync(e => {
-        e.preventDefault()
-        submitForm()
-    }, 300)
-
+} else {    
     // Submit form on button click or form submit
-    submitProjectButton.addEventListener('click', e => submit(e))
-    createProjectForm?.addEventListener('submit', e => submit(e))
+    submitProjectButton.addEventListener('click', e => debounceAsync(submitForm(e), 300))
+    createProjectForm?.addEventListener('submit', e => debounceAsync(submitForm(e), 300))
 }
 
-async function submitForm() {
+async function submitForm(e) {
+    e.preventDefault()
+
     if (!await confirmationDialog(
         'Add Project',
         'Are you sure you want to add this project?',
@@ -101,7 +98,7 @@ async function sendToBackend(data) {
     if (isLoading) return
     isLoading = true
 
-    const response = await Http.POST(`create-project`, data)
+    const response = await Http.POST(`projects`, data)
     if (!response) {
         throw new Error('No response from server.')
     }

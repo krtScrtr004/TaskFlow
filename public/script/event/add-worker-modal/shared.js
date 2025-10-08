@@ -9,12 +9,12 @@ let isSelectWorkerEventInitialized = false
 export const selectedUsers = []
 const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
 
-export async function fetchWorkers(key = null) {
+export async function fetchWorkers(projectId, key = null) {
     if (isLoading) return
     isLoading = true
 
     const param = (key) ? key : ''
-    const response = await Http.GET('get-worker-info/' + param)
+    const response = await Http.GET(`projects/${projectId}/workers/${param}`)
     if (!response) {
         throw new Error('Workers data not found!')
     }

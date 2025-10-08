@@ -49,7 +49,7 @@ async function terminateButtonEvent(e) {
     }
 
     try {
-        await sendToBackend(projectId, [workerId])
+        await sendToBackend(projectId, workerId)
         Dialog.operationSuccess(
             'Worker terminated.',
             'The worker has been successfully terminated from the project.'
@@ -70,11 +70,11 @@ async function terminateButtonEvent(e) {
     }
 }
 
-async function sendToBackend(projectId, workerIds) {
+async function sendToBackend(projectId, workerId) {
     if (isLoading) return
     isLoading = true
 
-    const response = await Http.POST('terminate-worker', { projectId, workerIds })
+    const response = await Http.PUT(`projects/${projectId}/workers/${workerId}`, { status: 'terminated' })
     if (!response) {
         throw new Error('Failed to terminate worker from project.')
     }
