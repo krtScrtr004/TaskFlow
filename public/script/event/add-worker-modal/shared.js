@@ -10,19 +10,19 @@ export const selectedUsers = []
 const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
 
 export async function fetchWorkers(projectId, key = null) {
-    isLoading = true
     try {
-        if (!projectId || projectId === '')
-            throw new Error('Project ID is required.')
-
         if (isLoading) {
             console.warn('Request already in progress. Please wait.')
             return
         }
+        isLoading = true
+
+        if (!projectId || projectId.trim() === '')
+            throw new Error('Project ID is required.')
 
         const param = (key) ? key : ''
         const response = await Http.GET(`projects/${projectId}/workers/${param}`)
-        if (!response) 
+        if (!response)
             throw new Error('Workers data not found!')
 
         return response.data

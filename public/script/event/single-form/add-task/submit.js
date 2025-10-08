@@ -78,17 +78,17 @@ async function submitForm(e) {
  * @returns {Promise<void>} - Resolves when the task is successfully added
  */
 async function sendToBackend(inputs = {}, projectId) {
-    isLoading = true
     try {
         if (isLoading) {
             console.warn('Request already in progress. Please wait.')
             return
         }
-        
-        if (!inputs) 
+        isLoading = true
+
+        if (!inputs)
             throw new Error('No input data provided to send to backend.')
 
-        if (!projectId || projectId === '')
+        if (!projectId || projectId.trim() === '')
             throw new Error('Project ID is required.')
 
         const {

@@ -27,7 +27,7 @@ if (workerList) {
 
 async function terminateButtonEvent(e) {
     e.preventDefault()
-    
+
     const workerId = workerInfoCardTemplate.dataset.workerid
     if (!workerId) {
         console.error('Worker ID not found.')
@@ -71,19 +71,18 @@ async function terminateButtonEvent(e) {
 }
 
 async function sendToBackend(projectId, workerId) {
-    isLoading = true
     try {
-        if (!projectId || projectId === '') 
-            throw new Error('Project ID is required.')
-
-        if (!workerId || workerId === '')
-            throw new Error('Worker ID is required.')
-
         if (isLoading) {
             console.warn('Request already in progress. Please wait.')
             return
         }
+        isLoading = true
 
+        if (!projectId || projectId.trim() === '')
+            throw new Error('Project ID is required.')
+
+        if (!workerId || workerId.trim() === '')
+            throw new Error('Worker ID is required.')
 
         const response = await Http.PUT(`projects/${projectId}/workers/${workerId}`, { status: 'terminated' })
         if (!response) {

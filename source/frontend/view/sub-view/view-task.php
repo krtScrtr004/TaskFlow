@@ -23,8 +23,9 @@ $taskData = [
     ),
     'status' => $task->getStatus(),
     'priority' => $task->getPriority(),
-]
-    ?>
+];
+
+?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -48,10 +49,12 @@ $taskData = [
 <body>
     <?php
     require_once COMPONENT_PATH . 'sidenav.php';
-    include_once COMPONENT_PATH . 'template/edit-task-modal.php';
+    require_once COMPONENT_PATH . 'template/edit-task-modal.php';
+    require_once COMPONENT_PATH . 'template/worker-info-card.php';
     ?>
 
-    <main class="view-task-info main-page flex-col" data-projectid="<?= $projectData['id'] ?>" data-taskid="<?= $taskData['id'] ?>">
+    <main class="view-task-info main-page flex-col" data-projectid="<?= $projectData['id'] ?>"
+        data-taskid="<?= $taskData['id'] ?>">
 
         <!-- Task Info -->
         <section class="task-info content-section-block flex-col">
@@ -152,6 +155,8 @@ $taskData = [
 
         </section>
     </main>
+
+    <script type="module" src="<?= EVENT_PATH . 'task' . DS . 'create-worker-card.js' ?>" defer></script>
 
     <script type="module" src="<?= EVENT_PATH . 'edit-task-modal' . DS . 'open.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'edit-task-modal' . DS . 'cancel.js' ?>" defer></script>

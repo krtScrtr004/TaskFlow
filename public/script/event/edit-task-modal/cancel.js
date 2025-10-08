@@ -48,21 +48,21 @@ async function submit(e) {
 }
 
 async function sendToBackend(projectId, taskId) {
-    isLoading = true
     try {
         if (isLoading) {
             console.warn('Request is already in progress. Please wait.')
             return
         }
+        isLoading = true
 
-        if (!projectId) 
+        if (!projectId)
             throw new Error('Project ID is required.')
 
         if (!taskId)
             throw new Error('Task ID is required.')
 
         const response = await Http.PUT(`/project/${projectId}/task/${taskId}`, { status: 'cancelled' })
-        if (!response) 
+        if (!response)
             throw new Error('No response from server.')
     } catch (error) {
         throw error

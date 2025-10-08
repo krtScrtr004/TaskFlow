@@ -97,7 +97,7 @@ function createWorkerPrimaryInfo(name, workerId, profileImage) {
         workerIcon.src = profileImage
         workerIcon.className = 'worker-profile-image'
     } else {
-        workerIcon.src = 'asset/image/icon/worker_w.svg'
+        workerIcon.src = '/TaskFlow/public/asset/image/icon/worker_w.svg'
     }
     workerIcon.alt = name
     workerIcon.title = name
@@ -123,7 +123,7 @@ function createWorkerPrimaryInfo(name, workerId, profileImage) {
     removeButton.className = 'unset-button'
 
     const removeIcon = document.createElement('img')
-    removeIcon.src = 'asset/image/icon/delete_r.svg'
+    removeIcon.src = '/TaskFlow/public/asset/image/icon/delete_r.svg'
     removeIcon.alt = 'Remove Worker'
     removeIcon.title = 'Remove Worker'
     removeIcon.height = 18
@@ -180,14 +180,14 @@ function createWorkerStatistics(performance, completedTasks) {
 
     // Create performance statistic
     const performanceDiv = createStatisticItem(
-        'asset/image/icon/progress_w.svg',
+        '/TaskFlow/public/asset/image/icon/progress_w.svg',
         'Worker Performance',
         `Performance: ${performance}%`
     )
 
     // Create completed tasks statistic
     const tasksDiv = createStatisticItem(
-        'asset/image/icon/task_w.svg',
+        '/TaskFlow/public/asset/image/icon/task_w.svg',
         'Worker Completed Task',
         `Completed Tasks: ${completedTasks}`
     )
@@ -232,25 +232,25 @@ function createStatisticItem(iconSrc, iconAlt, text) {
  * @returns {Promise<Object[]>} Resolves with array of worker data objects on success
  */
 async function sendToBackend(projectId, workerIds) {
-    isLoading = true
     try {
-        if (!projectId || projectId === '')
-            throw new Error('Project ID is required.')
-
-        if (!workerIds || workerIds.length === 0)
-            throw new Error('No worker IDs provided.')
-
         if (isLoading) {
             console.warn('Request already in progress. Please wait.')
             return
         }
+        isLoading = true
+
+        if (!projectId || projectId.trim() === '')
+            throw new Error('Project ID is required.')
+
+        if (!workerIds || workerIds.length === 0)
+            throw new Error('No worker IDs provided.')
 
         const idParams = workerIds.map(id => `${id}`).join(',')
         const response = await Http.GET(`projects/${projectId}/workers?ids=${idParams}`)
         if (!response) {
             throw new Error('No response from server.')
         }
-        
+
         return response.data
     } catch (error) {
         throw error

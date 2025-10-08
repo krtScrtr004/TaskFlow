@@ -67,7 +67,6 @@ async function submitForm(e) {
         Dialog.somethingWentWrong()
     } finally {
         Loader.delete()
-        isLoading = false
     }
 }
 
@@ -95,11 +94,25 @@ function addPhaseForm(phaseContainer) {
 }
 
 async function sendToBackend(data) {
-    if (isLoading) return
-    isLoading = true
+    try {
+        if (isLoading) {
+            console.warn('Request already in progress. Please wait.')
+            return
+        }
+        isLoading = true
 
-    const response = await Http.POST(`projects`, data)
-    if (!response) {
-        throw new Error('No response from server.')
+        if (!data) 
+            throw new Error('No input data provided.')
+
+        const response = await Http.POST(`projects`, data)
+        if (!response) {
+            throw new Error('No response from server.')
+        }
+        return response
+    } catch (error) {
+        console.error('Error sending data to server:', error)
+        throw error
+    } finally {
+        isLoading = false
     }
 }

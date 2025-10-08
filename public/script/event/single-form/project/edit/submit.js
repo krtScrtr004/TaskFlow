@@ -107,23 +107,24 @@ function addPhaseForm(phaseContainer) {
 }
 
 async function sendToBackend(projectId, data) {
-    isLoading = true
     try {
-        if (!projectId || projectId === '') 
-            throw new Error('Project ID is required.')
-
-        if (!data) 
-            throw new Error('No data provided.')
-
         if (isLoading) {
             console.warn('Request already in progress. Please wait.')
             return
         }
+        isLoading = true
+
+
+        if (!projectId || projectId.trim() === '')
+            throw new Error('Project ID is required.')
+
+        if (!data)
+            throw new Error('No data provided.')
 
         const response = await Http.PUT(`projects/${projectId}`, data)
-        if (!response) 
+        if (!response)
             throw new Error('No response from server.')
-        
+
         return response
     } catch (error) {
         throw error

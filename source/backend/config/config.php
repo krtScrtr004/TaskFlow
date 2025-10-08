@@ -1,6 +1,6 @@
 <?php
 
-define('DS', DIRECTORY_SEPARATOR);
+define('DS', '/');
 
 require_once __DIR__ . DS . 'path.php';
 
