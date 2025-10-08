@@ -1,18 +1,17 @@
 <?php
 
+// TODO: CHECK IF THE REQUEST HAS PROJECT ID;
+// IF NOT, RETURN UNASSIGNED WORKERS
+
 class WorkerController implements Controller
 {
 
-    private function __construct()
-    {
-    }
+    private function __construct() {}
 
-    public static function index(): void
-    {
-    }
+    public static function index(): void {}
 
     // Used to fetch single worker info by ID (eg. /get-worker-info/1)
-    public static function getWorkerInfoById($args = []): void
+    public static function getWorkerById($args = []): void
     {
         if (!isset($args['workerId'])) {
             Response::error('Worker ID is required');
@@ -29,7 +28,7 @@ class WorkerController implements Controller
     }
 
     // Used to fetch multiple workers by IDs or name filter (eg. /get-worker-info?ids=1,2,3 or /get-worker-info?name=John)
-    public static function getWorkerInfoByKey(): void
+    public static function getWorkerByKey(): void
     {
         $workers = UserModel::all();
 

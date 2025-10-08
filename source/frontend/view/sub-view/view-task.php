@@ -139,7 +139,7 @@ $taskData = [
             </div>
 
             <!-- Worker Grid Cards -->
-            <section class="workers-grid grid">
+            <section class="worker-grid grid">
                 <?php foreach ($taskData['workers'] as $worker) {
                     echo workerGridCard($worker);
                 } ?>

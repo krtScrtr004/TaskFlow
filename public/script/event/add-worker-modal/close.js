@@ -7,8 +7,8 @@ if (cancelButton) {
         addWorkerModalTemplate.classList.remove('flex-col')
         addWorkerModalTemplate.classList.add('no-display')
 
-        const workerList = addWorkerModalTemplate.querySelector('.worker-list')
-        workerList.textContent = ''
+        const workerContainer = addWorkerModalTemplate.querySelector('.worker-list' || '.worker-grid')
+        workerContainer.textContent = ''
         selectedUsers.length = 0
     })
 } else {

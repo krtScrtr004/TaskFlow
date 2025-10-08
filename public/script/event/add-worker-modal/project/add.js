@@ -1,5 +1,5 @@
-import { addWorker } from './shared.js'
-import { Http } from '../../utility/http.js'
+import { addWorker } from '../shared.js'
+import { Http } from '../../../utility/http.js'
 
 let isLoading = false
 

@@ -1,7 +1,8 @@
-import { fetchWorkers, createWorkerListCard, selectWorker } from './shared.js'
-import { Loader } from '../../render/loader.js'
-import { Dialog } from '../../render/dialog.js'
+import { fetchWorkers, createWorkerListCard, selectWorker } from '../shared.js'
+import { Loader } from '../../../render/loader.js'
+import { Dialog } from '../../../render/dialog.js'
 
+const projectContainer = document.querySelector('.project-container')
 const addWorkerButton = document.querySelector('#add_worker_button')
 const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
 if (addWorkerModalTemplate) {
@@ -13,7 +14,11 @@ if (addWorkerModalTemplate) {
             const workerList = addWorkerModalTemplate.querySelector('.worker-list')
             Loader.full(workerList)
 
-            const workers = await fetchWorkers()
+            const projectId = projectContainer.dataset.projectid
+            if (!projectId || projectId.trim() === '') 
+                throw new Error('Project ID is missing.')
+
+            const workers = await fetchWorkers(projectId)
             workers.forEach(worker => createWorkerListCard(worker))
             selectWorker()
         } catch (error) {

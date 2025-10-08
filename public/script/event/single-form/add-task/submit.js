@@ -2,7 +2,7 @@ import { Dialog } from '../../../render/dialog.js'
 import { Http } from '../../../utility/http.js'
 import { Loader } from '../../../render/loader.js'
 import { confirmationDialog } from '../../../render/confirmation-dialog.js'
-import { assignedWorkers } from '../../add-worker-modal/add-to-task.js'
+import { assignedWorkers } from '../../add-worker-modal/task/new/add.js'
 import { validateInputs } from '../../../utility/validator.js'
 import { debounceAsync } from '../../../utility/debounce.js'
 

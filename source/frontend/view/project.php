@@ -51,10 +51,10 @@
         <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'terminate-worker.js' ?>"></script>
         <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'cancel.js' ?>"></script>
 
-        <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'open.js' ?>"></script>
+        <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'project' . DS . 'open.js' ?>"></script>
+        <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'project' . DS . 'add.js' ?>"></script>
         <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'close.js' ?>"></script>
         <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'search.js' ?>"></script>
-        <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'add-to-project.js' ?>"></script>
     <?php endif; ?>
 </body>
 

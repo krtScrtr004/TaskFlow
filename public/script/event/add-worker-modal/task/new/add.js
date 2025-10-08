@@ -1,6 +1,6 @@
-import { addWorker } from './shared.js'
-import { Dialog } from '../../render/dialog.js'
-import { Http } from '../../utility/http.js'
+import { addWorker } from '../../shared.js'
+import { Dialog } from '../../../../render/dialog.js'
+import { Http } from '../../../../utility/http.js'
 
 let isLoading = false
 export const assignedWorkers = {}

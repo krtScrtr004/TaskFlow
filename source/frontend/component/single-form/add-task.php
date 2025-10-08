@@ -3,7 +3,7 @@ $projectId = $args['projectId'] ?? null;
 if ($projectId === null)
     throw new ErrorException("Project ID is required to add a task.");
 
-include_once COMPONENT_PATH . 'template' . DS . 'add-worker-modal.php';
+require_once COMPONENT_PATH . 'template' . DS . 'add-worker-modal.php';
 ?>
 
 <!-- Add Task Form -->
