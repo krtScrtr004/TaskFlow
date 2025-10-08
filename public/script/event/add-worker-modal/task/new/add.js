@@ -4,15 +4,22 @@ import { Http } from '../../../../utility/http.js'
 
 let isLoading = false
 export const assignedWorkers = {}
-const noAssignedWorkerWall = document.querySelector('.no-assigned-worker-wall')
+const addTaskForm = document.querySelector('#add_task_form')
+const noAssignedWorkerWall = addTaskForm?.querySelector('.no-assigned-worker-wall')
+const thisProjectId = document.querySelector('#add_worker_button')?.dataset.projectid
+if (!thisProjectId || thisProjectId.trim() === '') {
+    console.error('Project ID not found.')
+    Dialog.somethingWentWrong()
+}
 
 try {
     await addWorker(
+        thisProjectId,
         async (projectId, workersId) => sendToBackend(projectId, workersId),
         (workersData) => action(workersData)
     )
 
-    const taskWorkerList = document.querySelector('#add_task_form .task-worker > .list')
+    const taskWorkerList = addTaskForm.querySelector('.task-worker > .list')
     if (taskWorkerList) {
         taskWorkerList.addEventListener('click', e => {
             e.preventDefault()

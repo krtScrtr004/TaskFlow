@@ -1,7 +1,14 @@
 import { addWorker } from '../shared.js'
 import { Http } from '../../../utility/http.js'
+import { Dialog } from '../../../render/dialog.js'
 
 let isLoading = false
+const projectContainer = document.querySelector('.project-container')
+const thisProjectId = projectContainer ? projectContainer.dataset.projectid : null
+if (!thisProjectId || thisProjectId.trim() === '') {
+    console.error('Project ID not found.')
+    Dialog.somethingWentWrong()
+}
 
 // Just add workers with default behavior
 await addWorker(async (projectId, workerIds) => await sendToBackend(projectId, workerIds))

@@ -137,7 +137,7 @@ require_once COMPONENT_PATH . 'template' . DS . 'add-worker-modal.php';
         </section>
 
         <!-- Add Worker Button -->
-        <button id="add_worker_button" type="button" class="transparent-bg" data-projectid="<?= $projectId ?>">
+        <button id="add_worker_button" type="button" class="transparent-bg">
             <div class="text-w-icon">
                 <img src="<?= ICON_PATH . 'add_w.svg' ?>" alt="Add Worker" title="Add Worker" height="20">
                 <p>Add Worker</p>

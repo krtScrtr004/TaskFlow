@@ -2,9 +2,9 @@ import { workerInfoCard } from '../../render/worker-card.js'
 import { Dialog } from '../../render/dialog.js'
 
 const viewTaskInfo = document.querySelector('.view-task-info')
-const workersGrid = viewTaskInfo.querySelector('.workers-grid')
-if (workersGrid) {
-    workersGrid.addEventListener('click', async e => {
+const workerGrid = viewTaskInfo.querySelector('.worker-grid')
+if (workerGrid) {
+    workerGrid.addEventListener('click', async e => {
         const workerCard = e.target.closest('.worker-grid-card')
         if (!workerCard) return
 

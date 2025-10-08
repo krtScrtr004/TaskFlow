@@ -277,8 +277,7 @@ $projectData = [
             <!-- Add Worker Button -->
             <?php if (Role::isProjectManager(Me::getInstance())): ?>
                 <div class="">
-                    <button id="add_worker_button" type="button" class="float-right blue-bg"
-                        data-projectId="<?= $projectData['id'] ?>">
+                    <button id="add_worker_button" type="button" class="float-right blue-bg">
                         <div class="heading-title text-w-icon center-child">
                             <img src="<?= ICON_PATH . 'add_w.svg' ?>" alt="Add Worker" title="Add Worker" height="18">
 

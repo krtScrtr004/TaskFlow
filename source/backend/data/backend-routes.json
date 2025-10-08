@@ -35,7 +35,7 @@
 		"TaskFlow/projects": ["ProjectController", "createProject"],
 		"TaskFlow/projects/{projectId:[\\w+_-]+}/workers": [
 			"WorkerController",
-			"addWorker"
+			"addWorkerToProject"
 		],
 		"TaskFlow/projects/{projectId:[\\w+_-]+}/phases": [
 			"PhaseController",
@@ -44,6 +44,10 @@
 		"TaskFlow/projects/{projectId:[\\w+_-]+}/tasks": [
 			"TaskController",
 			"addTask"
+		],
+		"TaskFlow/projects/{projectId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}/workers": [
+			"WorkerController",
+			"addWorkerToTask"
 		]
 	},
 

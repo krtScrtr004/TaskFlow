@@ -44,8 +44,6 @@ class SingleFormController implements Controller
             'script' => [
                 'add-worker-modal/task/new/add',
                 'add-worker-modal/task/new/open',
-                'add-worker-modal/close',
-                'add-worker-modal/search',
                 'single-form/add-task/submit',
             ]
         ]

@@ -1,10 +1,16 @@
-import { fetchWorkers, createWorkerListCard, selectWorker } from '../../shared.js'
+import { fetchWorkers, createWorkerListCard, selectWorker, searchWorkerEvent, cancelAddWorkerModal } from '../../shared.js'
 import { Loader } from '../../../../render/loader.js'
 import { Dialog } from '../../../../render/dialog.js'
 
 const addTaskForm = document.querySelector('#add_task_form')
 const addWorkerButton = addTaskForm.querySelector('#add_worker_button')
 const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
+const projectId = addTaskForm.dataset.projectid
+if (!projectId || projectId.trim() === '') {
+    console.error('Project ID not found.')
+    Dialog.somethingWentWrong()
+}
+
 if (addWorkerModalTemplate) {
     addWorkerButton.addEventListener('click', async () => {
         addWorkerModalTemplate.classList.add('flex-col')
@@ -14,8 +20,7 @@ if (addWorkerModalTemplate) {
             const workerList = addWorkerModalTemplate.querySelector('.worker-list')
             Loader.full(workerList)
 
-            const projectId = addTaskForm.dataset.projectid
-            if (!projectId || projectId.trim() === '') 
+            if (!projectId || projectId.trim() === '')
                 throw new Error('Project ID is missing.')
 
             const workers = await fetchWorkers(projectId)
@@ -28,6 +33,10 @@ if (addWorkerModalTemplate) {
             Loader.delete()
         }
     })
+    
+    searchWorkerEvent(projectId)    
+
+    cancelAddWorkerModal()
 } else {
     console.error('Add Worker modal template not found.')
 }

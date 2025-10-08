@@ -6,9 +6,13 @@
 class WorkerController implements Controller
 {
 
-    private function __construct() {}
+    private function __construct()
+    {
+    }
 
-    public static function index(): void {}
+    public static function index(): void
+    {
+    }
 
     // Used to fetch single worker info by ID (eg. /get-worker-info/1)
     public static function getWorkerById($args = []): void
@@ -71,7 +75,7 @@ class WorkerController implements Controller
         ];
     }
 
-    public static function addWorker(array $args = []): void
+    public static function addWorkerToProject(array $args = []): void
     {
         $data = decodeData('php://input');
         if (!$data) {
@@ -80,6 +84,57 @@ class WorkerController implements Controller
 
         if (!isset($args['projectId'])) {
             Response::error('Project ID is required');
+        }
+
+        $workerIds = $data['workerIds'] ?? null;
+        if (!isset($data['workerIds']) || !is_array($data['workerIds']) || count($data['workerIds']) < 1) {
+            Response::error('Worker IDs are required');
+        }
+
+        $returnData = $data['returnData'] ?? false;
+
+        // TODO: Add worker to project logic
+
+        $returnDataArray = [];
+        if ($returnData) {
+            foreach ($workerIds as $workerId) {
+                // TODO: Fetch User
+                $user = UserModel::all()[0];
+
+                $userPerformance = WorkerPerformanceCalculator::calculateWorkerPerformance(TaskModel::all());
+                $returnDataArray[] = [
+                    'id' => $user->getPublicId(),
+                    'name' => $user->getFirstName() . ' ' . $user->getLastName(),
+                    'profilePicture' => $user->getProfileLink(),
+                    'bio' => $user->getBio(),
+                    'email' => $user->getEmail(),
+                    'contactNumber' => $user->getContactNumber(),
+                    'role' => $user->getRole()->value,
+                    'jobTitles' => $user->getJobTitles()->toArray(),
+                    'totalTasks' => count(TaskModel::all()),
+                    'completedTasks' => TaskModel::all()->getTaskCountByStatus(WorkStatus::COMPLETED),
+                    'performance' => $userPerformance['overallScore'],
+                ];
+            }
+
+        }
+
+        Response::success($returnDataArray, 'Worker added successfully');
+    }
+
+    public static function addWorkerToTask(array $args = []): void
+    {
+        $data = decodeData('php://input');
+        if (!$data) {
+            Response::error('Invalid data provided');
+        }
+
+        if (!isset($args['projectId'])) {
+            Response::error('Project ID is required');
+        }
+
+        if (!isset($args['taskId'])) {
+            Response::error('Task ID is required');
         }
 
         $workerIds = $data['workerIds'] ?? null;

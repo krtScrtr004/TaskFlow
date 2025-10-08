@@ -1,11 +1,11 @@
-import { fetchWorkers, createWorkerListCard, selectWorker, searchWorkerEvent, cancelAddWorkerModal } from '../shared.js'
-import { Loader } from '../../../render/loader.js'
-import { Dialog } from '../../../render/dialog.js'
+import { fetchWorkers, createWorkerListCard, selectWorker, searchWorkerEvent, cancelAddWorkerModal } from '../../shared.js'
+import { Loader } from '../../../../render/loader.js'
+import { Dialog } from '../../../../render/dialog.js'
 
-const projectContainer = document.querySelector('.project-container')
-const addWorkerButton = document.querySelector('#add_worker_button')
+const viewTaskInfo = document.querySelector('.view-task-info')
+const addWorkerButton = viewTaskInfo?.querySelector('#add_worker_button')
 const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
-const projectId = projectContainer.dataset.projectid
+const projectId = viewTaskInfo.dataset.projectid
 if (!projectId || projectId.trim() === '') {
     console.error('Project ID not found.')
     Dialog.somethingWentWrong()
@@ -20,7 +20,7 @@ if (addWorkerModalTemplate) {
             const workerList = addWorkerModalTemplate.querySelector('.worker-list')
             Loader.full(workerList)
 
-            if (!projectId || projectId.trim() === '')
+            if (!projectId || projectId.trim() === '') 
                 throw new Error('Project ID is missing.')
 
             const workers = await fetchWorkers(projectId)
@@ -39,5 +39,3 @@ if (addWorkerModalTemplate) {
 } else {
     console.error('Add Worker modal template not found.')
 }
-
-

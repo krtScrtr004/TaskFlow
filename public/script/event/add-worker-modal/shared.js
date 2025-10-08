@@ -61,36 +61,36 @@ export function createWorkerListCard(worker) {
     // Create image container
     const imgContainer = document.createElement('div');
     imgContainer.className = 'flex-col flex-child-center-v';
-    
+
     const img = document.createElement('img');
     img.src = worker.profilePicture || ICON_PATH + 'profile_w.svg';
     img.alt = worker.name;
     img.title = worker.name;
     img.height = 40;
     imgContainer.appendChild(img);
-    
+
     // Create info container
     const infoContainer = document.createElement('div');
     infoContainer.className = 'flex-col';
-    
+
     // Create name and ID section
     const nameSection = document.createElement('div');
-    
+
     const nameHeader = document.createElement('h4');
     nameHeader.className = 'wrap-text';
     nameHeader.textContent = worker.name;
     nameSection.appendChild(nameHeader);
-    
+
     const idPara = document.createElement('p');
     const idEm = document.createElement('em');
     idEm.textContent = worker.id;
     idPara.appendChild(idEm);
     nameSection.appendChild(idPara);
-    
+
     // Create job titles section
     const jobTitlesDiv = document.createElement('div');
     jobTitlesDiv.className = 'job-titles flex-row flex-wrap';
-    
+
     if (worker.jobTitles && worker.jobTitles.length > 0) {
         worker.jobTitles.forEach(title => {
             const span = document.createElement('span');
@@ -104,16 +104,16 @@ export function createWorkerListCard(worker) {
         noJobSpan.textContent = 'No Job Titles';
         jobTitlesDiv.appendChild(noJobSpan);
     }
-    
+
     // Assemble the components
     infoContainer.appendChild(nameSection);
     infoContainer.appendChild(jobTitlesDiv);
-    
+
     label.appendChild(imgContainer);
     label.appendChild(infoContainer);
-    
+
     workerCheckbox.appendChild(label);
-    
+
     // Add to DOM
     workerList.insertAdjacentElement('afterbegin', workerCheckbox);
 }
@@ -164,7 +164,12 @@ export function selectWorker() {
 
 // Add Worker -------------------------
 
-export async function addWorker(asyncFunction, action = () => { }) {
+export async function addWorker(
+    projectId,
+    asyncFunction,
+    action = () => { },
+    onSuccess = () => { }
+) {
     if (!asyncFunction || typeof asyncFunction !== 'function') {
         console.error('Invalid asyncFunction provided to addWorker.')
         return
@@ -184,10 +189,10 @@ export async function addWorker(asyncFunction, action = () => { }) {
         return
     }
 
-    confirmAddWorkerButton.addEventListener('click', e => debounceAsync(addWorkerButtonEvent(e, confirmAddWorkerButton, asyncFunction, action), 300))
+    confirmAddWorkerButton.addEventListener('click', e => debounceAsync(addWorkerButtonEvent(e, projectId, confirmAddWorkerButton, asyncFunction, action, onSuccess), 300))
 }
 
-async function addWorkerButtonEvent(e, confirmAddWorkerButton, asyncFunction, action) {
+async function addWorkerButtonEvent(e, projectId, confirmAddWorkerButton, asyncFunction, action, onSuccess) {
     e.preventDefault()
 
     if (selectedUsers.length === 0) {
@@ -200,8 +205,6 @@ async function addWorkerButtonEvent(e, confirmAddWorkerButton, asyncFunction, ac
         `Are you sure you want to add ${selectedUsers.length} worker(s) to this project?`,
     )) return
 
-    const addWorkerButton = document.querySelector('#add_worker_button')
-    const projectId = addWorkerButton.dataset.projectid
     if (!projectId) {
         console.error('Project ID not found in modal dataset.')
         Dialog.somethingWentWrong()
@@ -216,10 +219,101 @@ async function addWorkerButtonEvent(e, confirmAddWorkerButton, asyncFunction, ac
         // Close the modal
         const cancelButton = addWorkerModalTemplate.querySelector('#cancel_add_worker_button')
         cancelButton?.click()
+
+        onSuccess()
     } catch (error) {
         console.error(error)
         Dialog.errorOccurred('An error occurred while adding workers. Please try again.')
     } finally {
         Loader.delete()
     }
+}
+
+// Search Worker -------------------------
+
+export function searchWorkerEvent(projectId) {
+    const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
+    const searchBarForm = addWorkerModalTemplate?.querySelector('form.search-bar')
+    const button = searchBarForm?.querySelector('button')
+    if (!searchBarForm) {
+        console.error('Search bar form not found.')
+        return
+    }
+
+    if (!button) {
+        console.error('Search button not found.')
+        return
+    }
+
+    searchBarForm.addEventListener('submit', e => debounceAsync(searchForWorker(e, projectId), 300))
+    button.addEventListener('click', e => debounceAsync(searchForWorker(e, projectId), 300))
+}
+
+async function searchForWorker(e, projectId) {
+    e.preventDefault()
+
+    const workerList = addWorkerModalTemplate.querySelector('.worker-list')
+    if (!workerList) {
+        console.error('Worker list container not found.')
+        Dialog.somethingWentWrong()
+        return
+    }
+    const noWorkersWall = workerList.parentElement.querySelector('.no-workers-wall')
+
+    workerList.textContent = ''
+
+    // Hide no workers message and show worker list
+    noWorkersWall?.classList.remove('flex-col')
+    noWorkersWall?.classList.add('no-display')
+
+    workerList.classList.add('flex-col')
+    workerList.classList.remove('no-display')
+
+    Loader.full(workerList)
+
+    if (!projectId || projectId.trim() === '') {
+        console.error('Project ID is missing.')
+        Dialog.somethingWentWrong()
+        return
+    }
+
+    const searchTerm = document.querySelector('.search-bar input[type="text"]').value.trim()
+
+    try {
+        const workers = await fetchWorkers(projectId, searchTerm)
+
+        if (workers && workers.length > 0) {
+            workers.forEach(worker => createWorkerListCard(worker))
+        } else {
+            // Show no workers message if no results
+            noWorkersWall?.classList.add('flex-col')
+            noWorkersWall?.classList.remove('no-display')
+
+            workerList.classList.remove('flex-col')
+            workerList.classList.add('no-display')
+        }
+    } catch (error) {
+        console.error(error.message)
+        Dialog.errorOccurred('Failed to load workers. Please try again.')
+    } finally {
+        Loader.delete()
+    }
+}
+
+// Cancel Button -------------------------
+
+export function cancelAddWorkerModal(workerContainer = addWorkerModalTemplate.querySelector('.worker-list')) {
+    const cancelButton = addWorkerModalTemplate?.querySelector('#cancel_add_worker_button')
+    if (!cancelButton) {
+        console.error('Cancel button not found.')
+        return
+    }
+
+    cancelButton.addEventListener('click', () => {
+        addWorkerModalTemplate.classList.remove('flex-col')
+        addWorkerModalTemplate.classList.add('no-display')
+
+        if (workerContainer) workerContainer.textContent = ''
+        selectedUsers.length = 0
+    })
 }

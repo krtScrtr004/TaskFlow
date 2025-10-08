@@ -51,6 +51,7 @@ $taskData = [
     require_once COMPONENT_PATH . 'sidenav.php';
     require_once COMPONENT_PATH . 'template/edit-task-modal.php';
     require_once COMPONENT_PATH . 'template/worker-info-card.php';
+    require_once COMPONENT_PATH . 'template/add-worker-modal.php';
     ?>
 
     <main class="view-task-info main-page flex-col" data-projectid="<?= $projectData['id'] ?>"
@@ -145,7 +146,7 @@ $taskData = [
                 } ?>
             </section>
 
-            <!-- Add Button -->
+            <!-- Add Worker Button -->
             <button id="add_worker_button" type="button" class="transparent-bg">
                 <div class="text-w-icon">
                     <img src="<?= ICON_PATH . 'add_w.svg' ?>" alt="Add Worker" title="Add Worker" height="20">
@@ -158,6 +159,9 @@ $taskData = [
 
     <script type="module" src="<?= EVENT_PATH . 'task' . DS . 'create-worker-card.js' ?>" defer></script>
 
+    <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'existing' .  DS . 'open.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'existing' .  DS . 'add.js' ?>" defer></script>
+    
     <script type="module" src="<?= EVENT_PATH . 'edit-task-modal' . DS . 'open.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'edit-task-modal' . DS . 'cancel.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'edit-task-modal' . DS . 'submit.js' ?>" defer></script>
