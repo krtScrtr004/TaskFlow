@@ -1,4 +1,4 @@
-import { Loader } from '../../../../render/loader.js'
+import { Loader } from '../../../render/loader.js'
 
 let ALLOW_DISABLE = true
 

@@ -1,4 +1,4 @@
-import { Dialog } from '../../../../render/dialog.js'
+import { Dialog } from '../../../render/dialog.js'
 
 const addPhaseButton = document.querySelector('.phase-details #add_phase_button')
 if (addPhaseButton) {

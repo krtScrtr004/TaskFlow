@@ -1,5 +1,5 @@
-import { Dialog } from '../../../../../render/dialog.js'
-import { confirmationDialog } from '../../../../../render/confirmation-dialog.js'
+import { Dialog } from '../../../../render/dialog.js'
+import { confirmationDialog } from '../../../../render/confirmation-dialog.js'
 
 export const phaseToCancel = new Set()
 

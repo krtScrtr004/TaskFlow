@@ -1,8 +1,8 @@
-import { validateInputs } from '../../../../utility/validator.js'
+import { validateInputs } from '../../../utility/validator.js'
 import { clonePhaseListCard } from './clone-phase-list-card.js'
-import { Loader } from '../../../../render/loader.js'
-import { Dialog } from '../../../../render/dialog.js'
-import { debounceAsync } from '../../../../utility/debounce.js'
+import { Loader } from '../../../render/loader.js'
+import { Dialog } from '../../../render/dialog.js'
+import { debounceAsync } from '../../../utility/debounce.js'
 
 const addPhaseModal = document.querySelector('#add_phase_modal')
 const addPhaseForm = addPhaseModal.querySelector('#add_phase_form')

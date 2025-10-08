@@ -1,11 +1,11 @@
-import { Http } from '../../../../../utility/http.js'
-import { Dialog } from '../../../../../render/dialog.js'
-import { Loader } from '../../../../../render/loader.js'
-import { confirmationDialog } from '../../../../../render/confirmation-dialog.js'
-import { debounceAsync } from '../../../../../utility/debounce.js'
-import { phaseToAdd } from './add.js'
-import { phaseToCancel } from './cancel.js'
-import { validateInputs } from '../../../../../utility/validator.js'
+import { Http } from '../../../../utility/http.js'
+import { Dialog } from '../../../../render/dialog.js'
+import { Loader } from '../../../../render/loader.js'
+import { confirmationDialog } from '../../../../render/confirmation-dialog.js'
+import { debounceAsync } from '../../../../utility/debounce.js'
+import { phaseToAdd } from './add-phase.js'
+import { phaseToCancel } from './cancel-phase.js'
+import { validateInputs } from '../../../../utility/validator.js'
 
 let isLoading = false
 const toAdd = []
