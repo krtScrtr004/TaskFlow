@@ -80,16 +80,16 @@ async function submitForm(e) {
 async function sendToBackend(inputs = {}, projectId) {
     isLoading = true
     try {
+        if (isLoading) {
+            console.warn('Request already in progress. Please wait.')
+            return
+        }
+        
         if (!inputs) 
             throw new Error('No input data provided to send to backend.')
 
         if (!projectId || projectId === '')
             throw new Error('Project ID is required.')
-
-        if (isLoading) {
-            console.warn('Request already in progress. Please wait.')
-            return
-        }
 
         const {
             name,

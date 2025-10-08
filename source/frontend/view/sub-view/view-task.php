@@ -154,6 +154,7 @@ $taskData = [
     </main>
 
     <script type="module" src="<?= EVENT_PATH . 'edit-task-modal' . DS . 'open.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'edit-task-modal' . DS . 'cancel.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'edit-task-modal' . DS . 'submit.js' ?>" defer></script>
 </body>
 
