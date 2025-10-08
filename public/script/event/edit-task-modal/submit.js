@@ -93,15 +93,23 @@ async function submitForm(e) {
  * @returns {Promise<Object|null>} - The response data or null if failed
  */
 async function sendToBackend(projectId, taskId, inputs) {
-    if (!projectId || !taskId || !inputs)
-        throw new Error('Missing required parameters: project ID, task ID, or inputs')
+    isLoading = true
+    try {
+        if (!projectId || !taskId || !inputs)
+            throw new Error('Missing required parameters: project ID, task ID, or inputs')
 
-    if (isLoading) {
-        console.log('Request already in progress')
-        return
+        if (isLoading) {    
+            console.log('Request already in progress')
+            return
+        }
+
+        const response = await Http.PUT(`projects/${projectId}/tasks/${taskId}`, inputs)
+        if (!response)
+            throw new Error('No response from server.')
+        return response
+    } catch (error) {
+        throw error
+    } finally {
+        isLoading = false
     }
-
-    const response = await Http.PUT(`projects/${projectId}/tasks/${taskId}`, inputs)
-    if (!response)
-        throw new Error('No response from server.')
 }

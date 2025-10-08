@@ -4,6 +4,8 @@ import { Loader } from '../../render/loader.js'
 import { Dialog } from '../../render/dialog.js'
 import { Notification } from '../../render/notification.js'
 
+let isLoading = false
+
 const workerList = document.querySelector('.project-workers > .worker-list')
 if (workerList) {
     const projectContainer = document.querySelector('.project-container')
@@ -31,11 +33,24 @@ if (workerList) {
 }
 
 async function fetchWorkerInfo(projectId, workerId) {
-    const response = await Http.GET(`projects/${projectId}/workers/${workerId}`)
-    if (!response) {
-        throw new Error('No response from server')
+    isLoading = true
+    try {
+        if (!projectId || projectId === '') 
+            throw new Error('Project ID is required.')
+
+        if (!workerId || workerId === '')
+            throw new Error('Worker ID is required.')
+        
+        const response = await Http.GET(`projects/${projectId}/workers/${workerId}`)
+        if (!response) 
+            throw new Error('No response from server')
+        
+        return response.data
+    } catch (error) {
+        throw error
+    } finally {
+        isLoading = false
     }
-    return response.data
 }
 
 async function createWorkerInfoCard(projectId, workerId) {

@@ -7,13 +7,27 @@ let isLoading = false
 await addWorker(async (projectId, workerIds) => await sendToBackend(projectId, workerIds))
 
 async function sendToBackend(projectId, workerIds) {
-    if (isLoading) return
     isLoading = true
+    try {
+        if (!projectId || projectId === '')
+            throw new Error('Project ID is required.')
 
-    const response = await Http.POST(`projects/${projectId}/workers`, { workerIds })
-    if (!response) {
-        throw new Error('Failed to add workers to project.')
+        if (!workerIds || workerIds.length === 0)
+            throw new Error('No worker IDs provided.')
+
+        if (isLoading) {
+            console.warn('Request already in progress. Please wait.')
+            return
+        }
+
+        const response = await Http.POST(`projects/${projectId}/workers`, { workerIds })
+        if (!response) 
+            throw new Error('Failed to add workers to project.')
+
+        return response
+    } catch (error) {
+        throw error
+    } finally {
+        isLoading = false
     }
-
-    isLoading = false
 }

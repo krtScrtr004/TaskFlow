@@ -10,17 +10,27 @@ export const selectedUsers = []
 const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
 
 export async function fetchWorkers(projectId, key = null) {
-    if (isLoading) return
     isLoading = true
+    try {
+        if (!projectId || projectId === '')
+            throw new Error('Project ID is required.')
 
-    const param = (key) ? key : ''
-    const response = await Http.GET(`projects/${projectId}/workers/${param}`)
-    if (!response) {
-        throw new Error('Workers data not found!')
+        if (isLoading) {
+            console.warn('Request already in progress. Please wait.')
+            return
+        }
+
+        const param = (key) ? key : ''
+        const response = await Http.GET(`projects/${projectId}/workers/${param}`)
+        if (!response) 
+            throw new Error('Workers data not found!')
+
+        return response.data
+    } catch (error) {
+        throw error
+    } finally {
+        isLoading = false
     }
-
-    isLoading = false
-    return response.data
 }
 
 export function createWorkerListCard(worker) {
@@ -96,7 +106,7 @@ export function selectWorker() {
     isSelectWorkerEventInitialized = true
 }
 
-export async function addWorker(asyncFunction, action = () => {}) {
+export async function addWorker(asyncFunction, action = () => { }) {
     if (!asyncFunction || typeof asyncFunction !== 'function') {
         console.error('Invalid asyncFunction provided to addWorker.')
         return
@@ -121,7 +131,7 @@ export async function addWorker(asyncFunction, action = () => {}) {
 
 async function addWorkerButtonEvent(e, confirmAddWorkerButton, asyncFunction, action) {
     e.preventDefault()
-    
+
     if (selectedUsers.length === 0) {
         Dialog.errorOccurred('No workers selected. Please select at least one worker to add.')
         return

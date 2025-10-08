@@ -232,17 +232,31 @@ function createStatisticItem(iconSrc, iconAlt, text) {
  * @returns {Promise<Object[]>} Resolves with array of worker data objects on success
  */
 async function sendToBackend(projectId, workerIds) {
-    if (isLoading) return
     isLoading = true
+    try {
+        if (!projectId || projectId === '')
+            throw new Error('Project ID is required.')
 
-    const idParams = workerIds.map(id => `${id}`).join(',')
-    const response = await Http.GET(`projects/${projectId}/workers?ids=${idParams}`)
-    if (!response) {
-        throw new Error('No response from server.')
+        if (!workerIds || workerIds.length === 0)
+            throw new Error('No worker IDs provided.')
+
+        if (isLoading) {
+            console.warn('Request already in progress. Please wait.')
+            return
+        }
+
+        const idParams = workerIds.map(id => `${id}`).join(',')
+        const response = await Http.GET(`projects/${projectId}/workers?ids=${idParams}`)
+        if (!response) {
+            throw new Error('No response from server.')
+        }
+        
+        return response.data
+    } catch (error) {
+        throw error
+    } finally {
+        isLoading = false
     }
-
-    isLoading = false
-    return response.data
 }
 
 function action(workersData) {

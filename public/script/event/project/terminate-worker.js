@@ -71,13 +71,28 @@ async function terminateButtonEvent(e) {
 }
 
 async function sendToBackend(projectId, workerId) {
-    if (isLoading) return
     isLoading = true
+    try {
+        if (!projectId || projectId === '') 
+            throw new Error('Project ID is required.')
 
-    const response = await Http.PUT(`projects/${projectId}/workers/${workerId}`, { status: 'terminated' })
-    if (!response) {
-        throw new Error('Failed to terminate worker from project.')
+        if (!workerId || workerId === '')
+            throw new Error('Worker ID is required.')
+
+        if (isLoading) {
+            console.warn('Request already in progress. Please wait.')
+            return
+        }
+
+
+        const response = await Http.PUT(`projects/${projectId}/workers/${workerId}`, { status: 'terminated' })
+        if (!response) {
+            throw new Error('Failed to terminate worker from project.')
+        }
+    } catch (error) {
+        console.error('Error terminating worker:', error)
+        throw error
+    } finally {
+        isLoading = false
     }
-
-    isLoading = false
 }

@@ -78,28 +78,41 @@ async function submitForm(e) {
  * @returns {Promise<void>} - Resolves when the task is successfully added
  */
 async function sendToBackend(inputs = {}, projectId) {
-    if (isLoading) return
     isLoading = true
+    try {
+        if (!inputs) 
+            throw new Error('No input data provided to send to backend.')
 
-    const {
-        name,
-        startDateTime,
-        completionDateTime,
-        description,
-        priority,
-        assignedWorkers
-    } = inputs
+        if (!projectId || projectId === '')
+            throw new Error('Project ID is required.')
 
-    const response = await Http.POST(`projects/${projectId}/tasks`, {
-        name: name.trim(),
-        description: description.trim(),
-        startDateTime,
-        completionDateTime,
-        priority,
-        assignedWorkers: Object.keys(assignedWorkers).map(key => assignedWorkers[key])
-    })
-    if (!response)
-        throw new Error('No response from server.')
+        if (isLoading) {
+            console.warn('Request already in progress. Please wait.')
+            return
+        }
 
-    isLoading = false
+        const {
+            name,
+            startDateTime,
+            completionDateTime,
+            description,
+            priority,
+            assignedWorkers
+        } = inputs
+
+        const response = await Http.POST(`projects/${projectId}/tasks`, {
+            name: name.trim(),
+            description: description.trim(),
+            startDateTime,
+            completionDateTime,
+            priority,
+            assignedWorkers: Object.keys(assignedWorkers).map(key => assignedWorkers[key])
+        })
+        if (!response)
+            throw new Error('No response from server.')
+    } catch (error) {
+        throw error
+    } finally {
+        isLoading = false
+    }
 }
