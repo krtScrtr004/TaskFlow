@@ -1,6 +1,7 @@
 import { addWorker } from '../shared.js'
 import { Http } from '../../../utility/http.js'
 import { Dialog } from '../../../render/dialog.js'
+import { Notification } from '../../../render/notification.js'
 
 let isLoading = false
 const projectContainer = document.querySelector('.project-container')
@@ -11,7 +12,18 @@ if (!thisProjectId || thisProjectId.trim() === '') {
 }
 
 // Just add workers with default behavior
-await addWorker(async (projectId, workerIds) => await sendToBackend(projectId, workerIds))
+await addWorker(
+    thisProjectId, 
+    async (projectId, workerIds) => await sendToBackend(projectId, workerIds),
+    () => {},
+    () => {
+        const delay = 1500
+        setTimeout(() => {
+            window.location.reload()
+        }, delay)
+        Notification.success('Workers added successfully.', delay)
+    }
+)
 
 async function sendToBackend(projectId, workerIds) {
     try {

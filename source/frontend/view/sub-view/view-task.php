@@ -139,6 +139,12 @@ $taskData = [
                 </h3>
             </div>
 
+            <div class="no-workers-wall no-content-wall <?= count($taskData['workers']) > 0 ? 'no-display' : 'flex-col' ?>">
+                <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No workers assigned" title="No workers assigned"
+                    height="100">
+                <h3>No workers assigned to this task.</h3>
+            </div>
+
             <!-- Worker Grid Cards -->
             <section class="worker-grid grid">
                 <?php foreach ($taskData['workers'] as $worker) {
@@ -158,6 +164,7 @@ $taskData = [
     </main>
 
     <script type="module" src="<?= EVENT_PATH . 'task' . DS . 'create-worker-card.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'task' . DS . 'terminate-worker.js' ?>" defer></script>
 
     <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'existing' .  DS . 'open.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'existing' .  DS . 'add.js' ?>" defer></script>
