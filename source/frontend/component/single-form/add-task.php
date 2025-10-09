@@ -84,11 +84,11 @@ require_once COMPONENT_PATH . 'template' . DS . 'add-worker-modal.php';
 
         <!-- Task Priority -->
         <div class="input-label-container">
-            <label for="">
+            <label for="task_priority">
                 <div class="text-w-icon">
                     <img src="<?= ICON_PATH . 'priority_w.svg' ?>" alt="Task Priority" title="Task Priority"
                         height="20">
-                    <p>Assign Workers</p>
+                    <p>Priority</p>
                 </div>
             </label>
 
