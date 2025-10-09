@@ -40,7 +40,7 @@ class WorkerController implements Controller
         $name = $_GET['name'] ?? null;
 
         $offset = (int) $_GET['offset'] ?: 0;
-        if ($offset < 20)
+        if ($offset > 20)
             Response::success([], 'No more workers to load');
 
         $return = [];
@@ -65,10 +65,6 @@ class WorkerController implements Controller
             Response::error('Worker ID is required');
         }
 
-        $offset = (int) $_GET['offset'] ?: 0;
-        if ($offset < 20)
-            Response::success([], 'No more workers to load');
-
         $workerId = $args['workerId'];
         $worker = UserModel::all()[0];
         Response::success(
@@ -88,10 +84,10 @@ class WorkerController implements Controller
         $name = $_GET['name'] ?? null;
 
         $offset = (int) $_GET['offset'] ?: 0;
-        if ($offset < 20)
+        if ($offset > 20)
+            Response::success([], 'No more workers to load');
 
-
-            $return = [];
+        $return = [];
         // If both ID and name filters are empty, return all workers
         if (empty($workerIds) && empty($name)) {
             foreach ($workers as $worker) {
