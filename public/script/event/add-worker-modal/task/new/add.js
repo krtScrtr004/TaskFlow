@@ -6,7 +6,7 @@ let isLoading = false
 export const assignedWorkers = {}
 const addTaskForm = document.querySelector('#add_task_form')
 const noAssignedWorkerWall = addTaskForm?.querySelector('.no-assigned-worker-wall')
-const thisProjectId = document.querySelector('#add_worker_button')?.dataset.projectid
+const thisProjectId = addTaskForm?.dataset.projectid
 if (!thisProjectId || thisProjectId.trim() === '') {
     console.error('Project ID not found.')
     Dialog.somethingWentWrong()

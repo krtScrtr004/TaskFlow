@@ -10,11 +10,19 @@ class TaskController implements Controller
         if (!$projectId)
             throw new InvalidArgumentException('Project ID is required.');
 
+        $priority = $_GET['priority'] ?? null; // Temporary placeholder
+        $status = $_GET['status'] ?? null; // Temporary placeholder
+
         // TODO: 
         // Fetch tasks for the given project ID if PM;
         // else, fetch tasks assigned to the worker
 
         $project = ProjectModel::all()[0];
+
+        $queryParams = $_GET ?? [];
+        $filter = isset($queryParams['filter']) ? $queryParams['filter'] : '';
+
+        // If key is not provided, all tasks of the project
         $tasks = $project->getTasks();
 
         require_once VIEW_PATH . 'task.php';
@@ -61,7 +69,7 @@ class TaskController implements Controller
 
         if ($offset > 20)
             Response::success([], 'No more tasks to load.');
-        
+
         $tasks = TaskModel::all()->getItems(); // Temporary placeholder
         Response::success($tasks, 'Task fetched successfully.');
     }

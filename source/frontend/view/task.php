@@ -5,6 +5,9 @@ $projectId = $project->getPublicId();
 
 if (!isset($tasks))
     throw new Error('Tasks data is required.');
+
+$searchKey = isset($_GET['key']) ? htmlspecialchars($_GET['key']) : '';
+$searchFilter = isset($_GET['filter']) ? htmlspecialchars($_GET['filter']) : 'all';
 ?>
 
 <!DOCTYPE html>
@@ -34,8 +37,8 @@ if (!isset($tasks))
         <section>
             <form class="search-bar" action="" method="POST">
                 <div>
-                    <input type="text" name="search_task" id="search_task" placeholder="Search by Name or ID" min="1"
-                        max="255" autocomplete="on" required>
+                    <input type="text" name="search_task_input" id="search_task_input" placeholder="Search by Name or ID" min="1"
+                        max="255" value="<?= $searchKey ?>" autocomplete="on" required>
                     <button id="search_task_button" type="button" class="transparent-bg">
                         <img src="<?= ICON_PATH . 'search_w.svg' ?>" alt="Search Task" title="Search Task" height="20">
                     </button>
@@ -48,20 +51,20 @@ if (!isset($tasks))
 
                     <!-- Filter By Status -->
                     <optgroup class="filter-group" label="Filter by Status">
-                        <option value="allStatus">All Statuses</option>
-                        <option value="pending">Pending</option>
-                        <option value="onGoing">On Going</option>
-                        <option value="completed">Completed</option>
-                        <option value="delayed">Delayed</option>
-                        <option value="cancelled">Cancelled</option>
+                        <option value="allStatus" <?= $searchFilter === 'allStatus' ? 'selected' : '' ?>>All Statuses</option>
+                        <option value="pending" <?= $searchFilter === 'pending' ? 'selected' : '' ?>>Pending</option>
+                        <option value="onGoing" <?= $searchFilter === 'onGoing' ? 'selected' : '' ?>>On Going</option>
+                        <option value="completed" <?= $searchFilter === 'completed' ? 'selected' : '' ?>>Completed</option>
+                        <option value="delayed" <?= $searchFilter === 'delayed' ? 'selected' : '' ?>>Delayed</option>
+                        <option value="cancelled" <?= $searchFilter === 'cancelled' ? 'selected' : '' ?>>Cancelled</option>
                     </optgroup>
 
                     <!-- Filter By Priority -->
                     <optgroup class="filter-group" label="Filter by Priority">
-                        <option value="allPriority">All Priorities</option>
-                        <option value="high">High Priority</option>
-                        <option value="medium">Medium Priority</option>
-                        <option value="low">Low Priority</option>
+                        <option value="allPriority" <?= $searchFilter === 'allPriority' ? 'selected' : '' ?>>All Priorities</option>
+                        <option value="high" <?= $searchFilter === 'high' ? 'selected' : '' ?>>High Priority</option>
+                        <option value="medium" <?= $searchFilter === 'medium' ? 'selected' : '' ?>>Medium Priority</option>
+                        <option value="low" <?= $searchFilter === 'low' ? 'selected' : '' ?>>Low Priority</option>
                     </optgroup>
 
                 </select>
@@ -95,6 +98,7 @@ if (!isset($tasks))
 
     <script type="module" src="<?= EVENT_PATH . 'break-text-fallback.js' ?>" defer></script>
 
+    <script type="module" src="<?= EVENT_PATH . 'task' . DS . 'search.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'task' . DS . 'infinite-scroll.js' ?>" defer></script>
 
 </body>
