@@ -91,7 +91,7 @@ $projectData = [
 
                     <?php
                     if ($projectData['status'] === WorkStatus::COMPLETED):
-                        $actualCompletionDate = htmlspecialchars(formatDateTime($project->getActualCompletionDateTime()));
+                        $actualCompletionDate = htmlspecialchars(dateToWords($project->getActualCompletionDateTime()));
                         ?>
                         <div class="first-col text-w-icon">
                             <img src="<?= ICON_PATH . 'complete_w.svg' ?>" alt="Completed At" title="Completed At"
@@ -148,7 +148,8 @@ $projectData = [
                         <h3>Task Statistics</h3>
                     </div>
                     <!-- TODO: Add redirect link -->
-                    <a href="<?= REDIRECT_PATH . 'project' . DS . $projectData['id'] . DS . 'task' ?>" class="blue-text">See All</a>
+                    <a href="<?= REDIRECT_PATH . 'project' . DS . $projectData['id'] . DS . 'task' ?>"
+                        class="blue-text">See All</a>
                 </div>
 
                 <!-- Task Statistics Chart -->
@@ -260,10 +261,14 @@ $projectData = [
 
             <!-- Worker List -->
             <div class="worker-list">
-                <?php foreach ($projectData['workers'] as $worker) {
-                    // Worker List Card
-                    echo workerListCard($worker);
-                } ?>
+                <section class="list">
+                    <?php foreach ($projectData['workers'] as $worker) {
+                        // Worker List Card
+                        echo workerListCard($worker);
+                    } ?>
+                </section>
+
+                <div class="sentinel"></div>
 
                 <!-- No Workers Wall -->
                 <div

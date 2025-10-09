@@ -49,6 +49,7 @@
         <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'task-chart.js' ?>"></script>
         <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'create-worker-card.js' ?>"></script>
         <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'terminate-worker.js' ?>"></script>
+        <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'infinite-scroll-workers.js' ?>"></script>
         <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'cancel.js' ?>"></script>
 
         <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'project' . DS . 'open.js' ?>"></script>
