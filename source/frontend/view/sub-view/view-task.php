@@ -15,12 +15,8 @@ $taskData = [
     'name' => htmlspecialchars($task->getName()),
     'description' => htmlspecialchars($task->getDescription()),
     'workers' => $task->getWorkers(),
-    'startDateTime' => htmlspecialchars(
-        formatDateTime($task->getStartDateTime(), 'Y-m-d')
-    ),
-    'completionDateTime' => htmlspecialchars(
-        formatDateTime($task->getCompletionDateTime(), 'Y-m-d')
-    ),
+    'startDateTime' => $task->getStartDateTime(),
+    'completionDateTime' => $task->getCompletionDateTime(),
     'status' => $task->getStatus(),
     'priority' => $task->getPriority(),
 ];
@@ -86,7 +82,7 @@ $taskData = [
                     <img src="<?= ICON_PATH . 'start_w.svg' ?>" alt="Task Start Date" title="Task Start Date"
                         height="16">
 
-                    <p>Start Date: <?= $taskData['startDateTime'] ?></p>
+                    <p>Start Date: <?= htmlspecialchars(dateToWords($taskData['startDateTime'])) ?></p>
                 </div>
 
                 <!-- Task Completion Date -->
@@ -94,7 +90,7 @@ $taskData = [
                     <img src="<?= ICON_PATH . 'complete_w.svg' ?>" alt="Task Completion Date"
                         title="Task Completion Date" height="16">
 
-                    <p>Completion Date: <?= $taskData['completionDateTime'] ?></p>
+                    <p>Completion Date: <?= htmlspecialchars(dateToWords($taskData['completionDateTime'])) ?></p>
                 </div>
 
             </div>
@@ -139,7 +135,9 @@ $taskData = [
                 </h3>
             </div>
 
-            <div class="no-workers-wall no-content-wall <?= count($taskData['workers']) > 0 ? 'no-display' : 'flex-col' ?>">
+            <!-- No Workers Wall -->
+            <div
+                class="no-workers-wall no-content-wall <?= count($taskData['workers']) > 0 ? 'no-display' : 'flex-col' ?>">
                 <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No workers assigned" title="No workers assigned"
                     height="100">
                 <h3>No workers assigned to this task.</h3>
@@ -152,13 +150,15 @@ $taskData = [
                 } ?>
             </section>
 
-            <!-- Add Worker Button -->
-            <button id="add_worker_button" type="button" class="transparent-bg">
-                <div class="text-w-icon">
-                    <img src="<?= ICON_PATH . 'add_w.svg' ?>" alt="Add Worker" title="Add Worker" height="20">
-                    <h3>Add Worker</h3>
-                </div>
-            </button>
+            <?php if (Role::isProjectManager(Me::getInstance())): ?>
+                <!-- Add Worker Button -->
+                <button id="add_worker_button" type="button" class="transparent-bg">
+                    <div class="text-w-icon">
+                        <img src="<?= ICON_PATH . 'add_w.svg' ?>" alt="Add Worker" title="Add Worker" height="20">
+                        <h3>Add Worker</h3>
+                    </div>
+                </button>
+            <?php endif; ?>
 
         </section>
     </main>
@@ -166,9 +166,11 @@ $taskData = [
     <script type="module" src="<?= EVENT_PATH . 'task' . DS . 'create-worker-card.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'task' . DS . 'terminate-worker.js' ?>" defer></script>
 
-    <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'existing' .  DS . 'open.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'existing' .  DS . 'add.js' ?>" defer></script>
-    
+    <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'existing' . DS . 'open.js' ?>"
+        defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'existing' . DS . 'add.js' ?>"
+        defer></script>
+
     <script type="module" src="<?= EVENT_PATH . 'edit-task-modal' . DS . 'open.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'edit-task-modal' . DS . 'cancel.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'edit-task-modal' . DS . 'submit.js' ?>" defer></script>

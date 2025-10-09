@@ -35,6 +35,37 @@ class TaskController implements Controller
         require_once SUB_VIEW_PATH . 'view-task.php';
     }
 
+    public static function getTaskById(array $args = []): void
+    {
+        $projectId = $args['projectId'] ?? null; // Temporary placeholder
+        if ($projectId === null)
+            throw new InvalidArgumentException('Project ID is required to get a task.');
+
+        $taskId = $args['taskId'] ?? null; // Temporary placeholder
+        if ($taskId === null)
+            throw new InvalidArgumentException('Task ID is required to get a task.');
+
+        $tasks = TaskModel::all()->getItems(); // Temporary placeholder
+        Response::success($tasks, 'Task fetched successfully.');
+    }
+
+    public static function getTaskByKey(array $args = []): void
+    {
+        $projectId = $args['projectId'] ?? null; // Temporary placeholder
+        if ($projectId === null)
+            throw new InvalidArgumentException('Project ID is required to get tasks.');
+
+        $offset = isset($_GET['offset']) ? (int) $_GET['offset'] : 0;
+        if ($offset < 0)
+            throw new InvalidArgumentException('Invalid offset value.');
+
+        if ($offset > 20)
+            Response::success([], 'No more tasks to load.');
+        
+        $tasks = TaskModel::all()->getItems(); // Temporary placeholder
+        Response::success($tasks, 'Task fetched successfully.');
+    }
+
     public static function addTask(array $args = []): void
     {
         $projectId = $args['projectId'] ?? null; // Temporary placeholder

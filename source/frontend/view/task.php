@@ -76,7 +76,7 @@ if (!isset($tasks))
             <section class="task-grid grid">
                 <?php if (Role::isProjectManager(Me::getInstance())): ?>
                     <a href="<?= REDIRECT_PATH . "add-task/$projectId" ?>"
-                        class="task-grid-card flex-col flex-child-center-h flex-child-center-v">
+                        class="add-task-button task-grid-card flex-col flex-child-center-h flex-child-center-v">
                         <img src="<?= ICON_PATH . 'add_w.svg' ?>" alt="Add New Task" title="Add New Task" height="90">
                         <h3>Add New Task</h3>
                     </a>

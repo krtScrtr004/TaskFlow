@@ -19,15 +19,41 @@
 
 		"TaskFlow/projects/{projectId:[\\w+_-]+}/workers": [
 			"WorkerController",
-			"getWorkerByKey"
+			"getProjectWorkerByKey"
 		],
 		"TaskFlow/projects/{projectId:[\\w+_-]+}/workers/{workerId:[\\w+_-]+}": [
 			"WorkerController",
-			"getWorkerById"
+			"getProjectWorkerById"
 		],
 		"TaskFlow/projects/{projectId:[\\w+_-]+}/workers?(?:[\\w+\\s_=\\/\\?,%&@-]+)+": [
 			"WorkerController",
-			"getWorkerByKey"
+			"getProjectWorkerByKey"
+		],
+
+		"TaskFlow/projects/{projectId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}/workers": [
+			"WorkerController",
+			"getTaskWorkerByKey"
+		],
+		"TaskFlow/projects/{projectId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}/workers/{workerId:[\\w+_-]+}": [
+			"WorkerController",
+			"getTaskWorkerById"
+		],
+		"TaskFlow/projects/{projectId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}/workers?(?:[\\w+\\s_=\\/\\?,%&@-]+)+": [
+			"WorkerController",
+			"getTaskWorkerByKey"
+		],
+
+		"TaskFlow/projects/{projectId:[\\w+_-]+}/tasks": [
+			"TaskController",
+			"getTaskByKey"
+		],
+		"TaskFlow/projects/{projectId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}": [
+			"TaskController",
+			"getTaskById"
+		],
+		"TaskFlow/projects/{projectId:[\\w+_-]+}/tasks?(?:[\\w+\\s_=\\/\\?,%&@-]+)+": [
+			"TaskController",
+			"getTaskByKey"
 		]
 	},
 

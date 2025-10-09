@@ -15,7 +15,7 @@ class WorkerController implements Controller
     }
 
     // Used to fetch single worker info by ID (eg. /get-worker-info/1)
-    public static function getWorkerById($args = []): void
+    public static function getProjectWorkerById($args = []): void
     {
         if (!isset($args['workerId'])) {
             Response::error('Worker ID is required');
@@ -32,14 +32,66 @@ class WorkerController implements Controller
     }
 
     // Used to fetch multiple workers by IDs or name filter (eg. /get-worker-info?ids=1,2,3 or /get-worker-info?name=John)
-    public static function getWorkerByKey(): void
+    public static function getProjectWorkerByKey(): void
     {
         $workers = UserModel::all();
 
         $workerIds = isset($_GET['ids']) ? explode(',', $_GET['ids']) : [];
         $name = $_GET['name'] ?? null;
 
+        $offset = (int) $_GET['offset'] ?: 0;
+        if ($offset < 20)
+            Response::success([], 'No more workers to load');
+
         $return = [];
+        // If both ID and name filters are empty, return all workers
+        if (empty($workerIds) && empty($name)) {
+            foreach ($workers as $worker) {
+                $return[] = self::createResponseArrayData($worker->toWorker());
+            }
+        } else {
+            // TODO: Fetch workers by IDs and/or name from the database
+            foreach ($workers as $worker) {
+                $return[] = self::createResponseArrayData($worker->toWorker());
+            }
+        }
+
+        Response::success($return, 'Worker info retrieved successfully');
+    }
+
+    public static function getTaskWorkerById($args = []): void
+    {
+        if (!isset($args['workerId'])) {
+            Response::error('Worker ID is required');
+        }
+
+        $offset = (int) $_GET['offset'] ?: 0;
+        if ($offset < 20)
+            Response::success([], 'No more workers to load');
+
+        $workerId = $args['workerId'];
+        $worker = UserModel::all()[0];
+        Response::success(
+            [
+                self::createResponseArrayData($worker->toWorker())
+            ],
+            'Worker info retrieved successfully'
+        );
+    }
+
+    // Used to fetch multiple workers by IDs or name filter (eg. /get-worker-info?ids=1,2,3 or /get-worker-info?name=John)
+    public static function getTaskWorkerByKey(): void
+    {
+        $workers = UserModel::all();
+
+        $workerIds = isset($_GET['ids']) ? explode(',', $_GET['ids']) : [];
+        $name = $_GET['name'] ?? null;
+
+        $offset = (int) $_GET['offset'] ?: 0;
+        if ($offset < 20)
+
+
+            $return = [];
         // If both ID and name filters are empty, return all workers
         if (empty($workerIds) && empty($name)) {
             foreach ($workers as $worker) {
