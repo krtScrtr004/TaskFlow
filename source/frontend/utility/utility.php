@@ -47,6 +47,16 @@ function numberToWords(int $number): ?string
     return null;
 }
 
+function dateToWords(DateTime $date): string {
+    $day = (int)$date->format('j');
+    $month = $date->format('F');
+    $year = (int)$date->format('Y');
+
+    // Convert day to words if needed
+
+    return $day . ' ' . $month . ' ' . $year;
+}
+
 function maskString(string $string, int $offset, int $limit): string
 {
     $return = str_split($string);

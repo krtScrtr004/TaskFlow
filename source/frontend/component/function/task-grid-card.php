@@ -5,11 +5,11 @@ function taskGridCard($task, $projectId): string
     $id = htmlspecialchars($task->getPublicId());
     $name = htmlspecialchars($task->getName());
     $description = htmlspecialchars($task->getDescription());
-    $startDateTime = htmlspecialchars(formatDateTime($task->getStartDateTime(), 'Y-m-d'));
-    $completionDateTime = htmlspecialchars(formatDateTime($task->getCompletionDateTime(), 'Y-m-d'));
+    $startDateTime = htmlspecialchars(dateToWords($task->getStartDateTime(), 'Y-m-d'));
+    $completionDateTime = htmlspecialchars(dateToWords($task->getCompletionDateTime(), 'Y-m-d'));
     $status = $task->getStatus();
     $priority = $task->getPriority();
-    
+
     $redirect = REDIRECT_PATH . 'project' . DS . $projectId . DS . 'task' . DS . $id;
 
     ob_start();

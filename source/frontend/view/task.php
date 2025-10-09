@@ -71,7 +71,7 @@ if (!isset($tasks))
 
 
         <!-- Task Grid -->
-        <section class="task-grid-container">
+        <section class="task-grid-container" data-projectid="<?= $projectId ?>">
 
             <section class="task-grid grid">
                 <?php if (Role::isProjectManager(Me::getInstance())): ?>
@@ -87,10 +87,16 @@ if (!isset($tasks))
                 } ?>
             </section>
 
+            <!-- Sentinel -->
+            <div class="sentinel"></div>
+
         </section>
     </main>
 
     <script type="module" src="<?= EVENT_PATH . 'break-text-fallback.js' ?>" defer></script>
+
+    <script type="module" src="<?= EVENT_PATH . 'task' . DS . 'infinite-scroll.js' ?>" defer></script>
+
 </body>
 
 </html>

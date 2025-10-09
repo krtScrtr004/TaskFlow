@@ -2,20 +2,8 @@
 if (!$task)
     throw new InvalidArgumentException('Task data is required to render the edit task modal.');
 
-$taskData = [
-    'id' => htmlspecialchars($task->getPublicId()),
-    'name' => htmlspecialchars($task->getName()),
-    'description' => htmlspecialchars($task->getDescription()),
-    'workers' => $task->getWorkers(),
-    'startDateTime' => htmlspecialchars(
-        formatDateTime($task->getStartDateTime(), 'Y-m-d')
-    ),
-    'completionDateTime' => htmlspecialchars(
-        formatDateTime($task->getCompletionDateTime(), 'Y-m-d')
-    ),
-    'status' => $task->getStatus(),
-    'priority' => $task->getPriority(),
-]
+if (!$taskData)
+    throw new InvalidArgumentException('Task data array is required to render the edit task modal.');
 ?>
 
 <section id="edit_task_modal_template" class="modal-wrapper no-display" data-taskid="<?= $taskData['id'] ?> ">
@@ -79,7 +67,7 @@ $taskData = [
                         </div>
                     </label>
                     <input type="date" name="task_start_datetime" id="task_start_datetime"
-                        value="<?= $taskData['startDateTime'] ?>" required>
+                        value="<?= htmlspecialchars(formatDateTime($taskData['startDateTime'], 'Y-m-d')) ?>" required>
                 </div>
 
                 <!-- Completion Date -->
@@ -93,7 +81,7 @@ $taskData = [
                         </div>
                     </label>
                     <input type="date" name="task_completion_datetime" id="task_completion_datetime"
-                        value="<?= $taskData['completionDateTime'] ?>" required>
+                        value="<?= htmlspecialchars(formatDateTime($taskData['completionDateTime'], 'Y-m-d')) ?>" required>
                 </div>
             </div>
 
