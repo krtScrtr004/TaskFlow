@@ -106,8 +106,8 @@ if (!$taskData)
             <!-- Add New Task Button -->
             <button id="edit_task_button" type="button" class="blue-bg">
                 <div class="text-w-icon">
-                    <img src="<?= ICON_PATH . 'add_w.svg' ?>" alt="Add New Task" title="Add New Task" height="20">
-                    <h3 class="white-text">Add New Task</h3>
+                    <img src="<?= ICON_PATH . 'edit_w.svg' ?>" alt="Edit Task" title="Edit Task" height="20">
+                    <h3 class="white-text">Edit Task</h3>
                 </div>
             </button>
         </form>
