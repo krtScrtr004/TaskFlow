@@ -37,8 +37,9 @@ $searchFilter = isset($_GET['filter']) ? htmlspecialchars($_GET['filter']) : 'al
         <section>
             <form class="search-bar" action="" method="POST">
                 <div>
-                    <input type="text" name="search_task_input" id="search_task_input" placeholder="Search by Name or ID" min="1"
-                        max="255" value="<?= $searchKey ?>" autocomplete="on" required>
+                    <input type="text" name="search_task_input" id="search_task_input"
+                        placeholder="Search by Name or ID" min="1" max="255" value="<?= $searchKey ?>" autocomplete="on"
+                        required>
                     <button id="search_task_button" type="button" class="transparent-bg">
                         <img src="<?= ICON_PATH . 'search_w.svg' ?>" alt="Search Task" title="Search Task" height="20">
                     </button>
@@ -51,7 +52,8 @@ $searchFilter = isset($_GET['filter']) ? htmlspecialchars($_GET['filter']) : 'al
 
                     <!-- Filter By Status -->
                     <optgroup class="filter-group" label="Filter by Status">
-                        <option value="allStatus" <?= $searchFilter === 'allStatus' ? 'selected' : '' ?>>All Statuses</option>
+                        <option value="allStatus" <?= $searchFilter === 'allStatus' ? 'selected' : '' ?>>All Statuses
+                        </option>
                         <option value="pending" <?= $searchFilter === 'pending' ? 'selected' : '' ?>>Pending</option>
                         <option value="onGoing" <?= $searchFilter === 'onGoing' ? 'selected' : '' ?>>On Going</option>
                         <option value="completed" <?= $searchFilter === 'completed' ? 'selected' : '' ?>>Completed</option>
@@ -61,7 +63,8 @@ $searchFilter = isset($_GET['filter']) ? htmlspecialchars($_GET['filter']) : 'al
 
                     <!-- Filter By Priority -->
                     <optgroup class="filter-group" label="Filter by Priority">
-                        <option value="allPriority" <?= $searchFilter === 'allPriority' ? 'selected' : '' ?>>All Priorities</option>
+                        <option value="allPriority" <?= $searchFilter === 'allPriority' ? 'selected' : '' ?>>All Priorities
+                        </option>
                         <option value="high" <?= $searchFilter === 'high' ? 'selected' : '' ?>>High Priority</option>
                         <option value="medium" <?= $searchFilter === 'medium' ? 'selected' : '' ?>>Medium Priority</option>
                         <option value="low" <?= $searchFilter === 'low' ? 'selected' : '' ?>>Low Priority</option>
@@ -71,7 +74,6 @@ $searchFilter = isset($_GET['filter']) ? htmlspecialchars($_GET['filter']) : 'al
 
             </form>
         </section>
-
 
         <!-- Task Grid -->
         <section class="task-grid-container" data-projectid="<?= $projectId ?>">

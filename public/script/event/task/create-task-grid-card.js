@@ -136,7 +136,8 @@ export function createTaskGridCard(task) {
 
     taskCard.appendChild(link)
 
-    taskGridContainer.appendChild(taskCard)
+    const taskGrid = taskGridContainer.querySelector('.task-grid')
+    taskGrid.appendChild(taskCard)
 }
 
 /**

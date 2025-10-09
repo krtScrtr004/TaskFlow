@@ -5,8 +5,8 @@ function taskGridCard($task, $projectId): string
     $id = htmlspecialchars($task->getPublicId());
     $name = htmlspecialchars($task->getName());
     $description = htmlspecialchars($task->getDescription());
-    $startDateTime = htmlspecialchars(dateToWords($task->getStartDateTime(), 'Y-m-d'));
-    $completionDateTime = htmlspecialchars(dateToWords($task->getCompletionDateTime(), 'Y-m-d'));
+    $startDateTime = htmlspecialchars(dateToWords($task->getStartDateTime()));
+    $completionDateTime = htmlspecialchars(dateToWords($task->getCompletionDateTime()));
     $status = $task->getStatus();
     $priority = $task->getPriority();
 

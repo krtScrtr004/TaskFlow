@@ -31,7 +31,7 @@
             <div class="list flex-col">
                 <!-- Worker Items go here -->
             </div>
-            
+
             <div class="sentinel"></div>
         </section>
 

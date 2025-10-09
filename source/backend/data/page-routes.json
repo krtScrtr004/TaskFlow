@@ -13,7 +13,7 @@
 		"TaskFlow/project": "ProjectController",
 
 		"TaskFlow/project/{projectId:[\\w+_-]+}/task": "TaskController",
-		"TaskFlow/project/{projectId:[\\w+_-]+}/task?(?:[\\w+\\s_=\\/\\?,%&@-]+)+": "TaskController",
+		"TaskFlow/project/{projectId:[\\w+_-]+}/task(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)+": "TaskController",
 		"TaskFlow/project/{projectId:[\\w+_-]+}/task/{taskId:[\\w+_-]+}": [
 			"TaskController",
 			"viewTask"
