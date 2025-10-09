@@ -19,7 +19,7 @@ export function createTaskGridCard(task) {
     // Create link wrapper
     const link = document.createElement('a')
     link.className = 'flex-col full-body-content'
-    link.href = `project/${projectId}/task/${task.id}`
+    link.href = `/TaskFlow/project/${projectId}/task/${task.id}`
 
     // Create task header section
     const headerSection = document.createElement('section')

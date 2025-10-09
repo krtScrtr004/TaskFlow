@@ -1,57 +1,43 @@
 {
 	"GET": {
-		"TaskFlow/users": ["UserController", "getUserByKey"],
 		"TaskFlow/users/{userId:[\\w+_-]+}": ["UserController", "getUserById"],
-		"TaskFlow/users?(?:[\\w+\\s_=\\/\\?,%&@-]+)+": [
+		"TaskFlow/users(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": [
 			"UserController",
 			"getUserByKey"
 		],
 
-		"TaskFlow/workers": ["WorkerController", "getWorkerByKey"],
 		"TaskFlow/workers/{workerId:[\\w+_-]+}": [
 			"WorkerController",
 			"getWorkerById"
 		],
-		"TaskFlow/workers?(?:[\\w+\\s_=\\/\\?,%&@-]+)+": [
+		"TaskFlow/workers(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": [
 			"WorkerController",
 			"getWorkerByKey"
 		],
 
-		"TaskFlow/projects/{projectId:[\\w+_-]+}/workers": [
-			"WorkerController",
-			"getProjectWorkerByKey"
-		],
 		"TaskFlow/projects/{projectId:[\\w+_-]+}/workers/{workerId:[\\w+_-]+}": [
 			"WorkerController",
 			"getProjectWorkerById"
 		],
-		"TaskFlow/projects/{projectId:[\\w+_-]+}/workers?(?:[\\w+\\s_=\\/\\?,%&@-]+)+": [
+		"TaskFlow/projects/{projectId:[\\w+_-]+}/workers(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": [
 			"WorkerController",
 			"getProjectWorkerByKey"
 		],
 
-		"TaskFlow/projects/{projectId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}/workers": [
-			"WorkerController",
-			"getTaskWorkerByKey"
-		],
 		"TaskFlow/projects/{projectId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}/workers/{workerId:[\\w+_-]+}": [
 			"WorkerController",
 			"getTaskWorkerById"
 		],
-		"TaskFlow/projects/{projectId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}/workers?(?:[\\w+\\s_=\\/\\?,%&@-]+)+": [
+		"TaskFlow/projects/{projectId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}/workers(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": [
 			"WorkerController",
 			"getTaskWorkerByKey"
 		],
 
-		"TaskFlow/projects/{projectId:[\\w+_-]+}/tasks": [
-			"TaskController",
-			"getTaskByKey"
-		],
 		"TaskFlow/projects/{projectId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}": [
 			"TaskController",
 			"getTaskById"
 		],
-		"TaskFlow/projects/{projectId:[\\w+_-]+}/tasks?(?:[\\w+\\s_=\\/\\?,%&@-]+)+": [
+		"TaskFlow/projects/{projectId:[\\w+_-]+}/tasks(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": [
 			"TaskController",
 			"getTaskByKey"
 		]

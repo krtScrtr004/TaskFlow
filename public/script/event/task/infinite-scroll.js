@@ -50,7 +50,7 @@ async function asyncFunction(offset) {
         if (!projectId || projectId.trim() === '')
             throw new Error('Project ID not found.')
 
-        const response = await Http.GET(`projects/${projectId}/tasks/?offset=${offset}`)
+        const response = await Http.GET(`projects/${projectId}/tasks?offset=${offset}`)
         if (!response?.data)
             throw new Error('No response from server.')
 
