@@ -11,30 +11,29 @@ export function infiniteScroll(
     domCreator,
     existingItemsCount = 0
 ) {
-    if (!container) 
+    if (!container)
         throw new Error('Container element not found.')
 
-    if (!sentinel) 
+    if (!sentinel)
         throw new Error('Sentinel element not found.')
 
-    if (typeof asyncFunction !== 'function') 
+    if (typeof asyncFunction !== 'function')
         throw new Error('asyncFunction must be a function.')
 
-    if (typeof domCreator !== 'function') 
+    if (typeof domCreator !== 'function')
         throw new Error('domCreator must be a function.')
 
     if (isNaN(existingItemsCount) || existingItemsCount < 0)
         throw new Error('existingItemsCount must be a non-negative number.')
-    else
         offset = existingItemsCount
 
-    const observer = createObserver(container, asyncFunction, domCreator, existingItemsCount)
-    if (!observer) 
+    const observer = createObserver(container, asyncFunction, domCreator, offset)
+    if (!observer)
         throw new Error('Failed to create IntersectionObserver.')
     observer.observe(sentinel)
 }
 
-function createObserver(container, asyncFunction, domCreator, existingItemsCount) {
+function createObserver(container, asyncFunction, domCreator, offset) {
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(async (entry) => {
             if (entry.isIntersecting && !isLoading) {
@@ -48,11 +47,10 @@ function createObserver(container, asyncFunction, domCreator, existingItemsCount
                     }
 
                     offset += response.length
-                    response.forEach(item => container.appendChild(domCreator(item)))
+                    response.forEach(item => domCreator(item))
 
                     isLoading = true
                     Loader.trail(container)
-
                 } catch (error) {
                     console.error('Error during infinite scroll fetch:', error)
                     throw error

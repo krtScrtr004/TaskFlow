@@ -17,7 +17,6 @@ if (!taskGridContainer)
 if (!sentinel)
     console.warn('Sentinel element not found.')
 
-
 try {
     infiniteScroll(
         taskGrid,

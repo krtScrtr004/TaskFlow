@@ -136,7 +136,7 @@ export function createTaskGridCard(task) {
 
     taskCard.appendChild(link)
 
-    return taskCard
+    taskGridContainer.appendChild(taskCard)
 }
 
 /**

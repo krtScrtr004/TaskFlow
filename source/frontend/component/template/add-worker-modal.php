@@ -28,6 +28,11 @@
 
         <!-- Worker List -->
         <section class="worker-list flex-col">
+            <div class="list flex-col">
+                <!-- Worker Items go here -->
+            </div>
+            
+            <div class="sentinel"></div>
         </section>
 
         <!-- No Workers Wall -->
