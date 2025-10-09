@@ -212,7 +212,7 @@ async function fetchFromDatabase(projectId, key = null, isLoading = false, offse
             throw new Error('Project ID is required.')
 
         const param = (key) ? key : ''
-        const response = await Http.GET(`projects/${projectId}/workers/${param}&offset=${offset}`)
+        const response = await Http.GET(`projects/${projectId}/workers?key=${param}&offset=${offset}`)
         if (!response)
             throw new Error('Workers data not found!')
 
@@ -409,7 +409,8 @@ async function addWorkerButtonEvent(e, projectId, confirmAddWorkerButton, asyncF
         const cancelButton = addWorkerModalTemplate.querySelector('#cancel_add_worker_button')
         cancelButton?.click()
 
-        onSuccess()
+        if (onSuccess.length > 0) onSuccess(result)
+        else onSuccess()
     } catch (error) {
         console.error(error)
         Dialog.errorOccurred('An error occurred while adding workers. Please try again.')

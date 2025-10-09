@@ -16,7 +16,10 @@ try {
     await addWorker(
         thisProjectId,
         async (projectId, workersId) => sendToBackend(projectId, workersId),
-        (workersData) => action(workersData)
+        (workersData) => action(workersData),
+        () => {
+            Dialog.operationSuccess('Workers Added.', 'The selected workers have been added to the task.')
+        }
     )
 
     const taskWorkerList = addTaskForm.querySelector('.task-worker > .list')

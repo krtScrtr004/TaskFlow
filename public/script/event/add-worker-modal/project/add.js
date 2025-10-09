@@ -21,7 +21,7 @@ await addWorker(
         setTimeout(() => {
             window.location.reload()
         }, delay)
-        Notification.success('Workers added successfully.', delay)
+        Notification.success('Workers added to project successfully.', delay)
     }
 )
 

@@ -51,7 +51,7 @@ async function submitForm(e) {
 
     Loader.patch(submitProjectButton.querySelector('.text-w-icon'))
     try {
-        await sendToBackend({
+        const response = await sendToBackend({
             project: {
                 name: nameInput.value.trim(),
                 description: descriptionInput.value.trim(),
@@ -62,6 +62,8 @@ async function submitForm(e) {
         })
 
         Dialog.operationSuccess('Project Created.', 'The project has been successfully created.')
+        if (response)
+            setTimeout(() => window.location.href = `/TaskFlow/project/${response.id}`, 1500)
     } catch (error) {
         console.error('Error occurred while submitting form:', error)
         Dialog.somethingWentWrong()
@@ -108,7 +110,7 @@ async function sendToBackend(data) {
         if (!response) {
             throw new Error('No response from server.')
         }
-        return response
+        return response.data
     } catch (error) {
         console.error('Error sending data to server:', error)
         throw error

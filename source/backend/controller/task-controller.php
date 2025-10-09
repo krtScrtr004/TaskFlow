@@ -96,7 +96,7 @@ class TaskController implements Controller
         // projectId
 
         Response::success([
-            'redirectUrl' => REDIRECT_PATH . "project/$projectId/task"
+            'id' => uniqid()
         ], 'Task added successfully.');
     }
 

@@ -53,10 +53,11 @@ async function submitForm(e) {
         if (!projectId) {
             throw new Error('Project ID not found in form dataset.')
         }
-        await sendToBackend(params, projectId)
+        const response = await sendToBackend(params, projectId)
         Dialog.operationSuccess('Task Added.', 'The task has been added to the project.')
 
-        // TODO:
+        if (response)
+            setTimeout(() => window.location.href = `/TaskFlow/project/${projectId}/task/${response.id}`, 1500)
     } catch (error) {
         console.error('Error submitting form:', error)
         Dialog.somethingWentWrong()
@@ -110,6 +111,8 @@ async function sendToBackend(inputs = {}, projectId) {
         })
         if (!response)
             throw new Error('No response from server.')
+
+        return response.data
     } catch (error) {
         throw error
     } finally {

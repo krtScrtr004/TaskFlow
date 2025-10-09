@@ -41,7 +41,7 @@ class ProjectController implements Controller
 
         // TODO: Validate and sanitize $data
 
-        Response::success([], 'Project created successfully.', 201);
+        Response::success(['id' => uniqid()], 'Project created successfully.', 201);
     }
 
     public static function editProject(array $args = []): void
@@ -70,6 +70,6 @@ class ProjectController implements Controller
         $phasesToAdd = $data['phasesToAdd'] ?? [];
         // TODO: Use PhaseController to add phases and get their IDs
 
-        Response::success([], 'Project edited successfully.');
+        Response::success(['id' => $projectId], 'Project edited successfully.');
     }
 }

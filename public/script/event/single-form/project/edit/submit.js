@@ -59,7 +59,7 @@ async function submitForm(e) {
 
     Loader.patch(saveProjectInfoButton.querySelector('.text-w-icon'))
     try {
-        await sendToBackend(projectId, {
+        const response = await sendToBackend(projectId, {
             project: {
                 description: descriptionInput.value.trim(),
                 budget: parseFloat(budgetInput.value),
@@ -73,6 +73,8 @@ async function submitForm(e) {
         })
 
         Dialog.operationSuccess('Project Edited.', 'The project has been successfully edited.')
+        if (response)
+            setTimeout(() => window.location.href = `/TaskFlow/project/${response.id}`, 1500)
     } catch (error) {
         console.error('Error occurred while submitting form:', error)
         Dialog.somethingWentWrong()
@@ -125,7 +127,7 @@ async function sendToBackend(projectId, data) {
         if (!response)
             throw new Error('No response from server.')
 
-        return response
+        return response.data
     } catch (error) {
         throw error
     } finally {
