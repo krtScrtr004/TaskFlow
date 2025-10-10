@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="<?= STYLE_PATH . 'root.css' ?>">
     <link rel="stylesheet" href="<?= STYLE_PATH . 'utility.css' ?>">
     <link rel="stylesheet" href="<?= STYLE_PATH . 'component.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'loader.css' ?>">
     <link rel="stylesheet" href="<?= STYLE_PATH . 'index.css' ?>">
 
 </head>

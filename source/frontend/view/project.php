@@ -23,7 +23,7 @@
 
     <main class="main-page">
         <?php 
-        if (!$project) {
+        if (!isset($project)) {
             $createProject = '';
 
             if (Role::isProjectManager(Me::getInstance())) {

@@ -49,10 +49,8 @@ async function submit(e) {
             throw new Error('No response from server.')
 
         const projectId = response.projectId
-        if (!projectId || projectId.trim() === '')
-            throw new Error('Project ID not found in response.')
-
-        window.location.href = `/TaskFlow/project/${projectId}`
+        const redirect = (projectId && projectId.trim() !== '') ? `/${projectId}` : ``
+        window.location.href = `/TaskFlow/project${redirect}`
     } catch (error) {
         console.error('Error during login:', error)
         if (error?.status === 401) {
