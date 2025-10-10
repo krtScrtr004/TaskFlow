@@ -13,7 +13,7 @@
             </div>
         </a>
         <!-- History -->
-        <a class="" href="">
+        <a class="" href="<?= REDIRECT_PATH . 'history' ?>">
             <div class="text-w-icon">
                 <img
                     src="<?= ICON_PATH . 'history_w.svg' ?>"

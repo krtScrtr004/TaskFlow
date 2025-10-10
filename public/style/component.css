@@ -1,4 +1,6 @@
 main.main-page {
+	display: flex;
+	flex-direction: column;
 	padding: var(--space);
 }
 

@@ -227,10 +227,42 @@
 	text-overflow: ellipsis;
 }
 
-.multi-line-ellipsis {
+.multi-line-ellipsis-3 {
 	display: -webkit-box;
 	-webkit-line-clamp: 3; /* Number of lines */
 	line-clamp: 3; /* Standard property for compatibility */
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.multi-line-ellipsis-4 {
+	display: -webkit-box;
+	-webkit-line-clamp: 4; /* Number of lines */
+	line-clamp: 4; /* Standard property for compatibility */
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.multi-line-ellipsis-5 {
+	display: -webkit-box;
+	-webkit-line-clamp: 5; /* Number of lines */
+	line-clamp: 5; /* Standard property for compatibility */
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.multi-line-ellipsis-6 {
+	display: -webkit-box;
+	-webkit-line-clamp: 6; /* Default to 6 lines */
+	line-clamp: 6; /* Standard property for compatibility */
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.multi-line-ellipsis-7 {
+	display: -webkit-box;
+	-webkit-line-clamp: 7; /* Default to 7 lines */
+	line-clamp: 7; /* Standard property for compatibility */
 	-webkit-box-orient: vertical;
 	overflow: hidden;
 }
