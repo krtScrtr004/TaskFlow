@@ -77,6 +77,6 @@ function submitForm(e, params) {
         // Reset form fields
         addPhaseForm.reset()
     } catch (error) {
-        throw new Error(error)
+        throw error
     }
 }

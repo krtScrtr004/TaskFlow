@@ -45,12 +45,11 @@ async function asyncFunction(offset) {
             throw new Error('Invalid offset value.')
 
         const response = await Http.GET(`projects?offset=${offset}`)
-        if (!response?.data)
+        if (!response)
             throw new Error('No response from server.')
 
         return response.data
     } catch (error) {
-        console.error('Error during infinite scroll fetch:', error)
         throw error
     } finally {
         isLoading = false
@@ -65,7 +64,7 @@ async function asyncFunction(offset) {
 function domCreator(project) {
     const ICON_PATH = 'asset/image/icon/'
     const REDIRECT_PATH = ''
-    
+
     const id = project.id
     const name = project.name
     const description = project.description || 'No description provided'
@@ -121,7 +120,7 @@ function domCreator(project) {
     // Create status section
     const statusDiv = document.createElement('div')
     statusDiv.className = 'project-status flex-col flex-child-end-v'
-    
+
     const statusBadge = createStatusBadge(status)
     statusDiv.appendChild(statusBadge)
 
@@ -129,10 +128,10 @@ function domCreator(project) {
     link.appendChild(primaryInfoSection)
     link.appendChild(descriptionP)
     link.appendChild(statusDiv)
-    
+
     card.appendChild(link)
 
-   projectGrid.appendChild(card)
+    projectGrid.appendChild(card)
 }
 
 /**
@@ -143,10 +142,10 @@ function domCreator(project) {
 function createStatusBadge(status) {
     const badge = document.createElement('div')
     badge.className = 'status-badge badge center-child'
-    
+
     const statusText = document.createElement('p')
     statusText.className = 'center-text'
-    
+
     switch (status.toLowerCase()) {
         case 'pending':
             badge.classList.add('yellow-bg')
@@ -179,7 +178,7 @@ function createStatusBadge(status) {
             statusText.classList.add('black-text')
             statusText.textContent = 'Pending'
     }
-    
+
     badge.appendChild(statusText)
     return badge
 }

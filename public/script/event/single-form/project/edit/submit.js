@@ -71,13 +71,19 @@ async function submitForm(e) {
                 toCancel: toAdd
             }
         })
+        if (!response)
+            throw new Error('No response from server.')
 
         Dialog.operationSuccess('Project Edited.', 'The project has been successfully edited.')
-        if (response)
-            setTimeout(() => window.location.href = `/TaskFlow/project/${response.id}`, 1500)
+        setTimeout(() => window.location.href = `/TaskFlow/project/${response.id}`, 1500)
     } catch (error) {
         console.error('Error occurred while submitting form:', error)
-        Dialog.somethingWentWrong()
+        if (error?.status === 401 || error?.status === 403) {
+            const message = error.errorData.message || 'You do not have permission to perform this action.'
+            Dialog.errorOccurred(message)
+        } else {
+            Dialog.somethingWentWrong()
+        }
     } finally {
         Loader.delete()
         isLoading = false

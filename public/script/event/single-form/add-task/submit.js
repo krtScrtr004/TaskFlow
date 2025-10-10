@@ -54,13 +54,20 @@ async function submitForm(e) {
             throw new Error('Project ID not found in form dataset.')
         }
         const response = await sendToBackend(params, projectId)
+        if (!response) 
+            throw new Error('No response from server.')
         Dialog.operationSuccess('Task Added.', 'The task has been added to the project.')
 
         if (response)
             setTimeout(() => window.location.href = `/TaskFlow/project/${projectId}/task/${response.id}`, 1500)
     } catch (error) {
         console.error('Error submitting form:', error)
-        Dialog.somethingWentWrong()
+        if (error?.status === 401 || error?.status === 403) {
+            const message = error.errorData.message || 'You do not have permission to perform this action.'
+            Dialog.errorOccurred(message)
+        } else {
+            Dialog.somethingWentWrong()
+        }
         return
     } finally {
         Loader.delete()
@@ -110,7 +117,7 @@ async function sendToBackend(inputs = {}, projectId) {
             assignedWorkers: Object.keys(assignedWorkers).map(key => assignedWorkers[key])
         })
         if (!response)
-            throw new Error('No response from server.')
+            throw error
 
         return response.data
     } catch (error) {

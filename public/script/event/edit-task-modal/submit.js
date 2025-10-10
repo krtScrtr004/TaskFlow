@@ -76,7 +76,12 @@ async function submitForm(e) {
         }, 3000)
     } catch (error) {
         console.error('Error submitting form:', error)
-        Dialog.errorOccurred('Error editing task. Please try again.')
+        if (error?.status === 401 || error?.status === 403) {
+            const message = error.errorData.message || 'You do not have permission to perform this action.'
+            Dialog.errorOccurred(message)
+        } else {
+            Dialog.errorOccurred('Error editing task. Please try again.')
+        }
     } finally {
         Loader.delete()
         isLoading = false
@@ -112,7 +117,7 @@ async function sendToBackend(projectId, taskId, inputs) {
 
         const response = await Http.PUT(`projects/${projectId}/tasks/${taskId}`, inputs)
         if (!response)
-            throw new Error('No response from server.')
+            throw error
         return response
     } catch (error) {
         throw error

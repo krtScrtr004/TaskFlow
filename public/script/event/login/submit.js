@@ -46,7 +46,7 @@ async function submit(e) {
     try {
         const response = await sendToBackend(email, password)
         if (!response) 
-            throw error
+            throw new Error('No response from server.')
 
         const projectId = response.projectId
         if (!projectId || projectId.trim() === '')

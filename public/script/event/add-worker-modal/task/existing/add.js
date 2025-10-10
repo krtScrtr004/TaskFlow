@@ -43,7 +43,7 @@ async function sendToBackend(projectId, workerIds) {
 
         const response = await Http.POST(`projects/${projectId}/tasks/${taskId}/workers`, { workerIds })
         if (!response)
-            throw new Error('Failed to add workers to project.')
+            throw new Error('No response from server.')
 
         return response
     } catch (error) {

@@ -41,7 +41,12 @@ async function submit(e) {
         window.location.reload()
     } catch (error) {
         console.error('Error cancelling task:', error)
-        Dialog.errorOccurred('Error cancelling task')
+        if (error?.status === 401 || error?.status === 403) {
+            const message = error.errorData.message || 'You do not have permission to perform this action.'
+            Dialog.errorOccurred(message)
+        } else {
+            Dialog.errorOccurred('Error cancelling task')
+        }
     } finally {
         Loader.delete()
     }
@@ -63,7 +68,7 @@ async function sendToBackend(projectId, taskId) {
 
         const response = await Http.PUT(`/project/${projectId}/task/${taskId}`, { status: 'cancelled' })
         if (!response)
-            throw new Error('No response from server.')
+            throw error
     } catch (error) {
         throw error
     } finally {

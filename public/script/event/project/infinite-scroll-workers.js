@@ -27,7 +27,12 @@ try {
     )
 } catch (error) {
     console.error('Error initializing infinite scroll:', error)
-    Dialog.somethingWentWrong()
+    if (error?.status === 401 || error?.status === 403) {
+        const message = error.errorData.message || 'You do not have permission to perform this action.'
+        Dialog.errorOccurred(message)
+    } else {
+        Dialog.somethingWentWrong()
+    }
 }
 
 function getExistingItemsCount() {
@@ -52,11 +57,10 @@ async function asyncFunction(offset) {
 
         const response = await Http.GET(`projects/${projectId}/workers?offset=${offset}`)
         if (!response?.data)
-            throw new Error('No response from server.')
+            throw error
 
         return response.data
     } catch (error) {
-        console.error('Error during infinite scroll fetch:', error)
         throw error
     } finally {
         isLoading = false

@@ -13,7 +13,7 @@ const submitProjectButton = createProjectForm?.querySelector('#submit_project_bu
 if (!submitProjectButton) {
     console.error('Submit Project button not found within the Create Project form.')
     Dialog.errorOccurred('Submit Project button not found. Please refresh the page and try again.')
-} else {    
+} else {
     // Submit form on button click or form submit
     submitProjectButton.addEventListener('click', e => debounceAsync(submitForm(e), 300))
     createProjectForm?.addEventListener('submit', e => debounceAsync(submitForm(e), 300))
@@ -60,20 +60,26 @@ async function submitForm(e) {
             },
             phase: phaseToAdd,
         })
+        if (!response) 
+            throw new Error('No response from server.')
 
         Dialog.operationSuccess('Project Created.', 'The project has been successfully created.')
-        if (response)
-            setTimeout(() => window.location.href = `/TaskFlow/project/${response.id}`, 1500)
+        setTimeout(() => window.location.href = `/TaskFlow/project/${response.id}`, 1500)
     } catch (error) {
         console.error('Error occurred while submitting form:', error)
-        Dialog.somethingWentWrong()
+        if (error?.status === 401 || error?.status === 403) {
+            const message = error.errorData.message || 'You do not have permission to perform this action.'
+            Dialog.errorOccurred(message)
+        } else {
+            Dialog.somethingWentWrong()
+        }
     } finally {
         Loader.delete()
     }
 }
 
 function addPhaseForm(phaseContainer) {
-    if (!phaseContainer) 
+    if (!phaseContainer)
         throw new Error('Phase container not found.')
 
     const nameInput = phaseContainer.querySelector(`.phase-name`)
@@ -103,7 +109,7 @@ async function sendToBackend(data) {
         }
         isLoading = true
 
-        if (!data) 
+        if (!data)
             throw new Error('No input data provided.')
 
         const response = await Http.POST(`projects`, data)
@@ -112,7 +118,6 @@ async function sendToBackend(data) {
         }
         return response.data
     } catch (error) {
-        console.error('Error sending data to server:', error)
         throw error
     } finally {
         isLoading = false

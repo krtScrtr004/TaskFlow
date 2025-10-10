@@ -25,12 +25,22 @@ export function infiniteScroll(
 
     if (isNaN(existingItemsCount) || existingItemsCount < 0)
         throw new Error('existingItemsCount must be a non-negative number.')
-        offset = existingItemsCount
+    offset = existingItemsCount
 
-    const observer = createObserver(container, asyncFunction, domCreator, offset)
-    if (!observer)
-        throw new Error('Failed to create IntersectionObserver.')
-    observer.observe(sentinel)
+    try {
+        const observer = createObserver(container, asyncFunction, domCreator, offset)
+        if (!observer)
+            throw error
+        observer.observe(sentinel)
+    } catch (error) {
+        console.error('Error setting up infinite scroll observer:', error)
+        if (error?.status === 401 || error?.status === 403) {
+            const message = error.errorData.message || 'You do not have permission to perform this action.'
+            Dialog.errorOccurred(message)
+        } else {
+            Dialog.somethingWentWrong()
+        }
+    }
 }
 
 function createObserver(container, asyncFunction, domCreator, offset) {
@@ -52,7 +62,6 @@ function createObserver(container, asyncFunction, domCreator, offset) {
                     isLoading = true
                     Loader.trail(container)
                 } catch (error) {
-                    console.error('Error during infinite scroll fetch:', error)
                     throw error
                 } finally {
                     isLoading = false

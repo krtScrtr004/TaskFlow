@@ -31,7 +31,13 @@ if (cancelProjectButton) {
             await sendToBackend(projectId)
             window.location.reload()
         } catch (error) {
-            console.error(error)
+            console.error('Error cancelling project:', error)
+            if (error?.status === 401 || error?.status === 403) {
+                const message = error.errorData.message || 'You do not have permission to perform this action.'
+                Dialog.errorOccurred(message)
+            } else {
+                Dialog.errorOccurred('Error cancelling project. Please try again.')
+            }
         }
     })
 } else {
@@ -40,17 +46,22 @@ if (cancelProjectButton) {
 }
 
 async function sendToBackend(projectId) {
-    if (isLoading) return
+    try {
+        if (isLoading) {
+            console.warn('Request is already in progress. Please wait.')
+            return
+        }
+        isLoading = true
 
-    if (!projectId) {
-        throw new Error('Project ID is required to cancel the project.')
+        if (!projectId || projectId.trim() === '')
+            throw new Error('Project ID is required.')
+
+        const response = await Http.POST('cancel-project', { projectId: projectId })
+        if (!response)
+            throw error
+    } catch (error) {
+        throw error
+    } finally {
+        isLoading = false
     }
-    isLoading = true
-
-    const response = await Http.POST('cancel-project', { projectId: projectId })
-    if (!response) {
-        throw new Error('No response from the server.')
-    }
-
-    isLoading = false
 }

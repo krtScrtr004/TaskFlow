@@ -20,6 +20,12 @@ if (workerList) {
                 workerInfoCard(projectId, workerId)
             } catch (error) {
                 console.error(`Error fetching worker info: ${error.message}`)
+                if (error?.status === 401 || error?.status === 403) {
+                    const message = error.errorData.message || 'You do not have permission to perform this action.'
+                    Dialog.errorOccurred(message)
+                } else {
+                    Dialog.somethingWentWrong()
+                }
             }
         })
     }
