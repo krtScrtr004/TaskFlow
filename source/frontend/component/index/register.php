@@ -33,7 +33,7 @@
 
     <!-- Birth Date -->
     <div class="birth-date flex-col">
-        <label class="first-col black-text" for="day_of_birth">Date of Birth</label>
+        <label class="first-col" for="day_of_birth">Date of Birth</label>
         <div class="birth-date-inputs second-col flex-col">
             <div class="invalid-date-result-box">
                 <p class="red-text"></p>
@@ -63,7 +63,7 @@
                 <!-- Day of Birth -->
                 <select name="day_of_birth" id="day_of_birth">
                     <?php for ($i = 0; $i < $MAX_DAY_COUNT; ++$i): ?>
-                        <option class="black-text" value="<?= $i + 1 ?>">
+                        <option value="<?= $i + 1 ?>">
                             <?= $i + 1 ?>
                         </option>
                     <?php endfor; ?>
@@ -72,7 +72,7 @@
                 <!-- Month of Birth -->
                 <select name="month_of_birth" id="month_of_birth">
                     <?php foreach ($months as $month): ?>
-                        <option class="black-text" value="<?= $month ?>">
+                        <option value="<?= $month ?>">
                             <?= $month ?>
                         </option>
                     <?php endforeach; ?>
@@ -81,7 +81,7 @@
                 <!-- Year of Birth -->
                 <select name="year_of_birth" id="year_of_birth">
                     <?php for ($i = $CURRENT_YEAR; $i >= $OLDEST_YEAR; --$i): ?>
-                        <option class="black-text" value="<?= $i ?>">
+                        <option value="<?= $i ?>">
                             <?= $i ?>
                         </option>
                     <?php endfor; ?>

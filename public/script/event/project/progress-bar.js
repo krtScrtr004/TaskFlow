@@ -1,9 +1,12 @@
-const projectSecondaryInfo = document.querySelector('.project-secondary-info')
-const projectProgressPercentage = projectSecondaryInfo.querySelector('.progress-percentage')
+const projectProgressPercentage = document.querySelector('.project-secondary-info .progress-percentage')
+const progressBar = document.querySelector('.project-secondary-info #project_progress_bar')
+if (projectProgressPercentage && progressBar) {
+    const projectPercentage = projectProgressPercentage?.getAttribute('data-projectPercentage') ?? 0
 
-const projectPercentage = projectProgressPercentage?.getAttribute('data-projectPercentage') ?? 0
+    // Set progress dynamically
+    progressBar.style.width = projectPercentage + '%'
 
-const progressBar = projectSecondaryInfo.querySelector('#project_progress_bar')
+} else {
+    console.warn('Project Progress Percentage or Progress Bar element not found.')
+}
 
-// Set progress dynamically
-progressBar.style.width = projectPercentage + '%'

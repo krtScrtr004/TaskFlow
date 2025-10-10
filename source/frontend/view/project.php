@@ -33,7 +33,7 @@
             ?>
             <!-- No project -->
             <div class="no-project-wall no-content-wall full-body-content flex-col">
-                <img src="<?= ICON_PATH . 'empty_b.svg' ?>" alt="No active project found" title="No active project found"
+                <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No active project found" title="No active project found"
                     height="150">
                 <h3>No active project found. <?= $createProject ?></h3>
             </div>
@@ -49,12 +49,11 @@
         <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'task-chart.js' ?>"></script>
         <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'create-worker-card.js' ?>"></script>
         <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'terminate-worker.js' ?>"></script>
+        <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'infinite-scroll-workers.js' ?>"></script>
         <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'cancel.js' ?>"></script>
 
-        <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'add-worker-modal' . DS . 'open.js' ?>"></script>
-        <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'add-worker-modal' . DS . 'close.js' ?>"></script>
-        <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'add-worker-modal' . DS . 'search.js' ?>"></script>
-        <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'add-worker-modal' . DS . 'add.js' ?>"></script>
+        <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'project' . DS . 'open.js' ?>"></script>
+        <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'project' . DS . 'add.js' ?>"></script>
     <?php endif; ?>
 </body>
 

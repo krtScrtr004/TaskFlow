@@ -9,7 +9,7 @@
         <div class="input-label-container">
             <label for="project_name">
                 <div class="text-w-icon">
-                    <img src="<?= ICON_PATH . 'name_b.svg' ?>" alt="Project Name" title="Project Name" height="20">
+                    <img src="<?= ICON_PATH . 'name_w.svg' ?>" alt="Project Name" title="Project Name" height="20">
 
                     <p class="">Project Name</p>
                 </div>
@@ -21,7 +21,7 @@
         <div class="input-label-container">
             <label for="project_description">
                 <div class="text-w-icon">
-                    <img src="<?= ICON_PATH . 'description_b.svg' ?>" alt="Project Description"
+                    <img src="<?= ICON_PATH . 'description_w.svg' ?>" alt="Project Description"
                         title="Project Description" height="20">
                     <p>Description</p>
                 </div>
@@ -35,7 +35,7 @@
             <div class="input-label-container">
                 <label for="project_budget">
                     <div class="text-w-icon">
-                        <img src="<?= ICON_PATH . 'budget_b.svg' ?>" alt="Project Budget" title="Project Budget"
+                        <img src="<?= ICON_PATH . 'budget_w.svg' ?>" alt="Project Budget" title="Project Budget"
                             height="20">
                         <p>Budget</p>
                     </div>
@@ -48,7 +48,7 @@
             <div class="input-label-container">
                 <label for="project_start_date">
                     <div class="text-w-icon">
-                        <img src="<?= ICON_PATH . 'start_b.svg' ?>" alt="Project Start Date" title="Project Start Date"
+                        <img src="<?= ICON_PATH . 'start_w.svg' ?>" alt="Project Start Date" title="Project Start Date"
                             height="20">
                         <p>Start Date</p>
                     </div>
@@ -61,7 +61,7 @@
             <div class="input-label-container">
                 <label for="project_completion_date">
                     <div class="text-w-icon">
-                        <img src="<?= ICON_PATH . 'complete_b.svg' ?>" alt="Project Completion Date"
+                        <img src="<?= ICON_PATH . 'complete_w.svg' ?>" alt="Project Completion Date"
                             title="Project Completion Date" height="20">
                         <p>Completion Date</p>
                     </div>
@@ -87,7 +87,7 @@
         <!-- Phases List -->
         <section class="phases flex-col">
             <div class="no-phases-wall no-content-wall flex-col">
-                <img src="<?= ICON_PATH . 'empty_b.svg' ?>" alt="No Phases" title="No Phases" height="70">
+                <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No Phases" title="No Phases" height="70">
                 <h4>No Phases Added</h4>
             </div>
         </section>
@@ -95,8 +95,8 @@
         <!-- Add Phase Button -->
         <button id="add_phase_button" type="button" class="transparent-bg">
             <div class="text-w-icon">
-                <img src="<?= ICON_PATH . 'add_b.svg' ?>" alt="Add Phase" title="Add Phase" height="20">
-                <h3 class="black-text">Add Phase</h3>
+                <img src="<?= ICON_PATH . 'add_w.svg' ?>" alt="Add Phase" title="Add Phase" height="20">
+                <h3 class="white-text">Add Phase</h3>
             </div>
         </button>
 

@@ -1,7 +1,7 @@
 <!-- Modal Container -->
 <section id="worker_info_card_template" class="modal-wrapper no-display">
     <!-- Modal -->
-    <div class="worker-info-card modal flex-col white-bg">
+    <div class="worker-info-card modal flex-col black-bg">
         <!-- Primary Info -->
         <section class="primary-info flex-row flex-space-between">
             <div class="flex-row flex-child-center-v">
@@ -41,7 +41,7 @@
             <!-- Total Tasks -->
             <div class="worker-total-tasks worker-statistic flex-col flex-child-center-h">
                 <div class="text-w-icon">
-                    <img src="<?= ICON_PATH . 'task_b.svg' ?>" alt="Total Tasks" title="Total Tasks" height="20">
+                    <img src="<?= ICON_PATH . 'task_w.svg' ?>" alt="Total Tasks" title="Total Tasks" height="20">
                     <p class="center-text">Total Tasks</p>
                 </div>
                 <h4 class="center-text"></h4>
@@ -50,7 +50,7 @@
             <!-- Completed Tasks -->
             <div class="worker-completed-tasks worker-statistic flex-col flex-child-center-h">
                 <div class="text-w-icon">
-                    <img src="<?= ICON_PATH . 'complete_b.svg' ?>" alt="Completed Tasks" title="Completed Tasks"
+                    <img src="<?= ICON_PATH . 'complete_w.svg' ?>" alt="Completed Tasks" title="Completed Tasks"
                         height="20">
                     <p class="center-text">Completed Tasks</p>
                 </div>
@@ -60,7 +60,7 @@
             <!-- Performance -->
             <div class="worker-performance worker-statistic flex-col flex-child-center-h">
                 <div class="text-w-icon">
-                    <img src="<?= ICON_PATH . 'progress_b.svg' ?>" alt="Performance" title="Performance" height="20">
+                    <img src="<?= ICON_PATH . 'progress_w.svg' ?>" alt="Performance" title="Performance" height="20">
                     <p class="center-text">Performance</p>
                 </div>
                 <h4 class="center-text"></h4>
@@ -74,14 +74,14 @@
 
             <!-- Email -->
             <div class="text-w-icon">
-                <img src="<?= ICON_PATH . 'email_b.svg' ?>" alt="Email" title="Email" height="24">
+                <img src="<?= ICON_PATH . 'email_w.svg' ?>" alt="Email" title="Email" height="24">
 
                 <p class="worker-email wrap-text"></p>
             </div>
 
             <!-- Contact Number -->
             <div class="text-w-icon">
-                <img src="<?= ICON_PATH . 'contact_b.svg' ?>" alt="Contact" title="Contact" height="24">
+                <img src="<?= ICON_PATH . 'contact_w.svg' ?>" alt="Contact" title="Contact" height="24">
 
                 <p class="worker-contact wrap-text"></p>
             </div>

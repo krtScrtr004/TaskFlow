@@ -1,9 +1,9 @@
 <section id="add_phase_modal" class="modal-wrapper no-display">
-    <div class="modal flex-col white-bg">
+    <div class="modal-form modal flex-col black-bg">
         <!-- Heading -->
         <section class="flex-row flex-space-between">
             <div class="text-w-icon">
-                <img src="<?= ICON_PATH . 'phase_b.svg' ?>" alt="Add Project Phase" title="Add Project Phase" height="20">
+                <img src="<?= ICON_PATH . 'phase_w.svg' ?>" alt="Add Project Phase" title="Add Project Phase" height="20">
                 <h3 class="title">Add Project Phase</h3>
             </div>
 
@@ -20,7 +20,7 @@
             <div class="input-label-container">
                 <label for="phase_name">
                     <div class="text-w-icon">
-                        <img src="<?= ICON_PATH . 'name_b.svg' ?>" alt="Phase Name"
+                        <img src="<?= ICON_PATH . 'name_w.svg' ?>" alt="Phase Name"
                             title="Phase Name" height="20">
 
                         <p>Name</p>
@@ -33,7 +33,7 @@
             <div class="input-label-container">
                 <label for="phase_description">
                     <div class="text-w-icon">
-                        <img src="<?= ICON_PATH . 'description_b.svg' ?>" alt="Phase Description"
+                        <img src="<?= ICON_PATH . 'description_w.svg' ?>" alt="Phase Description"
                             title="Phase Description" height="20">
 
                         <p>Description</p>
@@ -47,7 +47,7 @@
                 <div class="input-label-container">
                     <label for="phase_start_datetime">
                         <div class="text-w-icon">
-                            <img src="<?= ICON_PATH . 'start_b.svg' ?>" alt="Phase Start Date"
+                            <img src="<?= ICON_PATH . 'start_w.svg' ?>" alt="Phase Start Date"
                                 title="Phase Start Date" height="20">
 
                             <p>Start Date</p>
@@ -61,7 +61,7 @@
                 <div class="input-label-container">
                     <label for="phase_completion_datetime">
                         <div class="text-w-icon">
-                            <img src="<?= ICON_PATH . 'complete_b.svg' ?>" alt="Phase Completion Date"
+                            <img src="<?= ICON_PATH . 'complete_w.svg' ?>" alt="Phase Completion Date"
                                 title="Phase Completion Date" height="20">
 
                             <p>Completion Date</p>

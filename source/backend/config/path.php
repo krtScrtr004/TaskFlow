@@ -11,6 +11,7 @@ define('CONFIG_PATH', BACKEND_PATH . 'config' . DS);
 define('VENDOR_PATH', BACKEND_PATH . 'vendor' . DS);
 
 define('VIEW_PATH', FRONTEND_PATH . 'view' . DS);
+define('SUB_VIEW_PATH', VIEW_PATH . 'sub-view' . DS);
 define('COMPONENT_PATH', FRONTEND_PATH . 'component' . DS);
 
 define('DIALOG_PATH', COMPONENT_PATH . 'dialog' . DS);

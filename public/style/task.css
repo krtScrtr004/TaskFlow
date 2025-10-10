@@ -1,0 +1,152 @@
+.task-grid,
+.worker-grid {
+	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)) !important;
+	gap: 1rem;
+}
+
+.task-grid-card,
+.worker-grid-card {
+	aspect-ratio: 1 / 1;
+	background-color: var(--black);
+	border-radius: var(--border-radius);
+}
+
+/* Main Task Page */
+
+.task {
+	gap: var(--space);
+}
+
+.task .search-bar {
+	width: 60ch;
+}
+
+.task-grid-card:hover {
+	opacity: 0.7;
+}
+
+.task-grid-card > a {
+	padding: 1rem;
+	gap: 0.7rem;
+}
+
+.task-grid-card .task-name {
+	font-size: 1.5rem;
+	font-weight: 600;
+}
+
+.task-grid-card .task-id {
+	font-size: 0.9rem;
+	font-weight: 300;
+}
+
+.task-grid-card .task-description {
+	display: -webkit-box;
+	-webkit-line-clamp: 4;
+	line-clamp: 4;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.task-grid-card .task-schedule {
+	gap: 0.5rem;
+}
+
+.task-grid-card .task-schedule > div {
+	gap: 0.3rem;
+}
+
+.task-grid-card .task-badge {
+	flex: 1;
+	gap: 0.3rem;
+}
+
+#add_task_button {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+}
+
+#add_task_button h3 {
+	font-size: 1.5rem;
+}
+
+/* View Task Page */
+
+.view-task-info {
+	height: 100%;
+	gap: var(--space);
+	overflow: auto;
+}
+
+.view-task-info .heading h3 {
+	font-size: 1.5rem;
+	margin-right: 0.8rem;
+}
+
+.task-info,
+.task-info .action-buttons {
+	gap: 0.5rem;
+}
+
+.task-info .task-id,
+.task-info .task-description {
+	font-weight: 300;
+}
+
+.task-info .task-schedule {
+	gap: 0.3rem;
+}
+
+.assigned-workers {
+	height: fit-content;
+	gap: 1rem;
+}
+
+.worker-grid {
+	max-height: 80vh;
+	overflow: auto;
+}
+
+.worker-grid-card {
+	display: flex;
+	flex-direction: column;
+	padding: 1rem;
+	gap: 1rem;
+}
+
+.worker-grid-card .worker-primary-info {
+	gap: 0.5rem;
+}
+
+.worker-grid-card .worker-name {
+	font-size: 1.2rem;
+	font-weight: 500;
+}
+
+.worker-grid-card .worker-id {
+	font-size: 0.9rem;
+	font-weight: 300;
+}
+
+.worker-grid-card .worker-statistics,
+.worker-grid-card .worker-contact-info {
+	gap: 0.3rem;
+}
+
+.worker-grid-card .worker-status {
+	flex: 1;
+}
+
+.assigned-workers #add_worker_button {
+	border: 1px solid var(--white);
+}
+
+#edit_task_form .task-secondary-info {
+	gap: 1rem;
+}
+
+#edit_task_form #task_priority {
+	width: 18ch;
+}

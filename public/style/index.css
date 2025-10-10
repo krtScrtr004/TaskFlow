@@ -19,7 +19,7 @@ body.index > main {
 .form > .line-divider {
     font-weight: 800;
     height: 3px; 
-    background-color: var(--black);
+    background-color: var(--white);
 }
 
 .called-form-container {
@@ -28,10 +28,6 @@ body.index > main {
 
 .called-form-container > .index-form {
     gap: 1rem;
-}
-
-.called-form-container input {
-    border: 1px solid var(--black);
 }
 
 .form > .index-redirect {
@@ -71,8 +67,4 @@ body.index > main {
 
 #register_form .invalid-date-result-box {
     margin-bottom: 0.3rem;
-}
-
-#register_form .birth-date .date-inputs > select {
-    border: 1px solid var(--black);
 }

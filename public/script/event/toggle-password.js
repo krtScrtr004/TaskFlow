@@ -4,6 +4,10 @@ const inputs = document.querySelectorAll(
     '.password-toggle-wrapper > input[type="password"]',
     '.password-toggle-wrapper > input[type="text"]'
 )
+if (inputs.length > 0)
+    inputs.forEach(input => togglePassword(input))
+else
+    console.warn('Password inputs not found.')
 
 function togglePassword(input) {
     const icon = input.parentElement.querySelector(
@@ -35,4 +39,3 @@ function togglePassword(input) {
         }
     }
 }
-inputs.forEach(input => togglePassword(input))

@@ -71,7 +71,7 @@ class WorkerPerformanceCalculator
             $statusStats[$status] = ($statusStats[$status] ?? 0) + 1;
             
             // Time performance statistics
-            if (isset($taskScore['timePerformance'])) {
+            if (isset($taskScore['timePerformance']) && $taskScore['timePerformance'] !== '') {
                 $timeStats[$taskScore['timePerformance']]++;
             }
         }

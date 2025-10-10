@@ -1,9 +1,9 @@
 :root {
 	--white: #fffefe;
-	--dark-white: #eaeaea;
+	--dark-white: #949494;
 	--light-blue: #89d6fb;
 	--blue: #007bff;
-	--light-black: #403b3b;
+	--light-black: #242424;
 	--black: #1e1e1e;
 	--red: #dc3545;
 	--green: #38ff5d;
@@ -23,12 +23,37 @@
 	--card-height: 300px;
 }
 
+/* For Webkit browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+	width: 8px;
+	height: 8px;
+}
+
+::-webkit-scrollbar-track {
+	background: var(--light-black);
+}
+
+::-webkit-scrollbar-thumb {
+	background: var(--dark-white);
+	border-radius: var(--border-radius);
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: var(--black);
+}
+
+/* For Firefox */
+* {
+	scrollbar-color: var(--dark-white) var(--light-black);
+	scrollbar-width: thin;
+}
+
 * {
 	box-sizing: border-box;
 	padding: 0;
 	margin: 0;
 	scrollbar-width: thin;
-	color: var(--black);
+	color: var(--white);
 }
 
 html,
@@ -70,6 +95,7 @@ aside {
 }
 
 main {
+	background-color: var(--light-black);
 	flex: 1;
 	position: relative;
 	width: 100%;
@@ -106,13 +132,19 @@ button {
 label,
 input,
 select {
-	color: var(--black);
+	color: var(--white);
 }
 
 input::placeholder,
 textarea::placeholder {
-	color: var(--black);
 	font-style: italic;
+}
+
+input::placeholder,
+input:active,
+textarea::placeholder,
+textarea:active {
+	color: var(--white);
 	opacity: 0.9;
 }
 
@@ -125,11 +157,37 @@ button:hover {
 
 input,
 textarea {
-	border: 1px solid var(--black);
+	background-color: transparent;
+	color: var(--white);
+	border: 1px solid var(--white);
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+	filter: invert(1); 
+	opacity: 0.7; 
+	cursor: pointer;
+}
+
+/* For Firefox and other browsers */
+input[type="date"] {
+	color-scheme: dark;
+}
+
+/* Remove default styling for cross-browser consistency */
+input[type="date"]::-webkit-inner-spin-button,
+input[type="date"]::-webkit-clear-button {
+	display: none;
 }
 
 select {
 	width: fit-content;
+	background-color: var(--light-black);
+	color: var(--white);
+}
+
+select option {
+	background-color: var(--black);
+	color: var(--white);
 }
 
 button {
@@ -154,6 +212,7 @@ fieldset {
 
 textarea {
 	padding: 0.5rem;
+	border: 1px solid var(--white);
 	border-radius: var(--border-radius);
 	resize: none;
 	font-family: inherit;

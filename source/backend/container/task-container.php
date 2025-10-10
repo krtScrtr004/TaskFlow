@@ -23,7 +23,7 @@ class TaskContainer extends Container
             }
 
             $this->add($task);
-            $this->updateTaskCount($task);
+            $this->increaseTaskCount($task);
         }
     }
 
@@ -33,6 +33,7 @@ class TaskContainer extends Container
             throw new InvalidArgumentException("Only Task instances can be added to TaskContainer.");
         }
         $this->items[] = $task;
+        $this->increaseTaskCount($task);
     }
 
     public function remove($item): void
@@ -45,9 +46,10 @@ class TaskContainer extends Container
         if ($index !== false) {
             array_splice($this->items, $index, 1);
         }
+        $this->decreaseTaskCount($item);
     }
 
-    public function updateTaskCount(Task $task): void
+    private function increaseTaskCount(Task $task): void
     {
         $status = $task->getStatus()->value;
         if (array_key_exists($status, $this->taskCountByStatus)) {
@@ -57,6 +59,19 @@ class TaskContainer extends Container
         $priority = $task->getPriority()->value;
         if (array_key_exists($priority, $this->taskCountByPriority)) {
             $this->taskCountByPriority[$priority]++;
+        }
+    }
+
+    private function decreaseTaskCount(Task $task): void
+    {
+        $status = $task->getStatus()->value;
+        if (array_key_exists($status, $this->taskCountByStatus) && $this->taskCountByStatus[$status] > 0) {
+            $this->taskCountByStatus[$status]--;
+        }
+
+        $priority = $task->getPriority()->value;
+        if (array_key_exists($priority, $this->taskCountByPriority) && $this->taskCountByPriority[$priority] > 0) {
+            $this->taskCountByPriority[$priority]--;
         }
     }
 

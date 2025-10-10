@@ -20,9 +20,10 @@ class SingleFormController implements Controller
             'description' => 'Fill in the details below to create a new project.',
             'form' => 'createProject',
             'script' => [
-                'single-form/edit-project/phase/open',
-                'single-form/edit-project/phase/create/add',
-                'single-form/edit-project/phase/create/cancel',
+                'single-form/project/open-phase',
+                'single-form/project/create/add-phase',
+                'single-form/project/create/cancel-phase',
+                'single-form/project/create/submit',
             ]
         ],
         'editProject' => [
@@ -30,10 +31,21 @@ class SingleFormController implements Controller
             'description' => 'Modify the details of your project below.',
             'form' => 'editProject',
             'script' => [
-                'single-form/edit-project/phase/open',
-                'single-form/edit-project/phase/edit/cancel',
-                'single-form/edit-project/phase/edit/add',
+                'single-form/project/open-phase',
+                'single-form/project/edit/cancel-phase',
+                'single-form/project/edit/add-phase',
+                'single-form/project/edit/submit',
             ],
+        ],
+        'addTask' => [
+            'title' => '',
+            'description' => 'Fill in the details below to add a new task.',
+            'form' => 'addTask',
+            'script' => [
+                'add-worker-modal/task/new/add',
+                'add-worker-modal/task/new/open',
+                'single-form/add-task/submit',
+            ]
         ]
     ];
 

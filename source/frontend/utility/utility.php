@@ -47,6 +47,16 @@ function numberToWords(int $number): ?string
     return null;
 }
 
+function dateToWords(DateTime $date): string {
+    $day = (int)$date->format('j');
+    $month = $date->format('F');
+    $year = (int)$date->format('Y');
+
+    // Convert day to words if needed
+
+    return $day . ' ' . $month . ' ' . $year;
+}
+
 function maskString(string $string, int $offset, int $limit): string
 {
     $return = str_split($string);
@@ -85,8 +95,8 @@ function simplifyDate(DateTime $date): string
     }
 }
 
-function formatDateTime(DateTime $dateTime): string {
-    return $dateTime->format('o-m-d H:i:s');
+function formatDateTime(DateTime $dateTime, string $format = 'o-m-d H:i:s'): string {
+    return $dateTime->format($format);
 }
 
 function formatNumber(int|float $number): string

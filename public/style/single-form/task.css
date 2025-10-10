@@ -1,0 +1,88 @@
+#add_task_form {
+    gap: 2rem;
+}
+
+.task-detail,
+.task-worker {
+    gap: var(--space);
+}
+
+.task-primary-info,
+.task-schedule {
+    gap: 1rem;
+}
+
+.task-primary-info > *
+.task-schedule > * {
+    flex: 1;
+}
+
+.task-name {
+    width: 30ch;
+    height: 100%;
+}
+
+.task-priority {
+    width: 50%;
+}
+
+.task-worker {
+    width: 40ch;
+}
+
+.task-worker .list {
+    max-height: 40ch;
+    overflow: auto;
+}
+
+.task-worker-card {
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    gap: 0.5rem;
+    border-radius: var(--border-radius);
+}
+
+.task-worker-card:hover {
+    background-color: var(--black);
+}
+
+.task-worker-card .worker-primary-info {
+    gap: 1rem;
+}
+
+.task-worker-card .worker-primary-info > section {
+    width: 100%;
+}
+
+.task-worker-card #remove_worker_button {
+    display: none;
+    margin-right: 0.3rem;
+}
+
+.task-worker-card:hover #remove_worker_button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.task-worker-card .worker-name {
+    font-size: 1.3rem;
+}
+
+.task-worker-card .worker-id {
+    font-size: 0.9rem;
+    font-weight: 300;
+}
+
+.task-worker-card .worker-job-titles,
+.task-worker-card .worker-statistics {
+    gap: 0.3rem;
+}
+
+#add_task_form #add_worker_button {
+    border: 1px solid var(--white);
+}
+
+.no-assigned-worker-wall h3 {
+    font-size: 1.2rem;
+}

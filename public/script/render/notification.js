@@ -63,7 +63,7 @@ export const Notification = (() => {
         success: function (
             message,
             duration,
-            parentElem = document.querySelector('header')
+            parentElem = document.querySelector('body')
         ) {
             render(
                 true,
@@ -76,7 +76,7 @@ export const Notification = (() => {
         error: function (
             message,
             duration,
-            parentElem = document.querySelector('header')
+            parentElem = document.querySelector('body')
         ) {
             render(
                 false,

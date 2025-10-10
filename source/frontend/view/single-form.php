@@ -1,7 +1,6 @@
 <?php
-if (!$component) {
+if (!$component)
     throw new Error('Component is not defined');
-}
 ?>
 
 <!DOCTYPE html>
@@ -20,7 +19,8 @@ if (!$component) {
     <link rel="stylesheet" href="<?= STYLE_PATH . 'loader.css' ?>">
 
     <link rel="stylesheet" href="<?= STYLE_PATH . 'single-form.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'create-edit-project.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'single-form' . DS . 'project.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'single-form' . DS . 'task.css' ?>">
 </head>
 
 <body class="single-form">
