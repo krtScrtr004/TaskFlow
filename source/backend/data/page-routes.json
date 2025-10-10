@@ -10,12 +10,14 @@
 		"TaskFlow/edit-project/{projectId:[\\w+_-]+}": "SingleFormController",
 		"TaskFlow/add-task/{projectId:[\\w+_-]+}": "SingleFormController",
 
-		"TaskFlow/project": "ProjectController",
+		"TaskFlow/project/{projectId:[\\w+_-]+}": ["ProjectController", "viewProject"],
 
 		"TaskFlow/project/{projectId:[\\w+_-]+}/task(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": "TaskController",
 		"TaskFlow/project/{projectId:[\\w+_-]+}/task/{taskId:[\\w+_-]+}": [
 			"TaskController",
 			"viewTask"
-		]
+		],
+
+		"TaskFlow/history": "HistoryController"
 	}
 }
