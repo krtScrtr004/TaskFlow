@@ -13,8 +13,6 @@ class ProjectController implements Controller
     public static function viewProject(array $args = []): void
     {
         $projectId = $args['projectId'] ?? null; // Temporary placeholder
-        if (!$projectId)
-            throw new InvalidArgumentException('Project ID is required.');
 
         $projects = ProjectModel::all();
         $project = $projects[0];

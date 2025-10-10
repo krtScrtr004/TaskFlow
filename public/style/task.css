@@ -17,10 +17,6 @@
 	gap: var(--space);
 }
 
-.task .search-bar {
-	width: 60ch;
-}
-
 .task-grid-card:hover {
 	opacity: 0.7;
 }

@@ -279,6 +279,7 @@ button > .text-w-icon {
 /* ---------------- SEARCH BAR ---------------- */
 
 .search-bar {
+	width: 60ch;
 	display: flex;
 	align-items: center;
 	background-color: transparent;
