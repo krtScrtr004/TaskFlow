@@ -8,9 +8,13 @@ class ProjectController implements Controller
     {
     }
 
-    public static function index(): void
+    public static function index(): void {}
+
+    public static function viewProject(array $args = []): void
     {
-        // TODO: Dummy
+        $projectId = $args['projectId'] ?? null; // Temporary placeholder
+        if (!$projectId)
+            throw new InvalidArgumentException('Project ID is required.');
 
         $projects = ProjectModel::all();
         $project = $projects[0];
@@ -55,7 +59,7 @@ class ProjectController implements Controller
          * - Edited Phases : ID, Description, Start Date, Completion Date
          * - New Phases :Name, Description, Start Date, Completion Date
          * - Cancelled Phases : ID
-         * */ 
+         * */
 
         $projectId = $args['projectId'] ?? null; // Temporary placeholder
         if (!$projectId)
