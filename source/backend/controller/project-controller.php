@@ -22,6 +22,26 @@ class ProjectController implements Controller
         require_once VIEW_PATH . 'project.php';
     }
 
+    public static function getProjectById(array $args = []): void
+    {
+        $projectId = $args['projectId'] ?? null; // Temporary placeholder
+        if (!$projectId)
+            Response::error('Project ID is required.');
+
+        $projects = ProjectModel::all();
+        Response::success([$projects[0]], 'Project retrieved successfully.');
+    }
+
+    public static function getProjectByKey(): void
+    {
+        $key = $_GET['key'] ?? '';
+
+        $offset = isset($_GET['offset']) ? (int)$_GET['offset'] : 0;
+
+        $projects = ProjectModel::all();
+        Response::success([$projects[0]], 'Projects retrieved successfully.');
+    }
+
     public static function createProject(): void
     {
         /**

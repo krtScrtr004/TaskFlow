@@ -33,14 +33,20 @@ if (!isset($projects))
             <p>Track all projects you've handled</p>
         </section>
 
-        <!-- Projects Grid -->
-        <section class="project-grid grid">
-            <?php foreach ($projects as $project) {
-                echo projectGridCard($project);
-            } ?>
+        <section class="project-grid-container">
+            <!-- Projects Grid -->
+            <section class="project-grid grid">
+                <?php foreach ($projects as $project) {
+                    echo projectGridCard($project);
+                } ?>
+            </section>
+
+            <div class="sentinel"></div>
         </section>
 
     </main>
+
+    <script type="module" src="<?= EVENT_PATH . 'history' . DS . 'infinite-scroll.js' ?>" defer></script>
 </body>
 
 </html>

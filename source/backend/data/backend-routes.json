@@ -15,6 +15,15 @@
 			"getWorkerByKey"
 		],
 
+		"TaskFlow/projects(?:[\\?[\\w+\\s_=\\/\\?,%&@-]+)?": [
+			"ProjectController",
+			"getProjectByKey"
+		],
+		"TaskFlow/projects/{projectId:[\\w+_-]+}": [
+			"ProjectController",
+			"getProjectById"
+		],
+
 		"TaskFlow/projects/{projectId:[\\w+_-]+}/workers/{workerId:[\\w+_-]+}": [
 			"WorkerController",
 			"getProjectWorkerById"
