@@ -37,15 +37,15 @@ $searchFilter = isset($_GET['filter']) ? htmlspecialchars($_GET['filter']) : 'al
         <section>
             <form class="search-bar" action="" method="POST">
                 <div>
-                    <input type="text" name="search_task_input" id="search_task_input"
+                    <input class="search-input" type="text" name="search_task_input" id="search_task_input"
                         placeholder="Search by Name or ID" min="1" max="255" value="<?= $searchKey ?>" autocomplete="on"
                         required>
-                    <button id="search_task_button" type="button" class="transparent-bg">
+                    <button class="search-button" id="search_task_button" type="button" class="transparent-bg">
                         <img src="<?= ICON_PATH . 'search_w.svg' ?>" alt="Search Task" title="Search Task" height="20">
                     </button>
                 </div>
 
-                <select class="" name="search_task_filter" id="search_task_filter">
+                <select class="search-filter" name="search_task_filter" id="search_task_filter">
 
                     <!-- Default Option -->
                     <option value="all" selected>All Tasks</option>

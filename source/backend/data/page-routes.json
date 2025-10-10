@@ -18,6 +18,6 @@
 			"viewTask"
 		],
 
-		"TaskFlow/history": "HistoryController"
+		"TaskFlow/history(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": "HistoryController"
 	}
 }

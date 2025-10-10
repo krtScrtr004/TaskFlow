@@ -308,6 +308,7 @@ button > .text-w-icon {
 }
 
 .search-bar button {
+	background-color: transparent;
 	width: fit-content;
 	padding: 0.3rem;
 }
