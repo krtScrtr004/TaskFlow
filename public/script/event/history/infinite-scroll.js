@@ -1,6 +1,7 @@
 import { infiniteScroll } from '../../utility/infinite-scroll.js'
 import { Http } from '../../utility/http.js'
 import { Dialog } from '../../render/dialog.js'
+import { formatDate } from '../../utility/utility.js'
 
 let isLoading = false
 const projectGridContainer = document.querySelector('.project-grid-container')
@@ -68,8 +69,8 @@ function domCreator(project) {
     const id = project.id
     const name = project.name
     const description = project.description || 'No description provided'
-    const startDateTime = project.startDateTime
-    const completionDateTime = project.completionDateTime
+    const startDateTime = formatDate(project.startDateTime)
+    const completionDateTime = formatDate(project.completionDateTime)
     const status = project.status
 
     // Create main card container
