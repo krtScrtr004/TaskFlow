@@ -3,8 +3,19 @@
 class IndexController implements Controller
 {
     private static array $components = [
-        'login' => ['title' => 'Log In Your Account', 'form'  => 'login'],
-        'register' => ['title' => 'Register An Account', 'form'  => 'register'],
+        'login' => [
+            'title' => 'Log In Your Account', 
+            'form'  => 'login',
+            'scripts' => [
+                'login/submit'
+            ]
+        ],
+        'register' => [
+            'title' => 'Register An Account', 
+            'form'  => 'register',
+            'scripts' => [
+            ]
+        ],
     ];
 
     private function __construct() {}
@@ -19,6 +30,7 @@ class IndexController implements Controller
         $uris = explode('/', $_SERVER['REQUEST_URI']);
         $page = kebabToCamelCase(($uris[2] !== '') ? $uris[2] : 'login');
         $component = self::$components[$page] ?? null;
+        $scripts = $component['scripts'] ?? [];
 
         require_once VIEW_PATH . 'index.php';
     }

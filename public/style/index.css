@@ -68,3 +68,8 @@ body.index > main {
 #register_form .invalid-date-result-box {
     margin-bottom: 0.3rem;
 }
+
+#login_button,
+#register_button {
+    width: 100% !important;
+}

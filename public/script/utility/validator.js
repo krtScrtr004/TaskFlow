@@ -11,16 +11,36 @@ export function defaultValidationRules() {
             condition: (inputs) => !inputs.name || inputs.name.trim().length < 3 || inputs.name.trim().length > 255,
             message: 'Name must be between 3 and 255 characters long.'
         },
+
+        'email': {
+            // Email length validation
+            condition: (inputs) => !inputs.email || inputs.email.trim().length < 3 || inputs.email.trim().length > 255,
+            message: 'Email must be between 3 and 255 characters long.'
+        },
+        'email': {
+            // Email format validation 
+            condition: (inputs) => !inputs.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inputs.email),
+            message: 'Invalid email address.'
+        },
+
+        'password': {
+            // Password validation
+            condition: (inputs) => !inputs.password || inputs.password.length < 8 || inputs.password.length > 128,
+            message: 'Password must be between 8 and 128 characters long.'
+        },
+
         'description': {
             // Description validation (optional)
             condition: (inputs) => inputs.description && (inputs.description.trim().length < 5 || inputs.description.trim().length > 500),
             message: 'Description must be between 5 and 500 characters long.'
         },
+
         'budget': {
             // Budget validation
             condition: (inputs) => !inputs.budget && (isNaN(inputs.budget) || inputs.budget < 0 || inputs.budget > 1000000),
             message: 'Budget must be a number between 0 and 1,000,000.'
         },
+
         'startDateTime': {
             // Priority validation
             condition: (inputs) => {
@@ -38,6 +58,7 @@ export function defaultValidationRules() {
             },
             message: 'Start date cannot be in the past.'
         },
+
         'completionDateTime': {
             // Completion date validation
             condition: (inputs) => {

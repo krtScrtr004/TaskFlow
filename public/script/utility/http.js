@@ -13,6 +13,28 @@ export const Http = (() => {
             
             const request = await fetch(`${apiUrl}${endpoint}`, options)
             
+            // Handle authentication and authorization errors specially
+            if (request.status === 401 || request.status === 403) {
+                const contentType = request.headers.get('Content-Type')
+                let errorData
+                
+                // Try to parse JSON error response
+                if (contentType && contentType.includes('application/json')) {
+                    errorData = await request.json()
+                } else {
+                    errorData = { 
+                        error: request.status === 401 ? 'Unauthorized' : 'Forbidden',
+                        message: request.statusText 
+                    }
+                }
+                
+                // Create a custom error with the response data
+                const error = new Error(errorData.message || errorData.error || 'Authentication failed')
+                error.status = request.status
+                error.data = errorData
+                throw error
+            }
+            
             if (!request.ok) {
                 throw new Error(`HTTP error! Status: ${request.status} ${request.statusText}`)
             }
@@ -32,7 +54,7 @@ export const Http = (() => {
             return true
         } catch (error) {
             console.error(error)
-            throw new Error('Error: ' + error.message)
+            throw error
         }
     }
     
