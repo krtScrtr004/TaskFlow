@@ -17,4 +17,15 @@ class AuthController implements Controller {
             'projectId' => 'P12345'
         ], 'Login successful.');
     }
+
+    public static function register(): void 
+    {
+        $data = decodeData('php://input');
+        if (!$data)
+            Response::error('Cannot decode data.');
+
+        // Response::error('Email already in use.', [], 409);
+
+        Response::success([], 'Registration successful. Please verify your email before logging in.', 201);
+    }
 }

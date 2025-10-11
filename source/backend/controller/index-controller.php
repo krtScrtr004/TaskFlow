@@ -14,6 +14,7 @@ class IndexController implements Controller
             'title' => 'Register An Account', 
             'form'  => 'register',
             'scripts' => [
+                'register/submit'
             ]
         ],
     ];
