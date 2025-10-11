@@ -1,5 +1,6 @@
 import { Http } from '../../utility/http.js'
 import { Dialog } from '../../render/dialog.js'
+import { errorListDialog } from '../../render/error-list-dialog.js'
 import { Loader } from '../../render/loader.js'
 import { confirmationDialog } from '../../render/confirmation-dialog.js'
 import { debounceAsync } from '../../utility/debounce.js'
@@ -413,12 +414,7 @@ async function addWorkerButtonEvent(e, projectId, confirmAddWorkerButton, asyncF
         else onSuccess()
     } catch (error) {
         console.error(error)
-        if (error?.status === 401 || error?.status === 403) {
-            const message = error.errorData.message || 'You do not have permission to perform this action.'
-            Dialog.errorOccurred(message)
-        } else {
-            Dialog.errorOccurred('An error occurred while adding workers. Please try again.')
-        }
+        errorListDialog(error?.errors, error?.message)
     } finally {
         Loader.delete()
     }

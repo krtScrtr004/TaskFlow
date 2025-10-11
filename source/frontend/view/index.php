@@ -53,7 +53,6 @@
     </main>
 
     <script type="module" src="<?= EVENT_PATH . 'toggle-password.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'check-date-validity.js' ?>" defer></script>
 
     <?php if ($scripts): ?>
         <?php foreach ($scripts as $script):

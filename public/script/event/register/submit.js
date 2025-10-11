@@ -1,5 +1,6 @@
 import { Http } from '../../utility/http.js'
 import { Dialog } from '../../render/dialog.js'
+import { errorListDialog } from '../../render/error-list-dialog.js'
 import { Loader } from '../../render/loader.js'
 import { Notification } from '../../render/notification.js'
 import { validateInputs, userValidationRules } from '../../utility/validator.js'
@@ -66,11 +67,7 @@ async function submit(e) {
         window.location.href = `/TaskFlow/project`
     } catch (error) {
         console.error('Error during register:', error)
-        if (error?.status === 401) {
-            Notification.error('Invalid email or password. Please try again.', 3000)
-        } else {
-            Dialog.somethingWentWrong()
-        }
+        errorListDialog(error?.errors, error?.message)
     } finally {
         Loader.delete()
     }
@@ -137,7 +134,6 @@ async function sendToBackend(
         Notification.success('Registration successful!', delay)
         setTimeout(() => window.location.href = '/TaskFlow/project', delay)
     } catch (error) {
-        console.error('Error during register:', error)
         throw error
     } finally {
         isLoading = false

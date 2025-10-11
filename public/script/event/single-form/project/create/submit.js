@@ -1,6 +1,7 @@
 import { Http } from '../../../../utility/http.js'
 import { Dialog } from '../../../../render/dialog.js'
 import { Loader } from '../../../../render/loader.js'
+import { errorListDialog } from '../../../../render/error-list-dialog.js'
 import { confirmationDialog } from '../../../../render/confirmation-dialog.js'
 import { debounceAsync } from '../../../../utility/debounce.js'
 import { validateInputs, workValidationRules } from '../../../../utility/validator.js'
@@ -60,19 +61,14 @@ async function submitForm(e) {
             },
             phase: phaseToAdd,
         })
-        if (!response) 
+        if (!response)
             throw new Error('No response from server.')
 
         Dialog.operationSuccess('Project Created.', 'The project has been successfully created.')
         setTimeout(() => window.location.href = `/TaskFlow/project/${response.id}`, 1500)
     } catch (error) {
         console.error('Error occurred while submitting form:', error)
-        if (error?.status === 401 || error?.status === 403) {
-            const message = error.errorData.message || 'You do not have permission to perform this action.'
-            Dialog.errorOccurred(message)
-        } else {
-            Dialog.somethingWentWrong()
-        }
+        errorListDialog(error?.errors, error?.message)
     } finally {
         Loader.delete()
     }

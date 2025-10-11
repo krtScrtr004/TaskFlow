@@ -1,5 +1,5 @@
 import { terminateWorker } from '../../utility/terminate-worker.js'
-import { Dialog } from '../../render/dialog.js'
+import { errorListDialog } from '../../render/error-list-dialog.js'
 
 try {
     const viewTaskInfo = document.querySelector('.view-task-info')
@@ -9,11 +9,7 @@ try {
     const workerContainer = viewTaskInfo?.querySelector('.worker-grid')
     terminateWorker(projectId, workerContainer, '.worker-grid-card')
 } catch (error) {
-    console.error(error.message)
-    if (error?.status === 401 || error?.status === 403) {
-        const message = error.errorData.message || 'You do not have permission to perform this action.'
-        Dialog.errorOccurred(message)
-    } else {
-        Dialog.errorOccurred('An error occurred while terminating the worker. Please try again.')
-    }
+    console.error('Error terminating worker:', error)
+    errorListDialog(error?.errors, error?.message)
+
 }

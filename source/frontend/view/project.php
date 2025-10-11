@@ -22,7 +22,7 @@
     <?php require_once COMPONENT_PATH . 'sidenav.php' ?>
 
     <main class="main-page">
-        <?php 
+        <?php
         if (!isset($project)) {
             $createProject = '';
 

@@ -1,4 +1,4 @@
-import { Notification } from '../render/notification.js'
+import { errorListDialog } from '../render/error-list-dialog.js'
 
 export function userValidationRules() {
     return {
@@ -70,7 +70,7 @@ export function userValidationRules() {
             // Email length validation
             condition: (inputs) => !inputs.email || inputs.email.trim().length < 3 || inputs.email.trim().length > 255,
             message: 'Email must be between 3 and 255 characters long.'
-        }, 
+        },
         'emailFormat': {
             // Email format validation 
             condition: (inputs) => inputs.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inputs.email),
@@ -112,17 +112,17 @@ export function workValidationRules() {
         'startDateTime': {
             // Priority validation
             condition: (inputs) => {
-                const startDate = new Date(inputs.startDateTime);
-                return !inputs.startDateTime || isNaN(startDate.getTime());
+                const startDate = new Date(inputs.startDateTime)
+                return !inputs.startDateTime || isNaN(startDate.getTime())
             },
             message: 'Invalid start date and time.'
         },
         'startDateTime': {
             // Start date cannot be in the past
             condition: (inputs) => {
-                const startDate = new Date(inputs.startDateTime);
-                const currentDate = new Date();
-                return startDate < currentDate;
+                const startDate = new Date(inputs.startDateTime)
+                const currentDate = new Date()
+                return startDate < currentDate
             },
             message: 'Start date cannot be in the past.'
         },
@@ -130,17 +130,17 @@ export function workValidationRules() {
         'completionDateTime': {
             // Completion date validation
             condition: (inputs) => {
-                const completionDate = new Date(inputs.completionDateTime);
-                return !inputs.completionDateTime || isNaN(completionDate.getTime());
+                const completionDate = new Date(inputs.completionDateTime)
+                return !inputs.completionDateTime || isNaN(completionDate.getTime())
             },
             message: 'Invalid completion date and time.'
         },
         'completionDateTime': {
             // Completion date must be after start date
             condition: (inputs) => {
-                const startDate = new Date(inputs.startDateTime);
-                const completionDate = new Date(inputs.completionDateTime);
-                return completionDate <= startDate;
+                const startDate = new Date(inputs.startDateTime)
+                const completionDate = new Date(inputs.completionDateTime)
+                return completionDate <= startDate
             },
             message: 'Completion date must be after the start date.'
         }
@@ -156,14 +156,19 @@ export function workValidationRules() {
  * @return {boolean} - Returns true if all inputs are valid, otherwise false
  */
 export function validateInputs(inputs = {}, validationRules) {
+    const errors = []
+
     // Check all validations
     for (const inputKey in inputs) {
-        const validation = validationRules[inputKey];
+        const validation = validationRules[inputKey]
         if (validation && validation.condition(inputs)) {
-            Notification.error(validation.message, 3000);
-            console.error('Validation failed:', validation.message);
-            return false;
+            console.error('Validation failed:', validation.message)
+            errors.push(validation.message)
         }
     }
-    return true;
+    if (errors.length > 0) {
+        errorListDialog(errors, 'Validation Errors')
+        return false
+    }
+    return true
 }

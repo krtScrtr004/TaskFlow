@@ -1,7 +1,7 @@
 import { Http } from '../../utility/http.js'
 import { Dialog } from '../../render/dialog.js'
+import { errorListDialog } from '../../render/error-list-dialog.js'
 import { Loader } from '../../render/loader.js'
-import { Notification } from '../../render/notification.js'
 import { validateInputs, userValidationRules } from '../../utility/validator.js'
 import { debounceAsync } from '../../utility/debounce.js'
 
@@ -27,11 +27,11 @@ async function submit(e) {
     e.preventDefault()
 
     const emailInput = loginForm.querySelector('#login_email')
-    if (!emailInput) 
+    if (!emailInput)
         throw new Error('Email input not found.')
 
     const passwordInput = loginForm.querySelector('#login_password')
-    if (!passwordInput) 
+    if (!passwordInput)
         throw new Error('Password input not found.')
 
     const email = emailInput.value.trim()
@@ -45,7 +45,7 @@ async function submit(e) {
     Loader.patch(loginButton.querySelector('.text-w-icon'))
     try {
         const response = await sendToBackend(email, password)
-        if (!response) 
+        if (!response)
             throw new Error('No response from server.')
 
         const projectId = response.projectId
@@ -53,11 +53,7 @@ async function submit(e) {
         window.location.href = `/TaskFlow/project${redirect}`
     } catch (error) {
         console.error('Error during login:', error)
-        if (error?.status === 401) {
-            Notification.error('Invalid email or password. Please try again.', 3000)
-        } else {
-            Dialog.somethingWentWrong()
-        }
+        errorListDialog(error?.errors, error?.message)
     } finally {
         Loader.delete()
     }
@@ -71,14 +67,14 @@ async function sendToBackend(email, password) {
         }
         isLoading = true
 
-        if (!email || email.trim() === '') 
+        if (!email || email.trim() === '')
             throw new Error('Email is required.')
 
-        if (!password || password.trim() === '') 
+        if (!password || password.trim() === '')
             throw new Error('Password is required.')
 
         const response = await Http.POST('auth/login', { email, password })
-        if (!response) 
+        if (!response)
             throw error
 
         return response.data

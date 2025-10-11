@@ -1,9 +1,10 @@
 import { Http } from '../../utility/http.js'
 import { Dialog } from '../../render/dialog.js'
+import { errorListDialog } from '../../render/error-list-dialog.js'
 import { Loader } from '../../render/loader.js'
 import { confirmationDialog } from '../../render/confirmation-dialog.js'
 import { validateInputs, workValidationRules } from '../../utility/validator.js'
-import { debounce, debounceAsync } from '../../utility/debounce.js'
+import { debounceAsync } from '../../utility/debounce.js'
 
 let isLoading = false
 const editTaskModalTemplate = document.querySelector('#edit_task_modal_template')
@@ -76,12 +77,7 @@ async function submitForm(e) {
         }, 3000)
     } catch (error) {
         console.error('Error submitting form:', error)
-        if (error?.status === 401 || error?.status === 403) {
-            const message = error.errorData.message || 'You do not have permission to perform this action.'
-            Dialog.errorOccurred(message)
-        } else {
-            Dialog.errorOccurred('Error editing task. Please try again.')
-        }
+        errorListDialog(error?.errors, error?.message)
     } finally {
         Loader.delete()
         isLoading = false

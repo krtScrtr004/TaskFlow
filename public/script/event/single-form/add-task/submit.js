@@ -1,6 +1,7 @@
 import { Dialog } from '../../../render/dialog.js'
 import { Http } from '../../../utility/http.js'
 import { Loader } from '../../../render/loader.js'
+import { errorListDialog } from '../../../render/error-list-dialog.js'
 import { confirmationDialog } from '../../../render/confirmation-dialog.js'
 import { assignedWorkers } from '../../add-worker-modal/task/new/add.js'
 import { validateInputs, workValidationRules } from '../../../utility/validator.js'
@@ -54,7 +55,7 @@ async function submitForm(e) {
             throw new Error('Project ID not found in form dataset.')
         }
         const response = await sendToBackend(params, projectId)
-        if (!response) 
+        if (!response)
             throw new Error('No response from server.')
         Dialog.operationSuccess('Task Added.', 'The task has been added to the project.')
 
@@ -62,13 +63,7 @@ async function submitForm(e) {
             setTimeout(() => window.location.href = `/TaskFlow/project/${projectId}/task/${response.id}`, 1500)
     } catch (error) {
         console.error('Error submitting form:', error)
-        if (error?.status === 401 || error?.status === 403) {
-            const message = error.errorData.message || 'You do not have permission to perform this action.'
-            Dialog.errorOccurred(message)
-        } else {
-            Dialog.somethingWentWrong()
-        }
-        return
+        errorListDialog(error?.errors, error?.message)
     } finally {
         Loader.delete()
     }

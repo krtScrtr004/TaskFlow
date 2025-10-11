@@ -33,7 +33,7 @@
 
     <!-- Birth Date -->
     <div class="birth-date flex-col">
-        <label class="first-col" for="register_day_of_birth">Date of Birth</label>
+        <label class="first-col" for="day_of_birth">Date of Birth</label>
         <div class="birth-date-inputs second-col flex-col">
             <div class="invalid-date-result-box">
                 <p class="red-text"></p>

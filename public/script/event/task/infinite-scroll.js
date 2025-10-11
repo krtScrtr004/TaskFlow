@@ -1,6 +1,7 @@
 import { infiniteScroll } from '../../utility/infinite-scroll.js'
 import { Http } from '../../utility/http.js'
 import { Dialog } from '../../render/dialog.js'
+import { errorListDialog } from '../../render/error-list-dialog.js'
 import { createTaskGridCard } from './create-task-grid-card.js'
 
 let isLoading = false
@@ -27,12 +28,7 @@ try {
     )
 } catch (error) {
     console.error('Error initializing infinite scroll:', error)
-    if (error?.status === 401 || error?.status === 403) {
-        const message = error.errorData.message || 'You do not have permission to perform this action.'
-        Dialog.errorOccurred(message)
-    } else {
-        Dialog.somethingWentWrong()
-    }
+    errorListDialog(error?.errors, error?.message)
 }
 
 function getExistingItemsCount() {

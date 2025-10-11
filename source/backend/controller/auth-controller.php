@@ -11,7 +11,9 @@ class AuthController implements Controller {
         if (!$data)
             Response::error('Cannot decode data.');
 
-        // Response::error('Invalid email or password.', [], 401);
+        Response::error('Login failed.', [
+            'Invalid email or password.'
+        ], 401);
 
         Response::success([
             'projectId' => 'P12345'

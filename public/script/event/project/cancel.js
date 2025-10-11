@@ -1,4 +1,5 @@
 import { Dialog } from '../../render/dialog.js'
+import { errorListDialog } from '../../render/error-list-dialog.js'
 import { confirmationDialog } from '../../render/confirmation-dialog.js'
 import { Http } from '../../utility/http.js'
 
@@ -32,12 +33,7 @@ if (cancelProjectButton) {
             window.location.reload()
         } catch (error) {
             console.error('Error cancelling project:', error)
-            if (error?.status === 401 || error?.status === 403) {
-                const message = error.errorData.message || 'You do not have permission to perform this action.'
-                Dialog.errorOccurred(message)
-            } else {
-                Dialog.errorOccurred('Error cancelling project. Please try again.')
-            }
+            errorListDialog(error?.errors, error?.message)
         }
     })
 } else {
