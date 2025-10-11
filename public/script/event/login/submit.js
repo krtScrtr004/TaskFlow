@@ -2,7 +2,7 @@ import { Http } from '../../utility/http.js'
 import { Dialog } from '../../render/dialog.js'
 import { Loader } from '../../render/loader.js'
 import { Notification } from '../../render/notification.js'
-import { validateInputs } from '../../utility/validator.js'
+import { validateInputs, userValidationRules } from '../../utility/validator.js'
 import { debounceAsync } from '../../utility/debounce.js'
 
 let isLoading = false
@@ -40,7 +40,7 @@ async function submit(e) {
     if (!validateInputs({
         email: email,
         password: password
-    })) return
+    }, userValidationRules())) return
 
     Loader.patch(loginButton.querySelector('.text-w-icon'))
     try {

@@ -3,7 +3,7 @@ import { Http } from '../../../utility/http.js'
 import { Loader } from '../../../render/loader.js'
 import { confirmationDialog } from '../../../render/confirmation-dialog.js'
 import { assignedWorkers } from '../../add-worker-modal/task/new/add.js'
-import { validateInputs } from '../../../utility/validator.js'
+import { validateInputs, workValidationRules } from '../../../utility/validator.js'
 import { debounceAsync } from '../../../utility/debounce.js'
 
 let isLoading = false
@@ -47,7 +47,7 @@ async function submitForm(e) {
             assignedWorkers: assignedWorkers ? assignedWorkers : {}
         }
 
-        if (!validateInputs(params)) return
+        if (!validateInputs(params, workValidationRules())) return
 
         const projectId = addTaskForm.dataset.projectid
         if (!projectId) {

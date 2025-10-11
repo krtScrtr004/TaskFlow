@@ -2,7 +2,7 @@ import { Http } from '../../utility/http.js'
 import { Dialog } from '../../render/dialog.js'
 import { Loader } from '../../render/loader.js'
 import { confirmationDialog } from '../../render/confirmation-dialog.js'
-import { validateInputs } from '../../utility/validator.js'
+import { validateInputs, workValidationRules } from '../../utility/validator.js'
 import { debounce, debounceAsync } from '../../utility/debounce.js'
 
 let isLoading = false
@@ -43,7 +43,7 @@ async function submitForm(e) {
         completionDateTime: completionDateInput ? completionDateInput.value : '',
         priority: prioritySelect ? prioritySelect.value : '',
     }
-    if (!validateInputs(params)) return
+    if (!validateInputs(params, workValidationRules())) return
 
     const viewTaskInfo = document.querySelector('.view-task-info.main-page')
     if (!viewTaskInfo) {

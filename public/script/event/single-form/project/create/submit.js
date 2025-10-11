@@ -3,7 +3,7 @@ import { Dialog } from '../../../../render/dialog.js'
 import { Loader } from '../../../../render/loader.js'
 import { confirmationDialog } from '../../../../render/confirmation-dialog.js'
 import { debounceAsync } from '../../../../utility/debounce.js'
-import { validateInputs } from '../../../../utility/validator.js'
+import { validateInputs, workValidationRules } from '../../../../utility/validator.js'
 
 let isLoading = false
 const phaseToAdd = []
@@ -44,7 +44,7 @@ async function submitForm(e) {
         budget: parseFloat(budgetInput.value) ?? null,
         startDate: startDateInput.value ?? null,
         completionDate: completionDateInput.value ?? null
-    })) return
+    }, workValidationRules())) return
 
     const phaseContainers = createProjectForm.querySelectorAll('.phase')
     phaseContainers.forEach(phaseContainer => addPhaseForm(phaseContainer))
