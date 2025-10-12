@@ -17,7 +17,8 @@ class Worker extends User {
         ?string $bio,
         ?string $profileLink,
         WorkerStatus $status,
-        DateTime $joinedDateTime
+        DateTime $joinedDateTime,
+        array $additionalInfo = []
     ) {
         parent::__construct(
             $id,
@@ -33,7 +34,8 @@ class Worker extends User {
             $email,
             $bio,
             $profileLink,
-            $joinedDateTime
+            $joinedDateTime,
+            $additionalInfo
         );
         $this->status = $status;
     }
@@ -71,7 +73,8 @@ class Worker extends User {
             $worker->getEmail(),
             $worker->getBio(),
             $worker->getProfileLink(),
-            $worker->getJoinedDateTime()
+            $worker->getJoinedDateTime(),
+            $worker->getAdditionalInfo()
         );
     }
 
@@ -101,7 +104,8 @@ class Worker extends User {
             $user->getBio(),
             $user->getProfileLink(),
             WorkerStatus::ACTIVE,
-            $user->getJoinedDateTime()
+            $user->getJoinedDateTime(),
+            $user->getAdditionalInfo()
         );
     }
 
@@ -121,7 +125,8 @@ class Worker extends User {
             $user->getBio(),
             $user->getProfileLink(),
             WorkerStatus::from($data['status']),
-            $user->getJoinedDateTime()
+            $user->getJoinedDateTime(),
+            $user->getAdditionalInfo()
         );
     }
 
