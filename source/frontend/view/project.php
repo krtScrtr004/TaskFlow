@@ -48,12 +48,14 @@
         <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'progress-bar.js' ?>"></script>
         <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'task-chart.js' ?>"></script>
         <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'create-worker-card.js' ?>"></script>
-        <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'terminate-worker.js' ?>"></script>
         <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'infinite-scroll-workers.js' ?>"></script>
-        <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'cancel.js' ?>"></script>
 
-        <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'project' . DS . 'open.js' ?>"></script>
-        <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'project' . DS . 'add.js' ?>"></script>
+        <?php if (Role::isProjectManager(Me::getInstance())): ?>
+            <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'terminate-worker.js' ?>"></script>
+            <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'cancel.js' ?>"></script>
+            <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'project' . DS . 'open.js' ?>"></script>
+            <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'project' . DS . 'add.js' ?>"></script>
+        <?php endif; ?>
     <?php endif; ?>
 </body>
 

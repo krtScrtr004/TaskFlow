@@ -15,7 +15,7 @@ class ProjectController implements Controller
         $projectId = $args['projectId'] ?? null; // Temporary placeholder
 
         $projects = ProjectModel::all();
-        $project = $projects[0];
+        $project = $projects->getItems()[0];
 
         require_once VIEW_PATH . 'project.php';
     }
@@ -27,7 +27,7 @@ class ProjectController implements Controller
             Response::error('Project ID is required.');
 
         $projects = ProjectModel::all();
-        Response::success([$projects[0]], 'Project retrieved successfully.');
+        Response::success([$projects->getItems()[0]], 'Project retrieved successfully.');
     }
 
     public static function getProjectByKey(): void
@@ -37,7 +37,7 @@ class ProjectController implements Controller
         $offset = isset($_GET['offset']) ? (int)$_GET['offset'] : 0;
 
         $projects = ProjectModel::all();
-        Response::success([$projects[0]], 'Projects retrieved successfully.');
+        Response::success([$projects->getItems()[0]], 'Projects retrieved successfully.');
     }
 
     public static function createProject(): void

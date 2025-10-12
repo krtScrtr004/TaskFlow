@@ -20,7 +20,7 @@ class ProjectModel implements Model
         }
     }
 
-    public static function all(): array
+    public static function all(): ProjectContainer
     {
         $workers = new WorkerContainer();
         $users = UserModel::all();
@@ -59,7 +59,7 @@ class ProjectModel implements Model
             );
         }
         
-        return $projects;
+        return new ProjectContainer($projects);
     }
 
     public static function find($id): ?self

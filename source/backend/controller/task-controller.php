@@ -17,7 +17,7 @@ class TaskController implements Controller
         // Fetch tasks for the given project ID if PM;
         // else, fetch tasks assigned to the worker
 
-        $project = ProjectModel::all()[0];
+        $project = ProjectModel::all()->getItems()[0]; // Temporary placeholder
 
         $queryParams = $_GET ?? [];
         $filter = isset($queryParams['filter']) ? $queryParams['filter'] : '';
@@ -37,7 +37,7 @@ class TaskController implements Controller
         if (!$taskId)
             throw new InvalidArgumentException('Task ID is required.');
 
-        $project = ProjectModel::all()[0]; // Temporary placeholder
+        $project = ProjectModel::all()->getItems()[0]; // Temporary placeholder
         $task = TaskModel::all()->getItems()[0]; // Temporary placeholder
 
         require_once SUB_VIEW_PATH . 'view-task.php';
