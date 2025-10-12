@@ -75,7 +75,7 @@ async function sendToBackend(email, password) {
 
         const response = await Http.POST('auth/login', { email, password })
         if (!response)
-            throw error
+            throw new Error('No response from server.')
 
         return response.data
     } catch (error) {
