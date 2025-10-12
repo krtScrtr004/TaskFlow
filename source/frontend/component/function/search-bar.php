@@ -9,7 +9,7 @@ function searchBar(
     ?array $filterOptions = null,
     string $placeholder = 'Search by Name or ID'
 ): string {
-    if (!$filterOptions && !isAssociativeArray($filterOptions)) 
+    if (!isAssociativeArray($filterOptions)) 
         throw new InvalidArgumentException('Filter options must be an associative array.');
 
     $searchKey = isset($_GET['key']) ? htmlspecialchars($_GET['key']) : '';
@@ -26,7 +26,7 @@ function searchBar(
             </button>
         </div>
 
-        <?php if ($filterOptions): ?>
+        <?php if ($filterOptions || ($filterOptions && count($filterOptions) > 0)): ?>
             <select class="search-filter" name="search_bar_filter" id="search_bar_filter">
                 <!-- Default Option -->
                 <option value="all" <?= $searchFilter === 'all' ? 'selected' : '' ?>>All Projects</option>
