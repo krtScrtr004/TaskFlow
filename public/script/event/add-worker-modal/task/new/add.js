@@ -257,10 +257,8 @@ async function sendToBackend(projectId, workerIds) {
 
         const idParams = workerIds.map(id => `${id}`).join(',')
         const response = await Http.GET(`projects/${projectId}/workers?ids=${idParams}`)
-        if (!response) {
+        if (!response) 
             throw new Error('No response from server.')
-        }
-
         return response.data
     } catch (error) {
         throw error

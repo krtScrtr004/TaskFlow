@@ -11,6 +11,9 @@ class UserController implements Controller
         if (!$userId)
             Response::error('User ID is required.');
 
+        if ($_GET['additionalInfo'])
+            // TODO
+
         $users = UserModel::all();
         Response::success([
             'user' => $users

@@ -63,13 +63,12 @@ async function terminateButtonEvent(e, projectId, workerCardSelector) {
             const noWorkersWall = thisWorkerContainer.querySelector('.no-workers-wall')
                 || thisWorkerContainer.parentElement?.querySelector('.no-workers-wall')
             noWorkersWall?.classList.add('flex-col')
-            noWorkersWall?.classList.remove('no-display')            
+            noWorkersWall?.classList.remove('no-display')
         }
         const closeButton = workerInfoCardTemplate.querySelector('#worker_info_card_close_button')
         closeButton?.click()
     } catch (error) {
-        console.error(error)
-        Dialog.errorOccurred('An error occurred while terminating the worker. Please try again.')
+        throw error
     }
 }
 
@@ -88,11 +87,9 @@ async function sendToBackend(projectId, workerId) {
             throw new Error('Worker ID is required.')
 
         const response = await Http.PUT(`projects/${projectId}/workers/${workerId}`, { status: 'terminated' })
-        if (!response) {
+        if (!response)
             throw new Error('Failed to terminate worker from project.')
-        }
     } catch (error) {
-        console.error('Error terminating worker:', error)
         throw error
     } finally {
         isLoading = false

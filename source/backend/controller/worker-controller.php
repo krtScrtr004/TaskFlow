@@ -107,7 +107,7 @@ class WorkerController implements Controller
     {
         $worker->setRole(Role::WORKER);
         $tasks = TaskModel::all();
-        $workerPerformanceTask = WorkerPerformanceCalculator::calculateWorkerPerformance($tasks);
+        $workerPerformanceTask = WorkerPerformanceCalculator::calculate($tasks);
         return [
             'id' => $worker->getPublicId(),
             'name' => $worker->getFirstName() . ' ' . $worker->getLastName(),
@@ -149,7 +149,7 @@ class WorkerController implements Controller
                 // TODO: Fetch User
                 $user = UserModel::all()[0];
 
-                $userPerformance = WorkerPerformanceCalculator::calculateWorkerPerformance(TaskModel::all());
+                $userPerformance = WorkerPerformanceCalculator::calculate(TaskModel::all());
                 $returnDataArray[] = [
                     'id' => $user->getPublicId(),
                     'name' => $user->getFirstName() . ' ' . $user->getLastName(),
@@ -200,7 +200,7 @@ class WorkerController implements Controller
                 // TODO: Fetch User
                 $user = UserModel::all()[0];
 
-                $userPerformance = WorkerPerformanceCalculator::calculateWorkerPerformance(TaskModel::all());
+                $userPerformance = WorkerPerformanceCalculator::calculate(TaskModel::all());
                 $returnDataArray[] = [
                     'id' => $user->getPublicId(),
                     'name' => $user->getFirstName() . ' ' . $user->getLastName(),

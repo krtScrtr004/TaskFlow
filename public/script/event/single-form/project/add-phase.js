@@ -1,4 +1,4 @@
-import { validateInputs } from '../../../utility/validator.js'
+import { validateInputs, workValidationRules } from '../../../utility/validator.js'
 import { clonePhaseListCard } from './clone-phase-list-card.js'
 import { Loader } from '../../../render/loader.js'
 import { Dialog } from '../../../render/dialog.js'
@@ -50,7 +50,7 @@ function submitForm(e, params) {
         description,
         startDateTime,
         completionDateTime
-    })) return
+    }, workValidationRules())) return
 
     Loader.patch(addNewPhaseButton.querySelector('.text-w-icon'))
     try {
@@ -77,6 +77,6 @@ function submitForm(e, params) {
         // Reset form fields
         addPhaseForm.reset()
     } catch (error) {
-        throw new Error(error)
+        throw error
     }
 }

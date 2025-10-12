@@ -23,7 +23,6 @@ class TaskContainer extends Container
             }
 
             $this->add($task);
-            $this->increaseTaskCount($task);
         }
     }
 

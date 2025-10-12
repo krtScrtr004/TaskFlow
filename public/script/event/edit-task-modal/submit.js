@@ -1,9 +1,10 @@
 import { Http } from '../../utility/http.js'
 import { Dialog } from '../../render/dialog.js'
+import { errorListDialog } from '../../render/error-list-dialog.js'
 import { Loader } from '../../render/loader.js'
 import { confirmationDialog } from '../../render/confirmation-dialog.js'
-import { validateInputs } from '../../utility/validator.js'
-import { debounce, debounceAsync } from '../../utility/debounce.js'
+import { validateInputs, workValidationRules } from '../../utility/validator.js'
+import { debounceAsync } from '../../utility/debounce.js'
 
 let isLoading = false
 const editTaskModalTemplate = document.querySelector('#edit_task_modal_template')
@@ -43,7 +44,7 @@ async function submitForm(e) {
         completionDateTime: completionDateInput ? completionDateInput.value : '',
         priority: prioritySelect ? prioritySelect.value : '',
     }
-    if (!validateInputs(params)) return
+    if (!validateInputs(params, workValidationRules())) return
 
     const viewTaskInfo = document.querySelector('.view-task-info.main-page')
     if (!viewTaskInfo) {
@@ -76,7 +77,7 @@ async function submitForm(e) {
         }, 3000)
     } catch (error) {
         console.error('Error submitting form:', error)
-        Dialog.errorOccurred('Error editing task. Please try again.')
+        errorListDialog(error?.errors, error?.message)
     } finally {
         Loader.delete()
         isLoading = false
@@ -112,7 +113,7 @@ async function sendToBackend(projectId, taskId, inputs) {
 
         const response = await Http.PUT(`projects/${projectId}/tasks/${taskId}`, inputs)
         if (!response)
-            throw new Error('No response from server.')
+            throw error
         return response
     } catch (error) {
         throw error

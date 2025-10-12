@@ -25,7 +25,7 @@ function taskGridCard($task, $projectId): string
             </section>
 
             <!-- Task Description -->
-            <p class="task-description multi-line-ellipsis" title="<?= $description ?>">
+            <p class="task-description multi-line-ellipsis-5" title="<?= $description ?>">
                 <?= $description ?>
             </p>
 

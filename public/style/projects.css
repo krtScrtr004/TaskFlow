@@ -1,0 +1,78 @@
+.projects {
+	gap: var(--space);
+}
+
+.projects > .heading > h3 {
+	font-size: 2rem;
+	font-weight: 600;
+}
+
+.projects > .heading > p {
+	font-size: 1.2rem;
+	font-weight: 300;
+	margin-top: 0.5rem;
+}
+
+.projects > .statistics {
+	gap: var(--space);
+}
+
+.projects > .statistics > div {
+	gap: 1rem;
+}
+
+.projects > .statistics .text-w-icon > h3 {
+	font-size: 1.7rem;
+}
+
+.projects > .statistics > .performance {
+	width: fit-content;
+}
+
+.projects > .statistics > .performance h1 {
+	margin-left: 0.5rem;
+	font-size: 3rem;
+	font-weight: 700;
+}
+
+.project-grid {
+	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+	gap: var(--space);
+}
+
+.project-grid-card {
+	background-color: var(--black);
+	aspect-ratio: 1 / 1;
+	padding: 1rem;
+	border-radius: var(--border-radius);
+}
+
+.project-grid-card:hover {
+    opacity: 0.7;
+}
+
+.project-grid-card > a {
+	gap: 0.5rem;
+}
+
+.project-grid-card .project-name {
+	max-width: 23ch;
+	font-size: 1.5rem;
+	font-weight: 600;
+}
+
+.project-grid-card .project-schedule {
+	margin-top: 0.3rem;
+	font-size: 0.9rem;
+	font-weight: 300;
+}
+
+.project-grid-card .project-description {
+	max-width: 25ch;
+	font-size: 1rem;
+	font-weight: 300;
+}
+
+.project-status {
+    flex: 1;
+}

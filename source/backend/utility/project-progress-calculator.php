@@ -30,7 +30,7 @@ class ProjectProgressCalculator
      * @param array $tasks Array of tasks with 'status' and 'priority' keys
      * @return array Progress data with percentage, breakdown, and insights
      */
-    public static function calculateProjectProgress(TaskContainer $taskContainer): array
+    public static function calculate(TaskContainer $taskContainer): array
     {
         $totalTasks = $taskContainer->count();
         if ($totalTasks === 0) {

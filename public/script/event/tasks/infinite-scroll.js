@@ -1,6 +1,7 @@
 import { infiniteScroll } from '../../utility/infinite-scroll.js'
 import { Http } from '../../utility/http.js'
 import { Dialog } from '../../render/dialog.js'
+import { errorListDialog } from '../../render/error-list-dialog.js'
 import { createTaskGridCard } from './create-task-grid-card.js'
 
 let isLoading = false
@@ -27,7 +28,7 @@ try {
     )
 } catch (error) {
     console.error('Error initializing infinite scroll:', error)
-    Dialog.somethingWentWrong()
+    errorListDialog(error?.errors, error?.message)
 }
 
 function getExistingItemsCount() {
@@ -51,12 +52,11 @@ async function asyncFunction(offset) {
             throw new Error('Project ID not found.')
 
         const response = await Http.GET(`projects/${projectId}/tasks?offset=${offset}`)
-        if (!response?.data)
+        if (!response)
             throw new Error('No response from server.')
 
         return response.data
     } catch (error) {
-        console.error('Error during infinite scroll fetch:', error)
         throw error
     } finally {
         isLoading = false

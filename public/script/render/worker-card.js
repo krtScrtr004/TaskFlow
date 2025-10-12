@@ -17,20 +17,20 @@ export async function workerInfoCard(projectId, workerId) {
 
     Loader.full(workerInfoCardTemplate.querySelector('.worker-info-card'))
 
-    const worker = await fetchWorkerInfo(projectId, workerId)
-    if (!worker || worker.length === 0) {
+    try {
+        const worker = await fetchWorkerInfo(projectId, workerId)
+        if (!worker) {
+            workerInfoCardTemplate.classList.remove('flex-col')
+            workerInfoCardTemplate.classList.add('no-display')
+
+            throw error
+        }
+        addInfoToCard(workerInfoCardTemplate, worker[0])
+    } catch (error) {
+        throw error
+    } finally {
         Loader.delete()
-        Notification.error('Failed to fetch worker information. Please try again later.', 3000)
-
-        workerInfoCardTemplate.classList.remove('flex-col')
-        workerInfoCardTemplate.classList.add('no-display')
-
-        return
     }
-
-    addInfoToCard(workerInfoCardTemplate, worker[0])
-
-    Loader.delete()
 }
 
 function addInfoToCard(card, worker) {
@@ -108,16 +108,16 @@ async function fetchWorkerInfo(projectId, workerId) {
         }
         isLoading = true
 
-        if (!projectId || projectId === '') 
+        if (!projectId || projectId === '')
             throw new Error('Project ID is required.')
 
         if (!workerId || workerId === '')
             throw new Error('Worker ID is required.')
-        
+
         const response = await Http.GET(`projects/${projectId}/workers/${workerId}`)
-        if (!response) 
-            throw new Error('No response from server')
-        
+        if (!response)
+            throw error
+
         return response.data
     } catch (error) {
         throw error

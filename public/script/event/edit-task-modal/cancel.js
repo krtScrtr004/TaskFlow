@@ -2,6 +2,7 @@ import { Http } from '../../utility/http.js'
 import { debounceAsync } from '../../utility/debounce.js'
 import { Loader } from '../../render/loader.js'
 import { Dialog } from '../../render/dialog.js'
+import { errorListDialog } from '../../render/error-list-dialog.js'
 import { confirmationDialog } from '../../render/confirmation-dialog.js'
 
 let isLoading = false
@@ -41,7 +42,7 @@ async function submit(e) {
         window.location.reload()
     } catch (error) {
         console.error('Error cancelling task:', error)
-        Dialog.errorOccurred('Error cancelling task')
+        errorListDialog(error?.errors, error?.message)
     } finally {
         Loader.delete()
     }
@@ -61,9 +62,9 @@ async function sendToBackend(projectId, taskId) {
         if (!taskId)
             throw new Error('Task ID is required.')
 
-        const response = await Http.PUT(`/project/${projectId}/task/${taskId}`, { status: 'cancelled' })
+        const response = await Http.PUT(`projects/${projectId}/tasks/${taskId}`, { status: 'cancelled' })
         if (!response)
-            throw new Error('No response from server.')
+            throw error
     } catch (error) {
         throw error
     } finally {

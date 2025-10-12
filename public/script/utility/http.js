@@ -1,26 +1,43 @@
-const apiUrl = 'http://localhost/TaskFlow/'
+const apiUrl = 'http://localhost/TaskFlow/endpoint/'
 
 export const Http = (() => {
     const makeRequest = async (endpoint, method = 'GET', body = null, serialize = true) => {
         try {
-            const options = { 
-                method 
+            const options = {
+                method
             }
-            
+
             if (body !== null && ['POST', 'PUT', 'PATCH'].includes(method)) {
                 options.body = serialize ? JSON.stringify(body) : body
             }
-            
+
             const request = await fetch(`${apiUrl}${endpoint}`, options)
-            
+
             if (!request.ok) {
-                throw new Error(`HTTP error! Status: ${request.status} ${request.statusText}`)
+                const contentType = request.headers.get('Content-Type')
+                let errorData
+
+                // Try to parse JSON error response
+                if (contentType && contentType.includes('application/json')) {
+                    errorData = await request.json()
+                } else {
+                    errorData = {
+                        error: request.status === 401 ? 'Unauthorized' : 'Forbidden',
+                        message: request.statusText
+                    }
+                }
+
+                // Create a custom error with the response data
+                const error = new Error(errorData.message || 'Authentication failed')
+                error.status = request.status
+                error.errors = errorData.errors || []
+                throw error
             }
-            
+
             if (request.status === 204 || request.status === 302) {
                 return true
             }
-            
+
             if (method !== 'DELETE') {
                 const contentType = request.headers.get('Content-Type')
                 if (!contentType || !contentType.includes('application/json')) {
@@ -28,14 +45,13 @@ export const Http = (() => {
                 }
                 return await request.json()
             }
-            
+
             return true
         } catch (error) {
-            console.error(error)
-            throw new Error('Error: ' + error.message)
+            throw error
         }
     }
-    
+
     return {
         GET: (endpoint) => makeRequest(endpoint, 'GET'),
         POST: (endpoint, body = null, serialize = true) => makeRequest(endpoint, 'POST', body, serialize),

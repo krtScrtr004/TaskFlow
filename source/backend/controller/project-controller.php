@@ -10,12 +10,45 @@ class ProjectController implements Controller
 
     public static function index(): void
     {
-        // TODO: Dummy
+    }
+
+    public static function viewProject(array $args = []): void
+    {
+        $projectId = $args['projectId'] ?? null; // Temporary placeholder
 
         $projects = ProjectModel::all();
-        $project = $projects[0];
+        $project = $projects->getItems()[0];
 
-        require_once VIEW_PATH . 'project.php';
+        require_once VIEW_PATH . 'home.php';
+    }
+
+    public static function viewProjectGrid(): void
+    {
+        $projects = ProjectModel::all();
+
+        require_once VIEW_PATH . 'projects.php';
+    }
+
+    // 
+
+    public static function getProjectById(array $args = []): void
+    {
+        $projectId = $args['projectId'] ?? null; // Temporary placeholder
+        if (!$projectId)
+            Response::error('Project ID is required.');
+
+        $projects = ProjectModel::all();
+        Response::success([$projects->getItems()[0]], 'Project retrieved successfully.');
+    }
+
+    public static function getProjectByKey(): void
+    {
+        $key = $_GET['key'] ?? '';
+
+        $offset = isset($_GET['offset']) ? (int) $_GET['offset'] : 0;
+
+        $projects = ProjectModel::all();
+        Response::success([$projects->getItems()[0]], 'Projects retrieved successfully.');
     }
 
     public static function createProject(): void
@@ -55,7 +88,7 @@ class ProjectController implements Controller
          * - Edited Phases : ID, Description, Start Date, Completion Date
          * - New Phases :Name, Description, Start Date, Completion Date
          * - Cancelled Phases : ID
-         * */ 
+         * */
 
         $projectId = $args['projectId'] ?? null; // Temporary placeholder
         if (!$projectId)
@@ -63,7 +96,7 @@ class ProjectController implements Controller
 
         $data = decodeData('php://input');
         if (!$data)
-            Response::error('Cannot decode data.');
+            Response::error('Cannot decode data.', []);
 
         // TODO: Validate and sanitize $data
 

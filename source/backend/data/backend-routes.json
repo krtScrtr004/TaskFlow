@@ -1,94 +1,103 @@
 {
 	"GET": {
-		"TaskFlow/users/{userId:[\\w+_-]+}": ["UserController", "getUserById"],
-		"TaskFlow/users(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": [
-			"UserController",
-			"getUserByKey"
-		],
-
-		"TaskFlow/workers/{workerId:[\\w+_-]+}": [
-			"WorkerController",
-			"getWorkerById"
-		],
-		"TaskFlow/workers(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": [
-			"WorkerController",
-			"getWorkerByKey"
-		],
-
-		"TaskFlow/projects/{projectId:[\\w+_-]+}/workers/{workerId:[\\w+_-]+}": [
-			"WorkerController",
-			"getProjectWorkerById"
-		],
-		"TaskFlow/projects/{projectId:[\\w+_-]+}/workers(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": [
-			"WorkerController",
-			"getProjectWorkerByKey"
-		],
-
-		"TaskFlow/projects/{projectId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}/workers/{workerId:[\\w+_-]+}": [
+		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}/tasks/{taskId:[\\w_-]+}/workers/{workerId:[\\w_-]+}": [
 			"WorkerController",
 			"getTaskWorkerById"
 		],
-		"TaskFlow/projects/{projectId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}/workers(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": [
+		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}/tasks/{taskId:[\\w_-]+}/workers(?:\\?[\\w\\s_=\\/%,&@-]+)?": [
 			"WorkerController",
 			"getTaskWorkerByKey"
 		],
 
-		"TaskFlow/projects/{projectId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}": [
+		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}/tasks/{taskId:[\\w_-]+}": [
 			"TaskController",
 			"getTaskById"
 		],
-		"TaskFlow/projects/{projectId:[\\w+_-]+}/tasks(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": [
+		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}/tasks(?:\\?[\\w\\s_=\\/%,&@-]+)?": [
 			"TaskController",
 			"getTaskByKey"
+		],
+
+		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}/workers/{workerId:[\\w_-]+}": [
+			"WorkerController",
+			"getProjectWorkerById"
+		],
+		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}/workers(?:\\?[\\w\\s_=\\/%,&@-]+)?": [
+			"WorkerController",
+			"getProjectWorkerByKey"
+		],
+
+		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}": [
+			"ProjectController",
+			"getProjectById"
+		],
+		"TaskFlow/endpoint/projects(?:\\?[\\w\\s_=\\/%,&@-]+)?": [
+			"ProjectController",
+			"getProjectByKey"
+		],
+
+		"TaskFlow/endpoint/workers/{workerId:[\\w_-]+}": [
+			"WorkerController",
+			"getWorkerById"
+		],
+		"TaskFlow/endpoint/workers(?:\\?[\\w\\s_=\\/%,&@-]+)?": [
+			"WorkerController",
+			"getWorkerByKey"
+		],
+
+		"TaskFlow/endpoint/users/{userId:[\\w_-]+}": ["UserController", "getUserById"],
+		"TaskFlow/endpoint/users(?:\\?[\\w\\s_=\\/%,&@-]+)?": [
+			"UserController",
+			"getUserByKey"
 		]
 	},
 
 	"POST": {
-		"TaskFlow/projects": ["ProjectController", "createProject"],
-		"TaskFlow/projects/{projectId:[\\w+_-]+}/workers": [
+		"TaskFlow/endpoint/projects": ["ProjectController", "createProject"],
+		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/workers": [
 			"WorkerController",
 			"addWorkerToProject"
 		],
-		"TaskFlow/projects/{projectId:[\\w+_-]+}/phases": [
+		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/phases": [
 			"PhaseController",
 			"addPhase"
 		],
-		"TaskFlow/projects/{projectId:[\\w+_-]+}/tasks": [
+		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/tasks": [
 			"TaskController",
 			"addTask"
 		],
-		"TaskFlow/projects/{projectId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}/workers": [
+		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}/workers": [
 			"WorkerController",
 			"addWorkerToTask"
 		]
 	},
 
 	"PUT": {
-		"TaskFlow/projects/{projectId:[\\w+_-]+}": [
+		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}": [
 			"ProjectController",
 			"editProject"
 		],
-		"TaskFlow/projects/{projectId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}": [
+		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}": [
 			"TaskController",
 			"editTask"
 		],
-		"TaskFlow/projects/{projectId:[\\w+_-]+}/workers/{workerId:[\\w+_-]+}": [
+		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/workers/{workerId:[\\w+_-]+}": [
 			"WorkerController",
 			"editWorker"
 		]
 	},
 
 	"PATCH": {
-		"TaskFlow/projects/{projectId:[\\w+_-]+}": [
+		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}": [
 			"ProjectController",
 			"editProject"
 		],
-		"TaskFlow/users/{userId:[\\w+_-]+}": ["UserController", "editUser"],
-		"TaskFlow/projects/{projectId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}": [
+		"TaskFlow/endpoint/users/{userId:[\\w+_-]+}": ["UserController", "editUser"],
+		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}": [
 			"TaskController",
 			"editTask"
 		],
-		"TaskFlow/projects/{projectId:[\\w+_-]+}/workers/{workerId:[\\w+_-]+}": [
+		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/workers/{workerId:[\\w+_-]+}": [
 			"WorkerController",
 			"editWorker"
 		]

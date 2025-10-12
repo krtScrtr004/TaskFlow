@@ -35,7 +35,7 @@ class WorkerPerformanceCalculator
      * @param TaskContainer $tasks Container of tasks assigned to the worker
      * @return array Comprehensive performance data
      */
-    public static function calculateWorkerPerformance(TaskContainer $tasks): array {
+    public static function calculate(TaskContainer $tasks): array {
         if ($tasks->count() < 1) {
             return [
                 'overallScore' => 0.0,

@@ -1,5 +1,6 @@
 import { Http } from '../../utility/http.js'
 import { Dialog } from '../../render/dialog.js'
+import { errorListDialog } from '../../render/error-list-dialog.js'
 import { Loader } from '../../render/loader.js'
 import { confirmationDialog } from '../../render/confirmation-dialog.js'
 import { debounceAsync } from '../../utility/debounce.js'
@@ -71,7 +72,7 @@ async function searchForWorker(e, projectId) {
 
         if (workers && workers.length > 0) {
             workers.forEach(worker => createWorkerListCard(worker))
-            
+
             // Reset and reinitialize infinite scroll with the search term
             infiniteScrollWorkers(projectId, searchTerm)
         } else {
@@ -81,7 +82,7 @@ async function searchForWorker(e, projectId) {
 
             workerList.classList.remove('flex-col')
             workerList.classList.add('no-display')
-            
+
             // Disconnect infinite scroll observer when no results
             disconnectInfiniteScroll()
         }
@@ -120,7 +121,7 @@ function infiniteScrollWorkers(projectId, searchKey = '') {
             projectId,
             searchKey
         )
-        
+
         // Store the observer so we can disconnect it later
         currentInfiniteScrollObserver = { observer, sentinel }
     } catch (error) {
@@ -141,7 +142,7 @@ function createInfiniteScrollObserver(workerList, sentinel, projectId, searchKey
 
                 try {
                     const workers = await fetchWorkers(projectId, searchKey, offset)
-                    
+
                     if (!workers || workers.length === 0) {
                         observer.unobserve(sentinel)
                         return
@@ -413,7 +414,7 @@ async function addWorkerButtonEvent(e, projectId, confirmAddWorkerButton, asyncF
         else onSuccess()
     } catch (error) {
         console.error(error)
-        Dialog.errorOccurred('An error occurred while adding workers. Please try again.')
+        errorListDialog(error?.errors, error?.message)
     } finally {
         Loader.delete()
     }

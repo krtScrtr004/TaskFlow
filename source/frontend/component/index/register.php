@@ -2,34 +2,34 @@
 
     <div class="separated-name-input flex-row">
         <!-- First Name -->
-        <input type="text" id="first_name" name="first_name" min="1" max="50" placeholder="First Name" autocomplete="on"
-            required>
+        <input type="text" id="register_first_name" name="register_first_name" min="1" max="50" placeholder="First Name"
+            autocomplete="on" required>
 
         <!-- Middle Name -->
-        <input type="text" id="middle_name" name="middle_name" min="1" max="50" placeholder="Middle Name"
-            autocomplete="on" required>
+        <input type="text" id="register_middle_name" name="register_middle_name" min="1" max="50"
+            placeholder="Middle Name" autocomplete="on" required>
     </div>
 
     <!-- Last Name -->
-    <input type="text" id="last_name" name="last_name" min="1" max="50" placeholder="Last Name" autocomplete="on"
-        required>
+    <input type="text" id="register_last_name" name="register_last_name" min="1" max="50" placeholder="Last Name"
+        autocomplete="on" required>
 
     <!-- Gender -->
     <div class="gender-radio flex-row">
         <div class="flex-row-reverse flex-child-center-h">
-            <label for="gender_male">Male</label>
-            <input type="radio" name="gender" id="gender_male" value="male" required>
+            <label for="register_gender_male">Male</label>
+            <input type="radio" name="gender" id="register_gender_male" value="male" required>
         </div>
 
         <div class="flex-row-reverse flex-child-center-h">
-            <label for="gender_female">Female</label>
-            <input type="radio" name="gender" id="gender_female" value="female" required>
+            <label for="register_gender_female">Female</label>
+            <input type="radio" name="gender" id="register_gender_female" value="female" required>
         </div>
     </div>
 
     <!-- Contact Number -->
-    <input type="tel" name="phone" id="phone" placeholder="Phone Number" pattern="[0-9]{10,15}" minlength="10"
-        maxlength="15" required>
+    <input type="tel" name="register_contact" id="register_contact" placeholder="Contact Number" pattern="[0-9]{10,15}"
+        minlength="10" maxlength="15" required>
 
     <!-- Birth Date -->
     <div class="birth-date flex-col">
@@ -91,22 +91,27 @@
     </div>
 
     <!-- Job Titles -->
-    <input type="text" name="job_titles" id="job_titles" placeholder="Job Titles (comma separated)" min="1" max="255"
-        autocomplete="on" required>
+    <input type="text" name="register_job_titles" id="register_job_titles" placeholder="Job Titles (comma separated)"
+        min="1" max="255" autocomplete="on" required>
 
     <!-- Email -->
-    <input type="email" name="email" id="email" placeholder="Email" min="8" max="255" autocomplete="on" required>
+    <input type="email" name="register_email" id="register_email" placeholder="Email" min="8" max="255"
+        autocomplete="on" required>
 
     <!-- Password -->
     <div class="password-toggle-wrapper">
-        <img class="absolute" src="<?= ICON_PATH . 'show_b.svg'; ?>" alt="Show password" title="Show password"
+        <img class="absolute" src="<?= ICON_PATH . 'show_w.svg'; ?>" alt="Show password" title="Show password"
             width="18" height="18" />
 
-        <input type="password" name="password" id="password" placeholder="Please enter your password here" min="8"
-            max="255" required />
+        <input type="password" name="register_password" id="register_password"
+            placeholder="Please enter your password here" min="8" max="255" required />
     </div>
 
     <button id="register_button" type="button" class="blue-bg white-text">
-        Register
+        <div class="text-w-icon">
+            <img src="<?= ICON_PATH . 'login_w.svg' ?>" alt="Register An Account" title="Register An Account"
+                height="20">
+            <h3>Register</h3>
+        </div>
     </button>
 </form>

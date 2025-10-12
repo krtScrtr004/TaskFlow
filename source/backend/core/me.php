@@ -21,7 +21,10 @@ class Me extends User
             email: 'zing.zang@example.com',
             bio: null,
             profileLink: null,
-            joinedDateTime: new DateTime('2023-01-01 12:00:00')
+            joinedDateTime: new DateTime('2023-01-01 12:00:00'),
+            additionalInfo: [
+                'terminationCount' => 3
+            ]
         );
     }
 

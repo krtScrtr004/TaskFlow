@@ -17,6 +17,7 @@ class User implements Entity {
     protected ?string $bio;
     protected ?string $profileLink;
     protected DateTime $joinedDateTime;
+    protected array $additionalInfo;
 
 
     public function __construct(
@@ -33,7 +34,8 @@ class User implements Entity {
         string $email,
         ?string $bio,
         ?string $profileLink,
-        DateTime $joinedDateTime
+        DateTime $joinedDateTime,
+        array $additionalInfo = []
     ) {
         $this->id = $id;
         $this->publicId = $publicId;
@@ -49,6 +51,7 @@ class User implements Entity {
         $this->bio = $bio;
         $this->profileLink = $profileLink;
         $this->joinedDateTime = $joinedDateTime;
+        $this->additionalInfo = $additionalInfo;
     }
 
     // Getters
@@ -108,6 +111,10 @@ class User implements Entity {
         return $this->joinedDateTime;
     }
 
+    public function getAdditionalInfo(): array {
+        return $this->additionalInfo;
+    }
+
     // Setters
     public function setId(int $id): void {
         $this->id = $id;
@@ -165,6 +172,14 @@ class User implements Entity {
         $this->joinedDateTime = $joinedDateTime;
     }
 
+    public function setAdditionalInfo(array $additionalInfo): void {
+        $this->additionalInfo = $additionalInfo;
+    }
+
+    public function addAdditionalInfo(string $key, $value): void {
+        $this->additionalInfo[$key] = $value;
+    }
+
     public function toWorker(): Worker {
         return new Worker(
             $this->id,
@@ -180,7 +195,8 @@ class User implements Entity {
             $this->bio,
             $this->profileLink,
             WorkerStatus::ACTIVE,
-            new DateTime()
+            new DateTime(),
+            $this->additionalInfo
         );
     }
 
@@ -198,7 +214,8 @@ class User implements Entity {
             'email' => $this->email,
             'bio' => $this->bio,
             'profileLink' => $this->profileLink,
-            'joinedDateTime' => $this->joinedDateTime->format('Y-m-d H:i:s')
+            'joinedDateTime' => $this->joinedDateTime->format('Y-m-d H:i:s'),
+            'additionalInfo' => $this->additionalInfo
         ];
     }   
 
@@ -217,7 +234,8 @@ class User implements Entity {
             $data['email'],
             $data['bio'],
             $data['profileLink'],
-            new DateTime($data['joinedDateTime'])
+            new DateTime($data['joinedDateTime']),
+            $data['additionalInfo'] ?? []
         );
     }
 

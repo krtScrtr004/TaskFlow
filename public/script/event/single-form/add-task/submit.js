@@ -1,9 +1,10 @@
 import { Dialog } from '../../../render/dialog.js'
 import { Http } from '../../../utility/http.js'
 import { Loader } from '../../../render/loader.js'
+import { errorListDialog } from '../../../render/error-list-dialog.js'
 import { confirmationDialog } from '../../../render/confirmation-dialog.js'
 import { assignedWorkers } from '../../add-worker-modal/task/new/add.js'
-import { validateInputs } from '../../../utility/validator.js'
+import { validateInputs, workValidationRules } from '../../../utility/validator.js'
 import { debounceAsync } from '../../../utility/debounce.js'
 
 let isLoading = false
@@ -47,21 +48,22 @@ async function submitForm(e) {
             assignedWorkers: assignedWorkers ? assignedWorkers : {}
         }
 
-        if (!validateInputs(params)) return
+        if (!validateInputs(params, workValidationRules())) return
 
         const projectId = addTaskForm.dataset.projectid
         if (!projectId) {
             throw new Error('Project ID not found in form dataset.')
         }
         const response = await sendToBackend(params, projectId)
+        if (!response)
+            throw new Error('No response from server.')
         Dialog.operationSuccess('Task Added.', 'The task has been added to the project.')
 
         if (response)
             setTimeout(() => window.location.href = `/TaskFlow/project/${projectId}/task/${response.id}`, 1500)
     } catch (error) {
         console.error('Error submitting form:', error)
-        Dialog.somethingWentWrong()
-        return
+        errorListDialog(error?.errors, error?.message)
     } finally {
         Loader.delete()
     }
@@ -110,7 +112,7 @@ async function sendToBackend(inputs = {}, projectId) {
             assignedWorkers: Object.keys(assignedWorkers).map(key => assignedWorkers[key])
         })
         if (!response)
-            throw new Error('No response from server.')
+            throw error
 
         return response.data
     } catch (error) {

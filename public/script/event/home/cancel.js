@@ -1,4 +1,5 @@
 import { Dialog } from '../../render/dialog.js'
+import { errorListDialog } from '../../render/error-list-dialog.js'
 import { confirmationDialog } from '../../render/confirmation-dialog.js'
 import { Http } from '../../utility/http.js'
 
@@ -31,7 +32,8 @@ if (cancelProjectButton) {
             await sendToBackend(projectId)
             window.location.reload()
         } catch (error) {
-            console.error(error)
+            console.error('Error cancelling project:', error)
+            errorListDialog(error?.errors, error?.message)
         }
     })
 } else {
@@ -40,17 +42,22 @@ if (cancelProjectButton) {
 }
 
 async function sendToBackend(projectId) {
-    if (isLoading) return
+    try {
+        if (isLoading) {
+            console.warn('Request is already in progress. Please wait.')
+            return
+        }
+        isLoading = true
 
-    if (!projectId) {
-        throw new Error('Project ID is required to cancel the project.')
+        if (!projectId || projectId.trim() === '')
+            throw new Error('Project ID is required.')
+
+        const response = await Http.PUT(`projects/${projectId}`, { status: 'Cancelled' })
+        if (!response)
+            throw error
+    } catch (error) {
+        throw error
+    } finally {
+        isLoading = false
     }
-    isLoading = true
-
-    const response = await Http.POST('cancel-project', { projectId: projectId })
-    if (!response) {
-        throw new Error('No response from the server.')
-    }
-
-    isLoading = false
 }

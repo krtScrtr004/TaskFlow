@@ -32,10 +32,10 @@ function togglePassword(input) {
         e.stopPropagation()
         if (input.type === 'password') {
             input.type = 'text'
-            icon.src = `${ICON_PATH}hide_b.svg`
+            icon.src = `${ICON_PATH}hide_w.svg`
         } else {
             input.type = 'password'
-            icon.src = `${ICON_PATH}show_b.svg`
+            icon.src = `${ICON_PATH}show_w.svg`
         }
     }
 }

@@ -3,9 +3,10 @@ import { Dialog } from '../../../../render/dialog.js'
 import { Loader } from '../../../../render/loader.js'
 import { confirmationDialog } from '../../../../render/confirmation-dialog.js'
 import { debounceAsync } from '../../../../utility/debounce.js'
+import { errorListDialog } from '../../../../render/error-list-dialog.js'
 import { phaseToAdd } from './add-phase.js'
 import { phaseToCancel } from './cancel-phase.js'
-import { validateInputs } from '../../../../utility/validator.js'
+import { validateInputs, workValidationRules } from '../../../../utility/validator.js'
 
 let isLoading = false
 const toAdd = []
@@ -45,7 +46,7 @@ async function submitForm(e) {
         budget: parseFloat(budgetInput.value) ?? null,
         startDate: startDateInput.value ?? null,
         completionDate: completionDateInput.value ?? null
-    })) return
+    }, workValidationRules())) return
 
     const phaseContainers = editableProjectDetailsForm.querySelectorAll('.phase')
     phaseContainers.forEach(phaseContainer => addPhaseForm(phaseContainer))
@@ -71,13 +72,14 @@ async function submitForm(e) {
                 toCancel: toAdd
             }
         })
+        if (!response)
+            throw new Error('No response from server.')
 
         Dialog.operationSuccess('Project Edited.', 'The project has been successfully edited.')
-        if (response)
-            setTimeout(() => window.location.href = `/TaskFlow/project/${response.id}`, 1500)
+        setTimeout(() => window.location.href = `/TaskFlow/project/${response.id}`, 1500)
     } catch (error) {
         console.error('Error occurred while submitting form:', error)
-        Dialog.somethingWentWrong()
+        errorListDialog(error?.errors, error?.message)
     } finally {
         Loader.delete()
         isLoading = false

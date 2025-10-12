@@ -1,6 +1,6 @@
 import { infiniteScroll } from '../../utility/infinite-scroll.js'
 import { Http } from '../../utility/http.js'
-import { Dialog } from '../../render/dialog.js'
+import { errorListDialog } from '../../render/error-list-dialog.js'
 import { createWorkerListCard } from './create-worker-list-card.js'
 
 let isLoading = false
@@ -27,7 +27,7 @@ try {
     )
 } catch (error) {
     console.error('Error initializing infinite scroll:', error)
-    Dialog.somethingWentWrong()
+    errorListDialog(error?.errors, error?.message)
 }
 
 function getExistingItemsCount() {
@@ -52,11 +52,10 @@ async function asyncFunction(offset) {
 
         const response = await Http.GET(`projects/${projectId}/workers?offset=${offset}`)
         if (!response?.data)
-            throw new Error('No response from server.')
+            throw error
 
         return response.data
     } catch (error) {
-        console.error('Error during infinite scroll fetch:', error)
         throw error
     } finally {
         isLoading = false
