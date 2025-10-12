@@ -12,7 +12,7 @@ function workerGridCard(Worker $worker): string
     $status = $worker->getStatus();
 
     // TODO: Fetch user tasks from the DB
-    $performance = WorkerPerformanceCalculator::calculateWorkerPerformance(TaskModel::all());
+    $performance = WorkerPerformanceCalculator::calculate(TaskModel::all());
 
     ob_start();
     ?>

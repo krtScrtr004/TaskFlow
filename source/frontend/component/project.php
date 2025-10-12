@@ -117,7 +117,7 @@ $projectData = [
                 <!-- Right Side -->
                 <div class="right">
                     <?php
-                    $projectProgress = ProjectProgressCalculator::calculateProjectProgress($projectData['tasks']);
+                    $projectProgress = ProjectProgressCalculator::calculate($projectData['tasks']);
                     $progressPercentage = htmlspecialchars(formatNumber($projectProgress['progressPercentage']));
                     ?>
 
