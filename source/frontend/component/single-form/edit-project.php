@@ -6,10 +6,9 @@ if (!$projectId) {
 
 // TODO: Fetch project data from the database using the provided project ID
 $projects = ProjectModel::all();
-$project = $projects[0];
-if (!$project) {
+$project = $projects->getItems()[0];
+if (!$project)
     throw new ErrorException('Project data is required to edit a project.');
-}
 
 $projectData = [
     'id' => htmlspecialchars($project->getPublicId()),
@@ -30,7 +29,7 @@ $uiState = [
     'showWarning' => in_array($projectData['status'], [WorkStatus::COMPLETED, WorkStatus::CANCELLED])
 ];
 
-include_once COMPONENT_PATH . 'template/add-phase-modal.php';
+require_once COMPONENT_PATH . 'template/add-phase-modal.php';
 ?>
 
 <!-- Edit Project -->
