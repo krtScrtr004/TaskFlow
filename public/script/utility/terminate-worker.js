@@ -88,7 +88,7 @@ async function sendToBackend(projectId, workerId) {
 
         const response = await Http.PUT(`projects/${projectId}/workers/${workerId}`, { status: 'terminated' })
         if (!response)
-            throw error
+            throw new Error('Failed to terminate worker from project.')
     } catch (error) {
         throw error
     } finally {
