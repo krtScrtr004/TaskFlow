@@ -30,7 +30,7 @@ export function infiniteScroll(
     try {
         const observer = createObserver(container, asyncFunction, domCreator, offset)
         if (!observer)
-            throw error
+            throw new Error('Failed to create IntersectionObserver.')
         observer.observe(sentinel)
     } catch (error) {
         console.error('Error setting up infinite scroll observer:', error)
