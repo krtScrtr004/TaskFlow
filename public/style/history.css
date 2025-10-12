@@ -13,6 +13,28 @@
 	margin-top: 0.5rem;
 }
 
+.history > .statistics {
+	gap: var(--space);
+}
+
+.history > .statistics > div {
+	gap: 1rem;
+}
+
+.history > .statistics .text-w-icon > h3 {
+	font-size: 1.7rem;
+}
+
+.history > .statistics > .performance {
+	width: fit-content;
+}
+
+.history > .statistics > .performance h1 {
+	margin-left: 0.5rem;
+	font-size: 3rem;
+	font-weight: 700;
+}
+
 .project-grid {
 	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
 	gap: var(--space);

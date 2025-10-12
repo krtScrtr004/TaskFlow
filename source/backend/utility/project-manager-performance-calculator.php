@@ -33,10 +33,10 @@ class ProjectManagerPerformanceCalculator
     /**
      * Calculate comprehensive project manager performance
      * 
-     * @param array $projects Array of Project objects managed by the PM
+     * @param ProjectContainer $projects Container of Project objects managed by the PM
      * @return array Detailed performance metrics and insights
      */
-    public static function calculate(array $projects): array
+    public static function calculate(ProjectContainer $projects): array
     {
         if (empty($projects)) {
             return [
@@ -80,7 +80,7 @@ class ProjectManagerPerformanceCalculator
     /**
      * Calculate project completion effectiveness score (0-100)
      */
-    private static function calculateProjectCompletionScore(array $projects): array
+    private static function calculateProjectCompletionScore(ProjectContainer $projects): array
     {
         $statusCounts = [];
         $totalWeightedScore = 0.0;
@@ -107,7 +107,7 @@ class ProjectManagerPerformanceCalculator
     /**
      * Calculate time management score (0-100)
      */
-    private static function calculateTimeManagementScore(array $projects): array
+    private static function calculateTimeManagementScore(ProjectContainer $projects): array
     {
         $totalTimeScore = 0.0;
         $completedProjects = 0;
@@ -167,7 +167,7 @@ class ProjectManagerPerformanceCalculator
     /**
      * Gather comprehensive project statistics
      */
-    private static function gatherProjectStatistics(array $projects): array
+    private static function gatherProjectStatistics(ProjectContainer $projects): array
     {
         $stats = [
             'total' => count($projects),
