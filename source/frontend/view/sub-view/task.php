@@ -30,7 +30,7 @@ $taskData = [
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title><?= $taskData['name'] ?></title>
+    <title><?= $taskData['name'] ?? 'Task' ?></title>
 
     <base href="<?= PUBLIC_PATH ?>">
     <link rel="stylesheet" href="<?= STYLE_PATH . 'root.css' ?>">
@@ -39,7 +39,7 @@ $taskData = [
     <link rel="stylesheet" href="<?= STYLE_PATH . 'sidenav.css' ?>">
     <link rel="stylesheet" href="<?= STYLE_PATH . 'loader.css' ?>">
 
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'task.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'tasks.css' ?>">
 </head>
 
 <body>
@@ -163,8 +163,8 @@ $taskData = [
         </section>
     </main>
 
-    <script type="module" src="<?= EVENT_PATH . 'task' . DS . 'create-worker-card.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'task' . DS . 'terminate-worker.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'tasks' . DS . 'create-worker-card.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'tasks' . DS . 'terminate-worker.js' ?>" defer></script>
 
     <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'existing' . DS . 'open.js' ?>"
         defer></script>

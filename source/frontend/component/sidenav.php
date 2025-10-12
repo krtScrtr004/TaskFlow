@@ -1,27 +1,27 @@
 <aside class="sidenav flex-col sticky black-bg">
     <nav>
         <!-- Project -->
-        <a class="" href="<?= REDIRECT_PATH . 'project' ?>">
+        <a class="" href="<?= REDIRECT_PATH . 'home' ?>">
             <div class="text-w-icon">
                 <img
-                    src="<?= ICON_PATH . 'project_w.svg' ?>"
+                    src="<?= ICON_PATH . 'home_w.svg' ?>"
                     alt="Project"
                     title="Project"
                     height="32">
 
-                <h3 class="white-text">PROJECT</h3>
+                <h3 class="white-text">HOME</h3>
             </div>
         </a>
         <!-- History -->
-        <a class="" href="<?= REDIRECT_PATH . 'history' ?>">
+        <a class="" href="<?= REDIRECT_PATH . 'projects' ?>">
             <div class="text-w-icon">
                 <img
-                    src="<?= ICON_PATH . 'history_w.svg' ?>"
+                    src="<?= ICON_PATH . 'project_w.svg' ?>"
                     alt="History"
                     title="History"
                     height="32">
 
-                <h3 class="white-text">HISTORY</h3>
+                <h3 class="white-text">PROJECTS</h3>
             </div>
         </a>
         <!-- Workers -->
@@ -33,7 +33,7 @@
                     title="Workers"
                     height="32">
 
-                <h3 class="white-text">WORKERS</h3>
+                <h3 class="white-text">USERS</h3>
             </div>
         </a>
         <!-- Profile -->

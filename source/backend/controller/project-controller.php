@@ -8,7 +8,9 @@ class ProjectController implements Controller
     {
     }
 
-    public static function index(): void {}
+    public static function index(): void
+    {
+    }
 
     public static function viewProject(array $args = []): void
     {
@@ -17,8 +19,17 @@ class ProjectController implements Controller
         $projects = ProjectModel::all();
         $project = $projects->getItems()[0];
 
-        require_once VIEW_PATH . 'project.php';
+        require_once VIEW_PATH . 'home.php';
     }
+
+    public static function viewProjectGrid(): void
+    {
+        $projects = ProjectModel::all();
+
+        require_once VIEW_PATH . 'projects.php';
+    }
+
+    // 
 
     public static function getProjectById(array $args = []): void
     {
@@ -34,7 +45,7 @@ class ProjectController implements Controller
     {
         $key = $_GET['key'] ?? '';
 
-        $offset = isset($_GET['offset']) ? (int)$_GET['offset'] : 0;
+        $offset = isset($_GET['offset']) ? (int) $_GET['offset'] : 0;
 
         $projects = ProjectModel::all();
         Response::success([$projects->getItems()[0]], 'Projects retrieved successfully.');
@@ -85,7 +96,7 @@ class ProjectController implements Controller
 
         $data = decodeData('php://input');
         if (!$data)
-            Response::error('Cannot decode data.');
+            Response::error('Cannot decode data.', []);
 
         // TODO: Validate and sanitize $data
 

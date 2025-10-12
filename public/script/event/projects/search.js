@@ -1,9 +1,9 @@
 import { search } from '../../utility/search.js'
 import { Dialog } from '../../render/dialog.js'
 
-const history = document.querySelector('.history')
+const projects = document.querySelector('.projects')
 try {
-    const searchBarForm = history?.querySelector('form.search-bar')
+    const searchBarForm = projects?.querySelector('form.search-bar')
     search(searchBarForm)
 } catch (error) {
     console.error('Error initializing search functionality:', error)

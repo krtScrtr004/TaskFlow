@@ -1,4 +1,4 @@
-const apiUrl = 'http://localhost/TaskFlow/'
+const apiUrl = 'http://localhost/TaskFlow/endpoint/'
 
 export const Http = (() => {
     const makeRequest = async (endpoint, method = 'GET', body = null, serialize = true) => {

@@ -11,5 +11,4 @@ try {
 } catch (error) {
     console.error('Error terminating worker:', error)
     errorListDialog(error?.errors, error?.message)
-
 }

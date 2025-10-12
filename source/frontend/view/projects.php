@@ -31,7 +31,7 @@ $statisticsData['performance'] = htmlspecialchars(formatNumber($calculateStatist
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>History</title>
+    <title>Projects</title>
 
     <base href="<?= PUBLIC_PATH ?>">
     <link rel="stylesheet" href="<?= STYLE_PATH . 'root.css' ?>">
@@ -40,13 +40,13 @@ $statisticsData['performance'] = htmlspecialchars(formatNumber($calculateStatist
     <link rel="stylesheet" href="<?= STYLE_PATH . 'sidenav.css' ?>">
     <link rel="stylesheet" href="<?= STYLE_PATH . 'loader.css' ?>">
 
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'history.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'projects.css' ?>">
 </head>
 
 <body>
     <?php require_once COMPONENT_PATH . 'sidenav.php' ?>
 
-    <main class="history main-page">
+    <main class="projects main-page">
 
         <!-- Heading -->
         <section class="heading content-section-block">
@@ -167,8 +167,8 @@ $statisticsData['performance'] = htmlspecialchars(formatNumber($calculateStatist
 
     </main>
 
-    <script type="module" src="<?= EVENT_PATH . 'history' . DS . 'infinite-scroll.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'history' . DS . 'search.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'projects' . DS . 'infinite-scroll.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'projects' . DS . 'search.js' ?>" defer></script>
 </body>
 
 </html>

@@ -25,7 +25,7 @@ class TaskController implements Controller
         // If key is not provided, all tasks of the project
         $tasks = $project->getTasks();
 
-        require_once VIEW_PATH . 'task.php';
+        require_once VIEW_PATH . 'tasks.php';
     }
 
     public static function viewTask(array $args = []): void
@@ -40,7 +40,7 @@ class TaskController implements Controller
         $project = ProjectModel::all()->getItems()[0]; // Temporary placeholder
         $task = TaskModel::all()->getItems()[0]; // Temporary placeholder
 
-        require_once SUB_VIEW_PATH . 'view-task.php';
+        require_once SUB_VIEW_PATH . 'task.php';
     }
 
     public static function getTaskById(array $args = []): void
@@ -111,7 +111,7 @@ class TaskController implements Controller
 
         $data = decodeData('php://input');
         if (!$data)
-            Response::error('Cannot decode data.');
+            Response::error('Cannot decode data.', []);
 
         Response::success([], 'Task updated successfully.');
     }

@@ -25,7 +25,7 @@ $searchFilter = isset($_GET['filter']) ? htmlspecialchars($_GET['filter']) : 'al
     <link rel="stylesheet" href="<?= STYLE_PATH . 'sidenav.css' ?>">
     <link rel="stylesheet" href="<?= STYLE_PATH . 'loader.css' ?>">
 
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'task.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'tasks.css' ?>">
 </head>
 
 <body>
@@ -78,8 +78,8 @@ $searchFilter = isset($_GET['filter']) ? htmlspecialchars($_GET['filter']) : 'al
 
     <script type="module" src="<?= EVENT_PATH . 'break-text-fallback.js' ?>" defer></script>
 
-    <script type="module" src="<?= EVENT_PATH . 'task' . DS . 'search.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'task' . DS . 'infinite-scroll.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'tasks' . DS . 'search.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'tasks' . DS . 'infinite-scroll.js' ?>" defer></script>
 
 </body>
 

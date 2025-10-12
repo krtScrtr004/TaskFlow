@@ -515,6 +515,10 @@ button > .text-w-icon {
 	max-width: 23ch;
 }
 
+.add-worker-modal .search-bar {
+	width: 100%;
+}
+
 .add-worker-modal .worker-list-card h4 {
 	font-size: 1.1rem;
 }

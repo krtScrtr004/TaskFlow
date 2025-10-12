@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Project</title>
+    <title>Home</title>
 
     <base href="<?= PUBLIC_PATH ?>">
     <link rel="stylesheet" href="<?= STYLE_PATH . 'root.css' ?>">
@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="<?= STYLE_PATH . 'sidenav.css' ?>">
     <link rel="stylesheet" href="<?= STYLE_PATH . 'loader.css' ?>">
 
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'project.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'home.css' ?>">
 
 </head>
 
@@ -45,14 +45,14 @@
     <?php if (isset($project)): ?>
         <script src="<?= PUBLIC_PATH . 'chart.umd.min.js' ?>"></script>
 
-        <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'progress-bar.js' ?>"></script>
-        <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'task-chart.js' ?>"></script>
-        <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'create-worker-card.js' ?>"></script>
-        <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'infinite-scroll-workers.js' ?>"></script>
+        <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'progress-bar.js' ?>"></script>
+        <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'task-chart.js' ?>"></script>
+        <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'create-worker-card.js' ?>"></script>
+        <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'infinite-scroll-workers.js' ?>"></script>
 
         <?php if (Role::isProjectManager(Me::getInstance())): ?>
-            <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'terminate-worker.js' ?>"></script>
-            <script type="module" src="<?= EVENT_PATH . 'project' . DS . 'cancel.js' ?>"></script>
+            <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'terminate-worker.js' ?>"></script>
+            <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'cancel.js' ?>"></script>
             <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'project' . DS . 'open.js' ?>"></script>
             <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'project' . DS . 'add.js' ?>"></script>
         <?php endif; ?>

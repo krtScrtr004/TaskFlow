@@ -63,8 +63,7 @@ async function asyncFunction(offset) {
  */
 function domCreator(project) {
     const ICON_PATH = 'asset/image/icon/'
-    const REDIRECT_PATH = ''
-
+    const REDIRECT_PATH = '/TaskFlow/home/' 
     const id = project.id
     const name = project.name
     const description = project.description || 'No description provided'
@@ -79,7 +78,7 @@ function domCreator(project) {
     // Create link wrapper
     const link = document.createElement('a')
     link.className = 'full-body-content flex-col'
-    link.href = `${REDIRECT_PATH}project/${id}`
+    link.href = `${REDIRECT_PATH}${id}`
 
     // Create primary info section
     const primaryInfoSection = document.createElement('section')

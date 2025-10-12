@@ -1,35 +1,35 @@
-.history {
+.projects {
 	gap: var(--space);
 }
 
-.history > .heading > h3 {
+.projects > .heading > h3 {
 	font-size: 2rem;
 	font-weight: 600;
 }
 
-.history > .heading > p {
+.projects > .heading > p {
 	font-size: 1.2rem;
 	font-weight: 300;
 	margin-top: 0.5rem;
 }
 
-.history > .statistics {
+.projects > .statistics {
 	gap: var(--space);
 }
 
-.history > .statistics > div {
+.projects > .statistics > div {
 	gap: 1rem;
 }
 
-.history > .statistics .text-w-icon > h3 {
+.projects > .statistics .text-w-icon > h3 {
 	font-size: 1.7rem;
 }
 
-.history > .statistics > .performance {
+.projects > .statistics > .performance {
 	width: fit-content;
 }
 
-.history > .statistics > .performance h1 {
+.projects > .statistics > .performance h1 {
 	margin-left: 0.5rem;
 	font-size: 3rem;
 	font-weight: 700;

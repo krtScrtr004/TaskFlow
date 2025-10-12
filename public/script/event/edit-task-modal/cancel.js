@@ -62,7 +62,7 @@ async function sendToBackend(projectId, taskId) {
         if (!taskId)
             throw new Error('Task ID is required.')
 
-        const response = await Http.PUT(`/project/${projectId}/task/${taskId}`, { status: 'cancelled' })
+        const response = await Http.PUT(`projects/${projectId}/tasks/${taskId}`, { status: 'cancelled' })
         if (!response)
             throw error
     } catch (error) {

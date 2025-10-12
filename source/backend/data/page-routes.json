@@ -10,8 +10,11 @@
 		"TaskFlow/edit-project/{projectId:[\\w+_-]+}": "SingleFormController",
 		"TaskFlow/add-task/{projectId:[\\w+_-]+}": "SingleFormController",
 
-		"TaskFlow/project": ["ProjectController", "viewProject"],
-		"TaskFlow/project/{projectId:[\\w+_-]+}": ["ProjectController", "viewProject"],
+		"TaskFlow/home": ["ProjectController", "viewProject"],
+		"TaskFlow/home/{projectId:[\\w+_-]+}": [
+			"ProjectController",
+			"viewProject"
+		],
 
 		"TaskFlow/project/{projectId:[\\w+_-]+}/task(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": "TaskController",
 		"TaskFlow/project/{projectId:[\\w+_-]+}/task/{taskId:[\\w+_-]+}": [
@@ -19,6 +22,9 @@
 			"viewTask"
 		],
 
-		"TaskFlow/history(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": "HistoryController"
+		"TaskFlow/projects(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": [
+			"ProjectController",
+			"viewProjectGrid"
+		]
 	}
 }

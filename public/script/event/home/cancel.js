@@ -52,7 +52,7 @@ async function sendToBackend(projectId) {
         if (!projectId || projectId.trim() === '')
             throw new Error('Project ID is required.')
 
-        const response = await Http.POST('cancel-project', { projectId: projectId })
+        const response = await Http.PUT(`projects/${projectId}`, { status: 'Cancelled' })
         if (!response)
             throw error
     } catch (error) {
