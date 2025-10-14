@@ -17,8 +17,7 @@ if (Role::isProjectManager(Me::getInstance())) {
     $calculateStatistics = ProjectManagerPerformanceCalculator::calculate($projects);
 } else {
     // TODO: Get all user tasks (LATEST 10 projects only)
-    $workerTasks = TaskModel::all();
-    $calculateStatistics = WorkerPerformanceCalculator::calculate($workerTasks);
+    $calculateStatistics = WorkerPerformanceCalculator::calculate(ProjectModel::all());
 }
 $statisticsData['performance'] = htmlspecialchars(formatNumber($calculateStatistics['overallScore']));
 
@@ -145,11 +144,11 @@ $statisticsData['performance'] = htmlspecialchars(formatNumber($calculateStatist
         <section class="flex-row flex-child-end-v">
             <?= searchBar([
                 'Status' => [
-                    'pending',
-                    'onGoing',
-                    'completed',
-                    'delayed',
-                    'cancelled'
+                    WorkStatus::PENDING->getDisplayName(),
+                    WorkStatus::ON_GOING->getDisplayName(),
+                    WorkStatus::COMPLETED->getDisplayName(),
+                    WorkStatus::DELAYED->getDisplayName(),
+                    WorkStatus::CANCELLED->getDisplayName()
                 ]
             ]) ?>
         </section>

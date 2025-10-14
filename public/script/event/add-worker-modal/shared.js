@@ -255,8 +255,8 @@ export function createWorkerListCard(worker) {
 
     const img = document.createElement('img')
     img.src = worker.profilePicture || ICON_PATH + 'profile_w.svg'
-    img.alt = worker.name
-    img.title = worker.name
+    img.alt = `${worker.firstName} ${worker.lastName}`
+    img.title = `${worker.firstName} ${worker.lastName}`
     img.height = 40
     imgContainer.appendChild(img)
 
@@ -269,7 +269,7 @@ export function createWorkerListCard(worker) {
 
     const nameHeader = document.createElement('h4')
     nameHeader.className = 'wrap-text'
-    nameHeader.textContent = worker.name
+    nameHeader.textContent = `${worker.firstName} ${worker.lastName}`
     nameSection.appendChild(nameHeader)
 
     const idPara = document.createElement('p')

@@ -25,7 +25,7 @@
             </div>
         </a>
         <!-- Workers -->
-        <a class="" href="">
+        <a class="" href="<?= REDIRECT_PATH . 'users' ?>">
             <div class="text-w-icon">
                 <img
                     src="<?= ICON_PATH . 'worker_w.svg' ?>"

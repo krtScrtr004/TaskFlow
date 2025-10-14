@@ -97,36 +97,6 @@
 	overflow: auto;
 }
 
-.worker-grid-card {
-	display: flex;
-	flex-direction: column;
-	padding: 1rem;
-	gap: 1rem;
-}
-
-.worker-grid-card .worker-primary-info {
-	gap: 0.5rem;
-}
-
-.worker-grid-card .worker-name {
-	font-size: 1.2rem;
-	font-weight: 500;
-}
-
-.worker-grid-card .worker-id {
-	font-size: 0.9rem;
-	font-weight: 300;
-}
-
-.worker-grid-card .worker-statistics,
-.worker-grid-card .worker-contact-info {
-	gap: 0.3rem;
-}
-
-.worker-grid-card .worker-status {
-	flex: 1;
-}
-
 .assigned-workers #add_worker_button {
 	border: 1px solid var(--white);
 }

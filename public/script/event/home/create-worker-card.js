@@ -1,5 +1,6 @@
 import { Dialog } from '../../render/dialog.js'
-import { workerInfoCard } from '../../render/worker-card.js'
+import { userInfoCard } from '../../render/user-card.js'
+import { Http } from '../../utility/http.js'
 
 let isLoading = false
 
@@ -17,7 +18,7 @@ if (workerList) {
 
             const workerId = workerCard.getAttribute('data-id')
             try {
-                workerInfoCard(projectId, workerId)
+                userInfoCard(workerId, () => fetchUserInfo(projectId, workerId))
             } catch (error) {
                 console.error(`Error fetching worker info: ${error.message}`)
                 if (error?.status === 401 || error?.status === 403) {
@@ -32,4 +33,27 @@ if (workerList) {
 } else {
     console.error('Worker list container not found!')
     Dialog.somethingWentWrong()
+}
+
+async function fetchUserInfo(projectId, userId) {
+    try {
+        if (isLoading) {
+            console.warn('Request already in progress. Please wait.')
+            return
+        }
+        isLoading = true
+
+        if (!userId || userId === '')
+            throw new Error('User ID is required.')
+
+        const response = await Http.GET(`projects/${projectId}/workers/${userId}`)
+        if (!response)
+            throw error
+
+        return response.data
+    } catch (error) {
+        throw error
+    } finally {
+        isLoading = false
+    }
 }

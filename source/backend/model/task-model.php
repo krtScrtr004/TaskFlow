@@ -37,7 +37,7 @@ class TaskModel implements Model
             $workerContainer,
             new DateTime('2023-01-02 09:00:00'),
             new DateTime('2023-01-04 17:00:00'),
-            new DateTime('2023-01-12 16:00:00'),
+            new DateTime('2023-01-03 16:00:00'),
             TaskPriority::HIGH,
             WorkStatus::COMPLETED,
             new DateTime('2023-01-05 10:00:00'),
@@ -50,9 +50,9 @@ class TaskModel implements Model
             $workerContainer,
             new DateTime('2023-02-01 09:00:00'),
             new DateTime('2023-02-05 17:00:00'),
-            new DateTime('2023-02-06 14:00:00'),
+            new DateTime('2023-02-05 14:00:00'),
             TaskPriority::MEDIUM,
-            WorkStatus::DELAYED,
+            WorkStatus::COMPLETED,
             new DateTime('2023-01-15 11:00:00'),
         ));
         $tasks->add(new Task(
@@ -63,9 +63,9 @@ class TaskModel implements Model
             $workerContainer,
             new DateTime('2023-03-10 09:00:00'),
             new DateTime('2023-03-15 17:00:00'),
-            null,
+            new DateTime('2023-03-11 16:00:00'),
             TaskPriority::LOW,
-            WorkStatus::ON_GOING,
+            WorkStatus::COMPLETED,
             new DateTime('2023-03-01 12:00:00'),
         ));
         $tasks->add(new Task(
@@ -76,9 +76,9 @@ class TaskModel implements Model
             $workerContainer,
             new DateTime('2023-04-01 09:00:00'),
             new DateTime('2023-04-10 17:00:00'),
-            null,
+            new DateTime('2023-04-05 16:00:00'),
             TaskPriority::HIGH,
-            WorkStatus::PENDING,
+            WorkStatus::COMPLETED,
             new DateTime('2023-03-20 13:00:00'),
         ));
         $tasks->add(new Task(
@@ -89,9 +89,9 @@ class TaskModel implements Model
             $workerContainer,
             new DateTime('2023-05-01 09:00:00'),
             new DateTime('2023-05-07 17:00:00'),
-            null,
+            new DateTime('2023-05-07 16:00:00'),
             TaskPriority::MEDIUM,
-            WorkStatus::CANCELLED,
+            WorkStatus::COMPLETED,
             new DateTime('2023-04-25 14:00:00'),
         ));
         $tasks->add(new Task(
@@ -102,9 +102,9 @@ class TaskModel implements Model
             $workerContainer,
             new DateTime('2023-06-01 09:00:00'),
             new DateTime('2023-06-05 17:00:00'),
-            null,
+            new DateTime('2023-06-04 16:00:00'),
             TaskPriority::HIGH,
-            WorkStatus::DELAYED,
+            WorkStatus::COMPLETED,
             new DateTime('2023-05-20 15:00:00'),
         ));
         return $tasks;

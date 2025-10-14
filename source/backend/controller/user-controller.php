@@ -2,8 +2,15 @@
 
 class UserController implements Controller
 {
-    private function __construct() {}
-    public static function index(array $args = []): void {}
+    private function __construct()
+    {
+    }
+    public static function index(array $args = []): void
+    {
+        $users = UserModel::all();
+
+        require_once VIEW_PATH . 'users.php';
+    }
 
     public static function getUserById(array $args = []): void
     {
@@ -11,21 +18,22 @@ class UserController implements Controller
         if (!$userId)
             Response::error('User ID is required.');
 
-        if ($_GET['additionalInfo'])
+        if ($_GET['additionalInfo']) {
             // TODO
+        }
 
         $users = UserModel::all();
-        Response::success([
-            'user' => $users
-        ], 'User fetched successfully.');
+        Response::success([self::createResponseArrayData($users[0]->toWorker())], 'User fetched successfully.');
     }
 
     public static function getUserByKey(): void
     {
         $users = UserModel::all();
-        Response::success([
-            'users' => $users
-        ], 'Users fetched successfully.');
+        $return = [];
+        foreach ($users as $user) {
+            $return[] = self::createResponseArrayData($user->toWorker());
+        }
+        Response::success($return, 'Users fetched successfully.');
     }
 
     public static function addUser(): void
@@ -44,5 +52,18 @@ class UserController implements Controller
             Response::error('Cannot decode data.');
 
         Response::success([], 'User edited successfully.');
+    }
+
+    private static function createResponseArrayData(Worker $worker): array
+    {
+        $worker->setRole(Role::WORKER);
+        $projects = ProjectModel::all();
+        $workerPerformanceProject = WorkerPerformanceCalculator::calculate($projects);
+        return [
+            ...$worker->toArray(),
+            'totalProjects' => count($projects),
+            'completedProjects' => $projects->getCountByStatus(WorkStatus::COMPLETED),
+            'performance' => $workerPerformanceProject['overallScore'],
+        ];
     }
 }
