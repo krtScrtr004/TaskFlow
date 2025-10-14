@@ -3,7 +3,7 @@ if (!$project) {
     throw new Exception('Project data is required to render this component.');
 }
 
-require_once COMPONENT_PATH . 'template/worker-info-card.php';
+require_once COMPONENT_PATH . 'template/user-info-card.php';
 require_once COMPONENT_PATH . 'template/add-worker-modal.php';
 
 $projectData = [

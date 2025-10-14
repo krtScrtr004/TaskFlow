@@ -109,14 +109,7 @@ class WorkerController implements Controller
         $tasks = TaskModel::all();
         $workerPerformanceTask = WorkerPerformanceCalculator::calculate($tasks);
         return [
-            'id' => $worker->getPublicId(),
-            'name' => $worker->getFirstName() . ' ' . $worker->getLastName(),
-            'profilePicture' => $worker->getProfileLink(),
-            'bio' => $worker->getBio(),
-            'email' => $worker->getEmail(),
-            'contactNumber' => $worker->getContactNumber(),
-            'role' => $worker->getRole()->value,
-            'jobTitles' => $worker->getJobTitles()->toArray(),
+            ...$worker->toArray(),
             'totalTasks' => count($tasks),
             'completedTasks' => $tasks->getTaskCountByStatus(WorkStatus::COMPLETED),
             'performance' => $workerPerformanceTask['overallScore'],
@@ -151,14 +144,7 @@ class WorkerController implements Controller
 
                 $userPerformance = WorkerPerformanceCalculator::calculate(TaskModel::all());
                 $returnDataArray[] = [
-                    'id' => $user->getPublicId(),
-                    'name' => $user->getFirstName() . ' ' . $user->getLastName(),
-                    'profilePicture' => $user->getProfileLink(),
-                    'bio' => $user->getBio(),
-                    'email' => $user->getEmail(),
-                    'contactNumber' => $user->getContactNumber(),
-                    'role' => $user->getRole()->value,
-                    'jobTitles' => $user->getJobTitles()->toArray(),
+                    ...$user->toArray(),
                     'totalTasks' => count(TaskModel::all()),
                     'completedTasks' => TaskModel::all()->getTaskCountByStatus(WorkStatus::COMPLETED),
                     'performance' => $userPerformance['overallScore'],

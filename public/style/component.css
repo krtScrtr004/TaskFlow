@@ -384,8 +384,8 @@ button > .text-w-icon {
 	margin: 0.1rem;
 }
 
-/* ---------------- WORKER INFO CARD ---------------- */
-.worker-info-card {
+/* ---------------- USER INFO CARD ---------------- */
+.user-info-card {
 	min-height: 20rem;
 	height: fit-content;
 	width: 28rem !important;
@@ -397,51 +397,51 @@ button > .text-w-icon {
 	overflow: auto;
 }
 
-.worker-info-card .worker-profile-picture {
+.user-info-card .user-profile-picture {
 	margin-right: 0.5rem;
 }
 
-.worker-info-card .worker-name {
+.user-info-card .user-name {
 	font-size: 1.5rem;
 	font-weight: 600;
 }
 
-.worker-info-card .worker-id {
+.user-info-card .user-id {
 	font-size: 1rem;
 }
 
-.worker-info-card .worker-job-titles {
+.user-info-card .user-job-titles {
 	margin-top: 0.3rem;
 	gap: 0.3rem;
 }
 
-.worker-info-card > .worker-bio {
+.user-info-card > .user-bio {
 	width: 100%;
 	font-size: 1rem;
 }
 
-.worker-info-card > .worker-statistics-container > * {
+.user-info-card > .user-statistics-container > * {
 	flex: 1;
 }
 
-.worker-statistic > .text-w-icon {
+.user-statistic > .text-w-icon {
 	font-size: 1.1rem;
 	margin-bottom: 0.3rem;
 }
 
-.worker-statistic > h4 {
+.user-statistic > h4 {
 	font-size: 1.8rem;
 }
 
-.worker-info-card > .contact-info {
+.user-info-card > .contact-info {
 	gap: 0.3rem;
 }
 
-.worker-info-card > .contact-info p {
+.user-info-card > .contact-info p {
 	white-space: pre-wrap;
 }
 
-.worker-info-card > #terminate_worker_button {
+.user-info-card > #terminate_worker_button {
 	width: fit-content;
 	padding: 0.5rem 1rem;
 }

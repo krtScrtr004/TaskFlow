@@ -1,7 +1,6 @@
 import { Dialog } from '../../render/dialog.js'
-import { workerInfoCard } from '../../render/worker-card.js'
-
-let isLoading = false
+import { userInfoCard } from '../../render/user-card.js'
+import { Http } from '../../utility/http.js'
 
 const workerList = document.querySelector('.project-workers > .worker-list')
 if (workerList) {
@@ -17,7 +16,7 @@ if (workerList) {
 
             const workerId = workerCard.getAttribute('data-id')
             try {
-                workerInfoCard(projectId, workerId)
+                userInfoCard(workerId)
             } catch (error) {
                 console.error(`Error fetching worker info: ${error.message}`)
                 if (error?.status === 401 || error?.status === 403) {

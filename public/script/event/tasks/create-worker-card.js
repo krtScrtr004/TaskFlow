@@ -1,4 +1,4 @@
-import { workerInfoCard } from '../../render/worker-card.js'
+import { userInfoCard } from '../../render/user-card.js'
 import { Dialog } from '../../render/dialog.js'
 
 const viewTaskInfo = document.querySelector('.view-task-info')
@@ -8,22 +8,22 @@ if (workerGrid) {
         const workerCard = e.target.closest('.worker-grid-card')
         if (!workerCard) return
 
-        const projectId = viewTaskInfo.dataset.projectid
-        if (!projectId || projectId.trim() === '') {
-            console.error('Project ID is missing.')
-            Dialog.somethingWentWrong()
-            return
-        }
+            const projectId = viewTaskInfo.dataset.projectid
+            if (!projectId || projectId.trim() === '') {
+                console.error('Project ID is missing.')
+                Dialog.somethingWentWrong()
+                return
+            }
 
-        const workerId = workerCard.dataset.workerid
-        if (!workerId || workerId.trim() === '') {
-            console.error('Worker ID is missing.')
-            Dialog.somethingWentWrong()
-            return
-        }
+            const workerId = workerCard.dataset.userid
+            if (!workerId || workerId.trim() === '') {
+                console.error('Worker ID is missing.')
+                Dialog.somethingWentWrong()
+                return
+            }
 
-        try {
-            workerInfoCard(projectId, workerId)
+            try {
+            userInfoCard(workerId)
         } catch (error) {
             console.error(`Error fetching worker info: ${error.message}`)
         }
@@ -31,3 +31,4 @@ if (workerGrid) {
 } else {
     console.error('Workers grid not found!')
 }
+    

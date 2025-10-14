@@ -46,7 +46,7 @@ $taskData = [
     <?php
     require_once COMPONENT_PATH . 'sidenav.php';
     require_once COMPONENT_PATH . 'template/edit-task-modal.php';
-    require_once COMPONENT_PATH . 'template/worker-info-card.php';
+    require_once COMPONENT_PATH . 'template/user-info-card.php';
     require_once COMPONENT_PATH . 'template/add-worker-modal.php';
     ?>
 

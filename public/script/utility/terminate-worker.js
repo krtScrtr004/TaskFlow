@@ -4,43 +4,43 @@ import { debounceAsync } from './debounce.js'
 import { confirmationDialog } from '../render/confirmation-dialog.js'
 
 let isLoading = false
-let targetWorker = null
-const workerInfoCardTemplate = document.querySelector('#worker_info_card_template')
-let thisWorkerContainer = null
+let targetUser = null
+const userInfoCardTemplate = document.querySelector('#user_info_card_template')
+let thisUserContainer = null
 
-export function terminateWorker(projectId, workerContainer, workerCardSelector) {
-    if (!workerContainer)
-        throw new Error('Worker container element is required.')
+export function terminateWorker(projectId, userContainer, userCardSelector) {
+    if (!userContainer)
+        throw new Error('user container element is required.')
 
-    thisWorkerContainer = workerContainer
+    thisUserContainer = userContainer
 
-    const workerCard = workerContainer.querySelector(workerCardSelector)
-    if (!workerCard)
-        throw new Error('Worker card element is required.')
+    const userCard = userContainer.querySelector(userCardSelector)
+    if (!userCard)
+        throw new Error('user card element is required.')
 
-    workerContainer.addEventListener('click', e => {
-        targetWorker = e.target.closest(workerCardSelector)
+    userContainer.addEventListener('click', e => {
+        targetUser = e.target.closest(userCardSelector)
     })
 
-    const terminateWorkerButton = workerInfoCardTemplate.querySelector('#terminate_worker_button')
-    if (!terminateWorkerButton)
-        throw new Error('Terminate Worker button not found.')
-    terminateWorkerButton.addEventListener('click', e => debounceAsync(terminateButtonEvent(e, projectId, workerCardSelector), 300))
+    const terminateUserButton = userInfoCardTemplate.querySelector('#terminate_worker_button')
+    if (!terminateUserButton)
+        throw new Error('Terminate user button not found.')
+    terminateUserButton.addEventListener('click', e => debounceAsync(terminateButtonEvent(e, projectId, userCardSelector), 300))
 }
 
-async function terminateButtonEvent(e, projectId, workerCardSelector) {
+async function terminateButtonEvent(e, projectId, userCardSelector) {
     e.preventDefault()
 
-    const workerId = workerInfoCardTemplate.dataset.workerid
-    if (!workerId) {
-        console.error('Worker ID not found.')
+    const userId = userInfoCardTemplate.dataset.userid
+    if (!userId) {
+        console.error('User ID not found.')
         Dialog.somethingWentWrong()
         return
     }
 
     if (!await confirmationDialog(
-        'Terminate Worker',
-        `Are you sure you want to terminate this worker?`,
+        'Terminate user',
+        `Are you sure you want to terminate this user?`,
     )) return
 
     if (!projectId) {
@@ -50,29 +50,30 @@ async function terminateButtonEvent(e, projectId, workerCardSelector) {
     }
 
     try {
-        await sendToBackend(projectId, workerId)
+        await sendToBackend(projectId, userId)
         Dialog.operationSuccess(
-            'Worker terminated.',
-            'The worker has been successfully terminated from the project.'
+            'User Terminated.',
+            'The user has been successfully terminated.'
         )
-        targetWorker.remove()
 
-        // TODO
-        const remainingWorkerCard = thisWorkerContainer.querySelectorAll(workerCardSelector)
+        // Remove worker card from UI
+        targetUser.remove()
+
+        const remainingWorkerCard = thisUserContainer.querySelectorAll(userCardSelector)
         if (remainingWorkerCard.length === 0) {
-            const noWorkersWall = thisWorkerContainer.querySelector('.no-workers-wall')
-                || thisWorkerContainer.parentElement?.querySelector('.no-workers-wall')
+            const noWorkersWall = thisUserContainer.querySelector('.no-workers-wall')
+                || thisUserContainer.parentElement?.querySelector('.no-workers-wall')
             noWorkersWall?.classList.add('flex-col')
             noWorkersWall?.classList.remove('no-display')
         }
-        const closeButton = workerInfoCardTemplate.querySelector('#worker_info_card_close_button')
+        const closeButton = userInfoCardTemplate.querySelector('#user_info_card_close_button')
         closeButton?.click()
     } catch (error) {
         throw error
     }
 }
 
-async function sendToBackend(projectId, workerId) {
+async function sendToBackend(projectId, userId) {
     try {
         if (isLoading) {
             console.warn('Request already in progress. Please wait.')
@@ -83,10 +84,10 @@ async function sendToBackend(projectId, workerId) {
         if (!projectId || projectId.trim() === '')
             throw new Error('Project ID is required.')
 
-        if (!workerId || workerId.trim() === '')
-            throw new Error('Worker ID is required.')
+        if (!userId || userId.trim() === '')
+            throw new Error('user ID is required.')
 
-        const response = await Http.PUT(`projects/${projectId}/workers/${workerId}`, { status: 'terminated' })
+        const response = await Http.PUT(`projects/${projectId}/workers/${userId}`, { status: 'terminated' })
         if (!response)
             throw new Error('Failed to terminate worker from project.')
     } catch (error) {

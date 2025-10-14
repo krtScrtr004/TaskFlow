@@ -2,8 +2,15 @@
 
 class UserController implements Controller
 {
-    private function __construct() {}
-    public static function index(array $args = []): void {}
+    private function __construct()
+    {
+    }
+    public static function index(array $args = []): void
+    {
+        $users = UserModel::all();
+
+        require_once VIEW_PATH . 'users.php';
+    }
 
     public static function getUserById(array $args = []): void
     {
@@ -11,21 +18,18 @@ class UserController implements Controller
         if (!$userId)
             Response::error('User ID is required.');
 
-        if ($_GET['additionalInfo'])
+        if ($_GET['additionalInfo']) {
             // TODO
+        }
 
         $users = UserModel::all();
-        Response::success([
-            'user' => $users
-        ], 'User fetched successfully.');
+        Response::success([$users[0]->toArray()], 'User fetched successfully.');
     }
 
     public static function getUserByKey(): void
     {
         $users = UserModel::all();
-        Response::success([
-            'users' => $users
-        ], 'Users fetched successfully.');
+        Response::success($users, 'Users fetched successfully.');
     }
 
     public static function addUser(): void
