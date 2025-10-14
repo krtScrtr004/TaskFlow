@@ -9,7 +9,7 @@ export async function userInfoCard(userId, asyncFunction) {
 
     const userInfoCardTemplate = document.querySelector('#user_info_card_template')
     if (!userInfoCardTemplate) {
-        throw new Error('user Info Card template not found!')
+        throw new Error('User Info Card template not found!')
     }
 
     userInfoCardTemplate.classList.add('flex-col')

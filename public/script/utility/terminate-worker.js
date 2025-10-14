@@ -85,7 +85,7 @@ async function sendToBackend(projectId, userId) {
             throw new Error('Project ID is required.')
 
         if (!userId || userId.trim() === '')
-            throw new Error('user ID is required.')
+            throw new Error('User ID is required.')
 
         const response = await Http.PUT(`projects/${projectId}/workers/${userId}`, { status: 'terminated' })
         if (!response)

@@ -30,12 +30,12 @@
             </div>
         </section>
 
-        <!-- user Bio -->
+        <!-- User Bio -->
         <p class="user-bio">!</p>
 
         <hr>
 
-        <!-- user Statistics -->
+        <!-- User Statistics -->
         <section class="user-statistics-container flex-row">
 
             <?php

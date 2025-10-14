@@ -51,7 +51,7 @@ function sentenceToCamelCase(string $string): string
     // Converts sentence case to camelCase
     return lcfirst(str_replace(' ', '', ucwords($string)));
 }
-    
+
 function formatBudgetToCents(float $amount): int {
     return (int) round($amount * 100);
 }

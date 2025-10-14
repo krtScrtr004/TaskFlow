@@ -1,9 +1,6 @@
 <?php
 if (!isset($users))
     throw new Error('Users data is required.');
-
-// $searchKey = isset($_GET['key']) ? htmlspecialchars($_GET['key']) : '';
-// $searchFilter = isset($_GET['filter']) ? htmlspecialchars($_GET['filter']) : 'all';
 ?>
 
 <!DOCTYPE html>

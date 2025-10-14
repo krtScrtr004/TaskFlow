@@ -72,11 +72,11 @@ export function createUserGridCard(user) {
         
     if (isUsersPage) {
         const completedProjects = document.createElement('p')
-        completedProjects.textContent = `Completed Projects: ${user.totalProjects || 0}`
+        completedProjects.textContent = `Completed Projects: ${user.completedProjects || 0}`
         statistics.appendChild(completedProjects)
     } else {
         const completedTasks = document.createElement('p')
-        completedTasks.textContent = `Completed Tasks: ${user.totalTasks || 0}`
+        completedTasks.textContent = `Completed Tasks: ${user.completedTasks || 0}`
         statistics.appendChild(completedTasks)
     }
     
