@@ -37,18 +37,18 @@ $searchFilter = isset($_GET['filter']) ? htmlspecialchars($_GET['filter']) : 'al
         <section>
             <?= searchBar([
                 'Status' => [
-                    'allStatus',
-                    'pending',
-                    'onGoing',
-                    'completed',
-                    'delayed',
-                    'cancelled'
+                    'All Statuses',
+                    WorkStatus::PENDING->getDisplayName(),
+                    WorkStatus::ON_GOING->getDisplayName(),
+                    WorkStatus::COMPLETED->getDisplayName(),
+                    WorkStatus::DELAYED->getDisplayName(),
+                    WorkStatus::CANCELLED->getDisplayName()
                 ],
                 'Priority' => [
-                    'allPriority',
-                    'high',
-                    'medium',
-                    'low'
+                    'All Priorities',
+                    TaskPriority::HIGH->getDisplayName(),
+                    TaskPriority::MEDIUM->getDisplayName(),
+                    TaskPriority::LOW->getDisplayName()
                 ]
             ]) ?>
         </section>

@@ -29,13 +29,13 @@ function searchBar(
         <?php if ($filterOptions || ($filterOptions && count($filterOptions) > 0)): ?>
             <select class="search-filter" name="search_bar_filter" id="search_bar_filter">
                 <!-- Default Option -->
-                <option value="all" <?= $searchFilter === 'all' ? 'selected' : '' ?>>All Projects</option>
+                <option value="all" <?= $searchFilter === 'all' ? 'selected' : '' ?>>All</option>
 
                 <?php foreach ($filterOptions as $group => $groups) { ?>
                     <optgroup label="<?= ucwords(camelToSentenceCase($group)) ?>">
                         <?php foreach ($groups as $value) { ?>
-                            <option value="<?= $value ?>" <?= $searchFilter === $value ? 'selected' : '' ?>>
-                                <?= ucwords(camelToSentenceCase($value)) ?>
+                            <option value="<?= sentenceToCamelCase($value) ?>" <?= $searchFilter === sentenceToCamelCase($value) ? 'selected' : '' ?>>
+                                <?= $value ?>
                             </option>
                         <?php } ?>
                     </optgroup>

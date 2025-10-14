@@ -144,11 +144,11 @@ $statisticsData['performance'] = htmlspecialchars(formatNumber($calculateStatist
         <section class="flex-row flex-child-end-v">
             <?= searchBar([
                 'Status' => [
-                    'pending',
-                    'onGoing',
-                    'completed',
-                    'delayed',
-                    'cancelled'
+                    WorkStatus::PENDING->getDisplayName(),
+                    WorkStatus::ON_GOING->getDisplayName(),
+                    WorkStatus::COMPLETED->getDisplayName(),
+                    WorkStatus::DELAYED->getDisplayName(),
+                    WorkStatus::CANCELLED->getDisplayName()
                 ]
             ]) ?>
         </section>

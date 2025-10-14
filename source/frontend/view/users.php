@@ -32,11 +32,17 @@ if (!isset($users))
         <!-- Search Bar -->
         <section>
             <?= searchBar([
+                'Role' => [
+                    'All Roles',
+                    Role::PROJECT_MANAGER->getDisplayName(),
+                    Role::WORKER->getDisplayName()
+                ],
                 'Status' => [
-                    WorkerStatus::ACTIVE->value => WorkerStatus::ACTIVE->getDisplayName(),
-                    WorkerStatus::UNASSIGNED->value => WorkerStatus::UNASSIGNED->getDisplayName(),
-                    WorkerStatus::ON_LEAVE->value => WorkerStatus::ON_LEAVE->getDisplayName(),
-                    WorkerStatus::TERMINATED->value => WorkerStatus::TERMINATED->getDisplayName()
+                    'All Statuses',
+                    WorkerStatus::ACTIVE->getDisplayName(),
+                    WorkerStatus::UNASSIGNED->getDisplayName(),
+                    WorkerStatus::ON_LEAVE->getDisplayName(),
+                    WorkerStatus::TERMINATED->getDisplayName()
                 ]
             ]) ?>
         </section>

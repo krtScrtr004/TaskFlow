@@ -6,6 +6,7 @@ function userGridCard(User|Worker $user): string
     $id = htmlspecialchars($user->getPublicId());
     $email = htmlspecialchars($user->getEmail());
     $contact = htmlspecialchars($user->getContactNumber());
+    $role = htmlspecialchars($user->getRole()->getDisplayName());
     $profileLink =
         htmlspecialchars($user->getProfileLink()) ?:
         ICON_PATH . 'profile_w.svg';
@@ -32,9 +33,16 @@ function userGridCard(User|Worker $user): string
             </div>
         </section>
 
+        <?php if ($isUsersPage): ?>
+            <div class="role-badge badge center-child white-bg">
+                <p><strong class="black-text"><?= $role ?></strong></p>
+            </div>
+        <?php endif; ?>
+
         <!-- Worker Statistics -->
         <section class="user-statistics flex-col">
-            <?php if ($isUsersPage): $projects = ProjectModel::all(); ?>
+            <?php if ($isUsersPage):
+                $projects = ProjectModel::all(); ?>
                 <!-- Completed Projects -->
                 <p>Completed Projects: <?= $performance['totalProjects'] ?></p>
             <?php else: ?>
@@ -63,7 +71,7 @@ function userGridCard(User|Worker $user): string
             </div>
         </section>
 
-        <?php if (Role::isWorker($user)): ?>
+        <?php if ($user instanceof Worker): ?>
             <!-- Worker Status -->
             <section class="user-status flex-col flex-child-end-h flex-child-end-v">
                 <div><?= WorkerStatus::badge($user->getStatus()) ?></div>
