@@ -10,13 +10,13 @@ let thisUserContainer = null
 
 export function terminateWorker(projectId, userContainer, userCardSelector) {
     if (!userContainer)
-        throw new Error('user container element is required.')
+        throw new Error('User container element is required.')
 
     thisUserContainer = userContainer
 
     const userCard = userContainer.querySelector(userCardSelector)
     if (!userCard)
-        throw new Error('user card element is required.')
+        throw new Error('User card element is required.')
 
     userContainer.addEventListener('click', e => {
         targetUser = e.target.closest(userCardSelector)

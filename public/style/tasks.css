@@ -97,33 +97,33 @@
 	overflow: auto;
 }
 
-.worker-grid-card {
+.user-grid-card {
 	display: flex;
 	flex-direction: column;
 	padding: 1rem;
 	gap: 1rem;
 }
 
-.worker-grid-card .worker-primary-info {
+.user-grid-card .user-primary-info {
 	gap: 0.5rem;
 }
 
-.worker-grid-card .worker-name {
+.user-grid-card .user-name {
 	font-size: 1.2rem;
 	font-weight: 500;
 }
 
-.worker-grid-card .worker-id {
+.user-grid-card .user-id {
 	font-size: 0.9rem;
 	font-weight: 300;
 }
 
-.worker-grid-card .worker-statistics,
-.worker-grid-card .worker-contact-info {
+.user-grid-card .user-statistics,
+.user-grid-card .user-contact-info {
 	gap: 0.3rem;
 }
 
-.worker-grid-card .worker-status {
+.user-grid-card .user-status {
 	flex: 1;
 }
 

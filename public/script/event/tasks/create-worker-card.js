@@ -1,11 +1,14 @@
 import { userInfoCard } from '../../render/user-card.js'
 import { Dialog } from '../../render/dialog.js'
+import { Http } from '../../utility/http.js'
+
+let isLoading = false
 
 const viewTaskInfo = document.querySelector('.view-task-info')
 const workerGrid = viewTaskInfo.querySelector('.worker-grid')
 if (workerGrid) {
     workerGrid.addEventListener('click', async e => {
-        const workerCard = e.target.closest('.worker-grid-card')
+        const workerCard = e.target.closest('.user-grid-card')
         if (!workerCard) return
 
             const projectId = viewTaskInfo.dataset.projectid
@@ -23,7 +26,7 @@ if (workerGrid) {
             }
 
             try {
-            userInfoCard(workerId)
+                userInfoCard(workerId, () => fetchUserInfo(projectId, workerId))
         } catch (error) {
             console.error(`Error fetching worker info: ${error.message}`)
         }
@@ -32,3 +35,25 @@ if (workerGrid) {
     console.error('Workers grid not found!')
 }
     
+async function fetchUserInfo(projectId, userId) {
+    try {
+        if (isLoading) {
+            console.warn('Request already in progress. Please wait.')
+            return
+        }
+        isLoading = true
+
+        if (!userId || userId === '')
+            throw new Error('User ID is required.')
+
+        const response = await Http.GET(`projects/${projectId}/workers/${userId}`)
+        if (!response)
+            throw error
+
+        return response.data
+    } catch (error) {
+        throw error
+    } finally {
+        isLoading = false
+    }
+}

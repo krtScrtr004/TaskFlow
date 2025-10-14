@@ -23,7 +23,7 @@ class UserController implements Controller
         }
 
         $users = UserModel::all();
-        Response::success([$users[0]->toArray()], 'User fetched successfully.');
+        Response::success([self::createResponseArrayData($users[0]->toWorker())], 'User fetched successfully.');
     }
 
     public static function getUserByKey(): void
@@ -48,5 +48,18 @@ class UserController implements Controller
             Response::error('Cannot decode data.');
 
         Response::success([], 'User edited successfully.');
+    }
+
+    private static function createResponseArrayData(Worker $worker): array
+    {
+        $worker->setRole(Role::WORKER);
+        $tasks = TaskModel::all();
+        $workerPerformanceProject = WorkerPerformanceCalculator::calculate($tasks);
+        return [
+            ...$worker->toArray(),
+            'totalProjects' => count($tasks),
+            'completedProjects' => $tasks->getTaskCountByStatus(WorkStatus::COMPLETED),
+            'performance' => $workerPerformanceProject['overallScore'],
+        ];
     }
 }

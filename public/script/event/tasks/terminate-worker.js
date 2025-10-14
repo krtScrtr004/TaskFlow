@@ -7,7 +7,7 @@ try {
     if (!projectId) throw new Error('Project ID not found.')
 
     const workerContainer = viewTaskInfo?.querySelector('.worker-grid')
-    terminateWorker(projectId, workerContainer, '.worker-grid-card')
+    terminateWorker(projectId, workerContainer, '.user-grid-card')
 } catch (error) {
     console.error('Error terminating worker:', error)
     errorListDialog(error?.errors, error?.message)
