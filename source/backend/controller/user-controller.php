@@ -29,7 +29,11 @@ class UserController implements Controller
     public static function getUserByKey(): void
     {
         $users = UserModel::all();
-        Response::success($users, 'Users fetched successfully.');
+        $return = [];
+        foreach ($users as $user) {
+            $return[] = self::createResponseArrayData($user->toWorker());
+        }
+        Response::success($return, 'Users fetched successfully.');
     }
 
     public static function addUser(): void

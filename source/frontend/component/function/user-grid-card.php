@@ -35,7 +35,7 @@ function userGridCard(User|Worker $user): string
 
         <?php if ($isUsersPage): ?>
             <div class="role-badge badge center-child white-bg">
-                <p><strong class="black-text"><?= $role ?></strong></p>
+                <p><strong class="user-role black-text"><?= $role ?></strong></p>
             </div>
         <?php endif; ?>
 
