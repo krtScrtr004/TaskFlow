@@ -111,13 +111,16 @@
             </div>
         </section>
 
-        <!-- Terminate user Button -->
-        <button id="terminate_worker_button" type="button" class="red-bg">
-            <div class="text-w-icon">
-                <img src="<?= ICON_PATH . 'close_w.svg' ?>" alt="Terminate" title="Terminate" height="20">
+        <?php if (!$isUsersPage): ?>
+            <!-- Terminate user Button -->
+            <button id="terminate_worker_button" type="button" class="red-bg">
+                <div class="text-w-icon">
+                    <img src="<?= ICON_PATH . 'close_w.svg' ?>" alt="Terminate" title="Terminate" height="20">
 
-                <h3 class="white-text">Terminate</h3>
-            </div>
-        </button>
+                    <h3 class="white-text">Terminate</h3>
+                </div>
+            </button>
+        <?php endif; ?>
+
     </div>
 </section>

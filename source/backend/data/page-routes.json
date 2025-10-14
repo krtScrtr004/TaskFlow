@@ -27,6 +27,6 @@
 			"viewProjectGrid"
 		],
 
-		"TaskFlow/users": "UserController"
+		"TaskFlow/users(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": "UserController"
 	}
 }

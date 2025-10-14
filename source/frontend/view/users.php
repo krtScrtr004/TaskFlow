@@ -25,7 +25,10 @@ if (!isset($users))
 </head>
 
 <body>
-    <?php require_once COMPONENT_PATH . 'sidenav.php' ?>
+    <?php 
+    require_once COMPONENT_PATH . 'sidenav.php';
+    require_once COMPONENT_PATH . 'template' . DS . 'user-info-card.php';
+    ?>
 
     <main class="users main-page flex-col">
 
@@ -64,8 +67,9 @@ if (!isset($users))
 
     <script type="module" src="<?= EVENT_PATH . 'break-text-fallback.js' ?>" defer></script>
 
-    <script type="module" src="<?= EVENT_PATH . 'tasks' . DS . 'search.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'tasks' . DS . 'infinite-scroll.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'users' . DS . 'search.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'users' . DS . 'infinite-scroll.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'users' . DS . 'create-user-card.js' ?>" defer></script>
 
 </body>
 
