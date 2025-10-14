@@ -10,8 +10,9 @@ function userGridCard(User|Worker $user): string
         htmlspecialchars($user->getProfileLink()) ?:
         ICON_PATH . 'profile_w.svg';
 
-    // TODO: Fetch user tasks from the DB
-    $performance = WorkerPerformanceCalculator::calculate(TaskModel::all());
+    $isUsersPage = strpos($_SERVER['REQUEST_URI'], 'users') !== false;
+
+    $performance = WorkerPerformanceCalculator::calculate(ProjectModel::all());
 
     ob_start();
     ?>
@@ -33,8 +34,13 @@ function userGridCard(User|Worker $user): string
 
         <!-- Worker Statistics -->
         <section class="user-statistics flex-col">
-            <!-- Completed Tasks -->
-            <p>Completed Tasks: <?= $performance['totalTasks'] ?></p>
+            <?php if ($isUsersPage): $projects = ProjectModel::all(); ?>
+                <!-- Completed Projects -->
+                <p>Completed Projects: <?= $performance['totalProjects'] ?></p>
+            <?php else: ?>
+                <!-- Completed Tasks -->
+                <p>Completed Tasks: <?= $performance['totalTasks'] ?></p>
+            <?php endif; ?>
 
             <!-- Performance -->
             <p>Performance: <?= $performance['overallScore'] ?>%</p>

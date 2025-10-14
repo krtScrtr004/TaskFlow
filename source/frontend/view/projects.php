@@ -17,8 +17,7 @@ if (Role::isProjectManager(Me::getInstance())) {
     $calculateStatistics = ProjectManagerPerformanceCalculator::calculate($projects);
 } else {
     // TODO: Get all user tasks (LATEST 10 projects only)
-    $workerTasks = TaskModel::all();
-    $calculateStatistics = WorkerPerformanceCalculator::calculate($workerTasks);
+    $calculateStatistics = WorkerPerformanceCalculator::calculate(ProjectModel::all());
 }
 $statisticsData['performance'] = htmlspecialchars(formatNumber($calculateStatistics['overallScore']));
 

@@ -53,12 +53,12 @@ class UserController implements Controller
     private static function createResponseArrayData(Worker $worker): array
     {
         $worker->setRole(Role::WORKER);
-        $tasks = TaskModel::all();
-        $workerPerformanceProject = WorkerPerformanceCalculator::calculate($tasks);
+        $projects = ProjectModel::all();
+        $workerPerformanceProject = WorkerPerformanceCalculator::calculate($projects);
         return [
             ...$worker->toArray(),
-            'totalProjects' => count($tasks),
-            'completedProjects' => $tasks->getTaskCountByStatus(WorkStatus::COMPLETED),
+            'totalProjects' => count($projects),
+            'completedProjects' => $projects->getCountByStatus(WorkStatus::COMPLETED),
             'performance' => $workerPerformanceProject['overallScore'],
         ];
     }

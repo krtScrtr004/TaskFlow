@@ -41,7 +41,7 @@ function addInfoToCard(card, user) {
     const domElements = getCardDomElements(card)
     const {
         userProfilePicture, userName, userId, userBio,
-        userTotalTasks, userCompletedTasks, userPerformance,
+        userTotalStatistics, userCompletedStatistics, userPerformance,
         userEmail, userContact, userJobTitles
     } = domElements
 
@@ -53,8 +53,8 @@ function addInfoToCard(card, user) {
         `<span class="job-title-chip">${title}</span>`
     ).join('')
     userBio.textContent = user.bio ?? 'No bio available'
-    userTotalTasks.textContent = user.totalProjects || user.totalTasks || 0
-    userCompletedTasks.textContent = user.completedProjects || user.completedTasks || 0
+    userTotalStatistics.textContent = user.totalProjects || user.totalTasks || 0
+    userCompletedStatistics.textContent = user.completedProjects || user.completedTasks || 0
     userPerformance.textContent = (user.performance ?? 0) + '%'
     userEmail.textContent = user.email ?? 'N/A'
     userContact.textContent = user.contactNumber ?? 'N/A'
@@ -71,7 +71,7 @@ function closeUserInfoCard(card) {
         const domElements = getCardDomElements(card)
         const {
             userProfilePicture, userName, userId, userBio,
-            userTotalTasks, userCompletedTasks, userPerformance,
+            userTotalStatistics, userCompletedStatistics, userPerformance,
             userEmail, userContact
         } = domElements
         // Remove recent user info
@@ -79,8 +79,8 @@ function closeUserInfoCard(card) {
         userName.textContent = ''
         userId.textContent = ''
         userBio.textContent = ''
-        userTotalTasks.textContent = ''
-        userCompletedTasks.textContent = ''
+        userTotalStatistics.textContent = ''
+        userCompletedStatistics.textContent = ''
         userPerformance.textContent = ''
         userEmail.textContent = ''
         userContact.textContent = ''
