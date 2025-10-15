@@ -3,11 +3,11 @@
 class SingleFormController implements Controller
 {
     private array $components = [
-        'forgetPassword' => [
+        'resetPassword' => [
             'title' => 'Reset Your Password',
             'description' => 'Enter your email address below and we will send you a link to reset your password.',
-            'form' => 'forgetPassword',
-            'script' => ['single-form/forget-password/send-link']
+            'form' => 'resetPassword',
+            'script' => ['single-form/reset-password/send-link']
         ],
         'changePassword' => [
             'title' => 'Set Your Password',
