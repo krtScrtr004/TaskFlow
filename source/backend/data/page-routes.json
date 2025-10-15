@@ -27,6 +27,8 @@
 			"viewProjectGrid"
 		],
 
-		"TaskFlow/users(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": "UserController"
+		"TaskFlow/users(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": "UserController",
+
+		"TaskFlow/profile": "ProfileController"
 	}
 }
