@@ -52,7 +52,12 @@ async function submit(file) {
         setTimeout(() => window.location.reload(), 1500)
     } catch (error) {
         console.error('Error during profile picture change:', error)
-        errorListDialog(error?.errors, error?.message)
+
+        if (error?.errors) {
+            errorListDialog(error?.message, error.errors)
+        } else {
+            Dialog.somethingWentWrong()
+        }
     } finally {
         Loader.delete()
     }
@@ -73,7 +78,7 @@ async function sendToBackend(formData) {
             throw new Error('User ID not found.')
         
         // Pass serialize = false to prevent JSON.stringify on FormData
-        const response = await Http.POST(`users/${myId}`, formData, false)
+        const response = await Http.POST(`user/${myId}`, formData, false)
         if (!response)
             throw new Error('No response from server.')
     } catch (error) {

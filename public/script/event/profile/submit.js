@@ -18,7 +18,7 @@ const originalValues = {}
 if (editableProfileDetailsForm) {
     // Capture initial values when the page loads
     storeOriginalValues()
-    
+
     editableProfileDetailsForm.addEventListener('input', debounce(e => {
         if (e.target.matches('input, textarea') && !hasSomethingChanged) {
             saveChangesButton.disabled = false
@@ -76,7 +76,7 @@ async function submit(e) {
 
     // Get only the changed values
     const changedParams = getChangedValues(params)
-    
+
     // If nothing changed, don't send request
     if (Object.keys(changedParams).length === 0) {
         Dialog.operationSuccess(
@@ -98,7 +98,11 @@ async function submit(e) {
         setTimeout(() => window.location.reload(), delay)
     } catch (error) {
         console.error('Error submitting profile changes:', error)
-        errorListDialog(error?.errors, error?.message)
+        if (error?.errors) {
+            errorListDialog(error?.message, error.errors)
+        } else {
+            Dialog.somethingWentWrong()
+        }
     } finally {
         Loader.delete()
     }

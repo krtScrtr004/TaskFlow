@@ -79,7 +79,11 @@ async function submitForm(e) {
         setTimeout(() => window.location.href = `/TaskFlow/project/${response.id}`, 1500)
     } catch (error) {
         console.error('Error occurred while submitting form:', error)
-        errorListDialog(error?.errors, error?.message)
+        if (error?.errors) {
+            errorListDialog(error?.message, error.errors)
+        } else {
+            Dialog.somethingWentWrong()
+        }
     } finally {
         Loader.delete()
         isLoading = false

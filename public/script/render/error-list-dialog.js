@@ -1,8 +1,8 @@
 import { hideModal } from '../utility/hide-modal.js'
 
 export function errorListDialog(
+    title,
     errors,
-    title = 'Error',
     parent = document.body
 ) {
     const HTML = `

@@ -30,7 +30,7 @@ export const Http = (() => {
                     errorData = await request.json()
                 } else {
                     errorData = {
-                        error: request.status === 401 ? 'Unauthorized' : 'Forbidden',
+                        error: 'HTTP Error',
                         message: request.statusText
                     }
                 }
@@ -49,7 +49,7 @@ export const Http = (() => {
             if (method !== 'DELETE') {
                 const contentType = request.headers.get('Content-Type')
                 if (!contentType || !contentType.includes('application/json')) {
-                    throw new Error('Expected JSON, but got non-JSON response')
+                    throw new Error('Invalid content type in response.')
                 }
                 return await request.json()
             }

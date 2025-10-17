@@ -35,7 +35,11 @@ async function submit(e) {
         setTimeout(() => window.location.href = '/TaskFlow/login', 1500)
     } catch (error) {
         console.error('Error during account deletion:', error)
-        errorListDialog(error?.errors, error?.message)
+        if (error?.errors) {
+            errorListDialog(error?.message, error.errors)
+        } else {
+            Dialog.somethingWentWrong()
+        }
     }
 }
 
@@ -49,7 +53,7 @@ async function sendToBackend() {
 
         if (!myId || myId.trim() === '')
             throw new Error('User ID not found.')
-        
+
         await Http.DELETE(`users/${myId}`)
     } catch (error) {
         throw error
