@@ -3,7 +3,6 @@ import { confirmationDialog } from '../../render/confirmation-dialog.js'
 import { Dialog } from '../../render/dialog.js'
 import { Loader } from '../../render/loader.js'
 import { errorListDialog } from '../../render/error-list-dialog.js'
-import { debounce } from '../../utility/debounce.js'
 
 let isLoading = false
 const profile = document.querySelector('.profile')
@@ -15,10 +14,10 @@ if (!myId || myId.trim() === '')
     console.warn('User ID not found in form dataset.')
 
 if (pickProfilePictureButton) {
-    pickProfilePictureButton.addEventListener('click', debounce(e => {
+    pickProfilePictureButton.addEventListener('click', e => {
         e.preventDefault()
         profilePicker.click()
-    }, 300))
+    })
 } else {
     console.error('Pick Profile Picture button not found.')
     Dialog.somethingWentWrong()
@@ -40,6 +39,11 @@ if (profilePicker) {
 }
 
 async function submit(file) {
+    if (!await confirmationDialog(
+        'Confirm Profile Picture Change',
+        'Are you sure you want to change your profile picture?'
+    )) return
+
     const formData = new FormData()
     formData.append('profilePicture', file)
     formData.append('_method', 'PATCH')  // Method override for PATCH request

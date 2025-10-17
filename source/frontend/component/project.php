@@ -231,7 +231,7 @@ $projectData = [
                 </div>
             </section>
 
-            <?php if (Role::isProjectManager(Me::getInstance())): ?>
+            <?php if (Role::isProjectManager(Me::getInstance()) && $projectData['status'] !== WorkStatus::CANCELLED): ?>
                 <!-- Project Actions -->
                 <section class="project-actions content-section-block">
                     <div class="heading-title text-w-icon">

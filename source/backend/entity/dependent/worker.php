@@ -103,7 +103,7 @@ class Worker extends User {
             $user->getEmail(),
             $user->getBio(),
             $user->getProfileLink(),
-            WorkerStatus::ACTIVE,
+            WorkerStatus::ASSIGNED,
             $user->getJoinedDateTime(),
             $user->getAdditionalInfo()
         );

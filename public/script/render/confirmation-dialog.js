@@ -22,15 +22,15 @@ export async function confirmationDialog(
                     </div>
 
                     <div class="buttons flex-row">
-                        <button id="cancel_confirmation_wutton" class="red-bg">
+                        <button id="cancel_confirmation_button" class="red-bg">
                             <div class="text-w-icon ">
-                                <img src="${ICON_PATH}delete_w.svg" alt="" title="" height="20">
+                                <img src="${ICON_PATH}close_w.svg" alt="" title="" height="20">
 
                                 <h3 class="white-text">Cancel</h3>
                             </div>
                         </button>
 
-                        <button id="confirm_confirmation_wutton" class="blue-bg">
+                        <button id="confirm_confirmation_button" class="blue-bg">
                             <div class="text-w-icon ">
                                 <img src="${ICON_PATH}complete_w.svg" alt="" title="" height="20">
 
@@ -50,9 +50,9 @@ export async function confirmationDialog(
             resolve(false)
             return
         }
-        
-        const cancelButton = modalWrapper.querySelector('#cancel_confirmation_wutton')
-        const confirmButton = modalWrapper.querySelector('#confirm_confirmation_wutton')
+
+        const cancelButton = modalWrapper.querySelector('#cancel_confirmation_button')
+        const confirmButton = modalWrapper.querySelector('#confirm_confirmation_button')
 
         // Function to clean up and resolve
         const cleanup = (result) => {

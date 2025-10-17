@@ -262,11 +262,6 @@ $myData = [
 
             <hr>
 
-            <!-- Take A Leave -->
-            <button id="take_a_leave_button" type="button" class="unset-button">
-                <p class="orange-text">Take A Leave</p>
-            </button>
-
             <!-- Delete -->
             <button id="delete_my_account_button" type="button" class="unset-button">
                 <p class="red-text">Delete My Account</p>

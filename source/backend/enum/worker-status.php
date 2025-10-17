@@ -1,7 +1,7 @@
 <?php
 
 enum WorkerStatus: string {
-    case ACTIVE = 'active';
+    case ASSIGNED = 'assigned';
     case UNASSIGNED = 'unassigned';
     case ON_LEAVE = 'onLeave';
     case SUSPENDED = 'suspended';
@@ -9,7 +9,7 @@ enum WorkerStatus: string {
 
     public function getDisplayName(): string {
         return match($this) {
-            self::ACTIVE => ucwords(camelToSentenceCase(self::ACTIVE->value)),
+            self::ASSIGNED => ucwords(camelToSentenceCase(self::ASSIGNED->value)),
             self::UNASSIGNED => ucwords(camelToSentenceCase(self::UNASSIGNED->value)),
             self::ON_LEAVE => ucwords(camelToSentenceCase(self::ON_LEAVE->value)),
             self::SUSPENDED => ucwords(camelToSentenceCase(self::SUSPENDED->value)),
@@ -19,7 +19,7 @@ enum WorkerStatus: string {
 
     public static function badge(self $status): string {
         return match($status) {
-            self::ACTIVE => '<span class="worker-badge badge blue-bg white-text">Active</span>',
+            self::ASSIGNED => '<span class="worker-badge badge blue-bg white-text">Assigned</span>',
             self::UNASSIGNED => '<span class="worker-badge badge yellow-bg black-text">Unassigned</span>',
             self::ON_LEAVE => '<span class="worker-badge badge orange-bg white-text">On Leave</span>',
             self::SUSPENDED => '<span class="worker-badge badge red-bg white-text">Suspended</span>',
