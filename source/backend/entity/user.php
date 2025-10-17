@@ -99,7 +99,7 @@ class User implements Entity {
         return $this->email;
     }
 
-    public function getBio(): string {
+    public function getBio(): ?string {
         return $this->bio;
     }
 

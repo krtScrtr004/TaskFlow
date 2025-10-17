@@ -1,0 +1,100 @@
+.profile,
+.profile > * {
+    gap: var(--space);
+}
+
+.profile {
+    padding: var(--space) calc(3 * var(--space)) !important;
+}
+
+.profile > .content-section-block {
+    padding: var(--space) calc(1.5 * var(--space));
+}
+
+.profile .primary-info {
+    gap: 0.8rem;
+}
+
+.profile .primary-info > .full-name {
+    font-size: 1.8rem;
+}
+
+.profile .id {
+    margin-top: 0.3rem;
+    font-weight: 300;
+}
+
+.profile .gender-selections {
+    gap: 1rem;
+}
+
+.profile .gender-selections label {
+    margin-left: 0.5rem;
+    font-size: 1.3rem;
+    cursor: pointer;
+}
+
+.profile .gender-selections input[type="radio"] {
+    height: 1.1rem;
+    width: 1.1rem;
+}
+
+.profile .role-chip {
+    width: fit-content;
+    padding: 0.4rem 0.8rem;
+    border-radius: var(--border-radius);
+}
+
+.profile .bio {
+    font-size: 1.1rem;
+    font-weight: 300;
+    margin-top: 1rem;
+}
+
+#pick_profile_picture_button {
+    width: 100%;
+    margin: 0.8rem 0;
+}   
+
+#editable_profile_details_form,
+#editable_profile_details_form > .grid {
+    gap: var(--space);
+}
+
+#editable_profile_details_form a:hover {
+    text-decoration: underline;
+}
+
+#editable_profile_details_form .name-inputs {
+    width: 100%;
+    gap: var(--space);
+}
+
+#editable_profile_details_form .name-inputs > * {
+    flex: 1;
+}
+
+#editable_profile_details_form > .grid {
+    grid-template-columns: 1fr 1fr;
+}
+
+#editable_profile_details_form a {
+    width: fit-content;
+}
+
+.profile .actions {
+    gap: 0.5rem;
+}
+
+.profile .actions button {
+    width: fit-content;
+}
+
+.profile .actions button:hover {
+    opacity: 1;
+}
+
+.profile .actions button:hover p {
+    text-decoration: underline;
+}
+
