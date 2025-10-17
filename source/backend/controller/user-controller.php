@@ -60,6 +60,10 @@ class UserController implements Controller
         if (!$userId)
             Response::error('User ID is required.');
 
+        // Response::error('Active Project', [
+        //     'You are assigned to an active project. Complete the project or ask for termination before deleting.'
+        // ]);
+
         Response::success([], 'User deleted successfully.');
     }
 

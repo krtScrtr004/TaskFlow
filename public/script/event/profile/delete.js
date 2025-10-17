@@ -50,7 +50,7 @@ async function sendToBackend() {
         if (!myId || myId.trim() === '')
             throw new Error('User ID not found.')
         
-        const response = await Http.DELETE(`profile/${myId}`)
+        const response = await Http.DELETE(`users/${myId}`)
     } catch (error) {
         throw error
     } finally {
