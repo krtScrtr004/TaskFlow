@@ -8,9 +8,9 @@ import { debounce, debounceAsync } from '../../utility/debounce.js'
 
 let [isLoading, hasSomethingChanged] = [false, false]
 const profile = document.querySelector('.profile')
-const editableProfileDetailsForm = profile.querySelector('#editable_profile_details_form')
-const saveChangesButton = editableProfileDetailsForm.querySelector('#save_changes_button')
-const myId = editableProfileDetailsForm.dataset.myid
+const editableProfileDetailsForm = profile?.querySelector('#editable_profile_details_form')
+const saveChangesButton = editableProfileDetailsForm?.querySelector('#save_changes_button')
+const myId = profile?.dataset.myid
 
 // Store original values
 const originalValues = {}

@@ -54,6 +54,15 @@ class UserController implements Controller
         Response::success([], 'User edited successfully.');
     }
 
+    public static function deleteUser(array $args = []): void
+    {
+        $userId = $args['userId'] ?? null;
+        if (!$userId)
+            Response::error('User ID is required.');
+
+        Response::success([], 'User deleted successfully.');
+    }
+
     private static function createResponseArrayData(Worker $worker): array
     {
         $worker->setRole(Role::WORKER);

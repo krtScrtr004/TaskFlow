@@ -42,7 +42,7 @@ $myData = [
 <body>
     <?php require_once COMPONENT_PATH . 'sidenav.php' ?>
 
-    <main class="profile main-page flex-col">
+    <main class="profile main-page flex-col" data-myid="<?= $myData['id'] ?>">
 
         <!-- Profile Overview -->
         <section class="profile-overview content-section-block flex-row">
@@ -102,8 +102,7 @@ $myData = [
         </section>
 
         <!-- Editable Profile Details -->
-        <form id="editable_profile_details_form" class="content-section-block flex-col" action="" method="POST"
-            data-myid="<?= $myData['id'] ?>">
+        <form id="editable_profile_details_form" class="content-section-block flex-col" action="" method="POST">
 
             <!-- Heading-->
             <div class="text-w-icon">
@@ -277,6 +276,7 @@ $myData = [
     </main>
 
     <script type="module" src="<?= EVENT_PATH . 'profile' . DS . 'submit.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'profile' . DS . 'delete.js' ?>" defer></script>
 </body>
 
 </html>

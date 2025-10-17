@@ -4,6 +4,7 @@ enum WorkerStatus: string {
     case ACTIVE = 'active';
     case UNASSIGNED = 'unassigned';
     case ON_LEAVE = 'onLeave';
+    case SUSPENDED = 'suspended';
     case TERMINATED = 'terminated';
 
     public function getDisplayName(): string {
@@ -11,6 +12,7 @@ enum WorkerStatus: string {
             self::ACTIVE => ucwords(camelToSentenceCase(self::ACTIVE->value)),
             self::UNASSIGNED => ucwords(camelToSentenceCase(self::UNASSIGNED->value)),
             self::ON_LEAVE => ucwords(camelToSentenceCase(self::ON_LEAVE->value)),
+            self::SUSPENDED => ucwords(camelToSentenceCase(self::SUSPENDED->value)),
             self::TERMINATED => ucwords(camelToSentenceCase(self::TERMINATED->value))
         };
     }
@@ -20,6 +22,7 @@ enum WorkerStatus: string {
             self::ACTIVE => '<span class="worker-badge badge blue-bg white-text">Active</span>',
             self::UNASSIGNED => '<span class="worker-badge badge yellow-bg black-text">Unassigned</span>',
             self::ON_LEAVE => '<span class="worker-badge badge orange-bg white-text">On Leave</span>',
+            self::SUSPENDED => '<span class="worker-badge badge red-bg white-text">Suspended</span>',
             self::TERMINATED => '<span class="worker-badge badge red-bg white-text">Terminated</span>'
         };
     }

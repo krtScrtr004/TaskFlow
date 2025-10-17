@@ -101,5 +101,9 @@
 			"WorkerController",
 			"editWorker"
 		]
+	},
+
+	"DELETE": {
+		"TaskFlow/endpoint/users/{userId:[\\w+_-]+}": ["UserController", "deleteUser"]
 	}
 }
