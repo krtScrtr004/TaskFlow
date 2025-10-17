@@ -42,7 +42,11 @@ async function submit(e) {
         window.location.reload()
     } catch (error) {
         console.error('Error cancelling task:', error)
-        errorListDialog(error?.errors, error?.message)
+        if (error?.errors) {
+            errorListDialog(error?.message, error.errors)
+        } else {
+            Dialog.somethingWentWrong()
+        }
     } finally {
         Loader.delete()
     }

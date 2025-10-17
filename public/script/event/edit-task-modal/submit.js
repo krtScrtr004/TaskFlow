@@ -77,7 +77,11 @@ async function submitForm(e) {
         }, 3000)
     } catch (error) {
         console.error('Error submitting form:', error)
-        errorListDialog(error?.errors, error?.message)
+        if (error?.errors) {
+            errorListDialog(error?.message, error.errors)
+        } else {
+            Dialog.somethingWentWrong()
+        }
     } finally {
         Loader.delete()
         isLoading = false

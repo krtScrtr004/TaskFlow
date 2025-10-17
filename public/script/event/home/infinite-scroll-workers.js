@@ -2,6 +2,7 @@ import { infiniteScroll } from '../../utility/infinite-scroll.js'
 import { Http } from '../../utility/http.js'
 import { errorListDialog } from '../../render/error-list-dialog.js'
 import { createWorkerListCard } from './create-worker-list-card.js'
+import { Dialog } from '../../render/dialog.js'
 
 let isLoading = false
 const projectContainer = document.querySelector('.project-container')
@@ -27,7 +28,11 @@ try {
     )
 } catch (error) {
     console.error('Error initializing infinite scroll:', error)
-    errorListDialog(error?.errors, error?.message)
+    if (error?.errors) {
+        errorListDialog(error?.message, error.errors)
+    } else {
+        Dialog.somethingWentWrong()
+    }
 }
 
 function getExistingItemsCount() {

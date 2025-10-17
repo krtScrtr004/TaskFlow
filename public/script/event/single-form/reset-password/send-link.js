@@ -1,15 +1,15 @@
 import { Dialog } from '../../../render/dialog.js'
 import { Notification } from '../../../render/notification.js'
 
-const forgetPasswordForm = document.querySelector('#forget_password_form')
-if (forgetPasswordForm) {
+const resetPasswordForm = document.querySelector('#reset_password_form')
+if (resetPasswordForm) {
     let isLoading = false
 
     function sendLink() {
         if (isLoading) return
         isLoading = true
 
-        const email = forgetPasswordForm.querySelector('#email')
+        const email = resetPasswordForm.querySelector('#email')
         if (email.value.trim() === '') {
             Notification.error(
                 'Please enter your email address.', 
@@ -33,11 +33,11 @@ if (forgetPasswordForm) {
 
     }
 
-    const sendLinkButton = forgetPasswordForm.querySelector('#send_link_button')
+    const sendLinkButton = resetPasswordForm.querySelector('#send_link_button')
     sendLinkButton.addEventListener('click', sendLink)
 
-    forgetPasswordForm.addEventListener('submit', e => { e.preventDefault(); sendLink(); })
+    resetPasswordForm.addEventListener('submit', e => { e.preventDefault(); sendLink(); })
 } else {
-    console.error('Forget Password form not found.')
+    console.error('Reset Password form not found.')
     Dialog.somethingWentWrong()
 }

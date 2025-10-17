@@ -1,3 +1,4 @@
+import { Dialog } from '../../render/dialog.js'
 import { terminateWorker } from '../../utility/terminate-worker.js'
 import { errorListDialog } from '../../render/error-list-dialog.js'
 
@@ -10,5 +11,9 @@ try {
     terminateWorker(projectId, workerContainer, '.user-grid-card')
 } catch (error) {
     console.error('Error terminating worker:', error)
-    errorListDialog(error?.errors, error?.message)
+    if (error?.errors) {
+        errorListDialog(error?.message, error.errors)
+    } else {
+        Dialog.somethingWentWrong()
+    }
 }

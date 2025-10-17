@@ -39,7 +39,7 @@
             <div class="index-redirect">
                 <?php if (strcasecmp($page, 'login') === 0): ?>
                     <p class="center-text">
-                        <a href="<?= REDIRECT_PATH . 'forget-password' ?>">Forget Password</a>
+                        <a href="<?= REDIRECT_PATH . 'reset-password' ?>">Forget Password</a>
                     </p>
                     <p class="center-text">Don't have an account?
                         <a class="blue-text" href="<?= REDIRECT_PATH . 'register' ?>">Sign up</a>

@@ -39,9 +39,9 @@ if (!isset($users))
                 ],
                 'Status' => [
                     'All Statuses',
-                    WorkerStatus::ACTIVE->getDisplayName(),
+                    WorkerStatus::ASSIGNED->getDisplayName(),
                     WorkerStatus::UNASSIGNED->getDisplayName(),
-                    WorkerStatus::ON_LEAVE->getDisplayName(),
+                    // WorkerStatus::ON_LEAVE->getDisplayName(),
                     WorkerStatus::TERMINATED->getDisplayName()
                 ]
             ]) ?>

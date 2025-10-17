@@ -1,4 +1,4 @@
-<form id="forget_password_form" class="flex-col" action="" method="POST">
+<form id="reset_password_form" class="flex-col" action="" method="POST">
     <p class="description"><?= $component['description'] ?></p>
 
     <input type="email" name="email" id="email" placeholder="Enter your email" required>

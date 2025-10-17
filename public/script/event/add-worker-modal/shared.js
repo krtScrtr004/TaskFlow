@@ -414,7 +414,11 @@ async function addWorkerButtonEvent(e, projectId, confirmAddWorkerButton, asyncF
         else onSuccess()
     } catch (error) {
         console.error(error)
-        errorListDialog(error?.errors, error?.message)
+        if (error?.errors) {
+            errorListDialog(error?.message, error.errors)
+        } else {
+            Dialog.somethingWentWrong()
+        }
     } finally {
         Loader.delete()
     }

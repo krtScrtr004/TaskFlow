@@ -4,7 +4,7 @@
 		"TaskFlow/login": "IndexController",
 		"TaskFlow/register": "IndexController",
 
-		"TaskFlow/forget-password": "SingleFormController",
+		"TaskFlow/reset-password": "SingleFormController",
 		"TaskFlow/change-password": "SingleFormController",
 		"TaskFlow/create-project": "SingleFormController",
 		"TaskFlow/edit-project/{projectId:[\\w+_-]+}": "SingleFormController",
@@ -27,6 +27,8 @@
 			"viewProjectGrid"
 		],
 
-		"TaskFlow/users(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": "UserController"
+		"TaskFlow/users(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": "UserController",
+
+		"TaskFlow/profile": "ProfileController"
 	}
 }

@@ -33,7 +33,11 @@ if (cancelProjectButton) {
             window.location.reload()
         } catch (error) {
             console.error('Error cancelling project:', error)
-            errorListDialog(error?.errors, error?.message)
+            if (error?.errors) {
+                errorListDialog(error?.message, error.errors)
+            } else {
+                Dialog.somethingWentWrong()
+            }
         }
     })
 } else {
