@@ -8,7 +8,15 @@ export const Http = (() => {
             }
 
             if (body !== null && ['POST', 'PUT', 'PATCH'].includes(method)) {
-                options.body = serialize ? JSON.stringify(body) : body
+                if (serialize) {
+                    options.headers = {
+                        'Content-Type': 'application/json'
+                    }
+                    options.body = JSON.stringify(body)
+                } else {
+                    // Don't set Content-Type for FormData - browser will set it with boundary
+                    options.body = body
+                }
             }
 
             const request = await fetch(`${apiUrl}${endpoint}`, options)

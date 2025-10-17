@@ -275,6 +275,7 @@ $myData = [
 
     </main>
 
+    <script type="module" src="<?= EVENT_PATH . 'profile' . DS . 'change-profile.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'profile' . DS . 'submit.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'profile' . DS . 'delete.js' ?>" defer></script>
 </body>

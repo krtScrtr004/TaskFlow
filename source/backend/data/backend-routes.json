@@ -53,6 +53,9 @@
 	},
 
 	"POST": {
+		"TaskFlow/endpoint/users(?:/[\\w_-]+)?": ["UserController", "editUser"],
+		"TaskFlow/endpoint/users": ["UserController", "createUser"],
+
 		"TaskFlow/endpoint/projects": ["ProjectController", "createProject"],
 		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/workers": [
 			"WorkerController",

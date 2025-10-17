@@ -36,7 +36,7 @@ class UserController implements Controller
         Response::success($return, 'Users fetched successfully.');
     }
 
-    public static function addUser(): void
+    public static function createUser(): void
     {
         $data = decodeData('php://input');
         if (!$data)
@@ -47,9 +47,14 @@ class UserController implements Controller
 
     public static function editUser(): void
     {
-        $data = decodeData('php://input');
-        if (!$data)
-            Response::error('Cannot decode data.');
+        if (count($_FILES) > 0) {
+            // Handle file upload
+            $profilePicture = $_FILES['profilePicture'] ?? null;
+        } else {
+            $data = decodeData('php://input');
+            if (!$data)
+                Response::error('Cannot decode data.');
+        }
 
         Response::success([], 'User edited successfully.');
     }
