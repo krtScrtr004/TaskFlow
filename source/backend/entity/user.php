@@ -99,7 +99,7 @@ class User implements Entity {
         return $this->email;
     }
 
-    public function getBio(): string {
+    public function getBio(): ?string {
         return $this->bio;
     }
 
@@ -194,7 +194,7 @@ class User implements Entity {
             $this->email,
             $this->bio,
             $this->profileLink,
-            WorkerStatus::ACTIVE,
+            WorkerStatus::ASSIGNED,
             new DateTime(),
             $this->additionalInfo
         );

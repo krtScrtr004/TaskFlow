@@ -36,7 +36,7 @@ class UserController implements Controller
         Response::success($return, 'Users fetched successfully.');
     }
 
-    public static function addUser(): void
+    public static function createUser(): void
     {
         $data = decodeData('php://input');
         if (!$data)
@@ -47,11 +47,29 @@ class UserController implements Controller
 
     public static function editUser(): void
     {
-        $data = decodeData('php://input');
-        if (!$data)
-            Response::error('Cannot decode data.');
+        if (count($_FILES) > 0) {
+            // Handle file upload
+            $profilePicture = $_FILES['profilePicture'] ?? null;
+        } else {
+            $data = decodeData('php://input');
+            if (!$data)
+                Response::error('Cannot decode data.');
+        }
 
         Response::success([], 'User edited successfully.');
+    }
+
+    public static function deleteUser(array $args = []): void
+    {
+        $userId = $args['userId'] ?? null;
+        if (!$userId)
+            Response::error('User ID is required.');
+
+        // Response::error('Active Project', [
+        //     'You are assigned to an active project. Complete the project or ask for termination before deleting.'
+        // ]);
+
+        Response::success([], 'User deleted successfully.');
     }
 
     private static function createResponseArrayData(Worker $worker): array

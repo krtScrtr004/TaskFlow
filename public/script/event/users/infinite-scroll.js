@@ -29,7 +29,11 @@ try {
     )
 } catch (error) {
     console.error('Error initializing infinite scroll:', error)
-    errorListDialog(error?.errors, error?.message)
+    if (error?.errors) {
+        errorListDialog(error?.message, error.errors)
+    } else {
+        Dialog.somethingWentWrong()
+    }
 }
 
 function getExistingItemsCount() {

@@ -8,7 +8,15 @@ export const Http = (() => {
             }
 
             if (body !== null && ['POST', 'PUT', 'PATCH'].includes(method)) {
-                options.body = serialize ? JSON.stringify(body) : body
+                if (serialize) {
+                    options.headers = {
+                        'Content-Type': 'application/json'
+                    }
+                    options.body = JSON.stringify(body)
+                } else {
+                    // Don't set Content-Type for FormData - browser will set it with boundary
+                    options.body = body
+                }
             }
 
             const request = await fetch(`${apiUrl}${endpoint}`, options)
@@ -22,8 +30,21 @@ export const Http = (() => {
                     errorData = await request.json()
                 } else {
                     errorData = {
-                        error: request.status === 401 ? 'Unauthorized' : 'Forbidden',
-                        message: request.statusText
+                        message: request.statusText || 'HTTP Error'
+                    }
+
+                    switch (request.status) {
+                        case 401:
+                            errorData.message = 'Unauthorized'
+                            break
+                        case 403:
+                            errorData.message = 'Forbidden'
+                            break
+                        case 404:
+                            errorData.message = 'Resource not found'
+                            break
+                        default:
+                            errorData.message = 'HTTP Error'
                     }
                 }
 
@@ -41,7 +62,7 @@ export const Http = (() => {
             if (method !== 'DELETE') {
                 const contentType = request.headers.get('Content-Type')
                 if (!contentType || !contentType.includes('application/json')) {
-                    throw new Error('Expected JSON, but got non-JSON response')
+                    throw new Error('Invalid content type in response.')
                 }
                 return await request.json()
             }

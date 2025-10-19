@@ -1,5 +1,6 @@
 import { terminateWorker } from '../../utility/terminate-worker.js'
 import { errorListDialog } from '../../render/error-list-dialog.js'
+import { Dialog } from '../../render/dialog.js'
 
 try {
     const projectContainer = document.querySelector('.project-container')
@@ -11,5 +12,9 @@ try {
     terminateWorker(projectId, workerContainer, '.worker-list-card')
 } catch (error) {
     console.error(error.message)
-    errorListDialog(error?.errors, error?.message)
+    if (error?.errors) {
+        errorListDialog(error?.message, error.errors)
+    } else {
+        Dialog.somethingWentWrong()
+    }
 }

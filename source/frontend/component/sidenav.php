@@ -37,7 +37,7 @@
             </div>
         </a>
         <!-- Profile -->
-        <a class="" href="">
+        <a class="" href="<?= REDIRECT_PATH . 'profile' ?>">
             <div class="text-w-icon">
                 <img
                     src="<?= ICON_PATH . 'profile_w.svg' ?>"
