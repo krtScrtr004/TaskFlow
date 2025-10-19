@@ -82,7 +82,7 @@ async function sendToBackend(formData) {
             throw new Error('User ID not found.')
         
         // Pass serialize = false to prevent JSON.stringify on FormData
-        const response = await Http.POST(`user/${myId}`, formData, false)
+        const response = await Http.POST(`users/${myId}`, formData, false)
         if (!response)
             throw new Error('No response from server.')
     } catch (error) {

@@ -30,8 +30,21 @@ export const Http = (() => {
                     errorData = await request.json()
                 } else {
                     errorData = {
-                        error: 'HTTP Error',
-                        message: request.statusText
+                        message: request.statusText || 'HTTP Error'
+                    }
+
+                    switch (request.status) {
+                        case 401:
+                            errorData.message = 'Unauthorized'
+                            break
+                        case 403:
+                            errorData.message = 'Forbidden'
+                            break
+                        case 404:
+                            errorData.message = 'Resource not found'
+                            break
+                        default:
+                            errorData.message = 'HTTP Error'
                     }
                 }
 

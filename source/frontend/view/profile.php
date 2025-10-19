@@ -8,7 +8,7 @@ $myData = [
     'firstName' => htmlspecialchars($me->getFirstName()),
     'middleName' => htmlspecialchars($me->getMiddleName()),
     'lastName' => htmlspecialchars($me->getLastName()),
-    'fullName' => $me->getFirstName() . ($me->getMiddleName() ? ' ' . $me->getMiddleName() . ' ' : ' ') . $me->getLastName(),
+    'fullName' => htmlspecialchars($me->getFirstName()) . ($me->getMiddleName() ? ' ' . htmlspecialchars($me->getMiddleName()) . ' ' : ' ') . htmlspecialchars($me->getLastName()),
     'gender' => $me->getGender(),
     'bio' => $me->getBio() ? htmlspecialchars($me->getBio()) : null,
     'role' => $me->getRole(),
@@ -160,7 +160,7 @@ $myData = [
                             <p>Email</p>
                         </div>
                     </label>
-                    <input type="text" name="email" id="email" placeholder="Email" value="<?= $myData['email'] ?>"
+                    <input type="email" name="email" id="email" placeholder="Email" value="<?= $myData['email'] ?>"
                         required>
                 </div>
 
@@ -180,12 +180,12 @@ $myData = [
 
                 <!-- Password -->
                 <div class="input-label-container">
-                    <label for="">
+                    <div>
                         <div class="text-w-icon">
                             <img src="<?= ICON_PATH . 'password_w.svg' ?>" alt="Password" title="Password" height="20">
                             <p>Password</p>
                         </div>
-                    </label>
+                    </div>
 
                     <a href="<?= REDIRECT_PATH . 'reset-password' ?>" class="blue-text">Change Password</a>
                 </div>

@@ -26,13 +26,13 @@ if (editableProfileDetailsForm) {
         }
     }, 300))
 
-    editableProfileDetailsForm.addEventListener('submit', e => debounceAsync(submit(e), 300))
+    editableProfileDetailsForm.addEventListener('submit', e => debounceAsync(() => submit(e), 300))
 } else {
     console.error('Editable profile details form not found.')
 }
 
 if (saveChangesButton) {
-    saveChangesButton.addEventListener('click', e => debounceAsync(submit(e), 300))
+    saveChangesButton.addEventListener('click', e => debounceAsync(() => submit(e), 300))
 } else {
     console.error('Save Changes button not found.')
 }
@@ -176,8 +176,7 @@ async function sendToBackend(params) {
         if (!response)
             throw new Error('No response from server.')
     } catch (error) {
-        console.error('Error updating profile:', error)
-        Dialog.somethingWentWrong()
+        throw error
     } finally {
         isLoading = false
     }
