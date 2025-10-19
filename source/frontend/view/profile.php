@@ -239,7 +239,7 @@ $myData = [
                     </div>
                 </label>
                 <textarea name="bio" id="bio" rows="4" cols="10" placeholder="Type your bio here..." minlength="1"
-                    max="300"><?= $myData['bio'] ?></textarea>
+                    maxlength="300"><?= $myData['bio'] ?></textarea>
             </div>
 
             <!-- Save Changes Button -->
