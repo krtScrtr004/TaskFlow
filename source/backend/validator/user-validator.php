@@ -1,15 +1,14 @@
 <?php
 
-class UserValidator {
-    public array $errors = [];
+use App\Abstract\Validator;
 
+class UserValidator extends Validator {
     /**
      * Validate first name
      */
     public function validateFirstName(?string $firstName): void {
         if ($firstName === null || trim($firstName) === '' || strlen($firstName) < 1 || strlen($firstName) > 255) {
             $this->errors['firstName'] = 'First name must be between 1 and 255 characters long.';
-            return;
         }
 
         if (!preg_match("/^[a-zA-Z\s'\-]{1,255}$/", $firstName)) {
@@ -23,7 +22,6 @@ class UserValidator {
     public function validateMiddleName(?string $middleName): void {
         if ($middleName === null || trim($middleName) === '' || strlen($middleName) < 1 || strlen($middleName) > 255) {
             $this->errors['middleName'] = 'Middle name must be between 1 and 255 characters long.';
-            return;
         }
 
         if (!preg_match("/^[a-zA-Z\s'\-]{1,255}$/", $middleName)) {
@@ -37,7 +35,6 @@ class UserValidator {
     public function validateLastName(?string $lastName): void {
         if ($lastName === null || trim($lastName) === '' || strlen($lastName) < 1 || strlen($lastName) > 255) {
             $this->errors['lastName'] = 'Last name must be between 1 and 255 characters long.';
-            return;
         }
 
         if (!preg_match("/^[a-zA-Z\s'\-]{1,255}$/", $lastName)) {
@@ -69,19 +66,16 @@ class UserValidator {
     public function validateDateOfBirth(?string $dateOfBirth): void {
         if ($dateOfBirth === null) {
             $this->errors['dateOfBirth'] = 'Date of birth is required.';
-            return;
         }
 
         $dob = DateTime::createFromFormat('Y-m-d', $dateOfBirth);
         if (!$dob) {
             $this->errors['dateOfBirth'] = 'Invalid date of birth format. Use YYYY-MM-DD.';
-            return;
         }
 
         $now = new DateTime();
         if ($dob >= $now) {
             $this->errors['dateOfBirth'] = 'Date of birth must be in the past.';
-            return;
         }
 
         // Calculate age
@@ -115,7 +109,6 @@ class UserValidator {
     public function validateEmail(?string $email): void {
         if ($email === null || strlen(trim($email)) < 3 || strlen(trim($email)) > 255) {
             $this->errors['email'] = 'Email must be between 3 and 255 characters long.';
-            return;
         }
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -130,29 +123,21 @@ class UserValidator {
         if ($password === null || strlen($password) < 8 || strlen($password) > 128) {
             $this->errors['password'] = 'Password must be between 8 and 128 characters long.';
         }
+
+        // Check for at least one lowercase letter
+        if (!preg_match('/[a-z]/', $password)) {
+            $this->errors['password'] = 'Password must contain at least one lowercase letter.';
+        }
+
+        // Check for at least one uppercase letter
+        if (!preg_match('/[A-Z]/', $password)) {
+            $this->errors['password'] = 'Password must contain at least one uppercase letter.';
+        }
+
+        // Check for special characters (should NOT contain special characters except _!@'.- which are allowed)
+        if (preg_match('/[^a-zA-Z0-9_!@\'\.\-]/', $password)) {
+            $this->errors['password'] = 'Password contains invalid special characters. Only _!@\'.- are allowed.';
+        }
     }
 
-    /**
-     * Get all validation errors
-     * @return array Array of error messages
-     */
-    public function getErrors(): array {
-        return $this->errors;
-    }
-
-    /**
-     * Get first validation error
-     * @return string|null First error message or null if no errors
-     */
-    public function getFirstError(): ?string {
-        return !empty($this->errors) ? reset($this->errors) : null;
-    }
-
-    /**
-     * Check if there are any validation errors
-     * @return bool True if there are errors, false otherwise
-     */
-    public function hasErrors(): bool {
-        return !empty($this->errors);
-    }
 }

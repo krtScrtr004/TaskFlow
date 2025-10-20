@@ -10,6 +10,7 @@ require_once VENDOR_PATH . 'autoload.php';
 
 spl_autoload_register(function ($class) {
     $paths = [
+        ABSTRACT_PATH,
         CONFIG_PATH,
         CONTAINER_PATH,
         CORE_PATH,
@@ -17,6 +18,7 @@ spl_autoload_register(function ($class) {
         DUMP_PATH,
         ENTITY_PATH,
         ENUM_PATH,
+        INTERFACE_PATH, 
         ROUTER_PATH,
         MIDDLEWARE_PATH,
         MODEL_PATH,

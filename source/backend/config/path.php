@@ -19,12 +19,14 @@ define('COMPONENT_PATH', FRONTEND_PATH . 'component' . DS);
 define('DIALOG_PATH', COMPONENT_PATH . 'dialog' . DS);
 define('FUNCTION_COMPONENT_PATH', COMPONENT_PATH . 'function' . DS);
 
+define('ABSTRACT_PATH', BACKEND_PATH . 'abstract' . DS);
 define('CORE_PATH', BACKEND_PATH . 'core' . DS);
 define('CONTAINER_PATH', BACKEND_PATH . 'container' . DS);
 define('CONTROLLER_PATH', BACKEND_PATH . 'controller' . DS);
 define('DATA_PATH', BACKEND_PATH . 'data' . DS);
 define('ENTITY_PATH', BACKEND_PATH . 'entity' . DS);
 define('ENUM_PATH', BACKEND_PATH . 'enum' . DS);
+define('INTERFACE_PATH', BACKEND_PATH . 'interface' . DS);
 define('MIDDLEWARE_PATH', BACKEND_PATH . 'middleware' . DS);
 define('MODEL_PATH', BACKEND_PATH . 'model' . DS);
 define('ROUTER_PATH', BACKEND_PATH . 'router' . DS);

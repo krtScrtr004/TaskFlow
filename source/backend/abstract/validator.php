@@ -1,6 +1,8 @@
 <?php
 
-class Validator {
+namespace App\Abstract;
+
+abstract class Validator {
     protected array $errors = [];
 
     public function hasErrors(): bool {

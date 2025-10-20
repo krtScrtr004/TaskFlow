@@ -1,5 +1,13 @@
 <?php
 
+namespace App\Abstract;
+
+use IteratorAggregate;
+use ArrayIterator;
+use Traversable;
+use Countable;
+use JsonSerializable;
+
 abstract class Container implements IteratorAggregate, Countable, JsonSerializable
 {
     protected array $items = [];
