@@ -1,5 +1,14 @@
 <?php
 
+namespace App\Controller;
+
+use App\Interface\Controller;
+use App\Middleware\Response;
+use App\Validator\UserValidator;
+use App\Model\UserModel;    
+use App\Core\Me;
+use App\Core\Session;
+
 class AuthController implements Controller {
     private function __construct() {}
 
@@ -11,35 +20,35 @@ class AuthController implements Controller {
         if (!$data)
             Response::error('Cannot decode data.');
 
-        // Check email
         $email = $data['email'] ?? null;
-        if (!$email)
-            Response::error('Login Failed.', [
-                'Email is required.'
-            ]);
-
-        // Check password
         $password = $data['password'] ?? null;
-        if (!$password)
-            Response::error('Login Failed.', [
-                'Password is required.'
-            ]);
+
+        $validator = new UserValidator();
+        $validator->validateEmail($email);
+        $validator->validatePassword($password);
+        if ($validator->hasErrors()) {
+            Response::error('Login Failed.', $validator->getErrors());
+        }
 
         // Verify credentials
         $find = UserModel::findByEmail($email);
-        if (!$find || !password_verify($password, $find['password']))
+        if (!$find || !password_verify($password, $find['password'])) {
             Response::error('Login Failed.', [
                 'Invalid email or password.'
             ]);
+        }
 
-        if (!Me::getInstance() === null) 
+        if (!Me::getInstance() === null) {
             Me::instantiate($find);
+        }
         
-        if (!Session::isSet()) 
+        if (!Session::isSet()) {
             Session::create();
+        }
 
-        if (!Session::has('user_id')) 
+        if (!Session::has('user_id')) {
             Session::set('user_id', Me::getInstance()->getId());
+        }
 
         Response::success([
             'projectId' => Me::getInstance()->getPublicId()
