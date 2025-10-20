@@ -1,14 +1,16 @@
 <?php
 
-define('ABS_PATH', dirname(__DIR__, 2) . '/');
+define('ROOT_PATH', dirname(__DIR__, 3) . '/');
+
+define('ABS_PATH',  ROOT_PATH . 'source' . DS);
 define('REDIRECT_PATH', 'http://localhost/TaskFlow/');
+define('VENDOR_PATH', ROOT_PATH . 'vendor' . DS);
 
 // Absolute paths
 define('BACKEND_PATH', ABS_PATH . 'backend' . DS);
 define('FRONTEND_PATH', ABS_PATH . 'frontend' . DS);
 
 define('CONFIG_PATH', BACKEND_PATH . 'config' . DS);
-define('VENDOR_PATH', ABS_PATH . 'vendor' . DS);
 
 define('VIEW_PATH', FRONTEND_PATH . 'view' . DS);
 define('SUB_VIEW_PATH', VIEW_PATH . 'sub-view' . DS);
@@ -26,6 +28,7 @@ define('ENUM_PATH', BACKEND_PATH . 'enum' . DS);
 define('MIDDLEWARE_PATH', BACKEND_PATH . 'middleware' . DS);
 define('MODEL_PATH', BACKEND_PATH . 'model' . DS);
 define('ROUTER_PATH', BACKEND_PATH . 'router' . DS);
+define('VALIDATOR_PATH', BACKEND_PATH . 'validator' . DS);
 
 define('DEPENDENT_PATH', ENTITY_PATH . 'dependent' . DS);
 

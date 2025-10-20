@@ -53,7 +53,11 @@ async function submit(e) {
         window.location.href = `/TaskFlow/project${redirect}`
     } catch (error) {
         console.error('Error during login:', error)
-        errorListDialog(error?.errors, error?.message)
+        if (error?.errors) {
+            errorListDialog(error.message, error.errors)
+        } else {
+            Dialog.somethingWentWrong()
+        }
     } finally {
         Loader.delete()
     }
@@ -79,7 +83,6 @@ async function sendToBackend(email, password) {
 
         return response.data
     } catch (error) {
-        console.error('Error during login:', error)
         throw error
     } finally {
         isLoading = false

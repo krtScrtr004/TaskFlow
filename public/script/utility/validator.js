@@ -29,6 +29,11 @@ export function userValidationRules() {
             message: 'Last name contains invalid characters.'
         },
 
+        'bio': {
+            condition: (inputs) => inputs.bio && (inputs.bio.trim().length < 10 || inputs.bio.trim().length > 500),
+            message: 'Bio must be between 10 and 500 characters long.'
+        },
+
         'gender': {
             condition: (inputs) => !inputs.gender || inputs.gender.trim() === '' || !(['male', 'female', 'Male', 'Female'].includes(inputs.gender)),
             message: 'Please select a valid gender.'
