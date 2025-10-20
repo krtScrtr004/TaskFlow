@@ -4,7 +4,7 @@ define('DS', '/');
 
 require_once __DIR__ . DS . 'path.php';
 
-// require_once VENDOR_PATH . 'autoload.php';
+require_once VENDOR_PATH . 'autoload.php';
 
 // require_once __DIR__ . DS . 'env.php';
 
