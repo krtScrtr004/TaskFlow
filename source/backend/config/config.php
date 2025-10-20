@@ -1,5 +1,6 @@
 <?php
 
+define('STRICT_TYPES', 1);
 define('DS', '/');
 
 require_once __DIR__ . DS . 'path.php';
@@ -20,6 +21,7 @@ spl_autoload_register(function ($class) {
         'dump' => DUMP_PATH,
         'entity' => ENTITY_PATH,
         'enumeration' => ENUM_PATH,
+        'exception' => EXCEPTION_PATH,
         'interface' => INTERFACE_PATH,
         'router' => ROUTER_PATH,
         'middleware' => MIDDLEWARE_PATH,

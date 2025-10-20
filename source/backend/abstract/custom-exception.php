@@ -6,9 +6,9 @@ use Exception;
 
 abstract class CustomException extends Exception
 {
-    private array $errors = [];
+    protected array $errors = [];
 
-    public function __construct($message = "Validation Error", $code = 0, Exception $previous = null)
+    public function __construct($message = "Custom Error", $code = 0, Exception $previous = null)
     {
         parent::__construct($message, $code, $previous);
     }
@@ -27,5 +27,4 @@ abstract class CustomException extends Exception
     {
         return $this->errors;
     }
-
 }
