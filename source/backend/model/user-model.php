@@ -2,6 +2,8 @@
 
 class UserModel implements Model
 {
+    public function get() {}
+
 
     public function save(): bool
     {
