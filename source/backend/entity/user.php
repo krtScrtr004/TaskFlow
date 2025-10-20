@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Core\UUID;
 use App\Model\UserModel;
 use App\Interface\Entity;
 use App\Enumeration\Gender;
@@ -9,6 +10,10 @@ use App\Enumeration\WorkerStatus;
 use App\Enumeration\Role;
 use App\Dependent\Worker;
 use App\Container\JobTitleContainer;
+use App\Exception\ValidationException;
+use App\Validator\UserValidator;
+use App\Validator\UuidValidator;
+use App\Validator\UrlValidator;
 use DateTime;
 
 require_once ENUM_PATH . 'role.php';
@@ -30,6 +35,7 @@ class User extends UserModel implements Entity {
     protected DateTime $createdAt;
     protected array $additionalInfo;
 
+    protected UserValidator $userValidator;
 
     public function __construct(
         int $id,
@@ -48,29 +54,39 @@ class User extends UserModel implements Entity {
         DateTime $createdAt,
         array $additionalInfo = []
     ) {
-        $this->id = $id;
-        $this->publicId = $publicId;
-        $this->firstName = $firstName;
-        $this->middleName = $middleName;
-        $this->lastName = $lastName;
-        $this->gender = $gender;    
-        $this->birthDate = $birthDate;
-        $this->role = $role;
-        $this->jobTitles = $jobTitles;
-        $this->contactNumber = $contactNumber;
-        $this->email = $email;
-        $this->bio = $bio;
-        $this->profileLink = $profileLink;
-        $this->createdAt = $createdAt;
+        $this->userValidator = new UserValidator();
+
+        $this->setId($id);
+        $this->setPublicId($publicId);
+        $this->setFirstName($firstName);
+        $this->setMiddleName($middleName);
+        $this->setLastName($lastName);
+        $this->setGender($gender);
+        $this->setBirthDate($birthDate);
+        $this->setRole($role);
+        $this->setJobTitles($jobTitles);
+        $this->setContactNumber($contactNumber);
+        $this->setEmail($email);
+        if ($bio !== null) {
+            $this->setBio($bio);
+        } else {
+            $this->bio = null;
+        }
+        if ($profileLink !== null) {
+            $this->setProfileLink($profileLink);
+        } else {
+            $this->profileLink = null;
+        }
+        $this->setJoinedDateTime($createdAt);
         $this->additionalInfo = $additionalInfo;
     }
 
     // Getters
-    public function getId() {
+    public function getId(): int {
         return $this->id;
     }
 
-    public function getPublicId() {
+    public function getPublicId(): UUID {
         return $this->publicId;
     }
 
@@ -128,68 +144,126 @@ class User extends UserModel implements Entity {
 
     // Setters
     public function setId(int $id): void {
+        if ($id < 0) {
+            throw new ValidationException("Invalid ID");
+        }
         $this->id = $id;
     }
 
-    public function setPublicId($publicId): void {
+    public function setPublicId(UUID $publicId): void {
+        $validator = new UuidValidator();
+
+        $validator->validateUuid($publicId);
+        if ($validator->hasErrors()) {
+            throw new ValidationException("Invalid Public ID", $validator->getErrors());
+        }
         $this->publicId = $publicId;
     }
 
     public function setFirstName(string $firstName): void {
+        $this->userValidator->validateFirstName(trim($firstName));
+        if ($this->userValidator->hasErrors()) {
+            throw new ValidationException("Invalid First Name", $this->userValidator->getErrors());
+        }
         $this->firstName = $firstName;
     }
 
     public function setMiddleName(string $middleName): void {
+        $this->userValidator->validateMiddleName(trim($middleName));
+        if ($this->userValidator->hasErrors()) {
+            throw new ValidationException("Invalid Middle Name", $this->userValidator->getErrors());
+        }
         $this->middleName = $middleName;
     }
 
     public function setLastName(string $lastName): void {
+        $this->userValidator->validateLastName($lastName);
+        if ($this->userValidator->hasErrors()) {
+            throw new ValidationException("Invalid Last Name", $this->userValidator->getErrors());
+        }
         $this->lastName = $lastName;
     }
 
     public function setGender(Gender $gender): void {
+        $this->userValidator->validateGender($gender);
+        if ($this->userValidator->hasErrors()) {
+            throw new ValidationException("Invalid Gender", $this->userValidator->getErrors());
+        }   
         $this->gender = $gender;
     }
 
     public function setBirthDate(DateTime $birthDate): void {
+        $this->userValidator->validateDateOfBirth($birthDate);
+        if ($this->userValidator->hasErrors()) {
+            throw new ValidationException("Invalid Birth Date", $this->userValidator->getErrors());
+        }
         $this->birthDate = $birthDate;
     }
 
     public function setRole(Role $role): void {
+        $this->userValidator->validateRole($role);
+        if ($this->userValidator->hasErrors()) {
+            throw new ValidationException("Invalid Role", $this->userValidator->getErrors());
+        }
         $this->role = $role;
     }
 
     public function setJobTitles(JobTitleContainer $jobTitles): void {
+        $this->userValidator->validateJobTitles($jobTitles);
+        if ($this->userValidator->hasErrors()) {
+            throw new ValidationException("Invalid Job Titles", $this->userValidator->getErrors());
+        }
         $this->jobTitles = $jobTitles;
     }
 
     public function setContactNumber(string $contactNumber): void {
+        $this->userValidator->validateContactNumber(trim($contactNumber));
+        if ($this->userValidator->hasErrors()) {
+            throw new ValidationException("Invalid Contact Number", $this->userValidator->getErrors());
+        }
         $this->contactNumber = $contactNumber;
     }
 
     public function setEmail(string $email): void {
+        $this->userValidator->validateEmail(trim($email));
+        if ($this->userValidator->hasErrors()) {
+            throw new ValidationException("Invalid Email", $this->userValidator->getErrors());
+        }
         $this->email = $email;
     }
 
-    public function setBio(?string $bio): void {
+    public function setBio(string $bio): void {
+        $this->userValidator->validateBio(trim($bio));
+        if ($this->userValidator->hasErrors()) {
+            throw new ValidationException("Invalid Bio", $this->userValidator->getErrors());
+        }
         $this->bio = $bio;
     }
 
-    public function setProfileLink(?string $profileLink): void {
+    public function setProfileLink(string $profileLink): void {
+        $validator = new UrlValidator();
+
+        $validator->validateUrl(trim($profileLink));
+        if ($validator->hasErrors()) {
+            throw new ValidationException("Invalid Profile Link", $validator->getErrors());
+        }
         $this->profileLink = $profileLink;
     }
 
     public function setJoinedDateTime(DateTime $createdAt): void {
+        if ($createdAt > new DateTime()) {
+            throw new ValidationException("Invalid Created At Date");
+        }
         $this->createdAt = $createdAt;
     }
 
-    public function setAdditionalInfo(array $additionalInfo): void {
-        $this->additionalInfo = $additionalInfo;
-    }
+    // public function setAdditionalInfo(array $additionalInfo): void {
+    //     $this->additionalInfo = $additionalInfo;
+    // }
 
-    public function addAdditionalInfo(string $key, $value): void {
-        $this->additionalInfo[$key] = $value;
-    }
+    // public function addAdditionalInfo(string $key, $value): void {
+    //     $this->additionalInfo[$key] = $value;
+    // }
 
     public function toWorker(): Worker {
         return new Worker(

@@ -7,6 +7,8 @@ use App\Enumeration\Gender;
 use App\Enumeration\WorkerStatus;
 use App\Enumeration\Role;
 use App\Container\JobTitleContainer;
+use App\Core\UUID;
+use App\Validator\UserValidator;
 use InvalidArgumentException;
 use DateTime;
 
@@ -15,7 +17,7 @@ class Worker extends User {
 
     public function __construct( 
         int $id,
-        $publicId,
+        UUID $publicId,
         string $firstName,
         string $middleName,
         string $lastName,
@@ -63,6 +65,11 @@ class Worker extends User {
     // Setter
 
     public function setStatus(WorkerStatus $status): void {
+        $validator = new UserValidator();
+        $validator->validateStatus($status);
+        if ($validator->hasErrors()) {
+            throw new InvalidArgumentException('Invalid worker status provided.');
+        }
         $this->status = $status;
     }
 

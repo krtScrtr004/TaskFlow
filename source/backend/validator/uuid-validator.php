@@ -5,6 +5,8 @@ namespace App\Validator;
 use Ramsey\Uuid\Rfc4122\Validator as Rfc4122Validator;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidFactory;
+
+use App\Core\UUID as MyUUID;
 use App\Abstract\Validator;
 use InvalidArgumentException;
 
@@ -17,10 +19,10 @@ class UuidValidator extends Validator {
         $this->validator = new Rfc4122Validator();
     }
 
-    public function validateUuid(string|Uuid $uuid): void {
+    public function validateUuid(string|MyUUID $uuid): void {
         try {
-            $id = is_string($uuid) ? Uuid::fromString($uuid) : $uuid;
-            if (!$this->validator->validate($id)) {
+            $id = is_string($uuid) ? MyUUID::fromString($uuid) : $uuid;
+            if (!$this->validator->validate((string)$id)) {
                 throw new InvalidArgumentException('Invalid UUID format.');
             }
         } catch (InvalidArgumentException $e) {

@@ -94,8 +94,8 @@ export function userValidationRules() {
         'contactNumber': {
             condition: (inputs) => {
                 const errors = []
-                if (!inputs.contactNumber || inputs.contactNumber.trim() === '' || inputs.contactNumber.length < 11 || inputs.contactNumber.length > 15) {
-                    errors.push('Contact number must be between 11 and 15 characters long.')
+                if (!inputs.contactNumber || inputs.contactNumber.trim() === '' || inputs.contactNumber.length < 11 || inputs.contactNumber.length > 20) {
+                    errors.push('Contact number must be between 11 and 20 characters long.')
                 }
                 return errors
             }

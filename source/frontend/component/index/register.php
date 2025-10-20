@@ -29,7 +29,7 @@
 
     <!-- Contact Number -->
     <input type="tel" name="register_contact" id="register_contact" placeholder="Contact Number" pattern="[0-9]{10,15}"
-        minlength="10" maxlength="15" required>
+        minlength="11" maxlength="20" required>
 
     <!-- Birth Date -->
     <div class="birth-date flex-col">

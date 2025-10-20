@@ -179,7 +179,7 @@ $myData = [
                         </div>
                     </label>
                     <input type="tel" name="contact_number" id="contact_number" placeholder="Contact Number"
-                        pattern="[0-9]{10,15}" value="<?= $myData['contactNumber'] ?>" minlength="10" maxlength="15"
+                        pattern="[0-9]{11,20}" value="<?= $myData['contactNumber'] ?>" minlength="11" maxlength="20"
                         required>
                 </div>
 
