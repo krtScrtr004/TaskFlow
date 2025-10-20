@@ -1,4 +1,9 @@
 <?php
+
+use App\Core\Me;
+use App\Enumeration\Gender;
+use App\Enumeration\Role;
+
 $me = Me::getInstance();
 if (!$me)
     throw new Exception("User is required to view profile.");

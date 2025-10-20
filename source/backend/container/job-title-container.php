@@ -1,5 +1,10 @@
 <?php
 
+namespace App\Container;
+
+use App\Abstract\Container;
+use InvalidArgumentException;
+
 class JobTitleContainer extends Container
 {
     public function __construct(array $jobTitles = [])

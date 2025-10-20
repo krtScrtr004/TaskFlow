@@ -1,5 +1,15 @@
 <?php
 
+namespace App\Dependent;
+
+use App\Entity\User;
+use App\Enumeration\Gender;
+use App\Enumeration\WorkerStatus;
+use App\Enumeration\Role;
+use App\Container\JobTitleContainer;
+use InvalidArgumentException;
+use DateTime;
+
 class Worker extends User {
     private WorkerStatus $status;
 

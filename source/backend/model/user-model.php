@@ -1,8 +1,50 @@
 <?php
 
+namespace App\Model;
+
+use App\Interface\Model;
+use App\Core\Connection;
+use App\Container\JobTitleContainer;
+use App\Entity\User;
+use App\Enumeration\Gender;
+use App\Enumeration\Role;
+use DateTime;
+use InvalidArgumentException;
+
 class UserModel implements Model
 {
-    public function get() {}
+    
+
+    public static function findByEmail(string $email): ?array
+    {
+        $query = "SELECT * FROM `user` WHERE email = :email LIMIT 1";
+        $statement = Connection::getInstance()->prepare($query);
+        $statement->execute([':email' => $email]);
+        $result = $statement->fetch();
+
+        return $result ?: null;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // 
+
+    public function get() {
+        return [];
+    }
 
 
     public function save(): bool

@@ -1,5 +1,10 @@
 <?php
 
+namespace App\Controller;
+
+use App\Interface\Controller;
+use App\Core\Session;
+
 class IndexController implements Controller
 {
     private static array $components = [

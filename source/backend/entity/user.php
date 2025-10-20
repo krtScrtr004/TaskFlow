@@ -1,8 +1,19 @@
 <?php
 
+namespace App\Entity;
+
+use App\Model\UserModel;
+use App\Interface\Entity;
+use App\Enumeration\Gender;
+use App\Enumeration\WorkerStatus;
+use App\Enumeration\Role;
+use App\Dependent\Worker;
+use App\Container\JobTitleContainer;
+use DateTime;
+
 require_once ENUM_PATH . 'role.php';
 
-class User implements Entity {
+class User extends UserModel implements Entity {
     private int $id;
     private $publicId;
     protected string $firstName;
@@ -16,7 +27,7 @@ class User implements Entity {
     protected string $email;
     protected ?string $bio;
     protected ?string $profileLink;
-    protected DateTime $joinedDateTime;
+    protected DateTime $createdAt;
     protected array $additionalInfo;
 
 
@@ -34,7 +45,7 @@ class User implements Entity {
         string $email,
         ?string $bio,
         ?string $profileLink,
-        DateTime $joinedDateTime,
+        DateTime $createdAt,
         array $additionalInfo = []
     ) {
         $this->id = $id;
@@ -50,7 +61,7 @@ class User implements Entity {
         $this->email = $email;
         $this->bio = $bio;
         $this->profileLink = $profileLink;
-        $this->joinedDateTime = $joinedDateTime;
+        $this->createdAt = $createdAt;
         $this->additionalInfo = $additionalInfo;
     }
 
@@ -108,7 +119,7 @@ class User implements Entity {
     }
 
     public function getJoinedDateTime(): DateTime {
-        return $this->joinedDateTime;
+        return $this->createdAt;
     }
 
     public function getAdditionalInfo(): array {
@@ -168,8 +179,8 @@ class User implements Entity {
         $this->profileLink = $profileLink;
     }
 
-    public function setJoinedDateTime(DateTime $joinedDateTime): void {
-        $this->joinedDateTime = $joinedDateTime;
+    public function setJoinedDateTime(DateTime $createdAt): void {
+        $this->createdAt = $createdAt;
     }
 
     public function setAdditionalInfo(array $additionalInfo): void {
@@ -214,7 +225,7 @@ class User implements Entity {
             'email' => $this->email,
             'bio' => $this->bio,
             'profileLink' => $this->profileLink,
-            'joinedDateTime' => $this->joinedDateTime->format('Y-m-d H:i:s'),
+            'createdAt' => $this->createdAt->format('Y-m-d H:i:s'),
             'additionalInfo' => $this->additionalInfo
         ];
     }   
@@ -234,7 +245,7 @@ class User implements Entity {
             $data['email'],
             $data['bio'],
             $data['profileLink'],
-            new DateTime($data['joinedDateTime']),
+            new DateTime($data['createdAt']),
             $data['additionalInfo'] ?? []
         );
     }

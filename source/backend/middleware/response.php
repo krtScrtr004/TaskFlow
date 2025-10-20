@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Middleware;
+
 class Response
 {
     private function __construct()

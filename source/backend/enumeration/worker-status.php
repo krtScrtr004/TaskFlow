@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Enumeration;
+
 enum WorkerStatus: string {
     case ASSIGNED = 'assigned';
     case UNASSIGNED = 'unassigned';

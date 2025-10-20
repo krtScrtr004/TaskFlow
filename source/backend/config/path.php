@@ -25,7 +25,7 @@ define('CONTAINER_PATH', BACKEND_PATH . 'container' . DS);
 define('CONTROLLER_PATH', BACKEND_PATH . 'controller' . DS);
 define('DATA_PATH', BACKEND_PATH . 'data' . DS);
 define('ENTITY_PATH', BACKEND_PATH . 'entity' . DS);
-define('ENUM_PATH', BACKEND_PATH . 'enum' . DS);
+define('ENUM_PATH', BACKEND_PATH . 'enumeration' . DS);
 define('INTERFACE_PATH', BACKEND_PATH . 'interface' . DS);
 define('MIDDLEWARE_PATH', BACKEND_PATH . 'middleware' . DS);
 define('MODEL_PATH', BACKEND_PATH . 'model' . DS);

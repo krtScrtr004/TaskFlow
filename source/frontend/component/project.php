@@ -1,4 +1,11 @@
 <?php
+
+use App\Core\Me;
+use App\Enumeration\Role;
+use App\Enumeration\WorkStatus;
+use App\Enumeration\TaskPriority;
+use App\Utility\ProjectProgressCalculator;
+
 if (!$project) {
     throw new Exception('Project data is required to render this component.');
 }

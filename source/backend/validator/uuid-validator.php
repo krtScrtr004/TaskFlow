@@ -1,10 +1,12 @@
 <?php
 
+namespace App\Validator;
+
 use Ramsey\Uuid\Rfc4122\Validator as Rfc4122Validator;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidFactory;
-
 use App\Abstract\Validator;
+use InvalidArgumentException;
 
 class UuidValidator extends Validator {
     private Rfc4122Validator $validator;
@@ -21,7 +23,7 @@ class UuidValidator extends Validator {
             if (!$this->validator->validate($id)) {
                 throw new InvalidArgumentException('Invalid UUID format.');
             }
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
             $this->errors['uuid'] = $e->getMessage();
         }
     }

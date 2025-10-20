@@ -1,4 +1,8 @@
 <?php
+
+use App\Enumeration\Role;
+use App\Enumeration\WorkerStatus;
+
 if (!isset($users))
     throw new Error('Users data is required.');
 ?>

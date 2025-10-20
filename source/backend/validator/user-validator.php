@@ -1,6 +1,9 @@
 <?php
 
+namespace App\Validator;
+
 use App\Abstract\Validator;
+use DateTime;
 
 class UserValidator extends Validator {
     /**

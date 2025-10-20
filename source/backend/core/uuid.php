@@ -1,34 +1,42 @@
 <?php
+
+namespace App\Core;
+
 use Ramsey\Uuid\Uuid as RamseyUuid;
 
 class UUID
 {
-    private function __construct() {}
+    private RamseyUuid $uuid;
 
-    public static function get(): RamseyUuid
+    private function __construct(RamseyUuid $uuid)
     {
-        return RamseyUuid::uuid4();
+        $this->uuid = $uuid;
     }
 
-    public static function fromString(string $uuidString): RamseyUuid
+    public static function get(): UUID
     {
-        return RamseyUuid::fromString($uuidString);
+        return new UUID(RamseyUuid::uuid4());
     }
 
-    public static function toString(RamseyUuid $uuid): string
+    public static function fromString(string $uuidString): UUID
     {
-        return $uuid->toString();
+        return new UUID(RamseyUuid::fromString($uuidString));
     }
 
-    public static function toBinary(RamseyUuid $uuid): string
+    public static function toString(UUID $id): string
+    {
+        return $id->uuid->toString();
+    }
+
+    public static function toBinary(UUID $id): string
     {
         // Returns 16-byte binary representation suitable for BINARY(16) storage
-        return $uuid->getBytes();
+        return $id->uuid->getBytes();
     }
 
-    public static function fromBinary(string $binaryUuid): RamseyUuid
+    public static function fromBinary(string $binaryUuid): UUID
     {
         // Convert 16-byte binary back to UUID object
-        return RamseyUuid::fromBytes($binaryUuid);
+        return new UUID(RamseyUuid::fromBytes($binaryUuid));    
     }
 }

@@ -1,5 +1,9 @@
 <?php
 
+namespace App\Controller;
+
+use App\Interface\Controller;
+
 class SingleFormController implements Controller
 {
     private array $components = [

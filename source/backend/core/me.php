@@ -1,5 +1,13 @@
 <?php
 
+namespace App\Core;
+
+use App\Enumeration\Gender;
+use App\Enumeration\Role;
+use App\Container\JobTitleContainer;
+use App\Entity\User;
+use DateTime;
+
 class Me extends User
 {
     private Me $me;
@@ -21,11 +29,16 @@ class Me extends User
             email: 'zing.zang@example.com',
             bio: null,
             profileLink: null,
-            joinedDateTime: new DateTime('2023-01-01 12:00:00'),
+            createdAt: new DateTime('2023-01-01 12:00:00'),
             additionalInfo: [
                 'terminationCount' => 3
             ]
         );
+    }
+
+    public static function instantiate(array $data): void
+    {
+        self::$me = parent::fromArray($data);
     }
 
     public static function getInstance(): self

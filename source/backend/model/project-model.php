@@ -1,5 +1,20 @@
 <?php
 
+namespace App\Model;
+
+use App\Interface\Model;
+use App\Model\UserModel;
+use App\Model\TaskModel;
+use App\Enumeration\WorkStatus;
+use App\Container\ProjectContainer;
+use App\Container\WorkerContainer;
+use App\Entity\Project;
+use App\Dependent\Worker;
+use App\Enumeration\Role;
+use App\Core\Me;
+use InvalidArgumentException;
+use DateTime;
+
 class ProjectModel implements Model
 {
 

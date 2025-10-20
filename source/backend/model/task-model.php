@@ -1,5 +1,17 @@
 <?php
 
+namespace App\Model;
+
+use App\Interface\Model;
+use App\Container\WorkerContainer;
+use App\Container\TaskContainer;
+use App\Model\UserModel;
+use App\Enumeration\WorkStatus;
+use App\Enumeration\TaskPriority;
+use App\Entity\Task;
+use DateTime;
+use InvalidArgumentException;
+
 class TaskModel implements Model
 {
 

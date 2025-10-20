@@ -1,5 +1,11 @@
 <?php
 
+use App\Entity\User;
+use App\Dependent\Worker;
+use App\Enumeration\WorkerStatus;
+use App\Model\ProjectModel;
+use App\Utility\WorkerPerformanceCalculator;
+
 function userGridCard(User|Worker $user): string
 {
     $name = htmlspecialchars($user->getFirstName() . ' ' . $user->getLastName());

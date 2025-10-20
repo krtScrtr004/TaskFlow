@@ -1,5 +1,11 @@
 <?php
 
+namespace App\Container;
+
+use App\Abstract\Container;
+use App\Dependent\Phase;
+use InvalidArgumentException;
+
 class PhaseContainer extends Container
 {
     public function __construct(array $phases = [])

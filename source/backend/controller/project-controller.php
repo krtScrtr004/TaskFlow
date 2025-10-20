@@ -1,6 +1,11 @@
 <?php
 
-use LDAP\Result;
+namespace App\Controller;
+
+use App\Interface\Controller;
+use App\Middleware\Response;
+use App\Model\ProjectModel;
+use InvalidArgumentException;
 
 class ProjectController implements Controller
 {

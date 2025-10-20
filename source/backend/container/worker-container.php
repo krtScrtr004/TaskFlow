@@ -1,5 +1,12 @@
 <?php
 
+namespace App\Container;
+
+use App\Abstract\Container;
+use App\Entity\User;
+use App\Enumeration\Role;
+use InvalidArgumentException;
+
 class WorkerContainer extends Container
 {
     public function __construct(array $workers = [])

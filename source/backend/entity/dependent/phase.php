@@ -1,5 +1,11 @@
 <?php
 
+namespace App\Dependent;
+
+use App\Interface\Entity;
+use App\Enumeration\WorkStatus;
+use DateTime;
+
 class Phase implements Entity
 {
     private int $id;

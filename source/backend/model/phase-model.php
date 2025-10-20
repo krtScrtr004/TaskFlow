@@ -1,5 +1,14 @@
 <?php
 
+namespace App\Model;
+
+use App\Interface\Model;
+use App\Container\PhaseContainer;
+use App\Enumeration\WorkStatus;
+use App\Dependent\Phase;
+use DateTime;
+use InvalidArgumentException;
+
 class PhaseModel implements Model
 {
 

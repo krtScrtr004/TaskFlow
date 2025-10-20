@@ -1,5 +1,15 @@
 <?php
 
+namespace App\Entity;
+
+use App\Interface\Entity;
+use App\Enumeration\WorkStatus;
+use App\Container\TaskContainer;
+use App\Container\WorkerContainer;
+use App\Container\PhaseContainer;
+use App\Entity\User;
+use DateTime;
+
 class Project implements Entity {
     private int $id;
     private $publicId;

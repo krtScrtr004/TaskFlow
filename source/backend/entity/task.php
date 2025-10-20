@@ -1,5 +1,14 @@
 <?php
 
+namespace App\Entity;
+
+use App\Interface\Entity;
+use App\Enumeration\TaskPriority;
+use App\Enumeration\WorkStatus;
+use App\Container\WorkerContainer;
+use App\Dependent\Worker;
+use DateTime;
+
 class Task implements Entity {
     private $id;
     private $publicId;

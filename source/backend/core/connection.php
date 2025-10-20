@@ -1,5 +1,11 @@
 <?php 
 
+namespace App\Core;
+
+use PDO;
+use PDOException;
+use RuntimeException;
+
 class Connection {
     private static ?PDO $instance = null;
 
@@ -9,7 +15,7 @@ class Connection {
         if (self::$instance === null) {
             $host = 'localhost';
             $db = 'taskflow';
-            $user = '';
+            $user = 'root';
             $pass = '';
             $charset = 'utf8mb4';
 
