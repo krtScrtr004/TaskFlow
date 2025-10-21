@@ -107,6 +107,30 @@
             placeholder="Please enter your password here" min="8" max="255" required />
     </div>
 
+    <div class="role-selection flex-row">
+        <input class="no-display" type="radio" name="register_role" id="register_role_project_manager"
+            value="projectManager">
+        <input class="no-display" type="radio" name="register_role" id="register_role_worker" value="worker">
+
+        <!-- Project Manager Role Button -->
+        <button id="project_manager_role_button" type="button" class="role-button unset-button">
+            <div class="text-w-icon">
+                <img src="<?= ICON_PATH . 'manager_w.svg' ?>" alt="Register as Project Manager"
+                    title="Register as Project Manager" height="20">
+                <p>Project Manager</p>
+            </div>
+        </button>
+
+        <!-- Worker Role Button -->
+        <button id="worker_role_button" type="button" class="role-button unset-button">
+            <div class="text-w-icon">
+                <img src="<?= ICON_PATH . 'worker_w.svg' ?>" alt="Register as Worker"
+                    title="Register as Worker" height="20">
+                <p>Worker</p>
+            </div>
+        </button>
+    </div>
+
     <button id="register_button" type="button" class="blue-bg white-text">
         <div class="text-w-icon">
             <img src="<?= ICON_PATH . 'login_w.svg' ?>" alt="Register An Account" title="Register An Account"
