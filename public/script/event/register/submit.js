@@ -38,9 +38,10 @@ async function submit(e) {
     const contactInput = registerForm.querySelector('#register_contact')
     const emailInput = registerForm.querySelector('#register_email')
     const passwordInput = registerForm.querySelector('#register_password')
+    const roleInput = registerForm.querySelector('input[name="role"]:checked')
     if (!firstNameInput || !middleNameInput || !lastNameInput || !genderInput ||
         !dayOfBirthInput || !monthOfBirthInput || !yearOfBirthInput ||
-        !jobTitlesInput || !emailInput || !passwordInput) {
+        !jobTitlesInput || !emailInput || !passwordInput || !roleInput) {
         throw new Error('One or more form inputs not found.')
     }
 
@@ -53,7 +54,8 @@ async function submit(e) {
         jobTitles: jobTitlesInput.value.trim(),
         contact: contactInput.value.trim(),
         email: emailInput.value.trim(),
-        password: passwordInput.value.trim()
+        password: passwordInput.value.trim(),
+        role: roleInput.value.trim()
     }
 
     if (!validateInputs(inputs, userValidationRules())) return
@@ -86,7 +88,8 @@ async function sendToBackend(
     jobTitles,
     contact,
     email,
-    password
+    password,
+    role
 ) {
     try {
         if (isLoading) {
@@ -122,6 +125,9 @@ async function sendToBackend(
         if (!password || password.trim() === '')
             throw new Error('Password is required.')
 
+        if (!role || role.trim() === '')
+            throw new Error('Role is required.')
+
         await Http.POST('auth/register', {
             firstName: firstName.trim(),
             middleName: middleName.trim(),
@@ -131,7 +137,8 @@ async function sendToBackend(
             jobTitles: jobTitles.trim(),
             contact: contact.trim(),
             email: email.trim(),
-            password: password.trim()
+            password: password.trim(),
+            role: role.trim()
         })
 
         const delay = 1500

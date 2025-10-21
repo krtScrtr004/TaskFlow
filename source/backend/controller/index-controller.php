@@ -20,6 +20,7 @@ class IndexController implements Controller
             'form'  => 'register',
             'scripts' => [
                 'check-date-validity',
+                'register/select-role',
                 'register/submit'
             ]
         ],
