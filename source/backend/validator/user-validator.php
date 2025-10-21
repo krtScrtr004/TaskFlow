@@ -7,10 +7,78 @@ use App\Container\JobTitleContainer;
 use App\Enumeration\WorkerStatus;
 use App\Enumeration\Gender;
 use App\Enumeration\Role;
+use App\Exception\ValidationException;
 use DateTime;
 
 class UserValidator extends Validator
 {
+
+    /**
+     * Validate multiple data
+     */
+    public function validateMultiple(array $data): void
+    {
+        $urlValidator = new UrlValidator();
+
+        if ($data['firstName'] !== null) {
+            $this->validateFirstName(trim($data['firstName']) ?? null);
+        }
+
+        if ($data['middleName'] !== null) {
+            $this->validateMiddleName(trim($data['middleName']) ?? null);
+        }
+
+        if ($data['lastName'] !== null) {
+            $this->validateLastName(trim($data['lastName']) ?? null);
+        }
+
+        if ($data['gender'] !== null) {
+            $this->validateGender($data['gender'] ?? null);
+        }
+
+        if ($data['birthDate'] !== null) {
+            $this->validateBirthDate($data['birthDate'] ?? null);
+        }
+
+        if ($data['role'] !== null) {
+            $this->validateRole($data['role'] ?? null);
+        }
+
+        if ($data['jobTitles'] !== null) {
+            $this->validateJobTitles($data['jobTitles'] ?? null);
+        }
+
+        if ($data['password'] !== null) {
+            $this->validatePassword(trim($data['password']) ?? null);
+        }
+
+        if ($data['contactNumber'] !== null) {
+            $this->validateContactNumber(trim($data['contactNumber']) ?? null);
+        }
+
+        if ($data['email'] !== null) {
+            $this->validateEmail(trim($data['email']) ?? null);
+        }
+
+        if ($data['bio'] !== null) {
+            $this->validateBio(trim($data['bio']));
+        }
+
+        if ($data['profileLink'] !== null) {
+            $urlValidator->validateUrl(trim($data['profileLink']) ?? null);
+        }
+
+        if ($data['createdAt'] > new DateTime()) {
+            $this->addError("createdAt", "Created At date cannot be in the future.");
+        }
+
+        if ($data['role'] !== null) {
+            $this->validateRole($data['role'] ?? null);
+        }
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------------------ //
+
     /**
      * Validate first name
      */
@@ -76,22 +144,22 @@ class UserValidator extends Validator
     /**
      * Validate date of birth
      */
-    public function validateDateOfBirth(?DateTime $dateOfBirth): void
+    public function validateBirthDate(?DateTime $birthDate): void
     {
-        if ($dateOfBirth === null) {
-            $this->errors['dateOfBirth'] = 'Date of birth is required.';
+        if ($birthDate === null) {
+            $this->errors['birthDate'] = 'Date of birth is required.';
             return;
         }
 
         $now = new DateTime();
-        if ($dateOfBirth >= $now) {
-            $this->errors['dateOfBirth'] = 'Date of birth must be in the past.';
+        if ($birthDate >= $now) {
+            $this->errors['birthDate'] = 'Date of birth must be in the past.';
         }
 
         // Calculate age
-        $age = $now->diff($dateOfBirth)->y;
+        $age = $now->diff($birthDate)->y;
         if ($age < 18) {
-            $this->errors['dateOfBirth'] = 'You must be at least 18 years old to register.';
+            $this->errors['birthDate'] = 'You must be at least 18 years old to register.';
         }
     }
 
@@ -128,8 +196,8 @@ class UserValidator extends Validator
      */
     public function validateContactNumber(?string $contactNumber): void
     {
-        if ($contactNumber === null || trim($contactNumber) === '' || strlen($contactNumber) < 11 || strlen($contactNumber) > 15) {
-            $this->errors['contactNumber'] = 'Contact number must be between 11 and 15 characters long.';
+        if ($contactNumber === null || trim($contactNumber) === '' || strlen($contactNumber) < 11 || strlen($contactNumber) > 20) {
+            $this->errors['contactNumber'] = 'Contact number must be between 11 and 20 characters long.';
         }
 
         if (!preg_match('/^\+?[\d\s\-\(\)]{11,20}$/', $contactNumber)) {
@@ -140,7 +208,8 @@ class UserValidator extends Validator
     /**
      * Validate worker status
      */
-    public function validateStatus(?WorkerStatus $status): void {
+    public function validateStatus(?WorkerStatus $status): void
+    {
         if ($status === null || !in_array($status, [WorkerStatus::ASSIGNED, WorkerStatus::UNASSIGNED, WorkerStatus::TERMINATED])) {
             $this->errors['status'] = 'Please select a valid worker status.';
         }

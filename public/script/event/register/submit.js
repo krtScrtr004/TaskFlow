@@ -50,9 +50,9 @@ async function submit(e) {
         middleName: middleNameInput.value.trim(),
         lastName: lastNameInput.value.trim(),
         gender: genderInput.value.trim(),
-        dateOfBirth: new Date(`${yearOfBirthInput.value.trim()}-${monthOfBirthInput.value.trim()}-${dayOfBirthInput.value.trim()}`),
+        birthDate: new Date(`${yearOfBirthInput.value.trim()}-${monthOfBirthInput.value.trim()}-${dayOfBirthInput.value.trim()}`),
         jobTitles: jobTitlesInput.value.trim(),
-        contact: contactInput.value.trim(),
+        contactNumber: contactInput.value.trim(),
         email: emailInput.value.trim(),
         password: passwordInput.value.trim(),
         role: roleInput.value.trim()
@@ -66,7 +66,7 @@ async function submit(e) {
         if (!response)
             throw new Error('No response from server.')
 
-        window.location.href = `/TaskFlow/project`
+        window.location.href = `/TaskFlow/home`
     } catch (error) {
         console.error('Error during register:', error)
         if (error?.errors) {
@@ -84,9 +84,9 @@ async function sendToBackend(
     middleName,
     lastName,
     gender,
-    dateOfBirth,
+    birthDate,
     jobTitles,
-    contact,
+    contactNumber,
     email,
     password,
     role
@@ -110,14 +110,14 @@ async function sendToBackend(
         if (!gender || gender.trim() === '')
             throw new Error('Gender is required.')
 
-        if (!dateOfBirth || isNaN(new Date(dateOfBirth).getTime()))
+        if (!birthDate || isNaN(new Date(birthDate).getTime()))
             throw new Error('Valid date of birth is required.')
 
         if (!jobTitles || jobTitles.trim() === '')
             throw new Error('Job titles is required.')
 
-        if (!contact || contact.trim() === '')
-            throw new Error('Contact is required.')
+        if (!contactNumber || contactNumber.trim() === '')
+            throw new Error('Contact number is required.')
 
         if (!email || email.trim() === '')
             throw new Error('Email is required.')
@@ -133,9 +133,9 @@ async function sendToBackend(
             middleName: middleName.trim(),
             lastName: lastName.trim(),
             gender: gender.trim(),
-            dateOfBirth: new Date(dateOfBirth).toISOString(),
+            birthDate: new Date(birthDate).toISOString(),
             jobTitles: jobTitles.trim(),
-            contact: contact.trim(),
+            contactNumber: contactNumber.trim(),
             email: email.trim(),
             password: password.trim(),
             role: role.trim()

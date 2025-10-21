@@ -2,6 +2,7 @@
 
 namespace App\Core;
 
+use App\Core\UUID;
 use App\Enumeration\Gender;
 use App\Enumeration\Role;
 use App\Container\JobTitleContainer;
@@ -17,7 +18,7 @@ class Me extends User
         // TODO: Implement actual user session retrieval logic
         parent::__construct(
             id: random_int(1, 1000),
-            publicId: uniqid(),
+            publicId: UUID::get(),
             firstName: 'Zing',
             middleName: 'Zang',
             lastName: 'Yang',

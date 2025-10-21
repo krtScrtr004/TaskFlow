@@ -3,12 +3,13 @@
 namespace App\Core;
 
 use Ramsey\Uuid\Uuid as RamseyUuid;
+use Ramsey\Uuid\UuidInterface;
 
 class UUID
 {
-    private RamseyUuid $uuid;
+    private UuidInterface $uuid;
 
-    private function __construct(RamseyUuid $uuid)
+    private function __construct(UuidInterface $uuid)
     {
         $this->uuid = $uuid;
     }

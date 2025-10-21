@@ -18,9 +18,10 @@ use DateTime;
 
 require_once ENUM_PATH . 'role.php';
 
-class User extends UserModel implements Entity {
-    private int $id;
-    private $publicId;
+class User extends UserModel implements Entity
+{
+    private ?int $id;
+    private ?UUID $publicId;
     protected string $firstName;
     protected string $middleName;
     protected string $lastName;
@@ -34,12 +35,13 @@ class User extends UserModel implements Entity {
     protected ?string $profileLink;
     protected DateTime $createdAt;
     protected array $additionalInfo;
+    private ?string $password;
 
     protected UserValidator $userValidator;
 
     public function __construct(
-        int $id,
-        $publicId,
+        ?int $id,
+        ?UUID $publicId,
         string $firstName,
         string $middleName,
         string $lastName,
@@ -52,105 +54,141 @@ class User extends UserModel implements Entity {
         ?string $bio,
         ?string $profileLink,
         DateTime $createdAt,
+        ?string $password = null,
         array $additionalInfo = []
     ) {
-        $this->userValidator = new UserValidator();
+        try {
+            $this->userValidator = new UserValidator();
+            $this->userValidator->validateMultiple([
+                'firstName' => $firstName,
+                'middleName' => $middleName,
+                'lastName' => $lastName,
+                'gender' => $gender,
+                'birthDate' => $birthDate,
+                'role' => $role,
+                'jobTitles' => $jobTitles,
+                'contactNumber' => $contactNumber,
+                'email' => $email,
+                'bio' => $bio,
+                'profileLink' => $profileLink,
+                'createdAt' => $createdAt,
+                'password' => $password,
+                'additionalInfo' => $additionalInfo
+            ]);
+        } catch (ValidationException $th) {
+            throw $th;
+        }
 
-        $this->setId($id);
-        $this->setPublicId($publicId);
-        $this->setFirstName($firstName);
-        $this->setMiddleName($middleName);
-        $this->setLastName($lastName);
-        $this->setGender($gender);
-        $this->setBirthDate($birthDate);
-        $this->setRole($role);
-        $this->setJobTitles($jobTitles);
-        $this->setContactNumber($contactNumber);
-        $this->setEmail($email);
-        if ($bio !== null) {
-            $this->setBio($bio);
-        } else {
-            $this->bio = null;
-        }
-        if ($profileLink !== null) {
-            $this->setProfileLink($profileLink);
-        } else {
-            $this->profileLink = null;
-        }
-        $this->setJoinedDateTime($createdAt);
+        $this->id = $id ?? null;
+        $this->publicId = $publicId ?? null;
+        $this->firstName = $firstName;
+        $this->middleName = $middleName;
+        $this->lastName = $lastName;
+        $this->gender = $gender;
+        $this->birthDate = $birthDate;
+        $this->role = $role;
+        $this->jobTitles = $jobTitles;
+        $this->contactNumber = $contactNumber;
+        $this->email = $email;
+        $this->bio = $bio ?? null;
+        $this->profileLink = $profileLink ?? null;
+        $this->createdAt = $createdAt;
+        $this->password = $password ?? null;
         $this->additionalInfo = $additionalInfo;
     }
 
     // Getters
-    public function getId(): int {
+    public function getId(): int
+    {
         return $this->id;
     }
 
-    public function getPublicId(): UUID {
+    public function getPublicId(): UUID
+    {
         return $this->publicId;
     }
 
-    public function getFirstName(): string {
+    public function getFirstName(): string
+    {
         return $this->firstName;
     }
 
-    public function getMiddleName(): string {
+    public function getMiddleName(): string
+    {
         return $this->middleName;
     }
 
-    public function getLastName(): string {
+    public function getLastName(): string
+    {
         return $this->lastName;
     }
 
-    public function getGender(): Gender {
+    public function getGender(): Gender
+    {
         return $this->gender;
     }
 
-    public function getBirthDate(): DateTime {
+    public function getBirthDate(): DateTime
+    {
         return $this->birthDate;
     }
 
-    public function getRole(): Role {
+    public function getRole(): Role
+    {
         return $this->role;
     }
 
-    public function getJobTitles(): JobTitleContainer {
+    public function getJobTitles(): JobTitleContainer
+    {
         return $this->jobTitles;
     }
 
-    public function getContactNumber(): string {
+    public function getContactNumber(): string
+    {
         return $this->contactNumber;
     }
 
-    public function getEmail(): string {
+    public function getEmail(): string
+    {
         return $this->email;
     }
 
-    public function getBio(): ?string {
+    public function getPassword(): ?string
+    {
+        return $this->password;
+    }
+
+    public function getBio(): ?string
+    {
         return $this->bio;
     }
 
-    public function getProfileLink(): ?string {
+    public function getProfileLink(): ?string
+    {
         return $this->profileLink;
     }
 
-    public function getJoinedDateTime(): DateTime {
+    public function getJoinedDateTime(): DateTime
+    {
         return $this->createdAt;
     }
 
-    public function getAdditionalInfo(): array {
+    public function getAdditionalInfo(): array
+    {
         return $this->additionalInfo;
     }
 
     // Setters
-    public function setId(int $id): void {
+    public function setId(int $id): void
+    {
         if ($id < 0) {
             throw new ValidationException("Invalid ID");
         }
         $this->id = $id;
     }
 
-    public function setPublicId(UUID $publicId): void {
+    public function setPublicId(UUID $publicId): void
+    {
         $validator = new UuidValidator();
 
         $validator->validateUuid($publicId);
@@ -160,7 +198,8 @@ class User extends UserModel implements Entity {
         $this->publicId = $publicId;
     }
 
-    public function setFirstName(string $firstName): void {
+    public function setFirstName(string $firstName): void
+    {
         $this->userValidator->validateFirstName(trim($firstName));
         if ($this->userValidator->hasErrors()) {
             throw new ValidationException("Invalid First Name", $this->userValidator->getErrors());
@@ -168,7 +207,8 @@ class User extends UserModel implements Entity {
         $this->firstName = $firstName;
     }
 
-    public function setMiddleName(string $middleName): void {
+    public function setMiddleName(string $middleName): void
+    {
         $this->userValidator->validateMiddleName(trim($middleName));
         if ($this->userValidator->hasErrors()) {
             throw new ValidationException("Invalid Middle Name", $this->userValidator->getErrors());
@@ -176,7 +216,8 @@ class User extends UserModel implements Entity {
         $this->middleName = $middleName;
     }
 
-    public function setLastName(string $lastName): void {
+    public function setLastName(string $lastName): void
+    {
         $this->userValidator->validateLastName($lastName);
         if ($this->userValidator->hasErrors()) {
             throw new ValidationException("Invalid Last Name", $this->userValidator->getErrors());
@@ -184,23 +225,26 @@ class User extends UserModel implements Entity {
         $this->lastName = $lastName;
     }
 
-    public function setGender(Gender $gender): void {
+    public function setGender(Gender $gender): void
+    {
         $this->userValidator->validateGender($gender);
         if ($this->userValidator->hasErrors()) {
             throw new ValidationException("Invalid Gender", $this->userValidator->getErrors());
-        }   
+        }
         $this->gender = $gender;
     }
 
-    public function setBirthDate(DateTime $birthDate): void {
-        $this->userValidator->validateDateOfBirth($birthDate);
+    public function setBirthDate(DateTime $birthDate): void
+    {
+        $this->userValidator->validateBirthDate($birthDate);
         if ($this->userValidator->hasErrors()) {
             throw new ValidationException("Invalid Birth Date", $this->userValidator->getErrors());
         }
         $this->birthDate = $birthDate;
     }
 
-    public function setRole(Role $role): void {
+    public function setRole(Role $role): void
+    {
         $this->userValidator->validateRole($role);
         if ($this->userValidator->hasErrors()) {
             throw new ValidationException("Invalid Role", $this->userValidator->getErrors());
@@ -208,7 +252,8 @@ class User extends UserModel implements Entity {
         $this->role = $role;
     }
 
-    public function setJobTitles(JobTitleContainer $jobTitles): void {
+    public function setJobTitles(JobTitleContainer $jobTitles): void
+    {
         $this->userValidator->validateJobTitles($jobTitles);
         if ($this->userValidator->hasErrors()) {
             throw new ValidationException("Invalid Job Titles", $this->userValidator->getErrors());
@@ -216,7 +261,8 @@ class User extends UserModel implements Entity {
         $this->jobTitles = $jobTitles;
     }
 
-    public function setContactNumber(string $contactNumber): void {
+    public function setContactNumber(string $contactNumber): void
+    {
         $this->userValidator->validateContactNumber(trim($contactNumber));
         if ($this->userValidator->hasErrors()) {
             throw new ValidationException("Invalid Contact Number", $this->userValidator->getErrors());
@@ -224,7 +270,8 @@ class User extends UserModel implements Entity {
         $this->contactNumber = $contactNumber;
     }
 
-    public function setEmail(string $email): void {
+    public function setEmail(string $email): void
+    {
         $this->userValidator->validateEmail(trim($email));
         if ($this->userValidator->hasErrors()) {
             throw new ValidationException("Invalid Email", $this->userValidator->getErrors());
@@ -232,7 +279,14 @@ class User extends UserModel implements Entity {
         $this->email = $email;
     }
 
-    public function setBio(string $bio): void {
+    public function setPassword(string $password): void
+    {
+
+        $this->password = $password;
+    }
+
+    public function setBio(string $bio): void
+    {
         $this->userValidator->validateBio(trim($bio));
         if ($this->userValidator->hasErrors()) {
             throw new ValidationException("Invalid Bio", $this->userValidator->getErrors());
@@ -240,7 +294,8 @@ class User extends UserModel implements Entity {
         $this->bio = $bio;
     }
 
-    public function setProfileLink(string $profileLink): void {
+    public function setProfileLink(string $profileLink): void
+    {
         $validator = new UrlValidator();
 
         $validator->validateUrl(trim($profileLink));
@@ -250,7 +305,8 @@ class User extends UserModel implements Entity {
         $this->profileLink = $profileLink;
     }
 
-    public function setJoinedDateTime(DateTime $createdAt): void {
+    public function setJoinedDateTime(DateTime $createdAt): void
+    {
         if ($createdAt > new DateTime()) {
             throw new ValidationException("Invalid Created At Date");
         }
@@ -265,7 +321,8 @@ class User extends UserModel implements Entity {
     //     $this->additionalInfo[$key] = $value;
     // }
 
-    public function toWorker(): Worker {
+    public function toWorker(): Worker
+    {
         return new Worker(
             $this->id,
             $this->publicId,
@@ -285,7 +342,8 @@ class User extends UserModel implements Entity {
         );
     }
 
-    public function toArray(): array {
+    public function toArray(): array
+    {
         return [
             'id' => $this->publicId,
             'firstName' => $this->firstName,
@@ -302,9 +360,10 @@ class User extends UserModel implements Entity {
             'createdAt' => $this->createdAt->format('Y-m-d H:i:s'),
             'additionalInfo' => $this->additionalInfo
         ];
-    }   
+    }
 
-    public static function fromArray(array $data): self {
+    public static function fromArray(array $data): self
+    {
         return new User(
             $data['id'],
             $data['publicId'],
@@ -324,7 +383,8 @@ class User extends UserModel implements Entity {
         );
     }
 
-    public function jsonSerialize(): array {
+    public function jsonSerialize(): array
+    {
         return $this->toArray();
     }
 }

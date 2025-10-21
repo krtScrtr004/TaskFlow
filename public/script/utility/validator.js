@@ -58,18 +58,18 @@ export function userValidationRules() {
             }
         },
 
-        'dateOfBirth': {
+        'birthDate': {
             condition: (inputs) => {
                 const errors = []
                 const now = new Date()
-                const dateOfBirth = inputs.dateOfBirth
+                const birthDate = inputs.birthDate
 
-                if (!dateOfBirth || dateOfBirth >= now) {
+                if (!birthDate || birthDate >= now) {
                     errors.push('You must be at least 18 years old to register.')
                 } else {
-                    let age = now.getFullYear() - dateOfBirth.getFullYear()
-                    const monthDiff = now.getMonth() - dateOfBirth.getMonth()
-                    if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < dateOfBirth.getDate())) {
+                    let age = now.getFullYear() - birthDate.getFullYear()
+                    const monthDiff = now.getMonth() - birthDate.getMonth()
+                    if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birthDate.getDate())) {
                         age--
                     }
 
@@ -127,6 +127,16 @@ export function userValidationRules() {
                 }
                 if (inputs.password && /[^a-zA-Z0-9_!@'\.\-]/.test(inputs.password)) {
                     errors.push('Password contains invalid special characters. Only _ ! @ \' . - are allowed.')
+                }
+                return errors
+            }
+        },
+
+        'role': {
+            condition: (inputs) => {
+                const errors = []
+                if (!inputs.role || !(['projectManager', 'worker'].includes(inputs.role.trim()))) {
+                    errors.push('Please select a valid role.')
                 }
                 return errors
             }

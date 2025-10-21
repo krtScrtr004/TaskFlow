@@ -5,6 +5,10 @@ namespace App\Abstract;
 abstract class Validator {
     protected array $errors = [];
 
+    public function addError(string $key, string $message): void {
+        $this->errors[$key] = $message;
+    }
+
     public function hasErrors(): bool {
         return !empty($this->errors);
     }

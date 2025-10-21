@@ -50,7 +50,7 @@ async function submit(e) {
 
         const projectId = response.projectId
         const redirect = (projectId && projectId.trim() !== '') ? `/${projectId}` : ``
-        window.location.href = `/TaskFlow/project${redirect}`
+        window.location.href = `/TaskFlow/home${redirect}`
     } catch (error) {
         console.error('Error during login:', error)
         if (error?.errors) {

@@ -128,7 +128,7 @@ use App\Enumeration\Role;
         </div>
 
         <div>
-            <input class="no-display" type="radio" name="role" id="register_role_worker" value=""<?= Role::WORKER->value ?>"">
+            <input class="no-display" type="radio" name="role" id="register_role_worker" value="<?= Role::WORKER->value ?>">
 
             <!-- Worker Role Button -->
             <button id="worker_role_button" type="button" class="role-button unset-button">

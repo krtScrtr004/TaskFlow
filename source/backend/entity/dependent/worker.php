@@ -16,8 +16,8 @@ class Worker extends User {
     private WorkerStatus $status;
 
     public function __construct( 
-        int $id,
-        UUID $publicId,
+        ?int $id,
+        ?UUID $publicId,
         string $firstName,
         string $middleName,
         string $lastName,
