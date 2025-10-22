@@ -2,7 +2,7 @@
 
 namespace App\Model;
 
-use App\Interface\Model;
+use App\Abstract\Model;
 use App\Core\Connection;
 use App\Container\JobTitleContainer;
 use App\Core\UUID;
@@ -14,7 +14,7 @@ use DateTime;
 use InvalidArgumentException;
 use PDOException;
 
-class UserModel implements Model
+class UserModel extends Model
 {
 
 
@@ -59,19 +59,31 @@ class UserModel implements Model
             // Insert User Data
             $userQuery = "
                 INSERT INTO `user` (
-                    publicId, firstName, 
-                    middleName, lastName, 
-                    gender, birthDate, 
-                    role, contactNumber, 
-                    email, bio, 
-                    profileLink, password
+                    publicId, 
+                    firstName, 
+                    middleName, 
+                    lastName, 
+                    gender, 
+                    birthDate, 
+                    role, 
+                    contactNumber, 
+                    email, 
+                    bio, 
+                    profileLink, 
+                    password
                 ) VALUES (
-                    :publicId, :firstName, 
-                    :middleName, :lastName, 
-                    :gender, :birthDate, 
-                    :role, :contactNumber, 
-                    :email, :bio, 
-                    :profileLink, :password
+                    :publicId, 
+                    :firstName, 
+                    :middleName, 
+                    :lastName, 
+                    :gender, 
+                    :birthDate, 
+                    :role, 
+                    :contactNumber, 
+                    :email, 
+                    :bio, 
+                    :profileLink, 
+                    :password
                 )
             ";
             $statement = $conn->prepare($userQuery);

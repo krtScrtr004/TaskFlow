@@ -32,7 +32,7 @@ class TaskModel extends Model
      * @throws ValidationException If the provided project ID is invalid (less than 1)
      * @throws DatabaseException If a database error occurs during the operation
      */
-    public static function findAllProjectTasksByProjectId(int $projectId): ?TaskContainer
+    public static function findAllByProjectId(int $projectId): ?TaskContainer
     {
         if ($projectId < 1) {
             throw new ValidationException('Invalid Project ID');
@@ -154,7 +154,7 @@ class TaskModel extends Model
      * @throws ValidationException If the task ID is less than 1
      * @throws DatabaseException If a database error occurs during the query
      */
-    public static function findProjectTaskWorkersByTaskId(int $taskId): ?WorkerContainer
+    public static function findWorkersByTaskId(int $taskId): ?WorkerContainer
     {
         if ($taskId < 1) {
             throw new ValidationException('Invalid Task ID');
