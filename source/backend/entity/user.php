@@ -31,11 +31,11 @@ class User extends UserModel implements Entity
     protected ?JobTitleContainer $jobTitles;
     protected ?string $contactNumber;
     protected ?string $email;
+    private ?string $password;
     protected ?string $bio;
     protected ?string $profileLink;
     protected ?DateTime $createdAt;
     protected array $additionalInfo;
-    private ?string $password;
 
     protected UserValidator $userValidator;
 

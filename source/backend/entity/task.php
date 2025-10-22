@@ -402,12 +402,12 @@ class Task implements Entity
             'name' => $this->name,
             'description' => $this->description,
             'workers' => $this->workers->toArray(),
-            'startDateTime' => $this->startDateTime->format(DateTime::ATOM),
-            'completionDateTime' => $this->completionDateTime->format(DateTime::ATOM),
-            'actualCompletionDateTime' => $this->actualCompletionDateTime?->format(DateTime::ATOM),
+            'startDateTime' => formatDateTime($this->startDateTime, DateTime::ATOM),
+            'completionDateTime' => formatDateTime($this->completionDateTime, DateTime::ATOM),
+            'actualCompletionDateTime' => $this->actualCompletionDateTime ? formatDateTime($this->actualCompletionDateTime, DateTime::ATOM) : null,
             'priority' => $this->priority->getDisplayName(),
             'status' => $this->status->getDisplayName(),
-            'createdAt' => $this->createdAt->format(DateTime::ATOM)
+            'createdAt' => formatDateTime($this->createdAt, DateTime::ATOM)
         ];
     }
 

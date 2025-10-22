@@ -480,9 +480,9 @@ class Project implements Entity
             'tasks' => $this->tasks->toArray() ?? [],
             'workers' => $this->workers->toArray() ?? [],
             'phases' => $this->phases->toArray() ?? [],
-            'startDateTime' => formatDateTime($this->startDateTime),
-            'completionDateTime' => formatDateTime($this->completionDateTime),
-            'actualCompletionDateTime' => formatDateTime($this->actualCompletionDateTime),
+            'startDateTime' => formatDateTime($this->startDateTime, DateTime::ATOM),
+            'completionDateTime' => formatDateTime($this->completionDateTime, DateTime::ATOM),
+            'actualCompletionDateTime' => $this->actualCompletionDateTime ? formatDateTime($this->actualCompletionDateTime, DateTime::ATOM) : null,
             'status' => $this->status->getDisplayName(),
             'createdAt' => formatDateTime($this->createdAt)
         ];
