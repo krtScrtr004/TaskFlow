@@ -2,18 +2,207 @@
 
 namespace App\Model;
 
-use App\Interface\Model;
+use App\Abstract\Model;
 use App\Container\WorkerContainer;
 use App\Container\TaskContainer;
+use App\Exception\ValidationException;
+use App\Exception\DatabaseException;
 use App\Model\UserModel;
 use App\Enumeration\WorkStatus;
 use App\Enumeration\TaskPriority;
+use App\Entity\User;
 use App\Entity\Task;
 use DateTime;
 use InvalidArgumentException;
+use PDOException;
 
-class TaskModel implements Model
+class TaskModel extends Model
 {
+    /**
+     * Finds all tasks belonging to a specific project along with their assigned workers.
+     * 
+     * This method retrieves all tasks associated with a given project ID from the database,
+     * including detailed information about each task and its assigned workers. The results
+     * are returned as a TaskContainer object containing Task objects, each potentially having
+     * assigned workers in a WorkerContainer.
+     * 
+     * @param int $projectId The ID of the project to retrieve tasks for
+     * @return TaskContainer|null Returns a TaskContainer with all project tasks and their workers,
+     *                           or null if no tasks are found for the project
+     * @throws ValidationException If the provided project ID is invalid (less than 1)
+     * @throws DatabaseException If a database error occurs during the operation
+     */
+    public static function findAllProjectTasksByProjectId(int $projectId): ?TaskContainer
+    {
+        if ($projectId < 1) {
+            throw new ValidationException('Invalid Project ID');
+        }
+
+        try {
+            $projectTaskQuery = "
+                SELECT 
+                    pt.id AS taskId,
+                    pt.publicId AS taskPublicId,
+                    pt.title AS taskName,
+                    pt.description AS taskDescription,
+                    pt.startDateTime AS taskStartDateTime,
+                    pt.dueDateTime AS taskCompletionDateTime,
+                    pt.completionDateTime AS taskActualCompletionDateTime,
+                    pt.priority AS taskPriority,
+                    pt.status AS taskStatus,
+                    pt.createdAt AS taskCreatedAt,
+                    u.id AS workerId,
+                    u.publicId AS workerPublicId,
+                    u.firstName AS workerFirstName,
+                    u.middleName AS workerMiddleName,
+                    u.lastName AS workerLastName,
+                    u.profileLink AS workerProfileLink
+                FROM 
+                    `projectTask` AS pt
+                LEFT JOIN 
+                    `projectTaskWorker` AS ptw ON pt.id = ptw.taskId
+                LEFT JOIN 
+                    `user` AS u ON ptw.workerId = u.id
+                WHERE 
+                    pt.projectId = :projectId
+                ORDER BY 
+                    pt.id
+            ";
+            $statement = self::$connection->prepare($projectTaskQuery);
+            $statement->execute([':projectId' => $projectId]);
+            $results = $statement->fetchAll();
+
+            if (empty($results)) {
+                return null;
+            }
+
+            // Group results by task
+            $tasksData = [];
+            foreach ($results as $row) {
+                $taskId = $row['id'];
+
+                // Initialize task data if not exists
+                if (!isset($tasksData[$taskId])) {
+                    $tasksData[$taskId] = [
+                        'id' => $row['taskId'],
+                        'publicId' => $row['taskPublicId'],
+                        'title' => $row['taskName'],
+                        'description' => $row['taskDescription'],
+                        'startDateTime' => new DateTime($row['taskStartDateTime']),
+                        'dueDateTime' => new DateTime($row['taskDueDateTime']),
+                        'completionDateTime' => $row['completionDateTime']
+                            ? new DateTime($row['completionDateTime'])
+                            : null,
+                        'priority' => TaskPriority::from($row['priority']),
+                        'status' => WorkStatus::from($row['status']),
+                        'createdAt' => new DateTime($row['createdAt']),
+                        'workers' => []
+                    ];
+                }
+
+                // Add worker if exists
+                if ($row['workerId'] !== null) {
+                    $tasksData[$taskId]['workers'][] = User::fromArray([
+                        'id' => $row['workerId'],
+                        'publicId' => $row['workerPublicId'],
+                        'firstName' => $row['workerFirstName'],
+                        'middleName' => $row['workerMiddleName'],
+                        'lastName' => $row['workerLastName'],
+                        'profileLink' => $row['workerProfileLink']
+                    ])->toWorker();
+                }
+            }
+
+            // Build TaskContainer
+            $tasks = new TaskContainer();
+            foreach ($tasksData as $taskData) {
+                $workers = new WorkerContainer();
+                foreach ($taskData['workers'] as $worker) {
+                    $workers->add($worker);
+                }
+
+                $tasks->add(Task::fromArray([
+                    'id' => $taskData['id'],
+                    'publicId' => $taskData['publicId'],
+                    'name' => $taskData['name'],
+                    'description' => $taskData['description'],
+                    'workers' => !empty($taskData['workers']) ? $workers : null,
+                    'startDateTime' => $taskData['startDateTime'],
+                    'dueDateTime' => $taskData['dueDateTime'],
+                    'completionDateTime' => $taskData['completionDateTime'],
+                    'priority' => $taskData['priority'],
+                    'status' => $taskData['status'],
+                    'createdAt' => $taskData['createdAt']
+                ]));
+            }
+
+            return $tasks;
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
+        }
+    }
+
+    /**
+     * Retrieves all workers assigned to a specific task.
+     * 
+     * This method queries the database to find all users who are assigned as workers to a particular task
+     * identified by the given task ID. It joins the 'user' and 'projectTaskWorker' tables to retrieve
+     * worker details.
+     * 
+     * @param int $taskId The ID of the task to find workers for
+     * @return WorkerContainer|null A container with all workers assigned to the task, or null if no workers are found
+     * @throws ValidationException If the task ID is less than 1
+     * @throws DatabaseException If a database error occurs during the query
+     */
+    public static function findProjectTaskWorkersByTaskId(int $taskId): ?WorkerContainer
+    {
+        if ($taskId < 1) {
+            throw new ValidationException('Invalid Task ID');
+        }
+
+        try {
+            $taskWorkerQuery = "
+                SELECT 
+                    u.id,
+                    u.publicId,
+                    u.firstName,
+                    u.middleName,
+                    u.lastName,
+                    u.profileLink
+                FROM 
+                    `user` AS u
+                INNER JOIN 
+                    `projectTaskWorker` AS tw 
+                ON 
+                    u.id = tw.workerId
+                WHERE 
+                    tw.taskId = :taskId";
+            $statement = self::$connection->prepare($taskWorkerQuery);
+            $statement->execute([':taskId' => $taskId]);
+            $result = $statement->fetchAll();
+
+            if (!empty($result)) {
+                $workers = new WorkerContainer();
+                foreach ($result as $item) {
+                    $workers->add(User::fromArray($item)->toWorker());
+                }
+                return $workers;
+            } else {
+                return null;
+            }
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
+        }
+    }
+
+
+
+
+
+
+
+
+
 
     public function save(): bool
     {
