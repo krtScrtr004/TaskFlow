@@ -12,73 +12,6 @@ use DateTime;
 
 class UserValidator extends Validator
 {
-
-    /**
-     * Validate multiple data
-     */
-    public function validateMultiple(array $data): void
-    {
-        $urlValidator = new UrlValidator();
-
-        if ($data['firstName'] !== null) {
-            $this->validateFirstName(trim($data['firstName']) ?? null);
-        }
-
-        if ($data['middleName'] !== null) {
-            $this->validateMiddleName(trim($data['middleName']) ?? null);
-        }
-
-        if ($data['lastName'] !== null) {
-            $this->validateLastName(trim($data['lastName']) ?? null);
-        }
-
-        if ($data['gender'] !== null) {
-            $this->validateGender($data['gender'] ?? null);
-        }
-
-        if ($data['birthDate'] !== null) {
-            $this->validateBirthDate($data['birthDate'] ?? null);
-        }
-
-        if ($data['role'] !== null) {
-            $this->validateRole($data['role'] ?? null);
-        }
-
-        if ($data['jobTitles'] !== null) {
-            $this->validateJobTitles($data['jobTitles'] ?? null);
-        }
-
-        if ($data['password'] !== null) {
-            $this->validatePassword(trim($data['password']) ?? null);
-        }
-
-        if ($data['contactNumber'] !== null) {
-            $this->validateContactNumber(trim($data['contactNumber']) ?? null);
-        }
-
-        if ($data['email'] !== null) {
-            $this->validateEmail(trim($data['email']) ?? null);
-        }
-
-        if ($data['bio'] !== null) {
-            $this->validateBio(trim($data['bio']));
-        }
-
-        if ($data['profileLink'] !== null) {
-            $urlValidator->validateUrl(trim($data['profileLink']) ?? null);
-        }
-
-        if ($data['createdAt'] > new DateTime()) {
-            $this->addError("createdAt", "Created At date cannot be in the future.");
-        }
-
-        if ($data['role'] !== null) {
-            $this->validateRole($data['role'] ?? null);
-        }
-    }
-
-    // ------------------------------------------------------------------------------------------------------------------------------ //
-
     /**
      * Validate first name
      */
@@ -251,6 +184,72 @@ class UserValidator extends Validator
         // Check for special characters (should NOT contain special characters except _!@'.- which are allowed)
         if (preg_match('/[^a-zA-Z0-9_!@\'\.\-]/', $password)) {
             $this->errors['password'] = 'Password contains invalid special characters. Only _!@\'.- are allowed.';
+        }
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------------------ //
+
+    /**
+     * Validate multiple data
+     */
+    public function validateMultiple(array $data): void
+    {
+        $urlValidator = new UrlValidator();
+
+        if ($data['firstName'] !== null) {
+            $this->validateFirstName(trim($data['firstName']) ?? null);
+        }
+
+        if ($data['middleName'] !== null) {
+            $this->validateMiddleName(trim($data['middleName']) ?? null);
+        }
+
+        if ($data['lastName'] !== null) {
+            $this->validateLastName(trim($data['lastName']) ?? null);
+        }
+
+        if ($data['gender'] !== null) {
+            $this->validateGender($data['gender'] ?? null);
+        }
+
+        if ($data['birthDate'] !== null) {
+            $this->validateBirthDate($data['birthDate'] ?? null);
+        }
+
+        if ($data['role'] !== null) {
+            $this->validateRole($data['role'] ?? null);
+        }
+
+        if ($data['jobTitles'] !== null) {
+            $this->validateJobTitles($data['jobTitles'] ?? null);
+        }
+
+        if ($data['password'] !== null) {
+            $this->validatePassword(trim($data['password']) ?? null);
+        }
+
+        if ($data['contactNumber'] !== null) {
+            $this->validateContactNumber(trim($data['contactNumber']) ?? null);
+        }
+
+        if ($data['email'] !== null) {
+            $this->validateEmail(trim($data['email']) ?? null);
+        }
+
+        if ($data['bio'] !== null) {
+            $this->validateBio(trim($data['bio']));
+        }
+
+        if ($data['profileLink'] !== null) {
+            $urlValidator->validateUrl(trim($data['profileLink']) ?? null);
+        }
+
+        if ($data['createdAt'] > new DateTime()) {
+            $this->addError("createdAt", "Created At date cannot be in the future.");
+        }
+
+        if ($data['role'] !== null) {
+            $this->validateRole($data['role'] ?? null);
         }
     }
 }
