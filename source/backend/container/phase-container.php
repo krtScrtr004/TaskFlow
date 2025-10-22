@@ -45,12 +45,19 @@ class PhaseContainer extends Container
      * using the Phase::fromArray() method. It then constructs and returns a new
      * PhaseContainer containing these Phase objects.
      *
-     * @param array $data Array of phase data where each element is an array representing a Phase
+     * @param array $data Array of phase data where each element is an instance of Phase or array representing a Phase
      * @return mixed A new PhaseContainer instance containing Phase objects
      */
     public static function fromArray(array $data): mixed
     {
-        $phases = array_map(fn($phaseData) => Phase::fromArray($phaseData), $data);
-        return new PhaseContainer($phases);
+        $phases = new self();
+        foreach ($data as $phaseData) {
+            if ($phaseData instanceof Phase) {
+                $phases->add($phaseData);
+            } else {
+                $phases->add(Phase::fromArray($phaseData));
+            }
+        }
+        return $phases;
     }
 }

@@ -85,14 +85,21 @@ class ProjectContainer extends Container
      * - Converting each element in the array to a Project object using Project::fromArray()
      * - Creating a new ProjectContainer with the resulting array of Project objects
      *
-     * @param array $data An array of project data arrays, where each element contains 
-     *                    the necessary data to create a Project instance
+     * @param array $data An array of project data arrays, where each element is an instance of Project 
+     *              or an array containing the necessary data to create a Project instance
      * 
      * @return ProjectContainer A new ProjectContainer instance containing the projects
      */
     public static function fromArray(array $data): ProjectContainer
     {
-        $projects = array_map(fn($projectData) => Project::fromArray($projectData), $data);
-        return new ProjectContainer($projects);
+        $projects = new self();
+        foreach ($data as $projectData) {
+            if ($projectData instanceof Project) {
+                $projects->add($projectData);
+            } else {
+                $projects->add(Project::fromArray($projectData));
+            }
+        }
+        return $projects;
     }
 }

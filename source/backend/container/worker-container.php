@@ -47,13 +47,20 @@ class WorkerContainer extends Container
      * into a Worker object using the Worker::fromArray method. It then creates and returns
      * a new WorkerContainer containing these Worker objects.
      *
-     * @param array $data Array of worker data arrays, where each element contains the data
-     *                    necessary to create a Worker object
+     * @param array $data Array of worker data arrays, where each element is an instance of Worker 
+     *              or an array containing the necessary data to create a Worker instance
      * @return WorkerContainer New WorkerContainer instance containing Worker objects created from the provided data
      */
     public static function fromArray(array $data): WorkerContainer
     {
-        $workersArray = array_map(fn($workerData) => Worker::fromArray($workerData), $data);
-        return new WorkerContainer($workersArray);
+        $workers = new self();
+        foreach ($data as $workerData) {
+            if ($workerData instanceof Worker) {
+                $workers->add($workerData);
+            } else {
+                $workers->add(Worker::fromArray($workerData));
+            }
+        }
+        return $workers;
     }
 }
