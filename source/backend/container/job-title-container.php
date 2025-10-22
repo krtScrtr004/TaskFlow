@@ -37,20 +37,19 @@ class JobTitleContainer extends Container
         }
     }
 
+    /**
+     * Creates a new JobTitleContainer instance from an array of data.
+     *
+     * This static factory method provides a convenient way to create a JobTitleContainer
+     * object from an associative array of data, typically used when deserializing
+     * from JSON or database results.
+     *
+     * @param array $data Array of strings containing job title data
+     * 
+     * @return mixed A new JobTitleContainer instance created from the provided data
+     */
     public static function fromArray(array $data): mixed
     {
-        // TODO: Implement proper mapping if necessary
-        return new JobTitleContainer([
-            // Map the array elements to strings if necessary
-            // For example, if $data contains associative arrays or objects
-            // you might need to extract the string representation
-            // Here we assume $data is already an array of strings
-            ...$data
-        ]);
-    }
-
-    public function jsonSerialize(): array
-    {
-        return $this->toArray();
+        return new JobTitleContainer($data);
     }
 }

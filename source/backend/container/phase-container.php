@@ -38,14 +38,19 @@ class PhaseContainer extends Container
         }
     }
 
+    /**
+     * Creates a PhaseContainer instance from an array of phase data.
+     *
+     * This method takes an array of phase data and maps each element to a Phase object
+     * using the Phase::fromArray() method. It then constructs and returns a new
+     * PhaseContainer containing these Phase objects.
+     *
+     * @param array $data Array of phase data where each element is an array representing a Phase
+     * @return mixed A new PhaseContainer instance containing Phase objects
+     */
     public static function fromArray(array $data): mixed
     {
         $phases = array_map(fn($phaseData) => Phase::fromArray($phaseData), $data);
         return new PhaseContainer($phases);
-    }
-
-    public function jsonSerialize(): array
-    {
-        return $this->toArray();
     }
 }

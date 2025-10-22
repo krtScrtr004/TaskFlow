@@ -109,6 +109,17 @@ class TaskContainer extends Container
         return array_map(fn($task) => $task->toArray(), $this->items);
     }
 
+    /**
+     * Creates a TaskContainer instance from an array of task data.
+     *
+     * This method transforms an array of task data into a TaskContainer object by:
+     * - Converting each element of the array to a Task object using Task::fromArray()
+     * - Initializing a new TaskContainer with the resulting array of Task objects
+     *
+     * @param array $data Array of task data arrays, where each element contains the data needed to create a Task object
+     * 
+     * @return TaskContainer New TaskContainer instance containing all the Task objects created from the provided data
+     */
     public static function fromArray(array $data): TaskContainer
     {
         $tasks = array_map(fn($taskData) => Task::fromArray($taskData), $data);
