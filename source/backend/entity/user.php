@@ -23,27 +23,27 @@ class User extends UserModel implements Entity
     private ?int $id;
     private ?UUID $publicId;
     protected string $firstName;
-    protected string $middleName;
+    protected ?string $middleName;
     protected string $lastName;
-    protected Gender $gender;
-    protected DateTime $birthDate;
-    protected Role $role;
-    protected JobTitleContainer $jobTitles;
-    protected string $contactNumber;
-    protected string $email;
+    protected ?Gender $gender;
+    protected ?DateTime $birthDate;
+    protected ?Role $role;
+    protected ?JobTitleContainer $jobTitles;
+    protected ?string $contactNumber;
+    protected ?string $email;
     protected ?string $bio;
     protected ?string $profileLink;
-    protected DateTime $createdAt;
+    protected ?DateTime $createdAt;
     protected array $additionalInfo;
     private ?string $password;
 
     protected UserValidator $userValidator;
 
     public function __construct(
-        ?int $id,
-        ?UUID $publicId,
+        int $id,
+        UUID $publicId,
         string $firstName,
-        string $middleName,
+        ?string $middleName,
         string $lastName,
         Gender $gender,
         DateTime $birthDate,
@@ -51,7 +51,7 @@ class User extends UserModel implements Entity
         JobTitleContainer $jobTitles,
         string $contactNumber,
         string $email,
-        ?string $bio,
+        string $bio,
         ?string $profileLink,
         DateTime $createdAt,
         ?string $password = null,
@@ -381,6 +381,88 @@ class User extends UserModel implements Entity
             new DateTime($data['createdAt']),
             $data['additionalInfo'] ?? []
         );
+    }
+
+    /**
+     * Create a partial User entity with only provided fields
+     * Useful for updates where only some fields are changed
+     * 
+     * @param array $data Associative array with partial user data
+     * @return self User entity with partial data (null for missing fields)
+     */
+    public static function createPartial(array $data): self
+    {
+        // Provide default values for required fields
+        $defaults = [
+            'id' => $data['id'] ?? null,
+            'publicId' => $data['publicId'] ?? null,
+            'firstName' => $data['firstName'] ?? '',
+            'middleName' => $data['middleName'] ?? null,
+            'lastName' => $data['lastName'] ?? '',
+            'gender' => $data['gender'] ?? null,
+            'birthDate' => $data['birthDate'] ?? null,
+            'role' => $data['role'] ?? null,
+            'jobTitles' => $data['jobTitles'] ?? null,
+            'contactNumber' => $data['contactNumber'] ?? null,
+            'email' => $data['email'] ?? null,
+            'bio' => $data['bio'] ?? null,
+            'profileLink' => $data['profileLink'] ?? null,
+            'createdAt' => $data['createdAt'] ?? null,
+            'password' => $data['password'] ?? null,
+            'additionalInfo' => $data['additionalInfo'] ?? []
+        ];
+
+        // Handle UUID conversion
+        if (isset($data['publicId']) && !($data['publicId'] instanceof UUID)) {
+            $defaults['publicId'] = is_string($data['publicId']) 
+                ? UUID::fromString($data['publicId']) 
+                : null;
+        }
+
+        // Handle DateTime conversions
+        if (isset($data['birthDate']) && !($data['birthDate'] instanceof DateTime)) {
+            $defaults['birthDate'] = new DateTime($data['birthDate']);
+        }
+
+        if (isset($data['createdAt']) && !($data['createdAt'] instanceof DateTime)) {
+            $defaults['createdAt'] = new DateTime($data['createdAt']);
+        }
+
+        // Handle enum conversions
+        if (isset($data['gender']) && !($data['gender'] instanceof Gender)) {
+            $defaults['gender'] = Gender::from($data['gender']);
+        }
+
+        if (isset($data['role']) && !($data['role'] instanceof Role)) {
+            $defaults['role'] = Role::from($data['role']);
+        }
+
+        // Handle JobTitleContainer conversion
+        if (isset($data['jobTitles']) && !($data['jobTitles'] instanceof JobTitleContainer)) {
+            $defaults['jobTitles'] = JobTitleContainer::fromArray($data['jobTitles']);
+        }
+
+        // Create instance bypassing full constructor validation
+        $instance = new self(
+            $defaults['id'],
+            $defaults['publicId'],
+            $defaults['firstName'],
+            $defaults['middleName'],
+            $defaults['lastName'],
+            $defaults['gender'],
+            $defaults['birthDate'],
+            $defaults['role'],
+            $defaults['jobTitles'],
+            $defaults['contactNumber'],
+            $defaults['email'],
+            $defaults['bio'],
+            $defaults['profileLink'],
+            $defaults['createdAt'],
+            $defaults['password'],
+            $defaults['additionalInfo']
+        );
+
+        return $instance;
     }
 
     public function jsonSerialize(): array
