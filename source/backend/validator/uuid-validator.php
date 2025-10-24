@@ -21,7 +21,7 @@ class UuidValidator extends Validator {
 
     public function validateUuid(string|MyUUID $uuid): void {
         try {
-            $id = is_string($uuid) ? MyUUID::fromString($uuid) : $uuid;
+            $id = is_string($uuid) ? $uuid : MyUUID::toString($uuid);
             if (!$this->validator->validate((string)$id)) {
                 throw new InvalidArgumentException('Invalid UUID format.');
             }
