@@ -35,8 +35,8 @@ class AuthController implements Controller
             ]);
         }
 
-        $email = $data['email'] ?? null;
-        $password = $data['password'] ?? null;
+        $email = trimOrNull($data['email']);
+        $password = trimOrNull($data['password']);
 
         try {
             $validator = new UserValidator();
@@ -117,16 +117,16 @@ class AuthController implements Controller
 
         try {
             // Extract Data
-            $firstName = isset($data['firstName']) ? (trim($data['firstName']) ?: null) : null;
-            $middleName = isset($data['middleName']) ? (trim($data['middleName']) ?: null) : null;
-            $lastName = isset($data['lastName']) ? (trim($data['lastName']) ?: null) : null;
-            $contactNumber = isset($data['contactNumber']) ? (trim($data['contactNumber']) ?: null) : null;
-            $birthDate = isset($data['birthDate']) ? new DateTime(trim($data['birthDate'])) : null;
-            $jobTitles = isset($data['jobTitles']) ? new JobTitleContainer(explode(',', trim($data['jobTitles']))) : null;
-            $email = isset($data['email']) ? (trim($data['email']) ?: null) : null;
-            $password = isset($data['password']) ? (trim($data['password']) ?: null) : null;
-            $gender = isset($data['gender']) ? (trim($data['gender']) ? Gender::tryFrom(trim($data['gender'])) : null) : null;
-            $role = isset($data['role']) ? (trim($data['role']) ? Role::tryFrom(trim($data['role'])) : null) : null;
+            $firstName = trimOrNull($data['firstName']);
+            $middleName = trimOrNull($data['middleName']);
+            $lastName = trimOrNull($data['lastName']);
+            $contactNumber = trimOrNull($data['contactNumber']);
+            $birthDate = isset($data['birthDate']) ? new DateTime(trimOrNull($data['birthDate'])) : null;
+            $jobTitles = isset($data['jobTitles']) ? new JobTitleContainer(explode(',', trimOrNull($data['jobTitles']))) : null;
+            $email = trimOrNull($data['email']);
+            $password = trimOrNull($data['password']);
+            $gender = (trimOrNull($data['gender']) ? Gender::tryFrom(trimOrNull($data['gender'])) : null);
+            $role = (trimOrNull($data['role']) ? Role::tryFrom(trimOrNull($data['role'])) : null);
 
             // Validate Data
             $userValidator = new UserValidator();

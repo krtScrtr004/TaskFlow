@@ -14,7 +14,7 @@ class Phase implements Entity
     private int $id;
     private UUID $publicId;
     private string $name;
-    private string $description;
+    private ?string $description;
     private DateTime $startDateTime;
     private DateTime $completionDateTime;
     private ?DateTime $actualCompletionDateTime;
@@ -31,7 +31,7 @@ class Phase implements Entity
      * @param int $id The unique identifier for the phase in the database
      * @param UUID $publicId The public identifier for the phase
      * @param string $name Phase name (3-255 characters)
-     * @param string $description Phase description (5-500 characters)
+     * @param string|null $description Phase description (5-500 characters) (optional)
      * @param DateTime $startDateTime Phase start date and time (cannot be in the past)
      * @param DateTime $completionDateTime Expected phase completion date and time (must be after start date)
      * @param DateTime|null $actualCompletionDateTime Actual completion date and time (null if not completed)
@@ -43,7 +43,7 @@ class Phase implements Entity
         int $id,
         UUID $publicId,
         string $name,
-        string $description,
+        ?string $description,
         DateTime $startDateTime,
         DateTime $completionDateTime,
         ?DateTime $actualCompletionDateTime,
@@ -67,8 +67,8 @@ class Phase implements Entity
 
         $this->id = $id;
         $this->publicId = $publicId;
-        $this->name = $name;
-        $this->description = $description;
+        $this->name = trimOrNull($name);
+        $this->description = trimOrNull($description);
         $this->startDateTime = $startDateTime;
         $this->completionDateTime = $completionDateTime;
         $this->actualCompletionDateTime = $actualCompletionDateTime;
@@ -198,7 +198,7 @@ class Phase implements Entity
         if ($this->workValidator->hasErrors()) {
             throw new ValidationException("Invalid phase name", $this->workValidator->getErrors());
         }
-        $this->name = $name;
+        $this->name = trimOrNull($name);
     }
 
     /**
@@ -214,7 +214,7 @@ class Phase implements Entity
         if ($this->workValidator->hasErrors()) {
             throw new ValidationException("Invalid phase description", $this->workValidator->getErrors());
         }
-        $this->description = $description;
+        $this->description = trimOrNull($description);
     }
 
     /**
@@ -298,7 +298,10 @@ class Phase implements Entity
             'description' => $this->description,
             'startDateTime' => formatDateTime($this->startDateTime, DateTime::ATOM),
             'completionDateTime' => formatDateTime($this->completionDateTime, DateTime::ATOM),
-            'actualCompletionDateTime' => $this->actualCompletionDateTime ? formatDateTime($this->actualCompletionDateTime, DateTime::ATOM) : null,
+            'actualCompletionDateTime' => 
+                $this->actualCompletionDateTime 
+                    ? formatDateTime($this->actualCompletionDateTime, DateTime::ATOM) 
+                    : null,
             'status' => $this->status->value
         ];
     }
@@ -331,30 +334,30 @@ class Phase implements Entity
         if ($data['publicId'] instanceof UUID) {
             $publicId = $data['publicId'];
         } else if (is_string($data['publicId'])) {
-            $publicId = UUID::fromBinary($data['publicId']);
+            $publicId = UUID::fromBinary(trimOrNull($data['publicId']));
         }
 
         $startDateTime = (is_string($data['startDateTime']))
-            ? new DateTime($data['startDateTime'])
+            ? new DateTime(trimOrNull($data['startDateTime']))
             : $data['startDateTime'];
 
         $completionDateTime = (is_string($data['completionDateTime']))
-            ? new DateTime($data['completionDateTime'])
+            ? new DateTime(trimOrNull($data['completionDateTime']))
             : $data['completionDateTime'];
 
         $actualCompletionDateTime = (is_string($data['actualCompletionDateTime']))
-            ? new DateTime($data['actualCompletionDateTime'])
+            ? new DateTime(trimOrNull($data['actualCompletionDateTime']))
             : $data['actualCompletionDateTime'];
 
         $status = (is_string($data['status']))
-            ? WorkStatus::fromString($data['status'])
+            ? WorkStatus::fromString(trimOrNull($data['status']))
             : $data['status'];
 
         return new self(
             id: $data['id'],
             publicId: $publicId,
-            name: $data['name'],
-            description: $data['description'],
+            name: trimOrNull($data['name']),
+            description: trimOrNull($data['description']),
             startDateTime: $startDateTime,
             completionDateTime: $completionDateTime,
             actualCompletionDateTime: $actualCompletionDateTime,

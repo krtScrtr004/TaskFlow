@@ -241,7 +241,7 @@ class Worker extends User
         $user = User::fromArray($data);
 
         $status = (is_string($data['status']))
-            ? WorkerStatus::tryFrom($data['status'])
+            ? WorkerStatus::tryFrom(trimOrNull($data['status']))
             : $data['status'];
 
         return new Worker(

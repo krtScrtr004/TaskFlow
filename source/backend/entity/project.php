@@ -12,6 +12,7 @@ use App\Core\UUID;
 use App\Exception\ValidationException;
 use App\Validator\UuidValidator;
 use App\Validator\WorkValidator;
+use BcMath\Number;
 use DateTime;
 
 class Project implements Entity
@@ -19,7 +20,7 @@ class Project implements Entity
     private int $id;
     private UUID $publicId;
     private string $name;
-    private string $description;
+    private ?string $description;
     private User $manager;
     private int $budget; // In cents to avoid floating point issues
     private ?TaskContainer $tasks;
@@ -42,7 +43,7 @@ class Project implements Entity
      * @param int $id The unique identifier for the project in the database
      * @param UUID $publicId The public identifier for the project
      * @param string $name Project name (3-255 characters)
-     * @param string $description Project description (5-500 characters)
+     * @param string|null $description Project description (5-500 characters) (optional)
      * @param User $manager The project manager (User object)
      * @param int $budget Project budget in cents (0-1,000,000, stored as cents to avoid floating point issues)
      * @param TaskContainer|null $tasks Container of tasks associated with the project (optional)
@@ -91,8 +92,8 @@ class Project implements Entity
 
         $this->id = $id;
         $this->publicId = $publicId;
-        $this->name = $name;
-        $this->description = $description;
+        $this->name = trimOrNull($name);
+        $this->description = trimOrNull($description);
         $this->manager = $manager;
         $this->budget = $budget;
         $this->tasks = $tasks;
@@ -294,7 +295,7 @@ class Project implements Entity
         if ($this->workValidator->hasErrors()) {
             throw new ValidationException("Invalid project name", $this->workValidator->getErrors());
         }
-        $this->name = $name;
+        $this->name = trimOrNull($name);
     }
 
     /**
@@ -310,7 +311,7 @@ class Project implements Entity
         if ($this->workValidator->hasErrors()) {
             throw new ValidationException("Invalid project description", $this->workValidator->getErrors());
         }
-        $this->description = $description;
+        $this->description = trimOrNull($description);
     }
 
     /**
@@ -482,7 +483,10 @@ class Project implements Entity
             'phases' => $this->phases->toArray() ?? [],
             'startDateTime' => formatDateTime($this->startDateTime, DateTime::ATOM),
             'completionDateTime' => formatDateTime($this->completionDateTime, DateTime::ATOM),
-            'actualCompletionDateTime' => $this->actualCompletionDateTime ? formatDateTime($this->actualCompletionDateTime, DateTime::ATOM) : null,
+            'actualCompletionDateTime' => 
+                $this->actualCompletionDateTime 
+                    ? formatDateTime($this->actualCompletionDateTime, DateTime::ATOM) 
+                    : null,
             'status' => $this->status->getDisplayName(),
             'createdAt' => formatDateTime($this->createdAt)
         ];
@@ -527,7 +531,7 @@ class Project implements Entity
         if ($data['publicId'] instanceof UUID) {
             $publicId = $data['publicId'];
         } else if (is_string($data['publicId'])) {
-            $publicId = UUID::fromBinary($data['publicId']);
+            $publicId = UUID::fromBinary(trimOrNull($data['publicId']));
         }
 
         $manager = (!($data['manager'] instanceof User))
@@ -547,30 +551,30 @@ class Project implements Entity
             : $data['phases'];
 
         $startDateTime = (is_string($data['startDateTime']))
-            ? new DateTime($data['startDateTime'])
+            ? new DateTime(trimOrNull($data['startDateTime']))
             : $data['startDateTime'];
 
         $completionDateTime = (is_string($data['completionDateTime']))
-            ? new DateTime($data['completionDateTime'])
+            ? new DateTime(trimOrNull($data['completionDateTime']))
             : $data['completionDateTime'];
 
         $actualCompletionDateTime = (is_string($data['actualCompletionDateTime']))
-            ? new DateTime($data['actualCompletionDateTime'])
+            ? new DateTime(trimOrNull($data['actualCompletionDateTime']))
             : $data['actualCompletionDateTime'];
 
         $status = (is_string($data['status']))
-            ? WorkStatus::fromString($data['status'])
+            ? WorkStatus::fromString(trimOrNull($data['status']))
             : $data['status'];
 
         $createdAt = (is_string($data['createdAt']))
-            ? new DateTime($data['createdAt'])
+            ? new DateTime(trimOrNull($data['createdAt']))
             : $data['createdAt'];
 
         return new Project(
             id: $data['id'],
             publicId: $publicId,
-            name: $data['name'],
-            description: $data['description'],
+            name: trimOrNull($data['name']),
+            description: trimOrNull($data['description']),
             manager: User::fromArray($data['manager']),
             budget: $data['budget'],
             tasks: $tasks,

@@ -18,7 +18,7 @@ class Task implements Entity
     private int $id;
     private UUID $publicId;
     private string $name;
-    private string $description;
+    private ?string $description;
     private WorkerContainer $workers;
     private DateTime $startDateTime;
     private DateTime $completionDateTime;
@@ -38,7 +38,7 @@ class Task implements Entity
      * @param int $id The unique identifier for the task in the database
      * @param UUID $publicId The public identifier for the task
      * @param string $name Task name (3-255 characters)
-     * @param string $description Task description (5-500 characters)
+     * @param string|null $description Task description (5-500 characters) (optional)
      * @param WorkerContainer $workers Container of workers assigned to the task
      * @param DateTime $startDateTime Task start date and time (cannot be in the past)
      * @param DateTime $completionDateTime Expected task completion date and time (must be after start date)
@@ -53,7 +53,7 @@ class Task implements Entity
         int $id,
         UUID $publicId,
         string $name,
-        string $description,
+        ?string $description,
         WorkerContainer $workers,
         DateTime $startDateTime,
         DateTime $completionDateTime,
@@ -80,8 +80,8 @@ class Task implements Entity
 
         $this->id = $id;
         $this->publicId = $publicId;
-        $this->name = $name;
-        $this->description = $description;
+        $this->name = trimOrNull($name);
+        $this->description = trimOrNull($description);
         $this->workers = $workers;
         $this->startDateTime = $startDateTime;
         $this->completionDateTime = $completionDateTime;
@@ -250,7 +250,7 @@ class Task implements Entity
         if ($this->workValidator->hasErrors()) {
             throw new ValidationException("Invalid task name", $this->workValidator->getErrors());
         }
-        $this->name = $name;
+        $this->name = trimOrNull($name);
     }
 
     /**
@@ -266,7 +266,7 @@ class Task implements Entity
         if ($this->workValidator->hasErrors()) {
             throw new ValidationException("Invalid task description", $this->workValidator->getErrors());
         }
-        $this->description = $description;
+        $this->description = trimOrNull($description);
     }
 
     /**
@@ -404,7 +404,10 @@ class Task implements Entity
             'workers' => $this->workers->toArray(),
             'startDateTime' => formatDateTime($this->startDateTime, DateTime::ATOM),
             'completionDateTime' => formatDateTime($this->completionDateTime, DateTime::ATOM),
-            'actualCompletionDateTime' => $this->actualCompletionDateTime ? formatDateTime($this->actualCompletionDateTime, DateTime::ATOM) : null,
+            'actualCompletionDateTime' => 
+                $this->actualCompletionDateTime 
+                    ? formatDateTime($this->actualCompletionDateTime, DateTime::ATOM) 
+                    : null,
             'priority' => $this->priority->getDisplayName(),
             'status' => $this->status->getDisplayName(),
             'createdAt' => formatDateTime($this->createdAt, DateTime::ATOM)
@@ -445,7 +448,7 @@ class Task implements Entity
         if ($data['publicId'] instanceof UUID) {
             $publicId = $data['publicId'];
         } else if (is_string($data['publicId'])) {
-            $publicId = UUID::fromBinary($data['publicId']);
+            $publicId = UUID::fromBinary(trimOrNull($data['publicId']));
         }
 
         $workers = (!($data['workers'] instanceof WorkerContainer))
@@ -453,27 +456,27 @@ class Task implements Entity
             : $data['workers'];
 
         $startDateTime = (is_string($data['startDateTime']))
-            ? new DateTime($data['startDateTime'])
+            ? new DateTime(trimOrNull($data['startDateTime']))
             : $data['startDateTime'];
 
         $completionDateTime = (is_string($data['completionDateTime']))
-            ? new DateTime($data['completionDateTime'])
+            ? new DateTime(trimOrNull($data['completionDateTime']))
             : $data['completionDateTime'];
 
         $actualCompletionDateTime = (is_string($data['actualCompletionDateTime']))
-            ? new DateTime($data['actualCompletionDateTime'])
+            ? new DateTime(trimOrNull($data['actualCompletionDateTime']))
             : $data['actualCompletionDateTime'];
 
         $priority = (is_string($data['priority']))
-            ? TaskPriority::tryFrom($data['priority'])
+            ? TaskPriority::tryFrom(trimOrNull($data['priority']))
             : $data['priority'];
 
         $status = (is_string($data['status']))
-            ? WorkStatus::fromString($data['status'])
+            ? WorkStatus::fromString(trimOrNull($data['status']))
             : $data['status'];
 
         $createdAt = (is_string($data['createdAt']))
-            ? new DateTime($data['createdAt'])
+            ? new DateTime(trimOrNull($data['createdAt']))
             : $data['createdAt'];
 
         return new Task(

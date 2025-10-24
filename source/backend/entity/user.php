@@ -104,21 +104,21 @@ class User extends UserModel implements Entity
             throw $th;
         }
 
-        $this->id = $id ?? null;
-        $this->publicId = $publicId ?? null;
-        $this->firstName = $firstName;
-        $this->middleName = $middleName;
-        $this->lastName = $lastName;
+        $this->id = $id;
+        $this->publicId = $publicId;
+        $this->firstName = trimOrNull($firstName);
+        $this->middleName = trimOrNull($middleName);
+        $this->lastName = trimOrNull($lastName);
         $this->gender = $gender;
         $this->birthDate = $birthDate;
         $this->role = $role;
         $this->jobTitles = $jobTitles;
-        $this->contactNumber = $contactNumber;
-        $this->email = $email;
-        $this->bio = $bio ?? null;
-        $this->profileLink = $profileLink ?? null;
+        $this->contactNumber = trimOrNull($contactNumber);
+        $this->email = trimOrNull($email);
+        $this->bio = trimOrNull($bio);
+        $this->profileLink = trimOrNull($profileLink);
         $this->createdAt = $createdAt;
-        $this->password = $password ?? null;
+        $this->password = $password;
         $this->additionalInfo = $additionalInfo;
     }
 
@@ -333,11 +333,11 @@ class User extends UserModel implements Entity
      */
     public function setFirstName(string $firstName): void
     {
-        $this->userValidator->validateFirstName(trim($firstName));
+        $this->userValidator->validateFirstName(trimOrNull($firstName));
         if ($this->userValidator->hasErrors()) {
             throw new ValidationException("Invalid First Name", $this->userValidator->getErrors());
         }
-        $this->firstName = $firstName;
+        $this->firstName = trimOrNull($firstName);
     }
 
     /**
@@ -349,11 +349,11 @@ class User extends UserModel implements Entity
      */
     public function setMiddleName(string $middleName): void
     {
-        $this->userValidator->validateMiddleName(trim($middleName));
+        $this->userValidator->validateMiddleName(trimOrNull($middleName));
         if ($this->userValidator->hasErrors()) {
             throw new ValidationException("Invalid Middle Name", $this->userValidator->getErrors());
         }
-        $this->middleName = $middleName;
+        $this->middleName = trimOrNull($middleName);
     }
 
     /**
@@ -369,7 +369,7 @@ class User extends UserModel implements Entity
         if ($this->userValidator->hasErrors()) {
             throw new ValidationException("Invalid Last Name", $this->userValidator->getErrors());
         }
-        $this->lastName = $lastName;
+        $this->lastName = trimOrNull($lastName);
     }
 
     /**
@@ -446,11 +446,11 @@ class User extends UserModel implements Entity
      */
     public function setContactNumber(string $contactNumber): void
     {
-        $this->userValidator->validateContactNumber(trim($contactNumber));
+        $this->userValidator->validateContactNumber(trimOrNull($contactNumber));
         if ($this->userValidator->hasErrors()) {
             throw new ValidationException("Invalid Contact Number", $this->userValidator->getErrors());
         }
-        $this->contactNumber = $contactNumber;
+        $this->contactNumber = trimOrNull($contactNumber);
     }
 
     /**
@@ -462,11 +462,11 @@ class User extends UserModel implements Entity
      */
     public function setEmail(string $email): void
     {
-        $this->userValidator->validateEmail(trim($email));
+        $this->userValidator->validateEmail(trimOrNull($email));
         if ($this->userValidator->hasErrors()) {
             throw new ValidationException("Invalid Email", $this->userValidator->getErrors());
         }
-        $this->email = $email;
+        $this->email = trimOrNull($email);
     }
 
 
@@ -500,11 +500,11 @@ class User extends UserModel implements Entity
      */
     public function setBio(string $bio): void
     {
-        $this->userValidator->validateBio(trim($bio));
+        $this->userValidator->validateBio(trimOrNull($bio));
         if ($this->userValidator->hasErrors()) {
             throw new ValidationException("Invalid Bio", $this->userValidator->getErrors());
         }
-        $this->bio = $bio;
+        $this->bio = trimOrNull($bio);
     }
 
     /**
@@ -518,7 +518,7 @@ class User extends UserModel implements Entity
     {
         $validator = new UrlValidator();
 
-        $validator->validateUrl(trim($profileLink));
+        $validator->validateUrl(trimOrNull($profileLink));
         if ($validator->hasErrors()) {
             throw new ValidationException("Invalid Profile Link", $validator->getErrors());
         }
@@ -625,28 +625,28 @@ class User extends UserModel implements Entity
         ];
 
         // Handle UUID conversion
-        if (isset($data['publicId']) && !($data['publicId'] instanceof UUID)) {
+        if (isset(($data['publicId'])) && !($data['publicId'] instanceof UUID)) {
             $defaults['publicId'] = is_string($data['publicId'])
-                ? UUID::fromString($data['publicId'])
+                ? UUID::fromString(trimOrNull($data['publicId']))
                 : null;
         }
 
         // Handle DateTime conversions
         if (isset($data['birthDate']) && !($data['birthDate'] instanceof DateTime)) {
-            $defaults['birthDate'] = new DateTime($data['birthDate']);
+            $defaults['birthDate'] = new DateTime(trimOrNull($data['birthDate']));
         }
 
         if (isset($data['createdAt']) && !($data['createdAt'] instanceof DateTime)) {
-            $defaults['createdAt'] = new DateTime($data['createdAt']);
+            $defaults['createdAt'] = new DateTime(trimOrNull($data['createdAt']));
         }
 
         // Handle enum conversions
         if (isset($data['gender']) && !($data['gender'] instanceof Gender)) {
-            $defaults['gender'] = Gender::from($data['gender']);
+            $defaults['gender'] = Gender::from(trimOrNull($data['gender']));
         }
 
         if (isset($data['role']) && !($data['role'] instanceof Role)) {
-            $defaults['role'] = Role::from($data['role']);
+            $defaults['role'] = Role::from(trimOrNull($data['role']));
         }
 
         // Handle JobTitleContainer conversion
@@ -658,22 +658,22 @@ class User extends UserModel implements Entity
 
         // Create instance bypassing full constructor validation
         $instance = new self(
-            $defaults['id'],
-            $defaults['publicId'],
-            $defaults['firstName'],
-            $defaults['middleName'],
-            $defaults['lastName'],
-            $defaults['gender'],
-            $defaults['birthDate'],
-            $defaults['role'],
-            $defaults['jobTitles'],
-            $defaults['contactNumber'],
-            $defaults['email'],
-            $defaults['bio'],
-            $defaults['profileLink'],
-            $defaults['createdAt'],
-            $defaults['password'],
-            $defaults['additionalInfo']
+            id: $defaults['id'],
+            publicId: $defaults['publicId'],
+            firstName: $defaults['firstName'],
+            middleName: $defaults['middleName'],
+            lastName: $defaults['lastName'],
+            gender: $defaults['gender'],
+            birthDate: $defaults['birthDate'],
+            role: $defaults['role'],
+            jobTitles: $defaults['jobTitles'],
+            contactNumber: $defaults['contactNumber'],
+            email: $defaults['email'],
+            bio: $defaults['bio'],
+            profileLink: $defaults['profileLink'],
+            createdAt: $defaults['createdAt'],
+            password: $defaults['password'],
+            additionalInfo: $defaults['additionalInfo']
         );
 
         return $instance;
@@ -797,19 +797,19 @@ class User extends UserModel implements Entity
         if ($data['publicId'] instanceof UUID) {
             $publicId = $data['publicId'];
         } else if (is_string($data['publicId'])) {
-            $publicId = UUID::fromBinary($data['publicId']);
+            $publicId = UUID::fromBinary(trimOrNull($data['publicId']));
         }
 
         $gender = (!($data['gender'] instanceof Gender))
-            ? Gender::from(($data['gender']))
+            ? Gender::from(trimOrNull($data['gender']))
             : $data['gender'];
 
         $birthDate = (is_string($data['birthDate']))
-            ? new DateTime($data['birthDate'])
+            ? new DateTime(trimOrNull($data['birthDate']))
             : $data['birthDate'];
 
         $role = (!($data['role'] instanceof Role))
-            ? Role::tryFrom($data['role'])
+            ? Role::tryFrom(trimOrNull($data['role']))
             : $data['role'];
 
         $jobTitles = (!($data['jobTitles'] instanceof JobTitleContainer))
@@ -817,23 +817,23 @@ class User extends UserModel implements Entity
             : $data['jobTitles'];
 
         $createdAt = (is_string($data['createdAt']))
-            ? new DateTime($data['createdAt'])
+            ? new DateTime(trimOrNull($data['createdAt']))
             : $data['createdAt'];
 
         return new User(
             id: $data['id'],
             publicId: $publicId,
-            firstName: $data['firstName'],
-            middleName: $data['middleName'],
-            lastName: $data['lastName'],
+            firstName: trimOrNull($data['firstName']),
+            middleName: trimOrNull($data['middleName']),
+            lastName: trimOrNull($data['lastName']),
             gender: $gender,
             birthDate: $birthDate,
             role: $role,
             jobTitles: $jobTitles,
-            contactNumber: $data['contactNumber'],
-            email: $data['email'],
-            bio: $data['bio'],
-            profileLink: $data['profileLink'],
+            contactNumber: trimOrNull($data['contactNumber']),
+            email: trimOrNull($data['email']),
+            bio: trimOrNull($data['bio']),
+            profileLink: trimOrNull($data['profileLink']),
             createdAt: $createdAt,
             additionalInfo: $data['additionalInfo'] ?? [],
             password: $data['password'] ?? null
