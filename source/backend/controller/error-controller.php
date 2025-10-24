@@ -17,6 +17,7 @@ class ErrorController implements Controller
             'title' => '404 Not Found',
             'status' => '404'
         ]);
+        http_response_code(404);
     }
 
     public static function forbidden(): void
@@ -25,5 +26,6 @@ class ErrorController implements Controller
             'title' => '403 Forbidden',
             'status' => '403'
         ]); 
+        http_response_code(403);
     }
 }

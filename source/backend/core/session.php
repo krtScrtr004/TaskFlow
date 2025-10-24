@@ -4,7 +4,7 @@ namespace App\Core;
 
 class Session
 {
-    private static ?self $instance = null;
+    private static ?Session $session = null;
 
     private function __construct()
     {
@@ -15,10 +15,10 @@ class Session
 
     public static function create(): self
     {
-        if (!self::$instance) {
-            self::$instance = new self();
+        if (!self::$session) {
+            self::$session = new self();
         }
-        return self::$instance;
+        return self::$session;
     }
 
     public static function isSet(): bool

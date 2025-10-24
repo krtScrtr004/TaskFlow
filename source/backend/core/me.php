@@ -11,43 +11,51 @@ use DateTime;
 
 class Me extends User
 {
-    private Me $me;
-
-    private function __construct()
-    {
-        // TODO: Implement actual user session retrieval logic
-        parent::__construct(
-            id: random_int(1, 1000),
-            publicId: UUID::get(),
-            firstName: 'Zing',
-            middleName: 'Zang',
-            lastName: 'Yang',
-            gender: Gender::MALE,
-            birthDate: new DateTime('2000-01-01'),
-            role: Role::PROJECT_MANAGER,
-            jobTitles: new JobTitleContainer(['Project Manager']),
-            contactNumber: '123-456-7890',
-            email: 'zing.zang@example.com',
-            bio: null,
-            profileLink: null,
-            createdAt: new DateTime('2023-01-01 12:00:00'),
-            additionalInfo: [
-                'terminationCount' => 3
-            ]
-        );
-    }
+    private static Me $me;
 
     public static function instantiate(User|array $data): void
     {
         if ($data instanceof User) {
-            self::$me = $data;
+            self::$me = new self(
+                id: $data->getId(),
+                publicId: $data->getPublicId(),
+                firstName: $data->getFirstName(),
+                middleName: $data->getMiddleName(),
+                lastName: $data->getLastName(),
+                gender: $data->getGender(),
+                birthDate: $data->getBirthDate(),
+                role: $data->getRole(),
+                jobTitles: $data->getJobTitles(),
+                contactNumber: $data->getContactNumber(),
+                email: $data->getEmail(),
+                bio: $data->getBio(),
+                profileLink: $data->getProfileLink(),
+                createdAt: $data->getCreatedAt(),
+                additionalInfo: $data->getAdditionalInfo()
+            );
         } else {
-            self::$me = parent::fromArray($data);
+            self::$me = new self(
+                id: $data['id'],
+                publicId: UUID::fromString($data['publicId']),
+                firstName: $data['firstName'],
+                middleName: $data['middleName'] ?? null,
+                lastName: $data['lastName'],
+                gender: Gender::from($data['gender']),
+                birthDate: isset($data['birthDate']) ? new DateTime($data['birthDate']) : null,
+                role: Role::from($data['role']),
+                jobTitles: new JobTitleContainer(explode(',', $data['jobTitles'] ?? '')),
+                contactNumber: $data['contactNumber'],
+                email: $data['email'],
+                bio: $data['bio'] ?? null,
+                profileLink: $data['profileLink'] ?? null,
+                createdAt: new DateTime($data['createdAt']),
+                additionalInfo: $data['additionalInfo'] ?? null
+            );
         }
     }
 
-    public static function getInstance(): self
+    public static function getInstance(): ?self
     {
-        return new self();
+        return self::$me ?? null;
     }
 }

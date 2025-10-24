@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Auth\SessionAuth;
 use App\Interface\Controller;
 use App\Core\Session;
 
@@ -30,9 +31,9 @@ class IndexController implements Controller
 
     public static function index(): void
     {
-        $session = Session::create();
-        if ($session->isSet())
-            $session->destroy();
+        if (SessionAuth::hasAuthorizedSession()) {
+            SessionAuth::destroySession();
+        }
 
         // Dynamically display appropriate page (login / signup) based on URL
         $uris = explode('/', $_SERVER['REQUEST_URI']);

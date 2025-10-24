@@ -274,10 +274,11 @@ class TaskModel extends Model
         return true;
     }
 
-    public static function create(mixed $data): void
+    public static function create(mixed $data): mixed
     {
         if (!($data instanceof self)) {
             throw new InvalidArgumentException('Expected instance of TaskModel');
         }
+        return null;
     }
 }

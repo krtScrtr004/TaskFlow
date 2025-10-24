@@ -2,6 +2,8 @@
 
 namespace App\Core;
 
+use App\Exception\ForbiddenException;
+use Ramsey\Uuid\Exception\InvalidUuidStringException;
 use Ramsey\Uuid\Uuid as RamseyUuid;
 use Ramsey\Uuid\UuidInterface;
 
@@ -21,7 +23,11 @@ class UUID
 
     public static function fromString(string $uuidString): UUID
     {
-        return new UUID(RamseyUuid::fromString($uuidString));
+        try {
+            return new UUID(RamseyUuid::fromString($uuidString));
+        } catch (InvalidUuidStringException $th) {
+            throw new ForbiddenException('Invalid UUID string provided.');
+        }
     }
 
     public static function toString(UUID $id): string
@@ -37,7 +43,11 @@ class UUID
 
     public static function fromBinary(string $binaryUuid): UUID
     {
-        // Convert 16-byte binary back to UUID object
-        return new UUID(RamseyUuid::fromBytes($binaryUuid));    
+        try {
+            // Convert 16-byte binary back to UUID object
+            return new UUID(RamseyUuid::fromBytes($binaryUuid));
+        } catch (InvalidUuidStringException $th) {
+            throw new ForbiddenException('Invalid UUID string provided.');
+        }
     }
 }

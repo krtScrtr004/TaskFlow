@@ -20,6 +20,7 @@ define('DIALOG_PATH', COMPONENT_PATH . 'dialog' . DS);
 define('FUNCTION_COMPONENT_PATH', COMPONENT_PATH . 'function' . DS);
 
 define('ABSTRACT_PATH', BACKEND_PATH . 'abstract' . DS);
+define('AUTH_PATH', BACKEND_PATH . 'auth' . DS);
 define('CORE_PATH', BACKEND_PATH . 'core' . DS);
 define('CONTAINER_PATH', BACKEND_PATH . 'container' . DS);
 define('CONTROLLER_PATH', BACKEND_PATH . 'controller' . DS);

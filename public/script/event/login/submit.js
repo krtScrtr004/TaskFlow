@@ -9,15 +9,19 @@ let isLoading = false
 
 const loginForm = document.querySelector('#login_form')
 const loginButton = loginForm?.querySelector('#login_button')
+
+// Create debounced version of submit function
+const debouncedSubmit = debounceAsync(submit, 300)
+
 if (loginButton) {
-    loginButton.addEventListener('click', e => debounceAsync(submit(e), 300))
+    loginButton.addEventListener('click', debouncedSubmit)
 } else {
     console.error('Login button not found.')
     Dialog.somethingWentWrong()
 }
 
 if (loginForm) {
-    loginForm.addEventListener('submit', e => debounceAsync(submit(e), 300))
+    loginForm.addEventListener('submit', debouncedSubmit)
 } else {
     console.error('Login form not found.')
     Dialog.somethingWentWrong()

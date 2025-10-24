@@ -9,9 +9,8 @@ use App\Interface\Controller;
 use App\Middleware\Response;
 use App\Validator\UserValidator;
 use App\Model\UserModel;
-use App\Core\Me;
-use App\Core\Session;
 use App\Enumeration\Gender;
+use App\Auth\SessionAuth;
 use App\Container\JobTitleContainer;
 use App\Exception\ValidationException;
 use DateTime;
@@ -59,7 +58,7 @@ class AuthController implements Controller
             // TODO: Check if user has current project assigned
 
             // Create user session
-            self::setUserSession($find);
+            SessionAuth::setAuthorizedSession($find);
 
             Response::success([
                 'projectId' => null
@@ -172,7 +171,7 @@ class AuthController implements Controller
                 'createdAt' => new DateTime()
             ]);
             $newUser = UserModel::create($partialUser);
-            self::setUserSession($newUser);
+            SessionAuth::setAuthorizedSession($newUser);
 
             Response::success([], 'Registration successful. Please verify your email before logging in.', 201);
         } catch (ValidationException $e) {
@@ -191,21 +190,6 @@ class AuthController implements Controller
             Response::error('Registration Failed.', [
                 'An unexpected error occurred. Please try again.'
             ]);
-        }
-    }
-
-    private static function setUserSession(User|array $userData): void
-    {
-        if (Me::getInstance() === null) {
-            Me::instantiate($userData);
-        }
-
-        if (!Session::isSet()) {
-            Session::create();
-        }
-
-        if (!Session::has('userId')) {
-            Session::set('userId', Me::getInstance()->getId());
         }
     }
 }

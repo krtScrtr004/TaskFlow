@@ -801,7 +801,7 @@ class User extends UserModel implements Entity
         }
 
         $gender = (!($data['gender'] instanceof Gender))
-            ? Gender::from($data['gender'])
+            ? Gender::from(($data['gender']))
             : $data['gender'];
 
         $birthDate = (is_string($data['birthDate']))
