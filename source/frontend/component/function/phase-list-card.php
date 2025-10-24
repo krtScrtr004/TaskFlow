@@ -1,5 +1,8 @@
 <?php
 
+use App\Dependent\Phase;
+use App\Enumeration\WorkStatus;
+
 function phaseListCard(Phase $phase): string
 {
     $ICON_PATH = ICON_PATH;

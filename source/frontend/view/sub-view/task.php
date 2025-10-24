@@ -1,5 +1,12 @@
 <?php
 
+use App\Core\Me;
+use App\Entity\Project;
+use App\Entity\Task;
+use App\Enumeration\Role;
+use App\Enumeration\WorkStatus;
+use App\Enumeration\TaskPriority;
+
 if (!isset($project) || !$project instanceof Project)
     throw new InvalidArgumentException('Project is not defined.');
 

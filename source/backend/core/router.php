@@ -1,5 +1,9 @@
 <?php
 
+namespace App\Core;
+
+use App\Controller\ErrorController;
+
 /* 
 * Router class for handling HTTP requests and routing them to the appropriate actions.
 * This class supports GET, POST, PUT, and DELETE methods and allows for dynamic route parameters.
@@ -46,7 +50,12 @@ class Router
         if (is_callable($action)) {
             return call_user_func($action, $routeParams);
         } else {
-            return call_user_func([$action[0], $action[1]], $routeParams);
+            // If the class name doesn't have a namespace, assume it's in App\Controller
+            $className = $action[0];
+            if (strpos($className, '\\') === false) {
+                $className = 'App\\Controller\\' . $className;
+            }
+            return call_user_func([$className, $action[1]], $routeParams);
         }
     }
 
@@ -104,6 +113,7 @@ class Router
             }
         }
 
-        echo '404 not found';
+        // If no route matched, send a 404 response.
+        ErrorController::notFound();
     }
 }

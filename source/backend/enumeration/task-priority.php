@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Enumeration;
+
 enum TaskPriority: string {
     case LOW = 'low';
     case MEDIUM = 'medium';

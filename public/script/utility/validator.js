@@ -3,84 +3,143 @@ import { errorListDialog } from '../render/error-list-dialog.js'
 export function userValidationRules() {
     return {
         'firstName': {
-            condition: (inputs) => !inputs.firstName || inputs.firstName.trim() === '' || inputs.firstName.length < 1 || inputs.firstName.length > 255,
-            message: 'First name must be between 1 and 255 characters long.'
-        },
-        'firstNameFormat': {
-            condition: (inputs) => inputs.firstName && !/^[a-zA-Z\s'-]{1,255}$/.test(inputs.firstName),
-            message: 'First name contains invalid characters.'
+            condition: (inputs) => {
+                const errors = []
+                if (!inputs.firstName || inputs.firstName.trim() === '' || inputs.firstName.length < 1 || inputs.firstName.length > 255) {
+                    errors.push('First name must be between 1 and 255 characters long.')
+                } else if (!/^[a-zA-Z\s'-]{1,255}$/.test(inputs.firstName)) {
+                    errors.push('First name contains invalid characters.')
+                }
+                return errors
+            }
         },
 
         'middleName': {
-            condition: (inputs) => !inputs.middleName || inputs.middleName.trim() === '' || inputs.middleName.length < 1 || inputs.middleName.length > 255,
-            message: 'Middle name must be between 1 and 255 characters long.'
-        },
-        'middleNameFormat': {
-            condition: (inputs) => inputs.middleName && !/^[a-zA-Z\s'-]{1,255}$/.test(inputs.middleName),
-            message: 'Middle name contains invalid characters.'
+            condition: (inputs) => {
+                const errors = []
+                if (inputs.middleName && inputs.middleName.trim() !== '' && (inputs.middleName.length < 1 || inputs.middleName.length > 255)) {
+                    errors.push('Middle name must be between 1 and 255 characters long.')
+                } else if (!/^[a-zA-Z\s'-]{0,255}$/.test(inputs.middleName)) {
+                    errors.push('Middle name contains invalid characters.')
+                }
+                return errors
+            }
         },
 
         'lastName': {
-            condition: (inputs) => !inputs.lastName || inputs.lastName.trim() === '' || inputs.lastName.length < 1 || inputs.lastName.length > 255,
-            message: 'Last name must be between 1 and 255 characters long.'
+            condition: (inputs) => {
+                const errors = []
+                if (!inputs.lastName || inputs.lastName.trim() === '' || inputs.lastName.length < 1 || inputs.lastName.length > 255) {
+                    errors.push('Last name must be between 1 and 255 characters long.')
+                } else if (!/^[a-zA-Z\s'-]{1,255}$/.test(inputs.lastName)) {
+                    errors.push('Last name contains invalid characters.')
+                }
+                return errors
+            }
         },
-        'lastNameFormat': {
-            condition: (inputs) => inputs.lastName && !/^[a-zA-Z\s'-]{1,255}$/.test(inputs.lastName),
-            message: 'Last name contains invalid characters.'
+
+        'bio': {
+            condition: (inputs) => {
+                const errors = []
+                if (inputs.bio && (inputs.bio.trim().length < 10 || inputs.bio.trim().length > 500)) {
+                    errors.push('Bio must be between 10 and 500 characters long.')
+                }
+                return errors
+            }
         },
 
         'gender': {
-            condition: (inputs) => !inputs.gender || inputs.gender.trim() === '' || !(['male', 'female', 'Male', 'Female'].includes(inputs.gender)),
-            message: 'Please select a valid gender.'
+            condition: (inputs) => {
+                const errors = []
+                if (!inputs.gender || inputs.gender.trim() === '' || !(['male', 'female', 'Male', 'Female'].includes(inputs.gender))) {
+                    errors.push('Please select a valid gender.')
+                }
+                return errors
+            }
         },
 
-        // Date of Birth 
-        'dateOfBirth': {
+        'birthDate': {
             condition: (inputs) => {
+                const errors = []
                 const now = new Date()
-                const dateOfBirth = inputs.dateOfBirth
+                const birthDate = inputs.birthDate
 
-                // Check if date is valid and in the past
-                if (dateOfBirth >= now) return true
+                if (!birthDate || birthDate >= now) {
+                    errors.push('You must be at least 18 years old to register.')
+                } else {
+                    let age = now.getFullYear() - birthDate.getFullYear()
+                    const monthDiff = now.getMonth() - birthDate.getMonth()
+                    if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birthDate.getDate())) {
+                        age--
+                    }
 
-                // Calculate age
-                let age = now.getFullYear() - dateOfBirth.getFullYear()
-                const monthDiff = now.getMonth() - dateOfBirth.getMonth()
-                if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < dateOfBirth.getDate())) {
-                    age--
+                    if (age < 18) {
+                        errors.push('You must be at least 18 years old to register.')
+                    }
                 }
-
-                // Check if age is at least 18
-                return age <= 18
-            },
-            message: 'You must be at least 18 years old to register.'
+                return errors
+            }
         },
 
         'jobTitles': {
-            condition: (inputs) => !inputs.jobTitles || inputs.jobTitles.trim() === '' || inputs.jobTitles.length < 1 || inputs.jobTitles.length > 500,
-            message: 'Job titles must be between 1 and 500 characters long.'
+            condition: (inputs) => {
+                const errors = []
+                if (!inputs.jobTitles || inputs.jobTitles.trim() === '' || inputs.jobTitles.length < 1 || inputs.jobTitles.length > 500) {
+                    errors.push('Job titles must be between 1 and 500 characters long.')
+                }
+                return errors
+            }
         },
 
-        'contact': {
-            condition: (inputs) => !inputs.contact || inputs.contact.trim() === '' || inputs.contact.length < 11 || inputs.contact.length > 15,
-            message: 'Contact number must be between 11 and 15 characters long.'
+        'contactNumber': {
+            condition: (inputs) => {
+                const errors = []
+                if (!inputs.contactNumber || inputs.contactNumber.trim() === '' || inputs.contactNumber.length < 11 || inputs.contactNumber.length > 20) {
+                    errors.push('Contact number must be between 11 and 20 characters long.')
+                }
+                return errors
+            }
         },
 
         'email': {
-            // Email length validation
-            condition: (inputs) => !inputs.email || inputs.email.trim().length < 3 || inputs.email.trim().length > 255,
-            message: 'Email must be between 3 and 255 characters long.'
-        },
-        'emailFormat': {
-            // Email format validation 
-            condition: (inputs) => inputs.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inputs.email),
-            message: 'Invalid email address.'
+            condition: (inputs) => {
+                const errors = []
+                if (!inputs.email || inputs.email.trim().length < 3 || inputs.email.trim().length > 255) {
+                    errors.push('Email must be between 3 and 255 characters long.')
+                } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inputs.email)) {
+                    errors.push('Invalid email address.')
+                }
+                return errors
+            }
         },
 
         'password': {
-            // Password validation
-            condition: (inputs) => !inputs.password || inputs.password.length < 8 || inputs.password.length > 128,
-            message: 'Password must be between 8 and 128 characters long.'
+            condition: (inputs) => {
+                const errors = []
+                if (!inputs.password || inputs.password.length < 8 || inputs.password.length > 128) {
+                    errors.push('Password must be between 8 and 128 characters long.')
+                }
+                if (inputs.password && !/[a-z]/.test(inputs.password)) {
+                    errors.push('Password must contain at least one lowercase letter.')
+                }
+                if (inputs.password && !/[A-Z]/.test(inputs.password)) {
+                    errors.push('Password must contain at least one uppercase letter.')
+                }
+                if (inputs.password && /[^a-zA-Z0-9_!@'\.\-]/.test(inputs.password)) {
+                    errors.push('Password contains invalid special characters. Only _ ! @ \' . - are allowed.')
+                }
+                return errors
+            }
+        },
+
+        'role': {
+            condition: (inputs) => {
+                const errors = []
+                if (!inputs.role || !(['projectManager', 'worker'].includes(inputs.role.trim()))) {
+                    errors.push('Please select a valid role.')
+                }
+                return errors
+            }
         }
     }
 }
@@ -150,24 +209,29 @@ export function workValidationRules() {
 /**
  * Validates inputs based on provided validation rules
  * @param {Object} inputs - Object containing form input values
- * @param {Array} validationRules - Array of validation rule objects
- * @param {Function} validationRules[].condition - Function that takes inputs and returns true if invalid
- * @param {string} validationRules[].message - Error message to display if condition is true
+ * @param {Object} validationRules - Object of validation rule objects
+ * @param {Function} validationRules[].condition - Function that takes inputs and returns array of error messages
  * @return {boolean} - Returns true if all inputs are valid, otherwise false
  */
 export function validateInputs(inputs = {}, validationRules) {
     const errors = []
 
-    // Check all validations
+    // Check validations for provided inputs only
     for (const inputKey in inputs) {
         const validation = validationRules[inputKey]
-        if (validation && validation.condition(inputs)) {
-            console.error('Validation failed:', validation.message)
-            errors.push(validation.message)
+        if (validation) {
+            const fieldErrors = validation.condition(inputs)
+            if (fieldErrors && fieldErrors.length > 0) {
+                fieldErrors.forEach(errorMessage => {
+                    console.error('Validation failed:', errorMessage)
+                    errors.push(errorMessage)
+                })
+            }
         }
     }
+
     if (errors.length > 0) {
-        errorListDialog(errors, 'Validation Errors')
+        errorListDialog('Validation Errors', errors)
         return false
     }
     return true

@@ -27,7 +27,7 @@ function kebabToSentenceCase(string $string): string
 function camelToSentenceCase(string $string): string
 {
     // Converts camelCase to sentence case
-    return ucfirst(trim(preg_replace('/([a-z])([A-Z])/', '$1 $2', $string)));
+    return ucfirst(trimOrNull(preg_replace('/([a-z])([A-Z])/', '$1 $2', $string)));
 }
 
 function camelToKebabCase(string $string): string
@@ -43,7 +43,7 @@ function sentenceToSnakeCase(string $string): string
 function sentenceToKebabCase(string $string): string
 {
     // Converts sentence case to kebab-case
-    return strtolower(str_replace(' ', '-', trim($string)));
+    return strtolower(str_replace(' ', '-', trimOrNull($string)));
 }
 
 function sentenceToCamelCase(string $string): string
@@ -63,4 +63,14 @@ function formatBudgetToPesos(int $amountInCents): float {
 function isAssociativeArray(array $array): bool {
     if (empty($array)) return false;
     return array_keys($array) !== range(0, count($array) - 1);
+}
+
+function trimOrNull(?string $string): ?string
+{
+    if ($string === null) {
+        return null;
+    }
+
+    $trimmed = trim((string) $string);
+    return $trimmed === '' ? null : $trimmed;
 }

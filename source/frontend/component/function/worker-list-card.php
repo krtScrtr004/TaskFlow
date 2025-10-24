@@ -1,5 +1,7 @@
 <?php
 
+use App\Dependent\Worker;
+
 function workerListCard(Worker $worker): string
 {
     $profileLink =

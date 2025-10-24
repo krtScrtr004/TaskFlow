@@ -1,5 +1,11 @@
 <?php
 
+namespace App\Controller;
+
+use App\Auth\SessionAuth;
+use App\Interface\Controller;
+use App\Core\Session;
+
 class IndexController implements Controller
 {
     private static array $components = [
@@ -15,6 +21,7 @@ class IndexController implements Controller
             'form'  => 'register',
             'scripts' => [
                 'check-date-validity',
+                'register/select-role',
                 'register/submit'
             ]
         ],
@@ -24,9 +31,9 @@ class IndexController implements Controller
 
     public static function index(): void
     {
-        $session = Session::create();
-        if ($session->isSet())
-            $session->destroy();
+        if (SessionAuth::hasAuthorizedSession()) {
+            SessionAuth::destroySession();
+        }
 
         // Dynamically display appropriate page (login / signup) based on URL
         $uris = explode('/', $_SERVER['REQUEST_URI']);

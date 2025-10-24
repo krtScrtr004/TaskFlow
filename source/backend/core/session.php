@@ -1,8 +1,10 @@
 <?php
 
+namespace App\Core;
+
 class Session
 {
-    private static ?self $instance = null;
+    private static ?Session $session = null;
 
     private function __construct()
     {
@@ -13,47 +15,47 @@ class Session
 
     public static function create(): self
     {
-        if (!self::$instance) {
-            self::$instance = new self();
+        if (!self::$session) {
+            self::$session = new self();
         }
-        return self::$instance;
+        return self::$session;
     }
 
-    public function isSet(): bool
+    public static function isSet(): bool
     {
         return session_status() === PHP_SESSION_ACTIVE;
     }
 
-    public function set(string $key, mixed $value): void
+    public static function set(string $key, mixed $value): void
     {
         $_SESSION[$key] = $value;
     }
 
-    public function get(string $key): mixed
+    public static function get(string $key): mixed
     {
         return $_SESSION[$key] ?? null;
     }
 
-    public function has(string $key): bool
+    public static function has(string $key): bool
     {
         return isset($_SESSION[$key]);
     }
 
-    public function remove(string $key): void
+    public static function remove(string $key): void
     {
         unset($_SESSION[$key]);
     }
 
-    public function clear(): void
+    public static function clear(): void
     {
-        if ($this->isSet()) {
+        if (self::isSet()) {
             $_SESSION = [];
         }
     }
 
-    public function destroy(): void
+    public static function destroy(): void
     {
-        if ($this->isSet()) {
+        if (self::isSet()) {
             $_SESSION = [];
             session_destroy();
         }

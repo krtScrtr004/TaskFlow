@@ -1,4 +1,13 @@
 <?php
+
+use App\Core\Me;
+use App\Model\ProjectModel;
+use App\Enumeration\Role;
+use App\Enumeration\WorkStatus;
+use App\Utility\ProjectManagerPerformanceCalculator;
+use App\Utility\WorkerPerformanceCalculator;
+
+
 if (!isset($projects))
     throw new ErrorException('Projects data are required to render this view');
 

@@ -1,112 +1,112 @@
 {
 	"GET": {
 		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}/tasks/{taskId:[\\w_-]+}/workers/{workerId:[\\w_-]+}": [
-			"WorkerController",
+			"WorkerEndpoint",
 			"getTaskWorkerById"
 		],
 		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}/tasks/{taskId:[\\w_-]+}/workers(?:\\?[\\w\\s_=\\/%,&@-]+)?": [
-			"WorkerController",
+			"WorkerEndpoint",
 			"getTaskWorkerByKey"
 		],
 
 		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}/tasks/{taskId:[\\w_-]+}": [
-			"TaskController",
+			"TaskEndpoint",
 			"getTaskById"
 		],
 		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}/tasks(?:\\?[\\w\\s_=\\/%,&@-]+)?": [
-			"TaskController",
+			"TaskEndpoint",
 			"getTaskByKey"
 		],
 
 		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}/workers/{workerId:[\\w_-]+}": [
-			"WorkerController",
+			"WorkerEndpoint",
 			"getProjectWorkerById"
 		],
 		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}/workers(?:\\?[\\w\\s_=\\/%,&@-]+)?": [
-			"WorkerController",
+			"WorkerEndpoint",
 			"getProjectWorkerByKey"
 		],
 
 		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}": [
-			"ProjectController",
+			"ProjectEndpoint",
 			"getProjectById"
 		],
 		"TaskFlow/endpoint/projects(?:\\?[\\w\\s_=\\/%,&@-]+)?": [
-			"ProjectController",
+			"ProjectEndpoint",
 			"getProjectByKey"
 		],
 
 		"TaskFlow/endpoint/workers/{workerId:[\\w_-]+}": [
-			"WorkerController",
+			"WorkerEndpoint",
 			"getWorkerById"
 		],
 		"TaskFlow/endpoint/workers(?:\\?[\\w\\s_=\\/%,&@-]+)?": [
-			"WorkerController",
+			"WorkerEndpoint",
 			"getWorkerByKey"
 		],
 
-		"TaskFlow/endpoint/users/{userId:[\\w_-]+}": ["UserController", "getUserById"],
+		"TaskFlow/endpoint/users/{userId:[\\w_-]+}": ["UserEndpoint", "getUserById"],
 		"TaskFlow/endpoint/users(?:\\?[\\w\\s_=\\/%,&@-]+)?": [
-			"UserController",
+			"UserEndpoint",
 			"getUserByKey"
 		]
 	},
 
 	"POST": {
-		"TaskFlow/endpoint/users(?:/[\\w_-]+)?": ["UserController", "editUser"],
-		"TaskFlow/endpoint/users": ["UserController", "createUser"],
+		"TaskFlow/endpoint/users(?:/[\\w_-]+)?": ["UserEndpoint", "editUser"],
+		"TaskFlow/endpoint/users": ["UserEndpoint", "createUser"],
 
-		"TaskFlow/endpoint/projects": ["ProjectController", "createProject"],
+		"TaskFlow/endpoint/projects": ["ProjectEndpoint", "createProject"],
 		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/workers": [
-			"WorkerController",
+			"WorkerEndpoint",
 			"addWorkerToProject"
 		],
 		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/phases": [
-			"PhaseController",
+			"PhaseEndpoint",
 			"addPhase"
 		],
 		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/tasks": [
-			"TaskController",
+			"TaskEndpoint",
 			"addTask"
 		],
 		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}/workers": [
-			"WorkerController",
+			"WorkerEndpoint",
 			"addWorkerToTask"
 		]
 	},
 
 	"PUT": {
 		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}": [
-			"ProjectController",
+			"ProjectEndpoint",
 			"editProject"
 		],
 		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}": [
-			"TaskController",
+			"TaskEndpoint",
 			"editTask"
 		],
 		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/workers/{workerId:[\\w+_-]+}": [
-			"WorkerController",
+			"WorkerEndpoint",
 			"editWorker"
 		]
 	},
 
 	"PATCH": {
 		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}": [
-			"ProjectController",
+			"ProjectEndpoint",
 			"editProject"
 		],
-		"TaskFlow/endpoint/users/{userId:[\\w+_-]+}": ["UserController", "editUser"],
+		"TaskFlow/endpoint/users/{userId:[\\w+_-]+}": ["UserEndpoint", "editUser"],
 		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}": [
-			"TaskController",
+			"TaskEndpoint",
 			"editTask"
 		],
 		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/workers/{workerId:[\\w+_-]+}": [
-			"WorkerController",
+			"WorkerEndpoint",
 			"editWorker"
 		]
 	},
 
 	"DELETE": {
-		"TaskFlow/endpoint/users/{userId:[\\w+_-]+}": ["UserController", "deleteUser"]
+		"TaskFlow/endpoint/users/{userId:[\\w+_-]+}": ["UserEndpoint", "deleteUser"]
 	}
 }

@@ -38,9 +38,10 @@ async function submit(e) {
     const contactInput = registerForm.querySelector('#register_contact')
     const emailInput = registerForm.querySelector('#register_email')
     const passwordInput = registerForm.querySelector('#register_password')
+    const roleInput = registerForm.querySelector('input[name="role"]:checked')
     if (!firstNameInput || !middleNameInput || !lastNameInput || !genderInput ||
         !dayOfBirthInput || !monthOfBirthInput || !yearOfBirthInput ||
-        !jobTitlesInput || !emailInput || !passwordInput) {
+        !jobTitlesInput || !emailInput || !passwordInput || !roleInput) {
         throw new Error('One or more form inputs not found.')
     }
 
@@ -49,22 +50,25 @@ async function submit(e) {
         middleName: middleNameInput.value.trim(),
         lastName: lastNameInput.value.trim(),
         gender: genderInput.value.trim(),
-        dateOfBirth: new Date(`${yearOfBirthInput.value.trim()}-${monthOfBirthInput.value.trim()}-${dayOfBirthInput.value.trim()}`),
+        birthDate: new Date(
+            `${yearOfBirthInput.value.trim()}-${monthOfBirthInput.value.trim().padStart(2, '0')}-${dayOfBirthInput.value.trim().padStart(2, '0')}`
+        ),
         jobTitles: jobTitlesInput.value.trim(),
-        contact: contactInput.value.trim(),
+        contactNumber: contactInput.value.trim(),
         email: emailInput.value.trim(),
-        password: passwordInput.value.trim()
+        password: passwordInput.value.trim(),
+        role: roleInput.value.trim()
     }
 
     if (!validateInputs(inputs, userValidationRules())) return
 
     Loader.patch(registerButton.querySelector('.text-w-icon'))
     try {
-        const response = await sendToBackend(...Object.values(inputs))
-        if (!response)
-            throw new Error('No response from server.')
+        await sendToBackend(...Object.values(inputs))
 
-        window.location.href = `/TaskFlow/project`
+        const delay = 1500
+        Notification.success('Registration successful!', delay)
+        setTimeout(() => window.location.href = '/TaskFlow/home', delay)
     } catch (error) {
         console.error('Error during register:', error)
         if (error?.errors) {
@@ -82,11 +86,12 @@ async function sendToBackend(
     middleName,
     lastName,
     gender,
-    dateOfBirth,
+    birthDate,
     jobTitles,
-    contact,
+    contactNumber,
     email,
-    password
+    password,
+    role
 ) {
     try {
         if (isLoading) {
@@ -98,23 +103,17 @@ async function sendToBackend(
         if (!firstName || firstName.trim() === '')
             throw new Error('First name is required.')
 
-        if (!middleName || middleName.trim() === '')
-            throw new Error('Middle name is required.')
-
         if (!lastName || lastName.trim() === '')
             throw new Error('Last name is required.')
 
         if (!gender || gender.trim() === '')
             throw new Error('Gender is required.')
 
-        if (!dateOfBirth || isNaN(new Date(dateOfBirth).getTime()))
+        if (!birthDate || isNaN(new Date(birthDate).getTime()))
             throw new Error('Valid date of birth is required.')
 
-        if (!jobTitles || jobTitles.trim() === '')
-            throw new Error('Job titles is required.')
-
-        if (!contact || contact.trim() === '')
-            throw new Error('Contact is required.')
+        if (!contactNumber || contactNumber.trim() === '')
+            throw new Error('Contact number is required.')
 
         if (!email || email.trim() === '')
             throw new Error('Email is required.')
@@ -122,21 +121,21 @@ async function sendToBackend(
         if (!password || password.trim() === '')
             throw new Error('Password is required.')
 
+        if (!role || role.trim() === '')
+            throw new Error('Role is required.')
+
         await Http.POST('auth/register', {
             firstName: firstName.trim(),
-            middleName: middleName.trim(),
+            middleName: middleName?.trim(),
             lastName: lastName.trim(),
             gender: gender.trim(),
-            dateOfBirth: new Date(dateOfBirth).toISOString(),
-            jobTitles: jobTitles.trim(),
-            contact: contact.trim(),
+            birthDate: new Date(birthDate).toISOString(),
+            jobTitles: jobTitles?.trim(),
+            contactNumber: contactNumber.trim(),
             email: email.trim(),
-            password: password.trim()
+            password: password.trim(),
+            role: role.trim()
         })
-
-        const delay = 1500
-        Notification.success('Registration successful!', delay)
-        setTimeout(() => window.location.href = '/TaskFlow/project', delay)
     } catch (error) {
         throw error
     } finally {

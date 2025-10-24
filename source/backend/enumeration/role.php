@@ -1,5 +1,9 @@
 <?php
 
+namespace App\Enumeration;
+
+use App\Entity\User;
+
 enum Role: string {
     case PROJECT_MANAGER = 'projectManager';
     case WORKER = 'worker';

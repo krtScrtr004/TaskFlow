@@ -1,5 +1,7 @@
 <?php
 
+use App\Core\Router;
+
 try {
     $router = Router::getRouter();
 

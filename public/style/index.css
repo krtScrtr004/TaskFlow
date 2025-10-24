@@ -69,6 +69,30 @@ body.index > main {
     margin-bottom: 0.3rem;
 }
 
+#register_form .role-selection {
+    gap: 1rem;
+}
+
+#register_form .role-selection > div {
+    flex: 1;
+}
+
+#register_form .role-button {
+    width: 100%;
+    display: block;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    font-size: 1.1rem;
+    border: 1px solid var(--white);
+    border-radius: var(--border-radius);
+}
+
+#register_form .role-button.selected {
+    background-color: var(--white);
+    color: var(--black);
+    font-weight: 600;
+}
+
 #login_button,
 #register_button {
     width: 100% !important;

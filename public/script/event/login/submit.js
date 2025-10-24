@@ -9,15 +9,16 @@ let isLoading = false
 
 const loginForm = document.querySelector('#login_form')
 const loginButton = loginForm?.querySelector('#login_button')
+
 if (loginButton) {
-    loginButton.addEventListener('click', e => debounceAsync(submit(e), 300))
+    loginButton.addEventListener('click', (e) => debounceAsync(submit(e), 300))
 } else {
     console.error('Login button not found.')
     Dialog.somethingWentWrong()
 }
 
 if (loginForm) {
-    loginForm.addEventListener('submit', e => debounceAsync(submit(e), 300))
+    loginForm.addEventListener('submit', (e) => debounceAsync(submit(e), 300))
 } else {
     console.error('Login form not found.')
     Dialog.somethingWentWrong()
@@ -50,10 +51,14 @@ async function submit(e) {
 
         const projectId = response.projectId
         const redirect = (projectId && projectId.trim() !== '') ? `/${projectId}` : ``
-        window.location.href = `/TaskFlow/project${redirect}`
+        window.location.href = `/TaskFlow/home${redirect}`
     } catch (error) {
         console.error('Error during login:', error)
-        errorListDialog(error?.errors, error?.message)
+        if (error?.errors) {
+            errorListDialog(error.message, error.errors)
+        } else {
+            Dialog.somethingWentWrong()
+        }
     } finally {
         Loader.delete()
     }
@@ -79,7 +84,6 @@ async function sendToBackend(email, password) {
 
         return response.data
     } catch (error) {
-        console.error('Error during login:', error)
         throw error
     } finally {
         isLoading = false

@@ -1,5 +1,8 @@
 <?php
 
+use App\Entity\Project;
+use App\Enumeration\WorkStatus;
+
 function projectGridCard(Project $project): string
 {
     $id = htmlspecialchars($project->getPublicId());

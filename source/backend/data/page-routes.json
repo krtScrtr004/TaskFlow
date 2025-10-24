@@ -29,6 +29,9 @@
 
 		"TaskFlow/users(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": "UserController",
 
-		"TaskFlow/profile": "ProfileController"
+		"TaskFlow/profile": "ProfileController", 
+
+		"TaskFlow/not-found": ["ErrorController", "notFound"],
+		"TaskFlow/forbidden": ["ErrorController", "forbidden"]
 	}
 }

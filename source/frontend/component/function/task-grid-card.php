@@ -1,6 +1,11 @@
 <?php
 
-function taskGridCard($task, $projectId): string
+use App\Entity\Task;
+use App\Core\UUID;
+use App\Enumeration\TaskPriority;
+use App\Enumeration\WorkStatus;
+
+function taskGridCard(Task $task, $projectId): string
 {
     $id = htmlspecialchars($task->getPublicId());
     $name = htmlspecialchars($task->getName());

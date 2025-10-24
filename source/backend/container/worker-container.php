@@ -1,5 +1,13 @@
 <?php
 
+namespace App\Container;
+
+use App\Abstract\Container;
+use App\Dependent\Worker;
+use App\Entity\User;
+use App\Enumeration\Role;
+use InvalidArgumentException;
+
 class WorkerContainer extends Container
 {
     public function __construct(array $workers = [])
@@ -32,10 +40,27 @@ class WorkerContainer extends Container
         }
     }
 
-
-
-    public static function fromArray(array $workersArray): WorkerContainer
+    /**
+     * Creates a WorkerContainer instance from an array of worker data.
+     *
+     * This static factory method takes an array of worker data and converts each element
+     * into a Worker object using the Worker::fromArray method. It then creates and returns
+     * a new WorkerContainer containing these Worker objects.
+     *
+     * @param array $data Array of worker data arrays, where each element is an instance of Worker 
+     *              or an array containing the necessary data to create a Worker instance
+     * @return WorkerContainer New WorkerContainer instance containing Worker objects created from the provided data
+     */
+    public static function fromArray(array $data): WorkerContainer
     {
-        return new WorkerContainer($workersArray);
+        $workers = new self();
+        foreach ($data as $workerData) {
+            if ($workerData instanceof Worker) {
+                $workers->add($workerData);
+            } else {
+                $workers->add(Worker::fromArray($workerData));
+            }
+        }
+        return $workers;
     }
 }

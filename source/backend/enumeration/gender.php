@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Enumeration;
+
 enum Gender: string {
     case MALE = 'male';
     case FEMALE = 'female';

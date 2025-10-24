@@ -1,5 +1,13 @@
 <?php
 
+namespace App\Abstract;
+
+use IteratorAggregate;
+use ArrayIterator;
+use Traversable;
+use Countable;
+use JsonSerializable;
+
 abstract class Container implements IteratorAggregate, Countable, JsonSerializable
 {
     protected array $items = [];
@@ -9,6 +17,11 @@ abstract class Container implements IteratorAggregate, Countable, JsonSerializab
     abstract public function remove(mixed $item): void;
 
     abstract public static function fromArray(array $data): mixed;
+
+    public function get(int $index): mixed
+    {
+        return $this->items[$index] ?? null;
+    }
 
     public function getItems(): array
     {

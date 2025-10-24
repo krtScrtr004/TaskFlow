@@ -1,8 +1,8 @@
 {
     "POST": {
-        "TaskFlow/auth/login": ["AuthController", "login"],
-        "TaskFlow/auth/register": ["AuthController", "register"],
-        "TaskFlow/auth/logout": ["AuthController", "logout"],
-        "TaskFlow/auth/verify-email": ["AuthController", "verifyEmail"]
+        "TaskFlow/endpoint/auth/login": ["AuthController", "login"],
+        "TaskFlow/endpoint/auth/register": ["AuthController", "register"],
+        "TaskFlow/endpoint/auth/logout": ["AuthController", "logout"],
+        "TaskFlow/endpoint/auth/verify-email": ["AuthController", "verifyEmail"]
     }
 }
