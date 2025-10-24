@@ -17,35 +17,147 @@ use PDOException;
 class UserModel extends Model
 {
 
-
-    public static function findByEmail(string $email): ?array
+    /**
+     * Finds a user in the database based on specified conditions.
+     *
+     * This method retrieves a single user record from the database that matches
+     * the provided WHERE clause. It supports pagination through limit and offset options.
+     *
+     * @param string $whereClause SQL WHERE clause to filter results (without the 'WHERE' keyword)
+     * @param array $params Parameters to be bound to the prepared statement
+     * @param array $options Additional query options:
+     *      - limit: int (optional) Maximum number of records to return
+     *      - offset: int (optional) Number of records to skip
+     *      - orderBy: string (optional) ORDER BY clause (without the 'ORDER BY' keywords)
+     * 
+     * @return array|null Array of User if found, null otherwise
+     * @throws DatabaseException If there is an error executing the query
+     */
+    protected static function find(string $whereClause = '', array $params = [], array $options = []): ?array
     {
         try {
-            $query = "SELECT * FROM `user` WHERE email = :email LIMIT 1";
-            $statement = Connection::getInstance()->prepare($query);
-            $statement->execute([':email' => $email]);
-            $result = $statement->fetch();
+            $query = self::appendOptionsToFindQuery("SELECT * FROM `user` WHERE $whereClause", $options);
 
-            return $result ?: null;
+            $statement = self::$connection->prepare($query);
+            $statement->execute($params);
+            $result = $statement->fetchAll();
+
+            if (empty($result)) {
+                return null;
+            }
+
+            $users = [];
+            foreach ($result as $row) {
+                $users[] = User::fromArray($row);
+            }
+            return $users;
         } catch (PDOException $th) {
             throw new DatabaseException($th->getMessage());
         }
     }
 
+    /**
+     * Finds a user by their public ID.
+     * 
+     * This method searches for a user in the database using the provided UUID.
+     * The UUID is converted to binary format for database search.
+     * 
+     * @param UUID $publicId The public UUID to search for
+     * @return User|null The User object if found, null otherwise
+     * @throws DatabaseException If a database error occurs during the search
+     */
+    public static function findByPublicId(UUID $publicId): ?User
+    {
+        try {
+            $result = self::find('publicId = :publicId', [':publicId' => UUID::toBinary($publicId)], ['limit' => 1]);
+            return $result ? $result[0] : null;
+        } catch (PDOException $th) {
+            throw new DatabaseException($th->getMessage());
+        }
+    }
+
+    /**
+     * Finds a user by their email address.
+     *
+     * This method searches the database for a user with the specified email address.
+     * It limits the result to one user since email addresses are expected to be unique.
+     * If no user is found with the given email, null is returned.
+     *
+     * @param string $email The email address to search for
+     * @return User|null User if found, null otherwise
+     * @throws DatabaseException If a database error occurs during the operation
+     */
+    public static function findByEmail(string $email): ?User
+    {
+        try {
+            $result = self::find('email = :email', [':email' => $email], ['limit' => 1]);
+            return $result ? $result[0] : null;
+        } catch (PDOException $th) {
+            throw new DatabaseException($th->getMessage());
+        }
+    }
+
+    /**
+     * Retrieves all users with pagination support.
+     *
+     * This method fetches all users from the database with optional pagination 
+     * parameters. It's a wrapper around the find() method with empty criteria.
+     *
+     * @param int $offset Number of records to skip (for pagination)
+     * @param int $limit Maximum number of records to return (default 10)
+     * @return array Array of User objects or empty array if no users found
+     * 
+     * @throws InvalidArgumentException If offset is negative or limit is less than 1
+     * @throws DatabaseException When database query fails
+     */
+    public static function all(int $offset = 0, int $limit = 10): ?array
+    {
+        if ($offset < 0) {
+            throw new InvalidArgumentException('Invalid offset value.');
+        }
+
+        if ($limit < 1) {
+            throw new InvalidArgumentException('Invalid limit value.');
+        }
+
+        try {
+            return self::find('', [], ['offset' => $offset, 'limit' => $limit]) ?: null;
+        } catch (PDOException $th) {
+            throw new DatabaseException($th->getMessage());
+        }
+    }
+
+    /**
+     * Creates a new user in the database.
+     *
+     * This method takes a User object and persists it to the database. It handles:
+     * - Sanitizing and validating all user fields
+     * - Converting null values appropriately
+     * - Securely hashing the user's password
+     * - Creating related job titles in a transaction
+     *
+     * The method uses a transaction to ensure that either all data is saved
+     * (both user record and job titles) or none at all in case of failure.
+     *
+     * @param mixed $user The User object to be created in the database
+     * @throws InvalidArgumentException If the parameter is not a User instance
+     * @throws DatabaseException If any database operation fails
+     * @return void
+     */
     public static function create(mixed $user): void
     {
         if (!($user instanceof User)) {
             throw new InvalidArgumentException('Expected instance of User');
         }
-        
+
         $uuid = UUID::get();
         $firstName = trim($user->getFirstName()) ?: null;
         $middleName = trim($user->getMiddleName()) ?: null;
         $lastName = trim($user->getLastName()) ?: null;
-        $gender = $user->getGender() ? $user->getGender()->value : null;
+        $gender = $user->getGender()?->value;
         $birthDate = $user->getBirthDate() ? formatDateTime($user->getBirthDate()) : null;
-        $role = $user->getRole() ? $user->getRole()->value : null;
-        $jobTitles = $user->getJobTitles() ? $user->getJobTitles()->toArray() : [];
+        $role = $user->getRole()?->value;
+        $jobTitles = $user->getJobTitles()?->toArray();
         $contactNumber = trim($user->getContactNumber()) ?: null;
         $email = trim($user->getEmail()) ?: null;
         $bio = trim($user->getBio()) ?: null;
@@ -119,9 +231,9 @@ class UserModel extends Model
             }
 
             $conn->commit();
-        } catch (\Throwable $th) {
+        } catch (PDOException $e) {
             $conn->rollBack();
-            throw new DatabaseException($th->getMessage());
+            throw new DatabaseException($e->getMessage());
         }
     }
 
@@ -156,51 +268,4 @@ class UserModel extends Model
     {
         return true;
     }
-
-
-    public static function all(): array
-    {
-        // $users = [
-        //     new User(
-        //         random_int(1, 1000),
-        //         uniqid(),
-        //         'Alice',
-        //         'B.',
-        //         'Smith',
-        //         Gender::FEMALE,
-        //         new DateTime('1990-05-15'),
-        //         Role::WORKER,
-        //         new JobTitleContainer(['Software Engineer', 'Team Lead', 'Architect']),
-        //         '123-456-7890',
-        //         'alice@example.com',
-        //         'Experienced developer',
-        //         null,
-        //         new DateTime('2020-01-10')
-        //     ),
-        //     new User(
-        //         random_int(1, 1000),
-        //         uniqid(),
-        //         'Bob',
-        //         'C.',
-        //         'Johnson',
-        //         Gender::MALE,
-        //         new DateTime('1985-08-22'),
-        //         Role::WORKER,
-        //         new JobTitleContainer(['Designer', 'Illustrator', 'Photographer']),
-        //         '987-654-3210',
-        //         'bob@example.com',
-        //         'Skilled designer',
-        //         null,
-        //         new DateTime('2019-03-25')
-        //     )
-        // ];
-        // return $users;
-        return [];
-    }
-
-    public static function find($id): ?self
-    {
-        return null;
-    }
-
 }

@@ -37,9 +37,13 @@ class Me extends User
         );
     }
 
-    public static function instantiate(array $data): void
+    public static function instantiate(User|array $data): void
     {
-        self::$me = parent::fromArray($data);
+        if ($data instanceof User) {
+            self::$me = $data;
+        } else {
+            self::$me = parent::fromArray($data);
+        }
     }
 
     public static function getInstance(): self

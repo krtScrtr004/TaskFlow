@@ -18,6 +18,11 @@ abstract class Container implements IteratorAggregate, Countable, JsonSerializab
 
     abstract public static function fromArray(array $data): mixed;
 
+    public function get(int $index): mixed
+    {
+        return $this->items[$index] ?? null;
+    }
+
     public function getItems(): array
     {
         return $this->items;

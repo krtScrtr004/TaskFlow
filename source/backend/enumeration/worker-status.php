@@ -3,8 +3,8 @@
 namespace App\Enumeration;
 
 enum WorkerStatus: string {
+    case UNASSIGNED = 'unassigned'; // This is only for workers who have been created but not yet assigned to any project
     case ASSIGNED = 'assigned';
-    case UNASSIGNED = 'unassigned';
     // case ON_LEAVE = 'onLeave';
     // case SUSPENDED = 'suspended';
     case TERMINATED = 'terminated';

@@ -19,25 +19,30 @@ use PDOException;
 class TaskModel extends Model
 {
     /**
-     * Finds all tasks belonging to a specific project along with their assigned workers.
+     * Finds and retrieves task data from the database based on provided criteria.
+     *
+     * This method fetches task data including associated workers from the database,
+     * organizing the results into task objects within a TaskContainer.
      * 
-     * This method retrieves all tasks associated with a given project ID from the database,
-     * including detailed information about each task and its assigned workers. The results
-     * are returned as a TaskContainer object containing Task objects, each potentially having
-     * assigned workers in a WorkerContainer.
+     * The method performs the following operations:
+     * - Executes a JOIN query between project tasks and workers
+     * - Processes pagination and sorting options if provided
+     * - Groups results by task and associates workers with their respective tasks
+     * - Converts database rows to strongly typed Task and Worker objects
+     * - Builds proper object relationships between tasks and workers
+     *
+     * @param string $whereClause SQL WHERE clause condition (without the 'WHERE' keyword)
+     * @param array $params Prepared statement parameters for the WHERE clause
+     * @param array $options Query options with the following possible keys:
+     *      - offset: int The number of rows to skip
+     *      - limit: int Maximum number of rows to return
+     *      - orderBy: string SQL ORDER BY clause (without the 'ORDER BY' keywords)
      * 
-     * @param int $projectId The ID of the project to retrieve tasks for
-     * @return TaskContainer|null Returns a TaskContainer with all project tasks and their workers,
-     *                           or null if no tasks are found for the project
-     * @throws ValidationException If the provided project ID is invalid (less than 1)
-     * @throws DatabaseException If a database error occurs during the operation
+     * @return TaskContainer|null TaskContainer with Task objects if results found, null if no results
+     * @throws DatabaseException If a database error occurs during execution
      */
-    public static function findAllByProjectId(int $projectId): ?TaskContainer
+    protected static function find(string $whereClause = '', array $params = [], array $options = []): ?TaskContainer
     {
-        if ($projectId < 1) {
-            throw new ValidationException('Invalid Project ID');
-        }
-
         try {
             $projectTaskQuery = "
                 SELECT 
@@ -64,12 +69,12 @@ class TaskModel extends Model
                 LEFT JOIN 
                     `user` AS u ON ptw.workerId = u.id
                 WHERE 
-                    pt.projectId = :projectId
-                ORDER BY 
-                    pt.id
+                    $whereClause
             ";
+            $projectTaskQuery = self::appendOptionsToFindQuery($projectTaskQuery, $options);
+
             $statement = self::$connection->prepare($projectTaskQuery);
-            $statement->execute([':projectId' => $projectId]);
+            $statement->execute($params);
             $results = $statement->fetchAll();
 
             if (empty($results)) {
@@ -135,7 +140,6 @@ class TaskModel extends Model
                     'createdAt' => $taskData['createdAt']
                 ]));
             }
-
             return $tasks;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
@@ -143,6 +147,31 @@ class TaskModel extends Model
     }
 
     /**
+     * Finds all tasks associated with a specific project.
+     *
+     * This method retrieves all tasks that belong to a given project ID from the database.
+     * It validates the project ID before performing the database query.
+     *
+     * @param int $projectId The ID of the project to find tasks for
+     * @return TaskContainer|null A container with all tasks for the specified project, or null if no tasks found
+     * @throws ValidationException If the project ID is less than 1
+     * @throws DatabaseException If there's an error during the database operation
+     */
+    public static function findAllByProjectId(int $projectId): ?TaskContainer
+    {
+        if ($projectId < 1) {
+            throw new ValidationException('Invalid Project ID');
+        }
+
+        try {
+            $tasks = self::find('projectId = :projectId', [':projectId' => $projectId]);
+            return $tasks;
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
+        }
+    }
+
+        /**
      * Retrieves all workers assigned to a specific task.
      * 
      * This method queries the database to find all users who are assigned as workers to a particular task
@@ -195,11 +224,40 @@ class TaskModel extends Model
         }
     }
 
+    /**
+     * Retrieves all tasks with pagination.
+     *
+     * This method fetches tasks from the database with optional pagination parameters:
+     * - Uses offset to skip a certain number of records
+     * - Uses limit to restrict the number of records returned
+     * - Validates input parameters before executing the query
+     * - Handles database exceptions by wrapping them in a DatabaseException
+     *
+     * @param int $offset Number of records to skip (must be non-negative)
+     * @param int $limit Maximum number of records to return (must be positive)
+     * 
+     * @throws InvalidArgumentException If offset is negative or limit is less than 1
+     * @throws DatabaseException If a database error occurs during the query
+     * 
+     * @return TaskContainer|null An array of task records or null if no records found
+     */
+    public static function all(int $offset = 0, int $limit = 10): ?TaskContainer
+    {
+        if ($offset < 0) {
+            throw new InvalidArgumentException('Invalid offset value.');
+        }
 
+        if ($limit < 1) {
+            throw new InvalidArgumentException('Invalid limit value.');
+        }
 
-
-
-
+        try {
+            $tasks = self::find('', [], ['offset' => $offset, 'limit' => $limit]);
+            return $tasks;
+        } catch (PDOException $th) {
+            throw new DatabaseException($th->getMessage());
+        }
+    }
 
 
 
@@ -220,100 +278,4 @@ class TaskModel extends Model
             throw new InvalidArgumentException('Expected instance of TaskModel');
         }
     }
-
-    public static function all(): TaskContainer
-    {
-        $workers = UserModel::all();
-        $workerContainer = new WorkerContainer();
-        foreach ($workers as $worker) {
-            $workerContainer->add($worker->toWorker());
-        }
-
-        $tasks = new TaskContainer();
-        $tasks->add(new Task(
-            random_int(1, 1000),
-            uniqid(),
-            'Task 1',
-            'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-            $workerContainer,
-            new DateTime('2023-01-02 09:00:00'),
-            new DateTime('2023-01-04 17:00:00'),
-            new DateTime('2023-01-03 16:00:00'),
-            TaskPriority::HIGH,
-            WorkStatus::COMPLETED,
-            new DateTime('2023-01-05 10:00:00'),
-        ));
-        $tasks->add(new Task(
-            random_int(1, 1000),
-            uniqid(),
-            'Task 2',
-            'This is the second task.',
-            $workerContainer,
-            new DateTime('2023-02-01 09:00:00'),
-            new DateTime('2023-02-05 17:00:00'),
-            new DateTime('2023-02-05 14:00:00'),
-            TaskPriority::MEDIUM,
-            WorkStatus::COMPLETED,
-            new DateTime('2023-01-15 11:00:00'),
-        ));
-        $tasks->add(new Task(
-            random_int(1, 1000),
-            uniqid(),
-            'Task 3',
-            'Lorem ipsum dolor sit amet. consectetur adipiscing elit. Lorem ipsum dolor sit amet. consectetur adipiscing elit. Lorem ipsum dolor sit amet. consectetur adipiscing elit.',
-            $workerContainer,
-            new DateTime('2023-03-10 09:00:00'),
-            new DateTime('2023-03-15 17:00:00'),
-            new DateTime('2023-03-11 16:00:00'),
-            TaskPriority::LOW,
-            WorkStatus::COMPLETED,
-            new DateTime('2023-03-01 12:00:00'),
-        ));
-        $tasks->add(new Task(
-            random_int(1, 1000),
-            uniqid(),
-            'Task 4',
-            'This is the fourth task.',
-            $workerContainer,
-            new DateTime('2023-04-01 09:00:00'),
-            new DateTime('2023-04-10 17:00:00'),
-            new DateTime('2023-04-05 16:00:00'),
-            TaskPriority::HIGH,
-            WorkStatus::COMPLETED,
-            new DateTime('2023-03-20 13:00:00'),
-        ));
-        $tasks->add(new Task(
-            random_int(1, 1000),
-            uniqid(),
-            'Task 5',
-            'This is the fifth task.',
-            $workerContainer,
-            new DateTime('2023-05-01 09:00:00'),
-            new DateTime('2023-05-07 17:00:00'),
-            new DateTime('2023-05-07 16:00:00'),
-            TaskPriority::MEDIUM,
-            WorkStatus::COMPLETED,
-            new DateTime('2023-04-25 14:00:00'),
-        ));
-        $tasks->add(new Task(
-            random_int(1, 1000),
-            uniqid(),
-            'Task 6',
-            'This is the sixth task.',
-            $workerContainer,
-            new DateTime('2023-06-01 09:00:00'),
-            new DateTime('2023-06-05 17:00:00'),
-            new DateTime('2023-06-04 16:00:00'),
-            TaskPriority::HIGH,
-            WorkStatus::COMPLETED,
-            new DateTime('2023-05-20 15:00:00'),
-        ));
-        return $tasks;
-    }
-
-    public static function find($id): ?self
-    {
-        return null;
-    }
-
 }
