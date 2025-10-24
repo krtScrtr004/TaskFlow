@@ -58,17 +58,8 @@ class AuthController implements Controller
 
             // TODO: Check if user has current project assigned
 
-            if (Me::getInstance() === null) {
-                Me::instantiate($find);
-            }
-
-            if (!Session::isSet()) {
-                Session::create();
-            }
-
-            if (!Session::has('user_id')) {
-                Session::set('user_id', Me::getInstance()->getId());
-            }
+            // Create user session
+            self::setUserSession($find);
 
             Response::success([
                 'projectId' => null
@@ -180,7 +171,8 @@ class AuthController implements Controller
                 'password' => $password,
                 'createdAt' => new DateTime()
             ]);
-            UserModel::create($partialUser);
+            $newUser = UserModel::create($partialUser);
+            self::setUserSession($newUser);
 
             Response::success([], 'Registration successful. Please verify your email before logging in.', 201);
         } catch (ValidationException $e) {
@@ -199,6 +191,21 @@ class AuthController implements Controller
             Response::error('Registration Failed.', [
                 'An unexpected error occurred. Please try again.'
             ]);
+        }
+    }
+
+    private static function setUserSession(User|array $userData): void
+    {
+        if (Me::getInstance() === null) {
+            Me::instantiate($userData);
+        }
+
+        if (!Session::isSet()) {
+            Session::create();
+        }
+
+        if (!Session::has('userId')) {
+            Session::set('userId', Me::getInstance()->getId());
         }
     }
 }

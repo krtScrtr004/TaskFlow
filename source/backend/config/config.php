@@ -19,6 +19,7 @@ spl_autoload_register(function ($class) {
         'core' => CORE_PATH,
         'dependent' => DEPENDENT_PATH,
         'dump' => DUMP_PATH,
+        'endpoint' => ENDPOINT_PATH,
         'entity' => ENTITY_PATH,
         'enumeration' => ENUM_PATH,
         'exception' => EXCEPTION_PATH,

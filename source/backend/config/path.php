@@ -24,6 +24,7 @@ define('CORE_PATH', BACKEND_PATH . 'core' . DS);
 define('CONTAINER_PATH', BACKEND_PATH . 'container' . DS);
 define('CONTROLLER_PATH', BACKEND_PATH . 'controller' . DS);
 define('DATA_PATH', BACKEND_PATH . 'data' . DS);
+define('ENDPOINT_PATH', BACKEND_PATH . 'endpoint' . DS);
 define('ENTITY_PATH', BACKEND_PATH . 'entity' . DS);
 define('ENUM_PATH', BACKEND_PATH . 'enumeration' . DS);
 define('EXCEPTION_PATH', BACKEND_PATH . 'exception' . DS);
