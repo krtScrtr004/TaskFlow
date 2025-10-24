@@ -50,7 +50,9 @@ async function submit(e) {
         middleName: middleNameInput.value.trim(),
         lastName: lastNameInput.value.trim(),
         gender: genderInput.value.trim(),
-        birthDate: new Date(`${yearOfBirthInput.value.trim()}-${monthOfBirthInput.value.trim()}-${dayOfBirthInput.value.trim()}`),
+        birthDate: new Date(
+            `${yearOfBirthInput.value.trim()}-${monthOfBirthInput.value.trim().padStart(2, '0')}-${dayOfBirthInput.value.trim().padStart(2, '0')}`
+        ),
         jobTitles: jobTitlesInput.value.trim(),
         contactNumber: contactInput.value.trim(),
         email: emailInput.value.trim(),
