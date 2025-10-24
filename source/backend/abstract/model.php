@@ -34,6 +34,14 @@ abstract class Model
         return false;
     }
 
+    protected function appendWhereClause(string $query, string $where): string 
+    {
+        if ($where && $where !== '') {
+            $query .= " WHERE " . $where;
+        }
+        return $query;
+    }
+
     protected function appendOptionsToFindQuery(string $query, array $options): string
     {
         if (isset($options['orderBy'])) {

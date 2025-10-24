@@ -41,9 +41,10 @@ class UserModel extends Model
                     u.*,
                     GROUP_CONCAT(ujt.title) AS jobTitles
                 FROM `user` u
-                LEFT JOIN `userJobTitle` ujt ON u.id = ujt.userId
-                WHERE $whereClause";
-            $query = $instance->appendOptionsToFindQuery($queryString, $options);
+                LEFT JOIN `userJobTitle` ujt ON u.id = ujt.userId";
+            $query = $instance->appendOptionsToFindQuery(
+                $instance->appendWhereClause($queryString, $whereClause),
+            $options);
 
             $statement = $instance->connection->prepare($query);
             $statement->execute($params);

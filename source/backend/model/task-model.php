@@ -45,7 +45,7 @@ class TaskModel extends Model
     {
         $instance = new self();
         try {
-            $projectTaskQuery = "
+            $projectTaskQueryString = "
                 SELECT 
                     pt.id AS taskId,
                     pt.publicId AS taskPublicId,
@@ -69,10 +69,10 @@ class TaskModel extends Model
                     `projectTaskWorker` AS ptw ON pt.id = ptw.taskId
                 LEFT JOIN 
                     `user` AS u ON ptw.workerId = u.id
-                WHERE 
-                    $whereClause
             ";
-            $projectTaskQuery = $instance->appendOptionsToFindQuery($projectTaskQuery, $options);
+            $projectTaskQuery = $instance->appendOptionsToFindQuery(
+                $instance->appendWhereClause($projectTaskQueryString, $whereClause),
+                $options);
 
             $statement = $instance->connection->prepare($projectTaskQuery);
             $statement->execute($params);

@@ -67,7 +67,9 @@ class ProjectModel extends Model
     {
         $instance = new self();
         try {
-            $query = $instance->appendOptionsToFindQuery("SELECT * FROM `project` WHERE $whereClause", $options);
+            $query = $instance->appendOptionsToFindQuery(
+                $instance->appendWhereClause("SELECT * FROM `project`", $whereClause), 
+                $options);
 
             $statement = $instance->connection->prepare($query);
             $statement->execute($params);

@@ -36,7 +36,9 @@ class PhaseModel extends Model
     {
         $instance = new self();
         try {
-            $query = $instance->appendOptionsToFindQuery("SELECT * FROM `projectPhase` WHERE $whereClause", $options);
+            $query = $instance->appendOptionsToFindQuery(
+                $instance->appendWhereClause("SELECT * FROM `projectPhase`", $whereClause), 
+                $options);
             $statement = $instance->connection->prepare($query);
             $statement->execute($params);
             $result = $statement->fetchAll();
