@@ -10,7 +10,7 @@
             max="255" required />
     </div>
 
-    <button id="login_button" type="button" class="blue-bg white-text">
+    <button id="login_button" type="submit" class="blue-bg white-text">
         <div class="text-w-icon">
             <img src="<?= ICON_PATH . 'login_w.svg'; ?>" alt="Log In" title="Log In" height="20" />
 
