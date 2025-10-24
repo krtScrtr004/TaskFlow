@@ -526,9 +526,7 @@ class Project implements Entity
         $publicId = null;
         if ($data['publicId'] instanceof UUID) {
             $publicId = $data['publicId'];
-        } elseif (is_string($data['publicId'])) {
-            $publicId = UUID::fromString($data['publicId']);
-        } else {
+        } else if (is_string($data['publicId'])) {
             $publicId = UUID::fromBinary($data['publicId']);
         }
 

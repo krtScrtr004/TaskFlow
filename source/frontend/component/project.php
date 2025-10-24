@@ -1,6 +1,7 @@
 <?php
 
 use App\Core\Me;
+use App\Core\UUID;
 use App\Enumeration\Role;
 use App\Enumeration\WorkStatus;
 use App\Enumeration\TaskPriority;
@@ -14,7 +15,7 @@ require_once COMPONENT_PATH . 'template/user-info-card.php';
 require_once COMPONENT_PATH . 'template/add-worker-modal.php';
 
 $projectData = [
-    'id' => htmlspecialchars($project->getPublicId()),
+    'id' => htmlspecialchars(UUID::toString($project->getPublicId())),
     'name' => htmlspecialchars($project->getName()),
     'description' => htmlspecialchars($project->getDescription()),
     'budget' => htmlspecialchars(formatNumber($project->getBudget())),

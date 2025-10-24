@@ -477,8 +477,13 @@ class User extends UserModel implements Entity
      * @throws ValidationException If the password is invalid
      * @return void
      */
-    public function setPassword(string $password): void
+    public function setPassword(?string $password): void
     {
+        if ($password === null) {
+            $this->password = null;
+            return;
+        }
+
         $this->userValidator->validatePassword($password);
         if ($this->userValidator->hasErrors()) {
             throw new ValidationException("Invalid Password", $this->userValidator->getErrors());

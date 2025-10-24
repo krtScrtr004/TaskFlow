@@ -151,13 +151,13 @@ class UserModel extends Model
      * @param mixed $user The User object to be created in the database
      * @throws InvalidArgumentException If the parameter is not a User instance
      * @throws DatabaseException If any database operation fails
-     * @return void
+     * @return User
      */
-    public static function create(mixed $user): void
+    public static function create(mixed $user): User
     {
         if (!($user instanceof User)) {
-            throw new InvalidArgumentException('Expected instance of User');
-        }
+                throw new InvalidArgumentException('Expected instance of User');
+            }
 
         $uuid = UUID::get();
         $firstName = trim($user->getFirstName()) ?: null;
@@ -222,10 +222,10 @@ class UserModel extends Model
                 ':profileLink' => $profileLink,
                 ':password' => password_hash($password, PASSWORD_ARGON2ID)
             ]);
+            $userId = $conn->lastInsertId();
 
             // Insert Job Titles, if any
             if (!empty($jobTitles)) {
-                $userId = $conn->lastInsertId();
                 $jobTitleQuery = "
                     INSERT INTO `userJobTitle` (userId, title)
                     VALUES (:userId, :title)
@@ -240,6 +240,11 @@ class UserModel extends Model
             }
 
             $conn->commit();
+
+            $user->setId((int)$userId);
+            $user->setPublicId($uuid);
+            $user->setPassword(null);
+            return $user;
         } catch (PDOException $e) {
             $conn->rollBack();
             throw new DatabaseException($e->getMessage());

@@ -59,7 +59,7 @@ abstract class Model
         return $query;
     }
 
-    abstract public static function create(mixed $data): void;
+    abstract public static function create(mixed $data): mixed;
 
     abstract public static function all(int $offset = 0, int $limit = 10): mixed;
 
