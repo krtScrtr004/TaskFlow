@@ -2,6 +2,8 @@
 
 namespace App\Core;
 
+use App\Controller\ErrorController;
+
 /* 
 * Router class for handling HTTP requests and routing them to the appropriate actions.
 * This class supports GET, POST, PUT, and DELETE methods and allows for dynamic route parameters.
@@ -111,6 +113,7 @@ class Router
             }
         }
 
-        echo '404 not found';
+        // If no route matched, send a 404 response.
+        ErrorController::notFound();
     }
 }
