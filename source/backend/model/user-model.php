@@ -16,7 +16,6 @@ use PDOException;
 
 class UserModel extends Model
 {
-
     /**
      * Finds a user in the database based on specified conditions.
      *
@@ -35,19 +34,28 @@ class UserModel extends Model
      */
     protected static function find(string $whereClause = '', array $params = [], array $options = []): ?array
     {
+        $instance = new self();
         try {
-            $query = self::appendOptionsToFindQuery("SELECT * FROM `user` WHERE $whereClause", $options);
+            $queryString = "    
+                SELECT 
+                    u.*,
+                    GROUP_CONCAT(ujt.title) AS jobTitles
+                FROM `user` u
+                LEFT JOIN `userJobTitle` ujt ON u.id = ujt.userId
+                WHERE $whereClause";
+            $query = $instance->appendOptionsToFindQuery($queryString, $options);
 
-            $statement = self::$connection->prepare($query);
+            $statement = $instance->connection->prepare($query);
             $statement->execute($params);
             $result = $statement->fetchAll();
 
-            if (empty($result)) {
+            if (!$instance->hasData($result)) {
                 return null;
             }
 
             $users = [];
             foreach ($result as $row) {
+                $row['jobTitles'] = explode(',', $row['jobTitles']);
                 $users[] = User::fromArray($row);
             }
             return $users;

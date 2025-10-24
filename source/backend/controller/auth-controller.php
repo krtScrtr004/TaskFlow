@@ -39,40 +39,83 @@ class AuthController implements Controller
         $email = $data['email'] ?? null;
         $password = $data['password'] ?? null;
 
-        $validator = new UserValidator();
-        $validator->validateEmail($email);
-        $validator->validatePassword($password);
-        if ($validator->hasErrors()) {
-            Response::error('Login Failed.', $validator->getErrors());
-        }
+        try {
+            $validator = new UserValidator();
+            $validator->validateEmail($email);
+            $validator->validatePassword($password);
+            if ($validator->hasErrors()) {
+                Response::error('Login Failed.', $validator->getErrors());
+            }
 
-        // Verify credentials
-        $find = UserModel::findByEmail($email);
-        if (!$find || !password_verify($password, $find['password'])) {
+            // Verify credentials
+            $find = UserModel::findByEmail($email);
+
+            if (!$find || !password_verify($password, $find->getPassword())) {
+                Response::error('Login Failed.', [
+                    'Invalid email or password.'
+                ]);
+            }
+
+            // TODO: Check if user has current project assigned
+
+            if (Me::getInstance() === null) {
+                Me::instantiate($find);
+            }
+
+            if (!Session::isSet()) {
+                Session::create();
+            }
+
+            if (!Session::has('user_id')) {
+                Session::set('user_id', Me::getInstance()->getId());
+            }
+
+            Response::success([
+                'projectId' => null
+            ], 'Login successful.');
+        } catch (ValidationException $e) {
+            Response::error(
+                'Login Failed.',
+                $e->getErrors()
+            );
+        } catch (DatabaseException $e) {
             Response::error('Login Failed.', [
-                'Invalid email or password.'
+                $e->getMessage()
+            ]);
+        } catch (Exception $e) {
+            Response::error('Login Failed.', [
+                'An unexpected error occurred. Please try again.'
             ]);
         }
-
-        // TODO: Check if user has current project assigned
-
-        if (!Me::getInstance() === null) {
-            Me::instantiate($find);
-        }
-
-        if (!Session::isSet()) {
-            Session::create();
-        }
-
-        if (!Session::has('user_id')) {
-            Session::set('user_id', Me::getInstance()->getId());
-        }
-
-        Response::success([
-            'projectId' => null
-        ], 'Login successful.');
     }
 
+    /**
+     * Handles user registration process.
+     * 
+     * This method processes user registration requests by:
+     * 1. Decoding and extracting user data from the request
+     * 2. Validating all user input fields
+     * 3. Checking if the email is already registered
+     * 4. Creating a new user record in the database
+     * 
+     * The method expects JSON data with user details including:
+     * - firstName: User's first name
+     * - middleName: User's middle name (optional)
+     * - lastName: User's last name
+     * - contactNumber: User's contact number
+     * - birthDate: User's date of birth
+     * - jobTitles: Comma-separated list of job titles
+     * - email: User's email address
+     * - password: User's password
+     * - gender: User's gender (must be valid enum value)
+     * - role: User's role (must be valid enum value)
+     * 
+     * @throws ValidationException When input validation fails
+     * @throws DatabaseException When database operations fail
+     * @throws Exception For any unexpected errors
+     * 
+     * @return void This method sends a JSON response directly
+     */
     public static function register(): void
     {
         $data = decodeData('php://input');
@@ -124,23 +167,20 @@ class AuthController implements Controller
             }
 
             // Create user
-            UserModel::create(new User(
-                id: null,
-                publicId: null,
-                firstName: $firstName,
-                middleName: $middleName,
-                lastName: $lastName,
-                gender: $gender,
-                birthDate: $birthDate,
-                role: $role,
-                jobTitles: $jobTitles,
-                contactNumber: $contactNumber,
-                email: $email,
-                password: $password,
-                profileLink: null,
-                bio: null,
-                createdAt: new DateTime(),
-            ));
+            $partialUser = User::createPartial([
+                'firstName' => $firstName,
+                'middleName' => $middleName,
+                'lastName' => $lastName,
+                'gender' => $gender,
+                'birthDate' => $birthDate,
+                'role' => $role,
+                'jobTitles' => $jobTitles,
+                'contactNumber' => $contactNumber,
+                'email' => $email,
+                'password' => $password,
+                'createdAt' => new DateTime()
+            ]);
+            UserModel::create($partialUser);
 
             Response::success([], 'Registration successful. Please verify your email before logging in.', 201);
         } catch (ValidationException $e) {

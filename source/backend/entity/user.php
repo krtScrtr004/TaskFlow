@@ -56,7 +56,7 @@ class User extends UserModel implements Entity
      * @param JobTitleContainer $jobTitles Container for user's job titles
      * @param string $contactNumber User's contact phone number
      * @param string $email User's email address
-     * @param string $bio User's biography or description
+     * @param string|null$bio User's biography or description (optional)
      * @param string|null $profileLink Link to user's profile (optional)
      * @param DateTime $createdAt Timestamp when the user was created
      * @param string|null $password User's password (optional)
@@ -76,7 +76,7 @@ class User extends UserModel implements Entity
         JobTitleContainer $jobTitles,
         string $contactNumber,
         string $email,
-        string $bio,
+        ?string $bio,
         ?string $profileLink,
         DateTime $createdAt,
         ?string $password = null,
@@ -601,20 +601,20 @@ class User extends UserModel implements Entity
     {
         // Provide default values for required fields
         $defaults = [
-            'id' => $data['id'] ?? null,
-            'publicId' => $data['publicId'] ?? null,
-            'firstName' => $data['firstName'] ?? '',
+            'id' => $data['id'] ?? 0,
+            'publicId' => $data['publicId'] ?? UUID::get(),
+            'firstName' => $data['firstName'] ?? 'Unknown',
             'middleName' => $data['middleName'] ?? null,
-            'lastName' => $data['lastName'] ?? '',
-            'gender' => $data['gender'] ?? null,
-            'birthDate' => $data['birthDate'] ?? null,
-            'role' => $data['role'] ?? null,
-            'jobTitles' => $data['jobTitles'] ?? null,
-            'contactNumber' => $data['contactNumber'] ?? null,
-            'email' => $data['email'] ?? null,
+            'lastName' => $data['lastName'] ?? 'User',
+            'gender' => $data['gender'] ?? Gender::MALE,
+            'birthDate' => $data['birthDate'] ?? new DateTime('2000-01-01'),
+            'role' => $data['role'] ?? Role::WORKER,
+            'jobTitles' => $data['jobTitles'] ?? new JobTitleContainer(),
+            'contactNumber' => $data['contactNumber'] ?? '00000000000',
+            'email' => $data['email'] ?? 'unknown@user.com',
             'bio' => $data['bio'] ?? null,
             'profileLink' => $data['profileLink'] ?? null,
-            'createdAt' => $data['createdAt'] ?? null,
+            'createdAt' => $data['createdAt'] ?? new DateTime(),
             'password' => $data['password'] ?? null,
             'additionalInfo' => $data['additionalInfo'] ?? []
         ];
@@ -646,7 +646,9 @@ class User extends UserModel implements Entity
 
         // Handle JobTitleContainer conversion
         if (isset($data['jobTitles']) && !($data['jobTitles'] instanceof JobTitleContainer)) {
-            $defaults['jobTitles'] = JobTitleContainer::fromArray($data['jobTitles']);
+            $defaults['jobTitles'] = is_array($data['jobTitles'])
+                ? JobTitleContainer::fromArray($data['jobTitles'])
+                : new JobTitleContainer();
         }
 
         // Create instance bypassing full constructor validation
@@ -672,6 +674,18 @@ class User extends UserModel implements Entity
         return $instance;
     }
 
+    /**
+     * Converts the User entity to a Worker entity.
+     *
+     * This method creates a new Worker instance using the current User's data.
+     * The Worker is created with:
+     * - All personal information from the User (names, gender, birth date, etc.)
+     * - Status automatically set to WorkerStatus::ASSIGNED
+     * - createdAt set to current DateTime
+     * - All other properties transferred directly from the User
+     *
+     * @return Worker New Worker instance with data from this User and status set to ASSIGNED
+     */
     public function toWorker(): Worker
     {
         return new Worker(
@@ -693,6 +707,34 @@ class User extends UserModel implements Entity
         );
     }
 
+    /**
+     * Converts the User entity to an array representation.
+     *
+     * This method serializes the User object into an associative array format
+     * suitable for JSON responses or data transfer. It formats certain fields:
+     * - Converts UUID publicId to string representation
+     * - Extracts gender display name from Gender enum
+     * - Formats birthDate as 'Y-m-d' string
+     * - Converts role enum to string
+     * - Serializes jobTitles collection to array
+     * - Formats createdAt timestamp as 'Y-m-d H:i:s' string
+     *
+     * @return array Associative array containing user data with following keys:
+     *      - id: string Public user identifier
+     *      - firstName: string User's first name
+     *      - middleName: string User's middle name
+     *      - lastName: string User's last name
+     *      - gender: string User's gender display name
+     *      - birthDate: string User's birth date (Y-m-d format)
+     *      - role: string User's role
+     *      - jobTitles: array User's job titles as array
+     *      - contactNumber: string User's contact number
+     *      - email: string User's email address
+     *      - bio: string User's biography
+     *      - profileLink: string User's profile link
+     *      - createdAt: string User creation timestamp (Y-m-d H:i:s format)
+     *      - additionalInfo: array Additional user information
+     */
     public function toArray(): array
     {
         return [
@@ -750,8 +792,6 @@ class User extends UserModel implements Entity
         if ($data['publicId'] instanceof UUID) {
             $publicId = $data['publicId'];
         } else if (is_string($data['publicId'])) {
-            $publicId = UUID::fromString($data['publicId']);
-        } else {
             $publicId = UUID::fromBinary($data['publicId']);
         }
 

@@ -43,6 +43,7 @@ class TaskModel extends Model
      */
     protected static function find(string $whereClause = '', array $params = [], array $options = []): ?TaskContainer
     {
+        $instance = new self();
         try {
             $projectTaskQuery = "
                 SELECT 
@@ -71,9 +72,9 @@ class TaskModel extends Model
                 WHERE 
                     $whereClause
             ";
-            $projectTaskQuery = self::appendOptionsToFindQuery($projectTaskQuery, $options);
+            $projectTaskQuery = $instance->appendOptionsToFindQuery($projectTaskQuery, $options);
 
-            $statement = self::$connection->prepare($projectTaskQuery);
+            $statement = $instance->connection->prepare($projectTaskQuery);
             $statement->execute($params);
             $results = $statement->fetchAll();
 
@@ -171,7 +172,7 @@ class TaskModel extends Model
         }
     }
 
-        /**
+    /**
      * Retrieves all workers assigned to a specific task.
      * 
      * This method queries the database to find all users who are assigned as workers to a particular task
@@ -189,6 +190,7 @@ class TaskModel extends Model
             throw new ValidationException('Invalid Task ID');
         }
 
+        $instance = new self();
         try {
             $taskWorkerQuery = "
                 SELECT 
@@ -206,19 +208,19 @@ class TaskModel extends Model
                     u.id = tw.workerId
                 WHERE 
                     tw.taskId = :taskId";
-            $statement = self::$connection->prepare($taskWorkerQuery);
+            $statement = $instance->connection->prepare($taskWorkerQuery);
             $statement->execute([':taskId' => $taskId]);
             $result = $statement->fetchAll();
 
-            if (!empty($result)) {
-                $workers = new WorkerContainer();
-                foreach ($result as $item) {
-                    $workers->add(User::fromArray($item)->toWorker());
-                }
-                return $workers;
-            } else {
+            if (!$instance->hasData($result)) {
                 return null;
             }
+
+            $workers = new WorkerContainer();
+            foreach ($result as $item) {
+                $workers->add(User::fromArray($item)->toWorker());
+            }
+            return $workers;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }

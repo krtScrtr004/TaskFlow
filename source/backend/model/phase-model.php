@@ -34,13 +34,14 @@ class PhaseModel extends Model
      */
     protected static function find(string $whereClause = '', array $params = [], array $options = []): ?PhaseContainer
     {
+        $instance = new self();
         try {
-            $query = self::appendOptionsToFindQuery("SELECT * FROM `projectPhase` WHERE $whereClause", $options);
-            $statement = self::$connection->prepare($query);
+            $query = $instance->appendOptionsToFindQuery("SELECT * FROM `projectPhase` WHERE $whereClause", $options);
+            $statement = $instance->connection->prepare($query);
             $statement->execute($params);
             $result = $statement->fetchAll();
 
-            if (empty($result)) {
+            if (!$instance->hasData($result)) {
                 return null;
             }
 

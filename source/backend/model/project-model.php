@@ -65,14 +65,15 @@ class ProjectModel extends Model
      */
     protected static function find(string $whereClause = '', array $params = [], array $options = []): ?ProjectContainer
     {
+        $instance = new self();
         try {
-            $query = self::appendOptionsToFindQuery("SELECT * FROM `project` WHERE $whereClause", $options);
+            $query = $instance->appendOptionsToFindQuery("SELECT * FROM `project` WHERE $whereClause", $options);
 
-            $statement = self::$connection->prepare($query);
+            $statement = $instance->connection->prepare($query);
             $statement->execute($params);
             $result = $statement->fetchAll();
 
-            if (empty($result)) {
+            if (!$instance->hasData($result)) {
                 return null;
             }
 
@@ -92,6 +93,7 @@ class ProjectModel extends Model
             throw new InvalidArgumentException('Invalid project ID provided.');
         }
 
+        $instance = new self();
         try {
             $query = "
                 SELECT 
@@ -170,7 +172,7 @@ class ProjectModel extends Model
                     p.id = :projectId
             ";
 
-            $statement = self::$connection->prepare($query);
+            $statement = $instance->connection->prepare($query);
             $statement->execute([':projectId' => $projectId]);
             $result = $statement->fetch();
 
@@ -409,6 +411,7 @@ class ProjectModel extends Model
             throw new InvalidArgumentException('Invalid project ID provided.');
         }
 
+        $instance = new self();
         try {
             $query = "
                 SELECT 
@@ -420,7 +423,7 @@ class ProjectModel extends Model
                 WHERE 
                     pw.projectId = :projectId
             ";
-            $statement = self::$connection->prepare($query);
+            $statement = $instance->connection->prepare($query);
             $statement->execute([':projectId' => $projectId]);
             $result = $statement->fetchAll();
 

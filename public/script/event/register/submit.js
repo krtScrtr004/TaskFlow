@@ -62,11 +62,11 @@ async function submit(e) {
 
     Loader.patch(registerButton.querySelector('.text-w-icon'))
     try {
-        const response = await sendToBackend(...Object.values(inputs))
-        if (!response)
-            throw new Error('No response from server.')
+        await sendToBackend(...Object.values(inputs))
 
-        window.location.href = `/TaskFlow/home`
+        const delay = 1500
+        Notification.success('Registration successful!', delay)
+        setTimeout(() => window.location.href = '/TaskFlow/home', delay)
     } catch (error) {
         console.error('Error during register:', error)
         if (error?.errors) {
@@ -101,9 +101,6 @@ async function sendToBackend(
         if (!firstName || firstName.trim() === '')
             throw new Error('First name is required.')
 
-        if (!middleName || middleName.trim() === '')
-            throw new Error('Middle name is required.')
-
         if (!lastName || lastName.trim() === '')
             throw new Error('Last name is required.')
 
@@ -112,9 +109,6 @@ async function sendToBackend(
 
         if (!birthDate || isNaN(new Date(birthDate).getTime()))
             throw new Error('Valid date of birth is required.')
-
-        if (!jobTitles || jobTitles.trim() === '')
-            throw new Error('Job titles is required.')
 
         if (!contactNumber || contactNumber.trim() === '')
             throw new Error('Contact number is required.')
@@ -130,20 +124,16 @@ async function sendToBackend(
 
         await Http.POST('auth/register', {
             firstName: firstName.trim(),
-            middleName: middleName.trim(),
+            middleName: middleName?.trim(),
             lastName: lastName.trim(),
             gender: gender.trim(),
             birthDate: new Date(birthDate).toISOString(),
-            jobTitles: jobTitles.trim(),
+            jobTitles: jobTitles?.trim(),
             contactNumber: contactNumber.trim(),
             email: email.trim(),
             password: password.trim(),
             role: role.trim()
         })
-
-        const delay = 1500
-        Notification.success('Registration successful!', delay)
-        setTimeout(() => window.location.href = '/TaskFlow/project', delay)
     } catch (error) {
         throw error
     } finally {

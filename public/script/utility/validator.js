@@ -17,9 +17,9 @@ export function userValidationRules() {
         'middleName': {
             condition: (inputs) => {
                 const errors = []
-                if (!inputs.middleName || inputs.middleName.trim() === '' || inputs.middleName.length < 1 || inputs.middleName.length > 255) {
+                if (inputs.middleName && inputs.middleName.trim() !== '' && (inputs.middleName.length < 1 || inputs.middleName.length > 255)) {
                     errors.push('Middle name must be between 1 and 255 characters long.')
-                } else if (!/^[a-zA-Z\s'-]{1,255}$/.test(inputs.middleName)) {
+                } else if (!/^[a-zA-Z\s'-]{0,255}$/.test(inputs.middleName)) {
                     errors.push('Middle name contains invalid characters.')
                 }
                 return errors

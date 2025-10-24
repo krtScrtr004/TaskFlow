@@ -14,18 +14,38 @@ abstract class Model
         $this->connection = Connection::getInstance();
     }
 
-    protected static function appendOptionsToFindQuery(string $query, array $options): string
+    protected function hasData(array $data): bool
     {
+        foreach ($data as $value) {
+            if (is_array($value)) {
+                if (empty($value)) {
+                    return false;
+                } else {
+                    foreach ($value as $subValue) {
+                        if ($subValue !== null && $subValue !== '') {
+                            return true;
+                        }
+                    }
+                }
+            } elseif ($value !== null && $value !== '') {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    protected function appendOptionsToFindQuery(string $query, array $options): string
+    {
+        if (isset($options['orderBy'])) {
+            $query .= " ORDER BY " . $options['orderBy'];
+        }
+
         if (isset($options['limit']) && is_numeric($options['limit'])) {
             $query .= " LIMIT " . intval($options['limit']);
         }
 
         if (isset($options['offset']) && is_numeric($options['offset'])) {
             $query .= " OFFSET " . intval($options['offset']);
-        }
-
-        if (isset($options['orderBy'])) {
-            $query .= " ORDER BY " . $options['orderBy'];
         }
 
         return $query;
