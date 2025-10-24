@@ -122,7 +122,7 @@ class AuthController implements Controller
             $lastName = isset($data['lastName']) ? (trim($data['lastName']) ?: null) : null;
             $contactNumber = isset($data['contactNumber']) ? (trim($data['contactNumber']) ?: null) : null;
             $birthDate = isset($data['birthDate']) ? new DateTime(trim($data['birthDate'])) : null;
-            $jobTitles = isset($data['jobTitles']) ? new JobTitleContainer(explode(',', trim($data['jobTitles']))) : null;
+            $jobTitles = isset($data['jobTitles']) ? new JobTitleContainer(array_filter(explode(',', trim($data['jobTitles'])), fn($title) => trim($title) !== '')) : null;
             $email = isset($data['email']) ? (trim($data['email']) ?: null) : null;
             $password = isset($data['password']) ? (trim($data['password']) ?: null) : null;
             $gender = isset($data['gender']) ? (trim($data['gender']) ? Gender::tryFrom(trim($data['gender'])) : null) : null;
