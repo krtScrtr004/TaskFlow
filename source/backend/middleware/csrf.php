@@ -1,6 +1,6 @@
 <?php
 
-namespace Middleware;
+namespace App\Middleware;
 
 use App\Core\Session;
 use App\Exception\ForbiddenException;
@@ -13,6 +13,7 @@ class Csrf {
         }
         return Session::get('csrfToken');
     }
+
     // Validate token from POST request
     public static function validate(string $token): bool {
         if (!Session::has('csrfToken') || !$token) {
