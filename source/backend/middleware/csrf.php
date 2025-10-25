@@ -5,7 +5,11 @@ namespace App\Middleware;
 use App\Core\Session;
 use App\Exception\ForbiddenException;
 
-class Csrf {
+class Csrf {    
+    public static function get(): ?string {
+        return Session::get('csrfToken');
+    }
+
      // Generate token and store in session
     public static function generate(): string {
         if (!Session::has('csrfToken')) {
