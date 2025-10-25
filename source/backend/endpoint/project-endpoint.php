@@ -11,7 +11,52 @@ use InvalidArgumentException;
 
 class ProjectEndpoint
 {
-        public static function getProjectById(array $args = []): void
+    public static function createProject(): void
+    {
+        /**
+         * Requirements:
+         * Project:
+         * - Name: string
+         * - Description: string
+         * - Budget: float
+         * - Start Date: string (YYYY-MM-DD)
+         * - Completion Date: string (YYYY-MM-DD)
+         * 
+         * Phases: Array
+         * - Name: string
+         * - Description: string
+         * - Start Date: string (YYYY-MM-DD)
+         * - Completion Date: string (YYYY-MM-DD)
+         */
+        $data = decodeData('php://input');
+        if (!$data) {
+            Response::error('Cannot decode data.');
+        }
+
+        // TODO: Validate and sanitize $data
+
+        Response::success(['id' => uniqid()], 'Project created successfully.', 201);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    public static function getProjectById(array $args = []): void
     {
         $projectId = $args['projectId'] ?? null; // Temporary placeholder
         if (!$projectId)
@@ -31,31 +76,7 @@ class ProjectEndpoint
         Response::success([$projects->getItems()[0]], 'Projects retrieved successfully.');
     }
 
-    public static function createProject(): void
-    {
-        /**
-         * Requirements:
-         * Project:
-         * - Name: string
-         * - Description: string
-         * - Budget: float
-         * - Start Date: string (YYYY-MM-DD)
-         * - Completion Date: string (YYYY-MM-DD)
-         * 
-         * Phases: Array
-         * - Name: string
-         * - Description: string
-         * - Start Date: string (YYYY-MM-DD)
-         * - Completion Date: string (YYYY-MM-DD)
-         */
-        $data = decodeData('php://input');
-        if (!$data)
-            Response::error('Cannot decode data.');
 
-        // TODO: Validate and sanitize $data
-
-        Response::success(['id' => uniqid()], 'Project created successfully.', 201);
-    }
 
     public static function editProject(array $args = []): void
     {

@@ -26,7 +26,7 @@
                     <p>Description</p>
                 </div>
             </label>
-            <textarea name="project-description" id="project_description" rows="5" cols="10"></textarea>
+            <textarea name="project-description" id="project_description" rows="5" cols="10" placeholder="(Optional) Type here..."></textarea>
         </div>
 
         <!-- Project Secondary Info -->
@@ -103,7 +103,7 @@
     </fieldset>
 
     <!-- Submit Button -->
-    <button id="submit_project_button" type="button" class="blue-bg">
+    <button id="submit_project_button" type="submit" class="blue-bg">
         <div class="text-w-icon">
             <img src="<?= ICON_PATH . 'save_w.svg' ?>" alt="Submit Project" title="Submit Project" height="20">
             <h3 class="white-text">Submit</h3>
