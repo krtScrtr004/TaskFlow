@@ -10,7 +10,8 @@ export const Http = (() => {
             if (body !== null && ['POST', 'PUT', 'PATCH'].includes(method)) {
                 if (serialize) {
                     options.headers = {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': document.querySelector('meta[name="csrfToken"]').getAttribute('content')
                     }
                     options.body = JSON.stringify(body)
                 } else {
