@@ -446,6 +446,141 @@ class Project implements Entity
     // OTHER METHODS (UTILITY)
 
     /**
+     * Creates a Project instance from an array of data with partial information.
+     *
+     * This method provides a flexible way to create a Project instance without requiring
+     * all fields to be present, supplying default values where necessary. It also
+     * handles different data formats and converts them to appropriate types:
+     * - Converts publicId to UUID object
+     * - Ensures manager is a User object
+     * - Ensures tasks is a TaskContainer object
+     * - Ensures workers is a WorkerContainer object
+     * - Ensures phases is a PhaseContainer object
+     * - Converts startDateTime string to DateTime
+     * - Converts completionDateTime string to DateTime
+     * - Converts actualCompletionDateTime string to DateTime
+     * - Ensures status is a WorkStatus enum
+     * - Converts createdAt string to DateTime
+     *
+     * @param array $data Associative array containing project data with following possible keys:
+     *      - id: int|null Project ID
+     *      - publicId: string|UUID|null Public identifier
+     *      - name: string Project name
+     *      - description: string|null Project description
+     *      - manager: array|User|null Project manager information
+     *      - budget: float|int|null Project budget
+     *      - tasks: array|TaskContainer|null Project tasks
+     *      - workers: array|WorkerContainer|null Project workers
+     *      - phases: array|PhaseContainer|null Project phases
+     *      - startDateTime: string|DateTime|null Project start date and time
+     *      - completionDateTime: string|DateTime|null Expected project completion date and time
+     *      - actualCompletionDateTime: string|DateTime|null Actual project completion date and time
+     *      - status: string|WorkStatus|null Project work status
+     *      - createdAt: string|DateTime|null Project creation timestamp
+     * 
+     * @return self New Project instance created from provided data with defaults for missing values
+     */
+    public static function createPartial(array $data): self
+    {
+        // Provide default values for required fields
+        $defaults = [
+            'id' => $data['id'] ?? 0,
+            'publicId' => $data['publicId'] ?? UUID::get(),
+            'name' => $data['name'] ?? 'Untitled Project',
+            'description' => $data['description'] ?? 'No description provided',
+            'manager' => $data['manager'] ?? User::createPartial([]),
+            'budget' => $data['budget'] ?? 0,
+            'tasks' => $data['tasks'] ?? null,
+            'workers' => $data['workers'] ?? new WorkerContainer(),
+            'phases' => $data['phases'] ?? null,
+            'startDateTime' => $data['startDateTime'] ?? new DateTime(),
+            'completionDateTime' => $data['completionDateTime'] ?? new DateTime('+30 days'),
+            'actualCompletionDateTime' => $data['actualCompletionDateTime'] ?? null,
+            'status' => $data['status'] ?? WorkStatus::PENDING,
+            'createdAt' => $data['createdAt'] ?? new DateTime()
+        ];
+
+        // Handle UUID conversion
+        if (isset($data['publicId']) && !($data['publicId'] instanceof UUID)) {
+            $defaults['publicId'] = is_string($data['publicId'])
+                ? UUID::fromString(trimOrNull($data['publicId']))
+                : UUID::get();
+        }
+
+        // Handle User/Manager conversion
+        if (isset($data['manager']) && !($data['manager'] instanceof User)) {
+            $defaults['manager'] = is_array($data['manager'])
+                ? User::createPartial($data['manager'])
+                : User::createPartial([]);
+        }
+
+        // Handle TaskContainer conversion
+        if (isset($data['tasks']) && !($data['tasks'] instanceof TaskContainer)) {
+            $defaults['tasks'] = is_array($data['tasks'])
+                ? TaskContainer::fromArray($data['tasks'])
+                : null;
+        }
+
+        // Handle WorkerContainer conversion
+        if (isset($data['workers']) && !($data['workers'] instanceof WorkerContainer)) {
+            $defaults['workers'] = is_array($data['workers'])
+                ? WorkerContainer::fromArray($data['workers'])
+                : new WorkerContainer();
+        }
+
+        // Handle PhaseContainer conversion
+        if (isset($data['phases']) && !($data['phases'] instanceof PhaseContainer)) {
+            $defaults['phases'] = is_array($data['phases'])
+                ? PhaseContainer::fromArray($data['phases'])
+                : null;
+        }
+
+        // Handle DateTime conversions
+        if (isset($data['startDateTime']) && !($data['startDateTime'] instanceof DateTime)) {
+            $defaults['startDateTime'] = new DateTime(trimOrNull($data['startDateTime']));
+        }
+
+        if (isset($data['completionDateTime']) && !($data['completionDateTime'] instanceof DateTime)) {
+            $defaults['completionDateTime'] = new DateTime(trimOrNull($data['completionDateTime']));
+        }
+
+        if (isset($data['actualCompletionDateTime']) && !($data['actualCompletionDateTime'] instanceof DateTime)) {
+            $defaults['actualCompletionDateTime'] = is_string($data['actualCompletionDateTime'])
+                ? new DateTime(trimOrNull($data['actualCompletionDateTime']))
+                : null;
+        }
+
+        if (isset($data['createdAt']) && !($data['createdAt'] instanceof DateTime)) {
+            $defaults['createdAt'] = new DateTime(trimOrNull($data['createdAt']));
+        }
+
+        // Handle enum conversions
+        if (isset($data['status']) && !($data['status'] instanceof WorkStatus)) {
+            $defaults['status'] = WorkStatus::from(trimOrNull($data['status']));
+        }
+
+        // Create instance with default values
+        $instance = new self(
+            id: $defaults['id'],
+            publicId: $defaults['publicId'],
+            name: $defaults['name'],
+            description: $defaults['description'],
+            manager: $defaults['manager'],
+            budget: $defaults['budget'],
+            tasks: $defaults['tasks'],
+            workers: $defaults['workers'],
+            phases: $defaults['phases'],
+            startDateTime: $defaults['startDateTime'],
+            completionDateTime: $defaults['completionDateTime'],
+            actualCompletionDateTime: $defaults['actualCompletionDateTime'],
+            status: $defaults['status'],
+            createdAt: $defaults['createdAt']
+        );
+
+        return $instance;
+    }
+
+    /**
      * Converts the Project object to an associative array representation.
      *
      * This method transforms all project properties into a structured array format:
