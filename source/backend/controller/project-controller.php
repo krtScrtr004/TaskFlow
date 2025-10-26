@@ -35,6 +35,8 @@ class ProjectController implements Controller
                 throw new ForbiddenException('Unauthorized access.');
             }
 
+            $project = null;
+
             $projectId = isset($args['projectId']) ? UUID::fromString($args['projectId']) : null;
             if ($projectId) {
                 $instance->uuidValidator->validateUuid($projectId);
@@ -44,6 +46,7 @@ class ProjectController implements Controller
                         $instance->uuidValidator->getErrors()
                     );
                 }
+                $project = ProjectModel::findFull($projectId);
             }
 
             require_once VIEW_PATH . 'home.php';

@@ -2,7 +2,9 @@
 
 namespace App\Entity;
 
+use App\Dependent\Phase;
 use App\Interface\Entity;
+use App\Dependent\Worker;
 use App\Enumeration\WorkStatus;
 use App\Container\TaskContainer;
 use App\Container\WorkerContainer;
@@ -444,6 +446,21 @@ class Project implements Entity
     }
 
     // OTHER METHODS (UTILITY)
+
+    public function addPhase(Phase $phase): void
+    {
+        $this->phases->add($phase);
+    }
+
+    public function addTask(Task $task): void
+    {
+        $this->tasks->add($task);
+    }
+
+    public function addWorker(Worker $worker): void
+    {
+        $this->workers->add($worker);
+    }
 
     /**
      * Creates a Project instance from an array of data with partial information.

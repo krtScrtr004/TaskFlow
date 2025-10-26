@@ -50,4 +50,21 @@ class UUID
             throw new ForbiddenException('Invalid UUID string provided.');
         }
     }
+    
+    public static function fromHex(string $hexString): UUID
+    {
+        try {
+            // Convert hex string back to UUID object
+            return new UUID(RamseyUuid::fromString(
+                // Insert hyphens into the hex string to match UUID format
+                substr($hexString, 0, 8) . '-' .
+                substr($hexString, 8, 4) . '-' .
+                substr($hexString, 12, 4) . '-' .
+                substr($hexString, 16, 4) . '-' .
+                substr($hexString, 20)
+            ));
+        } catch (InvalidUuidStringException $th) {
+            throw new ForbiddenException('Invalid UUID string provided.');
+        }
+    }
 }

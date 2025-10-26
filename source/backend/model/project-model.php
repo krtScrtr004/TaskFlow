@@ -3,7 +3,9 @@
 namespace App\Model;
 
 use App\Abstract\Model;
+use App\Container\PhaseContainer;
 use App\Container\TaskContainer;
+use App\Dependent\Phase;
 use App\Model\UserModel;
 use App\Model\TaskModel;
 use App\Core\UUID;
@@ -113,14 +115,31 @@ class ProjectModel extends Model
         }
     }
 
-    public static function findFull(int $projectId, array $options = ['workerLimit' => 10,]): mixed
+    /**
+     * Finds and retrieves a complete project with all associated data.
+     *
+     * This method performs a comprehensive database query to fetch a project along with:
+     * - Project manager details with job titles
+     * - All project phases with their details
+     * - All project workers with their details and job titles
+     * 
+     * The method uses JSON aggregation in SQL to efficiently fetch related data in a single query,
+     * then processes the result into a fully populated Project object with nested relationships.
+     *
+     * @param UUID $projectId The public UUID of the project to find
+     * @param array $options Optional configuration array with following keys:
+     *      - workerLimit: int (default: 10) Maximum number of workers to fetch (currently not implemented)
+     * 
+     * @return Project|null Returns a Project object with all associated data if found, null if project doesn't exist
+     * 
+     * @throws DatabaseException If a database error occurs during query execution
+     */
+    public static function findFull(UUID $projectId, array $options = ['workerLimit' => 10,]): mixed
     {
-        if ($projectId < 1) {
-            throw new InvalidArgumentException('Invalid project ID provided.');
-        }
-
         $instance = new self();
         try {
+            
+
             $query = "
                 SELECT 
                     p.id AS projectId,
@@ -134,81 +153,150 @@ class ProjectModel extends Model
                     p.actualCompletionDateTime AS projectActualCompletionDateTime,
                     p.createdAt AS projectCreatedAt,
 
+                    -- Manager JSON object
                     JSON_OBJECT(
-                        'managerId', u.id,
-                        'managerPublicId', u.publicId,
-                        'managerFirstName', u.firstName,
-                        'managerMiddleName', u.middleName,
-                        'managerLastName', u.lastName,
-                        'managerEmail', u.email,
-                        'managerProfileLink', u.profileLink,
-                        'managerGender', u.gender,
-                        'managerJobTitles', (
-                            SELECT JSON_ARRAYAGG(pjt.name)
-                            FROM `userJobTitle` AS pjt
-                            WHERE pjt.userId = u.id
+                        'managerId', m.id,
+                        'managerPublicId', HEX(m.publicId),
+                        'managerFirstName', m.firstName,
+                        'managerMiddleName', m.middleName,
+                        'managerLastName', m.lastName,
+                        'managerEmail', m.email,
+                        'managerProfileLink', m.profileLink,
+                        'managerGender', m.gender,
+                        'managerJobTitles', COALESCE(
+                            (
+                                SELECT CONCAT('[', GROUP_CONCAT(CONCAT('\"', mjt.title, '\"')), ']')
+                                FROM userJobTitle AS mjt
+                                WHERE mjt.userId = m.id
+                            ),
+                            '[]'
                         )
                     ) AS projectManager,
 
-                    (
-                        SELECT JSON_ARRAYAGG(
-                            JSON_OBJECT(
-                                'workerId', pw.id,
-                                'workerPublicId', pw.publicId,
-                                'workerFirstName', pw.firstName,
-                                'workerMiddleName', pw.middleName,
-                                'workerLastName', pw.lastName,
-                                'workerEmail', pw.email,
-                                'workerProfileLink', pw.profileLink,
-                                'workerGender', pw.gender,
-                                'workerJobTitles', (
-                                    SELECT JSON_ARRAYAGG(pjt.name)
-                                    FROM `userJobTitle` AS pjt
-                                    WHERE pjt.userId = pw.id
+                    COALESCE(
+                        (
+                            SELECT CONCAT('[', GROUP_CONCAT(
+                                JSON_OBJECT(
+                                    'phaseId', pp.id,
+                                    'phasePublicId', HEX(pp.publicId),
+                                    'phaseName', pp.name,
+                                    'phaseDescription', pp.description,
+                                    'phaseStatus', pp.status,
+                                    'phaseStartDateTime', pp.startDateTime,
+                                    'phaseCompletionDateTime', pp.completionDateTime
                                 )
-                            )
-                            LIMIT " . $options['workerLimit'] .
-                ")
-                        FROM 
-                            `projectWorker` AS pw
-                        INNER JOIN 
-                            `user` AS u ON pw.userId = u.id
-                        WHERE 
-                            pw.projectId = p.id
-                        
-                    ) AS projectWorkers,
+                            ), ']')
+                            FROM projectPhase pp
+                            WHERE pp.projectId = p.id
+                        )
+                    ) AS projectPhases,
 
-                    (
-                        SELECT COUNT(*)
-                        FROM `projectTask` AS pt
-                        WHERE pt.projectId = p.id
-                        GROUP BY pt.status
-                    ) AS projectTaskStatusCounts,
+                    -- Workers JSON array
+                    COALESCE(
+                        (
+                            SELECT CONCAT('[', GROUP_CONCAT(
+                                JSON_OBJECT(
+                                    'workerId', w.id,
+                                    'workerPublicId', HEX(w.publicId),
+                                    'workerFirstName', w.firstName,
+                                    'workerMiddleName', w.middleName,
+                                    'workerLastName', w.lastName,
+                                    'workerEmail', w.email,
+                                    'workerProfileLink', w.profileLink,
+                                    'workerGender', w.gender,
+                                    'workerJobTitles', COALESCE(
+                                        (
+                                            SELECT CONCAT('[', GROUP_CONCAT(CONCAT('\"', wjt.title, '\"')), ']')
+                                            FROM userJobTitle wjt
+                                            WHERE wjt.userId = w.id
+                                        ),
+                                        '[]'
+                                    )
+                                ) ORDER BY w.lastName SEPARATOR ','
+                            ), ']')
+                            FROM projectWorker pw
+                            INNER JOIN user w ON pw.workerId = w.id
+                            WHERE pw.projectId = p.id
+                        ),
+                        '[]'
+                    ) AS projectWorkers
 
-                    (
-                        SELECT COUNT(*)
-                        FROM `projectTask` AS pt
-                        WHERE pt.projectId = p.id
-                        GROUP BY pt.priority
-                    ) AS projectTaskPriorityCounts
-                
                 FROM 
-                    `project` AS p
+                    project p
                 INNER JOIN
-                    `user` AS u ON p.managerId = u.id
+                    user m ON p.managerId = m.id
                 WHERE 
-                    p.id = :projectId
+                    p.publicId = :projectId;
             ";
 
             $statement = $instance->connection->prepare($query);
-            $statement->execute([':projectId' => $projectId]);
+            $statement->execute([':projectId' => UUID::toBinary($projectId)]);
             $result = $statement->fetch();
 
-            // TODO: Process result into ProjectFull object
+            // Process result into ProjectFull object
+            if (!$instance->hasData($result)) {
+                return null;
+            }
 
-            return empty($result) ? null : User::fromArray($result);
-        } catch (PDOException $th) {
-            throw new DatabaseException($th->getMessage());
+            $mangerData = json_decode($result['projectManager'], true);
+            $manager = User::createPartial([
+                'id'            => $mangerData['managerId'],
+                'publicId'      => UUID::fromHex($mangerData['managerPublicId']),
+                'firstName'     => $mangerData['managerFirstName'],
+                'middleName'    => $mangerData['managerMiddleName'],
+                'lastName'      => $mangerData['managerLastName'],
+                'email'         => $mangerData['managerEmail'],
+                'profileLink'   => $mangerData['managerProfileLink'],
+            ]);
+
+            $project = new Project(
+                id: $result['projectId'],
+                publicId: UUID::fromBinary($result['projectPublicId']),
+                name: $result['projectName'],
+                description: $result['projectDescription'],
+                manager: $manager,
+                budget: $result['projectBudget'],
+                tasks: null,
+                workers: new WorkerContainer(),
+                phases: new PhaseContainer(),
+                startDateTime: new DateTime($result['projectStartDateTime']),
+                completionDateTime: new DateTime($result['projectCompletionDateTime']),
+                actualCompletionDateTime: $result['projectActualCompletionDateTime'] 
+                    ? new DateTime($result['projectActualCompletionDateTime']) 
+                    : null,
+                status: WorkStatus::from($result['projectStatus']),
+                createdAt: new DateTime($result['projectCreatedAt']),
+            );
+
+            $projectPhases = json_decode($result['projectPhases'], true);
+            foreach ($projectPhases as $phase) {
+                $project->addPhase(new Phase(
+                    id: $phase['phaseId'],
+                    publicId: UUID::fromHex($phase['phasePublicId']),
+                    name: $phase['phaseName'],
+                    description: $phase['phaseDescription'],
+                    status: WorkStatus::from($phase['phaseStatus']),
+                    startDateTime: new DateTime($phase['phaseStartDateTime']),
+                    completionDateTime: new DateTime($phase['phaseCompletionDateTime'])
+                ));
+            }
+
+            $projectWorkers = json_decode($result['projectWorkers'], true);
+            foreach ($projectWorkers as $worker) {
+                $project->addWorker(Worker::createPartial([
+                    'id'            => $worker['workerId'],
+                    'publicId'      => UUID::fromHex($worker['workerPublicId']),
+                    'firstName'     => $worker['workerFirstName'],
+                    'middleName'    => $worker['workerMiddleName'] ?? null,
+                    'lastName'      => $worker['workerLastName'],
+                    'email'         => $worker['workerEmail'] ?? null,
+                    'profileLink'   => $worker['workerProfileLink'] ?? null,
+                ]));
+            }
+                    
+            return $project;
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
         }
     }
 
