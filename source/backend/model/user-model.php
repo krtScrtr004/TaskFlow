@@ -158,27 +158,26 @@ class UserModel extends Model
      */
     public static function create(mixed $user): User
     {
-        if (!($user instanceof User)) {
-                throw new InvalidArgumentException('Expected instance of User');
-        }
-
         $instance = new self();
-
-        $uuid               =   $user->getPublicId() ?? UUID::get();
-        $firstName          =   trimOrNull($user->getFirstName());
-        $middleName         =   trimOrNull($user->getMiddleName());
-        $lastName           =   trimOrNull($user->getLastName());
-        $gender             =   $user->getGender()->value;
-        $birthDate          =   $user->getBirthDate(); 
-        $role               =   $user->getRole()->value;
-        $jobTitles          =   $user->getJobTitles()?->toArray();
-        $contactNumber      =   trimOrNull($user->getContactNumber());
-        $email              =   trimOrNull($user->getEmail());
-        $bio                =   trimOrNull($user->getBio());
-        $profileLink        =   trimOrNull($user->getProfileLink());
-        $password           =   $user->getPassword();
-
         try {
+            if (!($user instanceof User)) {
+                throw new InvalidArgumentException('Expected instance of User');
+            }
+
+            $uuid               =   $user->getPublicId() ?? UUID::get();
+            $firstName          =   trimOrNull($user->getFirstName());
+            $middleName         =   trimOrNull($user->getMiddleName());
+            $lastName           =   trimOrNull($user->getLastName());
+            $gender             =   $user->getGender()->value;
+            $birthDate          =   $user->getBirthDate(); 
+            $role               =   $user->getRole()->value;
+            $jobTitles          =   $user->getJobTitles()?->toArray();
+            $contactNumber      =   trimOrNull($user->getContactNumber());
+            $email              =   trimOrNull($user->getEmail());
+            $bio                =   trimOrNull($user->getBio());
+            $profileLink        =   trimOrNull($user->getProfileLink());
+            $password           =   $user->getPassword();
+            
             $instance->connection->beginTransaction();
 
             // Insert User Data

@@ -3,6 +3,7 @@
 namespace App\Endpoint;
 
 use App\Auth\HttpAuth;
+use App\Auth\SessionAuth;
 use App\Container\PhaseContainer;
 use App\Core\Me;
 use App\Core\UUID;
@@ -24,9 +25,12 @@ use InvalidArgumentException;
 
 class ProjectEndpoint
 {
-    public static function createProject(): void
+    public static function create(): void
     {
         try {
+            if (SessionAuth::hasAuthorizedSession()) {
+                throw new ForbiddenException('User sessions are not allowed to create projects.');
+            }
             Csrf::protect();
 
             $data = decodeData('php://input');
@@ -54,7 +58,7 @@ class ProjectEndpoint
             $phasesContainer = new PhaseContainer();
             foreach ($phases as &$phase) {
                 self::sanitizeData($phase);
-                
+
                 // Determine phase status
                 $phase['status'] = WorkStatus::getStatusFromDates(new DateTime($phase['startDateTime']), new DateTime($phase['completionDateTime']));
 
@@ -64,14 +68,14 @@ class ProjectEndpoint
 
             // Create partial Project entity
             $newProject = Project::createPartial([
-                'name'                  => $project['name'],
-                'description'           => $project['description'],
-                'budget'                => floatval($project['budget']) ?? 0.00,
-                'startDateTime'         => $project['startDateTime'],
-                'completionDateTime'    => $project['completionDateTime'],
-                'phases'                => $phasesContainer,
-                'tasks'                 => [],
-                'status'                => WorkStatus::getStatusFromDates(new DateTime($project['startDateTime']), new DateTime($project['completionDateTime']))
+                'name' => $project['name'],
+                'description' => $project['description'],
+                'budget' => floatval($project['budget']) ?? 0.00,
+                'startDateTime' => $project['startDateTime'],
+                'completionDateTime' => $project['completionDateTime'],
+                'phases' => $phasesContainer,
+                'tasks' => [],
+                'status' => WorkStatus::getStatusFromDates(new DateTime($project['startDateTime']), new DateTime($project['completionDateTime']))
             ]);
             $newProject = ProjectModel::create($newProject);
 

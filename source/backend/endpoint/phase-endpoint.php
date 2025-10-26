@@ -9,7 +9,7 @@ use App\Enumeration\WorkStatus;
 use DateTime;
 
 class PhaseEndpoint {
-    public static function addPhase(): void
+    public static function add(): void
     {
         $data = decodeData('php://input');
         if (!$data) {
@@ -43,7 +43,7 @@ class PhaseEndpoint {
         ], 'Phase added successfully.', 201);
     }
 
-    public static function cancelPhase(): void
+    public static function cancel(): void
     {
         $data = decodeData('php://input');
         if (!$data) {

@@ -36,7 +36,7 @@ class UserEndpoint
         Response::success($return, 'Users fetched successfully.');
     }
 
-    public static function createUser(): void
+    public static function create(): void
     {
         $data = decodeData('php://input');
         if (!$data)
@@ -45,7 +45,7 @@ class UserEndpoint
         Response::success([], 'User added successfully.', 201);
     }
 
-    public static function editUser(): void
+    public static function edit(): void
     {
         if (count($_FILES) > 0) {
             // Handle file upload
@@ -59,7 +59,7 @@ class UserEndpoint
         Response::success([], 'User edited successfully.');
     }
 
-    public static function deleteUser(array $args = []): void
+    public static function delete(array $args = []): void
     {
         $userId = $args['userId'] ?? null;
         if (!$userId)

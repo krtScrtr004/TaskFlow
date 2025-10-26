@@ -53,21 +53,21 @@
 	},
 
 	"POST": {
-		"TaskFlow/endpoint/users(?:/[\\w_-]+)?": ["UserEndpoint", "editUser"],
-		"TaskFlow/endpoint/users": ["UserEndpoint", "createUser"],
+		"TaskFlow/endpoint/users(?:/[\\w_-]+)?": ["UserEndpoint", "edit"],
+		"TaskFlow/endpoint/users": ["UserEndpoint", "create"],
 
-		"TaskFlow/endpoint/projects": ["ProjectEndpoint", "createProject"],
+		"TaskFlow/endpoint/projects": ["ProjectEndpoint", "create"],
 		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/workers": [
 			"WorkerEndpoint",
 			"addWorkerToProject"
 		],
 		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/phases": [
 			"PhaseEndpoint",
-			"addPhase"
+			"add"
 		],
 		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/tasks": [
 			"TaskEndpoint",
-			"addTask"
+			"add"
 		],
 		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}/workers": [
 			"WorkerEndpoint",
@@ -78,35 +78,35 @@
 	"PUT": {
 		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}": [
 			"ProjectEndpoint",
-			"editProject"
+			"edit"
 		],
 		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}": [
 			"TaskEndpoint",
-			"editTask"
+			"edit"
 		],
 		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/workers/{workerId:[\\w+_-]+}": [
 			"WorkerEndpoint",
-			"editWorker"
+			"edit"
 		]
 	},
 
 	"PATCH": {
 		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}": [
 			"ProjectEndpoint",
-			"editProject"
+			"edit"
 		],
-		"TaskFlow/endpoint/users/{userId:[\\w+_-]+}": ["UserEndpoint", "editUser"],
+		"TaskFlow/endpoint/users/{userId:[\\w+_-]+}": ["UserEndpoint", "edit"],
 		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}": [
 			"TaskEndpoint",
-			"editTask"
+			"edit"
 		],
 		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/workers/{workerId:[\\w+_-]+}": [
 			"WorkerEndpoint",
-			"editWorker"
+			"edit"
 		]
 	},
 
 	"DELETE": {
-		"TaskFlow/endpoint/users/{userId:[\\w+_-]+}": ["UserEndpoint", "deleteUser"]
+		"TaskFlow/endpoint/users/{userId:[\\w+_-]+}": ["UserEndpoint", "delete"]
 	}
 }

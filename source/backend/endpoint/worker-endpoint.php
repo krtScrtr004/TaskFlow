@@ -207,7 +207,7 @@ class WorkerEndpoint
         Response::success($returnDataArray, 'Worker added successfully');
     }
 
-    public static function editWorker(array $args = []): void
+    public static function edit(array $args = []): void
     {
         $data = decodeData('php://input');
         if (!$data) {
@@ -217,7 +217,7 @@ class WorkerEndpoint
         Response::success([], 'Worker updated successfully');
     }
 
-    public static function terminateWorker(): void
+    public static function terminate(): void
     {
         $data = decodeData('php://input');
         if (!$data) {

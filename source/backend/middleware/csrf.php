@@ -2,6 +2,7 @@
 
 namespace App\Middleware;
 
+use App\Auth\HttpAuth;
 use App\Core\Session;
 use App\Exception\ForbiddenException;
 
@@ -30,7 +31,7 @@ class Csrf {
 
     // Middleware-like protection
     public static function protect(): void {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if (HttpAuth::isPOSTRequest()) {
             $token = getRequestHeader('X-CSRF-Token') ?? '';
 
             if (!self::validate($token)) {

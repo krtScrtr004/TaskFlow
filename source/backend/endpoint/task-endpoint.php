@@ -40,7 +40,7 @@ class TaskEndpoint
         Response::success($tasks, 'Task fetched successfully.');
     }
 
-    public static function addTask(array $args = []): void
+    public static function add(array $args = []): void
     {
         $projectId = $args['projectId'] ?? null; // Temporary placeholder
         if ($projectId === null)
@@ -66,7 +66,7 @@ class TaskEndpoint
         ], 'Task added successfully.');
     }
 
-    public static function editTask(array $args = []): void
+    public static function edit(array $args = []): void
     {
         $projectId = $args['projectId'] ?? null; // Temporary placeholder
         if ($projectId === null)
