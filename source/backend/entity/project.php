@@ -22,7 +22,7 @@ class Project implements Entity
     private string $name;
     private ?string $description;
     private User $manager;
-    private int $budget; // In cents to avoid floating point issues
+    private float $budget; 
     private ?TaskContainer $tasks;
     private WorkerContainer $workers;
     private ?PhaseContainer $phases;
@@ -45,7 +45,7 @@ class Project implements Entity
      * @param string $name Project name (3-255 characters)
      * @param string|null $description Project description (5-500 characters) (optional)
      * @param User $manager The project manager (User object)
-     * @param int $budget Project budget in cents (0-1,000,000, stored as cents to avoid floating point issues)
+     * @param float $budget Project budget (0-1,000,000)
      * @param TaskContainer|null $tasks Container of tasks associated with the project (optional)
      * @param WorkerContainer $workers Container of workers assigned to the project
      * @param PhaseContainer|null $phases Container of project phases (optional)
@@ -63,7 +63,7 @@ class Project implements Entity
         string $name,
         string $description,
         User $manager,
-        int $budget,
+        float $budget,
         ?TaskContainer $tasks,
         WorkerContainer $workers,
         ?PhaseContainer $phases,
@@ -193,7 +193,7 @@ class Project implements Entity
      *
      * @return int The budget in cents (to avoid floating point issues)
      */
-    public function getBudget(): int
+    public function getBudget(): float
     {
         return $this->budget;
     }
@@ -332,7 +332,7 @@ class Project implements Entity
      * @throws ValidationException If the budget is invalid
      * @return void
      */
-    public function setBudget(int $budget): void
+    public function setBudget(float $budget): void
     {
         $this->workValidator->validateBudget($budget);
         if ($this->workValidator->hasErrors()) {
