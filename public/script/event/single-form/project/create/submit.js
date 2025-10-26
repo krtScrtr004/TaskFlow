@@ -43,8 +43,8 @@ async function submitForm(e) {
         name: nameInput.value.trim() ?? null,
         description: descriptionInput.value.trim() ?? null,
         budget: parseFloat(budgetInput.value) ?? null,
-        startDate: startDateInput.value ?? null,
-        completionDate: completionDateInput.value ?? null
+        startDateTime: startDateInput.value ?? null,
+        completionDateTime: completionDateInput.value ?? null
     }, workValidationRules())) return
 
     const phaseContainers = createProjectForm.querySelectorAll('.phase')
@@ -57,15 +57,17 @@ async function submitForm(e) {
                 name: nameInput.value.trim(),
                 description: descriptionInput.value.trim(),
                 budget: parseFloat(budgetInput.value),
-                startDate: startDateInput.value,
+                startDateTime: startDateInput.value.trim(),
+                completionDateTime: completionDateInput.value.trim(),
             },
-            phase: phaseToAdd,
+            phases: phaseToAdd,
         })
-        if (!response)
+        if (!response) {
             throw new Error('No response from server.')
+        }
 
         Dialog.operationSuccess('Project Created.', 'The project has been successfully created.')
-        setTimeout(() => window.location.href = `/TaskFlow/project/${response.id}`, 1500)
+        setTimeout(() => window.location.href = `/TaskFlow/project/${response.projectId}`, 1500)
     } catch (error) {
         console.error('Error occurred while submitting form:', error)
         if (error?.errors) {
@@ -75,6 +77,7 @@ async function submitForm(e) {
         }
     } finally {
         Loader.delete()
+        phaseToAdd.length = 0
     }
 }
 
@@ -93,10 +96,10 @@ function addPhaseForm(phaseContainer) {
     }
 
     const data = {
-        name: nameInput.value ? nameInput.value.trim() : null,
+        name: nameInput.textContent ? nameInput.textContent.trim() : null,
         description: descriptionInput.value ? descriptionInput.value.trim() : null,
-        startDate: startDateInput.value ? startDateInput.value : null,
-        completionDate: completionDateInput.value ? completionDateInput.value : null,
+        startDateTime: startDateInput.value ? startDateInput.value : null,
+        completionDateTime: completionDateInput.value ? completionDateInput.value : null,
     }
     phaseToAdd.push(data)
 }

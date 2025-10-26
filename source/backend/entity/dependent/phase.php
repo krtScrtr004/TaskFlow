@@ -274,6 +274,86 @@ class Phase implements Entity
     // Other methods (Utility)
 
     /**
+     * Creates a Phase instance from an array of data with partial information.
+     *
+     * This method provides a flexible way to create a Phase instance without requiring
+     * all fields to be present, supplying default values where necessary. It also
+     * handles different data formats and converts them to appropriate types:
+     * - Converts publicId to UUID object
+     * - Converts startDateTime string to DateTime
+     * - Converts completionDateTime string to DateTime
+     * - Converts actualCompletionDateTime string to DateTime
+     * - Ensures status is a WorkStatus enum
+     *
+     * @param array $data Associative array containing phase data with following possible keys:
+     *      - id: int|null Phase ID
+     *      - publicId: string|UUID|null Public identifier
+     *      - name: string Phase name
+     *      - description: string|null Phase description
+     *      - startDateTime: string|DateTime|null Phase start date and time
+     *      - completionDateTime: string|DateTime|null Expected completion date and time
+     *      - actualCompletionDateTime: string|DateTime|null Actual completion date and time
+     *      - status: string|WorkStatus|null Current work status of the phase
+     * 
+     * @return self New Phase instance created from provided data with defaults for missing values
+     */
+    public static function createPartial(array $data): self
+    {
+        // Provide default values for required fields
+        $defaults = [
+            'id' => $data['id'] ?? 0,
+            'publicId' => $data['publicId'] ?? UUID::get(),
+            'name' => $data['name'] ?? 'Untitled Phase',
+            'description' => $data['description'] ?? null,
+            'startDateTime' => $data['startDateTime'] ?? new DateTime(),
+            'completionDateTime' => $data['completionDateTime'] ?? new DateTime('+7 days'),
+            'actualCompletionDateTime' => $data['actualCompletionDateTime'] ?? null,
+            'status' => $data['status'] ?? WorkStatus::PENDING
+        ];
+
+        // Handle UUID conversion
+        if (isset($data['publicId']) && !($data['publicId'] instanceof UUID)) {
+            $defaults['publicId'] = is_string($data['publicId'])
+                ? UUID::fromString(trimOrNull($data['publicId']))
+                : UUID::get();
+        }
+
+        // Handle DateTime conversions
+        if (isset($data['startDateTime']) && !($data['startDateTime'] instanceof DateTime)) {
+            $defaults['startDateTime'] = new DateTime(trimOrNull($data['startDateTime']));
+        }
+
+        if (isset($data['completionDateTime']) && !($data['completionDateTime'] instanceof DateTime)) {
+            $defaults['completionDateTime'] = new DateTime(trimOrNull($data['completionDateTime']));
+        }
+
+        if (isset($data['actualCompletionDateTime']) && !($data['actualCompletionDateTime'] instanceof DateTime)) {
+            $defaults['actualCompletionDateTime'] = is_string($data['actualCompletionDateTime'])
+                ? new DateTime(trimOrNull($data['actualCompletionDateTime']))
+                : null;
+        }
+
+        // Handle enum conversion
+        if (isset($data['status']) && !($data['status'] instanceof WorkStatus)) {
+            $defaults['status'] = WorkStatus::from(trimOrNull($data['status']));
+        }
+
+        // Create instance with default values
+        $instance = new self(
+            id: $defaults['id'],
+            publicId: $defaults['publicId'],
+            name: $defaults['name'],
+            description: $defaults['description'],
+            startDateTime: $defaults['startDateTime'],
+            completionDateTime: $defaults['completionDateTime'],
+            actualCompletionDateTime: $defaults['actualCompletionDateTime'],
+            status: $defaults['status']
+        );
+
+        return $instance;
+    }
+
+    /**
      * Converts the Phase object to an associative array representation.
      *
      * This method transforms all phase properties into a structured array format:

@@ -31,7 +31,7 @@ class Csrf {
     // Middleware-like protection
     public static function protect(): void {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $token = $_POST['csrfToken'] ?? '';
+            $token = getRequestHeader('X-CSRF-Token') ?? '';
 
             if (!self::validate($token)) {
                 throw new ForbiddenException('CSRF Protection: Invalid Token');

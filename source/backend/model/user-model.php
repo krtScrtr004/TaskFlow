@@ -10,6 +10,7 @@ use App\Entity\User;
 use App\Enumeration\Gender;
 use App\Enumeration\Role;
 use App\Exception\DatabaseException;
+use App\Middleware\Csrf;
 use DateTime;
 use InvalidArgumentException;
 use PDOException;
@@ -36,6 +37,8 @@ class UserModel extends Model
     {
         $instance = new self();
         try {
+            Csrf::protect();
+
             $queryString = "    
                 SELECT 
                     u.*,
@@ -60,8 +63,8 @@ class UserModel extends Model
                 $users[] = User::fromArray($row);
             }
             return $users;
-        } catch (PDOException $th) {
-            throw new DatabaseException($th->getMessage());
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
         }
     }
 
@@ -80,8 +83,8 @@ class UserModel extends Model
         try {
             $result = self::find('publicId = :publicId', [':publicId' => UUID::toBinary($publicId)], ['limit' => 1]);
             return $result ? $result[0] : null;
-        } catch (PDOException $th) {
-            throw new DatabaseException($th->getMessage());
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
         }
     }
 
@@ -101,8 +104,8 @@ class UserModel extends Model
         try {
             $result = self::find('email = :email', [':email' => $email], ['limit' => 1]);
             return $result ? $result[0] : null;
-        } catch (PDOException $th) {
-            throw new DatabaseException($th->getMessage());
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
         }
     }
 
@@ -131,8 +134,8 @@ class UserModel extends Model
 
         try {
             return self::find('', [], ['offset' => $offset, 'limit' => $limit]) ?: null;
-        } catch (PDOException $th) {
-            throw new DatabaseException($th->getMessage());
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
         }
     }
 
@@ -157,25 +160,26 @@ class UserModel extends Model
     {
         if (!($user instanceof User)) {
                 throw new InvalidArgumentException('Expected instance of User');
-            }
+        }
 
-        $uuid = UUID::get();
-        $firstName = trim($user->getFirstName()) ?: null;
-        $middleName = trim($user->getMiddleName()) ?: null;
-        $lastName = trim($user->getLastName()) ?: null;
-        $gender = $user->getGender()?->value;
-        $birthDate = $user->getBirthDate() ? formatDateTime($user->getBirthDate()) : null;
-        $role = $user->getRole()?->value;
-        $jobTitles = $user->getJobTitles()?->toArray();
-        $contactNumber = trim($user->getContactNumber()) ?: null;
-        $email = trim($user->getEmail()) ?: null;
-        $bio = trim($user->getBio()) ?: null;
-        $profileLink = trim($user->getProfileLink()) ?: null;
-        $password = $user->getPassword() ?: null;
+        $instance = new self();
 
-        $conn = Connection::getInstance();
+        $uuid               =   $user->getPublicId() ?? UUID::get();
+        $firstName          =   trimOrNull($user->getFirstName());
+        $middleName         =   trimOrNull($user->getMiddleName());
+        $lastName           =   trimOrNull($user->getLastName());
+        $gender             =   $user->getGender()->value;
+        $birthDate          =   $user->getBirthDate(); 
+        $role               =   $user->getRole()->value;
+        $jobTitles          =   $user->getJobTitles()?->toArray();
+        $contactNumber      =   trimOrNull($user->getContactNumber());
+        $email              =   trimOrNull($user->getEmail());
+        $bio                =   trimOrNull($user->getBio());
+        $profileLink        =   trimOrNull($user->getProfileLink());
+        $password           =   $user->getPassword();
+
         try {
-            $conn->beginTransaction();
+            $instance->connection->beginTransaction();
 
             // Insert User Data
             $userQuery = "
@@ -207,7 +211,7 @@ class UserModel extends Model
                     :password
                 )
             ";
-            $statement = $conn->prepare($userQuery);
+            $statement = $instance->connection->prepare($userQuery);
             $statement->execute([
                 ':publicId' => UUID::toBinary($uuid),
                 ':firstName' => $firstName,
@@ -222,7 +226,7 @@ class UserModel extends Model
                 ':profileLink' => $profileLink,
                 ':password' => password_hash($password, PASSWORD_ARGON2ID)
             ]);
-            $userId = $conn->lastInsertId();
+            $userId = $instance->connection->lastInsertId();
 
             // Insert Job Titles, if any
             if (!empty($jobTitles)) {
@@ -230,7 +234,7 @@ class UserModel extends Model
                     INSERT INTO `userJobTitle` (userId, title)
                     VALUES (:userId, :title)
                 ";
-                $jobTitleStatement = $conn->prepare($jobTitleQuery);
+                $jobTitleStatement = $instance->connection->prepare($jobTitleQuery);
                 foreach ($jobTitles as $title) {
                     $jobTitleStatement->execute([
                         ':userId' => $userId,
@@ -239,14 +243,14 @@ class UserModel extends Model
                 }
             }
 
-            $conn->commit();
+            $instance->connection->commit();
 
             $user->setId((int)$userId);
             $user->setPublicId($uuid);
             $user->setPassword(null);
             return $user;
         } catch (PDOException $e) {
-            $conn->rollBack();
+            $instance->connection->rollBack();
             throw new DatabaseException($e->getMessage());
         }
     }

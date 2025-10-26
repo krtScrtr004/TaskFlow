@@ -1,12 +1,12 @@
 import { errorListDialog } from '../render/error-list-dialog.js'
 
 const LENGTH_VALIDATION = {
-    'name': { min: 1, max: 255 },
-    'uri': { min: 3, max: 255 },
-    'contactNumber': { min: 11, max: 20 },
-    'password': { min: 8, max: 255 },
-    'longText': { min: 10, max: 500 },
-    'budget': { min: 0, max: 999999999999 }
+    'name':             { min: 1, max: 255 },
+    'uri':              { min: 3, max: 255 },
+    'contactNumber':    { min: 11, max: 20 },
+    'password':         { min: 8, max: 255 },
+    'longText':         { min: 10, max: 500 },
+    'budget':           { min: 0, max: 999999999999 }
 }
 
 export function userValidationRules() {

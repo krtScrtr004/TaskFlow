@@ -8,6 +8,7 @@ use App\Exception\ForbiddenException;
 use App\Exception\NotFoundException;
 use App\Exception\ValidationException;
 use App\Interface\Controller;
+use App\Middleware\Csrf;
 use App\Middleware\Response;
 use App\Model\ProjectModel;
 use App\Validator\UuidValidator;

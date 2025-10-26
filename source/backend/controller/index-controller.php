@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Auth\SessionAuth;
 use App\Interface\Controller;
 use App\Core\Session;
+use App\Middleware\Csrf;
 
 class IndexController implements Controller
 {
@@ -34,6 +35,7 @@ class IndexController implements Controller
         if (SessionAuth::hasAuthorizedSession()) {
             SessionAuth::destroySession();
         }
+        Csrf::generate();
 
         // Dynamically display appropriate page (login / signup) based on URL
         $uris = explode('/', $_SERVER['REQUEST_URI']);

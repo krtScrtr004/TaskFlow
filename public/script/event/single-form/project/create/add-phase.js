@@ -1,4 +1,5 @@
-import { addPhase } from '../add-phase.js';
+import { addPhase } from '../add-phase.js'
+import { Dialog } from '../../../../render/dialog.js'
 
 try {
     addPhase({

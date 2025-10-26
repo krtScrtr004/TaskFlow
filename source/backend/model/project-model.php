@@ -485,6 +485,105 @@ class ProjectModel extends Model
         }
     }
 
+    public static function create(mixed $project): Project
+    {
+        if (!($project instanceof Project)) {
+            throw new InvalidArgumentException('Expected instance of Project');
+        }
+
+        $instance = new self();
+
+        $projectUuid               =   $project->getPublicId() ?? UUID::get();
+        $projectName               =   trimOrNull($project->getName());
+        $projectDescription        =   trimOrNull($project->getDescription());
+        $projectBudget             =   ($project->getBudget()) ?? 0.00;
+        $projectStatus             =   $project->getStatus() ?? WorkStatus::PENDING;
+        $projectStartDateTime      =   $project->getStartDateTime();
+        $projectCompletionDateTime =   $project->getCompletionDateTime();
+        $projectPhases             =   $project->getPhases();
+
+        try {
+            $instance->connection->beginTransaction();
+            
+            $projectQuery = "
+                INSERT INTO `project` (
+                    publicId,
+                    name,
+                    description,
+                    budget,
+                    status,
+                    startDateTime,
+                    completionDateTime,
+                    managerId
+                ) VALUES (
+                    :publicId,
+                    :name,
+                    :description,
+                    :budget,
+                    :status,
+                    :startDateTime,
+                    :completionDateTime,
+                    :managerId
+                )";
+            $statement = $instance->connection->prepare($projectQuery);
+            $statement->execute([
+                ':publicId'             => UUID::toBinary($projectUuid),
+                ':name'                 => $projectName,
+                ':description'          => $projectDescription,
+                ':budget'               => $projectBudget,
+                ':status'               => $projectStatus->value,
+                ':startDateTime'        => formatDateTime($projectStartDateTime, DateTime::ATOM),
+                ':completionDateTime'   => formatDateTime($projectCompletionDateTime, DateTime::ATOM),
+                ':managerId'            => Me::getInstance()->getId(),
+            ]);
+            $projectId = intval($instance->connection->lastInsertId());
+
+            if ($projectPhases->count() > 0) {
+                $projectPhaseQuery = "
+                    INSERT INTO `projectPhase` (
+                        projectId,
+                        publicId,
+                        name,
+                        description,
+                        startDateTime,
+                        completionDateTime,
+                        status
+                    ) VALUES (
+                        :projectId,
+                        :publicId,
+                        :name,
+                        :description,
+                        :startDateTime,
+                        :completionDateTime,
+                        :status
+                    )";
+                $phaseStatement = $instance->connection->prepare($projectPhaseQuery);                       
+                foreach ($projectPhases as $phase) {
+                    $phaseStatement->execute([
+                        ':projectId'            => $projectId,
+                        ':publicId'             => UUID::toBinary($phase->getPublicId()),
+                        ':name'                 => $phase->getName(),
+                        ':description'          => $phase->getDescription(),
+                        ':startDateTime'        => formatDateTime($phase->getStartDateTime(), DateTime::ATOM),
+                        ':completionDateTime'   => formatDateTime($phase->getCompletionDateTime(), DateTime::ATOM),
+                        ':status'               => $phase->getStatus()->value,
+                    ]);
+                }
+            }
+
+            $instance->connection->commit();
+
+            $project->setId($projectId);
+            $project->setPublicId($projectUuid);
+            return $project;
+        } catch (PDOException $e) {
+            $instance->connection->rollBack();
+            throw new DatabaseException($e->getMessage());
+        }
+    }
+
+
+
 
 
 
@@ -505,10 +604,5 @@ class ProjectModel extends Model
         return true;
     }
 
-    public static function create(mixed $data): void
-    {
-        if (!($data instanceof self)) {
-            throw new InvalidArgumentException('Expected instance of ProjectModel');
-        }
-    }
+
 }

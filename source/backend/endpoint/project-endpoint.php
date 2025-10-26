@@ -2,40 +2,106 @@
 
 namespace App\Endpoint;
 
+use App\Auth\HttpAuth;
+use App\Container\PhaseContainer;
+use App\Core\Me;
+use App\Core\UUID;
+use App\Dependent\Phase;
+use App\Entity\Project;
+use App\Enumeration\WorkStatus;
+use App\Exception\DatabaseException;
+use App\Exception\ForbiddenException;
 use App\Exception\ValidationException;
 use App\Interface\Controller;
 use App\Middleware\Response;
 use App\Model\ProjectModel;
 use App\Validator\UuidValidator;
+use App\Middleware\Csrf;
+use App\Validator\WorkValidator;
+use DateTime;
+use Exception;
 use InvalidArgumentException;
 
 class ProjectEndpoint
 {
     public static function createProject(): void
     {
-        /**
-         * Requirements:
-         * Project:
-         * - Name: string
-         * - Description: string
-         * - Budget: float
-         * - Start Date: string (YYYY-MM-DD)
-         * - Completion Date: string (YYYY-MM-DD)
-         * 
-         * Phases: Array
-         * - Name: string
-         * - Description: string
-         * - Start Date: string (YYYY-MM-DD)
-         * - Completion Date: string (YYYY-MM-DD)
-         */
-        $data = decodeData('php://input');
-        if (!$data) {
-            Response::error('Cannot decode data.');
+        try {
+            Csrf::protect();
+
+            $data = decodeData('php://input');
+            if (!$data) {
+                throw new ValidationException('Cannot decode data.');
+            }
+
+            $project = $data['project'] ?? null;
+            if (!$project || empty($project)) {
+                throw new ValidationException('Project data is required.');
+            }
+
+            $phases = $data['phases'] ?? null;
+            if (!$phases || empty($phases)) {
+                throw new ValidationException('Phases data is required.');
+            }
+
+            // Check if user has active project 
+            if (ProjectModel::findByManagerId(Me::getInstance()->getId())) {
+                throw new ForbiddenException('User already has an active project.');
+            }
+
+            self::sanitizeData($project);
+
+            $phasesContainer = new PhaseContainer();
+            foreach ($phases as &$phase) {
+                self::sanitizeData($phase);
+                
+                // Determine phase status
+                $phase['status'] = WorkStatus::getStatusFromDates(new DateTime($phase['startDateTime']), new DateTime($phase['completionDateTime']));
+
+                // Create partial Phase entity and add to container
+                $phasesContainer->add(Phase::createPartial($phase));
+            }
+
+            // Create partial Project entity
+            $newProject = Project::createPartial([
+                'name'                  => $project['name'],
+                'description'           => $project['description'],
+                'budget'                => floatval($project['budget']) ?? 0.00,
+                'startDateTime'         => $project['startDateTime'],
+                'completionDateTime'    => $project['completionDateTime'],
+                'phases'                => $phasesContainer,
+                'tasks'                 => [],
+                'status'                => WorkStatus::getStatusFromDates(new DateTime($project['startDateTime']), new DateTime($project['completionDateTime']))
+            ]);
+            $newProject = ProjectModel::create($newProject);
+
+            Response::success([
+                'projectId' => UUID::toString($newProject->getPublicId())
+            ], 'Project created successfully.', 201);
+        } catch (ValidationException $e) {
+            Response::error($e->getMessage(), $e->getErrors(), 422);
+        } catch (ForbiddenException $e) {
+            Response::error('Project Creation Failed. ' . $e->getMessage(), [], 403);
+        } catch (Exception $e) {
+            Response::error('Project Creation Failed.', ['An unexpected error occurred. Please try again later.'], 500);
         }
+    }
 
-        // TODO: Validate and sanitize $data
-
-        Response::success(['id' => uniqid()], 'Project created successfully.', 201);
+    private static function sanitizeData(
+        array &$data,
+        array $trimmableFields = [
+            'name',
+            'description',
+            'startDateTime',
+            'completionDateTime',
+            'actionDateTime'
+        ]
+    ): void {
+        foreach ($data as $key => $value) {
+            if (in_array($key, $trimmableFields, true)) {
+                $data[$key] = trim($value);
+            }
+        }
     }
 
 

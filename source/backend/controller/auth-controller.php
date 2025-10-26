@@ -6,6 +6,7 @@ use App\Entity\User;
 use App\Enumeration\Role;
 use App\Exception\DatabaseException;
 use App\Interface\Controller;
+use App\Middleware\Csrf;
 use App\Middleware\Response;
 use App\Validator\UserValidator;
 use App\Model\UserModel;
@@ -28,17 +29,17 @@ class AuthController implements Controller
 
     public static function login(): void
     {
-        $data = decodeData('php://input');
-        if (!$data) {
-            Response::error('Login Failed.', [
-                'An unexpected error occurred. Please try again.'
-            ]);
-        }
-
-        $email = trimOrNull($data['email']);
-        $password = trimOrNull($data['password']);
-
         try {
+            Csrf::protect();
+
+            $data = decodeData('php://input');
+            if (!$data) {
+                throw new ValidationException('Cannot decode data.');
+            }
+
+            $email = trimOrNull($data['email']);
+            $password = trimOrNull($data['password']);
+
             $validator = new UserValidator();
             $validator->validateEmail($email);
             $validator->validatePassword($password);
@@ -60,18 +61,9 @@ class AuthController implements Controller
             // Create user session
             SessionAuth::setAuthorizedSession($find);
 
-            Response::success([
-                'projectId' => null
-            ], 'Login successful.');
+            Response::success(['projectId' => null], 'Login successful.');
         } catch (ValidationException $e) {
-            Response::error(
-                'Login Failed.',
-                $e->getErrors()
-            );
-        } catch (DatabaseException $e) {
-            Response::error('Login Failed.', [
-                $e->getMessage()
-            ]);
+            Response::error('Login Failed.', $e->getErrors(), 422);
         } catch (Exception $e) {
             Response::error('Login Failed.', [
                 'An unexpected error occurred. Please try again.'
@@ -108,14 +100,14 @@ class AuthController implements Controller
      */
     public static function register(): void
     {
-        $data = decodeData('php://input');
-        if (!$data) {
-            Response::error('Registration Failed.', [
-                'An unexpected error occurred. Please try again.'
-            ]);
-        }
-
         try {
+            Csrf::protect();
+
+            $data = decodeData('php://input');
+            if (!$data) {
+                throw new \BadFunctionCallException('Cannot decode data.');
+            }
+
             // Extract Data
             $firstName = trimOrNull($data['firstName']);
             $middleName = trimOrNull($data['middleName']);
@@ -176,20 +168,10 @@ class AuthController implements Controller
             Response::success([], 'Registration successful. Please verify your email before logging in.', 201);
         } catch (ValidationException $e) {
             // Catch validation errors
-            Response::error(
-                'Registration Failed.',
-                $e->getErrors()
-            );
-        } catch (DatabaseException $e) {
-            // Catch database errors
-            Response::error('Registration Failed.', [
-                $e->getMessage()
-            ]);
+            Response::error('Registration Failed.',$e->getErrors(),422);
         } catch (Exception $e) {
             // Catch all other errors
-            Response::error('Registration Failed.', [
-                'An unexpected error occurred. Please try again.'
-            ]);
+            Response::error('Registration Failed.', ['An unexpected error occurred. Please try again.'], 500);
         }
     }
 }

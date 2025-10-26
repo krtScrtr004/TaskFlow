@@ -3,6 +3,7 @@ import { clonePhaseListCard } from './clone-phase-list-card.js'
 import { Loader } from '../../../render/loader.js'
 import { Dialog } from '../../../render/dialog.js'
 import { debounceAsync } from '../../../utility/debounce.js'
+import { errorListDialog } from '../../../render/error-list-dialog.js'
 
 const addPhaseModal = document.querySelector('#add_phase_modal')
 const addPhaseForm = addPhaseModal.querySelector('#add_phase_form')
@@ -52,6 +53,13 @@ function submitForm(e, params) {
         completionDateTime
     }, workValidationRules())) return
 
+    // Validate against project schedule and phase overlaps
+    const phaseValidationErrors = validatePhaseSchedule(startDateTime, completionDateTime)
+    if (phaseValidationErrors.length > 0) {
+        errorListDialog('Phase Validation Failed', phaseValidationErrors)
+        return
+    }
+
     Loader.patch(addNewPhaseButton.querySelector('.text-w-icon'))
     try {
         let body = {
@@ -79,4 +87,110 @@ function submitForm(e, params) {
     } catch (error) {
         throw error
     }
+}
+
+/**
+ * Validates phase schedule against project timeline and existing phases.
+ * Checks:
+ * 1. Phase dates are within project start and completion dates
+ * 2. Phase does not overlap with existing phases
+ * 
+ * @param {string} startDateTime - Phase start date/time (ISO format)
+ * @param {string} completionDateTime - Phase completion date/time (ISO format)
+ * @returns {Array<string>} Array of error messages (empty if valid)
+ */
+function validatePhaseSchedule(startDateTime, completionDateTime) {
+    const errors = []
+    
+    // Get project schedule
+    const projectStartInput = document.querySelector('#project_start_date')
+    const projectEndInput = document.querySelector('#project_completion_date')
+    
+    if (!projectStartInput || !projectEndInput) {
+        console.warn('Project date inputs not found. Skipping project schedule validation.')
+    } else {
+        const projectStart = new Date(projectStartInput.value)
+        const projectEnd = new Date(projectEndInput.value)
+        const phaseStart = new Date(startDateTime)
+        const phaseEnd = new Date(completionDateTime)
+        
+        // Validate phase is within project timeline
+        if (phaseStart < projectStart) {
+            errors.push(`Phase start date (${formatDate(phaseStart)}) cannot be before project start date (${formatDate(projectStart)}).`)
+        }
+        
+        if (phaseEnd > projectEnd) {
+            errors.push(`Phase completion date (${formatDate(phaseEnd)}) cannot be after project completion date (${formatDate(projectEnd)}).`)
+        }
+
+        if (phaseEnd <= phaseStart) {
+            errors.push(`Phase completion date (${formatDate(phaseEnd)}) must be after phase start date (${formatDate(phaseStart)}).`)
+        }
+        
+        if (phaseStart < projectStart && phaseEnd > projectEnd) {
+            errors.push(`Phase timeline (${formatDate(phaseStart)} - ${formatDate(phaseEnd)}) must be within project timeline (${formatDate(projectStart)} - ${formatDate(projectEnd)}).`)
+        }
+    }
+    
+    // Check for overlapping phases
+    const existingPhases = getAllExistingPhases()
+    const phaseStart = new Date(startDateTime)
+    const phaseEnd = new Date(completionDateTime)
+    
+    for (const existingPhase of existingPhases) {
+        const existingStart = new Date(existingPhase.startDateTime)
+        const existingEnd = new Date(existingPhase.completionDateTime)
+        
+        // Check if phases overlap
+        // Overlap occurs if: (StartA <= EndB) AND (EndA >= StartB)
+        if (phaseStart <= existingEnd && phaseEnd >= existingStart) {
+            errors.push(
+                `Phase overlaps with existing phase "${existingPhase.name}" ` +
+                `(${formatDate(existingStart)} - ${formatDate(existingEnd)}). ` +
+                `Please adjust the dates to avoid overlap.`
+            )
+        }
+    }
+    
+    return errors
+}
+
+/**
+ * Retrieves all existing phases from the phase list in the DOM.
+ * 
+ * @returns {Array<Object>} Array of phase objects with name, startDateTime, and completionDateTime
+ */
+function getAllExistingPhases() {
+    const phases = []
+    const phaseCards = document.querySelectorAll('.phase-details .phase')
+    
+    phaseCards.forEach(card => {
+        const nameElement = card.querySelector('.phase-name')
+        const startElement = card.querySelector('.phase-start-datetime')
+        const endElement = card.querySelector('.phase-completion-datetime')
+
+        if (nameElement && startElement && endElement) {
+            phases.push({
+                name: nameElement.textContent.trim(),
+                startDateTime: startElement.value.trim(),
+                completionDateTime: endElement.value.trim()
+            })
+        }
+    })
+    
+    return phases
+}
+
+/**
+ * Formats a Date object to a readable string (e.g., "Jan 15, 2025").
+ * 
+ * @param {Date} date - Date to format
+ * @returns {string} Formatted date string
+ */
+function formatDate(date) {
+    return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+    })
 }
