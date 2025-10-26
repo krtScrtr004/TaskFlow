@@ -57,7 +57,7 @@ class Phase implements Entity
                 'startDateTime' => $startDateTime,
                 'completionDateTime' => $completionDateTime
             ]);
-            
+
             if ($this->workValidator->hasErrors()) {
                 throw new ValidationException("Phase validation failed", $this->workValidator->getErrors());
             }
@@ -313,9 +313,12 @@ class Phase implements Entity
 
         // Handle UUID conversion
         if (isset($data['publicId']) && !($data['publicId'] instanceof UUID)) {
-            $defaults['publicId'] = is_string($data['publicId'])
-                ? UUID::fromString(trimOrNull($data['publicId']))
-                : UUID::get();
+            try {
+                $defaults['publicId'] = UUID::fromString(trimOrNull($data['publicId']));
+            } catch (\Exception $e) {
+                $defaults['publicId'] = UUID::fromBinary(trimOrNull($data['publicId']));
+            }
+
         }
 
         // Handle DateTime conversions
@@ -378,10 +381,10 @@ class Phase implements Entity
             'description' => $this->description,
             'startDateTime' => formatDateTime($this->startDateTime, DateTime::ATOM),
             'completionDateTime' => formatDateTime($this->completionDateTime, DateTime::ATOM),
-            'actualCompletionDateTime' => 
-                $this->actualCompletionDateTime 
-                    ? formatDateTime($this->actualCompletionDateTime, DateTime::ATOM) 
-                    : null,
+            'actualCompletionDateTime' =>
+                $this->actualCompletionDateTime
+                ? formatDateTime($this->actualCompletionDateTime, DateTime::ATOM)
+                : null,
             'status' => $this->status->value
         ];
     }

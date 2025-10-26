@@ -626,9 +626,11 @@ class User implements Entity
 
         // Handle UUID conversion
         if (isset(($data['publicId'])) && !($data['publicId'] instanceof UUID)) {
-            $defaults['publicId'] = is_string($data['publicId'])
-                ? UUID::fromString(trimOrNull($data['publicId']))
-                : null;
+            try {
+                $defaults['publicId'] = UUID::fromString(trimOrNull($data['publicId']));
+            } catch (\Exception $e) {
+                $defaults['publicId'] = UUID::fromBinary(trimOrNull($data['publicId']));
+            }
         }
 
         // Handle DateTime conversions

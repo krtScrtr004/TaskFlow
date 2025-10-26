@@ -2,12 +2,14 @@
 
 namespace App\Controller;
 
+use App\Core\UUID;
 use App\Entity\User;
 use App\Enumeration\Role;
 use App\Exception\DatabaseException;
 use App\Interface\Controller;
 use App\Middleware\Csrf;
 use App\Middleware\Response;
+use App\Model\ProjectModel;
 use App\Validator\UserValidator;
 use App\Model\UserModel;
 use App\Enumeration\Gender;
@@ -48,20 +50,22 @@ class AuthController implements Controller
             }
 
             // Verify credentials
-            $find = UserModel::findByEmail($email);
-
-            if (!$find || !password_verify($password, $find->getPassword())) {
+            $user = UserModel::findByEmail($email);
+            if (!$user || !password_verify($password, $user->getPassword())) {
                 Response::error('Login Failed.', [
                     'Invalid email or password.'
                 ]);
             }
 
-            // TODO: Check if user has current project assigned
+            // Check if user has current project assigned
+            $project = Role::isProjectManager($user)
+                ? ProjectModel::findManagerActiveProjectByManagerId($user->getId())
+                : ProjectModel::findWorkerActiveProjectByWorkerId($user->getId());
 
             // Create user session
-            SessionAuth::setAuthorizedSession($find);
+            SessionAuth::setAuthorizedSession($user);
 
-            Response::success(['projectId' => null], 'Login successful.');
+            Response::success(['projectId' => $project ? UUID::toString($project->getPublicId()) : null], 'Login successful.');
         } catch (ValidationException $e) {
             Response::error('Login Failed.', $e->getErrors(), 422);
         } catch (Exception $e) {

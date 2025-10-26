@@ -502,9 +502,11 @@ class Project implements Entity
 
         // Handle UUID conversion
         if (isset($data['publicId']) && !($data['publicId'] instanceof UUID)) {
-            $defaults['publicId'] = is_string($data['publicId'])
-                ? UUID::fromString(trimOrNull($data['publicId']))
-                : UUID::get();
+            try {
+                $defaults['publicId'] = UUID::fromString(trimOrNull($data['publicId']));
+            } catch (\Exception $e) {
+                $defaults['publicId'] = UUID::fromBinary(trimOrNull($data['publicId']));
+            }
         }
 
         // Handle User/Manager conversion

@@ -113,8 +113,8 @@ export function userValidationRules() {
         'email': {
             condition: (inputs) => {
                 const errors = []
-                if (!inputs.email || inputs.email.trim().length < LENGTH_VALIDATION.uri.min || inputs.uri.trim().length > LENGTH_VALIDATION.email.max) {
-                    errors.push(`Email must be between ${LENGTH_VALIDATION.uri.min} and ${LENGTH_VALIDATION.email.max} characters long.`)
+                if (!inputs.email || inputs.email.trim().length < LENGTH_VALIDATION.uri.min || inputs.email.trim().length > LENGTH_VALIDATION.uri.max) {
+                    errors.push(`Email must be between ${LENGTH_VALIDATION.uri.min} and ${LENGTH_VALIDATION.uri.max} characters long.`)
                 } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inputs.email)) {
                     errors.push('Invalid email address.')
                 }

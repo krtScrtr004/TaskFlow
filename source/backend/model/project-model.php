@@ -67,8 +67,24 @@ class ProjectModel extends Model
     {
         $instance = new self();
         try {
+            $queryString = "
+                SELECT 
+                    p.*,
+                    u.firstName AS managerFirstName,
+                    u.middleName AS managerMiddleName,
+                    u.lastName AS managerLastName,
+                    u.gender AS managerGender,
+                    u.email AS managerEmail,
+                    u.profileLink AS managerProfileLink 
+                FROM 
+                    `project` AS p
+                INNER JOIN
+                    `user` AS u 
+                ON 
+                    p.managerId = u.id
+            ";
             $query = $instance->appendOptionsToFindQuery(
-                $instance->appendWhereClause("SELECT * FROM `project`", $whereClause), 
+                $instance->appendWhereClause($queryString, $whereClause), 
                 $options);
 
             $statement = $instance->connection->prepare($query);
@@ -81,7 +97,15 @@ class ProjectModel extends Model
 
             $projects = new ProjectContainer();
             foreach ($result as $row) {
-                $projects->add(Project::fromArray($row));
+                $row['manager'] = User::createPartial([
+                    'firstName'     => $row['managerFirstName'],
+                    'middleName'    => $row['managerMiddleName'],
+                    'lastName'      => $row['managerLastName'],
+                    'gender'        => $row['managerGender'],
+                    'email'         => $row['managerEmail'],
+                    'profileLink'   => $row['managerProfileLink'],
+                ]);
+                $projects->add(Project::createPartial($row));
             }
             return $projects;
         } catch (PDOException $e) {
@@ -118,6 +142,7 @@ class ProjectModel extends Model
                         'managerLastName', u.lastName,
                         'managerEmail', u.email,
                         'managerProfileLink', u.profileLink,
+                        'managerGender', u.gender,
                         'managerJobTitles', (
                             SELECT JSON_ARRAYAGG(pjt.name)
                             FROM `userJobTitle` AS pjt
@@ -135,6 +160,7 @@ class ProjectModel extends Model
                                 'workerLastName', pw.lastName,
                                 'workerEmail', pw.email,
                                 'workerProfileLink', pw.profileLink,
+                                'workerGender', pw.gender,
                                 'workerJobTitles', (
                                     SELECT JSON_ARRAYAGG(pjt.name)
                                     FROM `userJobTitle` AS pjt
@@ -328,12 +354,12 @@ class ProjectModel extends Model
      *
      * @param int $managerId The ID of the manager whose active projects to retrieve
      * 
-     * @return ProjectContainer|null Container with active projects, or null if none found
+     * @return Project|null Active Project, or null if none found
      * 
      * @throws InvalidArgumentException If managerId is less than 1
      * @throws DatabaseException If a database error occurs during the query
      */
-    public static function findManagerActiveProjectsByManagerId(int $managerId): ?ProjectContainer
+    public static function findManagerActiveProjectByManagerId(int $managerId): ?Project
     {
         if ($managerId < 1) {
             throw new InvalidArgumentException('Invalid manager ID provided.');
@@ -346,8 +372,12 @@ class ProjectModel extends Model
                     ':managerId' => $managerId,
                     ':completedStatus' => WorkStatus::COMPLETED->value,
                 ],
+                [
+                    'limit'     => 1,
+                    'orderBy'   => 'createdAt DESC',
+                ]
             );
-            return $projects;
+            return $projects->get(0) ?? null;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
@@ -363,12 +393,12 @@ class ProjectModel extends Model
      *
      * @param int $workerId The ID of the worker whose active projects should be retrieved
      * 
-     * @return ProjectContainer|null Container with active projects for the worker, or null if none found
+     * @return Project|null Active Project, or null if none found
      * 
      * @throws InvalidArgumentException If the worker ID is less than 1
      * @throws DatabaseException If a database error occurs during the query execution
      */
-    public static function findWorkerActiveProjectsByWorkerId(int $workerId): ?ProjectContainer
+    public static function findWorkerActiveProjectByWorkerId(int $workerId): ?Project
     {
         if ($workerId < 1) {
             throw new InvalidArgumentException('Invalid worker ID provided.');
@@ -382,11 +412,15 @@ class ProjectModel extends Model
                     WHERE userId = :workerId
                 ) AND status != :completedStatus',
                 [
-                    ':workerId' => $workerId,
-                    ':completedStatus' => WorkStatus::COMPLETED->value,
+                    ':workerId'         => $workerId,
+                    ':completedStatus'  => WorkStatus::COMPLETED->value,
                 ],
+                [
+                    'limit'     => 1,
+                    'orderBy'   => 'createdAt DESC',
+                ]
             );
-            return $projects;
+            return $projects->get(0) ?? null;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
