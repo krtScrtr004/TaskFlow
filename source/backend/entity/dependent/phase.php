@@ -17,7 +17,6 @@ class Phase implements Entity
     private ?string $description;
     private DateTime $startDateTime;
     private DateTime $completionDateTime;
-    private ?DateTime $actualCompletionDateTime;
     private WorkStatus $status;
 
     protected WorkValidator $workValidator;
@@ -34,7 +33,6 @@ class Phase implements Entity
      * @param string|null $description Phase description (5-500 characters) (optional)
      * @param DateTime $startDateTime Phase start date and time (cannot be in the past)
      * @param DateTime $completionDateTime Expected phase completion date and time (must be after start date)
-     * @param DateTime|null $actualCompletionDateTime Actual completion date and time (null if not completed)
      * @param WorkStatus $status Current status of the phase (enum)
      * 
      * @throws ValidationException If any of the provided data fails validation
@@ -46,7 +44,6 @@ class Phase implements Entity
         ?string $description,
         DateTime $startDateTime,
         DateTime $completionDateTime,
-        ?DateTime $actualCompletionDateTime,
         WorkStatus $status
     ) {
         try {
@@ -71,7 +68,6 @@ class Phase implements Entity
         $this->description = trimOrNull($description);
         $this->startDateTime = $startDateTime;
         $this->completionDateTime = $completionDateTime;
-        $this->actualCompletionDateTime = $actualCompletionDateTime;
         $this->status = $status;
     }
 
@@ -135,16 +131,6 @@ class Phase implements Entity
     public function getCompletionDateTime(): DateTime
     {
         return $this->completionDateTime;
-    }
-
-    /**
-     * Gets the actual completion date and time.
-     *
-     * @return DateTime|null The DateTime object representing when the phase was completed, or null if not completed
-     */
-    public function getActualCompletionDateTime(): ?DateTime
-    {
-        return $this->actualCompletionDateTime;
     }
 
     /**
@@ -249,16 +235,6 @@ class Phase implements Entity
         $this->completionDateTime = $completionDateTime;
     }
 
-    /**
-     * Sets the actual completion date and time.
-     *
-     * @param DateTime|null $actualCompletionDateTime The actual completion date and time, or null if not completed
-     * @return void
-     */
-    public function setActualCompletionDateTime(?DateTime $actualCompletionDateTime): void
-    {
-        $this->actualCompletionDateTime = $actualCompletionDateTime;
-    }
 
     /**
      * Sets the phase status.
@@ -349,7 +325,6 @@ class Phase implements Entity
             description: $defaults['description'],
             startDateTime: $defaults['startDateTime'],
             completionDateTime: $defaults['completionDateTime'],
-            actualCompletionDateTime: $defaults['actualCompletionDateTime'],
             status: $defaults['status']
         );
 
@@ -381,10 +356,6 @@ class Phase implements Entity
             'description' => $this->description,
             'startDateTime' => formatDateTime($this->startDateTime, DateTime::ATOM),
             'completionDateTime' => formatDateTime($this->completionDateTime, DateTime::ATOM),
-            'actualCompletionDateTime' =>
-                $this->actualCompletionDateTime
-                ? formatDateTime($this->actualCompletionDateTime, DateTime::ATOM)
-                : null,
             'status' => $this->status->value
         ];
     }
@@ -428,10 +399,6 @@ class Phase implements Entity
             ? new DateTime(trimOrNull($data['completionDateTime']))
             : $data['completionDateTime'];
 
-        $actualCompletionDateTime = (is_string($data['actualCompletionDateTime']))
-            ? new DateTime(trimOrNull($data['actualCompletionDateTime']))
-            : $data['actualCompletionDateTime'];
-
         $status = (is_string($data['status']))
             ? WorkStatus::fromString(trimOrNull($data['status']))
             : $data['status'];
@@ -443,7 +410,6 @@ class Phase implements Entity
             description: trimOrNull($data['description']),
             startDateTime: $startDateTime,
             completionDateTime: $completionDateTime,
-            actualCompletionDateTime: $actualCompletionDateTime,
             status: $status
         );
     }
