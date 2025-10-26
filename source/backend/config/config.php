@@ -3,9 +3,9 @@
 define('STRICT_TYPES', 1);
 define('DS', '/');
 
-require_once __DIR__ . DS . 'path.php';
-
+require_once dirname(__DIR__, 1) . DS . 'data' . DS . 'path.php';
 require_once VENDOR_PATH . 'autoload.php';
+require_once DATA_PATH . 'data-length.php';
 
 // require_once __DIR__ . DS . 'env.php';
 
