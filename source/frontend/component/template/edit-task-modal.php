@@ -50,7 +50,8 @@ $uiState = [
                         <p>Name</p>
                     </div>
                 </label>
-                <input type="text" name="task_name" id="task_name" min="1" max="255" placeholder="Task Name"
+
+                <input type="text" name="task_name" id="task_name" min="<?= NAME_MIN ?>" max="<?= NAME_MAX ?>" placeholder="Task Name"
                     value="<?= $taskData['name'] ?>" <?= $uiState['taskIsCompleted'] ?> required>
             </div>
 
@@ -64,7 +65,8 @@ $uiState = [
                         <p>Description</p>
                     </div>
                 </label>
-                <textarea name="task_description" id="task_description" rows="4"
+
+                <textarea name="task_description" id="task_description" rows="4" min="<?= LONG_TEXT_MIN ?>" max="<?= LONG_TEXT_MAX ?>"
                     placeholder="Task Description (optional)" <?= $uiState['taskIsCompleted'] ?>><?= $taskData['description'] ?></textarea>
             </div>
 
@@ -80,6 +82,7 @@ $uiState = [
                             <p>Start Date</p>
                         </div>
                     </label>
+
                     <input type="date" name="task_start_datetime" id="task_start_datetime"
                         value="<?= htmlspecialchars(formatDateTime($taskData['startDateTime'], 'Y-m-d')) ?>"
                         <?= $uiState['taskHasStarted'] ?> required>
@@ -95,6 +98,7 @@ $uiState = [
                             <p>Completion Date</p>
                         </div>
                     </label>
+
                     <input type="date" name="task_completion_datetime" id="task_completion_datetime"
                         value="<?= htmlspecialchars(formatDateTime($taskData['completionDateTime'], 'Y-m-d')) ?>"
                         <?= $uiState['taskIsCompleted'] ?> required>
@@ -111,6 +115,7 @@ $uiState = [
                         <p>Priority</p>
                     </div>
                 </label>
+
                 <select name="task_priority" id="task_priority" <?= $uiState['taskIsCompleted'] ?>>
                     <?php $taskPriorityName = $taskData['priority']->getDisplayName() ?>
                     <option value="Low" <?= $taskPriorityName === 'Low' ? 'selected' : '' ?>>Low</option>
@@ -120,7 +125,7 @@ $uiState = [
             </div>
 
             <!-- Add New Task Button -->
-            <button id="edit_task_button" type="button" class="blue-bg" <?= $uiState['taskIsCompleted'] ?>>
+            <button id="edit_task_button" type="submit" class="blue-bg" <?= $uiState['taskIsCompleted'] ?>>
                 <div class="text-w-icon">
                     <img src="<?= ICON_PATH . 'edit_w.svg' ?>" alt="Edit Task" title="Edit Task" height="20">
                     <h3 class="white-text">Edit Task</h3>

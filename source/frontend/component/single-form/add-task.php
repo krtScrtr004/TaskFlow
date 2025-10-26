@@ -33,7 +33,8 @@ require_once COMPONENT_PATH . 'template' . DS . 'add-worker-modal.php';
                 </label>
 
                 <input type="text" class="task-name" name="task_name" id="task_name" autocomplete="on"
-                    autocapitalize="on" placeholder="Enter task name" required>
+                    min="<?= NAME_MIN ?>" max="<?= NAME_MAX ?>" autocapitalize="on" placeholder="Enter task name"
+                    required>
             </div>
 
             <!-- Task Schedule -->
@@ -78,8 +79,8 @@ require_once COMPONENT_PATH . 'template' . DS . 'add-worker-modal.php';
                 </div>
             </label>
 
-            <textarea name="task_description" id="task_description" rows="4"
-                placeholder="Enter task description"></textarea>
+            <textarea name="task_description" id="task_description" rows="4" min="<?= LONG_TEXT_MIN ?>"
+                max="<?= LONG_TEXT_MAX ?>" placeholder="Enter task description"></textarea>
         </div>
 
         <!-- Task Priority -->

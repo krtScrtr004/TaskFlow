@@ -75,7 +75,8 @@ require_once COMPONENT_PATH . 'template/add-phase-modal.php';
                         <p>Description</p>
                     </div>
                 </label>
-                <textarea name="project-description" id="project_description" rows="5" cols="10"><?= $projectData['description'] ?></textarea>
+
+                <textarea name="project-description" id="project_description" rows="5" cols="10" min="<?= LONG_TEXT_MIN ?>" max="<?= LONG_TEXT_MAX ?>"><?= $projectData['description'] ?></textarea>
             </div>
 
             <!-- Project Secondary Info -->
@@ -88,8 +89,9 @@ require_once COMPONENT_PATH . 'template/add-phase-modal.php';
                             <p>Budget</p>
                         </div>
                     </label>
+
                     <input type="number" name="project_budget" id="project_budget" value="<?= $projectData['budget'] ?>"
-                        min="0" max="9999999999" <?= $uiState['projectHasStarted'] ?> required>
+                        min="<?= BUDGET_MIN ?>" max="<?= BUDGET_MAX ?>" <?= $uiState['projectHasStarted'] ?> required>
                 </div>
 
                 <!-- Start Date -->
@@ -100,6 +102,7 @@ require_once COMPONENT_PATH . 'template/add-phase-modal.php';
                             <p>Start Date</p>
                         </div>
                     </label>
+
                     <input type="date" name="project-start-date" id="project_start_date"
                         value="<?= $projectData['startDate'] ?>" <?= $uiState['projectHasStarted'] ?> required>
                 </div>
@@ -112,6 +115,7 @@ require_once COMPONENT_PATH . 'template/add-phase-modal.php';
                             <p>Completion Date</p>
                         </div>
                     </label>
+
                     <input type="date" name="project-completion-date" id="project_completion_date"
                         value="<?= $projectData['completionDate'] ?>" required>
                 </div>
@@ -182,8 +186,9 @@ require_once COMPONENT_PATH . 'template/add-phase-modal.php';
                                         <p>Description</p>
                                     </div>
                                 </label>
+
                                 <textarea class="phase-description" name="<?= $phaseData['name'] ?>_description" id="<?= $phaseData['name'] ?>_description" rows="5"
-                                    cols="10" <?= $phaseUiState['isCompleted'] ?>><?= $phaseData['description'] ?></textarea>
+                                    cols="10" min="<?= LONG_TEXT_MIN ?>" max="<?= LONG_TEXT_MAX ?>" <?= $phaseUiState['isCompleted'] ?>><?= $phaseData['description'] ?></textarea>
                             </div>
 
                             <!-- Phase Secondary Info -->
@@ -199,6 +204,7 @@ require_once COMPONENT_PATH . 'template/add-phase-modal.php';
                                             <p>Start Date</p>
                                         </div>
                                     </label>
+
                                     <input type="date" class="phase-start-datetime" name="<?= $phaseData['name'] ?>_start_date" id="<?= $phaseData['name'] ?>_start_date"
                                         value="<?= $phaseData['startDate'] ?>" <?= $phaseUiState['hasStarted'] ?> required>
                                 </div>
@@ -213,6 +219,7 @@ require_once COMPONENT_PATH . 'template/add-phase-modal.php';
                                             <p>Completion Date</p>
                                         </div>
                                     </label>
+                                    
                                     <input type="date" class="phase-completion-datetime" name="<?= $phaseData['name'] ?>_completion_date" id="<?= $phaseData['name'] ?>_completion_date"
                                         value="<?= $phaseData['completionDate'] ?>" <?= $phaseUiState['isCompleted'] ?> required>
                                 </div>

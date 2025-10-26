@@ -1,5 +1,4 @@
-<?php if (!$component)
-    throw new Error('Component is not defined') ?>
+<?php if (!$component) { throw new Exception('Component is not defined'); } ?>
 
     <!DOCTYPE html>
     <html lang="en">
@@ -7,6 +6,8 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="csrfToken" content="<?= App\Middleware\Csrf::get() ?>">
+        
         <title><?= $component['title'] ?></title>
 
     <base href="<?= PUBLIC_PATH ?>">

@@ -7,8 +7,8 @@
         name="password" 
         id="password" 
         placeholder="Enter your password here" 
-        min="8" 
-        max="255"
+        min="<?= PASSWORD_MIN ?>" 
+        max="<?= PASSWORD_MAX ?>"
         required>
 
     <!-- Password validator guide -->

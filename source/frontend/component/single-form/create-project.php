@@ -1,7 +1,14 @@
-<?php include_once COMPONENT_PATH . 'template/add-phase-modal.php' ?>
+<?php
+include_once COMPONENT_PATH . 'template/add-phase-modal.php';
+if (App\Middleware\Csrf::get() === null) {
+    App\Middleware\Csrf::generate();
+}
+?>
 
 <!-- Create Project Form -->
 <form id="create_project_form" class="create-project flex-col" action="" method="POST">
+
+    <?= hiddenCsrfInput() ?>
 
     <!-- Project Details -->
     <fieldset class="project-details flex-col">
@@ -14,7 +21,8 @@
                     <p class="">Project Name</p>
                 </div>
             </label>
-            <input type="text" name="project_name" id="project_name" placeholder="Enter project name" required>
+            <input type="text" name="project_name" id="project_name" placeholder="Enter project name"
+                min="<?= NAME_MIN ?>" max="<?= NAME_MAX ?>" required>
         </div>
 
         <!-- Project Description -->
@@ -26,7 +34,9 @@
                     <p>Description</p>
                 </div>
             </label>
-            <textarea name="project-description" id="project_description" rows="5" cols="10" placeholder="(Optional) Type here..."></textarea>
+
+            <textarea name="project-description" id="project_description" rows="5" cols="10" min="<?= LONG_TEXT_MIN ?>"
+                max="<?= LONG_TEXT_MAX ?>" placeholder="(Optional) Type here..."></textarea>
         </div>
 
         <!-- Project Secondary Info -->
@@ -40,7 +50,8 @@
                         <p>Budget</p>
                     </div>
                 </label>
-                <input type="number" name="project-budget" id="project_budget" value="0" min="0" max="9999999999"
+
+                <input type="number" name="project-budget" id="project_budget" value="0" min="<?= BUDGET_MIN ?>" max="<?= BUDGET_MAX ?>"
                     required>
             </div>
 
@@ -53,6 +64,7 @@
                         <p>Start Date</p>
                     </div>
                 </label>
+
                 <input type="date" name="project-start-date" id="project_start_date"
                     value="<?= (new DateTime())->format('Y-m-d') ?>" required>
             </div>
@@ -66,6 +78,7 @@
                         <p>Completion Date</p>
                     </div>
                 </label>
+                
                 <input type="date" name="project-completion-date" id="project_completion_date"
                     value="<?= (new DateTime())->format('Y-m-d') ?>" required>
             </div>

@@ -17,8 +17,8 @@
             <form class="search-bar" action="" method="POST">
                 <div>
                     <input type="text" name="search_worker" id="search_worker" placeholder="Search by Name or ID"
-                        min="1" max="255" autocomplete="on" required>
-                    <button id="search_worker_button" type="button" class="transparent-bg">
+                        min="<?= NAME_MIN ?>" max="<?= NAME_MAX ?>" autocomplete="on" required>
+                    <button id="search_worker_button" type="submit" class="transparent-bg">
                         <img src="<?= ICON_PATH . 'search_w.svg' ?>" alt="Search Worker" title="Search Worker"
                             height="20">
                     </button>

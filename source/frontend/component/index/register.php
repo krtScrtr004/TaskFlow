@@ -6,16 +6,16 @@ use App\Enumeration\Role;
 
     <div class="separated-name-input flex-row">
         <!-- First Name -->
-        <input type="text" id="register_first_name" name="register_first_name" min="1" max="50" placeholder="First Name"
+        <input type="text" id="register_first_name" name="register_first_name" min="<?= NAME_MIN ?>" max="<?= NAME_MAX ?>" placeholder="First Name"
             autocomplete="on" required>
 
         <!-- Middle Name -->
-        <input type="text" id="register_middle_name" name="register_middle_name" min="1" max="50"
+        <input type="text" id="register_middle_name" name="register_middle_name" min="<?= NAME_MIN ?>" max="<?= NAME_MAX ?>"
             placeholder="Middle Name" autocomplete="on" required>
     </div>
 
     <!-- Last Name -->
-    <input type="text" id="register_last_name" name="register_last_name" min="1" max="50" placeholder="Last Name"
+    <input type="text" id="register_last_name" name="register_last_name" min="<?= NAME_MIN ?>" max="<?= NAME_MAX ?>" placeholder="Last Name"
         autocomplete="on" required>
 
     <!-- Gender -->
@@ -32,8 +32,8 @@ use App\Enumeration\Role;
     </div>
 
     <!-- Contact Number -->
-    <input type="tel" name="register_contact" id="register_contact" placeholder="Contact Number" pattern="[0-9]{10,15}"
-        minlength="11" maxlength="20" required>
+    <input type="tel" name="register_contact" id="register_contact" placeholder="Contact Number" pattern="[0-9]{11,20}"
+        minlength="<?= CONTACT_NUMBER_MIN ?>" maxlength="<?= CONTACT_NUMBER_MAX ?>" required>
 
     <!-- Birth Date -->
     <div class="birth-date flex-col">
@@ -99,7 +99,7 @@ use App\Enumeration\Role;
         min="1" max="255" autocomplete="on" required>
 
     <!-- Email -->
-    <input type="email" name="register_email" id="register_email" placeholder="Email" min="8" max="255"
+    <input type="email" name="register_email" id="register_email" placeholder="Email" min="<?= URI_MIN ?>" max="<?= URI_MAX ?>"
         autocomplete="on" required>
 
     <!-- Password -->
@@ -108,7 +108,7 @@ use App\Enumeration\Role;
             width="18" height="18" />
 
         <input type="password" name="register_password" id="register_password"
-            placeholder="Please enter your password here" min="8" max="255" required />
+            placeholder="Please enter your password here" min="<?= PASSWORD_MIN ?>" max="<?= PASSWORD_MAX ?>" required />
     </div>
 
     <div class="role-selection flex-row">

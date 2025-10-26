@@ -1,12 +1,21 @@
 import { errorListDialog } from '../render/error-list-dialog.js'
 
+const LENGTH_VALIDATION = {
+    'name': { min: 1, max: 255 },
+    'uri': { min: 3, max: 255 },
+    'contactNumber': { min: 11, max: 20 },
+    'password': { min: 8, max: 255 },
+    'longText': { min: 10, max: 500 },
+    'budget': { min: 0, max: 999999999999 }
+}
+
 export function userValidationRules() {
     return {
         'firstName': {
             condition: (inputs) => {
                 const errors = []
-                if (!inputs.firstName || inputs.firstName.trim() === '' || inputs.firstName.length < 1 || inputs.firstName.length > 255) {
-                    errors.push('First name must be between 1 and 255 characters long.')
+                if (!inputs.firstName || inputs.firstName.trim() === '' || inputs.firstName.length < LENGTH_VALIDATION.name.min || inputs.firstName.length > LENGTH_VALIDATION.name.max) {
+                    errors.push(`First name must be between ${LENGTH_VALIDATION.name.min} and ${LENGTH_VALIDATION.name.max} characters long.`)
                 } else if (!/^[a-zA-Z\s'-]{1,255}$/.test(inputs.firstName)) {
                     errors.push('First name contains invalid characters.')
                 }
@@ -17,8 +26,8 @@ export function userValidationRules() {
         'middleName': {
             condition: (inputs) => {
                 const errors = []
-                if (inputs.middleName && inputs.middleName.trim() !== '' && (inputs.middleName.length < 1 || inputs.middleName.length > 255)) {
-                    errors.push('Middle name must be between 1 and 255 characters long.')
+                if (inputs.middleName && inputs.middleName.trim() !== '' && (inputs.middleName.length < LENGTH_VALIDATION.name.min || inputs.middleName.length > LENGTH_VALIDATION.name.max)) {
+                    errors.push(`Middle name must be between ${LENGTH_VALIDATION.name.min} and ${LENGTH_VALIDATION.name.max} characters long.`)
                 } else if (!/^[a-zA-Z\s'-]{0,255}$/.test(inputs.middleName)) {
                     errors.push('Middle name contains invalid characters.')
                 }
@@ -29,8 +38,8 @@ export function userValidationRules() {
         'lastName': {
             condition: (inputs) => {
                 const errors = []
-                if (!inputs.lastName || inputs.lastName.trim() === '' || inputs.lastName.length < 1 || inputs.lastName.length > 255) {
-                    errors.push('Last name must be between 1 and 255 characters long.')
+                if (!inputs.lastName || inputs.lastName.trim() === '' || inputs.lastName.length < LENGTH_VALIDATION.name.min || inputs.lastName.length > LENGTH_VALIDATION.name.max) {
+                    errors.push(`Last name must be between ${LENGTH_VALIDATION.name.min} and ${LENGTH_VALIDATION.name.max} characters long.`)
                 } else if (!/^[a-zA-Z\s'-]{1,255}$/.test(inputs.lastName)) {
                     errors.push('Last name contains invalid characters.')
                 }
@@ -41,8 +50,8 @@ export function userValidationRules() {
         'bio': {
             condition: (inputs) => {
                 const errors = []
-                if (inputs.bio && (inputs.bio.trim().length < 10 || inputs.bio.trim().length > 500)) {
-                    errors.push('Bio must be between 10 and 500 characters long.')
+                if (inputs.bio && (inputs.bio.trim().length < LENGTH_VALIDATION.longText.min || inputs.bio.trim().length > LENGTH_VALIDATION.longText.max)) {
+                    errors.push(`Bio must be between ${LENGTH_VALIDATION.longText.min} and ${LENGTH_VALIDATION.longText.max} characters long.`)
                 }
                 return errors
             }
@@ -85,7 +94,7 @@ export function userValidationRules() {
             condition: (inputs) => {
                 const errors = []
                 if (!inputs.jobTitles || inputs.jobTitles.trim() === '' || inputs.jobTitles.length < 1 || inputs.jobTitles.length > 500) {
-                    errors.push('Job titles must be between 1 and 500 characters long.')
+                    errors.push(`Job titles must be between ${LENGTH_VALIDATION.longText.min} and ${LENGTH_VALIDATION.longText.max} characters long.`)
                 }
                 return errors
             }
@@ -94,8 +103,8 @@ export function userValidationRules() {
         'contactNumber': {
             condition: (inputs) => {
                 const errors = []
-                if (!inputs.contactNumber || inputs.contactNumber.trim() === '' || inputs.contactNumber.length < 11 || inputs.contactNumber.length > 20) {
-                    errors.push('Contact number must be between 11 and 20 characters long.')
+                if (!inputs.contactNumber || inputs.contactNumber.trim() === '' || inputs.contactNumber.length < LENGTH_VALIDATION.contactNumber.min || inputs.contactNumber.length > LENGTH_VALIDATION.contactNumber.max) {
+                    errors.push(`Contact number must be between ${LENGTH_VALIDATION.contactNumber.min} and ${LENGTH_VALIDATION.contactNumber.max} characters long.`)
                 }
                 return errors
             }
@@ -104,8 +113,8 @@ export function userValidationRules() {
         'email': {
             condition: (inputs) => {
                 const errors = []
-                if (!inputs.email || inputs.email.trim().length < 3 || inputs.email.trim().length > 255) {
-                    errors.push('Email must be between 3 and 255 characters long.')
+                if (!inputs.email || inputs.email.trim().length < LENGTH_VALIDATION.uri.min || inputs.uri.trim().length > LENGTH_VALIDATION.email.max) {
+                    errors.push(`Email must be between ${LENGTH_VALIDATION.uri.min} and ${LENGTH_VALIDATION.email.max} characters long.`)
                 } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inputs.email)) {
                     errors.push('Invalid email address.')
                 }
@@ -116,8 +125,8 @@ export function userValidationRules() {
         'password': {
             condition: (inputs) => {
                 const errors = []
-                if (!inputs.password || inputs.password.length < 8 || inputs.password.length > 128) {
-                    errors.push('Password must be between 8 and 128 characters long.')
+                if (!inputs.password || inputs.password.length < LENGTH_VALIDATION.password.min || inputs.password.length > LENGTH_VALIDATION.password.max) {
+                    errors.push(`Password must be between ${LENGTH_VALIDATION.password.min} and ${LENGTH_VALIDATION.password.max} characters long.`)
                 }
                 if (inputs.password && !/[a-z]/.test(inputs.password)) {
                     errors.push('Password must contain at least one lowercase letter.')
@@ -152,20 +161,20 @@ export function workValidationRules() {
     return {
         'name': {
             // Name validation
-            condition: (inputs) => !inputs.name || inputs.name.trim().length < 3 || inputs.name.trim().length > 255,
-            message: 'Name must be between 3 and 255 characters long.'
+            condition: (inputs) => !inputs.name || inputs.name.trim().length < LENGTH_VALIDATION.name.min || inputs.name.trim().length > LENGTH_VALIDATION.name.max,
+            message: `Name must be between ${LENGTH_VALIDATION.name.min} and ${LENGTH_VALIDATION.name.max} characters long.`
         },
 
         'description': {
             // Description validation (optional)
-            condition: (inputs) => inputs.description && (inputs.description.trim().length < 5 || inputs.description.trim().length > 500),
-            message: 'Description must be between 5 and 500 characters long.'
+            condition: (inputs) => inputs.description && (inputs.description.trim().length < LENGTH_VALIDATION.longText.min || inputs.description.trim().length > LENGTH_VALIDATION.longText.max),
+            message: `Description must be between ${LENGTH_VALIDATION.longText.min} and ${LENGTH_VALIDATION.longText.max} characters long.`
         },
 
         'budget': {
             // Budget validation
-            condition: (inputs) => !inputs.budget && (isNaN(inputs.budget) || inputs.budget < 0 || inputs.budget > 1000000),
-            message: 'Budget must be a number between 0 and 1,000,000.'
+            condition: (inputs) => !inputs.budget && (isNaN(inputs.budget) || inputs.budget < LENGTH_VALIDATION.budget.min || inputs.budget > LENGTH_VALIDATION.budget.max),
+            message: `Budget must be a number between ${LENGTH_VALIDATION.budget.min} and ${LENGTH_VALIDATION.budget.max}.`
         },
 
         'startDateTime': {
