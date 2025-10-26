@@ -26,7 +26,7 @@ class UuidValidator extends Validator {
                 throw new InvalidArgumentException('Invalid UUID format.');
             }
         } catch (InvalidArgumentException $e) {
-            $this->errors['uuid'] = $e->getMessage();
+            $this->errors[] = $e->getMessage();
         }
     }
 
