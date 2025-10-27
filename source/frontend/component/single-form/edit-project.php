@@ -1,5 +1,6 @@
 <?php
 
+use App\Core\UUID;
 use App\Enumeration\WorkStatus;
 use App\Model\ProjectModel;
 
@@ -8,29 +9,32 @@ if (!$projectId) {
     throw new ErrorException('Project ID is required to edit a project.');
 }
 
-// TODO: Fetch project data from the database using the provided project ID
-$projects = ProjectModel::all();
-$project = $projects->getItems()[0];
-if (!$project)
+// Fetch project data from the database using the provided project ID
+$project = ProjectModel::findFull(
+    UUID::fromString($projectId),
+    ['phases' => true]
+);
+if (!$project) {
     throw new ErrorException('Project data is required to edit a project.');
+}
 
 $projectData = [
-    'id' => htmlspecialchars($project->getPublicId()),
-    'name' => htmlspecialchars($project->getName()),
-    'description' => htmlspecialchars($project->getDescription()),
-    'budget' => htmlspecialchars(formatBudgetToPesos($project->getBudget())),
-    'startDate' => $project->getStartDateTime()->format('Y-m-d'),
-    'completionDate' => $project->getCompletionDateTime()->format('Y-m-d'),
-    'status' => WorkStatus::PENDING,
-    'phases' => $project->getPhases()
+    'id'                => htmlspecialchars(UUID::toString($project->getPublicId())),
+    'name'              => htmlspecialchars($project->getName()),
+    'description'       => htmlspecialchars($project->getDescription()),
+    'budget'            => htmlspecialchars($project->getBudget()),
+    'startDate'         => htmlspecialchars(formatDateTime($project->getStartDateTime())),
+    'completionDate'    => htmlspecialchars(formatDateTime($project->getCompletionDateTime())),
+    'status'            => WorkStatus::PENDING,
+    'phases'            => $project->getPhases()
 ];
 
 // Prepare UI state flags
 $uiState = [
-    'projectHasStarted' => $projectData['status'] === WorkStatus::PENDING ? '' : 'disabled',
-    'projectIsCompleted' => in_array($projectData['status'], [WorkStatus::COMPLETED, WorkStatus::CANCELLED]) ? 'disabled' : '',
-    'canEdit' => !in_array($projectData['status'], [WorkStatus::COMPLETED, WorkStatus::CANCELLED]),
-    'showWarning' => in_array($projectData['status'], [WorkStatus::COMPLETED, WorkStatus::CANCELLED])
+    'projectHasStarted'     => $projectData['status'] === WorkStatus::PENDING ? '' : 'disabled',
+    'projectIsCompleted'    => in_array($projectData['status'], [WorkStatus::COMPLETED, WorkStatus::CANCELLED]) ? 'disabled' : '',
+    'canEdit'               => !in_array($projectData['status'], [WorkStatus::COMPLETED, WorkStatus::CANCELLED]),
+    'showWarning'           => in_array($projectData['status'], [WorkStatus::COMPLETED, WorkStatus::CANCELLED])
 ];
 
 require_once COMPONENT_PATH . 'template/add-phase-modal.php';
@@ -136,17 +140,17 @@ require_once COMPONENT_PATH . 'template/add-phase-modal.php';
             <section class="phases flex-col">
                 <?php foreach ($projectData['phases'] as $phase):
                     $phaseData = [
-                        'id' => htmlspecialchars($phase->getPublicId()),
-                        'name' => htmlspecialchars($phase->getName()),
-                        'description' => htmlspecialchars($phase->getDescription()),
-                        'startDate' => $phase->getStartDateTime()->format('Y-m-d'),
-                        'completionDate' => $phase->getCompletionDateTime()->format('Y-m-d'),
-                        'status' => $phase->getStatus()
+                        'id'            => htmlspecialchars(UUID::toString($phase->getPublicId())),
+                        'name'          => htmlspecialchars($phase->getName()),
+                        'description'   => htmlspecialchars($phase->getDescription()),
+                        'startDate'     => htmlspecialchars(formatDateTime($phase->getStartDateTime())),
+                        'completionDate'=> htmlspecialchars(formatDateTime($phase->getCompletionDateTime())),
+                        'status'        => $phase->getStatus()
                     ];
 
                     $phaseUiState = [
-                        'hasStarted' => $phaseData['status'] === WorkStatus::PENDING ? '' : 'disabled',
-                        'isCompleted' => in_array($phaseData['status'], [WorkStatus::COMPLETED, WorkStatus::CANCELLED]) ? 'disabled' : ''
+                        'hasStarted'    => $phaseData['status'] === WorkStatus::PENDING ? '' : 'disabled',
+                        'isCompleted'   => in_array($phaseData['status'], [WorkStatus::COMPLETED, WorkStatus::CANCELLED]) ? 'disabled' : ''
                     ];
                 ?>
 
