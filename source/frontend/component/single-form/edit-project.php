@@ -4,14 +4,15 @@ use App\Core\UUID;
 use App\Enumeration\WorkStatus;
 use App\Model\ProjectModel;
 
-$projectId = $args['projectId'] ?? null;
-if (!$projectId) {
+$projectId = isset($args['projectId']) 
+    ? UUID::fromString($args['projectId']) 
+    : null;if (!$projectId) {
     throw new ErrorException('Project ID is required to edit a project.');
 }
 
 // Fetch project data from the database using the provided project ID
 $project = ProjectModel::findFull(
-    UUID::fromString($projectId),
+    $projectId,
     ['phases' => true]
 );
 if (!$project) {
@@ -23,8 +24,8 @@ $projectData = [
     'name'              => htmlspecialchars($project->getName()),
     'description'       => htmlspecialchars($project->getDescription()),
     'budget'            => htmlspecialchars($project->getBudget()),
-    'startDate'         => htmlspecialchars(formatDateTime($project->getStartDateTime())),
-    'completionDate'    => htmlspecialchars(formatDateTime($project->getCompletionDateTime())),
+    'startDate'         => htmlspecialchars(formatDateTime($project->getStartDateTime(), 'Y-m-d')),
+    'completionDate'    => htmlspecialchars(formatDateTime($project->getCompletionDateTime(), 'Y-m-d')),
     'status'            => WorkStatus::PENDING,
     'phases'            => $project->getPhases()
 ];
@@ -51,10 +52,10 @@ require_once COMPONENT_PATH . 'template/add-phase-modal.php';
             </div>
         <?php endif; ?>
 
-        <div class="title flex-row flex-child-center-h">
+        <div class="title flex-row flex-child-center-h flex-wrap">
             <div class="project-name text-w-icon">
                 <img src="<?= ICON_PATH . 'project_w.svg' ?>" alt="<?= $projectData['name'] ?>" title="<?= $projectData['name'] ?>" height="40">
-                <h1><?= $projectData['name'] ?></h1>
+                <h1 class="single-line-ellipsis" title="<?= $projectData['name'] ?>"><?= $projectData['name'] ?></h1>
             </div>
 
             <p class="project-id">
@@ -143,8 +144,8 @@ require_once COMPONENT_PATH . 'template/add-phase-modal.php';
                         'id'            => htmlspecialchars(UUID::toString($phase->getPublicId())),
                         'name'          => htmlspecialchars($phase->getName()),
                         'description'   => htmlspecialchars($phase->getDescription()),
-                        'startDate'     => htmlspecialchars(formatDateTime($phase->getStartDateTime())),
-                        'completionDate'=> htmlspecialchars(formatDateTime($phase->getCompletionDateTime())),
+                        'startDate'     => htmlspecialchars(formatDateTime($phase->getStartDateTime(), 'Y-m-d')),
+                        'completionDate'=> htmlspecialchars(formatDateTime($phase->getCompletionDateTime(), 'Y-m-d')),
                         'status'        => $phase->getStatus()
                     ];
 
@@ -164,7 +165,7 @@ require_once COMPONENT_PATH . 'template/add-phase-modal.php';
                                     <img src="<?= ICON_PATH . 'phase_w.svg' ?>" alt="<?= $phaseData['name'] ?>" title="<?= $phaseData['name'] ?>"
                                         height="22">
 
-                                    <h3 class="phase-name wrap-text"><?= $phaseData['name'] ?></h3>
+                                    <h3 class="phase-name wrap-text single-line-ellipsis" title="<?= $phaseData['name'] ?>"><?= $phaseData['name'] ?></h3>
                                 </div>
 
                                 <?= WorkStatus::badge($phaseData['status']) ?>

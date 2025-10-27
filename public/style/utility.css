@@ -227,6 +227,15 @@
 	text-overflow: ellipsis;
 }
 
+.multi-line-ellipsis-2 {
+	display: -webkit-box;
+	-webkit-line-clamp: 2; /* Number of lines */
+	line-clamp: 2; /* Standard property for compatibility */
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+
 .multi-line-ellipsis-3 {
 	display: -webkit-box;
 	-webkit-line-clamp: 3; /* Number of lines */
