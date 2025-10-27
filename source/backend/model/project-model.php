@@ -117,136 +117,162 @@ class ProjectModel extends Model
     }
 
     /**
-     * Finds and retrieves a complete project with phases and workers data.
+     * Finds and retrieves a project with conditionally included related data.
      *
-     * This method performs a comprehensive database query to fetch a project along with:
-     * - Project manager details with job titles
-     * - All project phases with their details
-     * - All project workers with their details and job titles
+     * This method performs an optimized database query to fetch a project along with:
+     * - Project basic information and manager details with job titles (always included)
+     * - Project phases (optional, based on options array)
+     * - Project tasks (optional, based on options array)
+     * - Project workers with their job titles (optional, based on options array)
      * 
-     * The method uses JSON aggregation in SQL to efficiently fetch related data in a single query,
-     * then processes the result into a fully populated Project object with nested relationships.
+     * The method uses JSON aggregation in SQL to efficiently fetch related data in a single query.
+     * By default, only basic project and manager information is fetched. Additional related data
+     * (phases, tasks, workers) are only queried when explicitly requested through the options array,
+     * improving query performance when the full dataset is not needed.
      *
      * @param UUID $projectId The public UUID of the project to find
      * @param array $options Optional configuration array with following keys:
-     *      - workerLimit: int (default: 10) Maximum number of workers to fetch (currently not implemented)
+     *      - phases: bool (default: false) Include project phases if true
+     *      - tasks: bool (default: false) Include project tasks if true
+     *      - workers: bool (default: false) Include project workers if true
      * 
-     * @return Project|null Returns a Project object with all associated data if found, null if project doesn't exist
+     * @return Project|null Returns a Project object with requested associated data if found, null if project doesn't exist
      * 
      * @throws DatabaseException If a database error occurs during query execution
      */
-    public static function findFull(UUID $projectId, array $options = ['workerLimit' => 10,]): mixed
-    {
+    public static function findFull(
+        UUID $projectId, 
+        array $options = [
+            'phases' => false,
+            'tasks' => false,
+            'workers' => false
+        ]
+    ): mixed {
         $instance = new self();
         try {
-            
+            // Default options
+            $includePhases = $options['phases'] ?? false;
+            $includeTasks = $options['tasks'] ?? false;
+            $includeWorkers = $options['workers'] ?? false;
 
+            // Build dynamic query parts
+            $selectFields = [
+                'p.id AS projectId',
+                'p.publicId AS projectPublicId',
+                'p.name AS projectName',
+                'p.description AS projectDescription',
+                'p.budget AS projectBudget',
+                'p.status AS projectStatus',
+                'p.startDateTime AS projectStartDateTime',
+                'p.completionDateTime AS projectCompletionDateTime',
+                'p.actualCompletionDateTime AS projectActualCompletionDateTime',
+                'p.createdAt AS projectCreatedAt',
+                
+                // Manager JSON object (always included)
+                "JSON_OBJECT(
+                    'managerId', m.id,
+                    'managerPublicId', HEX(m.publicId),
+                    'managerFirstName', m.firstName,
+                    'managerMiddleName', m.middleName,
+                    'managerLastName', m.lastName,
+                    'managerEmail', m.email,
+                    'managerProfileLink', m.profileLink,
+                    'managerGender', m.gender,
+                    'managerJobTitles', COALESCE(
+                        (
+                            SELECT CONCAT('[', GROUP_CONCAT(CONCAT('\"', mjt.title, '\"')), ']')
+                            FROM userJobTitle AS mjt
+                            WHERE mjt.userId = m.id
+                        ),
+                        '[]'
+                    )
+                ) AS projectManager"
+            ];
+
+            // Conditionally add phases subquery
+            if ($includePhases) {
+                $selectFields[] = "COALESCE(
+                    (
+                        SELECT CONCAT('[', GROUP_CONCAT(
+                            JSON_OBJECT(
+                                'phaseId', pp.id,
+                                'phasePublicId', HEX(pp.publicId),
+                                'phaseName', pp.name,
+                                'phaseDescription', pp.description,
+                                'phaseStatus', pp.status,
+                                'phaseStartDateTime', pp.startDateTime,
+                                'phaseCompletionDateTime', pp.completionDateTime
+                            )
+                        ), ']')
+                        FROM projectPhase pp
+                        WHERE pp.projectId = p.id
+                    ),
+                    '[]'
+                ) AS projectPhases";
+            }
+
+            // Conditionally add workers subquery
+            if ($includeWorkers) {
+                $selectFields[] = "COALESCE(
+                    (
+                        SELECT CONCAT('[', GROUP_CONCAT(
+                            JSON_OBJECT(
+                                'workerId', w.id,
+                                'workerPublicId', HEX(w.publicId),
+                                'workerFirstName', w.firstName,
+                                'workerMiddleName', w.middleName,
+                                'workerLastName', w.lastName,
+                                'workerEmail', w.email,
+                                'workerProfileLink', w.profileLink,
+                                'workerGender', w.gender,
+                                'workerJobTitles', COALESCE(
+                                    (
+                                        SELECT CONCAT('[', GROUP_CONCAT(CONCAT('\"', wjt.title, '\"')), ']')
+                                        FROM userJobTitle wjt
+                                        WHERE wjt.userId = w.id
+                                    ),
+                                    '[]'
+                                )
+                            ) ORDER BY w.lastName SEPARATOR ','
+                        ), ']')
+                        FROM projectWorker pw
+                        INNER JOIN user w ON pw.workerId = w.id
+                        WHERE pw.projectId = p.id
+                    ),
+                    '[]'
+                ) AS projectWorkers";
+            }
+
+            // Conditionally add tasks subquery
+            if ($includeTasks) {
+                $selectFields[] = "COALESCE(
+                    (
+                        SELECT CONCAT('[', GROUP_CONCAT(
+                            JSON_OBJECT(
+                                'taskId', pt.id,
+                                'taskPublicId', HEX(pt.publicId),
+                                'taskName', pt.name,
+                                'taskDescription', pt.description,
+                                'taskStatus', pt.status,
+                                'taskPriority', pt.priority,
+                                'taskStartDateTime', pt.startDateTime,
+                                'taskCompletionDateTime', pt.completionDateTime,
+                                'taskCreatedAt', pt.createdAt
+                            ) ORDER BY pt.createdAt SEPARATOR ','
+                        ), ']')
+                        FROM `projectTask` AS pt
+                        WHERE pt.projectId = p.id
+                    ),
+                    '[]'
+                ) AS projectTasks";
+            }
+
+            // Build the final query
             $query = "
                 SELECT *
                 FROM (
                     SELECT 
-                        p.id AS projectId,
-                        p.publicId AS projectPublicId,
-                        p.name AS projectName,
-                        p.description AS projectDescription,
-                        p.budget AS projectBudget,
-                        p.status AS projectStatus,
-                        p.startDateTime AS projectStartDateTime,
-                        p.completionDateTime AS projectCompletionDateTime,
-                        p.actualCompletionDateTime AS projectActualCompletionDateTime,
-                        p.createdAt AS projectCreatedAt,
-
-                        -- Manager JSON object
-                        JSON_OBJECT(
-                            'managerId', m.id,
-                            'managerPublicId', HEX(m.publicId),
-                            'managerFirstName', m.firstName,
-                            'managerMiddleName', m.middleName,
-                            'managerLastName', m.lastName,
-                            'managerEmail', m.email,
-                            'managerProfileLink', m.profileLink,
-                            'managerGender', m.gender,
-                            'managerJobTitles', COALESCE(
-                                (
-                                    SELECT CONCAT('[', GROUP_CONCAT(CONCAT('\"', mjt.title, '\"')), ']')
-                                    FROM userJobTitle AS mjt
-                                    WHERE mjt.userId = m.id
-                                ),
-                                '[]'
-                            )
-                        ) AS projectManager,
-
-                        -- Phases JSON array
-                        COALESCE(
-                            (
-                                SELECT CONCAT('[', GROUP_CONCAT(
-                                    JSON_OBJECT(
-                                        'phaseId', pp.id,
-                                        'phasePublicId', HEX(pp.publicId),
-                                        'phaseName', pp.name,
-                                        'phaseDescription', pp.description,
-                                        'phaseStatus', pp.status,
-                                        'phaseStartDateTime', pp.startDateTime,
-                                        'phaseCompletionDateTime', pp.completionDateTime
-                                    )
-                                ), ']')
-                                FROM projectPhase pp
-                                WHERE pp.projectId = p.id
-                            )
-                        ) AS projectPhases,
-
-                        -- Workers JSON array
-                        COALESCE(
-                            (
-                                SELECT CONCAT('[', GROUP_CONCAT(
-                                    JSON_OBJECT(
-                                        'workerId', w.id,
-                                        'workerPublicId', HEX(w.publicId),
-                                        'workerFirstName', w.firstName,
-                                        'workerMiddleName', w.middleName,
-                                        'workerLastName', w.lastName,
-                                        'workerEmail', w.email,
-                                        'workerProfileLink', w.profileLink,
-                                        'workerGender', w.gender,
-                                        'workerJobTitles', COALESCE(
-                                            (
-                                                SELECT CONCAT('[', GROUP_CONCAT(CONCAT('\"', wjt.title, '\"')), ']')
-                                                FROM userJobTitle wjt
-                                                WHERE wjt.userId = w.id
-                                            ),
-                                            '[]'
-                                        )
-                                    ) ORDER BY w.lastName SEPARATOR ','
-                                ), ']')
-                                FROM projectWorker pw
-                                INNER JOIN user w ON pw.workerId = w.id
-                                WHERE pw.projectId = p.id
-                            ),
-                            '[]'
-                        ) AS projectWorkers,
-
-                        -- Tasks JSON array
-                        COALESCE(
-                            (
-                                SELECT CONCAT('[', GROUP_CONCAT(
-                                    JSON_OBJECT(
-                                        'taskId', pt.id,
-                                        'taskPublicId', HEX(pt.publicId),
-                                        'taskName', pt.name,
-                                        'taskDescription', pt.description,
-                                        'taskStatus', pt.status,
-                                        'taskPriority', pt.priority,
-                                        'taskStartDateTime', pt.startDateTime,
-                                        'taskCompletionDateTime', pt.completionDateTime,
-                                        'taskCreatedAt', pt.createdAt
-                                    ) ORDER BY pt.createdAt SEPARATOR ','
-                                ), ']')
-                                FROM `projectTask` AS pt
-                                WHERE pt.projectId = p.id
-                            ),
-                            '[]'
-                        ) AS projectTasks
-
+                        " . implode(",\n                        ", $selectFields) . "
                     FROM 
                         project p
                     INNER JOIN
@@ -260,7 +286,7 @@ class ProjectModel extends Model
             $statement->execute([':projectId' => UUID::toBinary($projectId)]);
             $result = $statement->fetch();
 
-            // Process result into ProjectFull object
+            // Process result into Project object
             if (!$instance->hasData($result)) {
                 return null;
             }
@@ -295,53 +321,59 @@ class ProjectModel extends Model
                 createdAt: new DateTime($result['projectCreatedAt']),
             );
 
-            $projectPhases = json_decode($result['projectPhases'], true);
-            foreach ($projectPhases as $phase) {
-                $project->addPhase(new Phase(
-                    id: $phase['phaseId'],
-                    publicId: UUID::fromHex($phase['phasePublicId']),
-                    name: $phase['phaseName'],
-                    description: $phase['phaseDescription'],
-                    status: WorkStatus::from($phase['phaseStatus']),
-                    startDateTime: new DateTime($phase['phaseStartDateTime']),
-                    completionDateTime: new DateTime($phase['phaseCompletionDateTime'])
-                ));
+            // Process phases if included
+            if ($includePhases && isset($result['projectPhases'])) {
+                $projectPhases = json_decode($result['projectPhases'], true);
+                foreach ($projectPhases as $phase) {
+                    $project->addPhase(new Phase(
+                        id: $phase['phaseId'],
+                        publicId: UUID::fromHex($phase['phasePublicId']),
+                        name: $phase['phaseName'],
+                        description: $phase['phaseDescription'],
+                        status: WorkStatus::from($phase['phaseStatus']),
+                        startDateTime: new DateTime($phase['phaseStartDateTime']),
+                        completionDateTime: new DateTime($phase['phaseCompletionDateTime'])
+                    ));
+                }
             }
 
-            $projectTask = json_decode($result['projectTasks'], true);
-            foreach ($projectTask as $task) {
-                $project->addTask(new Task(
-                    id: $task['taskId'],
-                    publicId: UUID::fromHex($task['taskPublicId']),
-                    name: $task['taskName'],
-                    description: $task['taskDescription'],
-                    status: WorkStatus::from($task['taskStatus']),
-                    priority: TaskPriority::from($task['taskPriority']),
-                    workers: new WorkerContainer(),
-                    startDateTime: new DateTime($task['taskStartDateTime']),
-                    completionDateTime: new DateTime($task['taskCompletionDateTime']),
-                    actualCompletionDateTime: $task['taskActualCompletionDateTime'] 
-                        ? new DateTime($task['taskActualCompletionDateTime']) 
-                        : null,
-                    createdAt: new DateTime($task['taskCreatedAt'])
-                ));
+            // Process tasks if included
+            if ($includeTasks && isset($result['projectTasks'])) {
+                $projectTask = json_decode($result['projectTasks'], true);
+                foreach ($projectTask as $task) {
+                    $project->addTask(new Task(
+                        id: $task['taskId'],
+                        publicId: UUID::fromHex($task['taskPublicId']),
+                        name: $task['taskName'],
+                        description: $task['taskDescription'],
+                        status: WorkStatus::from($task['taskStatus']),
+                        priority: TaskPriority::from($task['taskPriority']),
+                        workers: new WorkerContainer(),
+                        startDateTime: new DateTime($task['taskStartDateTime']),
+                        completionDateTime: new DateTime($task['taskCompletionDateTime']),
+                        actualCompletionDateTime: $task['taskActualCompletionDateTime'] 
+                            ? new DateTime($task['taskActualCompletionDateTime']) 
+                            : null,
+                        createdAt: new DateTime($task['taskCreatedAt'])
+                    ));
+                }
             }
 
-            $projectWorkers = json_decode($result['projectWorkers'], true);
-            foreach ($projectWorkers as $worker) {
-                $project->addWorker(Worker::createPartial([
-                    'id'            => $worker['workerId'],
-                    'publicId'      => UUID::fromHex($worker['workerPublicId']),
-                    'firstName'     => $worker['workerFirstName'],
-                    'middleName'    => $worker['workerMiddleName'] ?? null,
-                    'lastName'      => $worker['workerLastName'],
-                    'email'         => $worker['workerEmail'] ?? null,
-                    'profileLink'   => $worker['workerProfileLink'] ?? null,
-                ]));
+            // Process workers if included
+            if ($includeWorkers && isset($result['projectWorkers'])) {
+                $projectWorkers = json_decode($result['projectWorkers'], true);
+                foreach ($projectWorkers as $worker) {
+                    $project->addWorker(Worker::createPartial([
+                        'id'            => $worker['workerId'],
+                        'publicId'      => UUID::fromHex($worker['workerPublicId']),
+                        'firstName'     => $worker['workerFirstName'],
+                        'middleName'    => $worker['workerMiddleName'] ?? null,
+                        'lastName'      => $worker['workerLastName'],
+                        'email'         => $worker['workerEmail'] ?? null,
+                        'profileLink'   => $worker['workerProfileLink'] ?? null,
+                    ]));
+                }
             }
-
-            // You can attach these counts to the project object if needed
-            // For now, they're available as separate variables
                     
             return $project;
         } catch (PDOException $e) {
@@ -368,14 +400,14 @@ class ProjectModel extends Model
      * @throws InvalidArgumentException If the provided $projectId is invalid (< 1)
      * @throws DatabaseException If a database error occurs (wraps the underlying PDOException)
      */
-    public function findById(int $projectId): ?Project
+    public static function findById(int $projectId): ?Project
     {
         if ($projectId < 1) {
             throw new InvalidArgumentException('Invalid Project ID.');
         }
 
         try {
-            return self::find('id = :projectId', ['projectId' => $projectId])->getItems() ?? null;
+            return self::find('p.id = :projectId', ['projectId' => $projectId])->getItems() ?? null;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
@@ -397,7 +429,7 @@ class ProjectModel extends Model
      * @throws ValidationException If the provided UUID fails validation (validator errors accessible from the validator)
      * @throws DatabaseException If a database error occurs while performing the lookup (wraps underlying PDO errors)
      */
-    public function findByPublicId(UUID $publicId): ?Project
+    public static function findByPublicId(UUID $publicId): ?Project
     {
         $uuidValidator = new UuidValidator();
         $uuidValidator->validateUuid($publicId);
@@ -410,7 +442,7 @@ class ProjectModel extends Model
 
         $binaryUuid = UUID::toBinary($publicId);
         try {
-            return self::find('publicId = :publicId', ['publicId' => $binaryUuid])->getItems() ?? null;
+            return self::find('p.publicId = :publicId', ['publicId' => $binaryUuid])->getItems() ?? null;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
@@ -439,7 +471,7 @@ class ProjectModel extends Model
         }
 
         try {
-            return self::find('managerId = :managerId', [':managerId' => $managerId]);
+            return self::find('p.managerId = :managerId', [':managerId' => $managerId]);
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
@@ -504,7 +536,7 @@ class ProjectModel extends Model
 
         try {
             $projects = self::find(
-                'managerId = :managerId AND status != :completedStatus',
+                'p.managerId = :managerId AND p.status != :completedStatus',
                 [
                     ':managerId' => $managerId,
                     ':completedStatus' => WorkStatus::COMPLETED->value,

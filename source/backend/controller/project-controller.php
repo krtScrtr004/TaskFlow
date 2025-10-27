@@ -48,7 +48,11 @@ class ProjectController implements Controller
                         $instance->uuidValidator->getErrors()
                     );
                 }
-                $project = ProjectModel::findFull($projectId);
+                $project = ProjectModel::findFull($projectId, [
+                    'phases' => true,
+                    'tasks'  => true,
+                    'workers' => true
+                ]);
 
                 // Check if the project is already completed or delayed based on current date and tasks status
                 $completionDateTime = $project->getCompletionDateTime();
