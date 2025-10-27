@@ -23,7 +23,8 @@ class PhaseContainer extends Container
         if (!$item instanceof Phase) {
             throw new InvalidArgumentException('Only Phase instances can be added to PhaseContainer.');
         }
-        $this->items[] = $item;
+
+        $this->items[$item->getId()] = $item;
     }
 
     public function remove($item): void
@@ -32,10 +33,15 @@ class PhaseContainer extends Container
             throw new InvalidArgumentException('Only Phase instances can be removed from PhaseContainer.');
         }
 
-        $index = array_search($item, $this->items, true);
-        if ($index !== false) {
-            array_splice($this->items, $index, 1);
+        unset($this->items[$item->getId()]);
+    }
+
+    public function contains($item): bool
+    {
+        if (!$item instanceof Phase) {
+            throw new InvalidArgumentException('Only Phase instances can be checked in PhaseContainer.');
         }
+        return isset($this->items[$item->getId()]);
     }
 
     /**

@@ -33,8 +33,8 @@ class ProjectContainer extends Container
         if (!$project instanceof Project) {
             throw new InvalidArgumentException("Only Project instances can be added to ProjectContainer.");
         }
-        $this->items[] = $project;
         $this->increaseCount($project);
+        $this->items[$project->getId()] = $project;
     }
 
     public function remove($item): void
@@ -43,11 +43,16 @@ class ProjectContainer extends Container
             throw new InvalidArgumentException('Only Project instances can be removed from ProjectContainer.');
         }
 
-        $index = array_search($item, $this->items, true);
-        if ($index !== false) {
-            array_splice($this->items, $index, 1);
-        }
         $this->decreaseCount($item);
+        unset($this->items[$item->getId()]);
+    }
+
+    public function contains($item): bool
+    {
+        if (!$item instanceof Project) {
+            throw new InvalidArgumentException('Only Project instances can be checked in ProjectContainer.');
+        }
+        return isset($this->items[$item->getId()]);
     }
 
     private function increaseCount(Project $project): void
@@ -75,7 +80,11 @@ class ProjectContainer extends Container
 
     public function toArray(): array
     {
-        return array_map(fn($project) => $project->toArray(), $this->items);
+        $projectsArray = [];
+        foreach ($this->items as $project) {
+            $projectsArray[] = $project->toArray();
+        }
+        return $projectsArray;
     }
 
     /**

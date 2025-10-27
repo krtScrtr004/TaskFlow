@@ -13,8 +13,8 @@ class WorkerContainer extends Container
     public function __construct(array $workers = [])
     {
         foreach ($workers as $worker) {
-            if (!($worker instanceof User)) {
-                throw new InvalidArgumentException("All elements of workers array must be instances of User.");
+            if (!($worker instanceof Worker)) {
+                throw new InvalidArgumentException("All elements of workers array must be instances of Worker.");
             }
             $this->add($worker);
         }
@@ -25,19 +25,23 @@ class WorkerContainer extends Container
         if (!Role::isWorker($worker)) {
             throw new InvalidArgumentException("Only users with the 'worker' role can be added as project workers.");
         }
-        $this->items[] = $worker;
+        $this->items[$worker->getId()] = $worker;
     }
 
     public function remove($item): void
     {
-        if (!$item instanceof User) {
-            throw new InvalidArgumentException('Only User instances can be removed from WorkerContainer.');
+        if (!$item instanceof Worker) {
+            throw new InvalidArgumentException('Only Worker instances can be removed from WorkerContainer.');
         }
+        unset($this->items[$item->getId()]);
+    }
 
-        $index = array_search($item, $this->items, true);
-        if ($index !== false) {
-            array_splice($this->items, $index, 1);
+    public function contains($item): bool
+    {
+        if (!$item instanceof Worker) {
+            throw new InvalidArgumentException('Only Worker instances can be checked in WorkerContainer.');
         }
+        return isset($this->items[$item->getId()]);
     }
 
     /**
