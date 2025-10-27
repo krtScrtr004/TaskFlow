@@ -1,6 +1,7 @@
 <?php
 
 use App\Entity\User;
+use App\Core\UUID;
 use App\Dependent\Worker;
 use App\Enumeration\WorkerStatus;
 use App\Model\ProjectModel;
@@ -9,7 +10,7 @@ use App\Utility\WorkerPerformanceCalculator;
 function userGridCard(User|Worker $user): string
 {
     $name = htmlspecialchars($user->getFirstName() . ' ' . $user->getLastName());
-    $id = htmlspecialchars($user->getPublicId());
+    $id = htmlspecialchars(UUID::toString($user->getPublicId()));
     $email = htmlspecialchars($user->getEmail());
     $contact = htmlspecialchars($user->getContactNumber());
     $role = htmlspecialchars($user->getRole()->getDisplayName());

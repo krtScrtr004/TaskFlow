@@ -7,7 +7,7 @@ use App\Enumeration\WorkStatus;
 
 function taskGridCard(Task $task, $projectId): string
 {
-    $id = htmlspecialchars($task->getPublicId());
+    $id = htmlspecialchars(UUID::toString($task->getPublicId()));
     $name = htmlspecialchars($task->getName());
     $description = htmlspecialchars($task->getDescription());
     $startDateTime = htmlspecialchars(dateToWords($task->getStartDateTime()));

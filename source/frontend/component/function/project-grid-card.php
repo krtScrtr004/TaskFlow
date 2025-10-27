@@ -1,11 +1,12 @@
 <?php
 
 use App\Entity\Project;
+use App\Core\UUID;
 use App\Enumeration\WorkStatus;
 
 function projectGridCard(Project $project): string
 {
-    $id = htmlspecialchars($project->getPublicId());
+    $id = htmlspecialchars(UUID::toString($project->getPublicId()));
     $name = htmlspecialchars($project->getName());
     $description = htmlspecialchars($project->getDescription()) ?? 'No description provided';
     $startDateTime = htmlspecialchars(
