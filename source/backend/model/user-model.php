@@ -254,7 +254,71 @@ class UserModel extends Model
         }
     }
 
+    public function save(array $data): bool
+    {
+        $instance = new self();
+        try {
+            $instance->connection->beginTransaction();
 
+            $updateFields = [];
+            $params = [':id' => $data['id']];
+
+            if (isset($data['firstName'])) {
+                $updateFields[] = 'firstName = :firstName';
+                $params[':firstName'] = trimOrNull($data['firstName']);
+            }
+
+            if (isset($data['middleName'])) {
+                $updateFields[] = 'middleName = :middleName';
+                $params[':middleName'] = trimOrNull($data['middleName']);
+            }
+
+            if (isset($data['lastName'])) {
+                $updateFields[] = 'lastName = :lastName';
+                $params[':lastName'] = trimOrNull($data['lastName']);
+            }
+
+            if (isset($data['bio'])) {
+                $updateFields[] = 'bio = :bio';
+                $params[':bio'] = trimOrNull($data['bio']);
+            }
+
+            if (isset($data['gender'])) {
+                $updateFields[] = 'gender = :gender';
+                $params[':gender'] = $data['gender']->value;
+            }
+
+            if (isset($data['email'])) {
+                $updateFields[] = 'email = :email';
+                $params[':email'] = trimOrNull($data['email']);
+            }
+            
+            if (isset($data['contactNumber'])) {
+                $updateFields[] = 'contactNumber = :contactNumber';
+                $params[':contactNumber'] = trimOrNull($data['contactNumber']);
+            }
+
+            if (isset($data['password'])) {
+                $updateFields[] = 'password = :password';
+                $params[':password'] = password_hash(trimOrNull($data['password']), PASSWORD_ARGON2ID);
+            }
+
+            if (!empty($updateFields)) {
+                $projectQuery = "UPDATE `projectTask` SET " . implode(', ', $updateFields) . " WHERE id = :id";
+                $statement = $instance->connection->prepare($projectQuery);
+                $statement->execute($params);
+            }
+
+            // TODO: Update Job Titles
+            // TODO: Create version for project and task workers
+
+            $instance->connection->commit();
+            return true;
+        } catch (PDOException $e) {
+            $instance->connection->rollBack();
+            throw new DatabaseException($e->getMessage());
+        }
+    }
 
 
 
@@ -273,12 +337,6 @@ class UserModel extends Model
     public function get()
     {
         return [];
-    }
-
-
-    public function save(): bool
-    {
-        return true;
     }
 
     public function delete(): bool

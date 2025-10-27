@@ -9,11 +9,12 @@ use App\Container\WorkerContainer;
 use App\Dependent\Worker;
 use App\Core\UUID;
 use App\Exception\ValidationException;
+use App\Model\TaskModel;
 use App\Validator\UuidValidator;
 use App\Validator\WorkValidator;
 use DateTime;
 
-class Task implements Entity
+class Task extends TaskModel implements Entity
 {
     private int $id;
     private UUID $publicId;

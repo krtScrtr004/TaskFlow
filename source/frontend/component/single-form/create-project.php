@@ -1,9 +1,4 @@
-<?php
-include_once COMPONENT_PATH . 'template/add-phase-modal.php';
-if (App\Middleware\Csrf::get() === null) {
-    App\Middleware\Csrf::generate();
-}
-?>
+<?php include_once COMPONENT_PATH . 'template/add-phase-modal.php' ?>
 
 <!-- Create Project Form -->
 <form id="create_project_form" class="create-project flex-col" action="" method="POST">

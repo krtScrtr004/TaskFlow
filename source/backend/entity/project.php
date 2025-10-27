@@ -12,12 +12,13 @@ use App\Container\PhaseContainer;
 use App\Entity\User;
 use App\Core\UUID;
 use App\Exception\ValidationException;
+use App\Model\ProjectModel;
 use App\Validator\UuidValidator;
 use App\Validator\WorkValidator;
 use BcMath\Number;
 use DateTime;
 
-class Project implements Entity
+class Project extends ProjectModel implements Entity
 {
     private int $id;
     private UUID $publicId;
@@ -540,16 +541,11 @@ class Project implements Entity
      * the underlying collection implementation.
      *
      * @param Worker $worker The worker instance to be added to the project
-     * @throws ValidationException If adding the worker exceeds the maximum allowed workers (50)
      * 
      * @return void
      */
     public function addWorker(Worker $worker): void
     {
-        if ($this->workers->count() >= 50) {
-            throw new ValidationException("Cannot add more than 50 workers to a project");
-        }
-
         $this->workers->add($worker);
     }
 

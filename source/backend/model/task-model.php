@@ -370,13 +370,68 @@ class TaskModel extends Model
         }
     }
 
-
-
-
-    public function save(): bool
+    public function save(array $data): bool
     {
-        return true;
+        $instance = new self();
+        try {
+            $instance->connection->beginTransaction();
+
+            $updateFields = [];
+            $params = [':id' => $data['id']];
+
+            if (isset($data['name'])) {
+                $updateFields[] = 'name = :name';
+                $params[':name'] = trimOrNull($data['name']);
+            }
+
+            if (isset($data['description'])) {
+                $updateFields[] = 'description = :description';
+                $params[':description'] = trimOrNull($data['description']);
+            }
+
+            if (isset($data['status'])) {
+                $updateFields[] = 'status = :status';
+                $params[':status'] = $data['status']->value;
+            }
+
+            if (isset($data['startDateTime'])) {
+                $updateFields[] = 'startDateTime = :startDateTime';
+                $params[':startDateTime'] = formatDateTime($data['startDateTime'], DateTime::ATOM);
+            }
+
+            if (isset($data['completionDateTime'])) {
+                $updateFields[] = 'completionDateTime = :completionDateTime';
+                $params[':completionDateTime'] = formatDateTime($data['completionDateTime'], DateTime::ATOM);
+            }
+
+            if (isset($data['actualCompletionDateTime'])) {
+                $updateFields[] = 'actualCompletionDateTime = :actualCompletionDateTime';
+                $params[':actualCompletionDateTime'] = $data['actualCompletionDateTime'] !== null 
+                    ? formatDateTime($data['actualCompletionDateTime'], DateTime::ATOM) 
+                    : null;
+            }
+
+            if (!empty($updateFields)) {
+                $projectQuery = "UPDATE `projectTask` SET " . implode(', ', $updateFields) . " WHERE id = :id";
+                $statement = $instance->connection->prepare($projectQuery);
+                $statement->execute($params);
+            }
+
+            if ($data['workers'] && $data['workers'] instanceof WorkerContainer) {
+                foreach ($data['workers'] as $worker) {
+                    $worker->save();
+                }
+            }
+
+            $instance->connection->commit();
+            return true;
+        } catch (PDOException $e) {
+            $instance->connection->rollBack();
+            throw new DatabaseException($e->getMessage());
+        }
     }
+
+
 
     public function delete(): bool
     {

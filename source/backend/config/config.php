@@ -84,7 +84,5 @@ foreach ($paths as $path) {
         require_once $fileName;
     }
 }
+App\Core\Session::restore();
 
-// Restore user session if it exists
-use App\Auth\SessionAuth;
-SessionAuth::restoreSession();

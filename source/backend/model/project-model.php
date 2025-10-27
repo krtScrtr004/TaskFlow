@@ -176,6 +176,7 @@ class ProjectModel extends Model
                             )
                         ) AS projectManager,
 
+                        -- Phases JSON array
                         COALESCE(
                             (
                                 SELECT CONCAT('[', GROUP_CONCAT(
@@ -224,6 +225,7 @@ class ProjectModel extends Model
                             '[]'
                         ) AS projectWorkers,
 
+                        -- Tasks JSON array
                         COALESCE(
                             (
                                 SELECT CONCAT('[', GROUP_CONCAT(
@@ -373,7 +375,7 @@ class ProjectModel extends Model
         }
 
         try {
-            return self::find('id = :projectId', ['projectId' => $projectId])->get(0) ?? null;
+            return self::find('id = :projectId', ['projectId' => $projectId])->getItems() ?? null;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
@@ -408,7 +410,7 @@ class ProjectModel extends Model
 
         $binaryUuid = UUID::toBinary($publicId);
         try {
-            return self::find('publicId = :publicId', ['publicId' => $binaryUuid])->get(0) ?? null;
+            return self::find('publicId = :publicId', ['publicId' => $binaryUuid])->getItems() ?? null;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
@@ -512,7 +514,7 @@ class ProjectModel extends Model
                     'orderBy'   => 'createdAt DESC',
                 ]
             );
-            return $projects->get(0) ?? null;
+            return $projects->getItems() ?? null;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
@@ -555,7 +557,7 @@ class ProjectModel extends Model
                     'orderBy'   => 'createdAt DESC',
                 ]
             );
-            return $projects->get(0) ?? null;
+            return $projects->getItems() ?? null;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
@@ -759,22 +761,74 @@ class ProjectModel extends Model
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-    public function save(): bool
+    public function save(array $data): bool
     {
-        return true;
+        $instance = new self();
+        try {
+            $instance->connection->beginTransaction();
+
+            $updateFields = [];
+            $params = [':id' => $data['id']];
+
+            if (isset($data['name'])) {
+                $updateFields[] = 'name = :name';
+                $params[':name'] = trimOrNull($data['name']);
+            }
+
+            if (isset($data['description'])) {
+                $updateFields[] = 'description = :description';
+                $params[':description'] = trimOrNull($data['description']);
+            }
+
+            if (isset($data['budget'])) {
+                $updateFields[] = 'budget = :budget';
+                $params[':budget'] = $data['budget'];
+            }
+
+            if (isset($data['status'])) {
+                $updateFields[] = 'status = :status';
+                $params[':status'] = $data['status']->value;
+            }
+
+            if (isset($data['startDateTime'])) {
+                $updateFields[] = 'startDateTime = :startDateTime';
+                $params[':startDateTime'] = formatDateTime($data['startDateTime'], DateTime::ATOM);
+            }
+
+            if (isset($data['completionDateTime'])) {
+                $updateFields[] = 'completionDateTime = :completionDateTime';
+                $params[':completionDateTime'] = formatDateTime($data['completionDateTime'], DateTime::ATOM);
+            }
+
+            if (isset($data['actualCompletionDateTime'])) {
+                $updateFields[] = 'actualCompletionDateTime = :actualCompletionDateTime';
+                $params[':actualCompletionDateTime'] = $data['actualCompletionDateTime'] !== null 
+                    ? formatDateTime($data['actualCompletionDateTime'], DateTime::ATOM) 
+                    : null;
+            }
+
+            if (!empty($updateFields)) {
+                $projectQuery = "UPDATE `project` SET " . implode(', ', $updateFields) . " WHERE id = :id";
+                $statement = $instance->connection->prepare($projectQuery);
+                $statement->execute($params);
+            }
+
+            if (isset($data['tasks']) && $data['tasks'] instanceof TaskContainer) {
+                foreach ($data['tasks'] as $task) {
+                    $task->save();
+                }
+            }
+
+            $instance->connection->commit();
+            return true;
+        } catch (PDOException $e) {
+            $instance->connection->rollBack();
+            throw new DatabaseException($e->getMessage());
+        }
     }
+
+
+
 
     public function delete(): bool
     {

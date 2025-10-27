@@ -15,16 +15,16 @@ require_once COMPONENT_PATH . 'template/user-info-card.php';
 require_once COMPONENT_PATH . 'template/add-worker-modal.php';
 
 $projectData = [
-    'id' => htmlspecialchars(UUID::toString($project->getPublicId())),
-    'name' => htmlspecialchars($project->getName()),
-    'description' => htmlspecialchars($project->getDescription()),
-    'budget' => htmlspecialchars(formatNumber($project->getBudget())),
-    'startDateTime' => htmlspecialchars(dateToWords($project->getStartDateTime())),
-    'completionDateTime' => htmlspecialchars(dateToWords($project->getCompletionDateTime())),
-    'status' => $project->getStatus(),
-    'tasks' => $project->getTasks(),
-    'phases' => $project->getPhases(),
-    'workers' => $project->getWorkers(),
+    'id'                    => htmlspecialchars(UUID::toString($project->getPublicId())),
+    'name'                  => htmlspecialchars($project->getName()),
+    'description'           => htmlspecialchars($project->getDescription()),
+    'budget'                => htmlspecialchars(formatNumber($project->getBudget())),
+    'startDateTime'         => htmlspecialchars(dateToWords($project->getStartDateTime())),
+    'completionDateTime'    => htmlspecialchars(dateToWords($project->getCompletionDateTime())),
+    'status'                => $project->getStatus(),
+    'tasks'                 => $project->getTasks(),
+    'phases'                => $project->getPhases(),
+    'workers'               => $project->getWorkers(),
 ];
 ?>
 <!-- Main Content -->

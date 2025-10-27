@@ -18,7 +18,7 @@ use DateTime;
 
 require_once ENUM_PATH . 'role.php';
 
-class User implements Entity
+class User Extends UserModel implements Entity
 {
     private ?int $id;
     private ?UUID $publicId;

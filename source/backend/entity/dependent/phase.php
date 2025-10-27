@@ -6,10 +6,11 @@ use App\Interface\Entity;
 use App\Enumeration\WorkStatus;
 use App\Core\UUID;
 use App\Exception\ValidationException;
+use App\Model\PhaseModel;
 use App\Validator\WorkValidator;
 use DateTime;
 
-class Phase implements Entity
+class Phase Extends PhaseModel implements Entity
 {
     private int $id;
     private UUID $publicId;

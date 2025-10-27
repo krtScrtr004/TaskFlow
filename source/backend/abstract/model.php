@@ -64,9 +64,10 @@ abstract class Model
     abstract public static function all(int $offset = 0, int $limit = 10): mixed;
 
     abstract protected static function find(string $whereClause = '', array $params = [], array $options = []): mixed;
+    
+    abstract protected function save(array $data): bool;
 
 
 
-    abstract public function save(): bool;
-    abstract public function delete(): bool;
+    abstract protected function delete(): bool;
 }

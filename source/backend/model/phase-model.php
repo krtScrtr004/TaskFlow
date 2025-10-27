@@ -115,28 +115,72 @@ class PhaseModel extends Model
         }
     }
 
-
-
-
-
-
-
-
-
-    public function save(): bool
+    public function save(array $data): bool
     {
-        return true;
+        $instance = new self();
+        try {
+            $instance->connection->beginTransaction();
+
+            $updateFields = [];
+            $params = [':id' => $data['id']];
+
+            if (isset($data['name'])) {
+                $updateFields[] = 'name = :name';
+                $params[':name'] = trimOrNull($data['name']);
+            }
+
+            if (isset($data['description'])) {
+                $updateFields[] = 'description = :description';
+                $params[':description'] = trimOrNull($data['description']);
+            }
+
+            if (isset($data['status'])) {
+                $updateFields[] = 'status = :status';
+                $params[':status'] = $data['status']->value;
+            }
+
+            if (isset($data['startDateTime'])) {
+                $updateFields[] = 'startDateTime = :startDateTime';
+                $params[':startDateTime'] = formatDateTime($data['startDateTime'], DateTime::ATOM);
+            }
+
+            if (isset($data['completionDateTime'])) {
+                $updateFields[] = 'completionDateTime = :completionDateTime';
+                $params[':completionDateTime'] = formatDateTime($data['completionDateTime'], DateTime::ATOM);
+            }
+
+            if (!empty($updateFields)) {
+                $projectQuery = "UPDATE `projectPhase` SET " . implode(', ', $updateFields) . " WHERE id = :id";
+                $statement = $instance->connection->prepare($projectQuery);
+                $statement->execute($params);
+            }
+
+            $instance->connection->commit();
+            return true;
+        } catch (PDOException $e) {
+            $instance->connection->rollBack();
+            throw new DatabaseException($e->getMessage());
+        }
     }
+
+
+
+
+
+
+
+
 
     public function delete(): bool
     {
         return true;
     }
 
-    public static function create(mixed $data): void
+    public static function create(mixed $data): mixed
     {
         if (!($data instanceof self)) {
             throw new InvalidArgumentException('Expected instance of PhaseModel');
         }
+        return [];
     }
 }
