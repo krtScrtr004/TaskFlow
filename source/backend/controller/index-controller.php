@@ -32,10 +32,21 @@ class IndexController implements Controller
 
     public static function index(): void
     {
+        // If user is already logged in, redirect to homepage instead of showing login page
         if (SessionAuth::hasAuthorizedSession()) {
-            SessionAuth::destroySession();
+            $projectId = Session::get('activeProjectId') ?? '';
+            header('Location: ' . REDIRECT_PATH . 'home' . DS . $projectId);
+            exit();
         }
-        Csrf::generate();
+
+        // For unauthenticated users, ensure session exists and CSRF token is set
+        if (!Session::isSet()) {
+            Session::create();
+        }
+        
+        if (!Csrf::get()) {
+            Csrf::generate();
+        }
 
         // Dynamically display appropriate page (login / signup) based on URL
         $uris = explode('/', $_SERVER['REQUEST_URI']);

@@ -3,12 +3,17 @@
 namespace App\Middleware;
 
 use App\Auth\HttpAuth;
+use App\Auth\SessionAuth;
 use App\Core\Session;
 use App\Exception\ForbiddenException;
 
 class Csrf {    
     public static function get(): ?string {
         return Session::get('csrfToken');
+    }
+
+    public static function set(string $token): void {
+        Session::set('csrfToken', $token);
     }
 
      // Generate token and store in session

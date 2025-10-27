@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Core\Session;
 use App\Core\UUID;
 use App\Entity\User;
 use App\Enumeration\Role;
@@ -62,10 +63,18 @@ class AuthController implements Controller
                 ? ProjectModel::findManagerActiveProjectByManagerId($user->getId())
                 : ProjectModel::findWorkerActiveProjectByWorkerId($user->getId());
 
+            // Regenerate session ID to prevent session fixation attacks
+            Session::regenerate(true);
+
             // Create user session
             SessionAuth::setAuthorizedSession($user);
 
-            Response::success(['projectId' => $project ? UUID::toString($project->getPublicId()) : null], 'Login successful.');
+            $projectId = $project ? UUID::toString($project->getPublicId()) : null;
+            if ($projectId && !Session::has('activeProjectId')) {
+                Session::set('activeProjectId', $projectId);
+            }
+
+            Response::success(['projectId' => $projectId], 'Login successful.');
         } catch (ValidationException $e) {
             Response::error('Login Failed.', $e->getErrors(), 422);
         } catch (Exception $e) {
@@ -167,6 +176,10 @@ class AuthController implements Controller
                 'createdAt' => new DateTime()
             ]);
             $newUser = UserModel::create($partialUser);
+
+            // Regenerate session ID to prevent session fixation attacks
+            Session::regenerate(true);
+            
             SessionAuth::setAuthorizedSession($newUser);
 
             Response::success([], 'Registration successful. Please verify your email before logging in.', 201);
@@ -176,6 +189,20 @@ class AuthController implements Controller
         } catch (Exception $e) {
             // Catch all other errors
             Response::error('Registration Failed.', ['An unexpected error occurred. Please try again.'], 500);
+        }
+    }
+
+    public static function logout(): void
+    {
+        try {
+            // Destroy the session completely
+            Session::destroy();
+
+            Response::success([], 'Logout successful.');
+        } catch (Exception $e) {
+            Response::error('Logout Failed.', [
+                'An unexpected error occurred. Please try again.'
+            ], 500);
         }
     }
 }

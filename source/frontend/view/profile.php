@@ -1,6 +1,7 @@
 <?php
 
 use App\Core\Me;
+use App\Core\UUID;
 use App\Enumeration\Gender;
 use App\Enumeration\Role;
 
@@ -9,7 +10,7 @@ if (!$me)
     throw new Exception("User is required to view profile.");
 
 $myData = [
-    'id' => htmlspecialchars($me->getPublicId()),
+    'id' => htmlspecialchars(UUID::toString($me->getPublicId())),
     'firstName' => htmlspecialchars($me->getFirstName()),
     'middleName' => htmlspecialchars($me->getMiddleName()),
     'lastName' => htmlspecialchars($me->getLastName()),

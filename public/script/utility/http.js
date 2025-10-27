@@ -11,7 +11,7 @@ export const Http = (() => {
                 if (serialize) {
                     options.headers = {
                         'Content-Type': 'application/json',
-                        'X-CSRF-Token': document.querySelector('meta[name="csrfToken"]').getAttribute('content')
+                        'X-CSRF-Token': document.querySelector('input[type="hidden"]#csrf_token').value
                     }
                     options.body = JSON.stringify(body)
                 } else {

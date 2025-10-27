@@ -1,7 +1,7 @@
 <aside class="sidenav flex-col sticky black-bg">
     <nav>
         <!-- Project -->
-        <a class="" href="<?= REDIRECT_PATH . 'home' ?>">
+        <a class="" href="<?= REDIRECT_PATH . 'home' . DS . (App\Core\Session::get('activeProjectId') ?? '') ?>">
             <div class="text-w-icon">
                 <img
                     src="<?= ICON_PATH . 'home_w.svg' ?>"

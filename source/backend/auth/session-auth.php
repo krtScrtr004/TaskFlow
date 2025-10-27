@@ -6,6 +6,7 @@ use App\Core\Me;
 use App\Core\Session;
 use App\Core\UUID;
 use App\Entity\User;
+use App\Middleware\Csrf;
 
 class SessionAuth
 {
@@ -23,14 +24,12 @@ class SessionAuth
             Session::create();
         }
 
-        // Instantiate Me if not already done
-        if (Me::getInstance() === null) {
-            Me::instantiate($user);
-        }
+        // Always re-instantiate Me with the new user data
+        // This ensures the Me instance is always up-to-date
+        Me::instantiate($user);
 
         // Store user data in session
         $currentUser = Me::getInstance();
-        Session::set('userId', $currentUser->getId());
         Session::set('userData', [
             'id' => $currentUser->getId(),
             'publicId' => UUID::toString($currentUser->getPublicId()),
@@ -48,24 +47,5 @@ class SessionAuth
             'createdAt' => $currentUser->getCreatedAt()->format('Y-m-d H:i:s'),
             'additionalInfo' => $currentUser->getAdditionalInfo()
         ]);
-    }
-
-    public static function restoreSession(): void
-    {
-        // Ensure session is started
-        if (!Session::isSet()) {
-            Session::create();
-        }
-
-        // Restore Me instance from session data if it exists
-        if (Session::has('userData') && Me::getInstance() === null) {
-            $userData = Session::get('userData');
-            Me::instantiate($userData);
-        }
-    }
-
-    public static function destroySession(): void
-    {
-        Session::destroy();
     }
 }
