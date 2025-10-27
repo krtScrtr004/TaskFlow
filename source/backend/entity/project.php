@@ -33,6 +33,7 @@ class Project implements Entity
     private ?DateTime $actualCompletionDateTime;
     private WorkStatus $status;
     private DateTime $createdAt;
+    private array $additionalInfo;
 
     protected WorkValidator $workValidator;
 
@@ -56,6 +57,7 @@ class Project implements Entity
      * @param DateTime|null $actualCompletionDateTime Actual completion date and time (null if not completed)
      * @param WorkStatus $status Current status of the project (enum)
      * @param DateTime $createdAt Timestamp when the project was created
+     * @param array $additionalInfo Additional information related to the project (optional)
      * 
      * @throws ValidationException If any of the provided data fails validation
      */
@@ -73,7 +75,8 @@ class Project implements Entity
         DateTime $completionDateTime,
         ?DateTime $actualCompletionDateTime,
         WorkStatus $status,
-        DateTime $createdAt
+        DateTime $createdAt,
+        array $additionalInfo = [] 
     ) {
         try {
             $this->workValidator = new WorkValidator();
@@ -106,6 +109,7 @@ class Project implements Entity
         $this->actualCompletionDateTime = $actualCompletionDateTime;
         $this->status = $status;
         $this->createdAt = $createdAt;
+        $this->additionalInfo = $additionalInfo;
     }
 
     // Getters 
@@ -248,6 +252,36 @@ class Project implements Entity
     public function getCreatedAt(): DateTime
     {
         return $this->createdAt;
+    }
+
+    /**
+     * Retrieves a value from the additional information array by key.
+     *
+     * This method provides safe access to the additionalInfo array, returning null
+     * if the requested key does not exist instead of throwing an error.
+     *
+     * @param string $key The key to look up in the additional information array
+     * 
+     * @return mixed The value associated with the key if it exists, null otherwise
+     */
+    public function getAdditionalInfo(string $key): mixed 
+    {
+        return $this->additionalInfo[$key] ?? null;
+    }
+
+    /**
+     * Retrieves all additional information associated with the project.
+     *
+     * This method returns the complete array of additional information stored
+     * for the project. The additional information can contain any supplementary
+     * data that doesn't fit into the standard project properties.
+     *
+     * @return array Associative array containing all additional project information.
+     *               Returns an empty array if no additional information is set.
+     */
+    public function getAllAdditionalInfo(): array 
+    {
+        return $this->additionalInfo;
     }
 
     // Setters
@@ -447,16 +481,68 @@ class Project implements Entity
 
     // OTHER METHODS (UTILITY)
 
+    /**
+     * Adds or updates additional information for the project.
+     *
+     * This method allows storing custom key-value pairs in the project's
+     * additional information array. If the key already exists, its value
+     * will be updated. This is useful for storing metadata or custom
+     * properties that don't fit into the standard project structure.
+     *
+     * @param string $key The key identifier for the additional information
+     * @param mixed $value The value to store (can be any type)
+     * 
+     * @return void
+     */
+    public function addAdditionalInfo($key, $value): void
+    {
+        $this->additionalInfo[$key] = $value;
+    }
+
+    /**
+     * Adds a phase to the project's phase collection.
+     *
+     * This method adds a new Phase instance to the project's phases collection.
+     * The phase is appended to the existing collection of phases associated with
+     * this project.
+     *
+     * @param Phase $phase The Phase instance to be added to the project's collection
+     * 
+     * @return void
+     */
     public function addPhase(Phase $phase): void
     {
         $this->phases->add($phase);
     }
 
+    /**
+     * Adds a task to the project's task collection.
+     *
+     * This method associates a task with the current project by adding it to the
+     * project's tasks collection. The task is added to the internal Doctrine collection
+     * which maintains the relationship between the project and its tasks.
+     *
+     * @param Task $task The task instance to be added to this project
+     * 
+     * @return void
+     */
     public function addTask(Task $task): void
     {
         $this->tasks->add($task);
     }
 
+    /**
+     * Adds a worker to the project's worker collection.
+     *
+     * This method associates a worker with the current project by adding them
+     * to the internal workers collection. The worker is added to the collection
+     * without checking for duplicates, as collection management is handled by
+     * the underlying collection implementation.
+     *
+     * @param Worker $worker The worker instance to be added to the project
+     * 
+     * @return void
+     */
     public function addWorker(Worker $worker): void
     {
         $this->workers->add($worker);
@@ -622,7 +708,8 @@ class Project implements Entity
      *      - completionDateTime: string|null Formatted expected completion date/time
      *      - actualCompletionDateTime: string|null Formatted actual completion date/time
      *      - status: string Display name of the project status
-     *      - createdAt: string Formatted creation date/time
+     *      - createdAt: string Formatted creation date/time,
+     *      - additionalInfo: array Additional project information
      */
     public function toArray(): array
     {
@@ -642,7 +729,8 @@ class Project implements Entity
                     ? formatDateTime($this->actualCompletionDateTime, DateTime::ATOM) 
                     : null,
             'status' => $this->status->getDisplayName(),
-            'createdAt' => formatDateTime($this->createdAt)
+            'createdAt' => formatDateTime($this->createdAt),
+            'additionalInfo' => $this->additionalInfo
         ];
     }
 
@@ -676,6 +764,7 @@ class Project implements Entity
      *      - actualCompletionDateTime: string|DateTime Actual project completion date and time
      *      - status: string|WorkStatus Project work status
      *      - createdAt: string|DateTime Project creation timestamp
+     *      - additionalInfo: array|mixed Additional project information
      * 
      * @return self New Project instance created from provided data
      */
@@ -738,7 +827,8 @@ class Project implements Entity
             completionDateTime: $completionDateTime,
             actualCompletionDateTime: $actualCompletionDateTime,
             status: $status,
-            createdAt: $createdAt
+            createdAt: $createdAt,
+            additionalInfo: $data['additionalInfo'] ?? []
         );
     }
 
