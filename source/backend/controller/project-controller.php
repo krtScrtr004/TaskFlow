@@ -47,6 +47,10 @@ class ProjectController implements Controller
                     );
                 }
                 $project = ProjectModel::findFull($projectId);
+
+                // TODO: CCheck if completion date is still not passed;
+                // Otherwise, set status to DELAYED, if there still pending tasks;
+                // Else, set to COMPLETED
             }
 
             require_once VIEW_PATH . 'home.php';

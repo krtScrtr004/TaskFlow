@@ -494,7 +494,7 @@ class Project implements Entity
      * 
      * @return void
      */
-    public function addAdditionalInfo($key, $value): void
+    public function addAdditionalInfo(int|string $key, mixed $value): void
     {
         $this->additionalInfo[$key] = $value;
     }
@@ -540,11 +540,16 @@ class Project implements Entity
      * the underlying collection implementation.
      *
      * @param Worker $worker The worker instance to be added to the project
+     * @throws ValidationException If adding the worker exceeds the maximum allowed workers (50)
      * 
      * @return void
      */
     public function addWorker(Worker $worker): void
     {
+        if ($this->workers->count() >= 50) {
+            throw new ValidationException("Cannot add more than 50 workers to a project");
+        }
+
         $this->workers->add($worker);
     }
 

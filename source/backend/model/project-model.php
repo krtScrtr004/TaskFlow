@@ -274,13 +274,6 @@ class ProjectModel extends Model
                 'profileLink'   => $mangerData['managerProfileLink'],
             ]);
 
-            // $additionalInfo = [
-            //     'taskCounts' => [
-            //         'priority' => TaskModel::findPriorityCountByProjectId($result['projectId']),
-            //         'statusC' => TaskModel::findStatusCountByProjectId($result['projectId']),
-            //     ]
-            // ];
-
             $project = new Project(
                 id: $result['projectId'],
                 publicId: UUID::fromBinary($result['projectPublicId']),

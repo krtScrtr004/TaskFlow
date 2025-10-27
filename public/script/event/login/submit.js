@@ -29,7 +29,7 @@ async function submit(e) {
     e.preventDefault()
 
     const emailInput = loginForm.querySelector('#login_email')
-    if (!emailInput) { // s
+    if (!emailInput) { 
         console.error('Email input not found.')
         Dialog.somethingWentWrong()
     }
@@ -73,15 +73,18 @@ async function sendToBackend(email, password) {
         }
         isLoading = true
 
-        if (!email || email.trim() === '')
+        if (!email || email.trim() === '') {
             throw new Error('Email is required.')
+        }
 
-        if (!password || password.trim() === '')
+        if (!password || password.trim() === '') {
             throw new Error('Password is required.')
+        }
 
         const response = await Http.POST('auth/login', { email, password })
-        if (!response)
+        if (!response) {
             throw new Error('No response from server.')
+        }
 
         return response.data
     } catch (error) {
