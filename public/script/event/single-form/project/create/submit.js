@@ -5,6 +5,7 @@ import { errorListDialog } from '../../../../render/error-list-dialog.js'
 import { confirmationDialog } from '../../../../render/confirmation-dialog.js'
 import { debounceAsync } from '../../../../utility/debounce.js'
 import { validateInputs, workValidationRules } from '../../../../utility/validator.js'
+import { handleException } from '../../../../utility/handle-exception.js'
 
 let isLoading = false
 const phaseToAdd = []
@@ -12,11 +13,16 @@ const phaseToAdd = []
 const createProjectForm = document.querySelector('#create_project_form')
 const submitProjectButton = createProjectForm?.querySelector('#submit_project_button')
 if (!submitProjectButton) {
-    console.error('Submit Project button not found within the Create Project form.')
-    Dialog.errorOccurred('Submit Project button not found. Please refresh the page and try again.')
+    console.error('Submit Project button not found.')
+    Dialog.somethingWentWrong()
 } else {
-    // Submit form on button click or form submit
     submitProjectButton.addEventListener('click', e => debounceAsync(submitForm(e), 300))
+}
+
+if (!createProjectForm) {
+    console.error('Create Project form not found.')
+    Dialog.somethingWentWrong()
+} else {
     createProjectForm?.addEventListener('submit', e => debounceAsync(submitForm(e), 300))
 }
 
@@ -69,12 +75,7 @@ async function submitForm(e) {
         Dialog.operationSuccess('Project Created.', 'The project has been successfully created.')
         setTimeout(() => window.location.href = `/TaskFlow/project/${response.projectId}`, 1500)
     } catch (error) {
-        console.error('Error occurred while submitting form:', error)
-        if (error?.errors) {
-            errorListDialog(error?.message, error.errors)
-        } else {
-            Dialog.somethingWentWrong()
-        }
+        handleException(error, 'Error submitting form:', error)
     } finally {
         Loader.delete()
         phaseToAdd.length = 0
@@ -82,8 +83,9 @@ async function submitForm(e) {
 }
 
 function addPhaseForm(phaseContainer) {
-    if (!phaseContainer)
+    if (!phaseContainer) {
         throw new Error('Phase container not found.')
+    }
 
     const nameInput = phaseContainer.querySelector(`.phase-name`)
     const descriptionInput = phaseContainer.querySelector(`.phase-description`)
@@ -112,13 +114,15 @@ async function sendToBackend(data) {
         }
         isLoading = true
 
-        if (!data)
+        if (!data) {
             throw new Error('No input data provided.')
+        }
 
         const response = await Http.POST(`projects`, data)
         if (!response) {
             throw new Error('No response from server.')
         }
+
         return response.data
     } catch (error) {
         throw error

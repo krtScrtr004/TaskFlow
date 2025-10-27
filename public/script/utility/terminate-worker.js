@@ -9,22 +9,25 @@ const userInfoCardTemplate = document.querySelector('#user_info_card_template')
 let thisUserContainer = null
 
 export function terminateWorker(projectId, userContainer, userCardSelector) {
-    if (!userContainer)
+    if (!userContainer) {
         throw new Error('User container element is required.')
+    }
 
     thisUserContainer = userContainer
 
     const userCard = userContainer.querySelector(userCardSelector)
-    if (!userCard)
+    if (!userCard) {
         throw new Error('User card element is required.')
+    }
 
     userContainer.addEventListener('click', e => {
         targetUser = e.target.closest(userCardSelector)
     })
 
     const terminateUserButton = userInfoCardTemplate.querySelector('#terminate_worker_button')
-    if (!terminateUserButton)
+    if (!terminateUserButton) {
         throw new Error('Terminate user button not found.')
+    }
     terminateUserButton.addEventListener('click', e => debounceAsync(terminateButtonEvent(e, projectId, userCardSelector), 300))
 }
 
@@ -81,15 +84,18 @@ async function sendToBackend(projectId, userId) {
         }
         isLoading = true
 
-        if (!projectId || projectId.trim() === '')
+        if (!projectId || projectId.trim() === '') {
             throw new Error('Project ID is required.')
+        }
 
-        if (!userId || userId.trim() === '')
+        if (!userId || userId.trim() === '') {
             throw new Error('User ID is required.')
+        }
 
         const response = await Http.PUT(`projects/${projectId}/workers/${userId}`, { status: 'terminated' })
-        if (!response)
+        if (!response) {
             throw new Error('Failed to terminate worker from project.')
+        }
     } catch (error) {
         throw error
     } finally {

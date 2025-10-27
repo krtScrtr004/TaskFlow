@@ -33,15 +33,18 @@ async function sendToBackend(projectId, workerIds) {
         }
         isLoading = true
 
-        if (!projectId || projectId.trim() === '')
+        if (!projectId || projectId.trim() === '') {
             throw new Error('Project ID is required.')
+        }
 
-        if (!workerIds || workerIds.length === 0)
+        if (!workerIds || workerIds.length === 0) {
             throw new Error('No worker IDs provided.')
+        }
 
         const response = await Http.POST(`projects/${projectId}/workers`, { workerIds })
-        if (!response)
+        if (!response) {
             throw new Error('No response from server.')
+        }
 
         return response
     } catch (error) {

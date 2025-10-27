@@ -3,6 +3,7 @@ import { confirmationDialog } from '../../render/confirmation-dialog.js'
 import { Dialog } from '../../render/dialog.js'
 import { errorListDialog } from '../../render/error-list-dialog.js'
 import { debounceAsync } from '../../utility/debounce.js'
+import { handleException } from '../../utility/handle-exception.js'
 
 let isLoading = false
 
@@ -33,12 +34,7 @@ async function submit(e) {
         )
         setTimeout(() => window.location.href = '/TaskFlow/login', 1500)
     } catch (error) {
-        console.error('Error during account deletion:', error)
-        if (error?.errors) {
-            errorListDialog(error?.message, error.errors)
-        } else {
-            Dialog.somethingWentWrong()
-        }
+        handleException(error, `Error during account deletion: ${error}`)
     }
 }
 

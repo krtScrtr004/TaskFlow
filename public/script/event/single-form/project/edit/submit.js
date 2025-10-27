@@ -7,6 +7,7 @@ import { errorListDialog } from '../../../../render/error-list-dialog.js'
 import { phaseToAdd } from './add-phase.js'
 import { phaseToCancel } from './cancel-phase.js'
 import { validateInputs, workValidationRules } from '../../../../utility/validator.js'
+import { handleException } from '../../../../utility/handle-exception.js'
 
 let isLoading = false
 const toAdd = []
@@ -15,11 +16,16 @@ const phaseToEdit = []
 const editableProjectDetailsForm = document.querySelector('.edit-project #editable_project_details')
 const saveProjectInfoButton = editableProjectDetailsForm?.querySelector('#save_project_info_button')
 if (!saveProjectInfoButton) {
-    console.error('Save Project Info button not found within the Editable Project Details form.')
-    Dialog.errorOccurred('Save Project Info button not found. Please refresh the page and try again.')
+    console.error('Save Project Info button not found.')
+    Dialog.somethingWentWrong()
 } else {
-    // Submit form on button click or form submit
     saveProjectInfoButton.addEventListener('click', e => debounceAsync(submitForm(e), 300))
+}
+
+if (!editableProjectDetailsForm) {
+    console.error('Editable Project Details form not found.')
+    Dialog.somethingWentWrong()
+} else {
     editableProjectDetailsForm?.addEventListener('submit', e => debounceAsync(submitForm(e), 300))
 }
 
@@ -78,12 +84,7 @@ async function submitForm(e) {
         Dialog.operationSuccess('Project Edited.', 'The project has been successfully edited.')
         setTimeout(() => window.location.href = `/TaskFlow/project/${response.id}`, 1500)
     } catch (error) {
-        console.error('Error occurred while submitting form:', error)
-        if (error?.errors) {
-            errorListDialog(error?.message, error.errors)
-        } else {
-            Dialog.somethingWentWrong()
-        }
+        handleException(error, `Error submitting form: ${error}`)
     } finally {
         Loader.delete()
         isLoading = false

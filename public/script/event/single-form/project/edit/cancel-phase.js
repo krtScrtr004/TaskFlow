@@ -1,5 +1,6 @@
 import { Dialog } from '../../../../render/dialog.js'
 import { confirmationDialog } from '../../../../render/confirmation-dialog.js'
+import { handleException } from '../../../../utility/handle-exception.js'
 
 export const phaseToCancel = new Set()
 
@@ -34,8 +35,7 @@ if (phaseDetails) {
 
             cancelButton.remove()
         } catch (error) {
-            console.error('Error canceling phase:', error)
-            Dialog.errorOccurred('Failed to cancel phase. Please try again.')
+            handleException(error, `Error canceling phase: ${error.message}`)
         }
     })
 } else {

@@ -51,14 +51,25 @@ function createChart(elementId, labels, data, colors, width = 400, height = 400)
     chartElement.style.width = width + 'px'
     chartElement.style.height = height + 'px'
 
+    // Check if all data is zero
+    const totalData = data.reduce((a, b) => a + b, 0)
+    const isAllZero = totalData === 0
+
+    // If all data is zero, add a placeholder segment
+    const chartData = isAllZero ? [1] : data
+    const chartLabels = isAllZero ? ['No Data'] : labels
+    const chartColors = isAllZero ? ['#e0e0e0'] : colors
+
     // Set fixed dimensions for the chart
     new Chart(chartElement, {
         type: 'pie',
         data: {
-            labels: labels,
+            labels: chartLabels,
             datasets: [{
-                data: data,
-                backgroundColor: colors
+                data: chartData,
+                backgroundColor: chartColors,
+                borderColor: '#ffffff',      // Add border color (white)
+                borderWidth: 2               // Add border width (2px)
             }]
         },
         options: {
@@ -77,6 +88,7 @@ function createChart(elementId, labels, data, colors, width = 400, height = 400)
                     }
                 },
                 tooltip: {
+                    enabled: !isAllZero,  // Disable tooltip when showing placeholder
                     callbacks: {
                         label: function (context) {
                             const value = context.parsed || 0

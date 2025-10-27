@@ -3,6 +3,7 @@ import { Http } from '../../utility/http.js'
 import { Dialog } from '../../render/dialog.js'
 import { errorListDialog } from '../../render/error-list-dialog.js'
 import { createTaskGridCard } from './create-task-grid-card.js'
+import { handleException } from '../../utility/handle-exception.js'
 
 let isLoading = false
 const taskGridContainer = document.querySelector('.task-grid-container')
@@ -27,12 +28,7 @@ try {
         getExistingItemsCount()
     )
 } catch (error) {
-    console.error('Error initializing infinite scroll:', error)
-    if (error?.errors) {
-        errorListDialog(error?.message, error.errors)
-    } else {
-        Dialog.somethingWentWrong()
-    }
+    handleException(error, 'Error initializing infinite scroll:', error)
 }
 
 function getExistingItemsCount() {
@@ -49,15 +45,18 @@ async function asyncFunction(offset) {
         }
         isLoading = true
 
-        if (!offset || isNaN(offset) || offset < 0)
+        if (!offset || isNaN(offset) || offset < 0) {
             throw new Error('Invalid offset value.')
+        }
 
-        if (!projectId || projectId.trim() === '')
+        if (!projectId || projectId.trim() === '') {
             throw new Error('Project ID not found.')
+        }
 
         const response = await Http.GET(`projects/${projectId}/tasks?offset=${offset}`)
-        if (!response)
+        if (!response) {
             throw new Error('No response from server.')
+        }
 
         return response.data
     } catch (error) {

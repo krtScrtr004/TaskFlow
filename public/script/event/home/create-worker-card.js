@@ -1,5 +1,6 @@
 import { Dialog } from '../../render/dialog.js'
 import { userInfoCard } from '../../render/user-card.js'
+import { handleException } from '../../utility/handle-exception.js'
 import { Http } from '../../utility/http.js'
 
 let isLoading = false
@@ -20,13 +21,7 @@ if (workerList) {
             try {
                 userInfoCard(workerId, () => fetchUserInfo(projectId, workerId))
             } catch (error) {
-                console.error(`Error fetching worker info: ${error.message}`)
-                if (error?.status === 401 || error?.status === 403) {
-                    const message = error.errorData.message || 'You do not have permission to perform this action.'
-                    Dialog.errorOccurred(message)
-                } else {
-                    Dialog.somethingWentWrong()
-                }
+                handleException(error, `Error fetching worker info: ${error}`)
             }
         })
     }

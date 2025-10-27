@@ -2,6 +2,7 @@ import { Dialog } from '../../render/dialog.js'
 import { errorListDialog } from '../../render/error-list-dialog.js'
 import { confirmationDialog } from '../../render/confirmation-dialog.js'
 import { Http } from '../../utility/http.js'
+import { handleException } from '../../utility/handle-exception.js'
 
 let isLoading = false
 
@@ -32,12 +33,7 @@ if (cancelProjectButton) {
             await sendToBackend(projectId)
             window.location.reload()
         } catch (error) {
-            console.error('Error cancelling project:', error)
-            if (error?.errors) {
-                errorListDialog(error?.message, error.errors)
-            } else {
-                Dialog.somethingWentWrong()
-            }
+            handleException(error, `Error cancelling project: ${error}`)
         }
     })
 } else {
@@ -53,12 +49,14 @@ async function sendToBackend(projectId) {
         }
         isLoading = true
 
-        if (!projectId || projectId.trim() === '')
+        if (!projectId || projectId.trim() === '') {
             throw new Error('Project ID is required.')
+        }
 
         const response = await Http.PUT(`projects/${projectId}`, { status: 'Cancelled' })
-        if (!response)
+        if (!response) {
             throw error
+        }
     } catch (error) {
         throw error
     } finally {

@@ -1,5 +1,6 @@
 import { Loader } from '../render/loader.js'
 import { Dialog } from '../render/dialog.js'
+import { handleException } from './handle-exception.js'
 
 let isLoading = false
 let offset = 0
@@ -11,35 +12,35 @@ export function infiniteScroll(
     domCreator,
     existingItemsCount = 0
 ) {
-    if (!container)
+    if (!container) {
         throw new Error('Container element not found.')
+    }
 
-    if (!sentinel)
+    if (!sentinel) {
         throw new Error('Sentinel element not found.')
+    }
 
-    if (typeof asyncFunction !== 'function')
+    if (typeof asyncFunction !== 'function') {
         throw new Error('asyncFunction must be a function.')
+    }
 
-    if (typeof domCreator !== 'function')
+    if (typeof domCreator !== 'function') {
         throw new Error('domCreator must be a function.')
+    }
 
-    if (isNaN(existingItemsCount) || existingItemsCount < 0)
+    if (isNaN(existingItemsCount) || existingItemsCount < 0) {
         throw new Error('existingItemsCount must be a non-negative number.')
+    }
     offset = existingItemsCount
 
     try {
         const observer = createObserver(container, asyncFunction, domCreator, offset)
-        if (!observer)
+        if (!observer) {
             throw new Error('Failed to create IntersectionObserver.')
+        }
         observer.observe(sentinel)
     } catch (error) {
-        console.error('Error setting up infinite scroll observer:', error)
-        if (error?.status === 401 || error?.status === 403) {
-            const message = error.errorData.message || 'You do not have permission to perform this action.'
-            Dialog.errorOccurred(message)
-        } else {
-            Dialog.somethingWentWrong()
-        }
+        handleException(error, 'Error in infinite scroll setup:', error)
     }
 }
 

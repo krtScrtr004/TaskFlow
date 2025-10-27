@@ -1,6 +1,7 @@
 import { addWorker } from '../../shared.js'
 import { Dialog } from '../../../../render/dialog.js'
 import { Http } from '../../../../utility/http.js'
+import { handleException } from '../../../../utility/handle-exception.js'
 
 let isLoading = false
 export const assignedWorkers = {}
@@ -31,8 +32,9 @@ try {
             if (!removeWorkerButton) return
 
             const workerCard = removeWorkerButton.closest('.task-worker-card')
-            if (!workerCard)
+            if (!workerCard) {
                 throw new Error('Worker card element not found.')
+            }
 
             delete assignedWorkers[workerCard.dataset.id]
             workerCard.remove()
@@ -43,8 +45,7 @@ try {
         })
     }
 } catch (error) {
-    console.error('Error adding worker:', error)
-    Dialog.somethingWentWrong()
+    handleException(error, `Error adding worker: ${error}`)
 }
 
 /**

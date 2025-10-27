@@ -5,6 +5,7 @@ import { Loader } from '../../render/loader.js'
 import { validateInputs, userValidationRules } from '../../utility/validator.js'
 import { errorListDialog } from '../../render/error-list-dialog.js'
 import { debounce, debounceAsync } from '../../utility/debounce.js'
+import { handleException } from '../../utility/handle-exception.js'
 
 let [isLoading, hasSomethingChanged] = [false, false]
 const profile = document.querySelector('.profile')
@@ -97,12 +98,7 @@ async function submit(e) {
         )
         setTimeout(() => window.location.reload(), delay)
     } catch (error) {
-        console.error('Error submitting profile changes:', error)
-        if (error?.errors) {
-            errorListDialog(error?.message, error.errors)
-        } else {
-            Dialog.somethingWentWrong()
-        }
+        handleException(error, `Error during profile update: ${error}`)
     } finally {
         Loader.delete()
     }
@@ -149,22 +145,29 @@ async function sendToBackend(params) {
         }
         isLoading = true
 
-        if (!myId || myId.trim() === '')
+        if (!myId || myId.trim() === '') {
             throw new Error('User ID not found.')
+        }
 
         // Only validate required fields if they were changed
-        if (params.hasOwnProperty('firstName') && (!params.firstName || params.firstName.trim() === ''))
+        if (params.hasOwnProperty('firstName') && (!params.firstName || params.firstName.trim() === '')) {
             throw new Error('First name is required.')
-        if (params.hasOwnProperty('lastName') && (!params.lastName || params.lastName.trim() === ''))
+        }
+        if (params.hasOwnProperty('lastName') && (!params.lastName || params.lastName.trim() === '')) {
             throw new Error('Last name is required.')
-        if (params.hasOwnProperty('email') && (!params.email || params.email.trim() === ''))
+        }
+        if (params.hasOwnProperty('email') && (!params.email || params.email.trim() === '')) {
             throw new Error('Email is required.')
-        if (params.hasOwnProperty('contactNumber') && (!params.contactNumber || params.contactNumber.trim() === ''))
+        }
+        if (params.hasOwnProperty('contactNumber') && (!params.contactNumber || params.contactNumber.trim() === '')) {
             throw new Error('Contact number is required.')
-        if (params.hasOwnProperty('gender') && (!params.gender || params.gender.trim() === ''))
+        }
+        if (params.hasOwnProperty('gender') && (!params.gender || params.gender.trim() === '')) {
             throw new Error('Gender is required.')
-        if (params.hasOwnProperty('jobTitles') && (!params.jobTitles || params.jobTitles.trim() === ''))
+        }
+        if (params.hasOwnProperty('jobTitles') && (!params.jobTitles || params.jobTitles.trim() === '')) {
             throw new Error('Job titles are required.')
+        }
 
         // Convert jobTitles to array if it exists in changed params
         const requestParams = { ...params }
@@ -173,8 +176,9 @@ async function sendToBackend(params) {
         }
 
         const response = await Http.PATCH(`users/${myId}`, requestParams)
-        if (!response)
+        if (!response) {
             throw new Error('No response from server.')
+        }
     } catch (error) {
         throw error
     } finally {

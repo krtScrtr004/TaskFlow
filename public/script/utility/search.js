@@ -1,15 +1,17 @@
 import { debounce } from './debounce.js'
 
 export function search(searchBarForm) {
-    if (!searchBarForm)
+    if (!searchBarForm) {
         throw new Error('Search Bar form not found.')
+    }
 
     const searchButton = searchBarForm?.querySelector('button.search-button')
 
-    if (!searchButton)
+    if (!searchButton) {
         throw new Error('Search Task button not found.')
-    else
+    } else {
         searchButton.addEventListener('click', e => debounce(submit(e, searchBarForm), 300))
+    }
 
     searchBarForm.addEventListener('submit', e => debounce(submit(e, searchBarForm), 300))
 }
@@ -23,8 +25,9 @@ function submit(e, searchBarForm) {
     params.append('key', key)
 
     const searchFilter = searchBarForm?.querySelector('select.search-filter')
-    if (searchFilter)
+    if (searchFilter) {
         params.append('filter', searchFilter.value.trim())
+    }
 
     params.append('offset', 0)
 

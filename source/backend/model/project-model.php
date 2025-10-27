@@ -116,7 +116,7 @@ class ProjectModel extends Model
     }
 
     /**
-     * Finds and retrieves a complete project with all associated data.
+     * Finds and retrieves a complete project with phases and workers data.
      *
      * This method performs a comprehensive database query to fetch a project along with:
      * - Project manager details with job titles

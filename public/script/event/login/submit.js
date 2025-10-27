@@ -4,6 +4,7 @@ import { errorListDialog } from '../../render/error-list-dialog.js'
 import { Loader } from '../../render/loader.js'
 import { validateInputs, userValidationRules } from '../../utility/validator.js'
 import { debounceAsync } from '../../utility/debounce.js'
+import { handleException } from '../../utility/handle-exception.js'
 
 let isLoading = false
 
@@ -28,12 +29,16 @@ async function submit(e) {
     e.preventDefault()
 
     const emailInput = loginForm.querySelector('#login_email')
-    if (!emailInput)
-        throw new Error('Email input not found.')
+    if (!emailInput) { // s
+        console.error('Email input not found.')
+        Dialog.somethingWentWrong()
+    }
 
     const passwordInput = loginForm.querySelector('#login_password')
-    if (!passwordInput)
-        throw new Error('Password input not found.')
+    if (!passwordInput) {
+        console.error('Password input not found.')
+        Dialog.somethingWentWrong()
+    }
 
     const email = emailInput.value.trim()
     const password = passwordInput.value.trim()
@@ -46,19 +51,15 @@ async function submit(e) {
     Loader.patch(loginButton.querySelector('.text-w-icon'))
     try {
         const response = await sendToBackend(email, password)
-        if (!response)
+        if (!response) {
             throw new Error('No response from server.')
+        }
 
         const projectId = response.projectId
         const redirect = (projectId && projectId.trim() !== '') ? `/${projectId}` : ``
         window.location.href = `/TaskFlow/home${redirect}`
     } catch (error) {
-        console.error('Error during login:', error)
-        if (error?.errors) {
-            errorListDialog(error.message, error.errors)
-        } else {
-            Dialog.somethingWentWrong()
-        }
+        handleException(error, 'Error during login:', error)
     } finally {
         Loader.delete()
     }

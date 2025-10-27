@@ -4,6 +4,7 @@ import { Loader } from '../../render/loader.js'
 import { Dialog } from '../../render/dialog.js'
 import { errorListDialog } from '../../render/error-list-dialog.js'
 import { confirmationDialog } from '../../render/confirmation-dialog.js'
+import { handleException } from '../../utility/handle-exception.js'
 
 let isLoading = false
 const viewTaskInfo = document.querySelector('.view-task-info')
@@ -41,12 +42,7 @@ async function submit(e) {
         await sendToBackend(projectId, taskId)
         window.location.reload()
     } catch (error) {
-        console.error('Error cancelling task:', error)
-        if (error?.errors) {
-            errorListDialog(error?.message, error.errors)
-        } else {
-            Dialog.somethingWentWrong()
-        }
+        handleException(error, `Error cancelling task: ${error}`)
     } finally {
         Loader.delete()
     }
@@ -67,8 +63,9 @@ async function sendToBackend(projectId, taskId) {
             throw new Error('Task ID is required.')
 
         const response = await Http.PUT(`projects/${projectId}/tasks/${taskId}`, { status: 'cancelled' })
-        if (!response)
+        if (!response) {
             throw error
+        }
     } catch (error) {
         throw error
     } finally {

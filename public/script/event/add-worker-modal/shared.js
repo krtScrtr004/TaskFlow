@@ -4,6 +4,7 @@ import { errorListDialog } from '../../render/error-list-dialog.js'
 import { Loader } from '../../render/loader.js'
 import { confirmationDialog } from '../../render/confirmation-dialog.js'
 import { debounceAsync } from '../../utility/debounce.js'
+import { handleException } from '../../utility/handle-exception.js'
 
 let currentInfiniteScrollObserver = null // Store the current observer to allow resetting
 let isSelectWorkerEventInitialized = false
@@ -410,15 +411,13 @@ async function addWorkerButtonEvent(e, projectId, confirmAddWorkerButton, asyncF
         const cancelButton = addWorkerModalTemplate.querySelector('#cancel_add_worker_button')
         cancelButton?.click()
 
-        if (onSuccess.length > 0) onSuccess(result)
-        else onSuccess()
-    } catch (error) {
-        console.error(error)
-        if (error?.errors) {
-            errorListDialog(error?.message, error.errors)
+        if (onSuccess.length > 0) { 
+            onSuccess(result)
         } else {
-            Dialog.somethingWentWrong()
+            onSuccess()
         }
+    } catch (error) {
+        handleException(error, `Error adding workers: ${error.message}`)
     } finally {
         Loader.delete()
     }

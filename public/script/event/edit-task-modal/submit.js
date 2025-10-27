@@ -5,6 +5,7 @@ import { Loader } from '../../render/loader.js'
 import { confirmationDialog } from '../../render/confirmation-dialog.js'
 import { validateInputs, workValidationRules } from '../../utility/validator.js'
 import { debounceAsync } from '../../utility/debounce.js'
+import { handleException } from '../../utility/handle-exception.js'
 
 let isLoading = false
 const editTaskModalTemplate = document.querySelector('#edit_task_modal_template')
@@ -76,12 +77,7 @@ async function submitForm(e) {
             window.location.reload()
         }, 3000)
     } catch (error) {
-        console.error('Error submitting form:', error)
-        if (error?.errors) {
-            errorListDialog(error?.message, error.errors)
-        } else {
-            Dialog.somethingWentWrong()
-        }
+        handleException(error, `Error submitting form: ${error}`)
     } finally {
         Loader.delete()
         isLoading = false

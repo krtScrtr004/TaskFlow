@@ -3,6 +3,7 @@ import { confirmationDialog } from '../../render/confirmation-dialog.js'
 import { Dialog } from '../../render/dialog.js'
 import { Loader } from '../../render/loader.js'
 import { errorListDialog } from '../../render/error-list-dialog.js'
+import { handleException } from '../../utility/handle-exception.js'
 
 let isLoading = false
 const profile = document.querySelector('.profile')
@@ -55,13 +56,7 @@ async function submit(file) {
         Dialog.operationSuccess('Profile Picture Updated.', 'Your profile picture has been successfully updated.')
         setTimeout(() => window.location.reload(), 1500)
     } catch (error) {
-        console.error('Error during profile picture change:', error)
-
-        if (error?.errors) {
-            errorListDialog(error?.message, error.errors)
-        } else {
-            Dialog.somethingWentWrong()
-        }
+        handleException(error, `Error during profile picture change: ${error}`)
     } finally {
         Loader.delete()
     }
@@ -75,16 +70,19 @@ async function sendToBackend(formData) {
         }
         isLoading = true
 
-        if (!formData)
+        if (!formData) {
             throw new Error('Form data is missing.')
+        }
 
-        if (!myId || myId.trim() === '')
+        if (!myId || myId.trim() === '') {
             throw new Error('User ID not found.')
+        }
         
         // Pass serialize = false to prevent JSON.stringify on FormData
         const response = await Http.POST(`users/${myId}`, formData, false)
-        if (!response)
+        if (!response) {
             throw new Error('No response from server.')
+        }
     } catch (error) {
         throw error
     } finally {

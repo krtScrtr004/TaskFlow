@@ -31,19 +31,23 @@ async function sendToBackend(projectId, workerIds) {
         }
         isLoading = true
 
-        if (!projectId || projectId.trim() === '')
+        if (!projectId || projectId.trim() === '') {
             throw new Error('Project ID is required.')
+        }
 
         const taskId = viewTaskInfo?.dataset.taskid
-        if (!taskId || taskId.trim() === '')
+        if (!taskId || taskId.trim() === '') {
             throw new Error('Task ID not found in the DOM.')
+        }
 
-        if (!workerIds || workerIds.length === 0)
+        if (!workerIds || workerIds.length === 0) {
             throw new Error('No worker IDs provided.')
+        }
 
         const response = await Http.POST(`projects/${projectId}/tasks/${taskId}/workers`, { workerIds })
-        if (!response)
+        if (!response) {
             throw new Error('No response from server.')
+        }
 
         return response
     } catch (error) {
@@ -303,26 +307,3 @@ export function renderWorkerGridCards(workersData, container, clearContainer = t
         container.appendChild(workerCard)
     })
 }
-
-// Example usage:
-/*
-const workerData = {
-    id: 'WKR-12345',
-    firstName: 'John',
-    lastName: 'Doe',
-    email: 'john.doe@example.com',
-    contactNumber: '+1234567890',
-    profileLink: 'path/to/profile.jpg', // optional
-    status: 'ACTIVE',
-    completedTasks: 15,
-    performance: 92
-}
-
-const container = document.querySelector('.workers-grid')
-const workerCard = createWorkerGridCard(workerData)
-container.appendChild(workerCard)
-
-// Or render multiple cards:
-const workersArray = [workerData1, workerData2, workerData3]
-renderWorkerGridCards(workersArray, container)
-*/

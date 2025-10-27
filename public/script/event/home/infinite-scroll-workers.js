@@ -3,6 +3,7 @@ import { Http } from '../../utility/http.js'
 import { errorListDialog } from '../../render/error-list-dialog.js'
 import { createWorkerListCard } from './create-worker-list-card.js'
 import { Dialog } from '../../render/dialog.js'
+import { handleException } from '../../utility/handle-exception.js'
 
 let isLoading = false
 const projectContainer = document.querySelector('.project-container')
@@ -27,12 +28,7 @@ try {
         getExistingItemsCount()
     )
 } catch (error) {
-    console.error('Error initializing infinite scroll:', error)
-    if (error?.errors) {
-        errorListDialog(error?.message, error.errors)
-    } else {
-        Dialog.somethingWentWrong()
-    }
+    handleException(error, 'Error initializing infinite scroll:', error)
 }
 
 function getExistingItemsCount() {
@@ -49,7 +45,7 @@ async function asyncFunction(offset) {
         }
         isLoading = true
 
-        if (!offset || isNaN(offset) || offset < 0)
+        if (isNaN(offset) || offset < 0)
             throw new Error('Invalid offset value.')
 
         if (!projectId || projectId.trim() === '')

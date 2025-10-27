@@ -2,6 +2,7 @@ import { infiniteScroll } from '../../utility/infinite-scroll.js'
 import { Http } from '../../utility/http.js'
 import { Dialog } from '../../render/dialog.js'
 import { formatDate } from '../../utility/utility.js'
+import { handleException } from '../../utility/handle-exception.js'
 
 let isLoading = false
 const projectGridContainer = document.querySelector('.project-grid-container')
@@ -23,8 +24,7 @@ try {
         getExistingItemsCount()
     )
 } catch (error) {
-    console.error('Error initializing infinite scroll:', error)
-    Dialog.somethingWentWrong()
+    handleException(error, 'Error initializing infinite scroll:', error)
 }
 
 function getExistingItemsCount() {
@@ -41,12 +41,14 @@ async function asyncFunction(offset) {
         }
         isLoading = true
 
-        if (!offset || isNaN(offset) || offset < 0)
+        if (!offset || isNaN(offset) || offset < 0) {
             throw new Error('Invalid offset value.')
+        }
 
         const response = await Http.GET(`projects?offset=${offset}`)
-        if (!response)
+        if (!response) {
             throw new Error('No response from server.')
+        }
 
         return response.data
     } catch (error) {

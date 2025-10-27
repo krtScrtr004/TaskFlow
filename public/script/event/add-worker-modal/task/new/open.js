@@ -29,8 +29,7 @@ if (addWorkerModalTemplate) {
             workers.forEach(worker => createWorkerListCard(worker))
             selectWorker()
         } catch (error) {
-            console.error(error.message)
-            Dialog.errorOccurred('Failed to load workers. Please try again.')
+            handleException(error, `Error loading workers: ${error}`)            
         } finally {
             Loader.delete()
         }

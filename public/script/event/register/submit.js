@@ -5,6 +5,7 @@ import { Loader } from '../../render/loader.js'
 import { Notification } from '../../render/notification.js'
 import { validateInputs, userValidationRules } from '../../utility/validator.js'
 import { debounceAsync } from '../../utility/debounce.js'
+import { handleException } from '../../utility/handle-exception.js'
 
 let isLoading = false
 
@@ -70,12 +71,7 @@ async function submit(e) {
         Notification.success('Registration successful!', delay)
         setTimeout(() => window.location.href = '/TaskFlow/home', delay)
     } catch (error) {
-        console.error('Error during register:', error)
-        if (error?.errors) {
-            errorListDialog(error?.message, error.errors)
-        } else {
-            Dialog.somethingWentWrong()
-        }
+        handleException(error, `Error during register: ${error}`)
     } finally {
         Loader.delete()
     }

@@ -1,6 +1,7 @@
 import { userInfoCard } from '../../render/user-card.js'
 import { Dialog } from '../../render/dialog.js'
 import { Http } from '../../utility/http.js'
+import { handleException } from '../../utility/handle-exception.js'
 
 let isLoading = false
 
@@ -10,23 +11,23 @@ if (userGrid) {
         const userCard = e.target.closest('.user-grid-card')
         if (!userCard) return
 
-            const userId = userCard.dataset.userid
-            if (!userId || userId.trim() === '') {
-                console.error('User ID is missing.')
-                Dialog.somethingWentWrong()
-                return
-            }
+        const userId = userCard.dataset.userid
+        if (!userId || userId.trim() === '') {
+            console.error('User ID is missing.')
+            Dialog.somethingWentWrong()
+            return
+        }
 
-            try {
-                userInfoCard(userId, () => fetchUserInfo(userId))
+        try {
+            userInfoCard(userId, () => fetchUserInfo(userId))
         } catch (error) {
-            console.error(`Error fetching user info: ${error.message}`)
+            handleException(error, 'Error displaying user info card:', error)
         }
     })
 } else {
     console.error('Users grid not found!')
 }
-    
+
 async function fetchUserInfo(userId) {
     try {
         if (isLoading) {
@@ -35,12 +36,14 @@ async function fetchUserInfo(userId) {
         }
         isLoading = true
 
-        if (!userId || userId === '')
+        if (!userId || userId === '') {
             throw new Error('User ID is required.')
+        }
 
         const response = await Http.GET(`users/${userId}`)
-        if (!response)
+        if (!response) {
             throw error
+        }
 
         return response.data
     } catch (error) {

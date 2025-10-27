@@ -6,6 +6,7 @@ import { confirmationDialog } from '../../../render/confirmation-dialog.js'
 import { assignedWorkers } from '../../add-worker-modal/task/new/add.js'
 import { validateInputs, workValidationRules } from '../../../utility/validator.js'
 import { debounceAsync } from '../../../utility/debounce.js'
+import { handleException } from '../../../utility/handle-exception.js'
 
 let isLoading = false
 
@@ -62,12 +63,7 @@ async function submitForm(e) {
         if (response)
             setTimeout(() => window.location.href = `/TaskFlow/project/${projectId}/task/${response.id}`, 1500)
     } catch (error) {
-        console.error('Error submitting form:', error)
-        if (error?.errors) {
-            errorListDialog(error?.message, error.errors)
-        } else {
-            Dialog.somethingWentWrong()
-        }
+        handleException(error, 'Error submitting form:', error)
     } finally {
         Loader.delete()
     }
@@ -92,11 +88,13 @@ async function sendToBackend(inputs = {}, projectId) {
         }
         isLoading = true
 
-        if (!inputs)
+        if (!inputs) {
             throw new Error('No input data provided to send to backend.')
+        }
 
-        if (!projectId || projectId.trim() === '')
+        if (!projectId || projectId.trim() === '') {
             throw new Error('Project ID is required.')
+        }
 
         const {
             name,
@@ -115,8 +113,9 @@ async function sendToBackend(inputs = {}, projectId) {
             priority,
             assignedWorkers: Object.keys(assignedWorkers).map(key => assignedWorkers[key])
         })
-        if (!response)
+        if (!response) {
             throw error
+        }
 
         return response.data
     } catch (error) {
