@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Auth\SessionAuth;
 use App\Core\UUID;
+use App\Enumeration\WorkStatus;
 use App\Exception\ForbiddenException;
 use App\Exception\NotFoundException;
 use App\Exception\ValidationException;
@@ -13,6 +14,7 @@ use App\Middleware\Response;
 use App\Model\ProjectModel;
 use App\Validator\UuidValidator;
 use InvalidArgumentException;
+use DateTime;
 
 class ProjectController implements Controller
 {
@@ -48,9 +50,27 @@ class ProjectController implements Controller
                 }
                 $project = ProjectModel::findFull($projectId);
 
-                // TODO: CCheck if completion date is still not passed;
-                // Otherwise, set status to DELAYED, if there still pending tasks;
-                // Else, set to COMPLETED
+                // Check if the project is already completed or delayed based on current date and tasks status
+                $completionDateTime = $project->getCompletionDateTime();
+                $currentDateTime = new DateTime();
+                if ($completionDateTime && $currentDateTime > $completionDateTime) {
+                    $hasPendingTasks = false;
+                    foreach ($project->getTasks() as $task) {
+                        if ($task->getStatus() !== WorkStatus::COMPLETED && $task->getStatus() !== WorkStatus::CANCELLED) {
+                            $hasPendingTasks = true;
+                            break;
+                        }
+                    }
+                    if ($hasPendingTasks) {
+                        $project->setStatus(WorkStatus::DELAYED);
+                        $project->save([
+                            'id'        => $project->getId(),
+                            'status'    => WorkStatus::DELAYED
+                        ]);
+                    } else {
+                        $project->setStatus(WorkStatus::COMPLETED);
+                    }
+                }
             }
 
             require_once VIEW_PATH . 'home.php';
