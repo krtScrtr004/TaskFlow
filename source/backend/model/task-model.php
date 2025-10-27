@@ -226,6 +226,115 @@ class TaskModel extends Model
         }
     }
 
+
+    /**
+     * Finds and returns the count of tasks grouped by status for a specific project.
+     *
+     * This method queries the database to retrieve task counts grouped by their status
+     * for a given project ID. It validates the input and handles database exceptions.
+     *
+     * @param int $projectId The unique identifier of the project to query tasks for
+     * 
+     * @return array|null Array of status counts where each element contains:
+     *      - status: string The status of the tasks
+     *      - count: int The number of tasks with that status
+     *      Returns null if no tasks are found for the project
+     * 
+     * @throws ValidationException If the provided project ID is less than 1
+     * @throws DatabaseException If a database error occurs during query execution
+     */
+    public static function findStatusCountByProjectId(int $projectId): ?array
+    {
+        if ($projectId < 1) {
+            throw new ValidationException('Invalid Project ID');
+        }
+
+        $instance = new self();
+        try {
+            $query = "
+                SELECT 
+                    pt.status AS taskStatus,
+                    COUNT(*) AS taskCount
+                FROM 
+                    `projectTask` AS pt
+                WHERE 
+                    pt.projectId = :projectId
+                GROUP BY 
+                    pt.status";
+            $statement = $instance->connection->prepare($query);
+            $statement->execute([':projectId' => $projectId]);
+            $results = $statement->fetchAll();
+
+            if (empty($results)) {
+                return null;
+            }
+
+            $statusCounts = [];
+            foreach ($results as $row) {
+                $statusCounts[$row['taskStatus']] = (int)$row['taskCount'];
+            }
+
+            return $statusCounts;
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
+        }
+    }
+
+    /**
+     * Finds and returns the count of tasks grouped by priority for a specific project.
+     *
+     * This method retrieves task distribution statistics by querying the database
+     * for all tasks associated with the given project ID and groups them by their
+     * priority level. The results include the priority value and the number of
+     * tasks for each priority.
+     *
+     * @param int $projectId The unique identifier of the project to query
+     * 
+     * @return array|null Array of associative arrays containing priority counts, or null if no tasks found.
+     *      Each array element contains:
+     *      - priority: string The priority level of the tasks
+     *      - count: int The number of tasks with this priority
+     * 
+     * @throws ValidationException If the provided project ID is less than 1
+     * @throws DatabaseException If a database error occurs during query execution
+     */
+    public static function findPriorityCountByProjectId(int $projectId): ?array
+    {
+        if ($projectId < 1) {
+            throw new ValidationException('Invalid Project ID');
+        }
+
+        $instance = new self();
+        try {
+            $query = "
+                SELECT 
+                    pt.priority AS taskPriority,
+                    COUNT(*) AS taskCount
+                FROM 
+                    `projectTask` AS pt
+                WHERE 
+                    pt.projectId = :projectId
+                GROUP BY 
+                    pt.priority";
+            $statement = $instance->connection->prepare($query);
+            $statement->execute([':projectId' => $projectId]);
+            $results = $statement->fetchAll();
+
+            if (empty($results)) {
+                return null;
+            }
+
+            $priorityCounts = [];
+            foreach ($results as $row) {
+                $priorityCounts[$row['taskPriority']] = (int)$row['taskCount'];
+            }
+
+            return $priorityCounts;
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
+        }
+    }   
+
     /**
      * Retrieves all tasks with pagination.
      *
