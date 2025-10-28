@@ -1,5 +1,6 @@
 <!-- Modal Container -->
 <section id="add_worker_modal_template" class="modal-wrapper no-display">
+    <?= hiddenCsrfInput() ?>
 
     <!-- Modal Content -->
     <div class="add-worker-modal modal flex-col black-bg">

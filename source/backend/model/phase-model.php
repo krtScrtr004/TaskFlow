@@ -148,7 +148,7 @@ class PhaseModel extends Model
      *      - completionDateTime: DateTime (required) The phase completion date/time
      *      - publicId: UUID (optional) Will be generated if not provided
      *
-     * @return array Returns an array of created phase IDs and public IDs in the same order as input
+     * @return void
      *
      * @throws InvalidArgumentException If PhaseContainer is empty, projectId is invalid, container contains non-Phase objects, or required fields are missing
      * @throws DatabaseException If a database error occurs during any insertion operation
@@ -166,7 +166,7 @@ class PhaseModel extends Model
      * ));
      * $phaseIds = PhaseModel::createMultiple(1, $container);
      */
-    public static function createMultiple(int $projectId, PhaseContainer $phases): array
+    public static function createMultiple(int $projectId, PhaseContainer $phases): void
     {
         if ($projectId < 1) {
             throw new InvalidArgumentException('Invalid project ID.');
@@ -199,8 +199,7 @@ class PhaseModel extends Model
                     :startDateTime,
                     :completionDateTime,
                     :status
-                )
-            ";
+                )";
             $statement = $instance->connection->prepare($insertQuery);
 
             $index = 0;
@@ -224,15 +223,10 @@ class PhaseModel extends Model
                 ];
 
                 $statement->execute($params);
-                $createdIds[] = [
-                    'id'        => (int) $instance->connection->lastInsertId(),
-                    'publicId'  => $publicId
-                ];
                 $index++;
             }
 
             $instance->connection->commit();
-            return $createdIds;
         } catch (PDOException $e) {
             $instance->connection->rollBack();
             throw new DatabaseException($e->getMessage());

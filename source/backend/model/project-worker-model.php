@@ -7,6 +7,7 @@ use App\Container\ProjectContainer;
 use App\Container\WorkerContainer;
 use App\Core\UUID;
 use App\Dependent\Worker;
+use App\Enumeration\WorkerStatus;
 use App\Enumeration\WorkStatus;
 use App\Exception\DatabaseException;
 use Exception;
@@ -286,7 +287,55 @@ class ProjectWorkerModel extends Model
         }
     }
 
+    public static function createMultiple(int|UUID $projectId, array $data): void
+    {
+        if (empty($data)) {
+            throw new InvalidArgumentException('No data provided.');
+        }
 
+        $projectId = ($projectId instanceof UUID)
+            ? UUID::toBinary($projectId)
+            : $projectId;
+
+        $instance = new self();
+        try {
+            $instance->connection->beginTransaction();
+
+            $insertQuery = "
+                INSERT INTO `projectWorker` (
+                    projectId, 
+                    workerId, 
+                    status
+                ) VALUES (
+                    (
+                        SELECT id 
+                        FROM `project` 
+                        WHERE publicId = :projectId
+                    ),
+                    (
+                        SELECT id 
+                        FROM `user` 
+                        WHERE publicId = :workerId
+                    ),
+                    :status
+                )";
+            $statement = $instance->connection->prepare($insertQuery);
+            foreach ($data as $id) {    
+                $statement->execute([
+                    ':projectId'    => $projectId,
+                    ':workerId'     => ($id instanceof UUID)
+                        ? UUID::toBinary($id)
+                        : $id,
+                    ':status'       => WorkerStatus::ASSIGNED->value
+                ]);
+            }
+
+            $instance->connection->commit();
+        } catch (PDOException $e) {
+            $instance->connection->rollBack();
+            throw new DatabaseException($e->getMessage());
+        }
+    }
 
 
 

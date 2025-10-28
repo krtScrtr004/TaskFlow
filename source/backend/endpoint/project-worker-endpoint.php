@@ -13,6 +13,7 @@ use App\Model\UserModel;
 use App\Enumeration\Role;
 use App\Dependent\Worker;
 use App\Enumeration\WorkStatus;
+use App\Middleware\Csrf;
 use App\Model\ProjectWorkerModel;
 use App\Model\WorkerModel;
 use App\Utility\WorkerPerformanceCalculator;
@@ -173,65 +174,45 @@ class ProjectWorkerEndpoint
     }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
     public static function add(array $args = []): void
     {
-        $data = decodeData('php://input');
-        if (!$data) {
-            Response::error('Invalid data provided');
-        }
+        try {
+            if (!SessionAuth::hasAuthorizedSession()) {
+                throw new ForbiddenException('User session is not authorized to perform this action.');
+            }
+            Csrf::protect();
 
-        if (!isset($args['projectId'])) {
-            Response::error('Project ID is required');
-        }
-
-        $workerIds = $data['workerIds'] ?? null;
-        if (!isset($data['workerIds']) || !is_array($data['workerIds']) || count($data['workerIds']) < 1) {
-            Response::error('Worker IDs are required');
-        }
-
-        $returnData = $data['returnData'] ?? false;
-
-        // TODO: Add worker to project logic
-
-        $returnDataArray = [];
-        if ($returnData) {
-            foreach ($workerIds as $workerId) {
-                // TODO: Fetch User
-                $user = UserModel::all()[0];
-
-                $userPerformance = WorkerPerformanceCalculator::calculate(ProjectModel::all());
-                $returnDataArray[] = [
-                    ...$user->toArray(),
-                    'totalProjects' => count(ProjectModel::all()),
-                    'completedProjects' => ProjectModel::all()->getCountByStatus(WorkStatus::COMPLETED),
-                    'performance' => $userPerformance['overallScore'],
-                ];
+            $data = decodeData('php://input');
+            if (!$data) {
+                throw new ValidationException('Cannot decode data.');
             }
 
-        }
+            $projectId = isset($args['projectId'])
+                ? UUID::fromString($args['projectId'])
+                : null;
+            if (!isset($projectId)) {
+                throw new ForbiddenException('Project ID is required.');
+            }
 
-        Response::success($returnDataArray, 'Worker added successfully');
+            $workerIds = $data['workerIds'] ?? null;
+            if (!isset($data['workerIds']) || !is_array($data['workerIds']) || count($data['workerIds']) < 1) {
+                throw new ForbiddenException('Worker IDs are required.');
+            }
+            
+            $ids = [];
+            foreach ($workerIds as $workerId) {
+                $ids[] = UUID::fromString($workerId);
+            }
+            ProjectWorkerModel::createMultiple($projectId, $ids);
+            
+            Response::success([], 'Workers added successfully.');
+        } catch (ValidationException $e) {
+            Response::error('Validation Failed.',$e->getErrors(),422);
+        } catch (ForbiddenException $e) {
+            Response::error('Forbidden.', [], 403);
+        } catch (Exception $e) {
+            Response::error('Unexpected Error.', ['An unexpected error occurred. Please try again.'], 500);
+        }
     }
 
 

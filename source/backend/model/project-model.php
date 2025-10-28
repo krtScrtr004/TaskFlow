@@ -3,6 +3,7 @@
 namespace App\Model;
 
 use App\Abstract\Model;
+use App\Container\JobTitleContainer;
 use App\Container\PhaseContainer;
 use App\Container\TaskContainer;
 use App\Dependent\Phase;
@@ -300,6 +301,7 @@ class ProjectModel extends Model
                 'lastName'      => $mangerData['managerLastName'],
                 'email'         => $mangerData['managerEmail'],
                 'profileLink'   => $mangerData['managerProfileLink'],
+                'jobTitles'    => new JobTitleContainer(json_decode($mangerData['managerJobTitles'], true))
             ]);
 
             $project = new Project(
@@ -371,7 +373,8 @@ class ProjectModel extends Model
                         'lastName'      => $worker['workerLastName'],
                         'email'         => $worker['workerEmail'] ?? null,
                         'profileLink'   => $worker['workerProfileLink'] ?? null,
-                    ]));
+                        'jobTitles'     => new JobTitleContainer(json_decode($worker['workerJobTitles'], true))
+                    ])->toWorker());
                 }
             }
                     
