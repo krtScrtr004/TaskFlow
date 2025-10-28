@@ -595,64 +595,8 @@ class ProjectModel extends Model
         }
     }
 
-    /**
-     * Finds and retrieves all workers associated with a specific project.
-     *
-     * This method queries the database to fetch all users who are assigned as workers
-     * to the specified project by joining the user and projectWorker tables. It returns
-     * a WorkerContainer with all matching workers, or null if no workers are found.
-     *
-     * @param int $projectId The ID of the project to find workers for
-     * 
-     * @return WorkerContainer|null Container with Worker objects if workers are found,
-     *                              null if no workers are associated with the project
-     * 
-     * @throws InvalidArgumentException If projectId is less than 1
-     * @throws DatabaseException If a database error occurs during the query execution
-     */
-    public static function findWorkersByProjectId(int $projectId): ?WorkerContainer
-    {
-        if ($projectId < 1) {
-            throw new InvalidArgumentException('Invalid project ID provided.');
-        }
+    
 
-        $instance = new self();
-        try {
-            $query = "
-                SELECT 
-                    u.id,
-                    u.publicId,
-                    u.firstName,
-                    u.middleName,
-                    u.lastName,
-                    u.gender,
-                    u.email,
-                    u.contactNumber,
-                    u.profileLink,
-                FROM 
-                    `user` AS u
-                INNER JOIN 
-                    `projectWorker` AS pw ON u.id = pw.userId
-                WHERE 
-                    pw.projectId = :projectId
-            ";
-            $statement = $instance->connection->prepare($query);
-            $statement->execute([':projectId' => $projectId]);
-            $result = $statement->fetchAll();
-
-            if (empty($result)) {
-                return null;
-            }
-
-            $workers = new WorkerContainer();
-            foreach ($result as $row) {
-                $workers->add(Worker::fromArray($row));
-            }
-            return $workers;
-        } catch (PDOException $e) {
-            throw new DatabaseException($e->getMessage());
-        }   
-    }
 
     /**
      * Retrieves a paginated collection of Project entities.
@@ -695,6 +639,7 @@ class ProjectModel extends Model
             throw new DatabaseException($e->getMessage());
         }
     }
+
 
     /**
      * Creates and persists a new Project instance to the database.

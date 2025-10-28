@@ -2,62 +2,147 @@
 
 namespace App\Endpoint;
 
+use App\Auth\HttpAuth;
+use App\Auth\SessionAuth;
+use App\Core\UUID;
+use App\Exception\ForbiddenException;
 use App\Middleware\Response;
 use App\Model\ProjectModel;
 use App\Model\UserModel;
 use App\Enumeration\Role;
 use App\Dependent\Worker;
 use App\Enumeration\WorkStatus;
+use App\Model\WorkerModel;
 use App\Utility\WorkerPerformanceCalculator;
+use Exception;
 
 // TODO: CHECK IF THE REQUEST HAS PROJECT ID;
 // IF NOT, RETURN UNASSIGNED WORKERS
 class WorkerEndpoint
 {
-    // Used to fetch single worker info by ID (eg. /get-worker-info/1)
+    private static function createResponseArrayData(Worker $worker): array
+    {
+        $worker->setRole(Role::WORKER);
+        $projects = ProjectModel::all();
+        $workerPerformanceProject = WorkerPerformanceCalculator::calculate($projects);
+        return [
+            ...$worker->toArray(),
+            'totalProjects' => $workerPerformanceProject['totalProjects'],
+            'completedProjects' => $projects->getCountByStatus(WorkStatus::COMPLETED),
+            'performance' => $workerPerformanceProject['overallScore'],
+        ];
+    }
+
+    // TODO:
     public static function getProjectWorkerById($args = []): void
     {
-        if (!isset($args['workerId'])) {
-            Response::error('Worker ID is required');
-        }
+        // try {
+        //     if (!HttpAuth::isGETRequest()) {
+        //         throw new ForbiddenException('Invalid request method. GET request required.');
+        //     }
 
-        $workerId = $args['workerId'];
-        $worker = UserModel::all()[0];
-        Response::success(
-            [
-                self::createResponseArrayData($worker->toWorker())
-            ],
-            'Worker info retrieved successfully'
-        );
+        //     if (!SessionAuth::hasAuthorizedSession()) {
+        //         throw new ForbiddenException('User session is not authorized to perform this action.');
+        //     }
+
+        //     $projectId = isset($args['projectId'])
+        //         ? UUID::fromString($args['projectId'])
+        //         : null;
+        //     if (!$projectId) {
+        //         throw new ForbiddenException('Project ID is required.');
+        //     }
+
+        //     $workers = ProjectModel::findWorkersByProjectId(
+        //         $projectId,
+        //         [
+        //             'limit' => isset($_GET['limit']) ? (int) $_GET['limit'] : 10,
+        //             'offset' => isset($_GET['offset']) ? (int) $_GET['offset'] : 0,
+        //         ]
+        //     );
+
+        //     if (!$workers) {
+        //         Response::success([], 'No workers found for the specified project.');
+        //     } else {
+        //         $return = [];
+        //         foreach ($workers as $worker) {
+        //             $return[] = $worker;
+        //         }
+        //         Response::success($return, 'Workers fetched successfully.');
+        //     }
+        // } catch (Exception $e) {
+        //     Response::error($e->getMessage());
+        // }
+
     }
 
     // Used to fetch multiple workers by IDs or name filter (eg. /get-worker-info?ids=1,2,3 or /get-worker-info?name=John)
-    public static function getProjectWorkerByKey(): void
+    public static function getProjectWorkerByKey(array $args = []): void
     {
-        $workers = UserModel::all();
-
-        $workerIds = isset($_GET['ids']) ? explode(',', $_GET['ids']) : [];
-        $name = $_GET['name'] ?? null;
-
-        $offset = (int) $_GET['offset'] ?: 0;
-        if ($offset > 20)
-            Response::success([], 'No more workers to load');
-
-        $return = [];
-        // If both ID and name filters are empty, return all workers
-        if (empty($workerIds) && empty($name)) {
-            foreach ($workers as $worker) {
-                $return[] = self::createResponseArrayData($worker->toWorker());
+        try {
+            if (!HttpAuth::isGETRequest()) {
+                throw new ForbiddenException('Invalid request method. GET request required.');
             }
-        } else {
-            // TODO: Fetch workers by IDs and/or name from the database
-            foreach ($workers as $worker) {
-                $return[] = self::createResponseArrayData($worker->toWorker());
+
+            if (!SessionAuth::hasAuthorizedSession()) {
+                throw new ForbiddenException('User session is not authorized to perform this action.');
             }
+
+            $projectId = isset($args['projectId'])
+                ? UUID::fromString($args['projectId'])
+                : null;
+            if (!$projectId) {
+                throw new ForbiddenException('Project ID is required.');
+            }
+
+            $workers = [];
+            // Check if 'key' parameter is present in the query string
+            if (isset($_GET['key']) && trim($_GET['key']) !== '') {
+                $workers = WorkerModel::searchProjectWorker(
+                    $projectId,
+                    trimOrNull($_GET['key'] ?? '') ?? ''
+                );
+            } else {
+                $workers = WorkerModel::findProjectWorkersByProjectId(
+                    $projectId,
+                    [
+                        'limit'     => isset($_GET['limit']) ? (int) $_GET['limit'] : 10,
+                        'offset'    => isset($_GET['offset']) ? (int) $_GET['offset'] : 0,
+                    ]
+                );
+            }
+
+            if (!$workers) {
+                Response::success([], 'No workers found for the specified project.');
+            } else {
+                $return = [];
+                foreach ($workers as $worker) {
+                    $return[] = $worker;
+                }
+                Response::success($return, 'Workers fetched successfully.');
+            }
+        } catch (Exception $e) {
+            Response::error($e->getMessage());
         }
-
-        Response::success($return, 'Worker info retrieved successfully');
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     public static function getTaskWorkerById($args = []): void
     {
@@ -103,18 +188,7 @@ class WorkerEndpoint
         Response::success($return, 'Worker info retrieved successfully');
     }
 
-    private static function createResponseArrayData(Worker $worker): array
-    {
-        $worker->setRole(Role::WORKER);
-        $projects = ProjectModel::all();
-        $workerPerformanceProject = WorkerPerformanceCalculator::calculate($projects);
-        return [
-            ...$worker->toArray(),
-            'totalProjects' => $workerPerformanceProject['totalProjects'],
-            'completedProjects' => $projects->getCountByStatus(WorkStatus::COMPLETED),
-            'performance' => $workerPerformanceProject['overallScore'],
-        ];
-    }
+
 
     public static function addWorkerToProject(array $args = []): void
     {

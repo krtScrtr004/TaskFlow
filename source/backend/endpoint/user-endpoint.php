@@ -2,6 +2,8 @@
 
 namespace App\Endpoint;
 
+use App\Core\UUID;
+use App\Exception\ValidationException;
 use App\Middleware\Response;
 use App\Model\ProjectModel;
 use App\Model\UserModel;
@@ -14,16 +16,23 @@ class UserEndpoint
 {
     public static function getUserById(array $args = []): void
     {
-        $userId = $args['userId'] ?? null;
-        if (!$userId)
-            Response::error('User ID is required.');
+        try {
+            $userId = (isset($args['userId']))
+                ? UUID::fromString($args['userId']) 
+                : null;
+            if (!$userId) {
+                throw new ValidationException('User ID is required.');
+            }
 
-        if ($_GET['additionalInfo']) {
-            // TODO
+            $user = UserModel::findByPublicId($userId);
+            if (!$user) {
+                Response::error('User not found.', [], 404);
+            } else {
+                Response::success([$user->toArray()], 'User fetched successfully.');
+            }
+        } catch (ValidationException $e) {
+            Response::error('Validation Error', $e->getErrors(), 422);
         }
-
-        $users = UserModel::all();
-        Response::success([self::createResponseArrayData($users[0]->toWorker())], 'User fetched successfully.');
     }
 
     public static function getUserByKey(): void

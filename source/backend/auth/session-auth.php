@@ -14,7 +14,7 @@ class SessionAuth
 
     public static function hasAuthorizedSession(): bool
     {
-        return (Me::getInstance() !== null) && Session::isSet() && Session::has('userId');
+        return (Me::getInstance() !== null) && Session::isSet() && Session::has('userData');
     }
 
     public static function setAuthorizedSession(User|array $user): void

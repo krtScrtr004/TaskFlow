@@ -7,7 +7,7 @@
  */
 function searchBar(
     ?array $filterOptions = null,
-    string $placeholder = 'Search by Name or ID'
+    string $placeholder = 'Search...'
 ): string {
     if (!isAssociativeArray($filterOptions)) 
         throw new InvalidArgumentException('Filter options must be an associative array.');
