@@ -1,12 +1,12 @@
 {
 	"GET": {
 		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}/tasks/{taskId:[\\w_-]+}/workers/{workerId:[\\w_-]+}": [
-			"WorkerEndpoint",
-			"getTaskWorkerById"
+			"TaskWorkerEndpoint",
+			"getById"
 		],
 		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}/tasks/{taskId:[\\w_-]+}/workers(?:\\?[\\w\\s_=\\/%,&@-]+)?": [
-			"WorkerEndpoint",
-			"getTaskWorkerByKey"
+			"TaskWorkerEndpoint",
+			"getByKey"
 		],
 
 		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}/tasks/{taskId:[\\w_-]+}": [
@@ -19,12 +19,12 @@
 		],
 
 		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}/workers/{workerId:[\\w_-]+}": [
-			"WorkerEndpoint",
-			"getProjectWorkerById"
+			"ProjectWorkerEndpoint",
+			"getById"
 		],
 		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}/workers(?:\\?[\\w\\s_=\\/%,&@-]+)?": [
-			"WorkerEndpoint",
-			"getProjectWorkerByKey"
+			"ProjectWorkerEndpoint",
+			"getByKey"
 		],
 
 		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}": [
@@ -37,11 +37,11 @@
 		],
 
 		"TaskFlow/endpoint/workers/{workerId:[\\w_-]+}": [
-			"WorkerEndpoint",
+			"ProjectWorkerEndpoint",
 			"getWorkerById"
 		],
 		"TaskFlow/endpoint/workers(?:\\?[\\w\\s_=\\/%,&@-]+)?": [
-			"WorkerEndpoint",
+			"ProjectWorkerEndpoint",
 			"getWorkerByKey"
 		],
 
@@ -58,8 +58,8 @@
 
 		"TaskFlow/endpoint/projects": ["ProjectEndpoint", "create"],
 		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/workers": [
-			"WorkerEndpoint",
-			"addWorkerToProject"
+			"ProjectWorkerEndpoint",
+			"add"
 		],
 		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/phases": [
 			"PhaseEndpoint",
@@ -70,8 +70,8 @@
 			"add"
 		],
 		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}/workers": [
-			"WorkerEndpoint",
-			"addWorkerToTask"
+			"TaskWorkerEndpoint",
+			"add"
 		]
 	},
 
@@ -85,7 +85,7 @@
 			"edit"
 		],
 		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/workers/{workerId:[\\w+_-]+}": [
-			"WorkerEndpoint",
+			"ProjectWorkerEndpoint",
 			"edit"
 		]
 	},
@@ -101,7 +101,7 @@
 			"edit"
 		],
 		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/workers/{workerId:[\\w+_-]+}": [
-			"WorkerEndpoint",
+			"ProjectWorkerEndpoint",
 			"edit"
 		]
 	},

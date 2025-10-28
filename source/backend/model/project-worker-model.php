@@ -11,7 +11,7 @@ use App\Exception\DatabaseException;
 use InvalidArgumentException;
 use PDOException;
 
-class WorkerModel extends Model
+class ProjectWorkerModel extends Model
 {
     /**
      * Searches for workers associated with a specific project using a full-text search key.
@@ -31,7 +31,7 @@ class WorkerModel extends Model
      *
      * @return WorkerContainer|null A container of Worker objects matching the search, or null if no results found.
      */
-    public static function searchProjectWorker(
+    public static function search(
         int|UUID $projectId, 
         string $key,
         array $options = [
@@ -120,7 +120,7 @@ class WorkerModel extends Model
         }
     }
 
-    public static function findProjectWorkerByWorkerId(
+    public static function findByWorkerId(
         int|UUID $projectId, 
         int|UUID $workerId,
         array $options = [
@@ -232,7 +232,7 @@ class WorkerModel extends Model
      * - GROUP_CONCAT is used to aggregate job titles
      * - GROUP BY u.id ensures one row per worker
      */
-    public static function findProjectWorkersByProjectId(
+    public static function findByProjectId(
         int|UUID $projectId, 
         array $options = [
             'limit' => 10,
