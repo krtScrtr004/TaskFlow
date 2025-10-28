@@ -9,6 +9,7 @@ use App\Core\Me;
 use App\Core\UUID;
 use App\Dependent\Phase;
 use App\Entity\Project;
+use App\Enumeration\Role;
 use App\Enumeration\WorkStatus;
 use App\Exception\DatabaseException;
 use App\Exception\ForbiddenException;
@@ -40,9 +41,9 @@ class ProjectEndpoint
      * - Creates partial Phase entities and adds them to a container
      * - Creates and persists the project with all phases
      *
-     * @throws ForbiddenException If user session attempts to create project or user already has active project
-     * @throws ValidationException If data cannot be decoded or required fields are missing/empty
-     * @throws Exception If an unexpected error occurs during project creation
+     * @throws ForbiddenException If user session attempts to create project or user already has active project (403)
+     * @throws ValidationException If data cannot be decoded or required fields are missing/empty (422)
+     * @throws Exception If an unexpected error occurs during project creation (500)
      *
      * @return void Sends JSON response with projectId on success (201) or error message on failure
      * 
@@ -80,6 +81,11 @@ class ProjectEndpoint
             if (!SessionAuth::hasAuthorizedSession()) {
                 throw new ForbiddenException('User session is not allowed to create projects.');
             }
+
+            if (!Role::isProjectManager(Me::getInstance())) {
+                throw new ForbiddenException('Only Project Managers can create projects.');
+            }
+
             Csrf::protect();
 
             $data = decodeData('php://input');
@@ -201,6 +207,11 @@ class ProjectEndpoint
             if (!SessionAuth::hasAuthorizedSession()) {
                 throw new ForbiddenException('User session is not allowed to edit projects.');
             }
+
+            if (!Role::isProjectManager(Me::getInstance())) {
+                throw new ForbiddenException('Only Project Managers can edit projects.');
+            }
+
             Csrf::protect();
 
             $projectId = isset($args['projectId'])
@@ -272,7 +283,7 @@ class ProjectEndpoint
             }
 
             // Save project edits
-            $project->save([
+            ProjectModel::save([
                 'publicId'              => $projectId,
                 'description'           => $data['project']['description'],
                 'budget'                => floatval($data['project']['budget']) ?? 0.00,

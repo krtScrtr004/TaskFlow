@@ -10,7 +10,7 @@ use App\Model\PhaseModel;
 use App\Validator\WorkValidator;
 use DateTime;
 
-class Phase Extends PhaseModel implements Entity
+class Phase implements Entity
 {
     private int $id;
     private UUID $publicId;

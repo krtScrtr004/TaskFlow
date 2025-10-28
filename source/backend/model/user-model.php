@@ -254,7 +254,7 @@ class UserModel extends Model
         }
     }
 
-    public function save(array $data): bool
+    public static function save(array $data): bool
     {
         $instance = new self();
         try {

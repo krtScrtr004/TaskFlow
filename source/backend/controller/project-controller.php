@@ -67,7 +67,7 @@ class ProjectController implements Controller
                     }
                     if ($hasPendingTasks) {
                         $project->setStatus(WorkStatus::DELAYED);
-                        $project->save([
+                        ProjectModel::save([
                             'id'        => $project->getId(),
                             'status'    => WorkStatus::DELAYED
                         ]);

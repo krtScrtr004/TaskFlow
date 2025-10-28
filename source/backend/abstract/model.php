@@ -65,7 +65,7 @@ abstract class Model
 
     abstract protected static function find(string $whereClause = '', array $params = [], array $options = []): mixed;
     
-    abstract protected function save(array $data): bool;
+    abstract public static function save(array $data): bool;
 
 
 

@@ -18,7 +18,7 @@ use App\Validator\WorkValidator;
 use BcMath\Number;
 use DateTime;
 
-class Project extends ProjectModel implements Entity
+class Project implements Entity
 {
     private int $id;
     private UUID $publicId;

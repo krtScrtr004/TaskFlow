@@ -839,7 +839,7 @@ class ProjectModel extends Model
      * 
      * @throws DatabaseException If a database error occurs during the transaction
      */
-    public function save(array $data): bool
+    public static function save(array $data): bool
     {
         $instance = new self();
         try {

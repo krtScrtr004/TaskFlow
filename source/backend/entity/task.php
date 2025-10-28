@@ -14,7 +14,7 @@ use App\Validator\UuidValidator;
 use App\Validator\WorkValidator;
 use DateTime;
 
-class Task extends TaskModel implements Entity
+class Task implements Entity
 {
     private int $id;
     private UUID $publicId;

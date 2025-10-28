@@ -250,7 +250,7 @@ class PhaseModel extends Model
      * 
      * @return bool Always returns false as the method is not implemented
      */
-    public function save(array $data): bool
+    public static function save(array $data): bool
     {
         // Not implemented (No use case)
         return false;
