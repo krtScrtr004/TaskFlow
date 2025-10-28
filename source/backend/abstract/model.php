@@ -44,6 +44,10 @@ abstract class Model
 
     protected function appendOptionsToFindQuery(string $query, array $options): string
     {
+        if (isset($options['groupBy'])) {
+            $query .= " GROUP BY " . $options['groupBy'];
+        }
+
         if (isset($options['orderBy'])) {
             $query .= " ORDER BY " . $options['orderBy'];
         }
