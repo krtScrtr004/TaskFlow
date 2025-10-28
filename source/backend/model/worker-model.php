@@ -13,13 +13,31 @@ use PDOException;
 
 class WorkerModel extends Model
 {
+    /**
+     * Searches for workers associated with a specific project using a full-text search key.
+     *
+     * This method performs a full-text search on user fields (first name, middle name, last name, bio, email)
+     * for workers assigned to the given project. It returns a WorkerContainer of matching workers, including
+     * their job titles, project status, and additional statistics.
+     *
+     * @param int|UUID $projectId The project identifier (integer or UUID) to filter workers by project.
+     * @param string $key The search key used for full-text search against user fields.
+     * @param array $options (optional) Search options:
+     *      - limit: int (default 10) Maximum number of results to return.
+     *      - offset: int (default 0) Number of results to skip (for pagination).
+     *
+     * @throws InvalidArgumentException If the project ID is invalid or the search key is empty.
+     * @throws DatabaseException If a database error occurs during the search.
+     *
+     * @return WorkerContainer|null A container of Worker objects matching the search, or null if no results found.
+     */
     public static function searchProjectWorker(
         int|UUID $projectId, 
         string $key,
         array $options = [
             'limit' => 10,
             'offset' => 0,
-        ]): mixed
+        ]): ?WorkerContainer
     {
         if (is_int($projectId) && $projectId < 1) {
             throw new InvalidArgumentException('Invalid project ID provided.');
@@ -97,6 +115,90 @@ class WorkerModel extends Model
                 $workers->add(Worker::fromArray($row));
             }
             return $workers;
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
+        }
+    }
+
+    public static function findProjectWorkerByWorkerId(
+        int|UUID $projectId, 
+        int|UUID $workerId,
+        array $options = [
+            'limit' => 10,
+            'offset' => 0,
+        ]): ?Worker
+    {
+        if (is_int($workerId) && $workerId < 1) {
+            throw new InvalidArgumentException('Invalid worker ID provided.');
+        }
+
+        $params = [];
+        $params[':projectId'] = ($projectId instanceof UUID) 
+            ? UUID::toBinary($workerId)
+            : $workerId;
+        $params[':workerId'] = ($workerId instanceof UUID) 
+            ? UUID::toBinary($workerId)
+            : $workerId;
+        
+        $instance = new self();
+        try {
+            $query = "
+                SELECT 
+                    u.id,
+                    u.publicId,
+                    u.firstName,
+                    u.middleName,
+                    u.lastName,
+                    u.gender,
+                    u.email,
+                    u.contactNumber,
+                    u.profileLink,
+                    GROUP_CONCAT(ujt.title) AS jobTitles,
+                    (
+                        SELECT COUNT(*) 
+                        FROM projectWorker AS pw2 
+                        WHERE pw2.workerId = u.id
+                    ) AS totalProjects,
+                    (
+                        SELECT COUNT(*) 
+                        FROM projectWorker AS pw3
+                        INNER JOIN project AS p2 ON pw3.projectId = p2.id
+                        WHERE pw3.workerId = u.id AND p2.status = '" . WorkStatus::COMPLETED->value . "'
+                    ) AS completedProjects
+                FROM 
+                    user AS u
+                INNER JOIN
+                    projectWorker AS pw 
+                ON 
+                    u.id = pw.workerId
+                INNER JOIN
+                    project AS p
+                LEFT JOIN 
+                    userJobTitle AS ujt 
+                ON 
+                    u.id = ujt.userId
+                WHERE 
+                    " . (is_int($workerId) ? "u.id" : "u.publicId") . " = :workerId
+                    AND
+                    " . (is_int($projectId) ? "p.id" : "p.publicId") . " = :projectId
+                GROUP BY u.id
+                LIMIT " . (int)$options['limit'] ?? 10 . "
+                OFFSET " . (int)$options['offset'] ?? 0 . "
+            ";
+            $statement = $instance->connection->prepare($query);
+            $statement->execute($params);
+            $result = $statement->fetch();
+
+            if (empty($result)) {
+                return null;
+            }
+
+            $result['jobTitles'] = explode(',', $result['jobTitles']);
+            $result['additionalInfo'] = [
+                'totalProjects'      => (int)$result['totalProjects'],
+                'completedProjects'  => (int)$result['completedProjects'],
+            ];
+            return Worker::fromArray($result);
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
