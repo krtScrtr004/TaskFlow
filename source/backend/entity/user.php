@@ -745,7 +745,7 @@ class User implements Entity
     public function toArray(): array
     {
         return [
-            'id' => $this->publicId,
+            'id' => UUID::toString($this->publicId),
             'firstName' => $this->firstName,
             'middleName' => $this->middleName,
             'lastName' => $this->lastName,

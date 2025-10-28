@@ -715,7 +715,7 @@ class Project implements Entity
     public function toArray(): array
     {
         return [
-            'id' => $this->publicId,
+            'id' => UUID::toString($this->publicId),
             'name' => $this->name,
             'description' => $this->description,
             'manager' => $this->manager->toArray(),

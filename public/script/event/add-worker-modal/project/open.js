@@ -13,7 +13,7 @@ if (!projectId || projectId.trim() === '') {
 
 if (addWorkerModalTemplate) {
     addWorkerButton.addEventListener('click', async () => {
-        initializeAddWorkerModal(projectId)
+        initializeAddWorkerModal(projectId, 'users')
 
         addWorkerModalTemplate.classList.add('flex-col')
         addWorkerModalTemplate.classList.remove('no-display')
@@ -26,7 +26,12 @@ if (addWorkerModalTemplate) {
                 throw new Error('Project ID is missing.')
             }
 
-            const workers = await fetchWorkers(projectId)
+            const workers = await fetchWorkers(
+                projectId,
+                null,
+                0,
+                'users'
+            )
             workers.forEach(worker => createWorkerListCard(worker))
             selectWorker()
         } catch (error) {

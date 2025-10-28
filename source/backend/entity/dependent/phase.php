@@ -352,7 +352,7 @@ class Phase implements Entity
     public function toArray(): array
     {
         return [
-            'id' => $this->publicId,
+            'id' => UUID::toString($this->publicId),
             'name' => $this->name,
             'description' => $this->description,
             'startDateTime' => formatDateTime($this->startDateTime, DateTime::ATOM),

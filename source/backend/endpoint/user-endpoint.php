@@ -2,7 +2,10 @@
 
 namespace App\Endpoint;
 
+use App\Auth\HttpAuth;
+use App\Auth\SessionAuth;
 use App\Core\UUID;
+use App\Exception\ForbiddenException;
 use App\Exception\ValidationException;
 use App\Middleware\Response;
 use App\Model\ProjectModel;
@@ -11,9 +14,28 @@ use App\Enumeration\Role;
 use App\Dependent\Worker;
 use App\Enumeration\WorkStatus;
 use App\Utility\WorkerPerformanceCalculator;
+use Exception;
 
 class UserEndpoint
 {
+    /**
+     * Retrieves a user by their unique identifier.
+     *
+     * This method attempts to fetch a user from the database using the provided user ID.
+     * It performs validation on the input, handles exceptions, and returns an appropriate
+     * HTTP response based on the outcome:
+     * - Validates that a user ID is provided and is a valid UUID.
+     * - Returns a 404 error if the user is not found.
+     * - Returns a 422 error if validation fails.
+     * - Returns a 403 error if access is forbidden.
+     * - Returns a 500 error for unexpected exceptions.
+     * - On success, returns the user data with a success message.
+     *
+     * @param array $args Associative array of arguments with the following key:
+     *      - userId: string The UUID string of the user to retrieve.
+     *
+     * @return void Outputs a JSON response with user data or error message.
+     */
     public static function getUserById(array $args = []): void
     {
         try {
@@ -24,26 +46,103 @@ class UserEndpoint
                 throw new ValidationException('User ID is required.');
             }
 
-            $user = UserModel::findByPublicId($userId);
+            $user = UserModel::finById($userId); 
             if (!$user) {
                 Response::error('User not found.', [], 404);
             } else {
-                Response::success([$user->toArray()], 'User fetched successfully.');
+                Response::success([$user], 'User fetched successfully.');
             }
         } catch (ValidationException $e) {
-            Response::error('Validation Error', $e->getErrors(), 422);
+            Response::error('Validation Failed.',$e->getErrors(),422);
+        } catch (ForbiddenException $e) {
+            Response::error('Forbidden.', [], 403);
+        } catch (Exception $e) {
+            Response::error('Unexpected Error.', ['An unexpected error occurred. Please try again.'], 500);
         }
     }
 
-    public static function getUserByKey(): void
+    /**
+     * Retrieves a list of users filtered by a search key or returns all users.
+     *
+     * This endpoint supports searching for users by a provided key or fetching all users if no key is specified.
+     * It enforces GET request method and requires an authorized user session.
+     * Supports pagination via 'limit' and 'offset' query parameters.
+     *
+     * Query Parameters:
+     *      - key: string (optional) Search term to filter users
+     *      - limit: int (optional) Maximum number of users to return (default: 10)
+     *      - offset: int (optional) Number of users to skip for pagination (default: 0)
+     *
+     * Responses:
+     *      - 200: Success, returns an array of user data or an empty array if no users found
+     *      - 403: Forbidden, if the request method is not GET or the session is unauthorized
+     *      - 422: Validation failed, returns validation errors
+     *      - 500: Unexpected error, returns a generic error message
+     *
+     * @throws ValidationException If validation of input parameters fails
+     * @throws ForbiddenException If the request method is not GET or session is unauthorized
+     * @throws Exception For any other unexpected errors
+     *
+     * @return void Outputs a JSON response with user data or error information
+     */
+    public static function getUsersByKey(): void
     {
-        $users = UserModel::all();
-        $return = [];
-        foreach ($users as $user) {
-            $return[] = self::createResponseArrayData($user->toWorker());
+        try {
+            if (!HttpAuth::isGETRequest()) {
+                throw new ForbiddenException('Invalid request method. GET request required.');
+            }
+
+            if (!SessionAuth::hasAuthorizedSession()) {
+                throw new ForbiddenException('User session is not authorized to perform this action.');
+            }
+
+            $users = [];
+            // Check if 'key' parameter is present in the query string
+            if (isset($_GET['key']) && trim($_GET['key']) !== '') {
+                $users = UserModel::search(
+                    trim($_GET['key']),
+                    [
+                        'limit'     => isset($_GET['limit']) ? (int)$_GET['limit'] : 10,
+                        'offset'    => isset($_GET['offset']) ? (int)$_GET['offset'] : 0
+                    ]
+                );
+            } else {
+                $users = UserModel::all(
+                    isset($_GET['offset']) ? (int)$_GET['offset'] : 0,
+                    isset($_GET['limit']) ? (int)$_GET['limit'] : 10
+                );
+            }
+
+            if (!$users) {
+                Response::success([], 'No users found.');
+            } else {
+                $return = [];
+                foreach ($users as $user) {
+                    $return[] = $user;
+                }
+                Response::success($return, 'Users fetched successfully.');
+            }
+        } catch (ValidationException $e) {
+            Response::error('Validation Failed.',$e->getErrors(),422);
+        } catch (ForbiddenException $e) {
+            Response::error('Forbidden.', [], 403);
+        } catch (Exception $e) {
+            Response::error('Unexpected Error.', ['An unexpected error occurred. Please try again.'], 500);
         }
-        Response::success($return, 'Users fetched successfully.');
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     public static function create(): void
     {

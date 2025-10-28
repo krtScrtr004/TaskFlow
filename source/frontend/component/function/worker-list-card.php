@@ -1,5 +1,6 @@
 <?php
 
+use App\Core\UUID;
 use App\Dependent\Worker;
 
 function workerListCard(Worker $worker): string
@@ -8,7 +9,7 @@ function workerListCard(Worker $worker): string
         htmlspecialchars($worker->getProfileLink()) ?:
         ICON_PATH . 'profile_w.svg';
     $name = htmlspecialchars($worker->getFirstName() . ' ' . $worker->getLastName());
-    $id = htmlspecialchars($worker->getPublicId());
+    $id = htmlspecialchars(UUID::toString($worker->getPublicId()));
     $jobTitles = $worker->getJobTitles();
 
     ob_start();
@@ -22,7 +23,7 @@ function workerListCard(Worker $worker): string
             <!-- Name and ID -->
             <div>
                 <h4 class="wrap-text"><?= $name ?></h4>
-                <p><em><?= $id ?></em></p>
+                <p><em class="id"><?= $id ?></em></p>
             </div>
 
             <div class="job-titles flex-row flex-wrap">

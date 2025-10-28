@@ -11,8 +11,8 @@ let isSelectWorkerEventInitialized = false
 export const selectedUsers = []
 const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
 
-export function initializeAddWorkerModal(projectId) {
-    searchWorkerEvent(projectId)
+export function initializeAddWorkerModal(projectId, searchEndpoint = 'workers') {
+    searchWorkerEvent(projectId, searchEndpoint)
     infiniteScrollWorkers(projectId)
 
     cancelAddWorkerModal()
@@ -20,7 +20,7 @@ export function initializeAddWorkerModal(projectId) {
 
 // Search Worker -------------------------
 
-function searchWorkerEvent(projectId) {
+function searchWorkerEvent(projectId, searchEndpoint = 'workers') {
     const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
     const searchBarForm = addWorkerModalTemplate?.querySelector('form.search-bar')
     const button = searchBarForm?.querySelector('button')
@@ -34,11 +34,11 @@ function searchWorkerEvent(projectId) {
         return
     }
 
-    searchBarForm.addEventListener('submit', e => debounceAsync(searchForWorker(e, projectId), 300))
-    button.addEventListener('click', e => debounceAsync(searchForWorker(e, projectId), 300))
+    searchBarForm.addEventListener('submit', e => debounceAsync(searchForWorker(e, projectId, searchEndpoint), 300))
+    button.addEventListener('click', e => debounceAsync(searchForWorker(e, projectId, searchEndpoint), 300))
 }
 
-async function searchForWorker(e, projectId) {
+async function searchForWorker(e, projectId, searchEndpoint = 'workers') {
     e.preventDefault()
 
     const workerList = addWorkerModalTemplate.querySelector('.worker-list > .list')
@@ -69,7 +69,7 @@ async function searchForWorker(e, projectId) {
     const searchTerm = document.querySelector('.search-bar input[type="text"]').value.trim()
 
     try {
-        const workers = await fetchWorkers(projectId, searchTerm)
+        const workers = await fetchWorkers(projectId, searchTerm, 0, searchEndpoint)
 
         if (workers && workers.length > 0) {
             workers.forEach(worker => createWorkerListCard(worker))
@@ -197,12 +197,12 @@ function cancelAddWorkerModal(workerContainer = addWorkerModalTemplate.querySele
 
 // Fetch Worker -------------------------
 
-export async function fetchWorkers(projectId, key = null, offset = 0) {
+export async function fetchWorkers(projectId, key = null, offset = 0, endpoint = 'workers') {
     let isLoading = false
-    return await fetchFromDatabase(projectId, key, isLoading, offset)
+    return await fetchFromDatabase(projectId, key, isLoading, offset, endpoint)
 }
 
-async function fetchFromDatabase(projectId, key = null, isLoading = false, offset = 0) {
+async function fetchFromDatabase(projectId, key = null, isLoading = false, offset, endpointKey) {
     try {
         if (isLoading) {
             console.warn('Request already in progress. Please wait.')
@@ -210,13 +210,18 @@ async function fetchFromDatabase(projectId, key = null, isLoading = false, offse
         }
         isLoading = true
 
-        if (!projectId || projectId.trim() === '')
+        if (!projectId || projectId.trim() === '') {
             throw new Error('Project ID is required.')
+        }
 
         const param = (key) ? key : ''
-        const response = await Http.GET(`projects/${projectId}/workers?key=${param}&offset=${offset}`)
-        if (!response)
+        const endpoint = (endpointKey === 'workers')
+            ? `projects/${projectId}/workers?key=${param}&offset=${offset}`
+            : `users?key=${param}&offset=${offset}`
+        const response = await Http.GET(endpoint)
+        if (!response) {
             throw new Error('Workers data not found!')
+        }
 
         return response.data
     } catch (error) {
@@ -275,6 +280,7 @@ export function createWorkerListCard(worker) {
 
     const idPara = document.createElement('p')
     const idEm = document.createElement('em')
+    idEm.className = 'id'
     idEm.textContent = worker.id
     idPara.appendChild(idEm)
     nameSection.appendChild(idPara)
@@ -321,32 +327,36 @@ export function selectWorker() {
         return
     }
 
-    // Use event delegation but be more specific about what triggers the action
     workerList.addEventListener('click', e => {
-        // Only proceed if clicked on checkbox, label, or worker-checkbox div
         const workerCheckbox = e.target.closest('.worker-checkbox')
         if (!workerCheckbox) return
 
-        // Prevent multiple triggers
+        // If the click is directly on the checkbox, let the browser handle toggling
+        if (e.target.matches('input[type="checkbox"]')) {
+            // Update selectedUsers based on the new checked state
+            const checkbox = e.target
+            const workerId = checkbox.id
+            if (checkbox.checked) {
+                if (!selectedUsers.includes(workerId)) selectedUsers.push(workerId)
+            } else {
+                const index = selectedUsers.indexOf(workerId)
+                if (index !== -1) selectedUsers.splice(index, 1)
+            }
+            return
+        }
+
+        // Otherwise, toggle the checkbox manually
         e.stopPropagation()
         e.preventDefault()
-
         const checkbox = workerCheckbox.querySelector('input[type="checkbox"]')
         if (!checkbox) return
-
-        // Toggle the checkbox state
-        const wasChecked = checkbox.checked
-        checkbox.checked = !wasChecked
-
-        // Update selectedUsers map
+        checkbox.checked = !checkbox.checked
         const workerId = checkbox.id
         if (checkbox.checked) {
-            selectedUsers.push(workerId)
+            if (!selectedUsers.includes(workerId)) selectedUsers.push(workerId)
         } else {
             const index = selectedUsers.indexOf(workerId)
-            if (index !== -1) {
-                selectedUsers.splice(index, 1)
-            }
+            if (index !== -1) selectedUsers.splice(index, 1)
         }
     })
 

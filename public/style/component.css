@@ -474,8 +474,13 @@ button > .text-w-icon {
 }
 
 .worker-list-card p {
+	max-width: unset !important;
 	font-size: 0.8rem;
 	font-weight: 300;
+}
+
+.worker-list-card .id {
+	max-width: fit-content;
 }
 
 .worker-list-card .job-titles {

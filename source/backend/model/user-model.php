@@ -74,14 +74,21 @@ class UserModel extends Model
      * This method searches for a user in the database using the provided UUID.
      * The UUID is converted to binary format for database search.
      * 
-     * @param UUID $publicId The public UUID to search for
+     * @param int|UUID $userId The user ID (integer) or public UUID to search for
      * @return User|null The User object if found, null otherwise
      * @throws DatabaseException If a database error occurs during the search
      */
-    public static function findByPublicId(UUID $publicId): ?User
+    public static function finById(int|UUID $userId): ?User
     {
+        if (is_int($userId) && $userId < 1) {
+            throw new InvalidArgumentException('Invalid user ID provided.');
+        }
+
+        $whereClause = is_int($userId) ? 'id = :id' : 'publicId = :publicId';
+        $params = is_int($userId) ? [':id' => $userId] : [':publicId' => UUID::toBinary($userId)];
+
         try {
-            $result = self::find('publicId = :publicId', [':publicId' => UUID::toBinary($publicId)], ['limit' => 1]);
+            $result = self::find($whereClause, $params, ['limit' => 1]);
             return $result ? $result[0] : null;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
@@ -134,6 +141,32 @@ class UserModel extends Model
 
         try {
             return self::find('', [], ['offset' => $offset, 'limit' => $limit]) ?: null;
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
+        }
+    }
+
+    public static function search(
+        string $key,
+        array $options = [
+            'limit' => 10,
+            'offset' => 0,
+        ]): ?array
+    {
+        if (trimOrNull($key) === null) {
+            throw new InvalidArgumentException('Search key cannot be empty.');
+        }
+
+        $instance = new self();
+        try {
+            return $instance->find(
+                '
+                    MATCH(firstName, middleName, lastName, email, bio)
+                    AGAINST (:key IN NATURAL LANGUAGE MODE)
+                ',
+                [':key' => $key],
+                $options
+            );
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
