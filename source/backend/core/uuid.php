@@ -2,7 +2,7 @@
 
 namespace App\Core;
 
-use App\Exception\ForbiddenException;
+use App\Exception\ValidationException;
 use Ramsey\Uuid\Exception\InvalidUuidStringException;
 use Ramsey\Uuid\Uuid as RamseyUuid;
 use Ramsey\Uuid\UuidInterface;
@@ -25,8 +25,8 @@ class UUID
     {
         try {
             return new UUID(RamseyUuid::fromString($uuidString));
-        } catch (InvalidUuidStringException $th) {
-            throw new ForbiddenException('Invalid UUID string provided.');
+        } catch (InvalidUuidStringException $e) {
+            throw new ValidationException('Invalid UUID string provided.');
         }
     }
 
@@ -46,8 +46,8 @@ class UUID
         try {
             // Convert 16-byte binary back to UUID object
             return new UUID(RamseyUuid::fromBytes($binaryUuid));
-        } catch (InvalidUuidStringException $th) {
-            throw new ForbiddenException('Invalid UUID string provided.');
+        } catch (InvalidUuidStringException $e) {
+            throw new ValidationException('Invalid UUID string provided.');
         }
     }
     
@@ -63,8 +63,8 @@ class UUID
                 substr($hexString, 16, 4) . '-' .
                 substr($hexString, 20)
             ));
-        } catch (InvalidUuidStringException $th) {
-            throw new ForbiddenException('Invalid UUID string provided.');
+        } catch (InvalidUuidStringException $e) {
+            throw new ValidationException('Invalid UUID string provided.');
         }
     }
 }

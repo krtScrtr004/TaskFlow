@@ -696,6 +696,24 @@ class ProjectModel extends Model
         }
     }
 
+    /**
+     * Creates and persists a new Project instance to the database.
+     *
+     * This method handles the complete creation of a project including:
+     * - Validation of the Project instance
+     * - Generation of UUID if not provided
+     * - Insertion of project data into the database
+     * - Creation of associated project phases if any exist
+     * - Transaction management to ensure data integrity
+     *
+     * @param mixed $project Project instance to be created. Must be an instance of Project class.
+     *
+     * @return Project The created Project instance with updated id and publicId from database
+     *
+     * @throws InvalidArgumentException If the provided parameter is not an instance of Project
+     * @throws DatabaseException If any database operation fails during the transaction
+     *
+     */
     public static function create(mixed $project): Project
     {
         if (!($project instanceof Project)) {
@@ -793,6 +811,34 @@ class ProjectModel extends Model
         }
     }
 
+    /**
+     * Saves or updates a project with its associated data in the database.
+     *
+     * This method performs a transactional update of project data. It dynamically builds
+     * an UPDATE query based on provided fields and handles various data conversions:
+     * - Trims string fields (name, description) or sets them to null
+     * - Converts status enum to its value
+     * - Formats DateTime objects to ATOM format for storage
+     * - Handles nullable actualCompletionDateTime field
+     * - Recursively saves associated tasks if provided
+     * - Uses either 'id' or 'publicId' for identifying the project record
+     *
+     * @param array $data Associative array containing project data with following keys:
+     *      - id: int|string (optional) Internal project ID (takes precedence over publicId)
+     *      - publicId: string|UUID (optional) Public project identifier (used if id not present)
+     *      - name: string (optional) Project name
+     *      - description: string (optional) Project description
+     *      - budget: float|int (optional) Project budget amount
+     *      - status: ProjectStatus (optional) Project status enum
+     *      - startDateTime: DateTime|string (optional) Project start date and time
+     *      - completionDateTime: DateTime|string (optional) Planned completion date and time
+     *      - actualCompletionDateTime: DateTime|string|null (optional) Actual completion date and time
+     *      - tasks: TaskContainer (optional) Container of associated Task objects to be saved
+     * 
+     * @return bool Returns true if save operation was successful
+     * 
+     * @throws DatabaseException If a database error occurs during the transaction
+     */
     public function save(array $data): bool
     {
         $instance = new self();
@@ -800,7 +846,13 @@ class ProjectModel extends Model
             $instance->connection->beginTransaction();
 
             $updateFields = [];
-            $params = [':id' => $data['id']];
+            $params = [];
+
+            if (isset($data['id'])) {
+                $params[':id'] = $data['id'];
+            } else {
+                $params[':id'] = UUID::toBinary($data['publicId']);
+            }
 
             if (isset($data['name'])) {
                 $updateFields[] = 'name = :name';
@@ -840,7 +892,7 @@ class ProjectModel extends Model
             }
 
             if (!empty($updateFields)) {
-                $projectQuery = "UPDATE `project` SET " . implode(', ', $updateFields) . " WHERE id = :id";
+                $projectQuery = "UPDATE `project` SET " . implode(', ', $updateFields) . " WHERE " . (isset($data['id']) ? 'id' : 'publicId') . " = :id";
                 $statement = $instance->connection->prepare($projectQuery);
                 $statement->execute($params);
             }

@@ -10,7 +10,8 @@ import { validateInputs, workValidationRules } from '../../../../utility/validat
 import { handleException } from '../../../../utility/handle-exception.js'
 
 let isLoading = false
-const toAdd = []
+
+// Note: phaseToEdit tracks existing phases that have been modified
 const phaseToEdit = []
 
 const editableProjectDetailsForm = document.querySelector('.edit-project #editable_project_details')
@@ -50,9 +51,12 @@ async function submitForm(e) {
     if (!validateInputs({
         description: descriptionInput.value.trim() ?? null,
         budget: parseFloat(budgetInput.value) ?? null,
-        startDate: startDateInput.value ?? null,
-        completionDate: completionDateInput.value ?? null
+        startDateTime: startDateInput.value ?? null,
+        completionDateTime: completionDateInput.value ?? null
     }, workValidationRules())) return
+
+    // Clear phaseToEdit before re-collecting to prevent duplication
+    phaseToEdit.length = 0
 
     const phaseContainers = editableProjectDetailsForm.querySelectorAll('.phase')
     phaseContainers.forEach(phaseContainer => addPhaseForm(phaseContainer))
@@ -70,19 +74,28 @@ async function submitForm(e) {
             project: {
                 description: descriptionInput.value.trim(),
                 budget: parseFloat(budgetInput.value),
-                startDate: startDateInput.value,
+                startDateTime: startDateInput.value,
+                completionDateTime: completionDateInput.value
             },
             phase: {
                 toAdd: Array.from(phaseToAdd.values()),
                 toEdit: phaseToEdit,
-                toCancel: toAdd
+                toCancel: phaseToCancel.size > 0 
+                    ? Array.from(phaseToCancel.values()).map(phase => ({ id: phase }))
+                    : null
             }
         })
-        if (!response)
+        if (!response) {
             throw new Error('No response from server.')
+        }
+
+        // Clear phase tracking only after successful submission to prevent data loss on retry
+        phaseToEdit.length = 0
+        phaseToAdd.clear()
+        phaseToCancel.clear()
 
         Dialog.operationSuccess('Project Edited.', 'The project has been successfully edited.')
-        setTimeout(() => window.location.href = `/TaskFlow/project/${response.id}`, 1500)
+        setTimeout(() => window.location.href = `/TaskFlow/home/${response.projectId}`, 1500)
     } catch (error) {
         handleException(error, `Error submitting form: ${error}`)
     } finally {
@@ -93,8 +106,7 @@ async function submitForm(e) {
 
 function addPhaseForm(phaseContainer) {
     const phaseId = phaseContainer.dataset.phaseid
-    if (phaseToCancel.has(phaseId))
-        return
+    if (phaseToCancel.has(phaseId)) return
 
     const descriptionInput = phaseContainer.querySelector(`.phase-description`)
     const startDateInput = phaseContainer.querySelector(`.phase-start-datetime`)
@@ -107,12 +119,15 @@ function addPhaseForm(phaseContainer) {
 
     const data = {
         description: descriptionInput.value ? descriptionInput.value.trim() : null,
-        startDate: startDateInput.value ? startDateInput.value : null,
-        completionDate: completionDateInput.value ? completionDateInput.value : null
+        startDateTime: startDateInput.value ? startDateInput.value : null,
+        completionDateTime: completionDateInput.value ? completionDateInput.value : null
     }
-    // If phaseId is not present, it's a new phase to add
-    if (!phaseId || phaseId === '') toAdd.push(data)
-    else phaseToEdit.push({ phaseId: phaseId, ...data })
+    
+    // Only track existing phases that have been edited
+    // New phases are already tracked by the phaseToAdd Map in add-phase.js
+    if (phaseId && phaseId !== '') {
+        phaseToEdit.push({ id: phaseId, ...data })
+    }
 }
 
 async function sendToBackend(projectId, data) {
@@ -124,15 +139,18 @@ async function sendToBackend(projectId, data) {
         isLoading = true
 
 
-        if (!projectId || projectId.trim() === '')
+        if (!projectId || projectId.trim() === '') {
             throw new Error('Project ID is required.')
+        }
 
-        if (!data)
+        if (!data) {
             throw new Error('No data provided.')
+        }
 
         const response = await Http.PUT(`projects/${projectId}`, data)
-        if (!response)
+        if (!response) {
             throw new Error('No response from server.')
+        }
 
         return response.data
     } catch (error) {

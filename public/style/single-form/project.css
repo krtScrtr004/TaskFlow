@@ -27,6 +27,14 @@
     font-weight: 500;
 }
 
+.edit-project .project-name h1,
+.edit-project .phase-name {
+    max-width: 30ch;
+    display: unset;
+    line-height: 2.8rem;
+    cursor: pointer;
+}
+
 #editable_project_details {
     gap: 1rem;
 }
@@ -78,11 +86,10 @@
 }
 
 .phase-name {
-    max-width: 35ch;
+    max-width: 40ch !important;
     font-size: 1.5rem !important;
     margin-right: 1rem;
     margin-bottom: 0.3rem;
-    white-space: break-spaces !important;
 }
 
 .phase-details-form,

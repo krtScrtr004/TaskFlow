@@ -25,8 +25,11 @@ if (phaseDetails) {
             return
         }
 
-        if (phaseId) phaseToCancel.add(phaseId)
-        else phase.remove()
+        if (phaseId) {
+            phaseToCancel.add(phaseId)
+        } else {
+            phase.remove()
+        }
 
         try {
 

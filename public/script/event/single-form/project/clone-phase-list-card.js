@@ -48,7 +48,8 @@ function createPhaseElement(data) {
     phaseIcon.height = 22;
     
     const phaseNameHeader = document.createElement('h3');
-    phaseNameHeader.className = 'phase-name wrap-text';
+    phaseNameHeader.className = 'phase-name wrap-text single-line-ellipsis';
+    phaseNameHeader.title = data.name;
     phaseNameHeader.textContent = data.name;
     
     nameDiv.appendChild(phaseIcon);

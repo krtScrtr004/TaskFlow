@@ -36,7 +36,7 @@ class Csrf {
 
     // Middleware-like protection
     public static function protect(): void {
-        if (HttpAuth::isPOSTRequest()) {
+        if (HttpAuth::isPOSTRequest() || HttpAuth::isPATCHRequest() || HttpAuth::isPUTRequest() || HttpAuth::isDELETERequest()) {
             $token = getRequestHeader('X-CSRF-Token') ?? '';
 
             if (!self::validate($token)) {
