@@ -541,23 +541,50 @@ class ProjectModel extends Model
             throw new InvalidArgumentException('Invalid worker ID provided.');
         }
 
+        $instance = new self();
         try {
-            $projects = self::find(
-                'id IN (
-                    SELECT projectId 
-                    FROM projectWorker 
-                    WHERE userId = :workerId
-                ) AND status != :completedStatus',
-                [
-                    ':workerId'         => $workerId,
-                    ':completedStatus'  => WorkStatus::COMPLETED->value,
-                ],
-                [
-                    'limit'     => 1,
-                    'orderBy'   => 'createdAt DESC',
-                ]
-            );
-            return $projects->getItems() ?? null;
+            $query = "
+                SELECT
+                    p.*,
+                    u.firstName AS managerFirstName,
+                    u.middleName AS managerMiddleName,
+                    u.lastName AS managerLastName,
+                    u.gender AS managerGender,
+                    u.email AS managerEmail,
+                    u.profileLink AS managerProfileLink
+                FROM
+                    `project` AS p
+                INNER JOIN 
+                    `user` AS u
+                ON
+                    p.managerId = u.id
+                LEFT JOIN
+                    `projectWorker` AS pw
+                ON	
+                    pw.projectId = p.id
+                WHERE	
+                    pw.workerId = :workerId
+                AND
+                    p.status != '" . WorkStatus::COMPLETED->value . "'
+                LIMIT 1
+            ";
+            $statement = $instance->connection->prepare($query);
+            $statement->execute([':workerId' => $workerId]);
+            $result = $statement->fetch();
+
+            if (!$instance->hasData($result)) {
+                return null;
+            }
+
+            $result['manager'] = User::createPartial([
+                'firstName'     => $result['managerFirstName'],
+                'middleName'    => $result['managerMiddleName'],
+                'lastName'      => $result['managerLastName'],
+                'gender'        => $result['managerGender'],
+                'email'         => $result['managerEmail'],
+                'profileLink'   => $result['managerProfileLink'],
+            ]);
+            return Project::createPartial($result);;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
