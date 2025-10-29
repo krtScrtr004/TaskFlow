@@ -10,7 +10,9 @@ use App\Core\UUID;
 use App\Dependent\Worker;
 use App\Entity\Project;
 use App\Entity\Task;
+use App\Entity\User;
 use App\Enumeration\Gender;
+use App\Enumeration\Role;
 use App\Enumeration\WorkerStatus;
 use App\Enumeration\WorkStatus;
 use App\Exception\DatabaseException;
@@ -104,14 +106,14 @@ class ProjectWorkerModel extends Model
 	}
 
     /**
-     * Searches for workers associated with a specific project using a full-text search key.
+     * Searches for workers, optionally associated with a specific project, using a full-text search key.
      *
      * This method performs a full-text search on user fields (first name, middle name, last name, bio, email)
-     * for workers assigned to the given project. It returns a WorkerContainer of matching workers, including
-     * their job titles, project status, and additional statistics.
+     * for workers. If a projectId is provided, it filters workers assigned to the given project.
+     * It returns a WorkerContainer of matching workers, including their job titles, project status, and additional statistics.
      *
-     * @param int|UUID $projectId The project identifier (integer or UUID) to filter workers by project.
      * @param string $key The search key used for full-text search against user fields.
+     * @param int|UUID|null $projectId (optional) The project ID or public UUID to filter workers by project.
      * @param array $options (optional) Search options:
      *      - limit: int (default 10) Maximum number of results to return.
      *      - offset: int (default 0) Number of results to skip (for pagination).
@@ -122,14 +124,15 @@ class ProjectWorkerModel extends Model
      * @return WorkerContainer|null A container of Worker objects matching the search, or null if no results found.
      */
     public static function search(
-        int|UUID $projectId, 
         string $key,
+        int|UUID|null $projectId = null,
         array $options = [
+            'projectId' => null,
             'limit' => 10,
             'offset' => 0,
         ]): ?WorkerContainer
     {
-        if (is_int($projectId) && $projectId < 1) {
+        if ($projectId !== null && is_int($projectId) && $projectId < 1) {
             throw new InvalidArgumentException('Invalid project ID provided.');
         }
 
@@ -138,21 +141,28 @@ class ProjectWorkerModel extends Model
         }
 
         $params = [];
-            $params[':key'] = $key;
+        $params[':key'] = $key;
+
+        $where = "MATCH(u.firstName, u.middleName, u.lastName, u.bio, u.email) 
+                    AGAINST (:key IN NATURAL LANGUAGE MODE)";
+
+        if ($projectId !== null) {
             $params[':projectId'] = ($projectId instanceof UUID)
                 ? UUID::toBinary($projectId)
                 : $projectId;
+            $where .= " AND " . (is_int($projectId) ? "p.id" : "p.publicId") . " = :projectId";
+        }
 
         try {
-            $result = self::find("MATCH(u.firstName, u.middleName, u.lastName, u.bio, u.email) 
-                    AGAINST (:key IN NATURAL LANGUAGE MODE)
-                    AND " . (is_int($projectId) ? "p.id" : "p.id") . " = :projectId",
+            $result = self::find(
+                $where,
                 $params, 
                 [
                     'limit'     => $options['limit'] ?? 10,
                     'offset'    => $options['offset'] ?? 0,
                     'groupBy'   => 'u.id'
-                ]);
+                ]
+            );
             return $result ? $result->getItems() ?? null : null;
         } catch (Exception $e) {
             throw $e;
@@ -163,19 +173,21 @@ class ProjectWorkerModel extends Model
      * Finds a Worker associated with a specific Project worker by project ID.
      *
      * This method retrieves a Worker instance that is linked to the given project,
-     * supporting both integer and UUID identifiers for project and worker. 
+     * supporting both integer and UUID identifiers for project and worker. If projectId is null,
+     * it will search for the worker across all projects.
      *
-     * @param int|UUID $projectId The project identifier (integer or UUID).
+     * @param int|UUID|null $projectId The project identifier (integer, UUID, or null for any project).
      * @param int|UUID $workerId The worker identifier (integer or UUID).
+     * @param bool $includeHistory Whether to include project/task history.
      * 
      * @throws InvalidArgumentException If an invalid project ID is provided.
      * @throws Exception If an error occurs during the query.
      * 
      * @return Worker|null The Worker instance if found, or null if not found.
      */
-    public static function findByWorkerId(int|UUID $projectId, int|UUID $workerId, bool $includeHistory = false): ?Worker
+    public static function findByWorkerId(int|UUID $workerId, int|UUID|null $projectId = null, bool $includeHistory = false): ?Worker
     {
-        if (is_int($projectId) && $projectId < 1) {
+        if ($projectId && is_int($projectId) && $projectId < 1) {
             throw new InvalidArgumentException('Invalid project ID provided.');
         }
 
@@ -222,6 +234,20 @@ class ProjectWorkerModel extends Model
                         '[]'
                     ) AS projectHistory"
                     : '';
+
+            $where = (is_int($workerId) ? "u.id" : "u.publicId") . " = :workerId";
+            $params = [
+                ':workerId' => ($workerId instanceof UUID) 
+                    ? UUID::toBinary($workerId)
+                    : $workerId,
+            ];
+
+            if ($projectId) {
+                $where .= " AND " . (is_int($projectId) ? "p.id" : "p.publicId") . " = :projectId";
+                $params[':projectId'] = ($projectId instanceof UUID) 
+                    ? UUID::toBinary($projectId)
+                    : $projectId;
+            }
 
             $query = "
                 SELECT 
@@ -275,21 +301,13 @@ class ProjectWorkerModel extends Model
                 ON 
                     u.id = ujt.userId
                 WHERE
-                    " . (is_int($workerId) ? "u.id" : "u.publicId") . " = :workerId 
-                    AND " . (is_int($projectId) ? "p.id" : "p.publicId") . " = :projectId
+                    $where
                 GROUP BY
                     u.id
                 LIMIT 1 
             ";
             $statement = $instance->connection->prepare($query);
-            $statement->execute([
-                ':projectId' => ($projectId instanceof UUID) 
-                    ? UUID::toBinary($projectId)
-                    : $projectId,
-                ':workerId' => ($workerId instanceof UUID) 
-                    ? UUID::toBinary($workerId)
-                    : $workerId,
-            ]);
+            $statement->execute($params);
             $result = $statement->fetch();
 
             if (!$instance->hasData($result)) {
@@ -407,6 +425,76 @@ class ProjectWorkerModel extends Model
                 ]);
         } catch (Exception $e) {
             throw $e;
+        }
+    }
+
+    public static function getByStatus(
+        WorkerStatus $status,
+        int|UUID|null $projectId = null,
+        array $options = [
+            'limit' => 10,
+            'offset' => 0,
+        ]
+    ): ?array
+    {
+        $instance = new self();
+        try {
+            $params = [];
+            $queryString = '';
+
+            if ($status === WorkerStatus::UNASSIGNED) {
+                $queryString = "
+                    SELECT 
+                        u.*,
+                        GROUP_CONCAT(ujt.title) AS jobTitles
+                    FROM `user` u
+                    LEFT JOIN `userJobTitle` ujt ON u.id = ujt.userId
+                    LEFT JOIN `projectWorker` pw ON u.id = pw.workerId
+                    WHERE pw.id IS NULL AND u.role = '" . Role::WORKER->value . "'
+                ";
+                if ($projectId !== null) {
+                    $queryString .= " AND (pw.projectId " . (is_int($projectId) ? "= :projectId" : "IN (SELECT id FROM project WHERE publicId = :projectId)") . ")";
+                    $params[':projectId'] = ($projectId instanceof UUID)
+                        ? UUID::toBinary($projectId)
+                        : $projectId;
+                }
+                $queryString .= " GROUP BY u.id";
+            } else {
+                $queryString = "
+                    SELECT 
+                        u.*,
+                        GROUP_CONCAT(ujt.title) AS jobTitles
+                    FROM `user` u
+                    LEFT JOIN `userJobTitle` ujt ON u.id = ujt.userId
+                    INNER JOIN `projectWorker` pw ON u.id = pw.workerId
+                    WHERE pw.status = :status
+                ";
+                $params[':status'] = $status->value;
+                if ($projectId !== null) {
+                    $queryString .= " AND (pw.projectId " . (is_int($projectId) ? "= :projectId" : "IN (SELECT id FROM project WHERE publicId = :projectId)") . ")";
+                    $params[':projectId'] = ($projectId instanceof UUID)
+                        ? UUID::toBinary($projectId)
+                        : $projectId;
+                }
+                $queryString .= " GROUP BY u.id";
+            }
+
+            $statement = $instance->connection->prepare($queryString);
+            $statement->execute($params);
+            $result = $statement->fetchAll();
+
+            if (!$instance->hasData($result)) {
+                return null;
+            }
+
+            $users = [];
+            foreach ($result as $row) {
+                $row['jobTitles'] = explode(',', $row['jobTitles']);
+                $users[] = User::fromArray($row);
+            }
+            return $users;
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
         }
     }
 

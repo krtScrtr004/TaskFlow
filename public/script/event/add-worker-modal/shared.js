@@ -11,8 +11,8 @@ let isSelectWorkerEventInitialized = false
 export const selectedUsers = []
 const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
 
-export function initializeAddWorkerModal(projectId, searchEndpoint = 'workers') {
-    searchWorkerEvent(projectId, searchEndpoint)
+export function initializeAddWorkerModal(projectId) {
+    searchWorkerEvent(projectId)
     infiniteScrollWorkers(projectId)
 
     cancelAddWorkerModal()
@@ -20,7 +20,7 @@ export function initializeAddWorkerModal(projectId, searchEndpoint = 'workers') 
 
 // Search Worker -------------------------
 
-function searchWorkerEvent(projectId, searchEndpoint = 'workers') {
+function searchWorkerEvent(projectId) {
     const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
     const searchBarForm = addWorkerModalTemplate?.querySelector('form.search-bar')
     const button = searchBarForm?.querySelector('button')
@@ -34,11 +34,11 @@ function searchWorkerEvent(projectId, searchEndpoint = 'workers') {
         return
     }
 
-    searchBarForm.addEventListener('submit', e => debounceAsync(searchForWorker(e, projectId, searchEndpoint), 300))
-    button.addEventListener('click', e => debounceAsync(searchForWorker(e, projectId, searchEndpoint), 300))
+    searchBarForm.addEventListener('submit', e => debounceAsync(searchForWorker(e, projectId), 300))
+    button.addEventListener('click', e => debounceAsync(searchForWorker(e, projectId), 300))
 }
 
-async function searchForWorker(e, projectId, searchEndpoint = 'workers') {
+async function searchForWorker(e, projectId) {
     e.preventDefault()
 
     const workerList = addWorkerModalTemplate.querySelector('.worker-list > .list')
@@ -69,7 +69,7 @@ async function searchForWorker(e, projectId, searchEndpoint = 'workers') {
     const searchTerm = document.querySelector('.search-bar input[type="text"]').value.trim()
 
     try {
-        const workers = await fetchWorkers(projectId, searchTerm, 0, searchEndpoint)
+        const workers = await fetchWorkers(projectId, searchTerm, 0)
 
         if (workers && workers.length > 0) {
             workers.forEach(worker => createWorkerListCard(worker))
@@ -98,9 +98,6 @@ async function searchForWorker(e, projectId, searchEndpoint = 'workers') {
 // Infinite Scroll -------------------------
 
 function infiniteScrollWorkers(projectId, searchKey = '') {
-    if (!projectId || projectId.trim() === '')
-        throw new Error('Project ID not found.')
-
     // Disconnect any existing observer before creating a new one
     disconnectInfiniteScroll()
 
@@ -197,12 +194,12 @@ function cancelAddWorkerModal(workerContainer = addWorkerModalTemplate.querySele
 
 // Fetch Worker -------------------------
 
-export async function fetchWorkers(projectId, key = null, offset = 0, endpoint = 'workers') {
+export async function fetchWorkers(projectId = null, key = null, offset = 0) {
     let isLoading = false
-    return await fetchFromDatabase(projectId, key, isLoading, offset, endpoint)
+    return await fetchFromDatabase(projectId, key, isLoading, offset)
 }
 
-async function fetchFromDatabase(projectId, key = null, isLoading = false, offset, endpointKey) {
+async function fetchFromDatabase(projectId, key = null, isLoading = false, offset) {
     try {
         if (isLoading) {
             console.warn('Request already in progress. Please wait.')
@@ -210,14 +207,10 @@ async function fetchFromDatabase(projectId, key = null, isLoading = false, offse
         }
         isLoading = true
 
-        if (!projectId || projectId.trim() === '') {
-            throw new Error('Project ID is required.')
-        }
-
         const param = (key) ? key : ''
-        const endpoint = (endpointKey === 'workers')
+        const endpoint = (projectId)
             ? `projects/${projectId}/workers?key=${param}&offset=${offset}`
-            : `users?key=${param}&offset=${offset}`
+            : `workers?key=${param}&status=unassigned&offset=${offset}`
         const response = await Http.GET(endpoint)
         if (!response) {
             throw new Error('Workers data not found!')

@@ -45,15 +45,18 @@ async function asyncFunction(offset) {
         }
         isLoading = true
 
-        if (isNaN(offset) || offset < 0)
+        if (isNaN(offset) || offset < 0) {
             throw new Error('Invalid offset value.')
+        }
 
-        if (!projectId || projectId.trim() === '')
+        if (!projectId || projectId.trim() === '') {
             throw new Error('Project ID not found.')
+        }
 
         const response = await Http.GET(`projects/${projectId}/workers?offset=${offset}`)
-        if (!response?.data)
+        if (!response?.data) {
             throw error
+        }
 
         return response.data
     } catch (error) {

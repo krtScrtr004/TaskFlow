@@ -73,7 +73,7 @@ async function submitForm(e) {
         }
 
         Dialog.operationSuccess('Project Created.', 'The project has been successfully created.')
-        setTimeout(() => window.location.href = `/TaskFlow/project/${response.projectId}`, 1500)
+        setTimeout(() => window.location.href = `/TaskFlow/home/${response.projectId}`, 1500)
     } catch (error) {
         handleException(error, 'Error submitting form:', error)
     } finally {

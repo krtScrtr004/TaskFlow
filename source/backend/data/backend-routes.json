@@ -38,11 +38,11 @@
 
 		"TaskFlow/endpoint/workers/{workerId:[\\w_-]+}": [
 			"ProjectWorkerEndpoint",
-			"getWorkerById"
+			"getById"
 		],
 		"TaskFlow/endpoint/workers(?:\\?[\\w\\s_=\\/%,&@-]+)?": [
 			"ProjectWorkerEndpoint",
-			"getWorkerByKey"
+			"getByKey"
 		],
 
 		"TaskFlow/endpoint/users/{userId:[\\w_-]+}": ["UserEndpoint", "getUserById"],

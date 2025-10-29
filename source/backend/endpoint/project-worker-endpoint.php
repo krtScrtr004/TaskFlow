@@ -12,6 +12,7 @@ use App\Model\ProjectModel;
 use App\Model\UserModel;
 use App\Enumeration\Role;
 use App\Dependent\Worker;
+use App\Enumeration\WorkerStatus;
 use App\Enumeration\WorkStatus;
 use App\Middleware\Csrf;
 use App\Model\ProjectWorkerModel;
@@ -57,13 +58,6 @@ class ProjectWorkerEndpoint
                 throw new ForbiddenException('User session is not authorized to perform this action.');
             }
 
-            $projectId = isset($args['projectId'])
-                ? UUID::fromString($args['projectId'])
-                : null;
-            if (!$projectId) {
-                throw new ForbiddenException('Project ID is required.');
-            }
-
             $workerId = isset($args['workerId'])
                 ? UUID::fromString($args['workerId'])
                 : null;
@@ -71,7 +65,15 @@ class ProjectWorkerEndpoint
                 throw new ForbiddenException('Worker ID is required.');
             }
 
-            $worker = ProjectWorkerModel::findByWorkerId($projectId, $workerId, true);
+            $projectId = isset($args['projectId'])
+                ? UUID::fromString($args['projectId'])
+                : null;
+            if (isset($args['projectId']) && !$projectId) {
+                throw new ForbiddenException('Project ID is required.');
+            }
+
+
+            $worker = ProjectWorkerModel::findByWorkerId($workerId,  $projectId, true);
             if (!$worker) {
                 Response::error( 'Worker not found for the specified project.', [], 404);
             } else {
@@ -124,7 +126,7 @@ class ProjectWorkerEndpoint
             $projectId = isset($args['projectId'])
                 ? UUID::fromString($args['projectId'])
                 : null;
-            if (!$projectId) {
+            if (isset($args['projectId']) && !$projectId) {
                 throw new ForbiddenException('Project ID is required.');
             }
 
@@ -132,8 +134,17 @@ class ProjectWorkerEndpoint
             // Check if 'key' parameter is present in the query string
             if (isset($_GET['key']) && trim($_GET['key']) !== '') {
                 $workers = ProjectWorkerModel::search(
+                    trimOrNull($_GET['key'] ?? '') ?? '',
+                    $projectId
+                );
+            } elseif (isset($_GET['status']) && trim($_GET['status']) !== '') {
+                $workers = ProjectWorkerModel::getByStatus(
+                    WorkerStatus::from(trimOrNull($_GET['status'] ?? '') ?? ''),
                     $projectId,
-                    trimOrNull($_GET['key'] ?? '') ?? ''
+                    [
+                        'limit'     => isset($_GET['limit']) ? (int) $_GET['limit'] : 10,
+                        'offset'    => isset($_GET['offset']) ? (int) $_GET['offset'] : 0,
+                    ]
                 );
             } else {
                 $workers = ProjectWorkerModel::findByProjectId(
