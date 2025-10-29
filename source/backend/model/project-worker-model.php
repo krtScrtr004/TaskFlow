@@ -78,7 +78,7 @@ class ProjectWorkerModel extends Model
                     'totalProjects'      => (int)$row['totalProjects'],
                     'completedProjects'  => (int)$row['completedProjects'],
                 ];
-                $workers->add(Worker::fromArray($row));
+                $workers->add(Worker::createPartial($row));
             }
             return $workers;
         } catch (PDOException $e) {
@@ -143,53 +143,93 @@ class ProjectWorkerModel extends Model
     }
 
     /**
-     * Finds a Worker associated with a specific Project by worker and project IDs.
+     * Finds a Worker associated with a specific Project worker by project ID.
      *
      * This method retrieves a Worker instance that is linked to the given project,
-     * supporting both integer and UUID identifiers for project and worker. It also
-     * allows for pagination through the options parameter.
+     * supporting both integer and UUID identifiers for project and worker. 
      *
      * @param int|UUID $projectId The project identifier (integer or UUID).
      * @param int|UUID $workerId The worker identifier (integer or UUID).
-     * @param array $options Optional query options:
-     *      - limit: int (default 10) Maximum number of results to return.
-     *      - offset: int (default 0) Number of results to skip.
      * 
      * @throws InvalidArgumentException If an invalid project ID is provided.
      * @throws Exception If an error occurs during the query.
      * 
      * @return Worker|null The Worker instance if found, or null if not found.
      */
-    public static function findByWorkerId(
-        int|UUID $projectId, 
-        int|UUID $workerId,
-        array $options = [
-            'limit' => 10,
-            'offset' => 0,
-        ]): ?Worker
+    public static function findByWorkerId(int|UUID $projectId, int|UUID $workerId): ?Worker
     {
         if (is_int($projectId) && $projectId < 1) {
             throw new InvalidArgumentException('Invalid project ID provided.');
         }
 
-        $params = [];
-        $params[':projectId'] = ($projectId instanceof UUID) 
-            ? UUID::toBinary($workerId)
-            : $workerId;
-        $params[':workerId'] = ($workerId instanceof UUID) 
-            ? UUID::toBinary($workerId)
-            : $workerId;
-
+        $instance = new self();
         try {
-            $result = self::find((is_int($workerId) ? "u.id" : "u.publicId") . " = :workerId 
-                        AND " . (is_int($projectId) ? "p.id" : "p.publicId") . " = :projectId",
-                $params, 
-                [
-                    'limit'     => $options['limit'] ?? 10,
-                    'offset'    => $options['offset'] ?? 0,
-                    'groupBy'   => 'u.id'
-                ]);
-            return $result->getItems() ?? null;
+            $query = "
+                SELECT 
+                    u.publicId,
+                    u.firstName,
+                    u.middleName,
+                    u.lastName,
+                    u.bio,
+                    u.gender,
+                    u.email,
+                    u.contactNumber,
+                    u.profileLink,
+                    pw.status,
+                    GROUP_CONCAT(ujt.title) AS jobTitles,
+                    (
+                        SELECT COUNT(*) 
+                        FROM projectWorker AS pw2 
+                        WHERE pw2.workerId = u.id
+                    ) AS totalProjects,
+                    (
+                        SELECT COUNT(*) 
+                        FROM projectWorker AS pw3
+                        INNER JOIN project AS p2 ON pw3.projectId = p2.id
+                        WHERE pw3.workerId = u.id AND p2.status = '" . WorkStatus::COMPLETED->value . "'
+                    ) AS completedProjects
+                FROM
+                    `user` AS u
+                INNER JOIN
+                    `projectWorker` AS pw 
+                ON 
+                    u.id = pw.workerId
+                INNER JOIN
+                    `project` AS p
+                ON
+                    pw.projectId = p.id
+                LEFT JOIN
+                    `userJobTitle` AS ujt
+                ON 
+                    u.id = ujt.userId
+                WHERE
+                    " . (is_int($workerId) ? "u.id" : "u.publicId") . " = :workerId 
+                    AND " . (is_int($projectId) ? "p.id" : "p.publicId") . " = :projectId
+                GROUP BY
+                    u.id
+                LIMIT 1 
+            ";
+            $statement = $instance->connection->prepare($query);
+            $statement->execute([
+                ':projectId' => ($projectId instanceof UUID) 
+                    ? UUID::toBinary($projectId)
+                    : $projectId,
+                ':workerId' => ($workerId instanceof UUID) 
+                    ? UUID::toBinary($workerId)
+                    : $workerId,
+            ]);
+            $result = $statement->fetch();
+
+            if (!$instance->hasData($result)) {
+                return null;
+            }
+
+            $result['jobTitles'] = explode(',', $result['jobTitles']);
+                $result['additionalInfo'] = [
+                    'totalProjects'      => (int)$result['totalProjects'],
+                    'completedProjects'  => (int)$result['completedProjects'],
+                ];
+            return Worker::createPartial($result);
         } catch (Exception $e) {
             throw $e;
         }

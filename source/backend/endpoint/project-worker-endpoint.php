@@ -71,23 +71,11 @@ class ProjectWorkerEndpoint
                 throw new ForbiddenException('Worker ID is required.');
             }
 
-            $workers = ProjectWorkerModel::findByWorkerId(
-                $projectId,
-                $workerId,
-                [
-                    'limit'     => isset($_GET['limit']) ? (int)$_GET['limit'] : 10,
-                    'offset'    => isset($_GET['offset']) ? (int)$_GET['offset'] : 0,
-                ]
-            );
-
-            if (!$workers) {
-                Response::success([], 'No workers found for the specified project.');
+            $worker = ProjectWorkerModel::findByWorkerId($projectId, $workerId);
+            if (!$worker) {
+                Response::error( 'Worker not found for the specified project.', [], 404);
             } else {
-                $return = [];
-                foreach ($workers as $worker) {
-                    $return[] = $worker;
-                }
-                Response::success($return, 'Workers fetched successfully.');
+                Response::success([$worker], 'Worker fetched successfully.');
             }
         } catch (ValidationException $e) {
             Response::error('Validation Failed.',$e->getErrors(),422);
