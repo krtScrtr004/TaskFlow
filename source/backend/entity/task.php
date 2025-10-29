@@ -371,8 +371,103 @@ class Task implements Entity
      */
     public function addWorker(Worker $worker): void
     {
+        if (!$this->workers) {
+            $this->workers = new WorkerContainer();
+        }
         $this->workers->add($worker);
     }
+
+    /**
+     * Creates a Task instance from partial data with sensible defaults.
+     *
+     * This helper mirrors the behavior of Project::createPartial and is useful
+     * for building lightweight Task objects for UI lists or early-stage
+     * construction without requiring all fields.
+     *
+     * @param array $data Partial task data
+     * @return self
+     */
+    public static function createPartial(array $data): self
+    {
+        $defaults = [
+            'id' => $data['id'] ?? 0,
+            'publicId' => $data['publicId'] ?? UUID::get(),
+            'name' => $data['name'] ?? 'Untitled Task',
+            'description' => $data['description'] ?? null,
+            'workers' => $data['workers'] ?? new WorkerContainer(),
+            'startDateTime' => $data['startDateTime'] ?? new DateTime(),
+            'completionDateTime' => $data['completionDateTime'] ?? new DateTime('+7 days'),
+            'actualCompletionDateTime' => $data['actualCompletionDateTime'] ?? null,
+            'priority' => $data['priority'] ?? TaskPriority::MEDIUM,
+            'status' => $data['status'] ?? WorkStatus::PENDING,
+            'createdAt' => $data['createdAt'] ?? new DateTime(),
+        ];
+
+        // Handle publicId conversion (accept UUID or string)
+        if (isset($data['publicId']) && !($data['publicId'] instanceof UUID)) {
+            try {
+                $defaults['publicId'] = UUID::fromString(trimOrNull($data['publicId']));
+            } catch (\Exception $e) {
+                // fall back to generated UUID
+                $defaults['publicId'] = UUID::get();
+            }
+        }
+
+        // Convert workers to WorkerContainer when provided as array
+        if (isset($data['workers']) && !($data['workers'] instanceof WorkerContainer)) {
+            $defaults['workers'] = is_array($data['workers'])
+                ? WorkerContainer::fromArray($data['workers'])
+                : new WorkerContainer();
+        }
+
+        // Date conversions
+        if (isset($data['startDateTime']) && !($data['startDateTime'] instanceof DateTime)) {
+            $defaults['startDateTime'] = new DateTime(trimOrNull($data['startDateTime']));
+        }
+
+        if (isset($data['completionDateTime']) && !($data['completionDateTime'] instanceof DateTime)) {
+            $defaults['completionDateTime'] = new DateTime(trimOrNull($data['completionDateTime']));
+        }
+
+        if (isset($data['actualCompletionDateTime']) && !($data['actualCompletionDateTime'] instanceof DateTime)) {
+            $defaults['actualCompletionDateTime'] = is_string($data['actualCompletionDateTime'])
+                ? new DateTime(trimOrNull($data['actualCompletionDateTime']))
+                : $data['actualCompletionDateTime'];
+        }
+
+        if (isset($data['createdAt']) && !($data['createdAt'] instanceof DateTime)) {
+            $defaults['createdAt'] = new DateTime(trimOrNull($data['createdAt']));
+        }
+
+        // Enum conversions
+        if (isset($data['priority']) && !($data['priority'] instanceof TaskPriority)) {
+            $defaults['priority'] = TaskPriority::tryFrom(trimOrNull($data['priority'])) ?? TaskPriority::MEDIUM;
+        }
+
+        if (isset($data['status']) && !($data['status'] instanceof WorkStatus)) {
+            try {
+                $defaults['status'] = WorkStatus::fromString(trimOrNull($data['status']));
+            } catch (\Throwable $e) {
+                $defaults['status'] = WorkStatus::PENDING;
+            }
+        }
+
+        return new self(
+            id: $defaults['id'],
+            publicId: $defaults['publicId'],
+            name: $defaults['name'],
+            description: $defaults['description'],
+            workers: $defaults['workers'],
+            startDateTime: $defaults['startDateTime'],
+            completionDateTime: $defaults['completionDateTime'],
+            actualCompletionDateTime: $defaults['actualCompletionDateTime'],
+            priority: $defaults['priority'],
+            status: $defaults['status'],
+            createdAt: $defaults['createdAt']
+        );
+    }
+
+    
 
     /**
      * Converts the Task object to an associative array representation.
