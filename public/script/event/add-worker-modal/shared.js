@@ -6,6 +6,7 @@ import { confirmationDialog } from '../../render/confirmation-dialog.js'
 import { debounceAsync } from '../../utility/debounce.js'
 import { handleException } from '../../utility/handle-exception.js'
 
+let isFetchingWorkers = false
 let currentInfiniteScrollObserver = null // Store the current observer to allow resetting
 let isSelectWorkerEventInitialized = false
 export const selectedUsers = []
@@ -195,17 +196,16 @@ function cancelAddWorkerModal(workerContainer = addWorkerModalTemplate.querySele
 // Fetch Worker -------------------------
 
 export async function fetchWorkers(projectId = null, key = null, offset = 0) {
-    let isLoading = false
-    return await fetchFromDatabase(projectId, key, isLoading, offset)
+    return await fetchFromDatabase(projectId, key, isFetchingWorkers, offset)
 }
 
-async function fetchFromDatabase(projectId, key = null, isLoading = false, offset) {
+async function fetchFromDatabase(projectId, key = null, offset) {
     try {
-        if (isLoading) {
+        if (isFetchingWorkers) {
             console.warn('Request already in progress. Please wait.')
             return
         }
-        isLoading = true
+        isFetchingWorkers = true
 
         const param = (key) ? key : ''
         const endpoint = (projectId)
@@ -220,7 +220,7 @@ async function fetchFromDatabase(projectId, key = null, isLoading = false, offse
     } catch (error) {
         throw error
     } finally {
-        isLoading = false
+        isFetchingWorkers = false
     }
 }
 
