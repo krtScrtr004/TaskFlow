@@ -229,7 +229,6 @@ class ProjectEndpoint
             if (!$project) {
                 throw new NotFoundException('Project is not found.');
             }
-            self::sanitizeData($data['project']);
 
             $phasesArray = $data['phase'] ?? null;
             if (!$phasesArray || !is_array($phasesArray)) {
@@ -237,6 +236,35 @@ class ProjectEndpoint
             }
 
             $validator = new WorkValidator();
+
+            $projectData = [
+                'publicId' => $projectId
+            ];
+            if (isset($data['project']['description'])) {
+                $projectData['description'] = $data['project']['description'];
+            }
+
+            if (isset($data['project']['budget'])) {
+                $projectData['budget'] = floatval($data['project']['budget']) ?? 0.00;
+            }
+
+            if (isset($data['project']['startDateTime'])) {
+                $projectData['startDateTime'] = new DateTime($data['project']['startDateTime']);
+            }
+
+            if (isset($data['project']['completionDateTime'])) {
+                $projectData['completionDateTime'] = new DateTime($data['project']['completionDateTime']);
+            }
+
+            if (isset($data['project']['status'])) {
+                $projectData['status'] = $data['project']['status'];
+            } else {
+                $projectData['status'] = WorkStatus::getStatusFromDates(
+                    $projectData['startDateTime'] ?? $project->getStartDateTime(),
+                    $projectData['completionDateTime'] ?? $project->getCompletionDateTime()
+                );
+            }
+
             $phases = [
                 'toEdit' => [],
                 'toAdd' => new PhaseContainer(),
@@ -282,14 +310,14 @@ class ProjectEndpoint
             }
 
             // Save project edits
-            ProjectModel::save([
-                'publicId'              => $projectId,
-                'description'           => $data['project']['description'],
-                'budget'                => floatval($data['project']['budget']) ?? 0.00,
-                'startDateTime'         => new DateTime($data['project']['startDateTime']),
-                'completionDateTime'    => new DateTime($data['project']['completionDateTime']),
-                'status'                => WorkStatus::getStatusFromDates(new DateTime($data['project']['startDateTime']), new DateTime($data['project']['completionDateTime']))
-            ]);
+            if ($projectData) {
+                $validator->validateMultiple($projectData);
+                if ($validator->hasErrors()) {
+                    throw new ValidationException('Invalid project data for editing.', $validator->getErrors());
+                }
+                self::sanitizeData($projectData);
+                ProjectModel::save($projectData);
+            }
             if ($phases['toAdd']->count() > 0) {
                 PhaseModel::createMultiple($project->getId(), $phases['toAdd']);
             }
