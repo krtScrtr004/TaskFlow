@@ -513,6 +513,9 @@ class Project implements Entity
      */
     public function addPhase(Phase $phase): void
     {
+        if (!$this->phases) {
+            $this->phases = new PhaseContainer();
+        }
         $this->phases->add($phase);
     }
 
@@ -529,6 +532,9 @@ class Project implements Entity
      */
     public function addTask(Task $task): void
     {
+        if (!$this->tasks) {
+            $this->tasks = new TaskContainer();
+        }
         $this->tasks->add($task);
     }
 
@@ -546,6 +552,9 @@ class Project implements Entity
      */
     public function addWorker(Worker $worker): void
     {
+        if (!$this->workers) {
+            $this->workers = new WorkerContainer();
+        }
         $this->workers->add($worker);
     }
 
@@ -720,9 +729,9 @@ class Project implements Entity
             'description' => $this->description,
             'manager' => $this->manager->toArray(),
             'budget' => $this->budget,
-            'tasks' => $this->tasks->toArray() ?? [],
-            'workers' => $this->workers->toArray() ?? [],
-            'phases' => $this->phases->toArray() ?? [],
+            'tasks' => $this->tasks?->toArray() ?? [],
+            'workers' => $this->workers?->toArray() ?? [],
+            'phases' => $this->phases?->toArray() ?? [],
             'startDateTime' => formatDateTime($this->startDateTime, DateTime::ATOM),
             'completionDateTime' => formatDateTime($this->completionDateTime, DateTime::ATOM),
             'actualCompletionDateTime' => 

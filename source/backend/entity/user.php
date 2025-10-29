@@ -282,11 +282,14 @@ class User implements Entity
     /**
      * Gets the additional information associated with the user.
      *
-     * @return array An array containing any additional user information
+     * @param string $key Optional key to retrieve specific additional info
+     * @return mixed Array containing all additional user information, specific info if key is provided, or null if key not found
      */
-    public function getAdditionalInfo(): array
+    public function getAdditionalInfo(string $key = ''): mixed
     {
-        return $this->additionalInfo;
+        return trimOrNull($key) 
+            ? ($this->additionalInfo[$key] ?? null) 
+            : $this->additionalInfo;
     }
 
     // SETTERS
@@ -567,6 +570,13 @@ class User implements Entity
     public function addAdditionalInfo(string $key, $value): void
     {
         $this->additionalInfo[$key] = $value;
+    }
+
+    public function removeAdditionalInfo(string $key): void
+    {
+        if (isset($this->additionalInfo[$key])) {
+            unset($this->additionalInfo[$key]);
+        }
     }
 
     /**

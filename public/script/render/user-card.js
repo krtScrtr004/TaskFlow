@@ -1,11 +1,13 @@
 import { Loader } from './loader.js'
 
 export async function userInfoCard(userId, asyncFunction) {
-    if (!userId || userId.trim() === '') 
+    if (!userId || userId.trim() === '') {
         throw new Error('User ID is required to fetch user info.')
+    }
 
-    if (!asyncFunction || typeof asyncFunction !== 'function')
+    if (!asyncFunction || typeof asyncFunction !== 'function') {
         throw new Error('A valid function to fetch user info must be provided.')
+    }
 
     const userInfoCardTemplate = document.querySelector('#user_info_card_template')
     if (!userInfoCardTemplate) {
@@ -45,6 +47,8 @@ function addInfoToCard(card, user) {
         userEmail, userContact, userJobTitles
     } = domElements
 
+    const isHomePage = window.location.href.includes('home')
+
     // Add user info to card
     userProfilePicture.src = user.profileLink ?? `${ICON_PATH}profile_w.svg`
     userName.textContent = `${user.firstName} ${user.lastName}` ?? 'Unknown'
@@ -53,9 +57,13 @@ function addInfoToCard(card, user) {
         `<span class="job-title-chip">${title}</span>`
     ).join('')
     userBio.textContent = user.bio ?? 'No bio available'
-    userTotalStatistics.textContent = user.totalProjects || user.totalTasks || 0
-    userCompletedStatistics.textContent = user.completedProjects || user.completedTasks || 0
-    userPerformance.textContent = (user.performance ?? 0) + '%'
+    userTotalStatistics.textContent = (isHomePage) 
+        ? user.additionalInfo.totalTasks 
+        : user.additionalInfo.totalProjects
+    userCompletedStatistics.textContent = (isHomePage)
+        ? user.additionalInfo.completedTasks 
+        : user.additionalInfo.completedProjects
+    userPerformance.textContent = (user.additionalInfo.performance ?? 0) + '%'
     userEmail.textContent = user.email ?? 'N/A'
     userContact.textContent = user.contactNumber ?? 'N/A'
 

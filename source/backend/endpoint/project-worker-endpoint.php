@@ -71,10 +71,12 @@ class ProjectWorkerEndpoint
                 throw new ForbiddenException('Worker ID is required.');
             }
 
-            $worker = ProjectWorkerModel::findByWorkerId($projectId, $workerId);
+            $worker = ProjectWorkerModel::findByWorkerId($projectId, $workerId, true);
             if (!$worker) {
                 Response::error( 'Worker not found for the specified project.', [], 404);
             } else {
+                $performance = WorkerPerformanceCalculator::calculate($worker->getAdditionalInfo('projectHistory'));
+                $worker->addAdditionalInfo('performance', $performance['overallScore']);
                 Response::success([$worker], 'Worker fetched successfully.');
             }
         } catch (ValidationException $e) {

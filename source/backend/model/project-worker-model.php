@@ -3,10 +3,14 @@
 namespace App\Model;
 
 use App\Abstract\Model;
+use App\Container\JobTitleContainer;
 use App\Container\ProjectContainer;
 use App\Container\WorkerContainer;
 use App\Core\UUID;
 use App\Dependent\Worker;
+use App\Entity\Project;
+use App\Entity\Task;
+use App\Enumeration\Gender;
 use App\Enumeration\WorkerStatus;
 use App\Enumeration\WorkStatus;
 use App\Exception\DatabaseException;
@@ -33,6 +37,17 @@ class ProjectWorkerModel extends Model
                     u.profileLink,
                     pw.status,
                     GROUP_CONCAT(ujt.title) AS jobTitles,
+                    (
+                        SELECT COUNT(*)
+                        FROM projectTaskWorker AS ptw
+                        WHERE ptw.workerId = u.id
+                    ) AS totalTasks,
+                    (
+                        SELECT COUNT(*)
+                        FROM projectTaskWorker AS ptw
+                        INNER JOIN projectTask AS t ON ptw.taskId = t.id
+                        WHERE ptw.workerId = u.id AND t.status = '" . WorkStatus::COMPLETED->value . "'
+                    ) AS completedTasks,
                     (
                         SELECT COUNT(*) 
                         FROM projectWorker AS pw2 
@@ -75,6 +90,8 @@ class ProjectWorkerModel extends Model
             foreach ($result as $row) {
                 $row['jobTitles'] = explode(',', $row['jobTitles']);
                 $row['additionalInfo'] = [
+                    'totalTasks'         => (int)$row['totalTasks'],
+                    'completedTasks'     => (int)$row['completedTasks'],
                     'totalProjects'      => (int)$row['totalProjects'],
                     'completedProjects'  => (int)$row['completedProjects'],
                 ];
@@ -156,7 +173,7 @@ class ProjectWorkerModel extends Model
      * 
      * @return Worker|null The Worker instance if found, or null if not found.
      */
-    public static function findByWorkerId(int|UUID $projectId, int|UUID $workerId): ?Worker
+    public static function findByWorkerId(int|UUID $projectId, int|UUID $workerId, bool $includeHistory = false): ?Worker
     {
         if (is_int($projectId) && $projectId < 1) {
             throw new InvalidArgumentException('Invalid project ID provided.');
@@ -164,8 +181,51 @@ class ProjectWorkerModel extends Model
 
         $instance = new self();
         try {
+            $projectHistory = $includeHistory ?
+                ", COALESCE(
+                        (
+                            SELECT CONCAT('[', GROUP_CONCAT(
+                                JSON_OBJECT(
+                                    'id', p2.id,
+                                    'publicId', HEX(p2.publicId),
+                                    'name', p2.name,
+                                    'status', p2.status,
+                                    'startDateTime', p2.startDateTime,
+                                    'completionDateTime', p2.completionDateTime,
+                                    'actualCompletionDateTime', p2.actualCompletionDateTime,
+                                    'tasks', (
+                                        SELECT CONCAT('[', GROUP_CONCAT(
+                                            JSON_OBJECT(
+                                                'id', t.id,
+                                                'publicId', HEX(t.id),
+                                                'name', t.name,
+                                                'status', t.status,
+                                                'startDateTime', t.startDateTime,
+                                                'completionDateTime', t.completionDateTime,
+                                                'actualCompletionDateTime', t.actualCompletionDateTime
+                                            ) ORDER BY t.createdAt DESC
+                                        ), ']')
+                                        FROM `projectTask` AS t
+                                        LEFT JOIN `projectTaskWorker` AS pwt
+                                        ON t.id = pwt.taskId
+                                        WHERE t.projectId = p2.id
+                                        AND pwt.workerId = u.id
+                                    )
+                                ) ORDER BY p2.createdAt DESC
+                            )
+                            , ']')
+                            FROM `project` AS p2
+                            INNER JOIN `projectWorker` AS pw4
+                            ON p2.id = pw4.projectId
+                            WHERE pw4.workerId = u.id
+                        ),
+                        '[]'
+                    ) AS projectHistory"
+                    : '';
+
             $query = "
                 SELECT 
+                    u.id,
                     u.publicId,
                     u.firstName,
                     u.middleName,
@@ -178,6 +238,17 @@ class ProjectWorkerModel extends Model
                     pw.status,
                     GROUP_CONCAT(ujt.title) AS jobTitles,
                     (
+                        SELECT COUNT(*)
+                        FROM projectTaskWorker AS ptw
+                        WHERE ptw.workerId = u.id
+                    ) AS totalTasks,
+                    (
+                        SELECT COUNT(*)
+                        FROM projectTaskWorker AS ptw
+                        INNER JOIN projectTask AS t ON ptw.taskId = t.id
+                        WHERE ptw.workerId = u.id AND t.status = '" . WorkStatus::COMPLETED->value . "'
+                    ) AS completedTasks,
+                    (
                         SELECT COUNT(*) 
                         FROM projectWorker AS pw2 
                         WHERE pw2.workerId = u.id
@@ -188,6 +259,7 @@ class ProjectWorkerModel extends Model
                         INNER JOIN project AS p2 ON pw3.projectId = p2.id
                         WHERE pw3.workerId = u.id AND p2.status = '" . WorkStatus::COMPLETED->value . "'
                     ) AS completedProjects
+                    $projectHistory
                 FROM
                     `user` AS u
                 INNER JOIN
@@ -224,14 +296,61 @@ class ProjectWorkerModel extends Model
                 return null;
             }
 
-            $result['jobTitles'] = explode(',', $result['jobTitles']);
-                $result['additionalInfo'] = [
-                    'totalProjects'      => (int)$result['totalProjects'],
-                    'completedProjects'  => (int)$result['completedProjects'],
-                ];
-            return Worker::createPartial($result);
-        } catch (Exception $e) {
-            throw $e;
+            $worker = Worker::createPartial([
+                'id'                    => $result['id'],
+                'publicId'              => $result['publicId'],
+                'firstName'             => $result['firstName'],
+                'middleName'            => $result['middleName'],
+                'lastName'              => $result['lastName'],
+                'bio'                   => $result['bio'],
+                'gender'                => Gender::from($result['gender']),
+                'email'                 => $result['email'],
+                'contactNumber'         => $result['contactNumber'],
+                'profileLink'           => $result['profileLink'],
+                'status'                => WorkerStatus::from($result['status']),
+                'jobTitles'             => new JobTitleContainer(explode(',', $result['jobTitles'] ?? '')),
+                'additionalInfo'        => [
+                    'totalTasks'        => (int)$result['totalTasks'],
+                    'completedTasks'    => (int)$result['completedTasks'],
+                    'totalProjects'     => (int)$result['totalProjects'],
+                    'completedProjects' => (int)$result['completedProjects'],
+                ],
+            ]);
+            if ($includeHistory) {
+                $projects = new ProjectContainer();
+
+                $projectLists = json_decode($result['projectHistory'], true);
+                foreach ($projectLists as &$project) {
+                    $entry = Project::createPartial([
+                        'id'                        => $project['id'],
+                        'publicId'                  => UUID::fromHex($project['publicId']),
+                        'name'                      => $project['name'],
+                        'status'                    => WorkStatus::from($project['status']),
+                        'startDateTime'             => $project['startDateTime'],
+                        'completionDateTime'        => $project['completionDateTime'],
+                        'actualCompletionDateTime'  => $project['actualCompletionDateTime']
+                    ]);
+
+                    foreach ($project['tasks'] as &$task) {
+                        $entry->addTask(
+                            Task::createPartial([
+                                'id'                        => $task['id'],
+                                'publicId'                  => UUID::fromHex($task['publicId']),
+                                'name'                      => $task['name'],
+                                'status'                    => WorkStatus::from($task['status']),
+                                'startDateTime'             => $task['startDateTime'],
+                                'completionDateTime'        => $task['completionDateTime'],
+                                'actualCompletionDateTime'  => $task['actualCompletionDateTime']
+                            ])
+                        );
+                    }
+                    $projects->add($entry);
+                }
+                $worker->addAdditionalInfo('projectHistory', $projects);
+            }
+            return $worker;
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
         }
     }
 

@@ -417,41 +417,6 @@ class ProjectModel extends Model
     }
 
     /**
-     * Finds a Project by its public UUID.
-     *
-     * This method validates the provided UUID, converts it to the binary representation
-     * used by storage, and attempts to retrieve the first matching Project record.
-     * - Validates the $publicId using UuidValidator
-     * - Converts the validated UUID to binary via UUID::toBinary
-     * - Queries the data store for a Project with the matching binary publicId
-     *
-     * @param UUID $publicId Public identifier for the project to locate
-     *
-     * @return Project|null The found Project instance, or null if no matching project exists
-     *
-     * @throws ValidationException If the provided UUID fails validation (validator errors accessible from the validator)
-     * @throws DatabaseException If a database error occurs while performing the lookup (wraps underlying PDO errors)
-     */
-    public static function findByPublicId(UUID $publicId): ?Project
-    {
-        $uuidValidator = new UuidValidator();
-        $uuidValidator->validateUuid($publicId);
-        if ($uuidValidator->hasErrors()) {
-            throw new ValidationException(
-                'Invalid Project ID',
-                $uuidValidator->getErrors()
-            );
-        }
-
-        $binaryUuid = UUID::toBinary($publicId);
-        try {
-            return self::find('p.publicId = :publicId', ['publicId' => $binaryUuid])->getItems() ?? null;
-        } catch (PDOException $e) {
-            throw new DatabaseException($e->getMessage());
-        }
-    }
-
-    /**
      * Finds all projects managed by a specific manager.
      *
      * This method retrieves projects from the database where the managerId matches
