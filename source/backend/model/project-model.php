@@ -21,6 +21,7 @@ use App\Dependent\Worker;
 use App\Enumeration\Role;
 use App\Core\Me;
 use App\Core\Connection;
+use App\Enumeration\WorkerStatus;
 use App\Exception\ValidationException;
 use App\Exception\DatabaseException;
 use App\Validator\UuidValidator;
@@ -239,6 +240,7 @@ class ProjectModel extends Model
                         FROM projectWorker pw
                         INNER JOIN user w ON pw.workerId = w.id
                         WHERE pw.projectId = p.id
+                        AND pw.status != '" . WorkerStatus::TERMINATED->value . "'
                     ),
                     '[]'
                 ) AS projectWorkers";

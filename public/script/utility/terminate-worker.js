@@ -92,7 +92,7 @@ async function sendToBackend(projectId, userId) {
             throw new Error('User ID is required.')
         }
 
-        const response = await Http.PUT(`projects/${projectId}/workers/${userId}`, { status: 'terminated' })
+        const response = await Http.PATCH(`projects/${projectId}/workers/${userId}`, { status: 'terminated' })
         if (!response) {
             throw new Error('Failed to terminate worker from project.')
         }

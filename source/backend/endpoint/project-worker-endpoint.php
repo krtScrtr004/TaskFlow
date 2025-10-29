@@ -175,6 +175,31 @@ class ProjectWorkerEndpoint
     }
 
 
+    /**
+     * Adds multiple workers to a project.
+     *
+     * This method performs the following actions:
+     * - Checks if the user session is authorized.
+     * - Validates the CSRF token.
+     * - Decodes JSON input data from the request body.
+     * - Validates the presence and format of projectId and workerIds.
+     * - Converts projectId and each workerId to UUID objects.
+     * - Calls the ProjectWorkerModel to associate the workers with the project.
+     * - Returns a success response if all operations succeed.
+     * - Handles and returns appropriate error responses for validation, authorization, and unexpected errors.
+     *
+     * @param array $args Associative array containing:
+     *      - projectId: string|UUID Project identifier (required)
+     *
+     * Input JSON body should contain:
+     *      - workerIds: array List of worker IDs (string or UUID) to add to the project (required)
+     *
+     * @throws ValidationException If input data is invalid or cannot be decoded.
+     * @throws ForbiddenException If the session is unauthorized or required parameters are missing.
+     * @throws Exception For any other unexpected errors.
+     *
+     * @return void
+     */
     public static function add(array $args = []): void
     {
         try {
@@ -220,12 +245,43 @@ class ProjectWorkerEndpoint
 
     public static function edit(array $args = []): void
     {
-        $data = decodeData('php://input');
-        if (!$data) {
-            Response::error('Invalid data provided');
-        }
+        try {
+            if (!SessionAuth::hasAuthorizedSession()) {
+                throw new ForbiddenException('User session is not authorized to perform this action.');
+            }
+            Csrf::protect();
 
-        Response::success([], 'Worker updated successfully');
+            $projectId = isset($args['projectId'])
+                ? UUID::fromString($args['projectId'])
+                : null;
+            if (!isset($projectId)) {
+                throw new ForbiddenException('Project ID is required.');
+            }
+
+            $workerId = $args['workerId'] ?? null;
+            if (!isset($workerId)) {
+                throw new ForbiddenException('Worker ID is required.');
+            }
+
+            $data = decodeData('php://input');
+            if (!$data) {
+                throw new ValidationException('Cannot decode data.');
+            }
+
+            ProjectWorkerModel::save([
+                'projectId'     => $projectId,
+                'workerId'      => UUID::fromString($workerId),
+                'status'        => isset($data['status']) ? WorkerStatus::from($data['status']) : null,
+            ]);
+
+            Response::success([], 'Worker status updated successfully.');
+        } catch (ValidationException $e) {
+            Response::error('Validation Failed.',$e->getErrors(),422);
+        } catch (ForbiddenException $e) {
+            Response::error('Forbidden.', [], 403);
+        } catch (Exception $e) {
+            Response::error('Unexpected Error.', ['An unexpected error occurred. Please try again.'], 500);
+        }
     }
 
     public static function terminate(): void

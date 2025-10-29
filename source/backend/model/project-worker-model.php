@@ -22,6 +22,28 @@ use PDOException;
 
 class ProjectWorkerModel extends Model
 {
+    /**
+     * Finds and retrieves worker information based on specified conditions.
+     *
+     * This method executes a complex SQL query to fetch worker details, including personal information,
+     * job titles, project and task statistics, and status. It supports dynamic WHERE clauses, query parameters,
+     * and additional query options.
+     *
+     * The returned data includes:
+     * - Worker personal details (publicId, firstName, middleName, lastName, bio, gender, email, contactNumber, profileLink)
+     * - Worker status in the project
+     * - Aggregated job titles (as an array)
+     * - Total and completed tasks assigned to the worker
+     * - Total and completed projects the worker is involved in
+     *
+     * @param string $whereClause Optional SQL WHERE clause to filter results (without the 'WHERE' keyword)
+     * @param array $params Parameters to bind to the prepared SQL statement
+     * @param array $options Additional options for query customization (e.g., ordering, limits)
+     *
+     * @return WorkerContainer|null A container of Worker objects matching the criteria, or null if no data found
+     *
+     * @throws DatabaseException If a database error occurs during query execution
+     */
     protected static function find(string $whereClause = '', array $params = [], array $options = []): ?WorkerContainer
 	{
 		$instance = new self();
@@ -416,7 +438,7 @@ class ProjectWorkerModel extends Model
             : $projectId;
 
         try {
-            return self::find((is_int($projectId) ? "p.id" : "p.publicId ") . " = :id", 
+            return self::find((is_int($projectId) ? "p.id" : "p.publicId ") . " = :id AND pw.status != '" . WorkerStatus::TERMINATED->value . "' ", 
                 $params, 
                 [
                     'limit'     => $options['limit'] ?? 10,
@@ -428,6 +450,26 @@ class ProjectWorkerModel extends Model
         }
     }
 
+    /**
+     * Retrieves a list of users (workers) filtered by their assignment status and optionally by project.
+     *
+     * This method queries the database for users based on their assignment status to projects.
+     * - If the status is WorkerStatus::UNASSIGNED, it selects users who are not assigned to any project.
+     * - Otherwise, it selects users assigned to a project with the specified status.
+     * - Optionally filters by project ID or public project UUID.
+     * - Aggregates job titles for each user.
+     * - Supports pagination via the $options parameter.
+     *
+     * @param WorkerStatus $status The worker's assignment status to filter by (e.g., ASSIGNED, UNASSIGNED).
+     * @param int|UUID|null $projectId (optional) The project ID (int) or public project UUID (UUID) to filter workers by project. If null, no project filter is applied.
+     * @param array $options (optional) Query options:
+     *      - limit: int Maximum number of users to return (default: 10)
+     *      - offset: int Number of users to skip for pagination (default: 0)
+     *
+     * @return array|null Array of User instances matching the criteria, or null if no users found.
+     *
+     * @throws DatabaseException If a database error occurs during the query.
+     */
     public static function getByStatus(
         WorkerStatus $status,
         int|UUID|null $projectId = null,
@@ -600,6 +642,25 @@ class ProjectWorkerModel extends Model
         }
     }
 
+        /**
+     * Creates a new ProjectWorker instance from the provided data.
+     *
+     * This method is intended to instantiate a ProjectWorker model using the given data.
+     * Currently, this method is not implemented as there is no use case for creating
+     * ProjectWorker instances directly from data arrays.
+     *
+     * @param mixed $data Data required to create a ProjectWorker instance. The expected
+     *      structure and type of this data is not defined as the method is not implemented.
+     *
+     * @return mixed Returns null as the method is not implemented.
+     */
+	public static function create(mixed $data): mixed
+	{
+        // Not implemented (No use case)
+		return null;
+	}
+
+
     /**
      * Determines if a worker is currently assigned to a project and not terminated.
      *
@@ -663,24 +724,98 @@ class ProjectWorkerModel extends Model
         }
     }
 
-
-
-
-	public static function create(mixed $data): mixed
+    /**
+     * Updates a project-worker relationship record in the database.
+     *
+     * This method updates fields of a project-worker association, identified either by its internal numeric ID,
+     * or by a combination of projectId and workerId (which may be integers or UUIDs). Only fields present in the
+     * $data array will be updated. If no updatable fields are provided, the method is a no-op and returns true.
+     *
+     * Transaction is used to ensure atomicity. If an error occurs, the transaction is rolled back and a
+     * DatabaseException is thrown.
+     *
+     * @param array $data Associative array containing update data with the following keys:
+     *      - id: int (optional) Internal projectWorker record ID. If not provided, both projectId and workerId are required.
+     *      - projectId: int|UUID (optional) Project identifier (internal ID or UUID). Required if id is not provided.
+     *      - workerId: int|UUID (optional) Worker identifier (internal ID or UUID). Required if id is not provided.
+     *      - status: int|string|WorkerStatus (optional) New status for the project-worker relationship.
+     *
+     * @throws InvalidArgumentException If neither id nor both projectId and workerId are provided.
+     * @throws DatabaseException If a database error occurs during the update.
+     *
+     * @return bool True on successful update or if nothing to update.
+     */
+	public static function save(array $data): bool
 	{
-		// TODO: Implement method logic
-		return null;
+        $instance = new self();
+        try {
+            $instance->connection->beginTransaction();
+
+            $updateFields = [];
+            $params = [];
+
+            // Determine identifier clause: prefer numeric/internal id when provided
+            if (isset($data['id'])) {
+                $where = 'id = :id';
+                $params[':id'] = $data['id'];
+            } else {
+                // Require projectId and workerId when id is not provided
+                if (!isset($data['projectId']) || !isset($data['workerId'])) {
+                    throw new InvalidArgumentException('Either id or both projectId and workerId must be provided.');
+                }
+
+                $whereParts = [];
+                // projectId may be int or UUID
+                if ($data['projectId'] instanceof UUID) {
+                    $whereParts[] = 'projectId = (SELECT id FROM `project` WHERE publicId = :projectPublicId)';
+                    $params[':projectPublicId'] = UUID::toBinary($data['projectId']);
+                } else {
+                    $whereParts[] = 'projectId = :projectId';
+                    $params[':projectId'] = $data['projectId'];
+                }
+
+                // workerId may be int or UUID
+                if ($data['workerId'] instanceof UUID) {
+                    $whereParts[] = 'workerId = (SELECT id FROM `user` WHERE publicId = :workerPublicId)';
+                    $params[':workerPublicId'] = UUID::toBinary($data['workerId']);
+                } else {
+                    $whereParts[] = 'workerId = :workerId';
+                    $params[':workerId'] = $data['workerId'];
+                }
+
+                $where = implode(' AND ', $whereParts);
+            }
+
+            // Build update fields
+            if (isset($data['status'])) {
+                $updateFields[] = 'status = :status';
+                $params[':status'] = ($data['status'] instanceof WorkerStatus)
+                    ? $data['status']->value
+                    : $data['status'];
+            }
+
+            // Nothing to update
+            if (empty($updateFields)) {
+                $instance->connection->commit();
+                return true;
+            }
+
+            $query = 'UPDATE `projectWorker` SET ' . implode(', ', $updateFields) . ' WHERE ' . $where;
+            $statement = $instance->connection->prepare($query);
+            $statement->execute($params);
+
+            $instance->connection->commit();
+            return true;
+        } catch (PDOException $e) {
+            $instance->connection->rollBack();
+            throw new DatabaseException($e->getMessage());
+        }
 	}
+
+
+    
 
 	protected function delete(): bool
-	{
-		// TODO: Implement method logic
-		return false;
-	}
-
-
-
-	public static function save(array $data): bool
 	{
 		// TODO: Implement method logic
 		return false;
