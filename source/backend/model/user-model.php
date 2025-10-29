@@ -9,6 +9,7 @@ use App\Core\UUID;
 use App\Entity\User;
 use App\Enumeration\Gender;
 use App\Enumeration\Role;
+use App\Enumeration\WorkerStatus;
 use App\Exception\DatabaseException;
 use App\Middleware\Csrf;
 use DateTime;
@@ -250,7 +251,7 @@ class UserModel extends Model
                 ':middleName' => $middleName,
                 ':lastName' => $lastName,
                 ':gender' => $gender,
-                ':birthDate' => $birthDate,
+                ':birthDate' => formatDateTime($birthDate, DateTime::ATOM),
                 ':role' => $role,
                 ':contactNumber' => $contactNumber,
                 ':email' => $email,

@@ -13,7 +13,7 @@
                 <div class="text-w-icon">
                     <img src="<?= ICON_PATH . 'name_w.svg' ?>" alt="Project Name" title="Project Name" height="20">
 
-                    <p class="">Project Name</p>
+                    <p>Project Name</p>
                 </div>
             </label>
             <input type="text" name="project_name" id="project_name" placeholder="Enter project name"

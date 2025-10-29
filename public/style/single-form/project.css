@@ -27,6 +27,7 @@
     font-weight: 500;
 }
 
+.create-project .phase-name,
 .edit-project .project-name h1,
 .edit-project .phase-name {
     max-width: 30ch;
@@ -86,7 +87,6 @@
 }
 
 .phase-name {
-    max-width: 40ch !important;
     font-size: 1.5rem !important;
     margin-right: 1rem;
     margin-bottom: 0.3rem;
