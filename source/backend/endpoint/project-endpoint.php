@@ -211,7 +211,6 @@ class ProjectEndpoint
             if (!Role::isProjectManager(Me::getInstance())) {
                 throw new ForbiddenException('Only Project Managers can edit projects.');
             }
-
             Csrf::protect();
 
             $projectId = isset($args['projectId'])
@@ -226,7 +225,7 @@ class ProjectEndpoint
                 throw new ValidationException('Cannot decode data.');
             }
 
-            $project = ProjectModel::findByPublicId($projectId);
+            $project = ProjectModel::findById($projectId);
             if (!$project) {
                 throw new NotFoundException('Project is not found.');
             }

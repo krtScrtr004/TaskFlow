@@ -403,14 +403,21 @@ class ProjectModel extends Model
      * @throws InvalidArgumentException If the provided $projectId is invalid (< 1)
      * @throws DatabaseException If a database error occurs (wraps the underlying PDOException)
      */
-    public static function findById(int $projectId): ?Project
+    public static function findById(int|UUID $projectId): ?Project
     {
-        if ($projectId < 1) {
+        if (is_int($projectId) && $projectId < 1) {
             throw new InvalidArgumentException('Invalid Project ID.');
         }
 
         try {
-            return self::find('p.id = :projectId', ['projectId' => $projectId])->getItems() ?? null;
+            return self::find(
+                (is_int($projectId) 
+                    ? 'p.id = :projectId' 
+                    : 'p.publicId = :projectId'), 
+                ['projectId' => (is_int($projectId) 
+                    ? $projectId 
+                    : UUID::toBinary($projectId))]
+            )->getItems() ?? null;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
