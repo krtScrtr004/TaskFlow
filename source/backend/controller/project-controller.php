@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Auth\SessionAuth;
+use App\Core\Me;
 use App\Core\UUID;
 use App\Enumeration\WorkStatus;
 use App\Exception\ForbiddenException;
@@ -12,9 +13,11 @@ use App\Interface\Controller;
 use App\Middleware\Csrf;
 use App\Middleware\Response;
 use App\Model\ProjectModel;
+use App\Model\ProjectWorkerModel;
 use App\Validator\UuidValidator;
 use InvalidArgumentException;
 use DateTime;
+use Exception;
 
 class ProjectController implements Controller
 {
@@ -29,18 +32,37 @@ class ProjectController implements Controller
     {
     }
 
-    public static function viewProject(array $args = []): void
+    public static function viewHomeProject(array $args = []): void
     {
-        $instance = new self();
-        try {
-            if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException('Unauthorized access.');
+        if (!SessionAuth::hasAuthorizedSession()) {
+            ErrorController::forbidden();
+        }
+
+        $projectId = isset($args['projectId']) 
+            ? UUID::fromString($args['projectId']) 
+            : null;
+        
+        if ($projectId) {
+            try {
+                if (ProjectWorkerModel::worksOn(
+                    $projectId,
+                    Me::getInstance()->getId())) {
+                        header('Location: ' . REDIRECT_PATH . 'home');
+                    }
+            } catch (Exception $e) {
+                ErrorController::forbidden();
+                exit();
             }
+        }
 
-            $project = null;
+        $instance = new self();
+        $instance->renderDashboard($projectId);
+    }
 
-            $projectId = isset($args['projectId']) ? UUID::fromString($args['projectId']) : null;
+    private function renderDashboard(UUID|null $projectId): void {
+        try {
             if ($projectId) {
+                $instance = new self();
                 $instance->uuidValidator->validateUuid($projectId);
                 if ($instance->uuidValidator->hasErrors()) {
                     throw new ValidationException(
@@ -78,10 +100,8 @@ class ProjectController implements Controller
             }
 
             require_once VIEW_PATH . 'home.php';
-        } catch (ValidationException | NotFoundException $e) {
+        } catch (ValidationException $e) {
             ErrorController::notFound();
-        } catch (ForbiddenException $e) {
-            ErrorController::forbidden();
         }
     }
 
