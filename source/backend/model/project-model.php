@@ -374,7 +374,7 @@ class ProjectModel extends Model
                         'email'         => $worker['workerEmail'] ?? null,
                         'profileLink'   => $worker['workerProfileLink'] ?? null,
                         'jobTitles'     => new JobTitleContainer(json_decode($worker['workerJobTitles'], true))
-                    ])->toWorker());
+                    ]));
                 }
             }
                     

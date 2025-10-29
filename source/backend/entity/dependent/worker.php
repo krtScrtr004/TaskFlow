@@ -122,6 +122,48 @@ class Worker extends User
     }
 
     // OTHER METHODS (UTILITY)
+
+    /**
+     * Creates a partial Worker instance from an array of data.
+     *
+     * This method initializes a Worker object using partial data, delegating base user creation
+     * to User::createPartial and converting it to a Worker. It handles the worker's status field,
+     * accepting either a string (converted to WorkerStatus enum) or a WorkerStatus instance.
+     * If no status is provided, it defaults to WorkerStatus::UNASSIGNED.
+     *
+     * @param array $data Associative array containing worker data with the following keys:
+     *      - id: int Worker ID
+     *      - publicId: string|UUID|binary Public identifier
+     *      - firstName: string Worker's first name
+     *      - middleName: string Worker's middle name
+     *      - lastName: string Worker's last name
+     *      - gender: string|Gender Worker's gender
+     *      - birthDate: string|DateTime Worker's birth date
+     *      - role: string|Role Worker's role
+     *      - jobTitles: array|JobTitleContainer Worker's job titles
+     *      - contactNumber: string Worker's contact number
+     *      - email: string Worker's email
+     *      - profileLink: string Worker's profile link
+     *      - status: string|WorkerStatus Worker's status
+     *      - joinedDateTime: string|DateTime When the worker joined
+     *      - additionalInfo: array (optional) Additional worker information
+     * 
+     * @return self New Worker instance created from provided data
+     */
+    public static function createPartial(array $data): Worker
+    {
+        $partial = User::createPartial($data)->toWorker();
+        if (isset($data['status'])) {
+            $partial->setStatus(
+                is_string($data['status'])
+                    ? WorkerStatus::tryFrom(trimOrNull($data['status']))
+                    : $data['status']
+            );
+        } else {
+            $partial->setStatus(WorkerStatus::UNASSIGNED);
+        }
+        return $partial;
+    }
     
     /**
      * Converts a Worker instance to a User object.
