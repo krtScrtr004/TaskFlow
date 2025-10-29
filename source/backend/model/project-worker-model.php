@@ -534,6 +534,22 @@ class ProjectWorkerModel extends Model
         }
     }
 
+    /**
+     * Creates multiple project-worker assignments for a given project.
+     *
+     * This method inserts multiple worker assignments into the `projectWorker` table for the specified project.
+     * It uses a transaction to ensure all assignments are created atomically. Each worker is referenced by their
+     * public UUID, which is converted to binary if necessary. The project is also referenced by its public UUID.
+     * The status for each assignment is set to WorkerStatus::ASSIGNED.
+     *
+     * @param int|UUID $projectId The public UUID or integer ID of the project to assign workers to.
+     * @param array $data Array of worker public UUIDs or binary IDs to be assigned to the project.
+     *
+     * @throws InvalidArgumentException If the data array is empty.
+     * @throws DatabaseException If a database error occurs during the transaction.
+     * 
+     * @return void
+     */
     public static function createMultiple(int|UUID $projectId, array $data): void
     {
         if (empty($data)) {
@@ -580,6 +596,69 @@ class ProjectWorkerModel extends Model
             $instance->connection->commit();
         } catch (PDOException $e) {
             $instance->connection->rollBack();
+            throw new DatabaseException($e->getMessage());
+        }
+    }
+
+    /**
+     * Determines if a worker is currently assigned to a project and not terminated.
+     *
+     * This method checks the `projectWorker` table to verify if the specified worker is actively working on the given project.
+     * It supports both integer IDs and UUIDs for project and worker identifiers. The method performs an INNER JOIN with the
+     * `project` and `user` tables to ensure the existence and validity of the referenced entities. The worker is considered
+     * active if their status is not equal to `TERMINATED`.
+     *
+     * @param int|UUID $projectId The project identifier. Can be an integer ID or a UUID object.
+     * @param int|UUID $workerId The worker identifier. Can be an integer ID or a UUID object.
+     *
+     * @return bool Returns true if the worker is actively assigned to the project and not terminated, false otherwise.
+     *
+     * @throws InvalidArgumentException If an invalid project ID or worker ID is provided.
+     * @throws DatabaseException If a database error occurs during the query execution.
+     */
+    public static function worksOn(int|UUID $projectId, int|UUID $workerId): bool
+    {
+        if (is_int($projectId) && $projectId < 1) {
+            throw new InvalidArgumentException('Invalid project ID provided.');
+        }
+
+        if (is_int($workerId) && $workerId < 1) {
+            throw new InvalidArgumentException('Invalid worker ID provided.');
+        }   
+
+        try {
+            $instance = new self();
+            $query = "
+                SELECT *
+                FROM 
+                    `projectWorker` AS pw
+                INNER JOIN 
+                    `project` AS p 
+                ON 
+                    pw.projectId = p.id
+                INNER JOIN 
+                    `user` AS u
+                ON 
+                    pw.workerId = u.id
+                WHERE 
+                    " . (is_int($projectId) ? "p.id" : "p.publicId") . " = :projectId
+                AND 
+                    " . (is_int($workerId) ? "u.id" : "u.publicId") . " = :workerId
+                AND 
+                    pw.status != '" . WorkerStatus::TERMINATED->value . "'
+            ";
+            $statement = $instance->connection->prepare($query);
+            $statement->execute([
+                ':projectId'    => ($projectId instanceof UUID)
+                    ? UUID::toBinary($projectId)
+                    : $projectId,
+                ':workerId'     => ($workerId instanceof UUID)
+                    ? UUID::toBinary($workerId)
+                    : $workerId,
+            ]);
+            $result = $statement->fetchAll();
+            return $instance->hasData($result);
+        } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
     }
