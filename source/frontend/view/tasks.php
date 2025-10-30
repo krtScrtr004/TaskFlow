@@ -82,6 +82,7 @@ $searchFilter = isset($_GET['filter']) ? htmlspecialchars($_GET['filter']) : 'al
     </main>
 
     <script type="module" src="<?= EVENT_PATH . 'break-text-fallback.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'logout.js' ?>" defer></script>
 
     <script type="module" src="<?= EVENT_PATH . 'tasks' . DS . 'search.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'tasks' . DS . 'infinite-scroll.js' ?>" defer></script>

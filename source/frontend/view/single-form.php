@@ -43,6 +43,7 @@ if (!$component)
     </main>
 
     <script type="module" src="<?= EVENT_PATH . 'back-button.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'logout.js' ?>" defer></script>
     <?php if ($scripts): ?>
         <?php foreach ($scripts as $script):
             $scriptPath = EVENT_PATH . $script . '.js';

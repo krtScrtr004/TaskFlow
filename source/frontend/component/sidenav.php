@@ -49,7 +49,7 @@
             </div>
         </a>
         <!-- Logout -->
-        <a class="" href="">
+        <a id="logout" class="" href="#">
             <div class="text-w-icon">
                 <img
                     src="<?= ICON_PATH . 'logout_w.svg' ?>"

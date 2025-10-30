@@ -170,6 +170,8 @@ $taskData = [
         </section>
     </main>
 
+    <script type="module" src="<?= EVENT_PATH . 'logout.js' ?>" defer></script>
+
     <script type="module" src="<?= EVENT_PATH . 'tasks' . DS . 'create-worker-card.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'tasks' . DS . 'terminate-worker.js' ?>" defer></script>
 

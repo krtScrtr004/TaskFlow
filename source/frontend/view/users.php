@@ -67,6 +67,7 @@ if (!isset($users))
     </main>
 
     <script type="module" src="<?= EVENT_PATH . 'break-text-fallback.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'logout.js' ?>" defer></script>
 
     <script type="module" src="<?= EVENT_PATH . 'users' . DS . 'search.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'users' . DS . 'infinite-scroll.js' ?>" defer></script>

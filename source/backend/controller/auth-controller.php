@@ -16,6 +16,7 @@ use App\Model\UserModel;
 use App\Enumeration\Gender;
 use App\Auth\SessionAuth;
 use App\Container\JobTitleContainer;
+use App\Core\Me;
 use App\Exception\ValidationException;
 use DateTime;
 use Exception;
@@ -185,8 +186,9 @@ class AuthController implements Controller
     public static function logout(): void
     {
         try {
-            // Destroy the session completely
             Session::destroy();
+            
+            Me::destroy();
 
             Response::success([], 'Logout successful.');
         } catch (Exception $e) {

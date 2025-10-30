@@ -175,6 +175,8 @@ $statisticsData['performance'] = htmlspecialchars(formatNumber($calculateStatist
 
     </main>
 
+    <script type="module" src="<?= EVENT_PATH . 'logout.js' ?>" defer></script>
+
     <script type="module" src="<?= EVENT_PATH . 'projects' . DS . 'infinite-scroll.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'projects' . DS . 'search.js' ?>" defer></script>
 </body>

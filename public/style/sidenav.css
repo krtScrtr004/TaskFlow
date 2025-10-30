@@ -7,22 +7,26 @@
     bottom: 0;
 }
 
-.sidenav a {
+.sidenav a,
+.sidenav button {
     display: block;
     padding: 1rem 4rem;
 }
 
-.sidenav a > .text-w-icon > h3 {
+.sidenav button {
+    max-width: unset;
+}
+
+.sidenav a > .text-w-icon > h3,
+.sidenav button > .text-w-icon > h3 {
     font-weight: 500;
     font-size: 1.5rem;
 }
 
 .sidenav a.active,
-.sidenav a:hover {
+.sidenav a:hover,
+.sidenav button.active,
+.sidenav button:hover {
     background-color: var(--light-black);
     font-weight: 800;
-}
-
-.sidenav > .logo {
-    flex: 1;
 }
