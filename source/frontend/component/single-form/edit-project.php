@@ -132,7 +132,7 @@ require_once COMPONENT_PATH . 'template/add-phase-modal.php';
         <hr>
 
         <!-- Phase Details -->
-        <fieldset class="phase-details flex-col" <?= $uiState['projectIsCompleted'] ?>>
+        <fieldset id="phase_fieldset" class="phase-details flex-col" <?= $uiState['projectIsCompleted'] ?>>
             <!-- Heading -->
             <section class="heading">
                 <h3>Project Phases</h3>

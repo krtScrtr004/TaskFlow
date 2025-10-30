@@ -84,7 +84,7 @@
     <hr>
 
     <!-- Phases Field -->
-    <fieldset class="phase-details flex-col">
+    <fieldset id="phase_fieldset" class="phase-details flex-col">
 
         <!-- Heading -->
         <section class="heading">

@@ -1,8 +1,7 @@
 import { addPhase } from '../add-phase.js'
 import { Dialog } from '../../../../render/dialog.js'
 
-// List of phases to add when edit form is submitted
-export const phaseToAdd = new Map()
+export const phaseToAdd = new Map() // List of phases to add when edit form is submitted
 try {
     addPhase({
         action: function (data) {

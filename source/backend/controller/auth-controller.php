@@ -58,11 +58,6 @@ class AuthController implements Controller
                 ]);
             }
 
-            // // Check if user has current project assigned
-            // $project = Role::isProjectManager($user)
-            //     ? ProjectModel::findManagerActiveProjectByManagerId($user->getId())
-            //     : ProjectModel::findWorkerActiveProjectByWorkerId($user->getId());
-
             // Regenerate session ID to prevent session fixation attacks
             Session::regenerate(true);
 

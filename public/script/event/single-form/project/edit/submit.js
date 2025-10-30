@@ -3,7 +3,6 @@ import { Dialog } from '../../../../render/dialog.js'
 import { Loader } from '../../../../render/loader.js'
 import { confirmationDialog } from '../../../../render/confirmation-dialog.js'
 import { debounceAsync } from '../../../../utility/debounce.js'
-import { phaseToAdd } from './add-phase.js'
 import { phaseToCancel } from './cancel-phase.js'
 import { validateInputs, workValidationRules } from '../../../../utility/validator.js'
 import { handleException } from '../../../../utility/handle-exception.js'
@@ -11,6 +10,7 @@ import { handleException } from '../../../../utility/handle-exception.js'
 let isLoading = false
 
 // Note: phaseToEdit tracks existing phases that have been modified
+const phaseToAdd = []
 const phaseToEdit = []
 
 const editableProjectDetailsForm = document.querySelector('.edit-project #editable_project_details')
@@ -79,7 +79,8 @@ async function submitForm(e) {
         completionDateTime: completionDateInput.value ?? null
     }, workValidationRules())) return
 
-    // Clear phaseToEdit before re-collecting to prevent duplication
+    // Clear before re-collecting to prevent duplication
+    phaseToAdd.length = 0
     phaseToEdit.length = 0
 
     const phaseContainers = editableProjectDetailsForm.querySelectorAll('.phase')
@@ -118,7 +119,7 @@ async function submitForm(e) {
         })
 
         const phasePayload = {
-            toAdd: Array.from(phaseToAdd.values()),
+            toAdd: phaseToAdd,
             toEdit: phaseToEdit,
             toCancel: phaseToCancel.size > 0 
                 ? Array.from(phaseToCancel.values()).map(phase => ({ id: phase }))
@@ -150,8 +151,8 @@ async function submitForm(e) {
         }
 
         // Clear phase tracking only after successful submission to prevent data loss on retry
+        phaseToAdd.length = 0
         phaseToEdit.length = 0
-        phaseToAdd.clear()
         phaseToCancel.clear()
 
         Dialog.operationSuccess('Project Edited.', 'The project has been successfully edited.')
@@ -168,6 +169,7 @@ function addPhaseForm(phaseContainer) {
     const phaseId = phaseContainer.dataset.phaseid
     if (phaseToCancel.has(phaseId)) return
 
+    const nameInput = phaseContainer.querySelector(`.phase-name`)
     const descriptionInput = phaseContainer.querySelector(`.phase-description`)
     const startDateInput = phaseContainer.querySelector(`.phase-start-datetime`)
     const completionDateInput = phaseContainer.querySelector(`.phase-completion-datetime`)
@@ -182,11 +184,13 @@ function addPhaseForm(phaseContainer) {
         startDateTime: startDateInput.value ? startDateInput.value : null,
         completionDateTime: completionDateInput.value ? completionDateInput.value : null
     }
-    
+        
     // Only track existing phases that have been edited
     // New phases are already tracked by the phaseToAdd Map in add-phase.js
     if (phaseId && phaseId !== '') {
         phaseToEdit.push({ id: phaseId, ...data })
+    } else {
+        phaseToAdd.push({ name: nameInput.textContent.trim(), ...data })
     }
 }
 

@@ -560,6 +560,8 @@ class ProjectModel extends Model
             $query = "
                 SELECT
                     p.*,
+                    u.id AS managerId,
+                    u.publicId AS managerPublicId,
                     u.firstName AS managerFirstName,
                     u.middleName AS managerMiddleName,
                     u.lastName AS managerLastName,
@@ -600,6 +602,8 @@ class ProjectModel extends Model
             }
 
             $result['manager'] = User::createPartial([
+                'id'            => $result['managerId'],
+                'publicId'      => UUID::fromBinary($result['managerPublicId']),
                 'firstName'     => $result['managerFirstName'],
                 'middleName'    => $result['managerMiddleName'],
                 'lastName'      => $result['managerLastName'],
@@ -612,8 +616,6 @@ class ProjectModel extends Model
             throw new DatabaseException($e->getMessage());
         }
     }
-
-    
 
 
     /**
