@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 24, 2025 at 04:47 PM
+-- Generation Time: Oct 30, 2025 at 03:15 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -33,7 +33,7 @@ CREATE TABLE `project` (
   `managerId` int(11) NOT NULL,
   `name` varchar(255) NOT NULL,
   `description` varchar(500) DEFAULT NULL,
-  `budget` int(11) NOT NULL CHECK (`budget` > 0),
+  `budget` decimal(21,4) NOT NULL,
   `startDateTime` datetime NOT NULL,
   `completionDateTime` datetime NOT NULL,
   `actualCompletionDateTime` datetime DEFAULT NULL,
@@ -45,6 +45,25 @@ CREATE TABLE `project` (
 --
 -- Triggers `project`
 --
+DELIMITER $$
+CREATE TRIGGER `cancelProject` AFTER UPDATE ON `project` FOR EACH ROW BEGIN
+    -- Only act when status changes to 'cancelled'
+    IF NEW.status = 'cancelled' AND OLD.status <> 'cancelled' THEN
+        UPDATE projectWorker
+        SET status = 'unassigned'
+        WHERE projectId = NEW.id;
+
+        UPDATE projectPhase
+        SET status = 'cancelled'
+        WHERE projectId = NEW.id;
+
+        UPDATE projectTask
+        SET status = 'cancelled'
+        WHERE projectId = NEW.id;
+    END IF;
+END
+$$
+DELIMITER ;
 DELIMITER $$
 CREATE TRIGGER `checkProjectDatesBeforeInsert` BEFORE INSERT ON `project` FOR EACH ROW BEGIN
     -- 1. Check that startDateTime is not in the past
@@ -112,7 +131,6 @@ CREATE TABLE `projectphase` (
   `description` varchar(500) DEFAULT NULL,
   `startDateTime` datetime NOT NULL,
   `completionDateTime` datetime NOT NULL,
-  `actualCompletionDateTime` datetime DEFAULT NULL,
   `status` varchar(25) NOT NULL CHECK (`status` in ('pending','onGoing','completed','delayed','cancelled'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -130,12 +148,6 @@ CREATE TRIGGER `checkProjectPhaseDatesBeforeInsert` BEFORE INSERT ON `projectpha
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'completionDateTime must be later than startDateTime.';
     END IF;
-
-    IF NEW.actualCompletionDateTime IS NOT NULL
-       AND NEW.actualCompletionDateTime <= NEW.startDateTime THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'actualCompletionDateTime must be later than startDateTime.';
-    END IF;
 END
 $$
 DELIMITER ;
@@ -149,12 +161,6 @@ CREATE TRIGGER `checkProjectPhaseDatesBeforeUpdate` BEFORE UPDATE ON `projectpha
     IF NEW.completionDateTime <= NEW.startDateTime THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'completionDateTime must be later than startDateTime.';
-    END IF;
-
-    IF NEW.actualCompletionDateTime IS NOT NULL
-       AND NEW.actualCompletionDateTime <= NEW.startDateTime THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'actualCompletionDateTime must be later than startDateTime.';
     END IF;
 END
 $$
@@ -184,6 +190,17 @@ CREATE TABLE `projecttask` (
 --
 -- Triggers `projecttask`
 --
+DELIMITER $$
+CREATE TRIGGER `cancelTask` AFTER UPDATE ON `projecttask` FOR EACH ROW BEGIN
+    -- Only act when task status changes to 'cancelled'
+    IF NEW.status = 'cancelled' AND OLD.status <> 'cancelled' THEN
+        UPDATE projectTaskWorker
+        SET status = 'unassigned'
+        WHERE taskId = NEW.id;
+    END IF;
+END
+$$
+DELIMITER ;
 DELIMITER $$
 CREATE TRIGGER `checkProjectTaskDatesBeforeInsert` BEFORE INSERT ON `projecttask` FOR EACH ROW BEGIN
     -- 1. Check that startDateTime is not in the past
@@ -247,7 +264,7 @@ CREATE TABLE `projecttaskworker` (
   `id` int(11) NOT NULL,
   `workerId` int(11) NOT NULL,
   `taskId` int(11) NOT NULL,
-  `status` varchar(25) NOT NULL CHECK (`status` in ('assigned','terminated'))
+  `status` varchar(25) NOT NULL CHECK (`status` in ('assigned','unassigned','terminated'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -260,7 +277,7 @@ CREATE TABLE `projectworker` (
   `id` int(11) NOT NULL,
   `workerId` int(11) NOT NULL,
   `projectId` int(11) NOT NULL,
-  `status` varchar(25) NOT NULL CHECK (`status` in ('assigned','terminated'))
+  `status` varchar(25) NOT NULL CHECK (`status` in ('assigned','unassigned','terminated'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -325,6 +342,7 @@ ALTER TABLE `project`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `publicId` (`publicId`),
   ADD KEY `projectManagerIdIndex` (`managerId`);
+ALTER TABLE `project` ADD FULLTEXT KEY `projectFulltextIndex` (`name`,`description`);
 
 --
 -- Indexes for table `projectphase`
@@ -341,6 +359,7 @@ ALTER TABLE `projecttask`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `publicId` (`publicId`),
   ADD KEY `projectTaskProjectIdIndex` (`projectId`);
+ALTER TABLE `projecttask` ADD FULLTEXT KEY `projectTaskFulltextIndex` (`name`,`description`);
 
 --
 -- Indexes for table `projecttaskworker`
@@ -367,6 +386,7 @@ ALTER TABLE `user`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `email` (`email`),
   ADD UNIQUE KEY `publicId` (`publicId`);
+ALTER TABLE `user` ADD FULLTEXT KEY `userFulltextIndex` (`firstName`,`middleName`,`lastName`,`bio`,`email`);
 
 --
 -- Indexes for table `userjobtitle`
@@ -384,13 +404,13 @@ ALTER TABLE `userjobtitle`
 -- AUTO_INCREMENT for table `project`
 --
 ALTER TABLE `project`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `projectphase`
 --
 ALTER TABLE `projectphase`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `projecttask`
@@ -408,19 +428,19 @@ ALTER TABLE `projecttaskworker`
 -- AUTO_INCREMENT for table `projectworker`
 --
 ALTER TABLE `projectworker`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT for table `user`
 --
 ALTER TABLE `user`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT for table `userjobtitle`
 --
 ALTER TABLE `userjobtitle`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- Constraints for dumped tables
