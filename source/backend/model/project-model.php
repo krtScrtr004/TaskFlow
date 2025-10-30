@@ -75,6 +75,8 @@ class ProjectModel extends Model
             $queryString = "
                 SELECT 
                     p.*,
+                    u.id AS managerId,
+                    u.publicId AS managerPublicId,
                     u.firstName AS managerFirstName,
                     u.middleName AS managerMiddleName,
                     u.lastName AS managerLastName,
@@ -103,6 +105,8 @@ class ProjectModel extends Model
             $projects = new ProjectContainer();
             foreach ($result as $row) {
                 $row['manager'] = User::createPartial([
+                    'id'            => $row['managerId'],
+                    'publicId'      => UUID::fromBinary($row['managerPublicId']),
                     'firstName'     => $row['managerFirstName'],
                     'middleName'    => $row['managerMiddleName'],
                     'lastName'      => $row['managerLastName'],
@@ -513,17 +517,18 @@ class ProjectModel extends Model
 
         try {
             $projects = self::find(
-                'p.managerId = :managerId AND p.status != :completedStatus',
+                'p.managerId = :managerId AND p.status != :completedStatus AND p.status != :cancelledStatus',
                 [
-                    ':managerId' => $managerId,
-                    ':completedStatus' => WorkStatus::COMPLETED->value,
+                    ':managerId'        => $managerId,
+                    ':completedStatus'  => WorkStatus::COMPLETED->value,
+                    ':cancelledStatus'  => WorkStatus::CANCELLED->value,
                 ],
                 [
                     'limit'     => 1,
                     'orderBy'   => 'createdAt DESC',
                 ]
             );
-            return $projects->getItems() ?? null;
+            return $projects?->getItems() ?? null;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
@@ -574,11 +579,20 @@ class ProjectModel extends Model
                 WHERE	
                     pw.workerId = :workerId
                 AND
-                    p.status != '" . WorkStatus::COMPLETED->value . "'
+                    p.status != :completedStatus
+                AND 
+                    p.status != :cancelledStatus
+                AND
+                    pw.status != :terminatedStatus
                 LIMIT 1
             ";
             $statement = $instance->connection->prepare($query);
-            $statement->execute([':workerId' => $workerId]);
+            $statement->execute([
+                ':workerId'         => $workerId,
+                ':completedStatus'  => WorkStatus::COMPLETED->value,
+                ':cancelledStatus'  => WorkStatus::CANCELLED->value,
+                ':terminatedStatus' => WorkerStatus::TERMINATED->value,
+            ]);
             $result = $statement->fetch();
 
             if (!$instance->hasData($result)) {
