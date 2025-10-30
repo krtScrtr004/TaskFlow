@@ -37,22 +37,33 @@ const normalizeDate = (val) => {
 }
 
 // Capture original project state (normalize once on load)
-try {
-    const descriptionInput = document.querySelector('#project_description')
-    const budgetInput = document.querySelector('#project_budget')
-    const startDateInput = document.querySelector('#project_start_date')
-    const completionDateInput = document.querySelector('#project_completion_date')
+const descriptionInput = document.querySelector('#project_description')
+const budgetInput = document.querySelector('#project_budget')
+const startDateInput = document.querySelector('#project_start_date')
+const completionDateInput = document.querySelector('#project_completion_date')
 
-    window.originalProject = {
-        description: descriptionInput ? (descriptionInput.value?.trim() || null) : null,
-        budget: budgetInput ? (budgetInput.value ? parseFloat(budgetInput.value) : null) : null,
-        startDateTime: startDateInput ? normalizeDate(startDateInput.value) : null,
-        completionDateTime: completionDateInput ? normalizeDate(completionDateInput.value) : null
-    }
-} catch (e) {
-    // non-fatal; originalProject may be undefined and we'll fall back to sending full payload
-    window.originalProject = null
+const originalProject = {
+    description: descriptionInput ? (descriptionInput.value?.trim() || null) : null,
+    budget: budgetInput ? (budgetInput.value ? parseFloat(budgetInput.value) : null) : null,
+    startDateTime: startDateInput ? normalizeDate(startDateInput.value) : null,
+    completionDateTime: completionDateInput ? normalizeDate(completionDateInput.value) : null
 }
+
+// Capture original phases state
+const originalPhases = {}
+const phaseContainers = document.querySelectorAll('.phase') || []
+phaseContainers.forEach(pc => {
+    const pid = pc.dataset.phaseid
+    if (!pid || pid === '') return
+    const descInput = pc.querySelector('.phase-description')
+    const startInput = pc.querySelector('.phase-start-datetime')
+    const completionInput = pc.querySelector('.phase-completion-datetime')
+    originalPhases[pid] = {
+        description: descInput ? (descInput.value?.trim() || null) : null,
+        startDateTime: startInput ? normalizeDate(startInput.value) : null,
+        completionDateTime: completionInput ? normalizeDate(completionInput.value) : null
+    }
+})
 
 async function submitForm(e) {
     e.preventDefault()
@@ -105,7 +116,7 @@ async function submitForm(e) {
 
         // Build changedProject by comparing to originalProject captured on load
         const changedProject = {}
-        const orig = window.originalProject || {}
+        const orig = originalProject || {}
         Object.keys(currentProject).forEach(key => {
             if (key === 'budget') {
                 const origNum = orig[key] === null || orig[key] === undefined ? null : Number(orig[key])
@@ -179,18 +190,34 @@ function addPhaseForm(phaseContainer) {
         return
     }
 
-    const data = {
+    // Normalize current values
+    const cur = {
         description: descriptionInput.value ? descriptionInput.value.trim() : null,
-        startDateTime: startDateInput.value ? startDateInput.value : null,
-        completionDateTime: completionDateInput.value ? completionDateInput.value : null
+        startDateTime: normalizeDate(startDateInput.value),
+        completionDateTime: normalizeDate(completionDateInput.value)
     }
-        
+
     // Only track existing phases that have been edited
-    // New phases are already tracked by the phaseToAdd Map in add-phase.js
     if (phaseId && phaseId !== '') {
-        phaseToEdit.push({ id: phaseId, ...data })
+        const orig = (originalPhases && originalPhases[phaseId]) ? originalPhases[phaseId] : {}
+        const changed = {}
+
+        if ((orig.description ?? null) !== (cur.description ?? null)) {
+            changed.description = cur.description
+        }
+        if ((orig.startDateTime ?? null) !== (cur.startDateTime ?? null)) {
+            changed.startDateTime = cur.startDateTime
+        }
+        if ((orig.completionDateTime ?? null) !== (cur.completionDateTime ?? null)) {
+            changed.completionDateTime = cur.completionDateTime
+        }
+
+        // Only push when there are actual changes
+        if (Object.keys(changed).length > 0) {
+            phaseToEdit.push({ id: phaseId, ...changed })
+        }
     } else {
-        phaseToAdd.push({ name: nameInput.textContent.trim(), ...data })
+        phaseToAdd.push({ name: nameInput.textContent.trim(), ...cur })
     }
 }
 
