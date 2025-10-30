@@ -245,6 +245,7 @@ class ProjectModel extends Model
                         INNER JOIN user w ON pw.workerId = w.id
                         WHERE pw.projectId = p.id
                         AND pw.status != '" . WorkerStatus::TERMINATED->value . "'
+                        AND pw.status != '" . WorkerStatus::UNASSIGNED->value . "'
                     ),
                     '[]'
                 ) AS projectWorkers";
@@ -789,8 +790,7 @@ class ProjectModel extends Model
      * - Uses either 'id' or 'publicId' for identifying the project record
      *
      * @param array $data Associative array containing project data with following keys:
-     *      - id: int|string (optional) Internal project ID (takes precedence over publicId)
-     *      - publicId: string|UUID (optional) Public project identifier (used if id not present)
+     *      - id: int|UUID Project ID to identify the project to update
      *      - name: string (optional) Project name
      *      - description: string (optional) Project description
      *      - budget: float|int (optional) Project budget amount
@@ -813,10 +813,12 @@ class ProjectModel extends Model
             $updateFields = [];
             $params = [];
 
-            if (isset($data['id'])) {
+            if (isset($data['id']) && is_int($data['id'])) {
                 $params[':id'] = $data['id'];
-            } else {
+            } elseif (isset($data['publicId']) && $data['publicId'] instanceof UUID) {
                 $params[':id'] = UUID::toBinary($data['publicId']);
+            } else {
+                throw new InvalidArgumentException('Project ID or Public ID must be provided for saving.');
             }
 
             if (isset($data['name'])) {
@@ -857,7 +859,13 @@ class ProjectModel extends Model
             }
 
             if (!empty($updateFields)) {
-                $projectQuery = "UPDATE `project` SET " . implode(', ', $updateFields) . " WHERE " . (isset($data['id']) ? 'id' : 'publicId') . " = :id";
+                $projectQuery = "
+                    UPDATE `project` 
+                    SET " . implode(', ', $updateFields) . 
+                    " WHERE " . (
+                        is_int($data['id']) 
+                        ? 'id' 
+                        : 'publicId') . " = :id";
                 $statement = $instance->connection->prepare($projectQuery);
                 $statement->execute($params);
             }
@@ -879,9 +887,9 @@ class ProjectModel extends Model
 
 
 
-    public function delete(): bool
+    public static function delete(): bool
     {
-        return true;
+        return false;
     }
 
 

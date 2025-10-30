@@ -354,27 +354,8 @@ class UserModel extends Model
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-    // 
-
-    public function get()
+    public static function delete(): bool
     {
-        return [];
-    }
-
-    public function delete(): bool
-    {
-        return true;
+        return false;
     }
 }

@@ -342,9 +342,17 @@ class PhaseModel extends Model
     }
 
 
-
-    public function delete(): bool
+    /**
+     * Deletes a phase entity.
+     *
+     * This method is currently not implemented as there is no use case for deleting a phase.
+     * Always returns false.
+     *
+     * @return bool Always returns false to indicate deletion is not supported.
+     */
+    public static function delete(): bool
     {
-        return true;
+        // Not implemented (No use case)
+        return false;
     }
 }

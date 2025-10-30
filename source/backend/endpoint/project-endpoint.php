@@ -21,6 +21,7 @@ use App\Model\PhaseModel;
 use App\Model\ProjectModel;
 use App\Validator\UuidValidator;
 use App\Middleware\Csrf;
+use App\Model\TaskModel;
 use App\Validator\WorkValidator;
 use DateTime;
 use Exception;
@@ -232,9 +233,8 @@ class ProjectEndpoint
 
             $validator = new WorkValidator();
 
-            $projectData = [
-                'publicId' => $projectId
-            ];
+            $projectData = ['id' => $project->getId()];
+
             if (isset($data['project']['description'])) {
                 $projectData['description'] = $data['project']['description'];
             }

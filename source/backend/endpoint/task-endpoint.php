@@ -9,7 +9,7 @@ use InvalidArgumentException;
 
 class TaskEndpoint
 {
-      public static function getTaskById(array $args = []): void
+    public static function getTaskById(array $args = []): void
     {
         $projectId = $args['projectId'] ?? null; // Temporary placeholder
         if ($projectId === null)

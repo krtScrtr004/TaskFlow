@@ -5,6 +5,7 @@ namespace App\Model;
 use App\Abstract\Model;
 use App\Container\WorkerContainer;
 use App\Container\TaskContainer;
+use App\Core\UUID;
 use App\Exception\ValidationException;
 use App\Exception\DatabaseException;
 use App\Model\UserModel;
@@ -226,7 +227,6 @@ class TaskModel extends Model
         }
     }
 
-
     /**
      * Finds and returns the count of tasks grouped by status for a specific project.
      *
@@ -431,11 +431,18 @@ class TaskModel extends Model
         }
     }
 
-
-
-    public function delete(): bool
+    /**
+     * Deletes a task from the data source.
+     *
+     * This method is currently not implemented as there is no use case for deleting tasks.
+     * Always returns false.
+     *
+     * @return bool Returns false, indicating the operation is not supported.
+     */
+    public static function delete(): bool
     {
-        return true;
+        // Not implemented (No use case)
+        return false;
     }
 
     public static function create(mixed $data): mixed
