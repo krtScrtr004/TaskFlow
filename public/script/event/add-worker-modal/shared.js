@@ -6,13 +6,15 @@ import { confirmationDialog } from '../../render/confirmation-dialog.js'
 import { debounceAsync } from '../../utility/debounce.js'
 import { handleException } from '../../utility/handle-exception.js'
 
+let searchEndpoint = 'workers'
 let isFetchingWorkers = false
 let currentInfiniteScrollObserver = null // Store the current observer to allow resetting
 let isSelectWorkerEventInitialized = false
 export const selectedUsers = []
 const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
 
-export function initializeAddWorkerModal(projectId) {
+export function initializeAddWorkerModal(projectId, localSearchEndpoint = 'workers') {
+    searchEndpoint = localSearchEndpoint
     searchWorkerEvent(projectId)
     infiniteScrollWorkers(projectId)
 
@@ -195,8 +197,11 @@ function cancelAddWorkerModal(workerContainer = addWorkerModalTemplate.querySele
 
 // Fetch Worker -------------------------
 
-export async function fetchWorkers(projectId = null, key = null, offset = 0) {
+export async function fetchWorkers(projectId, key = null, offset = 0) {
     return await fetchFromDatabase(projectId, key, isFetchingWorkers, offset)
+        .catch(error => {
+            throw error
+        })
 }
 
 async function fetchFromDatabase(projectId, key = null, offset) {
@@ -208,9 +213,9 @@ async function fetchFromDatabase(projectId, key = null, offset) {
         isFetchingWorkers = true
 
         const param = (key) ? key : ''
-        const endpoint = (projectId)
-            ? `projects/${projectId}/workers?key=${param}&offset=${offset}`
-            : `workers?key=${param}&status=unassigned&offset=${offset}`
+        const endpoint = (searchEndpoint === 'projects-workers')
+            ? `projects/${projectId}/workers?key=${param}&offset=${offset}&excludeProjectTerminated=true`
+            : `projects/${projectId}/workers?key=${param}&status=unassigned&offset=${offset}&excludeProjectTerminated=true`
         const response = await Http.GET(endpoint)
         if (!response) {
             throw new Error('Workers data not found!')

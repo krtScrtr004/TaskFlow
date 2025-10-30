@@ -90,27 +90,29 @@ class ProjectWorkerEndpoint
         }
     }
 
+
     /**
-     * Retrieves workers associated with a specific project, optionally filtered by a search key.
+     * Retrieves project workers based on provided criteria.
      *
-     * This method validates the request method and user session, then fetches workers for the given project.
-     * If a 'key' parameter is present in the query string, it performs a search for workers matching the key.
-     * Otherwise, it retrieves a paginated list of all workers for the project.
-     * The method responds with a success message and the list of workers, or an error message if no workers are found or an exception occurs.
+     * This method handles GET requests to fetch workers associated with a specific project.
+     * It supports searching by a key, filtering by worker status, and pagination.
+     * The method enforces session authorization and request method validation.
      *
-     * @param array $args Associative array of arguments with the following keys:
-     *      - projectId: string|UUID The unique identifier of the project (required)
-     * 
      * Query Parameters:
-     *      - key: string (optional) Search term to filter workers by name or other attributes
-     *      - limit: int (optional) Maximum number of workers to return (default: 10)
-     *      - offset: int (optional) Number of workers to skip for pagination (default: 0)
+     *      - key: string (optional) Search term to filter workers.
+     *      - status: string (optional) Worker status to filter results.
+     *      - excludeProjectTerminated: bool (optional) Exclude workers from terminated projects.
+     *      - limit: int (optional) Maximum number of workers to return (default: 10).
+     *      - offset: int (optional) Number of workers to skip for pagination (default: 0).
      *
-     * @return void Outputs a JSON response with the list of workers or an error message
+     * @param array $args Associative array of arguments:
+     *      - projectId: string|UUID|null Project identifier to filter workers by project.
      *
-     * @throws ValidationException If validation of input parameters fails
-     * @throws ForbiddenException If the request method is not GET, the session is unauthorized, or the project ID is missing
-     * @throws Exception For any unexpected errors
+     * @throws ForbiddenException If the request method is not GET or the session is unauthorized.
+     * @throws ValidationException If validation of input parameters fails.
+     * @throws Exception For any other unexpected errors.
+     *
+     * @return void Outputs a JSON response with the list of workers or an appropriate message.
      */
     public static function getByKey(array $args = []): void
     {
@@ -142,8 +144,9 @@ class ProjectWorkerEndpoint
                     WorkerStatus::from(trimOrNull($_GET['status'] ?? '') ?? ''),
                     $projectId,
                     [
-                        'limit'     => isset($_GET['limit']) ? (int) $_GET['limit'] : 10,
-                        'offset'    => isset($_GET['offset']) ? (int) $_GET['offset'] : 0,
+                        'excludeProjectTerminated'  => isset($_GET['excludeProjectTerminated']) ? (bool) $_GET['excludeProjectTerminated'] : false,
+                        'limit'                     => isset($_GET['limit']) ? (int) $_GET['limit'] : 10,
+                        'offset'                    => isset($_GET['offset']) ? (int) $_GET['offset'] : 0,
                     ]
                 );
             } else {

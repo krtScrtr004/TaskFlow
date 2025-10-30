@@ -5,10 +5,15 @@ import { Dialog } from '../../../render/dialog.js'
 const projectContainer = document.querySelector('.project-container')
 const addWorkerButton = document.querySelector('#add_worker_button')
 const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
+const thisProjectId = projectContainer ? projectContainer.dataset.projectid : null
+if (!thisProjectId || thisProjectId.trim() === '') {
+    console.error('Project ID not found.')
+    Dialog.somethingWentWrong()
+}
 
 if (addWorkerModalTemplate) {
     addWorkerButton.addEventListener('click', async () => {
-        initializeAddWorkerModal(null, 'users')
+        initializeAddWorkerModal(thisProjectId, 'users')
 
         addWorkerModalTemplate.classList.add('flex-col')
         addWorkerModalTemplate.classList.remove('no-display')
@@ -18,7 +23,7 @@ if (addWorkerModalTemplate) {
             Loader.full(workerList)
 
             const workers = await fetchWorkers(
-                null,
+                thisProjectId,
                 null,
                 0,
                 'users'

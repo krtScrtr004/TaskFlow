@@ -15,6 +15,8 @@ use App\Validator\UserValidator;
 use App\Validator\UuidValidator;
 use App\Validator\UrlValidator;
 use DateTime;
+use Exception;
+use InvalidArgumentException;
 
 require_once ENUM_PATH . 'role.php';
 
@@ -637,9 +639,9 @@ class User implements Entity
         // Handle UUID conversion
         if (isset(($data['publicId'])) && !($data['publicId'] instanceof UUID)) {
             try {
-                $defaults['publicId'] = UUID::fromString(trimOrNull($data['publicId']));
-            } catch (\Exception $e) {
-                $defaults['publicId'] = UUID::fromBinary(trimOrNull($data['publicId']));
+                $defaults['publicId'] = UUID::fromString($data['publicId']);
+            } catch (Exception $e) {
+                $defaults['publicId'] = UUID::fromBinary($data['publicId']);
             }
         }
 

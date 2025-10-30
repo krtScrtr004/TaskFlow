@@ -13,6 +13,8 @@ use App\Model\TaskModel;
 use App\Validator\UuidValidator;
 use App\Validator\WorkValidator;
 use DateTime;
+use Exception;
+use Ramsey\Collection\Exception\InvalidArgumentException;
 
 class Task implements Entity
 {
@@ -406,10 +408,10 @@ class Task implements Entity
         // Handle publicId conversion (accept UUID or string)
         if (isset($data['publicId']) && !($data['publicId'] instanceof UUID)) {
             try {
-                $defaults['publicId'] = UUID::fromString(trimOrNull($data['publicId']));
-            } catch (\Exception $e) {
+                $defaults['publicId'] = UUID::fromString($data['publicId']);
+            } catch (Exception $e) {
                 // fall back to generated UUID
-                $defaults['publicId'] = UUID::get();
+                $defaults['publicId'] = UUID::fromBinary($data['publicId']);
             }
         }
 

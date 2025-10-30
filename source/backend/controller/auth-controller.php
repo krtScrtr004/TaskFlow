@@ -58,10 +58,10 @@ class AuthController implements Controller
                 ]);
             }
 
-            // Check if user has current project assigned
-            $project = Role::isProjectManager($user)
-                ? ProjectModel::findManagerActiveProjectByManagerId($user->getId())
-                : ProjectModel::findWorkerActiveProjectByWorkerId($user->getId());
+            // // Check if user has current project assigned
+            // $project = Role::isProjectManager($user)
+            //     ? ProjectModel::findManagerActiveProjectByManagerId($user->getId())
+            //     : ProjectModel::findWorkerActiveProjectByWorkerId($user->getId());
 
             // Regenerate session ID to prevent session fixation attacks
             Session::regenerate(true);
@@ -69,12 +69,7 @@ class AuthController implements Controller
             // Create user session
             SessionAuth::setAuthorizedSession($user);
 
-            $projectId = $project ? UUID::toString($project->getPublicId()) : null;
-            if ($projectId && !Session::has('activeProjectId')) {
-                Session::set('activeProjectId', $projectId);
-            }
-
-            Response::success(['projectId' => $projectId], 'Login successful.');
+            Response::success([], 'Login successful.');
         } catch (ValidationException $e) {
             Response::error('Login Failed.', $e->getErrors(), 422);
         } catch (Exception $e) {

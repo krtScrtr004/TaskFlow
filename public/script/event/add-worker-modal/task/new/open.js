@@ -22,8 +22,9 @@ if (addWorkerModalTemplate) {
             const workerList = addWorkerModalTemplate.querySelector('.worker-list > .list')
             Loader.full(workerList)
 
-            if (!projectId || projectId.trim() === '')
+            if (!projectId || projectId.trim() === '') {
                 throw new Error('Project ID is missing.')
+            }
 
             const workers = await fetchWorkers(projectId)
             workers.forEach(worker => createWorkerListCard(worker))

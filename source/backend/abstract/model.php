@@ -14,8 +14,12 @@ abstract class Model
         $this->connection = Connection::getInstance();
     }
 
-    protected function hasData(array $data): bool
+    protected function hasData(array|bool $data): bool
     {
+        if ($data === false) {
+            return false;
+        }
+
         foreach ($data as $value) {
             if (is_array($value)) {
                 if (empty($value)) {

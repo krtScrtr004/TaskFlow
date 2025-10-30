@@ -474,6 +474,7 @@ class ProjectWorkerModel extends Model
         WorkerStatus $status,
         int|UUID|null $projectId = null,
         array $options = [
+            'excludeProjectTerminated' => false,
             'limit' => 10,
             'offset' => 0,
         ]
@@ -482,43 +483,53 @@ class ProjectWorkerModel extends Model
         $instance = new self();
         try {
             $params = [];
-            $queryString = '';
+
+            // Base select and joins
+            $queryString = "
+                SELECT
+                    u.*,
+                    GROUP_CONCAT(ujt.title) AS jobTitles
+                FROM `user` u
+                LEFT JOIN `userJobTitle` ujt ON u.id = ujt.userId
+                LEFT JOIN `projectWorker` pw ON u.id = pw.workerId
+            ";
+
+            $where = [];
+
+            if ($projectId !== null) {
+                $queryString .= "LEFT JOIN `project` AS p ON pw.projectId = p.id ";
+            }
 
             if ($status === WorkerStatus::UNASSIGNED) {
-                $queryString = "
-                    SELECT 
-                        u.*,
-                        GROUP_CONCAT(ujt.title) AS jobTitles
-                    FROM `user` u
-                    LEFT JOIN `userJobTitle` ujt ON u.id = ujt.userId
-                    LEFT JOIN `projectWorker` pw ON u.id = pw.workerId
-                    WHERE pw.id IS NULL AND u.role = '" . Role::WORKER->value . "'
-                ";
-                if ($projectId !== null) {
-                    $queryString .= " AND (pw.projectId " . (is_int($projectId) ? "= :projectId" : "IN (SELECT id FROM project WHERE publicId = :projectId)") . ")";
-                    $params[':projectId'] = ($projectId instanceof UUID)
-                        ? UUID::toBinary($projectId)
-                        : $projectId;
-                }
-                $queryString .= " GROUP BY u.id";
+                $where[] = $options['excludeProjectTerminated']
+                    ? '(pw.id IS NULL OR pw.status != :terminatedStatus)'
+                    : '(pw.id IS NULL OR pw.status = :terminatedStatus)';
+
+                $params[':terminatedStatus'] = WorkerStatus::TERMINATED->value;
             } else {
-                $queryString = "
-                    SELECT 
-                        u.*,
-                        GROUP_CONCAT(ujt.title) AS jobTitles
-                    FROM `user` u
-                    LEFT JOIN `userJobTitle` ujt ON u.id = ujt.userId
-                    INNER JOIN `projectWorker` pw ON u.id = pw.workerId
-                    WHERE pw.status = :status
-                ";
+                $where[] = $options['excludeProjectTerminated']
+                    ? '(pw.status = :status AND p.status != :status)'                
+                    : 'pw.status = :status';
                 $params[':status'] = $status->value;
-                if ($projectId !== null) {
-                    $queryString .= " AND (pw.projectId " . (is_int($projectId) ? "= :projectId" : "IN (SELECT id FROM project WHERE publicId = :projectId)") . ")";
-                    $params[':projectId'] = ($projectId instanceof UUID)
-                        ? UUID::toBinary($projectId)
-                        : $projectId;
-                }
-                $queryString .= " GROUP BY u.id";
+            }
+
+            $where[] = 'u.role = :role';
+            $params[':role'] = Role::WORKER->value;
+
+            // If project filter is provided, add joins/conditions to filter by that project
+
+            // finalize where and grouping
+            if (!empty($where)) {
+                $queryString .= ' WHERE ' . implode(' AND ', $where);
+            }
+            $queryString .= ' GROUP BY u.id';
+
+            // pagination
+            if (isset($options['limit'])) {
+                $queryString .= ' LIMIT ' . intval($options['limit']);
+            }
+            if (isset($options['offset'])) {
+                $queryString .= ' OFFSET ' . intval($options['offset']);
             }
 
             $statement = $instance->connection->prepare($queryString);
@@ -677,15 +688,15 @@ class ProjectWorkerModel extends Model
      * @throws InvalidArgumentException If an invalid project ID or worker ID is provided.
      * @throws DatabaseException If a database error occurs during the query execution.
      */
-    public static function worksOn(int|UUID $projectId, int|UUID $workerId): bool
+    public static function worksOn(int|UUID $projectId, int|UUID $userId): bool
     {
         if (is_int($projectId) && $projectId < 1) {
             throw new InvalidArgumentException('Invalid project ID provided.');
         }
 
-        if (is_int($workerId) && $workerId < 1) {
-            throw new InvalidArgumentException('Invalid worker ID provided.');
-        }   
+        if (is_int($userId) && $userId < 1) {
+            throw new InvalidArgumentException('Invalid user ID provided.');
+        }
 
         try {
             $instance = new self();
@@ -704,21 +715,26 @@ class ProjectWorkerModel extends Model
                 WHERE 
                     " . (is_int($projectId) ? "p.id" : "p.publicId") . " = :projectId
                 AND 
-                    " . (is_int($workerId) ? "u.id" : "u.publicId") . " = :workerId
+                    (
+                        " . (is_int($userId) ? "u.id" : "u.publicId") . " = :userId1
+                    OR
+                        p.managerId = :userId2
+                    )
                 AND 
-                    pw.status != '" . WorkerStatus::TERMINATED->value . "'
+                    pw.status != :terminatedStatus
             ";
             $statement = $instance->connection->prepare($query);
             $statement->execute([
-                ':projectId'    => ($projectId instanceof UUID)
+                ':projectId'        => ($projectId instanceof UUID)
                     ? UUID::toBinary($projectId)
                     : $projectId,
-                ':workerId'     => ($workerId instanceof UUID)
-                    ? UUID::toBinary($workerId)
-                    : $workerId,
+                ':userId1'           => ($userId instanceof UUID)
+                    ? UUID::toBinary($userId)
+                    : $userId,
+                ':userId2'           => $userId,
+                ':terminatedStatus' => WorkerStatus::TERMINATED->value
             ]);
-            $result = $statement->fetchAll();
-            return $instance->hasData($result);
+            return $instance->hasData($statement->fetchAll());
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }

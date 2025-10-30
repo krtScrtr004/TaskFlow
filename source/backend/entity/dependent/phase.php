@@ -9,6 +9,8 @@ use App\Exception\ValidationException;
 use App\Model\PhaseModel;
 use App\Validator\WorkValidator;
 use DateTime;
+use Exception;
+use InvalidArgumentException;
 
 class Phase implements Entity
 {
@@ -291,9 +293,9 @@ class Phase implements Entity
         // Handle UUID conversion
         if (isset($data['publicId']) && !($data['publicId'] instanceof UUID)) {
             try {
-                $defaults['publicId'] = UUID::fromString(trimOrNull($data['publicId']));
-            } catch (\Exception $e) {
-                $defaults['publicId'] = UUID::fromBinary(trimOrNull($data['publicId']));
+                $defaults['publicId'] = UUID::fromString($data['publicId']);
+            } catch (Exception $e) {
+                $defaults['publicId'] = UUID::fromBinary($data['publicId']);
             }
 
         }

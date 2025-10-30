@@ -230,11 +230,6 @@ class ProjectEndpoint
                 throw new NotFoundException('Project is not found.');
             }
 
-            $phasesArray = $data['phase'] ?? null;
-            if (!$phasesArray || !is_array($phasesArray)) {
-                throw new ValidationException('Phases data is required.');
-            }
-
             $validator = new WorkValidator();
 
             $projectData = [
@@ -257,7 +252,7 @@ class ProjectEndpoint
             }
 
             if (isset($data['project']['status'])) {
-                $projectData['status'] = $data['project']['status'];
+                $projectData['status'] = WorkStatus::from($data['project']['status']);
             } else {
                 $projectData['status'] = WorkStatus::getStatusFromDates(
                     $projectData['startDateTime'] ?? $project->getStartDateTime(),
@@ -269,6 +264,8 @@ class ProjectEndpoint
                 'toEdit' => [],
                 'toAdd' => new PhaseContainer(),
             ];
+
+            $phasesArray = $data['phase'] ?? [];
             foreach ($phasesArray as $key => &$arr) {
                 foreach ($arr as &$value) {
                     self::sanitizeData($value);

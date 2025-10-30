@@ -4,7 +4,10 @@ namespace App\Controller;
 
 use App\Auth\SessionAuth;
 use App\Core\Me;
+use App\Core\Session;
 use App\Core\UUID;
+use App\Entity\Project;
+use App\Enumeration\Role;
 use App\Enumeration\WorkStatus;
 use App\Exception\ForbiddenException;
 use App\Exception\NotFoundException;
@@ -32,77 +35,81 @@ class ProjectController implements Controller
     {
     }
 
-    public static function viewHomeProject(array $args = []): void
+    public static function viewHomeProject(): void
     {
-        if (!SessionAuth::hasAuthorizedSession()) {
+        try {
+            if (!SessionAuth::hasAuthorizedSession()) {
+                throw new ForbiddenException();
+            }
+
+            $instance = new self();
+
+            $fullProjectInfo = null;
+            $activeProject = (Role::isProjectManager(Me::getInstance()))
+                ? ProjectModel::findManagerActiveProjectByManagerId(Me::getInstance()->getId())
+                : ProjectModel::findWorkerActiveProjectByWorkerId(Me::getInstance()->getId());
+        
+            // If projectId is provided, verify that the user works on the project and the project is not cancelled
+            if (
+                $activeProject &&
+                // ProjectWorkerModel::worksOn($activeProject->getId(),Me::getInstance()->getId()) &&
+                $activeProject->getStatus() !== WorkStatus::CANCELLED
+            ) {
+                $fullProjectInfo = $instance->getProjectInfo($activeProject->getPublicId());
+                $projectId = $fullProjectInfo ? UUID::toString($fullProjectInfo->getPublicId()) : null;
+                if ($projectId && !Session::has('activeProjectId')) {
+                    Session::set('activeProjectId', $projectId);
+                }
+            }
+
+            $instance->renderDashboard($fullProjectInfo);
+        } catch (NotFoundException $e) {
+            ErrorController::notFound();
+        } catch (Exception $e) {
             ErrorController::forbidden();
         }
-
-        $projectId = isset($args['projectId']) 
-            ? UUID::fromString($args['projectId']) 
-            : null;
-        
-        if ($projectId) {
-            try {
-                if (ProjectWorkerModel::worksOn(
-                    $projectId,
-                    Me::getInstance()->getId())) {
-                        header('Location: ' . REDIRECT_PATH . 'home');
-                    }
-            } catch (Exception $e) {
-                ErrorController::forbidden();
-                exit();
-            }
-        }
-
-        $instance = new self();
-        $instance->renderDashboard($projectId);
     }
 
-    private function renderDashboard(UUID|null $projectId): void {
-        try {
-            if ($projectId) {
-                $instance = new self();
-                $instance->uuidValidator->validateUuid($projectId);
-                if ($instance->uuidValidator->hasErrors()) {
-                    throw new ValidationException(
-                        'Invalid project ID.',
-                        $instance->uuidValidator->getErrors()
-                    );
-                }
-                $project = ProjectModel::findFull($projectId, [
-                    'phases' => true,
-                    'tasks'  => true,
-                    'workers' => true
-                ]);
+    private function getProjectInfo(UUID|null $projectId): ?Project
+    {
+        if (!$projectId) {
+            return null;
+        }
+        
+        return ProjectModel::findFull($projectId, [
+            'phases' => true,
+            'tasks' => true,
+            'workers' => true
+        ]);
+    }
 
-                // Check if the project is already completed or delayed based on current date and tasks status
-                $completionDateTime = $project->getCompletionDateTime();
-                $currentDateTime = new DateTime();
-                if ($completionDateTime && $currentDateTime > $completionDateTime) {
-                    $hasPendingTasks = false;
-                    foreach ($project->getTasks() as $task) {
-                        if ($task->getStatus() !== WorkStatus::COMPLETED && $task->getStatus() !== WorkStatus::CANCELLED) {
-                            $hasPendingTasks = true;
-                            break;
-                        }
+    private function renderDashboard(Project|null $project): void
+    {
+        if ($project) {
+            // Check if the project is already completed or delayed based on current date and tasks status
+            $completionDateTime = $project->getCompletionDateTime();
+            $currentDateTime = new DateTime();
+            if ($completionDateTime && $currentDateTime > $completionDateTime) {
+                $hasPendingTasks = false;
+                foreach ($project->getTasks() as $task) {
+                    if ($task->getStatus() !== WorkStatus::COMPLETED && $task->getStatus() !== WorkStatus::CANCELLED) {
+                        $hasPendingTasks = true;
+                        break;
                     }
-                    if ($hasPendingTasks) {
-                        $project->setStatus(WorkStatus::DELAYED);
-                        ProjectModel::save([
-                            'id'        => $project->getId(),
-                            'status'    => WorkStatus::DELAYED
-                        ]);
-                    } else {
-                        $project->setStatus(WorkStatus::COMPLETED);
-                    }
+                }
+                if ($hasPendingTasks) {
+                    $project->setStatus(WorkStatus::DELAYED);
+                    ProjectModel::save([
+                        'id' => $project->getId(),
+                        'status' => WorkStatus::DELAYED
+                    ]);
+                } else {
+                    $project->setStatus(WorkStatus::COMPLETED);
                 }
             }
-
-            require_once VIEW_PATH . 'home.php';
-        } catch (ValidationException $e) {
-            ErrorController::notFound();
         }
+
+        require_once VIEW_PATH . 'home.php';
     }
 
     public static function viewProjectGrid(): void

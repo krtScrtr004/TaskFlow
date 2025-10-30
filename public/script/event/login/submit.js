@@ -50,14 +50,9 @@ async function submit(e) {
 
     Loader.patch(loginButton.querySelector('.text-w-icon'))
     try {
-        const response = await sendToBackend(email, password)
-        if (!response) {
-            throw new Error('No response from server.')
-        }
+        await sendToBackend(email, password)
 
-        const projectId = response.projectId
-        const redirect = (projectId && projectId.trim() !== '') ? `/${projectId}` : ``
-        window.location.href = `/TaskFlow/home${redirect}`
+        window.location.href = `/TaskFlow/home`
     } catch (error) {
         handleException(error, 'Error during login:', error)
     } finally {
@@ -85,8 +80,6 @@ async function sendToBackend(email, password) {
         if (!response) {
             throw new Error('No response from server.')
         }
-
-        return response.data
     } catch (error) {
         throw error
     } finally {
