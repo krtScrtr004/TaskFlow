@@ -509,18 +509,20 @@ class ProjectWorkerModel extends Model
 
             if ($status === WorkerStatus::UNASSIGNED) {
                 $where[] = $options['excludeProjectTerminated']
-                    ? '(pw.id IS NULL OR pw.status = :unassignedStatus OR pw.status != :terminatedStatus)'
-                    : '(pw.id IS NULL OR pw.status = :unassignedStatus)';
+                    ? '(pw.id IS NULL OR pw.status = :unassignedStatus OR (pw.status = :assignedStatus AND pw.status != :terminatedStatus))'
+                    : '(pw.id IS NULL OR pw.status = :assignedStatus OR pw.status = :unassignedStatus)';
+                $params[':assignedStatus']   = WorkerStatus::ASSIGNED->value;
                 $params[':unassignedStatus'] = WorkerStatus::UNASSIGNED->value;
-                $params[':terminatedStatus'] = WorkerStatus::TERMINATED->value;
             } else {
                 $where[] = $options['excludeProjectTerminated']
-                    ? '(pw.status = :status AND p.status != :status)'                
+                    ? '(pw.status = :status AND p.status != :terminatedStatus)'                
                     : 'pw.status = :status';
                 $params[':status'] = $status->value;
             }
+            $params[':terminatedStatus'] = WorkerStatus::TERMINATED->value;
 
-            $where[] = 'u.role = :role';
+
+            $where[] = ' u.role = :role';
             $params[':role'] = Role::WORKER->value;
 
             // If project filter is provided, add joins/conditions to filter by that project
@@ -641,7 +643,8 @@ class ProjectWorkerModel extends Model
                         WHERE publicId = :workerId
                     ),
                     :status
-                )";
+                ) ON DUPLICATE KEY UPDATE 
+                    status = VALUES(status)";
             $statement = $instance->connection->prepare($insertQuery);
             foreach ($data as $id) {    
                 $statement->execute([
