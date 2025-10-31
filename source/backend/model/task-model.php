@@ -67,7 +67,7 @@ class TaskModel extends Model
             'createdAt'                 => new DateTime($row['taskCreatedAt']),
         ]);
 
-        $workers = json_decode($row['taskWorkers'], true);
+        $workers = json_decode($row['taskWorkers'], true) ?? [];
         foreach ($workers as $worker) {
             $task->addWorker(Worker::createPartial([
                 'id' => $worker['workerId'],
@@ -110,7 +110,7 @@ class TaskModel extends Model
     {
         $instance = new self();
         try {
-            $projectTaskQueryString = "
+            $query = "
                 SELECT 
                     pt.id AS taskId,
                     pt.publicId AS taskPublicId,
@@ -161,7 +161,7 @@ class TaskModel extends Model
                     `user` AS u ON ptw.workerId = u.id
             ";
             $projectTaskQuery = $instance->appendOptionsToFindQuery(
-                $instance->appendWhereClause($projectTaskQueryString, $whereClause),
+                $instance->appendWhereClause($query, $whereClause),
                 $options);
 
             $statement = $instance->connection->prepare($projectTaskQuery);
@@ -182,6 +182,100 @@ class TaskModel extends Model
         }
     }
 
+    /**
+     * Searches for tasks matching the provided search key within a project.
+     *
+     * This method performs a full-text search on the task name and description fields.
+     * Optionally, the search can be limited to a specific project by providing a project ID.
+     * Supports pagination through limit and offset options.
+     *
+     * @param string $key The search keyword to match against task name and description.
+     * @param int|UUID|null $projectId (optional) The project ID or UUID to filter tasks by project. If null, searches across all projects.
+     * @param array $options (optional) Search options:
+     *      - limit: int Maximum number of results to return (default: 10)
+     *      - offset: int Number of results to skip for pagination (default: 0)
+     *
+     * @throws InvalidArgumentException If the search key is empty.
+     * @throws Exception If an error occurs during the search operation.
+     *
+     * @return TaskContainer|null A container of found tasks, or null if no tasks match the search criteria.
+     */
+    public static function search( string $key,
+        int|UUID|null $projectId = null,
+        array $options = [
+            'limit' => 10,
+            'offset' => 0,
+        ]): ?TaskContainer 
+    {
+        if (trimOrNull($key) === null) {
+            throw new InvalidArgumentException('Search key cannot be empty.');
+        }
+
+        try {
+            $params = [];
+
+            $whereClause = "MATCH(pt.name, pt.description) AGAINST (:key IN NATURAL LANGUAGE MODE)";
+            $params = [':key' => $key];
+            $options = [
+                ':limit'    => $options['limit'] ?? 10,
+                ':offset'   => $options['offset'] ?? 0
+            ];
+
+            return self::find($whereClause, $params, $options);
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+
+    /**
+     * Finds a Task by its ID and optionally by Project ID.
+     *
+     * This method retrieves a Task instance from the database using either its internal integer ID or its public UUID.
+     * Optionally, the search can be restricted to a specific project by providing a project ID (integer or UUID).
+     * The method validates the provided IDs and constructs the appropriate SQL WHERE clause and parameters.
+     *
+     * @param int|UUID $taskId The task's internal integer ID or public UUID.
+     * @param int|UUID|null $projectId (optional) The project's internal integer ID or public UUID to further filter the task.
+     *
+     * @throws ValidationException If the provided task or project ID is invalid (e.g., less than 1 for integers).
+     * @throws Exception If an error occurs during the database query.
+     *
+     * @return Task|null The found Task instance, or null if no matching task is found.
+     */
+    public static function findById(int|UUID $taskId, int|UUID|null $projectId = null): ?Task {
+        if (is_int($taskId) && $taskId < 1) {
+            throw new ValidationException('Invalid Task ID');
+        }
+
+        if ($projectId && is_int($projectId) && $projectId < 1) {
+            throw new ValidationException('Invalid Project ID');
+        }
+
+        try {
+            $whereClause = is_int($taskId) 
+                ? 'pt.id = :taskId' 
+                : 'pt.publicId = :taskId';
+            $params = [
+                ':taskId' => is_int($taskId) 
+                    ? $taskId 
+                    : UUID::toBinary($taskId)
+            ];
+
+            if ($projectId) {
+                $whereClause .= is_int($projectId)
+                    ? ' AND p.id = :projectId'
+                    : ' AND p.publicId = :projectId';
+                $params[':projectId'] = is_int($projectId)
+                    ? $projectId
+                    : UUID::toBinary($projectId);
+            }
+
+            $tasks = self::find($whereClause, $params);
+            return $tasks?->getItems() ?? null;
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
 
     /**
      * Retrieves all tasks associated with a given project ID.
@@ -214,11 +308,11 @@ class TaskModel extends Model
 
         try {
             $whereClause = is_int($projectId) 
-                        ? 'p.id = :projectId'
-                        : 'p.id IN (
-                            SELECT id 
-                            FROM `project` 
-                            WHERE publicId = :projectId)';
+                ? 'p.id = :projectId'
+                : 'p.id IN (
+                    SELECT id 
+                    FROM `project` 
+                    WHERE publicId = :projectId)';
             $params = [
                 ':projectId' => is_int($projectId) 
                     ? $projectId 
@@ -341,6 +435,110 @@ class TaskModel extends Model
             return $workers;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
+        }
+    }
+
+    /**
+     * Finds tasks by their work status, optionally filtered by project.
+     *
+     * This method retrieves a collection of tasks that match the specified work status.
+     * Optionally, tasks can be filtered by a specific project, identified by either an integer ID or a UUID.
+     * The method supports pagination through the 'limit' and 'offset' options.
+     *
+     * @param WorkStatus $status The work status to filter tasks by.
+     * @param int|UUID|null $projectId (optional) The project identifier. Can be an integer ID, a UUID, or null to include all projects.
+     * @param array $options (optional) Query options:
+     *      - limit: int (default 10) Maximum number of tasks to return.
+     *      - offset: int (default 0) Number of tasks to skip before starting to collect the result set.
+     *
+     * @throws InvalidArgumentException If an invalid project ID is provided.
+     * @throws Exception If an error occurs during the query.
+     *
+     * @return TaskContainer|null A container of tasks matching the criteria, or null if none found.
+     */
+    public static function findByStatus(
+        WorkStatus $status,
+        int|UUID|null $projectId = null,
+        array $options = [
+            'limit' => 10,
+            'offset' => 0,
+        ]
+    ): ?TaskContainer
+    {
+        if ($projectId && is_int($projectId) && $projectId < 1) {
+            throw new InvalidArgumentException('Invalid project ID provided.');
+        }
+
+        try {
+            $whereClause = 'pt.status = :status';
+            $params = [':status' => $status->value];
+
+            if ($projectId) {
+                $whereClause .= is_int($projectId)
+                    ? ' AND p.id = :projectId'
+                    : ' AND p.publicId = :projectId';
+                $params[':projectId'] = is_int($projectId)
+                    ? $projectId
+                    : UUID::toBinary($projectId);
+            }
+
+            return self::find($whereClause, $params, $options);
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+
+    /**
+     * Finds tasks by their priority, optionally filtered by project.
+     *
+     * This method retrieves a collection of tasks that match the specified priority.
+     * If a project ID is provided, the search is limited to tasks within that project.
+     * The project ID can be either an integer (internal ID) or a UUID (public ID).
+     * Additional options such as limit and offset can be specified for pagination.
+     *
+     * @param TaskPriority $priority The priority level to filter tasks by.
+     * @param int|UUID|null $projectId (optional) The project identifier. Accepts:
+     *      - int: Internal project ID
+     *      - UUID: Public project UUID
+     *      - null: No project filter applied
+     * @param array $options (optional) Query options:
+     *      - limit: int Maximum number of tasks to return (default: 10)
+     *      - offset: int Number of tasks to skip (default: 0)
+     *
+     * @throws InvalidArgumentException If an invalid project ID is provided.
+     * @throws Exception If an error occurs during the query.
+     *
+     * @return TaskContainer|null A container of found tasks, or null if none found.
+     */
+    public static function findByPriority(
+        TaskPriority $priority,
+        int|UUID|null $projectId = null,
+        array $options = [
+            'limit' => 10,
+            'offset' => 0,
+        ]
+    ): ?TaskContainer
+    {
+        if ($projectId && is_int($projectId) && $projectId < 1) {
+            throw new InvalidArgumentException('Invalid project ID provided.');
+        }
+
+        try {
+            $whereClause = 'pt.priority = :priority';
+            $params = [':priority' => $priority->value];
+
+            if ($projectId) {
+                $whereClause .= is_int($projectId)
+                    ? ' AND p.id = :projectId'
+                    : ' AND p.publicId = :projectId';
+                $params[':projectId'] = is_int($projectId)
+                    ? $projectId
+                    : UUID::toBinary($projectId);
+            }
+
+            return self::find($whereClause, $params, $options);
+        } catch (Exception $e) {
+            throw $e;
         }
     }
 
@@ -480,9 +678,94 @@ class TaskModel extends Model
         }
 
         try {
-            $tasks = self::find('', [], ['offset' => $offset, 'limit' => $limit]);
-            return $tasks;
+            $options = [
+                'offset'    => $offset,
+                'limit'     => $limit,
+            ];
+            return self::find('', [], $options);
         } catch (Exception $e) {
+            throw $e;
+        }
+    }
+
+    public static function create(mixed $task): mixed
+    {
+        if (!($task instanceof Task)) {
+            throw new InvalidArgumentException('Expected instance of Task');
+        }
+
+        $instance = new self();
+        try {
+            $instance->connection->beginTransaction();
+
+            $taskPublicId       = $task->getPublicId() ?? UUID::get();
+            $taskName           = trimOrNull($task->getName());
+            $taskDescription    = trimOrNull($task->getDescription());
+            $taskPriority       = $task->getPriority()->value;
+            $taskStatus         = $task->getStatus()->value;
+            $taskWorkers        = $task->getWorkers();
+            $taskStartDateTime  = formatDateTime($task->getStartDateTime(), DateTime::ATOM);
+            $completionDateTime = formatDateTime($task->getCompletionDateTime(), DateTime::ATOM);
+
+            $taskQuery = "
+                INSERT INTO `projectTask` (
+                    publicId, 
+                    name, 
+                    description, 
+                    priority, 
+                    status, 
+                    startDateTime, 
+                    completionDateTime, 
+                ) VALUES (
+                    :publicId, 
+                    :name, 
+                    :description, 
+                    :priority, 
+                    :status, 
+                    :startDateTime, 
+                    :completionDateTime
+                )
+            ";
+            $statement = $instance->connection->prepare($taskQuery);
+            $statement->execute([
+                ':publicId'         => UUID::toBinary($taskPublicId),
+                ':name'             => $taskName,
+                ':description'      => $taskDescription,
+                ':priority'         => $taskPriority,
+                ':status'           => $taskStatus,
+                ':startDateTime'    => $taskStartDateTime,
+                ':completionDateTime'=> $completionDateTime,
+            ]);
+            $taskId = (int)$instance->connection->lastInsertId();
+
+            if ($taskWorkers && $taskWorkers->count() > 0) {
+                $taskWorkerQuery = "
+                    INSERT INTO `projectTaskWorker` (
+                        taskId,
+                        workerId
+                    ) VALUES (
+                        :taskId,
+                        :workerId
+                    )";
+                $workerStatement = $instance->connection->prepare($taskWorkerQuery);
+                foreach ($taskWorkers as $worker) {
+                    $workerStatement->execute([
+                        ':taskId'   => $taskId,
+                        ':workerId' => $worker->getId(),
+                    ]);
+                }
+            }
+
+            $instance->connection->commit();
+
+            $task->setId($taskId);
+            $task->setPublicId($taskPublicId);
+            return $task;
+        } catch (PDOException $e) {
+            $instance->connection->rollBack();
+            throw new DatabaseException($e->getMessage());
+        } catch (Exception $e) {
+            $instance->connection->rollBack();
             throw $e;
         }
     }
@@ -560,21 +843,5 @@ class TaskModel extends Model
     {
         // Not implemented (No use case)
         return false;
-    }
-
-
-
-
-
-
-
-
-
-    public static function create(mixed $data): mixed
-    {
-        if (!($data instanceof self)) {
-            throw new InvalidArgumentException('Expected instance of TaskModel');
-        }
-        return null;
     }
 }

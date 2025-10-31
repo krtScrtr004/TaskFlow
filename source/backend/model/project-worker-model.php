@@ -149,43 +149,39 @@ class ProjectWorkerModel extends Model
         string $key,
         int|UUID|null $projectId = null,
         array $options = [
-            'projectId' => null,
             'limit' => 10,
             'offset' => 0,
         ]): ?WorkerContainer
     {
-        if ($projectId !== null && is_int($projectId) && $projectId < 1) {
-            throw new InvalidArgumentException('Invalid project ID provided.');
-        }
-
         if (trimOrNull($key) === null) {
             throw new InvalidArgumentException('Search key cannot be empty.');
+        }
+
+        if ($projectId !== null && is_int($projectId) && $projectId < 1) {
+            throw new InvalidArgumentException('Invalid project ID provided.');
         }
 
         $params = [];
         $params[':key'] = $key;
 
-        $where = "MATCH(u.firstName, u.middleName, u.lastName, u.bio, u.email) 
+        $whereClause = "MATCH(u.firstName, u.middleName, u.lastName, u.bio, u.email) 
                     AGAINST (:key IN NATURAL LANGUAGE MODE)";
 
         if ($projectId !== null) {
             $params[':projectId'] = ($projectId instanceof UUID)
                 ? UUID::toBinary($projectId)
                 : $projectId;
-            $where .= " AND " . (is_int($projectId) ? "p.id" : "p.publicId") . " = :projectId";
+            $whereClause .= " AND " . (is_int($projectId) ? "p.id" : "p.publicId") . " = :projectId";
         }
 
+        $options = [
+            'limit'     => $options['limit'] ?? 10,
+            'offset'    => $options['offset'] ?? 0,
+            'groupBy'   => 'u.id'
+        ];
+
         try {
-            $result = self::find(
-                $where,
-                $params, 
-                [
-                    'limit'     => $options['limit'] ?? 10,
-                    'offset'    => $options['offset'] ?? 0,
-                    'groupBy'   => 'u.id'
-                ]
-            );
-            return $result ? $result->getItems() ?? null : null;
+            return self::find($whereClause,$params,$options);
         } catch (Exception $e) {
             throw $e;
         }
@@ -433,22 +429,25 @@ class ProjectWorkerModel extends Model
         }
 
         try {
-            return self::find(
-                (is_int($projectId) 
-                                ? "p.id" 
-                                : "p.publicId ") . " = :id 
-                                AND pw.status != :unassignedStatus 
-                                AND pw.status != :terminatedStatus", 
-                [
-                    ':id'               => ($projectId instanceof UUID) ? UUID::toBinary($projectId) : $projectId,
-                    ':unassignedStatus' => WorkerStatus::UNASSIGNED->value,
-                    ':terminatedStatus' => WorkerStatus::TERMINATED->value,
-                ], 
-                [
-                    'limit'            => $options['limit'] ?? 10,
-                    'offset'           => $options['offset'] ?? 0,
-                    'groupBy'          => 'u.id'
-                ]);
+            $whereClause = (is_int($projectId) 
+                ? "p.id" 
+                : "p.publicId ") . " = :id 
+                AND pw.status != :unassignedStatus 
+                AND pw.status != :terminatedStatus";
+
+            $params = [
+                ':id'               => ($projectId instanceof UUID) ? UUID::toBinary($projectId) : $projectId,
+                ':unassignedStatus' => WorkerStatus::UNASSIGNED->value,
+                ':terminatedStatus' => WorkerStatus::TERMINATED->value,
+            ];
+
+            $options = [
+                'limit'     => $options['limit'] ?? 10,
+                'offset'    => $options['offset'] ?? 0,
+                'groupBy'   => 'u.id'
+            ];
+
+            return self::find($whereClause, $params, $options);
         } catch (Exception $e) {
             throw $e;
         }
@@ -474,7 +473,7 @@ class ProjectWorkerModel extends Model
      *
      * @throws DatabaseException If a database error occurs during the query.
      */
-    public static function getByStatus(
+    public static function findByStatus(
         WorkerStatus $status,
         int|UUID|null $projectId = null,
         array $options = [
@@ -484,6 +483,10 @@ class ProjectWorkerModel extends Model
         ]
     ): ?array
     {
+        if ($projectId && is_int($projectId) && $projectId < 1) {
+            throw new InvalidArgumentException('Invalid project ID provided.');
+        }
+
         $instance = new self();
         try {
             $params = [];
@@ -583,11 +586,13 @@ class ProjectWorkerModel extends Model
         }
 
         try {
-            return self::find('', [], [
-                'offset' => $offset,
-                'limit' => $limit,
-                'orderBy' => 'u.createdAt DESC',
-            ]);
+            $options = [
+                'offset'    => $offset,
+                'limit'     => $limit,
+                'orderBy'   => 'u.createdAt DESC',
+            ];  
+
+            return self::find('', [], $options);
         } catch (Exception $e) {
             throw $e;
         }

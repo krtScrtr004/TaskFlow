@@ -27,6 +27,7 @@ use App\Exception\DatabaseException;
 use App\Validator\UuidValidator;
 use InvalidArgumentException;
 use DateTime;
+use Exception;
 use PDOException;
 
 class ProjectModel extends Model
@@ -417,14 +418,16 @@ class ProjectModel extends Model
         }
 
         try {
-            return self::find(
-                (is_int($projectId) 
-                    ? 'p.id = :projectId' 
-                    : 'p.publicId = :projectId'), 
-                ['projectId' => (is_int($projectId) 
-                    ? $projectId 
-                    : UUID::toBinary($projectId))]
-            )->getItems() ?? null;
+            $whereClause = is_int($projectId) 
+                ? 'p.id = :projectId' 
+                : 'p.publicId = :projectId';
+
+            $params['projectId'] = is_int($projectId) 
+                ? $projectId 
+                : UUID::toBinary($projectId);
+
+            $projects = self::find($whereClause, $params);
+            return $projects?->getItems() ?? null;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
@@ -437,8 +440,7 @@ class ProjectModel extends Model
      * the provided ID. It validates the manager ID before executing the query and
      * handles potential database errors.
      *
-     * @param int $managerId The ID of the manager whose projects should be retrieved.
-     *                       Must be a positive integer greater than 0.
+     * @param int|UUID $managerId The ID (integer or UUID) of the manager whose projects to retrieve
      * 
      * @return ProjectContainer|null Container with projects managed by the specified manager,
      *                               or null if no projects are found.
@@ -446,14 +448,22 @@ class ProjectModel extends Model
      * @throws InvalidArgumentException If the provided manager ID is less than 1.
      * @throws DatabaseException If a database error occurs during the query execution.
      */
-    public static function findByManagerId(int $managerId): ?ProjectContainer
+    public static function findByManagerId(int|UUID $managerId): ?ProjectContainer
     {
-        if ($managerId < 1) {
+        if (is_int($managerId) && $managerId < 1) {
             throw new InvalidArgumentException('Invalid manager ID provided.');
         }
 
         try {
-            return self::find('p.managerId = :managerId', [':managerId' => $managerId]);
+            $whereClause = is_int($managerId) 
+                ? 'p.id = :managerId' 
+                : 'p.publicId = :managerId';
+
+            $params['managerId'] = is_int($managerId) 
+                ? $managerId
+                : UUID::toBinary($managerId);
+
+            return self::find($whereClause, $params);
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
@@ -476,21 +486,31 @@ class ProjectModel extends Model
      * @throws InvalidArgumentException If $workerId is not a valid positive integer
      * @throws DatabaseException If a database error occurs (wraps the underlying PDOException)
      */
-    public static function findByWorkerId(int $workerId): ?ProjectContainer
+    public static function findByWorkerId(int|UUID $workerId): ?ProjectContainer
     {
-        if ($workerId < 1) {
+        if (is_int($workerId) && $workerId < 1) {
             throw new InvalidArgumentException('Invalid worker ID provided.');
         }
 
         try {
-            return self::find(
-                'id IN (
+            $whereClause = is_int($workerId) 
+                ? 'p.id IN (
                     SELECT projectId 
                     FROM projectWorker 
-                    WHERE userId = :workerId
-                )',
-                [':workerId' => $workerId],
-            );
+                    WHERE workerId = :workerId
+                )' 
+                : 'p.id IN (
+                    SELECT projectId 
+                    FROM projectWorker pw
+                    INNER JOIN user u ON pw.workerId = u.id
+                    WHERE u.publicId = :workerId
+                )';
+
+            $param['workerId'] = is_int($workerId) 
+                ? $workerId
+                : UUID::toBinary($workerId);
+
+            return self::find($whereClause,$param);
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
@@ -517,18 +537,18 @@ class ProjectModel extends Model
         }
 
         try {
-            $projects = self::find(
-                'p.managerId = :managerId AND p.status != :completedStatus AND p.status != :cancelledStatus',
-                [
-                    ':managerId'        => $managerId,
-                    ':completedStatus'  => WorkStatus::COMPLETED->value,
-                    ':cancelledStatus'  => WorkStatus::CANCELLED->value,
-                ],
-                [
-                    'limit'     => 1,
-                    'orderBy'   => 'createdAt DESC',
-                ]
-            );
+            $whereClause = 'p.managerId = :managerId AND p.status != :completedStatus AND p.status != :cancelledStatus';
+            $param = [
+                ':managerId'        => $managerId,
+                ':completedStatus'  => WorkStatus::COMPLETED->value,
+                ':cancelledStatus'  => WorkStatus::CANCELLED->value,
+            ];
+            $options = [
+                'limit'     => 1,
+                'orderBy'   => 'createdAt DESC',
+            ];
+
+            $projects = self::find($whereClause, $param, $options);
             return $projects?->getItems() ?? null;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
@@ -651,16 +671,16 @@ class ProjectModel extends Model
         }
 
         try {
-            return self::find('', [], [
-                'offset' => $offset,
-                'limit' => $limit,
-                'orderBy' => 'createdAt DESC',
-            ]);
+            $options = [
+                'offset'    => $offset,
+                'limit'     => $limit,
+                'orderBy'   => 'createdAt DESC',
+            ];
+            return self::find('', [], $options);
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
     }
-
 
     /**
      * Creates and persists a new Project instance to the database.
@@ -688,17 +708,18 @@ class ProjectModel extends Model
 
         $instance = new self();
 
-        $projectUuid               =   $project->getPublicId() ?? UUID::get();
-        $projectName               =   trimOrNull($project->getName());
-        $projectDescription        =   trimOrNull($project->getDescription());
-        $projectBudget             =   ($project->getBudget()) ?? 0.00;
-        $projectStatus             =   $project->getStatus() ?? WorkStatus::PENDING;
-        $projectStartDateTime      =   $project->getStartDateTime();
-        $projectCompletionDateTime =   $project->getCompletionDateTime();
-        $projectPhases             =   $project->getPhases();
-
         try {
             $instance->connection->beginTransaction();
+
+            $projectPublicId           =   $project->getPublicId() ?? UUID::get();
+            $projectName               =   trimOrNull($project->getName());
+            $projectDescription        =   trimOrNull($project->getDescription());
+            $projectBudget             =   ($project->getBudget()) ?? 0.00;
+            $projectStatus             =   $project->getStatus() ?? WorkStatus::PENDING;
+            $projectStartDateTime      =   formatDateTime($project->getStartDateTime(), DateTime::ATOM);
+            $projectCompletionDateTime =   formatDateTime($project->getCompletionDateTime(), DateTime::ATOM);
+            $projectPhases             =   $project->getPhases();
+
             
             $projectQuery = "
                 INSERT INTO `project` (
@@ -722,18 +743,18 @@ class ProjectModel extends Model
                 )";
             $statement = $instance->connection->prepare($projectQuery);
             $statement->execute([
-                ':publicId'             => UUID::toBinary($projectUuid),
+                ':publicId'             => UUID::toBinary($projectPublicId),
                 ':name'                 => $projectName,
                 ':description'          => $projectDescription,
                 ':budget'               => $projectBudget,
                 ':status'               => $projectStatus->value,
-                ':startDateTime'        => formatDateTime($projectStartDateTime, DateTime::ATOM),
-                ':completionDateTime'   => formatDateTime($projectCompletionDateTime, DateTime::ATOM),
+                ':startDateTime'        => $projectStartDateTime,
+                ':completionDateTime'   => $projectCompletionDateTime,
                 ':managerId'            => Me::getInstance()->getId(),
             ]);
             $projectId = intval($instance->connection->lastInsertId());
 
-            if ($projectPhases->count() > 0) {
+            if ($projectPhases && $projectPhases->count() > 0) {
                 $projectPhaseQuery = "
                     INSERT INTO `projectPhase` (
                         projectId,
@@ -769,11 +790,14 @@ class ProjectModel extends Model
             $instance->connection->commit();
 
             $project->setId($projectId);
-            $project->setPublicId($projectUuid);
+            $project->setPublicId($projectPublicId);
             return $project;
         } catch (PDOException $e) {
             $instance->connection->rollBack();
             throw new DatabaseException($e->getMessage());
+        } catch (Exception $e) {
+            $instance->connection->rollBack();
+            throw $e;
         }
     }
 
