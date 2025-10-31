@@ -29,7 +29,7 @@ class SingleFormController implements Controller
                 'single-form/project/create/cancel-phase',
                 'single-form/project/create/submit',
             ]
-        ],
+        ], 
         'editProject' => [
             'title' => 'Edit Project Details',
             'description' => 'Modify the details of your project below.',

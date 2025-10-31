@@ -1,3 +1,24 @@
+/**
+ * @param {number} year
+ * @param {number} month - 1-based (1 = January, 12 = December)
+ * @param {number} day
+ * @returns {boolean}
+ */
+export function isValidDate(year, month, day) {
+    if (
+        typeof year !== 'number' ||
+        typeof month !== 'number' ||
+        typeof day !== 'number'
+    ) return false;
+    // JavaScript Date months are 0-based, so subtract 1 from month
+    const date = new Date(year, month - 1, day);
+    return (
+        date.getFullYear() === year &&
+        date.getMonth() === month - 1 &&
+        date.getDate() === day
+    );
+}
+
 export function formatDate(dateString) {
     if (!dateString) {
         throw new Error('Date string is required.')

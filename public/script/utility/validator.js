@@ -1,3 +1,4 @@
+import { isValidDate } from './utility.js'
 import { errorListDialog } from '../render/error-list-dialog.js'
 
 const LENGTH_VALIDATION = {
@@ -7,6 +8,15 @@ const LENGTH_VALIDATION = {
     'password':         { min: 8, max: 255 },
     'longText':         { min: 10, max: 500 },
     'budget':           { min: 0, max: 999999999999 }
+}
+
+function isValidDateHelper(date) {
+    if (!date || typeof date !== 'string') {
+        throw new Error('A valid date string is required.')
+    }
+
+    const [year, month, day] = date.split('-').map(Number)
+    return isValidDate(year, month, day)
 }
 
 export function userValidationRules() {
@@ -73,7 +83,7 @@ export function userValidationRules() {
                 const now = new Date()
                 const birthDate = inputs.birthDate
 
-                if (!birthDate || birthDate >= now) {
+                if (!birthDate || !isValidDateHelper(inputs.birthDate)) {
                     errors.push('You must be at least 18 years old to register.')
                 } else {
                     let age = now.getFullYear() - birthDate.getFullYear()
@@ -160,57 +170,81 @@ export function userValidationRules() {
 export function workValidationRules() {
     return {
         'name': {
-            // Name validation
-            condition: (inputs) => !inputs.name || inputs.name.trim().length < LENGTH_VALIDATION.name.min || inputs.name.trim().length > LENGTH_VALIDATION.name.max,
-            message: `Name must be between ${LENGTH_VALIDATION.name.min} and ${LENGTH_VALIDATION.name.max} characters long.`
+            condition: (inputs) => {
+                const errors = []
+                if (!inputs.name || inputs.name.trim().length < LENGTH_VALIDATION.name.min || inputs.name.trim().length > LENGTH_VALIDATION.name.max) {
+                    errors.push(`Name must be between ${LENGTH_VALIDATION.name.min} and ${LENGTH_VALIDATION.name.max} characters long.`)
+                }
+                return errors
+            }
         },
 
         'description': {
-            // Description validation (optional)
-            condition: (inputs) => inputs.description && (inputs.description.trim().length < LENGTH_VALIDATION.longText.min || inputs.description.trim().length > LENGTH_VALIDATION.longText.max),
-            message: `Description must be between ${LENGTH_VALIDATION.longText.min} and ${LENGTH_VALIDATION.longText.max} characters long.`
+            condition: (inputs) => {
+                const errors = []
+                if (inputs.description && (inputs.description.trim().length < LENGTH_VALIDATION.longText.min || inputs.description.trim().length > LENGTH_VALIDATION.longText.max)) {
+                    errors.push(`Description must be between ${LENGTH_VALIDATION.longText.min} and ${LENGTH_VALIDATION.longText.max} characters long.`)
+                }
+                return errors
+            }
         },
 
         'budget': {
-            // Budget validation
-            condition: (inputs) => !inputs.budget && (isNaN(inputs.budget) || inputs.budget < LENGTH_VALIDATION.budget.min || inputs.budget > LENGTH_VALIDATION.budget.max),
-            message: `Budget must be a number between ${LENGTH_VALIDATION.budget.min} and ${LENGTH_VALIDATION.budget.max}.`
+            condition: (inputs) => {
+                const errors = []
+                const value = inputs.budget
+                if (value === undefined || value === null || value === '') {
+                    errors.push(`Budget must be a number between ${LENGTH_VALIDATION.budget.min} and ${LENGTH_VALIDATION.budget.max}.`)
+                } else if (isNaN(Number(value)) || Number(value) < LENGTH_VALIDATION.budget.min || Number(value) > LENGTH_VALIDATION.budget.max) {
+                    errors.push(`Budget must be a number between ${LENGTH_VALIDATION.budget.min} and ${LENGTH_VALIDATION.budget.max}.`)
+                }
+                return errors
+            }
         },
 
         'startDateTime': {
-            // Priority validation
             condition: (inputs) => {
-                const startDate = new Date(inputs.startDateTime)
-                return !inputs.startDateTime || isNaN(startDate.getTime())
-            },
-            message: 'Invalid start date and time.'
-        },
-        'startDateTime': {
-            // Start date cannot be in the past
-            condition: (inputs) => {
-                const startDate = new Date(inputs.startDateTime)
-                const currentDate = new Date()
-                return startDate < currentDate
-            },
-            message: 'Start date cannot be in the past.'
+                const errors = []
+                const val = inputs.startDateTime
+                if (!val) {
+                    errors.push('Invalid start date and time.')
+                    return errors
+                }
+                if (!isValidDateHelper(val)) {
+                    errors.push('Invalid start date and time.')
+                    return errors
+                }
+                const startDate = new Date(val)
+                const now = new Date()
+                if (startDate < now) {
+                    errors.push('Start date cannot be in the past.')
+                }
+                return errors
+            }
         },
 
         'completionDateTime': {
-            // Completion date validation
             condition: (inputs) => {
-                const completionDate = new Date(inputs.completionDateTime)
-                return !inputs.completionDateTime || isNaN(completionDate.getTime())
-            },
-            message: 'Invalid completion date and time.'
-        },
-        'completionDateTime': {
-            // Completion date must be after start date
-            condition: (inputs) => {
-                const startDate = new Date(inputs.startDateTime)
-                const completionDate = new Date(inputs.completionDateTime)
-                return completionDate <= startDate
-            },
-            message: 'Completion date must be after the start date.'
+                const errors = []
+                const val = inputs.completionDateTime
+                if (!val) {
+                    errors.push('Invalid completion date and time.')
+                    return errors
+                }
+                if (!isValidDateHelper(val)) {
+                    errors.push('Invalid completion date and time.')
+                    return errors
+                }
+                const completionDate = new Date(val)
+                const startVal = inputs.startDateTime
+                if (startVal) {
+                    const startDate = new Date(startVal)
+                    if (!isNaN(startDate.getTime()) && completionDate <= startDate) {
+                        errors.push('Completion date must be after the start date.')
+                    }
+                }
+                return errors
+            }
         }
     }
 }

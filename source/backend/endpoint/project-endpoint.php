@@ -111,10 +111,13 @@ class ProjectEndpoint
 
             self::sanitizeData($project);
 
+            $index = 0;
             $phasesContainer = new PhaseContainer();
             foreach ($phases as &$phase) {
                 self::sanitizeData($phase);
 
+                // Temporarily assign index as ID
+                $phase['id'] = $index++;
                 // Determine phase status
                 $phase['status'] = WorkStatus::getStatusFromDates(new DateTime($phase['startDateTime']), new DateTime($phase['completionDateTime']));
 
