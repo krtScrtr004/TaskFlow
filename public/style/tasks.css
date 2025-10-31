@@ -17,6 +17,11 @@
 	gap: var(--space);
 }
 
+.task-grid-container {
+	height: 100%;
+	overflow: auto;
+}
+
 .task-grid-card:hover {
 	opacity: 0.7;
 }
@@ -58,6 +63,10 @@
 
 #add_task_button h3 {
 	font-size: 1.5rem;
+}
+
+.no-tasks-wall {
+	height: 100%;
 }
 
 /* View Task Page */

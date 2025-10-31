@@ -1,5 +1,6 @@
 <?php
 use App\Core\Me;
+use App\Core\UUID;
 use App\Enumeration\TaskPriority;
 use App\Enumeration\Role;
 use App\Enumeration\WorkStatus;
@@ -7,6 +8,7 @@ use App\Enumeration\WorkStatus;
 if (!isset($projectId)) {
     throw new Error('Project ID is required.');
 }
+$projectIdString = UUID::toString($projectId);
 
 if (!isset($tasks)) {
     throw new Error('Tasks data is required.');
@@ -57,11 +59,19 @@ if (!isset($tasks)) {
         </section>
 
         <!-- Task Grid -->
-        <section class="task-grid-container" data-projectid="<?= $projectId ?>">
+        <section class="task-grid-container" data-projectid="<?= $projectIdString ?>">
+            <?php if (Role::isWorker(Me::getInstance())): ?>
+                <div
+                    class="no-tasks-wall no-content-wall <?= $tasks->count() > 0 ? 'no-display' : 'flex-col' ?>">
+                    <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No tasks available" title="No tasks available"
+                        height="70">
+                    <h3 class="center-text">No tasks available for this project.</h3>
+                </div>
+            <?php endif; ?>
 
             <section class="task-grid grid">
                 <?php if (Role::isProjectManager(Me::getInstance())): ?>
-                    <a href="<?= REDIRECT_PATH . "add-task/$projectId" ?>"
+                    <a href="<?= REDIRECT_PATH . "add-task/$projectIdString" ?>"
                         class="add-task-button task-grid-card flex-col flex-child-center-h flex-child-center-v">
                         <img src="<?= ICON_PATH . 'add_w.svg' ?>" alt="Add New Task" title="Add New Task" height="90">
                         <h3>Add New Task</h3>
