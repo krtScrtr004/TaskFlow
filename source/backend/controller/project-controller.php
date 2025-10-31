@@ -86,10 +86,20 @@ class ProjectController implements Controller
     private function renderDashboard(Project|null $project): void
     {
         if ($project) {
-            // Check if the project is already completed or delayed based on current date and tasks status
+            $status = $project->getStatus();
+            $startDateTime = $project->getStartDateTime();
             $completionDateTime = $project->getCompletionDateTime();
             $currentDateTime = new DateTime();
-            if ($completionDateTime && $currentDateTime > $completionDateTime) {
+
+            if ($startDateTime && $currentDateTime >= $startDateTime && $status === WorkStatus::PENDING) {
+                // Check if the project is already ongoing
+                $project->setStatus(WorkStatus::ON_GOING);
+                ProjectModel::save([
+                    'id' => $project->getId(),
+                    'status' => WorkStatus::ON_GOING
+                ]);
+            } elseif ($completionDateTime && $currentDateTime > $completionDateTime && ($status === WorkStatus::PENDING || $status === WorkStatus::ON_GOING)) {
+                // Check if the project is already completed or delayed based on current date and tasks status
                 $hasPendingTasks = false;
                 foreach ($project->getTasks() as $task) {
                     if ($task->getStatus() !== WorkStatus::COMPLETED && $task->getStatus() !== WorkStatus::CANCELLED) {

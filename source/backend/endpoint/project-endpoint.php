@@ -116,10 +116,13 @@ class ProjectEndpoint
             foreach ($phases as &$phase) {
                 self::sanitizeData($phase);
 
-                // Temporarily assign index as ID
+                // Temporarily assign index as ID to avoid replacing other inserted fields in the container
                 $phase['id'] = $index++;
                 // Determine phase status
-                $phase['status'] = WorkStatus::getStatusFromDates(new DateTime($phase['startDateTime']), new DateTime($phase['completionDateTime']));
+                $phase['status'] = WorkStatus::getStatusFromDates(
+                    new DateTime($phase['startDateTime']), 
+                    new DateTime($phase['completionDateTime'])
+                );
 
                 // Create partial Phase entity and add to container
                 $phasesContainer->add(Phase::createPartial($phase));
