@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controller;
+namespace App\Endpoint;
 
 use App\Core\Session;
 use App\Core\UUID;
@@ -21,7 +21,7 @@ use App\Exception\ValidationException;
 use DateTime;
 use Exception;
 
-class AuthController implements Controller
+class AuthEndpoint implements Controller
 {
     private function __construct()
     {
