@@ -3,9 +3,11 @@
 namespace App\Model;
 
 use App\Abstract\Model;
+use App\Container\JobTitleContainer;
 use App\Container\WorkerContainer;
 use App\Container\TaskContainer;
 use App\Core\UUID;
+use App\Dependent\Worker;
 use App\Exception\ValidationException;
 use App\Exception\DatabaseException;
 use App\Model\UserModel;
@@ -13,34 +15,96 @@ use App\Enumeration\WorkStatus;
 use App\Enumeration\TaskPriority;
 use App\Entity\User;
 use App\Entity\Task;
+use App\Enumeration\Gender;
 use DateTime;
+use Exception;
 use InvalidArgumentException;
 use PDOException;
 
 class TaskModel extends Model
 {
     /**
-     * Finds and retrieves task data from the database based on provided criteria.
+     * Creates a Task instance from an associative array of database row data.
      *
-     * This method fetches task data including associated workers from the database,
-     * organizing the results into task objects within a TaskContainer.
-     * 
-     * The method performs the following operations:
-     * - Executes a JOIN query between project tasks and workers
-     * - Processes pagination and sorting options if provided
-     * - Groups results by task and associates workers with their respective tasks
-     * - Converts database rows to strongly typed Task and Worker objects
-     * - Builds proper object relationships between tasks and workers
+     * This method converts raw database row data into a Task object, handling type conversions and
+     * nested objects as needed:
+     * - Converts date/time strings to DateTime objects
+     * - Converts priority and status to their respective enum types
+     * - Decodes the workers JSON and populates the WorkerContainer with Worker objects
+     * - Converts worker publicId to UUID object
+     * - Converts worker gender to Gender enum
+     * - Converts worker jobTitles JSON to JobTitleContainer
      *
-     * @param string $whereClause SQL WHERE clause condition (without the 'WHERE' keyword)
-     * @param array $params Prepared statement parameters for the WHERE clause
-     * @param array $options Query options with the following possible keys:
-     *      - offset: int The number of rows to skip
-     *      - limit: int Maximum number of rows to return
-     *      - orderBy: string SQL ORDER BY clause (without the 'ORDER BY' keywords)
+     * @param array $row Associative array containing task data with the following keys:
+     *      - taskId: int Task ID
+     *      - taskPublicId: string Task public identifier
+     *      - taskName: string Task name
+     *      - taskDescription: string Task description
+     *      - taskWorkers: string JSON-encoded array of workers
+     *      - taskStartDateTime: string Task start date/time (Y-m-d H:i:s)
+     *      - taskCompletionDateTime: string Task expected completion date/time (Y-m-d H:i:s)
+     *      - taskActualCompletionDateTime: string|null Actual completion date/time (Y-m-d H:i:s) or null
+     *      - taskPriority: string|int Task priority (enum value)
+     *      - taskStatus: string|int Task status (enum value)
+     *      - taskCreatedAt: string Task creation timestamp (Y-m-d H:i:s)
+     *
+     * @return Task New Task instance created from provided data
+     */
+    private static function populate(array $row): Task {
+        $task = Task::createPartial([
+            'id'                        => $row['taskId'],
+            'publicId'                  => $row['taskPublicId'],
+            'name'                      => $row['taskName'],
+            'description'               => $row['taskDescription'],
+            'workers'                   => new WorkerContainer(),
+            'startDateTime'             => new DateTime($row['taskStartDateTime']),
+            'completionDateTime'        => new DateTime($row['taskCompletionDateTime']),
+            'actualCompletionDateTime'  => $row['taskActualCompletionDateTime']
+                ? new DateTime($row['taskActualCompletionDateTime'])
+                : null,
+            'priority'                  => TaskPriority::from($row['taskPriority']),
+            'status'                    => WorkStatus::from($row['taskStatus']),
+            'createdAt'                 => new DateTime($row['taskCreatedAt']),
+        ]);
+
+        $workers = json_decode($row['taskWorkers'], true);
+        foreach ($workers as $worker) {
+            $task->addWorker(Worker::createPartial([
+                'id' => $worker['workerId'],
+                'publicId' => UUID::fromHex($worker['workerPublicId']),
+                'firstName' => $worker['workerFirstName'],
+                'middleName' => $worker['workerMiddleName'],
+                'lastName' => $worker['workerLastName'],
+                'email' => $worker['workerEmail'],
+                'contactNumber' => $worker['workerContactNumber'],
+                'profileLink' => $worker['workerProfileLink'],
+                'gender' => Gender::from($worker['workerGender']),
+                'jobTitles' => isset($worker['workerJobTitles'])
+                    ? new JobTitleContainer(json_decode($worker['workerJobTitles'], true))
+                    : new JobTitleContainer()
+            ]));
+        }
+        return $task;
+    }
+
+    /**
+     * Finds and retrieves project tasks from the database with optional filtering and options.
+     *
+     * This method executes a complex SQL query to fetch project tasks along with their associated workers and worker job titles.
+     * The result is returned as a TaskContainer containing Task objects populated with the retrieved data.
      * 
-     * @return TaskContainer|null TaskContainer with Task objects if results found, null if no results
-     * @throws DatabaseException If a database error occurs during execution
+     * - Supports dynamic WHERE clauses and query options (e.g., ordering, limits).
+     * - Aggregates worker information and their job titles as JSON arrays for each task.
+     * - Handles empty result sets by returning null.
+     * - Throws a DatabaseException on database errors.
+     *
+     * @param string $whereClause Optional SQL WHERE clause to filter tasks.
+     * @param array $params Parameters to bind to the prepared SQL statement.
+     * @param array $options Additional query options (e.g., order, limit).
+     * 
+     * @return TaskContainer|null A container of Task objects if found, or null if no tasks match the criteria.
+     *
+     * @throws DatabaseException If a PDOException occurs during query execution.
      */
     protected static function find(string $whereClause = '', array $params = [], array $options = []): ?TaskContainer
     {
@@ -50,22 +114,47 @@ class TaskModel extends Model
                 SELECT 
                     pt.id AS taskId,
                     pt.publicId AS taskPublicId,
-                    pt.title AS taskName,
+                    pt.name AS taskName,
                     pt.description AS taskDescription,
                     pt.startDateTime AS taskStartDateTime,
-                    pt.dueDateTime AS taskCompletionDateTime,
-                    pt.completionDateTime AS taskActualCompletionDateTime,
+                    pt.completionDateTime AS taskCompletionDateTime,
+                    pt.actualCompletionDateTime AS taskActualCompletionDateTime,
                     pt.priority AS taskPriority,
                     pt.status AS taskStatus,
                     pt.createdAt AS taskCreatedAt,
-                    u.id AS workerId,
-                    u.publicId AS workerPublicId,
-                    u.firstName AS workerFirstName,
-                    u.middleName AS workerMiddleName,
-                    u.lastName AS workerLastName,
-                    u.profileLink AS workerProfileLink
+                    COALESCE(
+                        (
+                            SELECT CONCAT('[', GROUP_CONCAT(
+                                JSON_OBJECT(
+                                    'workerId', u.id,
+                                    'workerPublicId', HEX(u.publicId),
+                                    'workerFirstName', u.firstName,
+                                    'workerMiddleName', u.middleName,
+                                    'workerLastName', u.lastName,
+                                    'workerEmail', u.email,
+                                    'workerContactNumber', u.contactNumber,
+                                    'workerProfileLink', u.profileLink,
+                                    'workerGender', u.gender,
+                                    'workerJobTitles', COALESCE(
+                                        (
+                                            SELECT CONCAT('[', GROUP_CONCAT(CONCAT('\"', wjt.title, '\"')), ']')
+                                            FROM userJobTitle wjt
+                                            WHERE wjt.userId = u.id
+                                        ),
+                                        '[]'
+                                    )
+                                ) ORDER BY u.lastName SEPARATOR ','
+                            ), ']')
+                            FROM `projectTaskWorker` AS ptw
+                            LEFT JOIN `user` AS u
+                            ON ptw.workerId = u.id
+                            WHERE ptw.id IS NOT NULL
+                        ), '[]'
+                    ) AS taskWorkers
                 FROM 
                     `projectTask` AS pt
+                LEFT JOIN 
+                    `project` AS p ON pt.projectId = p.id
                 LEFT JOIN 
                     `projectTaskWorker` AS ptw ON pt.id = ptw.taskId
                 LEFT JOIN 
@@ -83,64 +172,9 @@ class TaskModel extends Model
                 return null;
             }
 
-            // Group results by task
-            $tasksData = [];
-            foreach ($results as $row) {
-                $taskId = $row['id'];
-
-                // Initialize task data if not exists
-                if (!isset($tasksData[$taskId])) {
-                    $tasksData[$taskId] = [
-                        'id' => $row['taskId'],
-                        'publicId' => $row['taskPublicId'],
-                        'title' => $row['taskName'],
-                        'description' => $row['taskDescription'],
-                        'startDateTime' => new DateTime($row['taskStartDateTime']),
-                        'dueDateTime' => new DateTime($row['taskDueDateTime']),
-                        'completionDateTime' => $row['completionDateTime']
-                            ? new DateTime($row['completionDateTime'])
-                            : null,
-                        'priority' => TaskPriority::from($row['priority']),
-                        'status' => WorkStatus::from($row['status']),
-                        'createdAt' => new DateTime($row['createdAt']),
-                        'workers' => []
-                    ];
-                }
-
-                // Add worker if exists
-                if ($row['workerId'] !== null) {
-                    $tasksData[$taskId]['workers'][] = User::fromArray([
-                        'id' => $row['workerId'],
-                        'publicId' => $row['workerPublicId'],
-                        'firstName' => $row['workerFirstName'],
-                        'middleName' => $row['workerMiddleName'],
-                        'lastName' => $row['workerLastName'],
-                        'profileLink' => $row['workerProfileLink']
-                    ])->toWorker();
-                }
-            }
-
-            // Build TaskContainer
             $tasks = new TaskContainer();
-            foreach ($tasksData as $taskData) {
-                $workers = new WorkerContainer();
-                foreach ($taskData['workers'] as $worker) {
-                    $workers->add($worker);
-                }
-
-                $tasks->add(Task::fromArray([
-                    'id' => $taskData['id'],
-                    'publicId' => $taskData['publicId'],
-                    'name' => $taskData['name'],
-                    'description' => $taskData['description'],
-                    'workers' => !empty($taskData['workers']) ? $workers : null,
-                    'startDateTime' => $taskData['startDateTime'],
-                    'dueDateTime' => $taskData['dueDateTime'],
-                    'completionDateTime' => $taskData['completionDateTime'],
-                    'priority' => $taskData['priority'],
-                    'status' => $taskData['status'],
-                    'createdAt' => $taskData['createdAt']
-                ]));
+            foreach ($results as $row) {
+                $tasks->add(self::populate($row));
             }
             return $tasks;
         } catch (PDOException $e) {
@@ -148,28 +182,111 @@ class TaskModel extends Model
         }
     }
 
+
     /**
-     * Finds all tasks associated with a specific project.
+     * Retrieves all tasks associated with a given project ID.
      *
-     * This method retrieves all tasks that belong to a given project ID from the database.
-     * It validates the project ID before performing the database query.
+     * This method fetches tasks for a specific project, supporting both integer and UUID project identifiers.
+     * It applies pagination options and returns a TaskContainer with the results.
+     * - If $projectId is an integer, it is used directly in the query.
+     * - If $projectId is a UUID, it is converted to binary and used in a subquery to resolve the internal project ID.
      *
-     * @param int $projectId The ID of the project to find tasks for
-     * @return TaskContainer|null A container with all tasks for the specified project, or null if no tasks found
-     * @throws ValidationException If the project ID is less than 1
-     * @throws DatabaseException If there's an error during the database operation
+     * @param int|UUID $projectId The project ID (integer or UUID as string).
+     * @param array $options Optional query options:
+     *      - offset: int (default 0) The starting point for the result set.
+     *      - limit: int (default 10) The maximum number of tasks to return.
+     *
+     * @throws ValidationException If the provided project ID is invalid.
+     * @throws DatabaseException If a database error occurs during retrieval.
+     *
+     * @return TaskContainer|null A container with the found tasks, or null if none found.
      */
-    public static function findAllByProjectId(int $projectId): ?TaskContainer
-    {
+    public static function findAllByProjectId(
+        int|UUID $projectId,
+        array $options = [
+            'offset' => 0,
+            'limit' => 10,
+        ]
+    ): ?TaskContainer {
         if ($projectId < 1) {
             throw new ValidationException('Invalid Project ID');
         }
 
         try {
-            $tasks = self::find('projectId = :projectId', [':projectId' => $projectId]);
-            return $tasks;
-        } catch (PDOException $e) {
-            throw new DatabaseException($e->getMessage());
+            $whereClause = is_int($projectId) 
+                        ? 'p.id = :projectId'
+                        : 'p.id IN (
+                            SELECT id 
+                            FROM `project` 
+                            WHERE publicId = :projectId)';
+            $params = [
+                ':projectId' => is_int($projectId) 
+                    ? $projectId 
+                    : UUID::toBinary($projectId)
+            ];
+
+            return self::find($whereClause,$params, $options);
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+
+    /**
+     * Finds tasks assigned to a specific worker, optionally filtered by project.
+     *
+     * This method retrieves tasks assigned to the given worker, identified by either an integer ID or a UUID.
+     * Optionally, results can be filtered by a specific project, also identified by an integer ID or a UUID.
+     * Supports pagination through the $options parameter.
+     *
+     * @param int|UUID $workerId The worker's identifier (integer ID or UUID).
+     * @param int|UUID|null $projectId (Optional) The project's identifier (integer ID or UUID). If null, tasks from all projects are included.
+     * @param array $options (Optional) Query options:
+     *      - offset: int (default 0) The number of records to skip.
+     *      - limit: int (default 10) The maximum number of records to return.
+     *
+     * @throws ValidationException If the worker or project ID is invalid.
+     * @throws Exception If an error occurs during the query.
+     *
+     * @return TaskContainer|null A container with the found tasks, or null if none found.
+     */
+    public static function findAssignedToWorker(
+        int|UUID $workerId,
+        int|UUID|null $projectId,
+        array $options = [
+            'offset' => 0,
+            'limit' => 10,
+        ]
+    ): ?TaskContainer {
+        if (is_int($workerId) && $workerId < 1) {
+            throw new ValidationException('Invalid Worker ID');
+        }
+
+        if ($projectId && is_int($projectId) && $projectId < 1) {
+            throw new ValidationException('Invalid Project ID');
+        }
+
+        try {
+            $whereClause = is_int($workerId) 
+                ? 'u.id = :workerId'
+                : 'u.publicId = :workerId';
+            $params = [
+                ':workerId' => is_int($workerId) 
+                    ? $workerId 
+                    : UUID::toBinary($workerId),
+            ];
+
+            if ($projectId) {
+                $whereClause .= is_int($projectId)
+                    ? ' AND p.id = :projectId'
+                    : ' AND p.publicId = :projectId';
+                $params[':projectId'] = is_int($projectId)
+                    ? $projectId
+                    : UUID::toBinary($projectId);
+            }
+
+            return self::find($whereClause,$params, $options);
+        } catch (Exception $e) {
+            throw $e;
         }
     }
 
@@ -365,8 +482,8 @@ class TaskModel extends Model
         try {
             $tasks = self::find('', [], ['offset' => $offset, 'limit' => $limit]);
             return $tasks;
-        } catch (PDOException $th) {
-            throw new DatabaseException($th->getMessage());
+        } catch (Exception $e) {
+            throw $e;
         }
     }
 
@@ -444,6 +561,14 @@ class TaskModel extends Model
         // Not implemented (No use case)
         return false;
     }
+
+
+
+
+
+
+
+
 
     public static function create(mixed $data): mixed
     {
