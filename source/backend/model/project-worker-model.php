@@ -432,11 +432,6 @@ class ProjectWorkerModel extends Model
             throw new InvalidArgumentException('Invalid project ID provided.');
         }
 
-        $params = [];
-        $params[':id'] = ($projectId instanceof UUID) 
-            ? UUID::toBinary($projectId)
-            : $projectId;
-
         try {
             return self::find(
                 (is_int($projectId) 
@@ -444,13 +439,15 @@ class ProjectWorkerModel extends Model
                                 : "p.publicId ") . " = :id 
                                 AND pw.status != :unassignedStatus 
                                 AND pw.status != :terminatedStatus", 
-                $params, 
                 [
+                    ':id'               => ($projectId instanceof UUID) ? UUID::toBinary($projectId) : $projectId,
                     ':unassignedStatus' => WorkerStatus::UNASSIGNED->value,
                     ':terminatedStatus' => WorkerStatus::TERMINATED->value,
-                    ':limit'            => $options['limit'] ?? 10,
-                    ':offset'           => $options['offset'] ?? 0,
-                    ':groupBy'          => 'u.id'
+                ], 
+                [
+                    'limit'            => $options['limit'] ?? 10,
+                    'offset'           => $options['offset'] ?? 0,
+                    'groupBy'          => 'u.id'
                 ]);
         } catch (Exception $e) {
             throw $e;

@@ -84,11 +84,12 @@ export function userValidationRules() {
                 const birthDate = inputs.birthDate
 
                 if (!birthDate || !isValidDateHelper(inputs.birthDate)) {
-                    errors.push('You must be at least 18 years old to register.')
+                    errors.push('Invalid birth date.')
                 } else {
-                    let age = now.getFullYear() - birthDate.getFullYear()
-                    const monthDiff = now.getMonth() - birthDate.getMonth()
-                    if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birthDate.getDate())) {
+                    const parseBirthDate = new Date(birthDate.trim())
+                    let age = now.getFullYear() - parseBirthDate.getFullYear()
+                    const monthDiff = now.getMonth() - parseBirthDate.getMonth()
+                    if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < parseBirthDate.getDate())) {
                         age--
                     }
 

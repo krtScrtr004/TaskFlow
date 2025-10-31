@@ -32,17 +32,14 @@ async function submit(e) {
     const middleNameInput = registerForm.querySelector('#register_middle_name')
     const lastNameInput = registerForm.querySelector('#register_last_name')
     const genderInput = registerForm.querySelector('input[name="gender"]:checked')
-    const dayOfBirthInput = registerForm.querySelector('#day_of_birth')
-    const monthOfBirthInput = registerForm.querySelector('#month_of_birth')
-    const yearOfBirthInput = registerForm.querySelector('#year_of_birth')
+    const birthDateInput = registerForm.querySelector('#register_birth_date')
     const jobTitlesInput = registerForm.querySelector('#register_job_titles')
     const contactInput = registerForm.querySelector('#register_contact')
     const emailInput = registerForm.querySelector('#register_email')
     const passwordInput = registerForm.querySelector('#register_password')
     const roleInput = registerForm.querySelector('input[name="role"]:checked')
     if (!firstNameInput || !middleNameInput || !lastNameInput || !genderInput ||
-        !dayOfBirthInput || !monthOfBirthInput || !yearOfBirthInput ||
-        !jobTitlesInput || !emailInput || !passwordInput || !roleInput) {
+        !birthDateInput || !jobTitlesInput || !emailInput || !passwordInput || !roleInput) {
         throw new Error('One or more form inputs not found.')
     }
 
@@ -51,9 +48,7 @@ async function submit(e) {
         middleName: middleNameInput.value.trim(),
         lastName: lastNameInput.value.trim(),
         gender: genderInput.value.trim(),
-        birthDate: new Date(
-            `${yearOfBirthInput.value.trim()}-${monthOfBirthInput.value.trim().padStart(2, '0')}-${dayOfBirthInput.value.trim().padStart(2, '0')}`
-        ),
+        birthDate: birthDateInput.value.trim(),
         jobTitles: jobTitlesInput.value.trim(),
         contactNumber: contactInput.value.trim(),
         email: emailInput.value.trim(),
@@ -133,7 +128,7 @@ async function sendToBackend(
             middleName: middleName?.trim(),
             lastName: lastName.trim(),
             gender: gender.trim(),
-            birthDate: new Date(birthDate).toISOString(),
+            birthDate: birthDate.trim(),
             jobTitles: jobTitles?.trim(),
             contactNumber: contactNumber.trim(),
             email: email.trim(),

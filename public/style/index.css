@@ -39,7 +39,7 @@ body.index > main {
 }
 
 /* Register Form */
-#register_form .separated-name-input {
+#register_form .separated-input {
     gap: 1rem;
 }
 
