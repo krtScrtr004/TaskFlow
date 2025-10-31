@@ -2,6 +2,13 @@
 
 namespace App\Controller;
 
+use App\Auth\SessionAuth;
+use App\Container\TaskContainer;
+use App\Core\Me;
+use App\Core\UUID;
+use App\Enumeration\Role;
+use App\Exception\ForbiddenException;
+use App\Exception\NotFoundException;
 use App\Interface\Controller;
 use App\Middleware\Response;
 use App\Model\ProjectModel;
@@ -10,31 +17,44 @@ use InvalidArgumentException;
 
 class TaskController implements Controller
 {
+    private function __construct()
+    {
+    }
+
     public static function index(array $args = []): void
     {
-        // TODO
+        try {
+            if (!SessionAuth::hasAuthorizedSession()) {
+                throw new ForbiddenException();
+            }
 
-        $projectId = $args['projectId'] ?? null; // Temporary placeholder   
-        if (!$projectId)
-            throw new InvalidArgumentException('Project ID is required.');
+            $projectId = isset($args['projectId']) 
+                ? UUID::fromString($args['projectId']) 
+                : null;
+            if (!$projectId) {
+                throw new ForbiddenException('Project ID is required.');
+            } elseif (ProjectModel::findById($projectId) === null) {
+                throw new NotFoundException('Project not found.');
+            }
 
-        $priority = $_GET['priority'] ?? null; // Temporary placeholder
-        $status = $_GET['status'] ?? null; // Temporary placeholder
-
-        // TODO: 
-        // Fetch tasks for the given project ID if PM;
-        // else, fetch tasks assigned to the worker
-
-        $project = ProjectModel::all()->getItems()[0]; // Temporary placeholder
-
-        $queryParams = $_GET ?? [];
-        $filter = isset($queryParams['filter']) ? $queryParams['filter'] : '';
-
-        // If key is not provided, all tasks of the project
-        $tasks = $project->getTasks();
-
-        require_once VIEW_PATH . 'tasks.php';
+            $tasks = Role::isProjectManager(Me::getInstance())
+                ? $tasks = TaskModel::findAllByProjectId(Me::getInstance()->getId())
+                : null;
+            if (!$tasks) {
+                // No tasks found, assign an empty container
+                $tasks = new TaskContainer();
+            }
+            require_once VIEW_PATH . 'tasks.php';
+        } catch (NotFoundException $e) {
+            ErrorController::notFound();
+        } catch (ForbiddenException $e) {
+            ErrorController::forbidden();
+        }
     }
+
+
+
+    
 
     public static function viewTask(array $args = []): void
     {

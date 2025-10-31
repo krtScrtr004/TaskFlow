@@ -403,7 +403,7 @@ class ProjectModel extends Model
      * - Returns the first matching Project or null if none exists.
      * - Catches low-level PDOException and rethrows it as a DatabaseException while preserving the original message.
      *
-     * @param int $projectId Numeric project identifier (must be >= 1)
+     * @param int|UUID $projectId The numeric ID or UUID of the project to retrieve.
      *
      * @return Project|null The matching Project instance, or null if not found
      *

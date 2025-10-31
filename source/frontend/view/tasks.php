@@ -4,15 +4,13 @@ use App\Enumeration\TaskPriority;
 use App\Enumeration\Role;
 use App\Enumeration\WorkStatus;
 
-if (!$project)
-    throw new Error('Project data is required.');
-$projectId = $project->getPublicId();
+if (!isset($projectId)) {
+    throw new Error('Project ID is required.');
+}
 
-if (!isset($tasks))
+if (!isset($tasks)) {
     throw new Error('Tasks data is required.');
-
-$searchKey = isset($_GET['key']) ? htmlspecialchars($_GET['key']) : '';
-$searchFilter = isset($_GET['filter']) ? htmlspecialchars($_GET['filter']) : 'all';
+}
 ?>
 
 <!DOCTYPE html>

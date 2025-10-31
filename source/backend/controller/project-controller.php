@@ -76,7 +76,7 @@ class ProjectController implements Controller
             $instance->renderDashboard($fullProjectInfo);
         } catch (NotFoundException $e) {
             ErrorController::notFound();
-        } catch (Exception $e) {
+        } catch (ForbiddenException $e) {
             ErrorController::forbidden();
         }
     }
