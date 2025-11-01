@@ -102,18 +102,22 @@ async function sendToBackend(projectId, taskId, inputs) {
         isLoading = true
 
 
-        if (!projectId || projectId.trim() === '')
+        if (!projectId || projectId.trim() === '') {
             throw new Error('Project ID is required.')
+        }
 
-        if (!taskId || taskId.trim() === '')
+        if (!taskId || taskId.trim() === '') {
             throw new Error('Task ID is required.')
+        }
 
-        if (!inputs || Object.keys(inputs).length === 0)
+        if (!inputs || Object.keys(inputs).length === 0) {
             throw new Error('No input data provided to send to backend.')
+        }
 
         const response = await Http.PUT(`projects/${projectId}/tasks/${taskId}`, inputs)
-        if (!response)
-            throw error
+        if (!response) {
+            throw new Error('Failed to update task.')
+        }
         return response
     } catch (error) {
         throw error

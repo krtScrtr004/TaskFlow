@@ -413,7 +413,9 @@ async function addWorkerButtonEvent(e, projectId, confirmAddWorkerButton, asyncF
     Loader.patch(confirmAddWorkerButton.querySelector('.text-w-icon'))
     try {
         const result = await asyncFunction(projectId, selectedUsers)
-        if (typeof action === 'function') action(result)
+        if (typeof action === 'function') { 
+            action(result)
+        }
 
         // Close the modal
         const cancelButton = addWorkerModalTemplate.querySelector('#cancel_add_worker_button')

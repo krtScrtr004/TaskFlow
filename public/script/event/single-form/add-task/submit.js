@@ -3,7 +3,7 @@ import { Http } from '../../../utility/http.js'
 import { Loader } from '../../../render/loader.js'
 import { errorListDialog } from '../../../render/error-list-dialog.js'
 import { confirmationDialog } from '../../../render/confirmation-dialog.js'
-import { assignedWorkers } from '../../add-worker-modal/task/new/add.js'
+import { workerIds } from '../../add-worker-modal/task/new/add.js'
 import { validateInputs, workValidationRules } from '../../../utility/validator.js'
 import { debounceAsync } from '../../../utility/debounce.js'
 import { handleException } from '../../../utility/handle-exception.js'
@@ -46,7 +46,7 @@ async function submitForm(e) {
             completionDateTime: completionDateInput ? completionDateInput.value : '',
             description: descriptionInput ? descriptionInput.value : '',
             priority: prioritySelect ? prioritySelect.value : '',
-            assignedWorkers: assignedWorkers ? assignedWorkers : {}
+            workerIds: workerIds ? workerIds : {}
         }
 
         if (!validateInputs(params, workValidationRules())) return
@@ -56,12 +56,14 @@ async function submitForm(e) {
             throw new Error('Project ID not found in form dataset.')
         }
         const response = await sendToBackend(params, projectId)
-        if (!response)
+        if (!response) {
             throw new Error('No response from server.')
+        }
         Dialog.operationSuccess('Task Added.', 'The task has been added to the project.')
 
-        if (response)
+        if (response) {
             setTimeout(() => window.location.href = `/TaskFlow/project/${projectId}/task/${response.id}`, 1500)
+        }
     } catch (error) {
         handleException(error, 'Error submitting form:', error)
     } finally {
@@ -77,7 +79,7 @@ async function submitForm(e) {
  * @param {string} inputs.completionDateTime - Task completion date and time (ISO string)
  * @param {string} inputs.description - Task description
  * @param {string} inputs.priority - Task priority ('low', 'medium', 'high')
- * @param {Object} inputs.assignedWorkers - Object of assigned workers
+ * @param {Object} inputs.workerIds - Object of assigned workers
  * @returns {Promise<void>} - Resolves when the task is successfully added
  */
 async function sendToBackend(inputs = {}, projectId) {
@@ -102,7 +104,7 @@ async function sendToBackend(inputs = {}, projectId) {
             completionDateTime,
             description,
             priority,
-            assignedWorkers
+            workerIds
         } = inputs
 
         const response = await Http.POST(`projects/${projectId}/tasks`, {
@@ -111,7 +113,7 @@ async function sendToBackend(inputs = {}, projectId) {
             startDateTime,
             completionDateTime,
             priority,
-            assignedWorkers: Object.keys(assignedWorkers).map(key => assignedWorkers[key])
+            workerIds: Object.keys(workerIds).map(key => workerIds[key])
         })
         if (!response) {
             throw error

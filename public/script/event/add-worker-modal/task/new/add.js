@@ -4,7 +4,7 @@ import { Http } from '../../../../utility/http.js'
 import { handleException } from '../../../../utility/handle-exception.js'
 
 let isLoading = false
-export const assignedWorkers = {}
+export const workerIds = {}
 const addTaskForm = document.querySelector('#add_task_form')
 const noAssignedWorkerWall = addTaskForm?.querySelector('.no-assigned-worker-wall')
 const thisProjectId = addTaskForm?.dataset.projectid
@@ -16,7 +16,7 @@ if (!thisProjectId || thisProjectId.trim() === '') {
 try {
     await addWorker(
         thisProjectId,
-        async (projectId, workersId) => sendToBackend(projectId, workersId),
+        async (projectId, workersId) => {},
         (workersData) => action(workersData),
         () => {
             Dialog.operationSuccess('Workers Added.', 'The selected workers have been added to the task.')
@@ -36,9 +36,9 @@ try {
                 throw new Error('Worker card element not found.')
             }
 
-            delete assignedWorkers[workerCard.dataset.id]
+            delete workerIds[workerCard.dataset.id]
             workerCard.remove()
-            if (Object.keys(assignedWorkers).length === 0 && noAssignedWorkerWall) {
+            if (Object.keys(workerIds).length === 0 && noAssignedWorkerWall) {
                 noAssignedWorkerWall.classList.remove('no-display')
                 noAssignedWorkerWall.classList.add('flex-col')
             }
@@ -250,16 +250,19 @@ async function sendToBackend(projectId, workerIds) {
         }
         isLoading = true
 
-        if (!projectId || projectId.trim() === '')
+        if (!projectId || projectId.trim() === '') {
             throw new Error('Project ID is required.')
+        }
 
-        if (!workerIds || workerIds.length === 0)
+        if (!workerIds || workerIds.length === 0) {
             throw new Error('No worker IDs provided.')
+        }
 
         const idParams = workerIds.map(id => `${id}`).join(',')
         const response = await Http.GET(`projects/${projectId}/workers?ids=${idParams}`)
-        if (!response) 
+        if (!response) {
             throw new Error('No response from server.')
+        }
         return response.data
     } catch (error) {
         throw error
@@ -277,7 +280,8 @@ function action(workersData) {
         taskWorkerList.appendChild(taskWorkerCard)
         noAssignedWorkerWall?.classList.add('no-display')
         noAssignedWorkerWall?.classList.remove('flex-col')
-        assignedWorkers[workerData.id] = workerData
+
+        workerIds[workerData.id] = workerData
     })
 }
 
