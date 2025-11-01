@@ -1,4 +1,4 @@
-import { addWorker } from '../../shared.js'
+import { addWorker } from '../../modal.js'
 import { Dialog } from '../../../../render/dialog.js'
 import { Http } from '../../../../utility/http.js'
 import { handleException } from '../../../../utility/handle-exception.js'

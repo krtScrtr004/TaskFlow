@@ -1,7 +1,10 @@
-import { fetchWorkers, createWorkerListCard, selectWorker, initializeAddWorkerModal } from '../../shared.js'
 import { Loader } from '../../../../render/loader.js'
 import { Dialog } from '../../../../render/dialog.js'
 import { handleException } from '../../../../utility/handle-exception.js'
+import { fetchWorkers } from '../../fetch.js'
+import { createWorkerListCard } from '../../render.js'
+import { selectWorker } from '../../select.js'
+import { initializeAddWorkerModal } from '../../modal.js'
 
 const viewTaskInfo = document.querySelector('.view-task-info')
 const addWorkerButton = viewTaskInfo?.querySelector('#add_worker_button')

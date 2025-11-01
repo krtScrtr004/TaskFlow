@@ -1,6 +1,10 @@
-import { fetchWorkers, createWorkerListCard, selectWorker, initializeAddWorkerModal } from '../shared.js'
 import { Loader } from '../../../render/loader.js'
 import { Dialog } from '../../../render/dialog.js'
+import { fetchWorkers } from '../fetch.js'
+import { createWorkerListCard } from '../render.js'
+import { selectWorker } from '../select.js'
+import { initializeAddWorkerModal } from '../modal.js'
+import { handleException } from '../../../utility/handle-exception.js'
 
 const projectContainer = document.querySelector('.project-container')
 const addWorkerButton = document.querySelector('#add_worker_button')
@@ -13,7 +17,14 @@ if (!thisProjectId || thisProjectId.trim() === '') {
 
 if (addWorkerModalTemplate) {
     addWorkerButton.addEventListener('click', async () => {
-        initializeAddWorkerModal(thisProjectId, 'users')
+        const params = new URLSearchParams()
+        params.append('status', 'unassigned')
+        params.append('projectReferenceId', thisProjectId)
+        params.append('excludeProjectTerminated', 'true')
+
+        const endpoint = `workers?${params.toString()}`
+
+        initializeAddWorkerModal(thisProjectId, endpoint)
 
         addWorkerModalTemplate.classList.add('flex-col')
         addWorkerModalTemplate.classList.remove('no-display')
@@ -24,6 +35,7 @@ if (addWorkerModalTemplate) {
 
             const workers = await fetchWorkers(
                 thisProjectId,
+                `workers?${params.toString()}`,
                 null,
                 0,
                 'users'

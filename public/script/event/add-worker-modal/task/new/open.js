@@ -1,6 +1,10 @@
-import { fetchWorkers, createWorkerListCard, selectWorker, initializeAddWorkerModal } from '../../shared.js'
 import { Loader } from '../../../../render/loader.js'
 import { Dialog } from '../../../../render/dialog.js'
+import { handleException } from '../../../../utility/handle-exception.js'
+import { fetchWorkers } from '../../fetch.js'
+import { createWorkerListCard } from '../../render.js'
+import { selectWorker } from '../../select.js'
+import { initializeAddWorkerModal } from '../../modal.js'
 
 const addTaskForm = document.querySelector('#add_task_form')
 const addWorkerButton = addTaskForm.querySelector('#add_worker_button')
@@ -13,7 +17,10 @@ if (!projectId || projectId.trim() === '') {
 
 if (addWorkerModalTemplate) {
     addWorkerButton.addEventListener('click', async () => {
-        initializeAddWorkerModal(projectId)
+        initializeAddWorkerModal(projectId, {
+            searchEndpoint: '/api/workers/search',
+            infiniteScrollEndpoint: '/api/workers/infinite-scroll'
+        })
 
         addWorkerModalTemplate.classList.add('flex-col')
         addWorkerModalTemplate.classList.remove('no-display')
