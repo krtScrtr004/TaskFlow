@@ -13,6 +13,7 @@ use ArrayIterator;
 
 class WorkerContainer extends Container
 {
+    private array $unassigned = [];
     private array $assigned = [];
     private array $terminated = [];
 
@@ -37,7 +38,9 @@ class WorkerContainer extends Container
         
         // Store in status-specific array based on worker status
         $status = $worker->getStatus();
-        if ($status === WorkerStatus::ASSIGNED) {
+        if ($status === WorkerStatus::UNASSIGNED) {
+            $this->unassigned[$workerId] = $worker;
+        } elseif ($status === WorkerStatus::ASSIGNED) {
             $this->assigned[$workerId] = $worker;
         } elseif ($status === WorkerStatus::TERMINATED) {
             $this->terminated[$workerId] = $worker;
@@ -54,6 +57,7 @@ class WorkerContainer extends Container
         unset($this->items[$workerId]);
         
         // Remove from status-specific arrays
+        unset($this->unassigned[$workerId]);
         unset($this->assigned[$workerId]);
         unset($this->terminated[$workerId]);
     }
@@ -63,7 +67,19 @@ class WorkerContainer extends Container
         if (!$item instanceof Worker) {
             throw new InvalidArgumentException('Only Worker instances can be checked in WorkerContainer.');
         }
-        return isset($this->items[$item->getId()]);
+        return isset($this->unassigned[$item->getId()]) 
+            || isset($this->assigned[$item->getId()]) 
+            || isset($this->terminated[$item->getId()]);
+    }
+
+    /**
+     * Gets workers with 'unassigned' status.
+     *
+     * @return array Array of Worker instances with unassigned status
+     */
+    public function getUnassigned(): array
+    {
+        return $this->unassigned;
     }
 
     /**
@@ -95,6 +111,7 @@ class WorkerContainer extends Container
     public function getByStatus(WorkerStatus $status): array
     {
         return match($status) {
+            WorkerStatus::UNASSIGNED => $this->unassigned,
             WorkerStatus::ASSIGNED => $this->assigned,
             WorkerStatus::TERMINATED => $this->terminated,
         };
@@ -112,7 +129,10 @@ class WorkerContainer extends Container
      */
     public function get(int|string $key): ?Worker
     {
-        return $this->items[$key] ?? null;
+        return $this->unassigned[$key] ?? 
+            $this->assigned[$key] ?? 
+            $this->terminated[$key] ?? 
+            null;
     }
 
     /**
@@ -126,7 +146,7 @@ class WorkerContainer extends Container
      */
     public function getItems(): array 
     {
-        return array_merge($this->assigned, $this->terminated);
+        return array_merge($this->unassigned, $this->assigned, $this->terminated);
     }
 
     public function getIterator(): Traversable

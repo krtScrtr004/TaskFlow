@@ -37,10 +37,10 @@ async function fetchFromDatabase(projectId, endpoint, key = null, offset) {
             throw new Error('Workers data not found!')
         }
 
+        isFetchingWorkers = false
         return response.data
     } catch (error) {
-        throw error
-    } finally {
         isFetchingWorkers = false
+        throw error
     }
 }

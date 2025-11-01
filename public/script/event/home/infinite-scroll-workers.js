@@ -53,7 +53,13 @@ async function asyncFunction(offset) {
             throw new Error('Project ID not found.')
         }
 
-        const response = await Http.GET(`projects/${projectId}/workers?offset=${offset}`)
+        const queryParams = new URLSearchParams()
+        queryParams.append('status', 'assigned')
+        queryParams.append('excludeProjectTerminated', 'true')
+        queryParams.append('offset', offset)
+
+        const endpoint = `projects/${projectId}/workers?${queryParams.toString()}`
+        const response = await Http.GET(endpoint)
         if (!response?.data) {
             throw error
         }

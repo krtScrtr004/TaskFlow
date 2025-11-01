@@ -127,116 +127,147 @@ class ProjectWorkerModel extends Model
         }
 	}
 
-    /**
-     * Searches for available workers using full-text search.
-     *
-     * Performs a full-text search on user fields (first name, middle name, last name, bio, email)
-     * and returns workers who are NOT currently assigned to any ongoing project.
-     *
-     * When projectId is provided:
-     * - Searches only available workers (not on ongoing projects)
-     * - Excludes workers who were terminated from that specific project (to prevent re-hiring)
-     *
-     * When projectId is null:
-     * - Searches all available workers globally
-     *
-     * @param string $key The search key used for full-text search against user fields.
-     * @param int|UUID|null $projectId (optional) Project ID to exclude terminated workers from that project.
-     * @param array $options (optional) Search options:
-     *      - excludeProjectTerminated: bool (default: true) Exclude workers terminated from the specified project
-     *      - limit: int (default 10) Maximum number of results to return.
-     *      - offset: int (default 0) Number of results to skip (for pagination).
-     *
-     * @throws InvalidArgumentException If the project ID is invalid or the search key is empty.
-     * @throws DatabaseException If a database error occurs during the search.
-     *
-     * @return array|null Array of User instances matching the search, or null if no results found.
-     */
     public static function search(
-        string $key,
+        string|null $key = null,
         int|UUID|null $projectId = null,
-        array $options = [
-            'projectReferenceId' => null,
-            'excludeProjectTerminated' => true,
+        WorkerStatus|null $status = null,
+        $options = [
             'limit' => 10,
             'offset' => 0,
-        ]): ?array
-    {
-        if (trimOrNull($key) === null) {
-            throw new InvalidArgumentException('Search key cannot be empty.');
-        }
-
-        $projectId = null;
-        if ($options['projectReferenceId'] && is_int($options['projectReferenceId'])) {
-            $projectId = $options['projectReferenceId'];
-            if ($projectId < 1) {
-                throw new InvalidArgumentException('Invalid project ID provided.');
-            }
-        } elseif ($projectId && !is_string($projectId)) {
-            $projectId = UUID::fromString($options['projectReferenceId']);
-        }
-
-        $instance = new self();
+        ]
+    ): ?WorkerContainer {
         try {
-            $params = [
-                ':key' => $key,
-                ':role' => Role::WORKER->value,
-                ':assignedStatus' => WorkerStatus::ASSIGNED->value,
-                ':completedStatus' => WorkStatus::COMPLETED->value,
-                ':cancelledStatus' => WorkStatus::CANCELLED->value,
-            ];
+            $instance = new self();
 
-            $queryString = "
-                SELECT
-                    u.*,
-                    GROUP_CONCAT(DISTINCT ujt.title) AS jobTitles
-                FROM `user` u
-                LEFT JOIN `userJobTitle` ujt ON u.id = ujt.userId
+            $where = [];
+            $params = [];
+
+            $query = "
+                SELECT 
+                    u.id,
+                    u.publicId,
+                    u.firstName,
+                    u.middleName,
+                    u.lastName,
+                    u.birthDate,
+                    u.gender,
+                    u.email,
+                    u.contactNumber,
+                    pw.status,
+                    GROUP_CONCAT(ujt.title) AS jobTitles
+                FROM
+                    `user` AS u
+                LEFT JOIN
+                    `projectWorker` AS pw
+                ON
+                    u.id = pw.workerId
+                LEFT JOIN
+                    `userJobTitle` AS ujt
+                ON
+                    u.id = ujt.userId
             ";
 
-            $where = [
-                'u.role = :role',
-                'MATCH(u.firstName, u.middleName, u.lastName, u.bio, u.email) AGAINST (:key IN NATURAL LANGUAGE MODE)'
-            ];
-
-            // Exclude workers assigned to any ongoing project
-            $where[] = "NOT EXISTS (
-                SELECT 1 
-                FROM `projectWorker` pw2
-                INNER JOIN `project` p2 ON pw2.projectId = p2.id
-                WHERE pw2.workerId = u.id
-                AND pw2.status = :assignedStatus
-                AND p2.status NOT IN (:completedStatus, :cancelledStatus)
-            )";
-
-            // If projectId provided, exclude workers terminated from that project
-            if ($projectId !== null && ($options['excludeProjectTerminated'] ?? true)) {
-                $queryString .= "
-                    LEFT JOIN `projectWorker` pw ON u.id = pw.workerId AND pw.projectId = " . 
-                    (is_int($projectId) ? ":projectIdJoin" : "(SELECT id FROM `project` WHERE publicId = :projectIdJoin)") . "
+            if ($key || !empty($key))  {
+                $query .= "
+                    MATCH(u.firstName, u.middleName, u.lastName, u.bio, u.email) 
+                    AGAINST (:key IN NATURAL LANGUAGE MODE)
                 ";
-                
-                $params[':projectIdJoin'] = ($projectId instanceof UUID) 
-                    ? UUID::toBinary($projectId) 
-                    : $projectId;
-                $params[':terminatedStatus'] = WorkerStatus::TERMINATED->value;
-                
-                $where[] = "(pw.id IS NULL OR pw.status != :terminatedStatus)";
+                $params[':key'] = $key;
             }
 
-            // Finalize query
-            $queryString .= ' WHERE ' . implode(' AND ', $where);
-            $queryString .= ' GROUP BY u.id';
+            if ($projectId) {
+                $where[] = is_int($projectId)
+                    ? "pw.projectId = :projectId"
+                    : "pw.projectId = (SELECT id FROM `project` WHERE publicId = :projectId)";
+                $params[':projectId'] = is_int($projectId)
+                    ? $projectId
+                    : UUID::toBinary($projectId);
+            }
+
+            if ($status) {
+                /**
+                 * Workers are considered available if they:
+                 * 1. Have no projectWorker records at all (never assigned), OR
+                 * 2. Only have assignments to completed/cancelled projects (finished their work), OR
+                 * 3. Only have terminated status in projects (removed from projects)
+                 *
+                 * When projectId is provided:
+                 * - Returns available workers but additionally excludes those terminated in that specific project
+                 * - If excludeProjectTerminated=true: excludes workers who were terminated from that project
+                 * - If excludeProjectTerminated=false: includes workers even if terminated from that project (as long as not on other ongoing projects)
+                 */
+                if ($status === WorkerStatus::UNASSIGNED) {
+                    $params[':assignedStatus'] = WorkerStatus::ASSIGNED->value;
+                    $params[':completedStatus'] = WorkStatus::COMPLETED->value;
+                    $params[':cancelledStatus'] = WorkStatus::CANCELLED->value;
+
+                    // Core rule: Exclude workers assigned to any ongoing project
+                    $where[] = "pw.id IS NULL OR NOT EXISTS (
+                        SELECT 1
+                        FROM 
+                            `projectWorker` AS pw2
+                        INNER JOIN 
+                            `project` AS p2 
+                        ON 
+                            pw2.projectId = p2.id
+                        WHERE 
+                            pw2.workerId = u.id
+                        AND 
+                            pw2.status = :assignedStatus
+                        AND 
+                            p2.status NOT IN (
+                                :completedStatus, :cancelledStatus
+                            )
+                    )";
+
+                    if ($projectId && ($options['excludeProjectTerminated'])) {
+                        // Exclude workers terminated from this specific project
+                        $where[] = "NOT EXISTS (
+                            SELECT 1
+                            FROM 
+                                `projectWorker` AS pw3
+                            WHERE 
+                                pw3.workerId = u.id
+                            AND 
+                                pw3.projectId = " . (is_int($projectId) 
+                                ? ":projectIdTermCheck" 
+                                : "(SELECT id 
+                                    FROM 
+                                        `project` 
+                                    WHERE 
+                                        publicId = :projectIdTermCheck
+                                )") . "
+                            AND 
+                                pw3.status = :terminatedStatus
+                        )";
+                        $params[':terminatedStatus'] = WorkerStatus::TERMINATED->value;
+                        $params[':projectIdTermCheck'] = is_int($projectId)
+                            ? $projectId
+                            : UUID::toBinary($projectId);
+                    }
+                } else {
+                    $where[] = "pw.status = :status";
+                    $params[':status'] = $status->value;
+                }
+            }
+
+            $where[] = "u.role = :role";
+            $params[':role'] = Role::WORKER->value;
+
+            if (!empty($where)) {
+                $query .= " WHERE " . implode(' AND ', $where);
+            }
+            $query .= " GROUP BY u.id";
 
             // Pagination
             if (isset($options['limit'])) {
-                $queryString .= ' LIMIT ' . intval($options['limit']);
+                $query .= " LIMIT " . intval($options['limit']);
             }
             if (isset($options['offset'])) {
-                $queryString .= ' OFFSET ' . intval($options['offset']);
+                $query .= " OFFSET " . intval($options['offset']);
             }
 
-            $statement = $instance->connection->prepare($queryString);
+            $statement = $instance->connection->prepare($query);
             $statement->execute($params);
             $result = $statement->fetchAll();
 
@@ -244,14 +275,14 @@ class ProjectWorkerModel extends Model
                 return null;
             }
 
-            $users = [];
+            $workers = new WorkerContainer();
             foreach ($result as $row) {
                 $row['jobTitles'] = $row['jobTitles'] 
                     ? explode(',', $row['jobTitles']) 
                     : [];
-                $users[] = User::fromArray($row);
+                $workers->add(Worker::createPartial($row));
             }
-            return $users;
+            return $workers;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
@@ -521,308 +552,6 @@ class ProjectWorkerModel extends Model
         } catch (Exception $e) {
             throw $e;
         }
-    }
-
-    /**
-     * Retrieves a list of users (workers) filtered by their assignment status and optionally by project.
-     *
-     * This is the main entry point that delegates to specific private methods based on the status.
-     *
-     * Logic:
-     * - If status is UNASSIGNED: delegates to findUnassignedWorkers()
-     * - If status is ASSIGNED: delegates to findAssignedWorkers()
-     * - If status is TERMINATED: delegates to findTerminatedWorkers()
-     *
-     * @param WorkerStatus $status The worker's assignment status to filter by (ASSIGNED, UNASSIGNED, or TERMINATED).
-     * @param int|UUID|null $projectId (optional) The project ID (int) or public project UUID (UUID) to filter workers by project.
-     * @param array $options (optional) Query options:
-     *      - excludeProjectTerminated: bool (default: false) When status=UNASSIGNED and projectId provided, exclude terminated workers
-     *      - limit: int Maximum number of users to return (default: 10)
-     *      - offset: int Number of users to skip for pagination (default: 0)
-     *
-     * @return array|null Array of User instances matching the criteria, or null if no users found.
-     *
-     * @throws InvalidArgumentException If projectId is invalid
-     * @throws DatabaseException If a database error occurs during the query.
-     */
-    public static function findByStatus(
-        WorkerStatus $status,
-        array $options = [
-            'projectReferenceId' => null,
-            'excludeProjectTerminated' => false,
-            'limit' => 10,
-            'offset' => 0,
-        ]
-    ): ?array
-    {
-        if ($options['projectReferenceId'] !== null) {
-            $projectId = $options['projectReferenceId'];
-            if (is_int($projectId) && $projectId < 1) {
-                throw new InvalidArgumentException('Invalid project ID provided.');
-            }
-        } else {
-            $projectId = null;
-        }
-
-        return match($status) {
-            WorkerStatus::UNASSIGNED => self::findUnassignedWorkers($projectId, $options),
-            WorkerStatus::ASSIGNED => self::findAssignedWorkers($projectId, $options),
-            WorkerStatus::TERMINATED => self::findTerminatedWorkers($projectId, $options),
-        };
-    }
-
-    /**
-     * Finds workers who are unassigned (available for new work).
-     *
-     * Returns workers who are NOT currently assigned to any ongoing project.
-     * Workers are considered available if they:
-     * 1. Have no projectWorker records at all (never assigned), OR
-     * 2. Only have assignments to completed/cancelled projects (finished their work), OR
-     * 3. Only have terminated status in projects (removed from projects)
-     *
-     * When projectId is provided:
-     * - Returns available workers but additionally excludes those terminated in that specific project
-     * - If excludeProjectTerminated=true: excludes workers who were terminated from that project
-     * - If excludeProjectTerminated=false: includes workers even if terminated from that project (as long as not on other ongoing projects)
-     *
-     * Key Rule: Workers can only be assigned to ONE ongoing project at a time.
-     *
-     * @param int|UUID|null $projectId Optional project filter (to exclude terminated workers from that project)
-     * @param array $options Query options (excludeProjectTerminated, limit, offset)
-     * @return array|null Array of User instances or null if none found
-     * @throws InvalidArgumentException|DatabaseException
-     */
-    private static function findUnassignedWorkers(int|UUID|null $projectId, array $options): ?array
-    {
-        if ($projectId && is_int($projectId) && $projectId < 1) {
-            throw new InvalidArgumentException('Invalid project ID provided.');
-        }
-
-        $instance = new self();
-        try {
-            $params = [':role' => Role::WORKER->value];
-
-            $queryString = "
-                SELECT
-                    u.*,
-                    GROUP_CONCAT(DISTINCT ujt.title) AS jobTitles
-                FROM `user` u
-                LEFT JOIN `userJobTitle` ujt ON u.id = ujt.userId
-            ";
-
-            $where = ['u.role = :role'];
-
-            if ($projectId !== null) {
-                // Project-specific: return workers not assigned to any ongoing project
-                // and exclude those terminated in this specific project
-                $queryString .= "
-                    LEFT JOIN `projectWorker` pw ON u.id = pw.workerId AND pw.projectId = " . 
-                    (is_int($projectId) ? ":projectIdJoin" : "(SELECT id FROM `project` WHERE publicId = :projectIdJoin)") . "
-                    LEFT JOIN `project` p ON pw.projectId = p.id
-                ";
-                
-                $params[':projectIdJoin'] = ($projectId instanceof UUID) 
-                    ? UUID::toBinary($projectId) 
-                    : $projectId;
-
-                // Only include workers who are NOT assigned to any ongoing project
-                $where[] = "NOT EXISTS (
-                    SELECT 1 
-                    FROM `projectWorker` pw2
-                    INNER JOIN `project` p2 ON pw2.projectId = p2.id
-                    WHERE pw2.workerId = u.id
-                    AND pw2.status = :assignedStatus
-                    AND p2.status NOT IN (:completedStatus, :cancelledStatus)
-                )";
-                $params[':completedStatus'] = WorkStatus::COMPLETED->value;
-                $params[':cancelledStatus'] = WorkStatus::CANCELLED->value;
-                $params[':assignedStatus'] = WorkerStatus::ASSIGNED->value;
-
-                if ($options['excludeProjectTerminated']) {
-                    // Also exclude workers who were terminated in this specific project
-                    $where[] = "(pw.id IS NULL OR pw.status != :terminatedStatus)";
-                    $params[':terminatedStatus'] = WorkerStatus::TERMINATED->value;
-                }
-            } else {
-                // Global: users not assigned to any ongoing project
-                $queryString .= "
-                    LEFT JOIN `projectWorker` pw ON u.id = pw.workerId
-                    LEFT JOIN `project` p ON pw.projectId = p.id
-                ";
-
-                // Only include workers who are NOT assigned to any ongoing project
-                $where[] = "NOT EXISTS (
-                    SELECT 1 
-                    FROM `projectWorker` pw2
-                    INNER JOIN `project` p2 ON pw2.projectId = p2.id
-                    WHERE pw2.workerId = u.id
-                    AND pw2.status = :assignedStatus
-                    AND p2.status NOT IN (:completedStatus, :cancelledStatus)
-                )";
-                $params[':completedStatus'] = WorkStatus::COMPLETED->value;
-                $params[':cancelledStatus'] = WorkStatus::CANCELLED->value;
-                $params[':assignedStatus'] = WorkerStatus::ASSIGNED->value;
-            }
-
-            return self::executeWorkerQuery($instance, $queryString, $where, $params, $options);
-        } catch (PDOException $e) {
-            throw new DatabaseException($e->getMessage());
-        }
-    }
-
-    /**
-     * Finds workers who are currently assigned to active projects.
-     *
-     * When projectId is provided: returns workers assigned to that specific project
-     * When projectId is null: returns workers assigned to any project
-     *
-     * @param int|UUID|null $projectId Optional project filter
-     * @param array $options Query options (limit, offset)
-     * @return array|null Array of User instances or null if none found
-     * @throws InvalidArgumentException|DatabaseException
-     */
-    private static function findAssignedWorkers(int|UUID|null $projectId, array $options): ?array
-    {
-        if ($projectId && is_int($projectId) && $projectId < 1) {
-            throw new InvalidArgumentException('Invalid project ID provided.');
-        }
-
-        $instance = new self();
-        try {
-            $params = [
-                ':role' => Role::WORKER->value,
-                ':status' => WorkerStatus::ASSIGNED->value
-            ];
-
-            $queryString = "
-                SELECT
-                    u.*,
-                    GROUP_CONCAT(DISTINCT ujt.title) AS jobTitles
-                FROM `user` u
-                LEFT JOIN `userJobTitle` ujt ON u.id = ujt.userId
-                INNER JOIN `projectWorker` pw ON u.id = pw.workerId
-            ";
-
-            $where = ['u.role = :role', 'pw.status = :status'];
-
-            if ($projectId !== null) {
-                // Project-specific: workers assigned to this project
-                $queryString .= "INNER JOIN `project` p ON pw.projectId = p.id ";
-                
-                $projectIdColumn = is_int($projectId) ? 'p.id' : 'p.publicId';
-                $where[] = "$projectIdColumn = :projectId";
-                $params[':projectId'] = ($projectId instanceof UUID) 
-                    ? UUID::toBinary($projectId) 
-                    : $projectId;
-            }
-
-            return self::executeWorkerQuery($instance, $queryString, $where, $params, $options);
-        } catch (PDOException $e) {
-            throw new DatabaseException($e->getMessage());
-        }
-    }
-
-    /**
-     * Finds workers who have been terminated from projects.
-     *
-     * When projectId is provided: returns workers terminated from that specific project
-     * When projectId is null: returns workers terminated from any project
-     *
-     * @param int|UUID|null $projectId Optional project filter
-     * @param array $options Query options (limit, offset)
-     * @return array|null Array of User instances or null if none found
-     * @throws InvalidArgumentException|DatabaseException
-     */
-    private static function findTerminatedWorkers(int|UUID|null $projectId, array $options): ?array
-    {
-        if ($projectId && is_int($projectId) && $projectId < 1) {
-            throw new InvalidArgumentException('Invalid project ID provided.');
-        }
-
-        $instance = new self();
-        try {
-            $params = [
-                ':role' => Role::WORKER->value,
-                ':status' => WorkerStatus::TERMINATED->value
-            ];
-
-            $queryString = "
-                SELECT
-                    u.*,
-                    GROUP_CONCAT(DISTINCT ujt.title) AS jobTitles
-                FROM `user` u
-                LEFT JOIN `userJobTitle` ujt ON u.id = ujt.userId
-                INNER JOIN `projectWorker` pw ON u.id = pw.workerId
-            ";
-
-            $where = ['u.role = :role', 'pw.status = :status'];
-
-            if ($projectId !== null) {
-                // Project-specific: workers terminated from this project
-                $queryString .= "INNER JOIN `project` p ON pw.projectId = p.id ";
-                
-                $projectIdColumn = is_int($projectId) ? 'p.id' : 'p.publicId';
-                $where[] = "$projectIdColumn = :projectId";
-                $params[':projectId'] = ($projectId instanceof UUID) 
-                    ? UUID::toBinary($projectId) 
-                    : $projectId;
-            }
-
-            return self::executeWorkerQuery($instance, $queryString, $where, $params, $options);
-        } catch (PDOException $e) {
-            throw new DatabaseException($e->getMessage());
-        }
-    }
-
-    /**
-     * Executes a worker query and returns the results as User instances.
-     *
-     * This helper method finalizes the query with WHERE, GROUP BY, and pagination,
-     * then executes it and transforms the results into User objects.
-     *
-     * @param self $instance Model instance with database connection
-     * @param string $queryString Base SQL query string
-     * @param array $where Array of WHERE conditions
-     * @param array $params Query parameters
-     * @param array $options Query options (limit, offset)
-     * @return array|null Array of User instances or null if none found
-     */
-    private static function executeWorkerQuery(
-        self $instance, 
-        string $queryString, 
-        array $where, 
-        array $params, 
-        array $options
-    ): ?array
-    {
-        // Finalize query
-        $queryString .= ' WHERE ' . implode(' AND ', $where);
-        $queryString .= ' GROUP BY u.id';
-
-        // Pagination
-        if (isset($options['limit'])) {
-            $queryString .= ' LIMIT ' . intval($options['limit']);
-        }
-        if (isset($options['offset'])) {
-            $queryString .= ' OFFSET ' . intval($options['offset']);
-        }
-
-        $statement = $instance->connection->prepare($queryString);
-        $statement->execute($params);
-        $result = $statement->fetchAll();
-
-        if (!$instance->hasData($result)) {
-            return null;
-        }
-
-        $users = [];
-        foreach ($result as $row) {
-            $row['jobTitles'] = $row['jobTitles'] 
-                ? explode(',', $row['jobTitles']) 
-                : [];
-            $users[] = User::fromArray($row);
-        }
-        return $users;
     }
 
     /**

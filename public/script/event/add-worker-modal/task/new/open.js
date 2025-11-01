@@ -13,7 +13,7 @@ const projectId = addTaskForm.dataset.projectid
 if (!projectId || projectId.trim() === '') {
     console.error('Project ID not found.')
     Dialog.somethingWentWrong()
-}
+}W
 
 if (addWorkerModalTemplate) {
     addWorkerButton.addEventListener('click', async () => {

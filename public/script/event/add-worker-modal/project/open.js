@@ -19,10 +19,9 @@ if (addWorkerModalTemplate) {
     addWorkerButton.addEventListener('click', async () => {
         const params = new URLSearchParams()
         params.append('status', 'unassigned')
-        params.append('projectReferenceId', thisProjectId)
         params.append('excludeProjectTerminated', 'true')
 
-        const endpoint = `workers?${params.toString()}`
+        const endpoint = `projects/${thisProjectId}/workers?${params.toString()}`
 
         initializeAddWorkerModal(thisProjectId, endpoint)
 
@@ -35,10 +34,9 @@ if (addWorkerModalTemplate) {
 
             const workers = await fetchWorkers(
                 thisProjectId,
-                `workers?${params.toString()}`,
+                endpoint,
                 null,
-                0,
-                'users'
+                0
             )
             workers.forEach(worker => createWorkerListCard(worker))
             selectWorker()

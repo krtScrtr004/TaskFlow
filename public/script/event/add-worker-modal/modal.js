@@ -93,14 +93,14 @@ export async function addWorker(
 async function addWorkerButtonEvent(e, projectId, confirmAddWorkerButton, asyncFunction, action, onSuccess) {
     e.preventDefault()
 
-    if (selectedUsers.length === 0) {
+    if (selectedUsers.size === 0) {
         Dialog.errorOccurred('No workers selected. Please select at least one worker to add.')
         return
     }
 
     if (!await confirmationDialog(
         'Add Workers',
-        `Are you sure you want to add ${selectedUsers.length} worker(s) to this project?`,
+        `Are you sure you want to add ${selectedUsers.size} worker(s) to this project?`,
     )) return
 
     if (!projectId) {
@@ -111,7 +111,7 @@ async function addWorkerButtonEvent(e, projectId, confirmAddWorkerButton, asyncF
 
     Loader.patch(confirmAddWorkerButton.querySelector('.text-w-icon'))
     try {
-        const result = await asyncFunction(projectId, selectedUsers)
+        const result = await asyncFunction(projectId, Array.from(selectedUsers.values()))
         
         if (typeof action === 'function') { 
             action(result)

@@ -94,29 +94,7 @@ class ProjectWorkerEndpoint
     }
 
 
-    /**
-     * Retrieves project workers based on provided criteria.
-     *
-     * This method handles GET requests to fetch workers associated with a specific project.
-     * It supports searching by a key, filtering by worker status, and pagination.
-     * The method enforces session authorization and request method validation.
-     *
-     * Query Parameters:
-     *      - key: string (optional) Search term to filter workers.
-     *      - status: string (optional) Worker status to filter results.
-     *      - excludeProjectTerminated: bool (optional) Exclude workers from terminated projects.
-     *      - limit: int (optional) Maximum number of workers to return (default: 10).
-     *      - offset: int (optional) Number of workers to skip for pagination (default: 0).
-     *
-     * @param array $args Associative array of arguments:
-     *      - projectId: string|UUID|null Project identifier to filter workers by project.
-     *
-     * @throws ForbiddenException If the request method is not GET or the session is unauthorized.
-     * @throws ValidationException If validation of input parameters fails.
-     * @throws Exception For any other unexpected errors.
-     *
-     * @return void Outputs a JSON response with the list of workers or an appropriate message.
-     */
+
     public static function getByKey(array $args = []): void
     {
         try {
@@ -135,45 +113,35 @@ class ProjectWorkerEndpoint
                 throw new ForbiddenException('Project ID is required.');
             }
 
-            $workers = [];
-            // Check if 'key' parameter is present in the query string
+            $key = null;
             if (isset($_GET['key']) && trim($_GET['key']) !== '') {
-                $workers = ProjectWorkerModel::search(
-                    trimOrNull($_GET['key'] ?? '') ?? '',
-                    $projectId
-                );
-            } elseif (isset($_GET['status']) && trim($_GET['status']) !== '') {
-                if (isset($_GET['projectReference']) && trim($_GET['projectReferenceId']) === '') {
-                    throw new ValidationException('Project Reference ID cannot be empty.');
-                }
-
-                if (isset($_GET['projectReferenceId']) && !isset($_GET['excludeProjectTerminated'])) {
-                    throw new ValidationException('When filtering by Project Reference ID, excludeProjectTerminated parameter must also be provided.');
-                }
-
-                if (!isset($_GET['projectReferenceId']) && isset($_GET['excludeProjectTerminated'])) {
-                    throw new ValidationException('When filtering by excludeProjectTerminated, projectReferenceId parameter must also be provided.');
-                }
-
-                $workers = ProjectWorkerModel::findByStatus(
-                    WorkerStatus::from(trimOrNull($_GET['status'] ?? '') ?? ''),
-                    [
-                        'projectReferenceId'        => isset($_GET['projectReferenceId']) ? UUID::fromString($_GET['projectReferenceId']) : null,
-                        'excludeProjectTerminated'  => isset($_GET['excludeProjectTerminated']) ? (bool) $_GET['excludeProjectTerminated'] : false,
-                        'limit'                     => isset($_GET['limit']) ? (int) $_GET['limit'] : 10,
-                        'offset'                    => isset($_GET['offset']) ? (int) $_GET['offset'] : 0,
-                    ]
-                );
-            } else {
-                $workers = ProjectWorkerModel::findByProjectId(
-                    $projectId,
-                    [
-                        'limit'     => isset($_GET['limit']) ? (int) $_GET['limit'] : 10,
-                        'offset'    => isset($_GET['offset']) ? (int) $_GET['offset'] : 0,
-                    ]
-                );
+                $key = trimOrNull($_GET['key'] ?? '');
             }
 
+            $status = null;
+            if (isset($_GET['status']) && trim($_GET['status']) !== '') {
+                $status = WorkerStatus::from(trimOrNull($_GET['status'] ?? ''));
+            }
+
+            $excludeProjectTerminated = false;
+            if (isset($_GET['excludeProjectTerminated']) && trim($_GET['excludeProjectTerminated']) !== '') {
+                $excludeProjectTerminated = (bool) $_GET['excludeProjectTerminated'];
+                if ($excludeProjectTerminated && !isset($projectId)) {
+                    throw new ForbiddenException('Project ID is required when excluding terminated project workers.');
+                }
+            }
+
+            $workers = [];
+            $workers = ProjectWorkerModel::search(
+                $key,
+                $projectId,
+                $status,
+                [
+                    'excludeProjectTerminated'  => $excludeProjectTerminated,
+                    'limit'                     => isset($_GET['limit']) ? (int) $_GET['limit'] : 10,
+                    'offset'                    => isset($_GET['offset']) ? (int) $_GET['offset'] : 0,
+                ]
+            );
             if (!$workers) {
                 Response::success([], 'No workers found for the specified project.');
             } else {
