@@ -14,6 +14,7 @@ use App\Enumeration\Role;
 use App\Dependent\Worker;
 use App\Enumeration\WorkerStatus;
 use App\Enumeration\WorkStatus;
+use App\Exception\NotFoundException;
 use App\Middleware\Csrf;
 use App\Model\ProjectWorkerModel;
 use App\Model\WorkerModel;
@@ -75,14 +76,16 @@ class ProjectWorkerEndpoint
 
             $worker = ProjectWorkerModel::findByWorkerId($workerId,  $projectId, true);
             if (!$worker) {
-                Response::error( 'Worker not found for the specified project.', [], 404);
-            } else {
-                $performance = WorkerPerformanceCalculator::calculate($worker->getAdditionalInfo('projectHistory'));
-                $worker->addAdditionalInfo('performance', $performance['overallScore']);
-                Response::success([$worker], 'Worker fetched successfully.');
-            }
+                throw new NotFoundException('Worker not found.');
+            } 
+
+            $performance = WorkerPerformanceCalculator::calculate($worker->getAdditionalInfo('projectHistory'));
+            $worker->addAdditionalInfo('performance', $performance['overallScore']);
+            Response::success([$worker], 'Worker fetched successfully.');
         } catch (ValidationException $e) {
             Response::error('Validation Failed.',$e->getErrors(),422);
+        } catch (NotFoundException $e) {
+            Response::error('Resource Not Found.', [$e->getMessage()], 404);
         } catch (ForbiddenException $e) {
             Response::error('Forbidden.', [], 403);
         } catch (Exception $e) {
@@ -140,10 +143,22 @@ class ProjectWorkerEndpoint
                     $projectId
                 );
             } elseif (isset($_GET['status']) && trim($_GET['status']) !== '') {
-                $workers = ProjectWorkerModel::getByStatus(
+                if (isset($_GET['projectReference']) && trim($_GET['projectReferenceId']) === '') {
+                    throw new ValidationException('Project Reference ID cannot be empty.');
+                }
+
+                if (isset($_GET['projectReferenceId']) && !isset($_GET['excludeProjectTerminated'])) {
+                    throw new ValidationException('When filtering by Project Reference ID, excludeProjectTerminated parameter must also be provided.');
+                }
+
+                if (!isset($_GET['projectReferenceId']) && isset($_GET['excludeProjectTerminated'])) {
+                    throw new ValidationException('When filtering by excludeProjectTerminated, projectReferenceId parameter must also be provided.');
+                }
+
+                $workers = ProjectWorkerModel::findByStatus(
                     WorkerStatus::from(trimOrNull($_GET['status'] ?? '') ?? ''),
-                    $projectId,
                     [
+                        'projectReferenceId'        => isset($_GET['projectReferenceId']) ? UUID::fromString($_GET['projectReferenceId']) : null,
                         'excludeProjectTerminated'  => isset($_GET['excludeProjectTerminated']) ? (bool) $_GET['excludeProjectTerminated'] : false,
                         'limit'                     => isset($_GET['limit']) ? (int) $_GET['limit'] : 10,
                         'offset'                    => isset($_GET['offset']) ? (int) $_GET['offset'] : 0,
@@ -176,7 +191,6 @@ class ProjectWorkerEndpoint
             Response::error('Unexpected Error.', ['An unexpected error occurred. Please try again.'], 500);
         }
     }
-
 
     /**
      * Adds multiple workers to a project.

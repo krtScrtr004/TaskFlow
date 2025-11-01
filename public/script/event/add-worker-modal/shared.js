@@ -215,7 +215,7 @@ async function fetchFromDatabase(projectId, key = null, offset) {
         const param = (key) ? key : ''
         const endpoint = (searchEndpoint === 'projects-workers')
             ? `projects/${projectId}/workers?key=${param}&offset=${offset}&excludeProjectTerminated=true`
-            : `projects/${projectId}/workers?key=${param}&status=unassigned&offset=${offset}&excludeProjectTerminated=true`
+            : `workers?key=${param}&status=unassigned&offset=${offset}&projectReferenceId=${projectId}&excludeProjectTerminated=true`
         const response = await Http.GET(endpoint)
         if (!response) {
             throw new Error('Workers data not found!')

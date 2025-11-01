@@ -47,10 +47,10 @@ class WorkValidator extends Validator
             return;
         }
 
-        $currentDate = new DateTime();
-        if ($startDateTime < $currentDate) {
-            $this->errors[] = 'Start date cannot be in the past.';
-        }
+        // $currentDate = new DateTime();
+        // if ($startDateTime < $currentDate) {
+        //     $this->errors[] = 'Start date cannot be in the past.';
+        // }
     }
 
     /**

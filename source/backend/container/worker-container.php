@@ -8,6 +8,8 @@ use App\Entity\User;
 use App\Enumeration\Role;
 use App\Enumeration\WorkerStatus;
 use InvalidArgumentException;
+use Traversable;
+use ArrayIterator;
 
 class WorkerContainer extends Container
 {
@@ -125,6 +127,11 @@ class WorkerContainer extends Container
     public function getItems(): array 
     {
         return array_merge($this->assigned, $this->terminated);
+    }
+
+    public function getIterator(): Traversable
+    {  
+        return new ArrayIterator($this->getItems());
     }
 
     /**

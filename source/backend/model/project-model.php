@@ -232,6 +232,7 @@ class ProjectModel extends Model
                                 'workerEmail', w.email,
                                 'workerProfileLink', w.profileLink,
                                 'workerGender', w.gender,
+                                'workerStatus', pw.status,
                                 'workerJobTitles', COALESCE(
                                     (
                                         SELECT CONCAT('[', GROUP_CONCAT(CONCAT('\"', wjt.title, '\"')), ']')
@@ -245,8 +246,6 @@ class ProjectModel extends Model
                         FROM projectWorker pw
                         INNER JOIN user w ON pw.workerId = w.id
                         WHERE pw.projectId = p.id
-                        AND pw.status != '" . WorkerStatus::TERMINATED->value . "'
-                        AND pw.status != '" . WorkerStatus::UNASSIGNED->value . "'
                     ),
                     '[]'
                 ) AS projectWorkers";
@@ -381,6 +380,7 @@ class ProjectModel extends Model
                         'lastName'      => $worker['workerLastName'],
                         'email'         => $worker['workerEmail'] ?? null,
                         'profileLink'   => $worker['workerProfileLink'] ?? null,
+                        'status'        => WorkerStatus::from($worker['workerStatus']),
                         'jobTitles'     => new JobTitleContainer(json_decode($worker['workerJobTitles'], true))
                     ]));
                 }

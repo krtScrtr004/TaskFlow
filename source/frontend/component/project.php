@@ -24,7 +24,7 @@ $projectData = [
     'status'                => $project->getStatus(),
     'tasks'                 => $project->getTasks(),
     'phases'                => $project->getPhases(),
-    'workers'               => $project->getWorkers(),
+    'workers'               => $project->getWorkers()->getAssigned(),
 ];
 ?>
 <!-- Main Content -->
@@ -289,7 +289,7 @@ $projectData = [
 
                 <!-- No Workers Wall -->
                 <div
-                    class="no-workers-wall no-content-wall <?= $projectData['workers']->count() > 0 ? 'no-display' : 'flex-col' ?>">
+                    class="no-workers-wall no-content-wall <?= count($projectData['workers']) > 0 ? 'no-display' : 'flex-col' ?>">
                     <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No workers assigned" title="No workers assigned"
                         height="70">
                     <h3 class="center-text">No workers assigned to this project.</h3>
