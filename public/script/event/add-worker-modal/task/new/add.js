@@ -2,6 +2,7 @@ import { addWorker } from '../../modal.js'
 import { Dialog } from '../../../../render/dialog.js'
 import { Http } from '../../../../utility/http.js'
 import { handleException } from '../../../../utility/handle-exception.js'
+import { fetchWorkers } from '../../fetch.js'
 
 let isLoading = false
 export const workerIds = {}
@@ -16,7 +17,7 @@ if (!thisProjectId || thisProjectId.trim() === '') {
 try {
     await addWorker(
         thisProjectId,
-        async (projectId, workersId) => {},
+        async (projectId, workersId) => sendToBackend(projectId, workersId),
         (workersData) => action(workersData),
         () => {
             Dialog.operationSuccess('Workers Added.', 'The selected workers have been added to the task.')
@@ -273,7 +274,18 @@ async function sendToBackend(projectId, workerIds) {
 
 function action(workersData) {
     workersData.forEach(workerData => {
-        const taskWorkerCard = createTaskWorkerCard(workerData)
+        if (workerIds[workerData.id]) {
+            return
+        }
+
+        const taskWorkerCard = createTaskWorkerCard({
+            name: `${workerData.firstName} ${workerData.lastName}`,
+            id: workerData.id,
+            jobTitles: workerData.jobTitles,
+            performance: workerData.additionalInfo.performance,
+            completedTasks: workerData.additionalInfo.completedTasks,
+            profileImage: workerData.profilePicture
+        })
         const taskWorkerList = document.querySelector('#add_task_form .task-worker > .list')
         if (!taskWorkerList) throw new Error('Task worker list container not found.')
 

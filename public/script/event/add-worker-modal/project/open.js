@@ -32,12 +32,7 @@ if (addWorkerModalTemplate) {
             const workerList = addWorkerModalTemplate.querySelector('.worker-list > .list')
             Loader.full(workerList)
 
-            const workers = await fetchWorkers(
-                thisProjectId,
-                endpoint,
-                null,
-                0
-            )
+            const workers = await fetchWorkers(endpoint)
             workers.forEach(worker => createWorkerListCard(worker))
             selectWorker()
         } catch (error) {

@@ -217,8 +217,8 @@ class PhaseModel extends Model
                     ':publicId'             => UUID::toBinary($publicId),
                     ':name'                 => trimOrNull($phase->getName()),
                     ':description'          => trimOrNull($phase->getDescription()),
-                    ':startDateTime'        => formatDateTime($phase->getStartDateTime(), DateTime::ATOM),
-                    ':completionDateTime'   => formatDateTime($phase->getCompletionDateTime(), DateTime::ATOM),
+                    ':startDateTime'        => formatDateTime($phase->getStartDateTime()),
+                    ':completionDateTime'   => formatDateTime($phase->getCompletionDateTime()),
                     ':status'               => $phase->getStatus() ? $phase->getStatus()->value : WorkStatus::PENDING->value
                 ];
 
@@ -317,12 +317,12 @@ class PhaseModel extends Model
 
                 if (isset($data['startDateTime'])) {
                     $updateFields[] = 'startDateTime = :startDateTime';
-                    $params[':startDateTime'] = formatDateTime($data['startDateTime'], DateTime::ATOM);
+                    $params[':startDateTime'] = formatDateTime($data['startDateTime']);
                 }
 
                 if (isset($data['completionDateTime'])) {
                     $updateFields[] = 'completionDateTime = :completionDateTime';
-                    $params[':completionDateTime'] = formatDateTime($data['completionDateTime'], DateTime::ATOM);
+                    $params[':completionDateTime'] = formatDateTime($data['completionDateTime']);
                 }
 
                 // Only execute update if there are fields to update

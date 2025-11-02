@@ -43,7 +43,7 @@ class Worker extends User
         ?int $id,
         ?UUID $publicId,
         string $firstName,
-        string $middleName,
+        ?string $middleName,
         string $lastName,
         Gender $gender,
         DateTime $birthDate,

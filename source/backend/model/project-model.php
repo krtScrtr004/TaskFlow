@@ -716,8 +716,8 @@ class ProjectModel extends Model
             $projectDescription        =   trimOrNull($project->getDescription());
             $projectBudget             =   ($project->getBudget()) ?? 0.00;
             $projectStatus             =   $project->getStatus() ?? WorkStatus::PENDING;
-            $projectStartDateTime      =   formatDateTime($project->getStartDateTime(), DateTime::ATOM);
-            $projectCompletionDateTime =   formatDateTime($project->getCompletionDateTime(), DateTime::ATOM);
+            $projectStartDateTime      =   formatDateTime($project->getStartDateTime());
+            $projectCompletionDateTime =   formatDateTime($project->getCompletionDateTime());
             $projectPhases             =   $project->getPhases();
 
             
@@ -780,8 +780,8 @@ class ProjectModel extends Model
                         ':publicId'             => UUID::toBinary($phase->getPublicId()),
                         ':name'                 => $phase->getName(),
                         ':description'          => $phase->getDescription(),
-                        ':startDateTime'        => formatDateTime($phase->getStartDateTime(), DateTime::ATOM),
-                        ':completionDateTime'   => formatDateTime($phase->getCompletionDateTime(), DateTime::ATOM),
+                        ':startDateTime'        => formatDateTime($phase->getStartDateTime()),
+                        ':completionDateTime'   => formatDateTime($phase->getCompletionDateTime()),
                         ':status'               => $phase->getStatus()->value,
                     ]);
                 }
@@ -867,18 +867,18 @@ class ProjectModel extends Model
 
             if (isset($data['startDateTime'])) {
                 $updateFields[] = 'startDateTime = :startDateTime';
-                $params[':startDateTime'] = formatDateTime($data['startDateTime'], DateTime::ATOM);
+                $params[':startDateTime'] = formatDateTime($data['startDateTime']);
             }
 
             if (isset($data['completionDateTime'])) {
                 $updateFields[] = 'completionDateTime = :completionDateTime';
-                $params[':completionDateTime'] = formatDateTime($data['completionDateTime'], DateTime::ATOM);
+                $params[':completionDateTime'] = formatDateTime($data['completionDateTime']);
             }
 
             if (isset($data['actualCompletionDateTime'])) {
                 $updateFields[] = 'actualCompletionDateTime = :actualCompletionDateTime';
                 $params[':actualCompletionDateTime'] = $data['actualCompletionDateTime'] !== null 
-                    ? formatDateTime($data['actualCompletionDateTime'], DateTime::ATOM) 
+                    ? formatDateTime($data['actualCompletionDateTime']) 
                     : null;
             }
 

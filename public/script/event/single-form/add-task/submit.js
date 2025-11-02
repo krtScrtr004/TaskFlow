@@ -113,7 +113,7 @@ async function sendToBackend(inputs = {}, projectId) {
             startDateTime,
             completionDateTime,
             priority,
-            workerIds: Object.keys(workerIds).map(key => workerIds[key])
+            workerIds: Object.keys(workerIds)
         })
         if (!response) {
             throw error

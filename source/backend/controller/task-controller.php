@@ -38,8 +38,8 @@ class TaskController implements Controller
             }
 
             $tasks = Role::isProjectManager(Me::getInstance())
-                ? $tasks = TaskModel::findAllByProjectId(Me::getInstance()->getId())
-                : null;
+                ? TaskModel::findAllByProjectId($projectId)
+                : TaskModel::findAssignedToWorker(Me::getInstance()->getId(), $projectId);
             if (!$tasks) {
                 // No tasks found, assign an empty container
                 $tasks = new TaskContainer();

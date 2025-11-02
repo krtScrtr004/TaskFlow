@@ -95,7 +95,7 @@ function simplifyDate(DateTime $date): string
     }
 }
 
-function formatDateTime(DateTime $dateTime, string $format = 'o-m-d H:i:s'): string {
+function formatDateTime(DateTime $dateTime, string $format = 'Y-m-d H:i:s'): string {
     return $dateTime->format($format);
 }
 

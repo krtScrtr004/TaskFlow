@@ -15,7 +15,7 @@ function taskGridCard(Task $task, $projectId): string
     $status = $task->getStatus();
     $priority = $task->getPriority();
 
-    $redirect = REDIRECT_PATH . 'project' . DS . $projectId . DS . 'task' . DS . $id;
+    $redirect = REDIRECT_PATH . 'project' . DS . UUID::toString($projectId) . DS . 'task' . DS . $id;
 
     ob_start();
     ?>

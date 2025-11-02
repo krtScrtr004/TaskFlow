@@ -127,6 +127,27 @@ class ProjectWorkerModel extends Model
         }
 	}
 
+    /**
+     * Searches for workers based on provided criteria and returns a WorkerContainer of matching results.
+     *
+     * This method allows searching for workers by keyword, project association, and worker status.
+     * It supports full-text search on user fields, filtering by project ID (integer or UUID), and filtering by worker status.
+     * Special handling is provided for the UNASSIGNED status, including exclusion of workers assigned to ongoing projects
+     * and optionally excluding workers terminated from a specific project.
+     * The method also supports pagination via limit and offset options.
+     *
+     * @param string|null $key Optional search keyword for full-text search on user fields (firstName, middleName, lastName, bio, email).
+     * @param int|UUID|null $projectId Optional project identifier (integer ID or UUID) to filter workers by project association.
+     * @param WorkerStatus|null $status Optional worker status to filter results (e.g., ASSIGNED, UNASSIGNED, TERMINATED).
+     * @param array $options Optional associative array for additional options:
+     *      - limit: int (default 10) Maximum number of results to return.
+     *      - offset: int (default 0) Number of results to skip (for pagination).
+     *      - excludeProjectTerminated: bool (optional) If true and status is UNASSIGNED, excludes workers terminated from the specified project.
+     *
+     * @return WorkerContainer|null A WorkerContainer with matching Worker instances, or null if no results found.
+     *
+     * @throws DatabaseException If a database error occurs during the search.
+     */
     public static function search(
         string|null $key = null,
         int|UUID|null $projectId = null,
@@ -185,17 +206,6 @@ class ProjectWorkerModel extends Model
             }
 
             if ($status) {
-                /**
-                 * Workers are considered available if they:
-                 * 1. Have no projectWorker records at all (never assigned), OR
-                 * 2. Only have assignments to completed/cancelled projects (finished their work), OR
-                 * 3. Only have terminated status in projects (removed from projects)
-                 *
-                 * When projectId is provided:
-                 * - Returns available workers but additionally excludes those terminated in that specific project
-                 * - If excludeProjectTerminated=true: excludes workers who were terminated from that project
-                 * - If excludeProjectTerminated=false: includes workers even if terminated from that project (as long as not on other ongoing projects)
-                 */
                 if ($status === WorkerStatus::UNASSIGNED) {
                     $params[':assignedStatus'] = WorkerStatus::ASSIGNED->value;
                     $params[':completedStatus'] = WorkStatus::COMPLETED->value;
@@ -304,7 +314,7 @@ class ProjectWorkerModel extends Model
      * 
      * @return Worker|null The Worker instance if found, or null if not found.
      */
-    public static function findByWorkerId(int|UUID $workerId, int|UUID|null $projectId = null, bool $includeHistory = false): ?Worker
+    public static function findById(int|UUID $workerId, int|UUID|null $projectId = null, bool $includeHistory = false): ?Worker
     {
         if ($projectId && is_int($projectId) && $projectId < 1) {
             throw new InvalidArgumentException('Invalid project ID provided.');
@@ -486,6 +496,235 @@ class ProjectWorkerModel extends Model
                 $worker->addAdditionalInfo('projectHistory', $projects);
             }
             return $worker;
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
+        }
+    }
+
+    /**
+     * Finds multiple Workers associated with a specific Project by their worker IDs.
+     *
+     * This method retrieves multiple Worker instances that are linked to the given project,
+     * supporting both integer and UUID identifiers for project and workers. If projectId is null,
+     * it will search for the workers across all projects.
+     *
+     * @param array $workerIds Array of worker identifiers (integers or UUIDs).
+     * @param int|UUID|null $projectId The project identifier (integer, UUID, or null for any project).
+     * @param bool $includeHistory Whether to include project/task history.
+     * 
+     * @throws InvalidArgumentException If an invalid project ID or empty worker IDs array is provided.
+     * @throws DatabaseException If an error occurs during the query.
+     * 
+     * @return WorkerContainer|null A WorkerContainer with Worker instances if found, or null if not found.
+     */
+    public static function findMultipleById(
+        array $workerIds, 
+        int|UUID|null $projectId = null, 
+        bool $includeHistory = false
+    ): ?WorkerContainer
+    {
+        if (empty($workerIds)) {
+            throw new InvalidArgumentException('Worker IDs array cannot be empty.');
+        }
+
+        if ($projectId && is_int($projectId) && $projectId < 1) {
+            throw new InvalidArgumentException('Invalid project ID provided.');
+        }
+
+        $instance = new self();
+        try {
+            // Determine if workerIds are integers or UUIDs based on first element
+            $firstWorkerId = $workerIds[0];
+            $useIntId = is_int($firstWorkerId);
+
+            $projectHistory = $includeHistory ?
+                ", COALESCE(
+                        (
+                            SELECT CONCAT('[', GROUP_CONCAT(
+                                JSON_OBJECT(
+                                    'id', p2.id,
+                                    'publicId', HEX(p2.publicId),
+                                    'name', p2.name,
+                                    'status', p2.status,
+                                    'startDateTime', p2.startDateTime,
+                                    'completionDateTime', p2.completionDateTime,
+                                    'actualCompletionDateTime', p2.actualCompletionDateTime,
+                                    'tasks', (
+                                        SELECT CONCAT('[', GROUP_CONCAT(
+                                            JSON_OBJECT(
+                                                'id', t.id,
+                                                'publicId', HEX(t.id),
+                                                'name', t.name,
+                                                'status', t.status,
+                                                'startDateTime', t.startDateTime,
+                                                'completionDateTime', t.completionDateTime,
+                                                'actualCompletionDateTime', t.actualCompletionDateTime
+                                            ) ORDER BY t.createdAt DESC
+                                        ), ']')
+                                        FROM `projectTask` AS t
+                                        LEFT JOIN `projectTaskWorker` AS pwt
+                                        ON t.id = pwt.taskId
+                                        WHERE t.projectId = p2.id
+                                        AND pwt.workerId = u.id
+                                    )
+                                ) ORDER BY p2.createdAt DESC
+                            )
+                            , ']')
+                            FROM `project` AS p2
+                            INNER JOIN `projectWorker` AS pw4
+                            ON p2.id = pw4.projectId
+                            WHERE pw4.workerId = u.id
+                        ),
+                        '[]'
+                    ) AS projectHistory"
+                    : '';
+
+            // Build WHERE clause for multiple worker IDs
+            $workerIdPlaceholders = [];
+            $params = [];
+            
+            foreach ($workerIds as $index => $workerId) {
+                $placeholder = ":workerId$index";
+                $workerIdPlaceholders[] = $placeholder;
+                $params[$placeholder] = ($workerId instanceof UUID) 
+                    ? UUID::toBinary($workerId)
+                    : $workerId;
+            }
+
+            $workerIdColumn = $useIntId ? "u.id" : "u.publicId";
+            $where = "$workerIdColumn IN (" . implode(', ', $workerIdPlaceholders) . ")";
+
+            if ($projectId) {
+                $where .= " AND " . (is_int($projectId) ? "p.id" : "p.publicId") . " = :projectId";
+                $params[':projectId'] = ($projectId instanceof UUID) 
+                    ? UUID::toBinary($projectId)
+                    : $projectId;
+            }
+
+            $query = "
+                SELECT 
+                    u.id,
+                    u.publicId,
+                    u.firstName,
+                    u.middleName,
+                    u.lastName,
+                    u.bio,
+                    u.gender,
+                    u.email,
+                    u.contactNumber,
+                    u.profileLink,
+                    pw.status,
+                    GROUP_CONCAT(ujt.title) AS jobTitles,
+                    (
+                        SELECT COUNT(*)
+                        FROM projectTaskWorker AS ptw
+                        WHERE ptw.workerId = u.id
+                    ) AS totalTasks,
+                    (
+                        SELECT COUNT(*)
+                        FROM projectTaskWorker AS ptw
+                        INNER JOIN projectTask AS t ON ptw.taskId = t.id
+                        WHERE ptw.workerId = u.id AND t.status = '" . WorkStatus::COMPLETED->value . "'
+                    ) AS completedTasks,
+                    (
+                        SELECT COUNT(*) 
+                        FROM projectWorker AS pw2 
+                        WHERE pw2.workerId = u.id
+                    ) AS totalProjects,
+                    (
+                        SELECT COUNT(*) 
+                        FROM projectWorker AS pw3
+                        INNER JOIN project AS p2 ON pw3.projectId = p2.id
+                        WHERE pw3.workerId = u.id AND p2.status = '" . WorkStatus::COMPLETED->value . "'
+                    ) AS completedProjects
+                    $projectHistory
+                FROM
+                    `user` AS u
+                INNER JOIN
+                    `projectWorker` AS pw 
+                ON 
+                    u.id = pw.workerId
+                INNER JOIN
+                    `project` AS p
+                ON
+                    pw.projectId = p.id
+                LEFT JOIN
+                    `userJobTitle` AS ujt
+                ON 
+                    u.id = ujt.userId
+                WHERE
+                    $where
+                GROUP BY
+                    u.id
+            ";
+            $statement = $instance->connection->prepare($query);
+            $statement->execute($params);
+            $results = $statement->fetchAll();
+
+            if (!$instance->hasData($results)) {
+                return null;
+            }
+
+            $workers = new WorkerContainer();
+            foreach ($results as $result) {
+                $worker = Worker::createPartial([
+                    'id'                    => $result['id'],
+                    'publicId'              => $result['publicId'],
+                    'firstName'             => $result['firstName'],
+                    'middleName'            => $result['middleName'],
+                    'lastName'              => $result['lastName'],
+                    'bio'                   => $result['bio'],
+                    'gender'                => Gender::from($result['gender']),
+                    'email'                 => $result['email'],
+                    'contactNumber'         => $result['contactNumber'],
+                    'profileLink'           => $result['profileLink'],
+                    'status'                => WorkerStatus::from($result['status']),
+                    'jobTitles'             => new JobTitleContainer(explode(',', $result['jobTitles'] ?? '')),
+                    'additionalInfo'        => [
+                        'totalTasks'        => (int)$result['totalTasks'],
+                        'completedTasks'    => (int)$result['completedTasks'],
+                        'totalProjects'     => (int)$result['totalProjects'],
+                        'completedProjects' => (int)$result['completedProjects'],
+                    ],
+                ]);
+
+                if ($includeHistory) {
+                    $projects = new ProjectContainer();
+
+                    $projectLists = json_decode($result['projectHistory'], true);
+                    foreach ($projectLists as &$project) {
+                        $entry = Project::createPartial([
+                            'id'                        => $project['id'],
+                            'publicId'                  => UUID::fromHex($project['publicId']),
+                            'name'                      => $project['name'],
+                            'status'                    => WorkStatus::from($project['status']),
+                            'startDateTime'             => $project['startDateTime'],
+                            'completionDateTime'        => $project['completionDateTime'],
+                            'actualCompletionDateTime'  => $project['actualCompletionDateTime']
+                        ]);
+
+                        foreach ($project['tasks'] as &$task) {
+                            $entry->addTask(
+                                Task::createPartial([
+                                    'id'                        => $task['id'],
+                                    'publicId'                  => UUID::fromHex($task['publicId']),
+                                    'name'                      => $task['name'],
+                                    'status'                    => WorkStatus::from($task['status']),
+                                    'startDateTime'             => $task['startDateTime'],
+                                    'completionDateTime'        => $task['completionDateTime'],
+                                    'actualCompletionDateTime'  => $task['actualCompletionDateTime']
+                                ])
+                            );
+                        }
+                        $projects->add($entry);
+                    }
+                    $worker->addAdditionalInfo('projectHistory', $projects);
+                }
+
+                $workers->add($worker);
+            }
+
+            return $workers;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }

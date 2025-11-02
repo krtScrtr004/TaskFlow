@@ -74,7 +74,7 @@ class ProjectWorkerEndpoint
             }
 
 
-            $worker = ProjectWorkerModel::findByWorkerId($workerId,  $projectId, true);
+            $worker = ProjectWorkerModel::findById($workerId,  $projectId, true);
             if (!$worker) {
                 throw new NotFoundException('Worker not found.');
             } 
@@ -92,7 +92,6 @@ class ProjectWorkerEndpoint
             Response::error('Unexpected Error.', ['An unexpected error occurred. Please try again.'], 500);
         }
     }
-
 
 
     public static function getByKey(array $args = []): void
@@ -113,35 +112,44 @@ class ProjectWorkerEndpoint
                 throw new ForbiddenException('Project ID is required.');
             }
 
-            $key = null;
-            if (isset($_GET['key']) && trim($_GET['key']) !== '') {
-                $key = trimOrNull($_GET['key'] ?? '');
-            }
-
-            $status = null;
-            if (isset($_GET['status']) && trim($_GET['status']) !== '') {
-                $status = WorkerStatus::from(trimOrNull($_GET['status'] ?? ''));
-            }
-
-            $excludeProjectTerminated = false;
-            if (isset($_GET['excludeProjectTerminated']) && trim($_GET['excludeProjectTerminated']) !== '') {
-                $excludeProjectTerminated = (bool) $_GET['excludeProjectTerminated'];
-                if ($excludeProjectTerminated && !isset($projectId)) {
-                    throw new ForbiddenException('Project ID is required when excluding terminated project workers.');
-                }
-            }
-
             $workers = [];
-            $workers = ProjectWorkerModel::search(
-                $key,
-                $projectId,
-                $status,
-                [
-                    'excludeProjectTerminated'  => $excludeProjectTerminated,
-                    'limit'                     => isset($_GET['limit']) ? (int) $_GET['limit'] : 10,
-                    'offset'                    => isset($_GET['offset']) ? (int) $_GET['offset'] : 0,
-                ]
-            );
+            if (isset($_GET['ids']) && trim($_GET['ids']) !== '') {
+                $ids = explode(',', trimOrNull($_GET['ids'] ?? ''));
+                $uuids = [];
+                foreach ($ids as $id) {
+                    $uuids[] = UUID::fromString($id);
+                }
+                $workers = ProjectWorkerModel::findMultipleById($uuids, $projectId, false);
+            } else {
+                $key = null;
+                if (isset($_GET['key']) && trim($_GET['key']) !== '') {
+                    $key = trimOrNull($_GET['key'] ?? '');
+                }
+
+                $status = null;
+                if (isset($_GET['status']) && trim($_GET['status']) !== '') {
+                    $status = WorkerStatus::from(trimOrNull($_GET['status'] ?? ''));
+                }
+
+                $excludeProjectTerminated = false;
+                if (isset($_GET['excludeProjectTerminated']) && trim($_GET['excludeProjectTerminated']) !== '') {
+                    $excludeProjectTerminated = (bool) $_GET['excludeProjectTerminated'];
+                    if ($excludeProjectTerminated && !isset($projectId)) {
+                        throw new ForbiddenException('Project ID is required when excluding terminated project workers.');
+                    }
+                }
+
+                $workers = ProjectWorkerModel::search(
+                    $key,
+                    $projectId,
+                    $status,
+                    [
+                        'excludeProjectTerminated'  => $excludeProjectTerminated,
+                        'limit'                     => isset($_GET['limit']) ? (int) $_GET['limit'] : 10,
+                        'offset'                    => isset($_GET['offset']) ? (int) $_GET['offset'] : 0,
+                    ]
+                );
+            }
             if (!$workers) {
                 Response::success([], 'No workers found for the specified project.');
             } else {

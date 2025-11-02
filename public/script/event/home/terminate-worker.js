@@ -10,9 +10,7 @@ try {
         throw new Error('Project ID not found.')
 
     const workerContainer = projectContainer?.querySelector('.worker-list')
-    if (workerContainer.querySelectorAll('.worker-list-card').length > 0) {
-        terminateWorker(projectId, workerContainer, '.worker-list-card')
-    }
+    terminateWorker(projectId, workerContainer, '.worker-list-card')
 } catch (error) {
     handleException(error, 'Error initializing terminate worker functionality:', error)
 }

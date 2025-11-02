@@ -146,14 +146,14 @@ class TaskModel extends Model
                                 ) ORDER BY u.lastName SEPARATOR ','
                             ), ']')
                             FROM `projectTaskWorker` AS ptw
-                            LEFT JOIN `user` AS u
+                            INNER JOIN `user` AS u
                             ON ptw.workerId = u.id
-                            WHERE ptw.id IS NOT NULL
+                            WHERE ptw.taskId = pt.id
                         ), '[]'
                     ) AS taskWorkers
                 FROM 
                     `projectTask` AS pt
-                LEFT JOIN 
+                INNER JOIN 
                     `project` AS p ON pt.projectId = p.id
                 LEFT JOIN 
                     `projectTaskWorker` AS ptw ON pt.id = ptw.taskId
@@ -308,8 +308,8 @@ class TaskModel extends Model
 
         try {
             $whereClause = is_int($projectId) 
-                ? 'p.id = :projectId'
-                : 'p.id IN (
+                ? 'pt.projectId = :projectId'
+                : 'pt.projectId IN (
                     SELECT id 
                     FROM `project` 
                     WHERE publicId = :projectId)';
@@ -698,26 +698,29 @@ class TaskModel extends Model
         try {
             $instance->connection->beginTransaction();
 
+            $projectId          = $task->getAdditionalInfo('projectId');
             $taskPublicId       = $task->getPublicId() ?? UUID::get();
             $taskName           = trimOrNull($task->getName());
             $taskDescription    = trimOrNull($task->getDescription());
             $taskPriority       = $task->getPriority()->value;
             $taskStatus         = $task->getStatus()->value;
-            $taskWorkers        = $task->getWorkers();
-            $taskStartDateTime  = formatDateTime($task->getStartDateTime(), DateTime::ATOM);
-            $completionDateTime = formatDateTime($task->getCompletionDateTime(), DateTime::ATOM);
+            $taskWorkers        = $task->getWorkers()->getItems();
+            $taskStartDateTime  = formatDateTime($task->getStartDateTime());
+            $completionDateTime = formatDateTime($task->getCompletionDateTime());
 
             $taskQuery = "
                 INSERT INTO `projectTask` (
                     publicId, 
+                    projectId,
                     name, 
                     description, 
                     priority, 
                     status, 
                     startDateTime, 
-                    completionDateTime, 
+                    completionDateTime
                 ) VALUES (
                     :publicId, 
+                    :projectId,
                     :name, 
                     :description, 
                     :priority, 
@@ -729,6 +732,7 @@ class TaskModel extends Model
             $statement = $instance->connection->prepare($taskQuery);
             $statement->execute([
                 ':publicId'         => UUID::toBinary($taskPublicId),
+                ':projectId'        => $projectId,
                 ':name'             => $taskName,
                 ':description'      => $taskDescription,
                 ':priority'         => $taskPriority,
@@ -738,20 +742,19 @@ class TaskModel extends Model
             ]);
             $taskId = (int)$instance->connection->lastInsertId();
 
-            if ($taskWorkers && $taskWorkers->count() > 0) {
+            if ($taskWorkers && count($taskWorkers) > 0) {
                 $taskWorkerQuery = "
                     INSERT INTO `projectTaskWorker` (
                         taskId,
                         workerId
-                    ) VALUES (
-                        :taskId,
-                        :workerId
-                    )";
+                    ) SELECT :taskId, id
+                    FROM `user`
+                    WHERE publicId = :workerId";
                 $workerStatement = $instance->connection->prepare($taskWorkerQuery);
                 foreach ($taskWorkers as $worker) {
                     $workerStatement->execute([
-                        ':taskId'   => $taskId,
-                        ':workerId' => $worker->getId(),
+                        ':taskId'   => is_int($taskId) ? $taskId : UUID::toBinary($taskId),
+                        ':workerId' => UUID::toBinary($worker->getPublicId()),
                     ]);
                 }
             }
@@ -796,18 +799,18 @@ class TaskModel extends Model
 
             if (isset($data['startDateTime'])) {
                 $updateFields[] = 'startDateTime = :startDateTime';
-                $params[':startDateTime'] = formatDateTime($data['startDateTime'], DateTime::ATOM);
+                $params[':startDateTime'] = formatDateTime($data['startDateTime']);
             }
 
             if (isset($data['completionDateTime'])) {
                 $updateFields[] = 'completionDateTime = :completionDateTime';
-                $params[':completionDateTime'] = formatDateTime($data['completionDateTime'], DateTime::ATOM);
+                $params[':completionDateTime'] = formatDateTime($data['completionDateTime']);
             }
 
             if (isset($data['actualCompletionDateTime'])) {
                 $updateFields[] = 'actualCompletionDateTime = :actualCompletionDateTime';
                 $params[':actualCompletionDateTime'] = $data['actualCompletionDateTime'] !== null 
-                    ? formatDateTime($data['actualCompletionDateTime'], DateTime::ATOM) 
+                    ? formatDateTime($data['actualCompletionDateTime']) 
                     : null;
             }
 

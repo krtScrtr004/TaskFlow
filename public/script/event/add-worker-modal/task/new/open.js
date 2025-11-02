@@ -13,14 +13,17 @@ const projectId = addTaskForm.dataset.projectid
 if (!projectId || projectId.trim() === '') {
     console.error('Project ID not found.')
     Dialog.somethingWentWrong()
-}W
+}
 
+// TODO
 if (addWorkerModalTemplate) {
     addWorkerButton.addEventListener('click', async () => {
-        initializeAddWorkerModal(projectId, {
-            searchEndpoint: '/api/workers/search',
-            infiniteScrollEndpoint: '/api/workers/infinite-scroll'
-        })
+        const params = new URLSearchParams()
+        params.append('status', 'unassigned')
+
+        const endpoint = `projects/${projectId}/tasks/workers?${params.toString()}`
+
+        initializeAddWorkerModal(projectId, endpoint)   
 
         addWorkerModalTemplate.classList.add('flex-col')
         addWorkerModalTemplate.classList.remove('no-display')
@@ -33,7 +36,7 @@ if (addWorkerModalTemplate) {
                 throw new Error('Project ID is missing.')
             }
 
-            const workers = await fetchWorkers(projectId)
+            const workers = await fetchWorkers(endpoint)
             workers.forEach(worker => createWorkerListCard(worker))
             selectWorker()
         } catch (error) {

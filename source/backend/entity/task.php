@@ -29,6 +29,7 @@ class Task implements Entity
     private TaskPriority $priority;
     private WorkStatus $status;
     private DateTime $createdAt;
+    private array $additionalInfo;
 
     protected WorkValidator $workValidator;
 
@@ -49,6 +50,7 @@ class Task implements Entity
      * @param TaskPriority $priority Task priority level (enum)
      * @param WorkStatus $status Current status of the task (enum)
      * @param DateTime $createdAt Timestamp when the task was created
+     * @param array $additionalInfo Additional information related to the task
      * 
      * @throws ValidationException If any of the provided data fails validation
      */
@@ -63,7 +65,8 @@ class Task implements Entity
         ?DateTime $actualCompletionDateTime,
         TaskPriority $priority,
         WorkStatus $status,
-        DateTime $createdAt
+        DateTime $createdAt,
+        array $additionalInfo = []
     ) {
         try {
             $this->workValidator = new WorkValidator();
@@ -92,6 +95,7 @@ class Task implements Entity
         $this->priority = $priority;
         $this->status = $status;
         $this->createdAt = $createdAt;
+        $this->additionalInfo = $additionalInfo;
     }
 
     // Getters
@@ -204,6 +208,19 @@ class Task implements Entity
     public function getCreatedAt(): DateTime
     {
         return $this->createdAt;
+    }
+
+    /**
+     * Gets the additional information associated with the user.
+     *
+     * @param string $key Optional key to retrieve specific additional info
+     * @return mixed Array containing all additional user information, specific info if key is provided, or null if key not found
+     */
+    public function getAdditionalInfo(string $key = ''): mixed
+    {
+        return trimOrNull(string: $key) 
+            ? ($this->additionalInfo[$key] ?? null) 
+            : $this->additionalInfo;
     }
 
     // Setters
@@ -363,6 +380,16 @@ class Task implements Entity
         $this->createdAt = $createdAt;
     }
 
+    /**
+     * Summary of setAdditionalInfo
+     * @param array $additionalInfo
+     * @return void
+     */
+    public function setAdditionalInfo(array $additionalInfo): void
+    {
+        $this->additionalInfo = $additionalInfo;
+    }
+
     // Other methods (Utility)
 
     /**
@@ -377,6 +404,22 @@ class Task implements Entity
             $this->workers = new WorkerContainer();
         }
         $this->workers->add($worker);
+    }
+
+/**
+     * Adds or updates a key-value pair in the task's additional information.
+     *
+     * This method stores custom data in the additionalInfo array property,
+     * which can be used for storing task metadata or preferences that
+     * don't fit into the standard task properties.
+     *
+     * @param string $key The key identifier for the information
+     * @param mixed $value The value to store (can be any type that's serializable)
+     * @return void
+     */
+    public function addAdditionalInfo(string|int $key, mixed $value): void
+    {
+        $this->additionalInfo[$key] = $value;
     }
 
     /**
@@ -403,6 +446,7 @@ class Task implements Entity
             'priority' => $data['priority'] ?? TaskPriority::MEDIUM,
             'status' => $data['status'] ?? WorkStatus::PENDING,
             'createdAt' => $data['createdAt'] ?? new DateTime(),
+            'additionalInfo' => $data['additionalInfo'] ?? []
         ];
 
         // Handle publicId conversion (accept UUID or string)
@@ -465,7 +509,8 @@ class Task implements Entity
             actualCompletionDateTime: $defaults['actualCompletionDateTime'],
             priority: $defaults['priority'],
             status: $defaults['status'],
-            createdAt: $defaults['createdAt']
+            createdAt: $defaults['createdAt'],
+            additionalInfo: $defaults['additionalInfo']
         );
     }
 
@@ -492,6 +537,7 @@ class Task implements Entity
      *      - priority: string Display name of the task priority
      *      - status: string Display name of the task status
      *      - createdAt: string Formatted creation date/time
+     *      - additionalInfo: array Additional information related to the task
      */
     public function toArray(): array
     {
@@ -508,7 +554,8 @@ class Task implements Entity
                     : null,
             'priority' => $this->priority->getDisplayName(),
             'status' => $this->status->getDisplayName(),
-            'createdAt' => formatDateTime($this->createdAt, DateTime::ATOM)
+            'createdAt' => formatDateTime($this->createdAt, DateTime::ATOM),
+            'additionalInfo' => $this->additionalInfo
         ];
     }
 
@@ -537,6 +584,7 @@ class Task implements Entity
      *      - priority: string|TaskPriority Task priority level
      *      - status: string|WorkStatus Current task status
      *      - createdAt: string|DateTime Task creation timestamp
+     *      - additionalInfo: array Additional information related to the task
      * 
      * @return self New Task instance created from provided data
      */
@@ -588,7 +636,8 @@ class Task implements Entity
             actualCompletionDateTime: $actualCompletionDateTime,
             priority: $priority,
             status: $status,
-            createdAt: $createdAt
+            createdAt: $createdAt,
+            additionalInfo: $data['additionalInfo'] ?? []
         );
     }
 

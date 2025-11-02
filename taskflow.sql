@@ -66,8 +66,8 @@ $$
 DELIMITER ;
 DELIMITER $$
 CREATE TRIGGER `checkProjectDatesBeforeInsert` BEFORE INSERT ON `project` FOR EACH ROW BEGIN
-    -- 1. Check that startDateTime is not in the past
-    IF NEW.startDateTime < NOW() THEN
+    -- 1. Check that startDateTime is not in the past (allow current moment)
+    IF NEW.startDateTime < DATE_SUB(NOW(), INTERVAL 1 SECOND) THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'startDateTime cannot be in the past.';
     END IF;
@@ -94,8 +94,8 @@ CREATE TRIGGER `checkProjectDatesBeforeUpdate` BEFORE UPDATE ON `project` FOR EA
         OR NEW.completionDateTime <> OLD.completionDateTime
         OR NEW.actualCompletionDateTime <> OLD.actualCompletionDateTime) THEN
         
-        -- 1. startDateTime cannot be in the past
-        IF NEW.startDateTime < NOW() THEN
+        -- 1. startDateTime cannot be in the past (allow current moment)
+        IF NEW.startDateTime < DATE_SUB(NOW(), INTERVAL 1 SECOND) THEN
             SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'startDateTime cannot be in the past.';
         END IF;
@@ -139,7 +139,7 @@ CREATE TABLE `projectphase` (
 --
 DELIMITER $$
 CREATE TRIGGER `checkProjectPhaseDatesBeforeInsert` BEFORE INSERT ON `projectphase` FOR EACH ROW BEGIN
-    IF NEW.startDateTime < CURRENT_TIMESTAMP THEN
+    IF NEW.startDateTime < DATE_SUB(NOW(), INTERVAL 1 SECOND) THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'startDateTime cannot be in the past.';
     END IF;
@@ -153,7 +153,7 @@ $$
 DELIMITER ;
 DELIMITER $$
 CREATE TRIGGER `checkProjectPhaseDatesBeforeUpdate` BEFORE UPDATE ON `projectphase` FOR EACH ROW BEGIN
-    IF NEW.startDateTime < NOW() THEN
+    IF NEW.startDateTime < DATE_SUB(NOW(), INTERVAL 1 SECOND) THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'startDateTime cannot be in the past.';
     END IF;
@@ -203,8 +203,8 @@ $$
 DELIMITER ;
 DELIMITER $$
 CREATE TRIGGER `checkProjectTaskDatesBeforeInsert` BEFORE INSERT ON `projecttask` FOR EACH ROW BEGIN
-    -- 1. Check that startDateTime is not in the past
-    IF NEW.startDateTime < NOW() THEN
+    -- 1. Check that startDateTime is not in the past (allow current moment)
+    IF NEW.startDateTime < DATE_SUB(NOW(), INTERVAL 1 SECOND) THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'startDateTime cannot be in the past.';
     END IF;
@@ -231,8 +231,8 @@ CREATE TRIGGER `checkProjectTaskDatesBeforeUpdate` BEFORE UPDATE ON `projecttask
         OR NEW.completionDateTime <> OLD.completionDateTime
         OR NEW.actualCompletionDateTime <> OLD.actualCompletionDateTime) THEN
         
-        -- 1. startDateTime cannot be in the past
-        IF NEW.startDateTime < NOW() THEN
+        -- 1. startDateTime cannot be in the past (allow current moment)
+        IF NEW.startDateTime < DATE_SUB(NOW(), INTERVAL 1 SECOND) THEN
             SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'startDateTime cannot be in the past.';
         END IF;

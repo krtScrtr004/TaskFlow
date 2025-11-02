@@ -217,7 +217,10 @@ export function workValidationRules() {
                 }
                 const startDate = new Date(val)
                 const now = new Date()
-                if (startDate < now) {
+                // Compare only the date part (ignore time)
+                const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate())
+                const nowDateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+                if (startDateOnly < nowDateOnly) {
                     errors.push('Start date cannot be in the past.')
                 }
                 return errors
