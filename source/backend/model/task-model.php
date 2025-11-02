@@ -263,8 +263,8 @@ class TaskModel extends Model
 
             if ($projectId) {
                 $whereClause .= is_int($projectId)
-                    ? ' AND p.id = :projectId'
-                    : ' AND p.publicId = :projectId';
+                    ? ' p.id = :projectId'
+                    : ' p.publicId = :projectId';
                 $params[':projectId'] = is_int($projectId)
                     ? $projectId
                     : UUID::toBinary($projectId);
@@ -302,7 +302,7 @@ class TaskModel extends Model
             'limit' => 10,
         ]
     ): ?TaskContainer {
-        if ($projectId < 1) {
+        if (is_int($projectId) && $projectId < 1) {
             throw new ValidationException('Invalid Project ID');
         }
 
@@ -753,7 +753,7 @@ class TaskModel extends Model
                 $workerStatement = $instance->connection->prepare($taskWorkerQuery);
                 foreach ($taskWorkers as $worker) {
                     $workerStatement->execute([
-                        ':taskId'   => is_int($taskId) ? $taskId : UUID::toBinary($taskId),
+                        ':taskId'   => $taskId instanceof UUID ? UUID::toBinary($taskId) : $taskId,
                         ':workerId' => UUID::toBinary($worker->getPublicId()),
                     ]);
                 }

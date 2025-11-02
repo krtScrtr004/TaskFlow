@@ -84,5 +84,14 @@ foreach ($paths as $path) {
         require_once $fileName;
     }
 }
+
+/**
+ * Error Handling Config
+ */
+ini_set('error_reporting', E_ALL);          // Report all errors
+ini_set('display_errors', 0);               // Do not display errors on browser
+set_error_handler(['Logger', 'logError']);
+set_exception_handler(['Logger', 'logException']);
+
 App\Core\Session::restore();
 
