@@ -8,6 +8,10 @@
 			"TaskWorkerEndpoint",
 			"getByKey"
 		],
+		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}/tasks/workers(?:\\?[\\w\\s_=\\/%,&@-]+)?": [
+			"TaskWorkerEndpoint",
+			"getByKey"
+		],
 
 		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}/tasks/{taskId:[\\w_-]+}": [
 			"TaskEndpoint",
