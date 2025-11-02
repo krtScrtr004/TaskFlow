@@ -111,9 +111,21 @@ class ProjectEndpoint
 
             self::sanitizeData($project);
 
+            $validator = new WorkValidator();
+
             $index = 0;
             $phasesContainer = new PhaseContainer();
             foreach ($phases as &$phase) {
+                $validator->validateDateBounds(
+                    new DateTime($phase['startDateTime']),
+                    new DateTime($phase['completionDateTime']),
+                    new DateTime($project['startDateTime']),
+                    new DateTime($project['completionDateTime'])
+                );
+                if ($validator->hasErrors()) {
+                    throw new ValidationException('Phase Validation Failed.', $validator->getErrors());
+                }
+
                 self::sanitizeData($phase);
 
                 // Temporarily assign index as ID to avoid replacing other inserted fields in the container
@@ -276,6 +288,18 @@ class ProjectEndpoint
                 foreach ($arr as &$value) {
                     self::sanitizeData($value);
 
+                    if ($key === 'toEdit' || $key === 'toAdd') {
+                        $validator->validateDateBounds(
+                            new DateTime($value['startDateTime']),
+                            new DateTime($value['completionDateTime']),
+                            $projectData['startDateTime'] ?? $project->getStartDateTime(),
+                            $projectData['completionDateTime'] ?? $project->getCompletionDateTime()
+                        );
+                        if ($validator->hasErrors()) {
+                            throw new ValidationException('Phase Validation Failed.', $validator->getErrors());
+                        }
+                    }
+
                     if ($key === 'toEdit') {
                         // Phase to edit
                         $validator->validateMultiple([
@@ -284,7 +308,7 @@ class ProjectEndpoint
                             'completionDateTime'    => new DateTime($value['completionDateTime'])
                         ]);
                         if ($validator->hasErrors()) {
-                            throw new ValidationException('Invalid phase data for editing.', $validator->getErrors());
+                            throw new ValidationException('Phase Validation Failed.', $validator->getErrors());
                         }
                         $phases['toEdit'][] = [
                             'publicId'              => UUID::fromString($value['id']),
@@ -316,7 +340,7 @@ class ProjectEndpoint
             if ($projectData) {
                 $validator->validateMultiple($projectData);
                 if ($validator->hasErrors()) {
-                    throw new ValidationException('Invalid project data for editing.', $validator->getErrors());
+                    throw new ValidationException('Project Validation Failed.', $validator->getErrors());
                 }
                 self::sanitizeData($projectData);
                 ProjectModel::save($projectData);

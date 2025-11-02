@@ -68,6 +68,45 @@ class WorkValidator extends Validator
         }
     }
 
+    /**
+     * Validate that phase/task dates are within project date bounds
+     * 
+     * @param DateTime|null $startDateTime The phase/task start date
+     * @param DateTime|null $completionDateTime The phase/task completion date
+     * @param DateTime|null $projectStartDateTime The project start date
+     * @param DateTime|null $projectCompletionDateTime The project completion date
+     * @return void
+     */
+    public function validateDateBounds(
+        ?DateTime $startDateTime,
+        ?DateTime $completionDateTime,
+        ?DateTime $projectStartDateTime,
+        ?DateTime $projectCompletionDateTime
+    ): void {
+        if ($startDateTime === null || $completionDateTime === null) {
+            $this->errors[] = 'Start date and completion date are required.';
+            return;
+        }
+        
+
+        if ($projectStartDateTime === null || $projectCompletionDateTime === null) {
+            $this->errors[] = 'Project start date and completion date are required.';
+            return;
+        }
+
+        if ($startDateTime < $projectStartDateTime) {
+            $this->errors[] = 'Start date cannot be before project start date.';
+        }
+
+        if ($startDateTime > $projectCompletionDateTime) {
+            $this->errors[] = 'Start date cannot be after project completion date.';
+        }
+
+        if ($completionDateTime > $projectCompletionDateTime) {
+            $this->errors[] = 'Completion date cannot be after project completion date.';
+        }
+    }
+
     // ------------------------------------------------------------------------------------------------------------------------------ //
 
     /**
