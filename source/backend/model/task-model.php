@@ -16,6 +16,7 @@ use App\Enumeration\TaskPriority;
 use App\Entity\User;
 use App\Entity\Task;
 use App\Enumeration\Gender;
+use App\Enumeration\WorkerStatus;
 use DateTime;
 use Exception;
 use InvalidArgumentException;
@@ -746,8 +747,9 @@ class TaskModel extends Model
                 $taskWorkerQuery = "
                     INSERT INTO `projectTaskWorker` (
                         taskId,
-                        workerId
-                    ) SELECT :taskId, id
+                        workerId,
+                        status
+                    ) SELECT :taskId, id, :status
                     FROM `user`
                     WHERE publicId = :workerId";
                 $workerStatement = $instance->connection->prepare($taskWorkerQuery);
@@ -755,6 +757,7 @@ class TaskModel extends Model
                     $workerStatement->execute([
                         ':taskId'   => $taskId instanceof UUID ? UUID::toBinary($taskId) : $taskId,
                         ':workerId' => UUID::toBinary($worker->getPublicId()),
+                        ':status'   => WorkerStatus::ASSIGNED->value,
                     ]);
                 }
             }
