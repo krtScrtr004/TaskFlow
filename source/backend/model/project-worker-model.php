@@ -188,15 +188,17 @@ class ProjectWorkerModel extends Model
                     u.id = ujt.userId
             ";
 
-            if ($key || !empty($key))  {
-                $query .= "
+            if ($key && !empty(trim($key)))  {
+                $where[] = "
                     MATCH(u.firstName, u.middleName, u.lastName, u.bio, u.email) 
                     AGAINST (:key IN NATURAL LANGUAGE MODE)
                 ";
                 $params[':key'] = $key;
             }
 
-            if ($projectId) {
+            // Don't filter by projectId when searching for unassigned workers
+            // The NOT EXISTS clause handles the assignment check globally
+            if ($projectId && $status !== WorkerStatus::UNASSIGNED) {
                 $where[] = is_int($projectId)
                     ? "pw.projectId = :projectId"
                     : "pw.projectId = (SELECT id FROM `project` WHERE publicId = :projectId)";
@@ -211,8 +213,8 @@ class ProjectWorkerModel extends Model
                     $params[':completedStatus'] = WorkStatus::COMPLETED->value;
                     $params[':cancelledStatus'] = WorkStatus::CANCELLED->value;
 
-                    // Core rule: Exclude workers assigned to any ongoing project
-                    $where[] = "pw.id IS NULL OR NOT EXISTS (
+                    // Core rule: Include users with no project assignments OR users not assigned to ongoing projects
+                    $where[] = "NOT EXISTS (
                         SELECT 1
                         FROM 
                             `projectWorker` AS pw2

@@ -24,7 +24,7 @@ function taskGridCard(Task $task, $projectId): string
             <section>
                 <div class="text-w-icon">
                     <img src="<?= ICON_PATH . 'task_w.svg' ?>" alt="Task" title="Task" height="24">
-                    <h3 class="task-name"><?= $name ?></h3>
+                    <h3 class="task-name single-line-ellipsis"><?= $name ?></h3>
                 </div>
                 <p class="task-id"><em><?= $id ?></em></p>
             </section>

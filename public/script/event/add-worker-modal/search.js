@@ -1,8 +1,12 @@
 import { Loader } from '../../render/loader.js'
 import { Dialog } from '../../render/dialog.js'
 import { debounceAsync } from '../../utility/debounce.js'
+import { fetchWorkers } from './fetch.js'
+import { createWorkerListCard } from './render.js'
+import { infiniteScrollWorkers, disconnectInfiniteScroll } from './infinite-scroll.js'
 
 let endpoint = ''
+const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
 
 export function searchWorkerEvent(projectId, localEndpoint) {
     if (!localEndpoint || localEndpoint.trim() === '') {
@@ -10,7 +14,6 @@ export function searchWorkerEvent(projectId, localEndpoint) {
     }
     endpoint = localEndpoint
 
-    const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
     const searchBarForm = addWorkerModalTemplate?.querySelector('form.search-bar')
     const button = searchBarForm?.querySelector('button')
     if (!searchBarForm) {
@@ -58,13 +61,13 @@ async function searchForWorker(e, projectId) {
     const searchTerm = document.querySelector('.search-bar input[type="text"]').value.trim()
 
     try {
-        const workers = await fetchWorkers(projectId, endpoint, searchTerm, 0)
+        const workers = await fetchWorkers(endpoint, searchTerm, 0)
 
         if (workers && workers.length > 0) {
             workers.forEach(worker => createWorkerListCard(worker))
 
             // Reset and reinitialize infinite scroll with the search term
-            infiniteScrollWorkers(projectId, searchTerm)
+            infiniteScrollWorkers(projectId, endpoint, searchTerm)
         } else {
             // Show no workers message if no results
             noWorkersWall?.classList.add('flex-col')

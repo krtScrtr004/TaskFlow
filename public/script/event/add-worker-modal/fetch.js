@@ -5,7 +5,6 @@ let isFetchingWorkers = false
 /**
  * Fetches workers from the API with optional search and pagination.
  * 
- * @param {string} projectId - The project ID to fetch workers for
  * @param {string} endpoint - The API endpoint to call
  * @param {string|null} key - Search key for filtering workers
  * @param {number} offset - Pagination offset
@@ -27,7 +26,7 @@ async function fetchFromDatabase(endpoint, key = null, offset) {
     try {
         if (isFetchingWorkers) {
             console.warn('Request already in progress. Please wait.')
-            return
+            return false
         }
         isFetchingWorkers = true
 

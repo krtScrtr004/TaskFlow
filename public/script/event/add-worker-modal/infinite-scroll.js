@@ -32,7 +32,6 @@ export function infiniteScrollWorkers(projectId, localEndpoint, searchKey = '') 
             workerList,
             sentinel,
             projectId,
-            endpoint,
             searchKey
         )
 
@@ -55,7 +54,11 @@ function createInfiniteScrollObserver(workerList, sentinel, projectId, searchKey
                 Loader.trail(workerList)
 
                 try {
-                    const workers = await fetchWorkers(projectId, endpoint, searchKey, offset)
+                    const workers = await fetchWorkers(endpoint, searchKey, offset)
+                    if (workers === false) {
+                        // Fetch was already in progress; skip this cycle
+                        return
+                    }
 
                     if (!workers || workers.length === 0) {
                         observer.unobserve(sentinel)
@@ -83,7 +86,7 @@ function createInfiniteScrollObserver(workerList, sentinel, projectId, searchKey
     }
 }
 
-function disconnectInfiniteScroll() {
+export function disconnectInfiniteScroll() {
     if (currentInfiniteScrollObserver) {
         currentInfiniteScrollObserver.observer.disconnect()
         currentInfiniteScrollObserver = null
