@@ -57,7 +57,8 @@ class ProjectProgressCalculator
         $totalWeight = 0.0;
 
         // Process each task
-        $tasks = $taskContainer->getItems();
+        $items = $taskContainer->getItems();
+        $tasks = is_array($items) ? $items : [$items];
         foreach ($tasks as $task) {
             $status = $task->getStatus()->value;
             $priority = $task->getPriority()->value;

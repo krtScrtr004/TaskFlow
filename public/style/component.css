@@ -116,7 +116,7 @@ button:has(.text-w-icon):not(.unset-button) {
 
 .modal-wrapper::before {
 	content: '';
-	background-color: var(--black);
+	background-color: rgba(0, 0, 0, 0.8);
 	opacity: 0.5;
 }
 
@@ -136,6 +136,7 @@ button:has(.text-w-icon):not(.unset-button) {
 	max-width: 25rem;
 	box-sizing: content-box;
 	padding: var(--space);
+	box-shadow: 0 0 15px rgba(68, 68, 68, 0.2);
 }
 
 .modal-wrapper hr {
@@ -510,11 +511,17 @@ button > .text-w-icon {
 }
 
 .add-worker-modal .worker-list {
-	min-height: 10rem;
-	max-height: 15rem;
 	gap: 0.8rem;
 	overflow-y: auto;
 	flex-shrink: 0;
+}
+
+.add-worker-modal .worker-list > .list,
+.add-worker-modal .no-workers-wall {
+	min-height: 15rem;
+	max-height: 15rem;
+	height: 15rem;
+	margin-bottom: 0 !important;
 }
 
 .add-worker-modal .worker-list-card h4,

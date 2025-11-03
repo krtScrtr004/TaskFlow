@@ -4,11 +4,11 @@
 			"TaskWorkerEndpoint",
 			"getById"
 		],
-		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}/tasks/{taskId:[\\w_-]+}/workers(?:\\?[\\w\\s_=\\/%,&@-]+)?": [
+		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}/tasks/{taskId:[\\w_-]+}/workers(?:\\?[\\w\\s_=\\/%,&@.-]+)?": [
 			"TaskWorkerEndpoint",
 			"getByKey"
 		],
-		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}/tasks/workers(?:\\?[\\w\\s_=\\/%,&@-]+)?": [
+		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}/tasks/workers(?:\\?[\\w\\s_=\\/%,&@.-]+)?": [
 			"TaskWorkerEndpoint",
 			"getByKey"
 		],
@@ -17,7 +17,7 @@
 			"TaskEndpoint",
 			"getTaskById"
 		],
-		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}/tasks(?:\\?[\\w\\s_=\\/%,&@-]+)?": [
+		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}/tasks(?:\\?[\\w\\s_=\\/%,&.@-]+)?": [
 			"TaskEndpoint",
 			"getTaskByKey"
 		],
@@ -26,7 +26,7 @@
 			"ProjectWorkerEndpoint",
 			"getById"
 		],
-		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}/workers(?:\\?[\\w\\s_=\\/%,&@-]+)?": [
+		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}/workers(?:\\?[\\w\\s_=\\/%,&@.-]+)?": [
 			"ProjectWorkerEndpoint",
 			"getByKey"
 		],
@@ -35,7 +35,7 @@
 			"ProjectEndpoint",
 			"getProjectById"
 		],
-		"TaskFlow/endpoint/projects(?:\\?[\\w\\s_=\\/%,&@-]+)?": [
+		"TaskFlow/endpoint/projects(?:\\?[\\w\\s_=\\/%,&@.-]+)?": [
 			"ProjectEndpoint",
 			"getProjectByKey"
 		],
@@ -44,13 +44,13 @@
 			"ProjectWorkerEndpoint",
 			"getById"
 		],
-		"TaskFlow/endpoint/workers(?:\\?[\\w\\s_=\\/%,&@-]+)?": [
+		"TaskFlow/endpoint/workers(?:\\?[\\w\\s_=\\/%,&@.-]+)?": [
 			"ProjectWorkerEndpoint",
 			"getByKey"
 		],
 
 		"TaskFlow/endpoint/users/{userId:[\\w_-]+}": ["UserEndpoint", "getUserById"],
-		"TaskFlow/endpoint/users(?:\\?[\\w\\s_=\\/%,&@-]+)?": [
+		"TaskFlow/endpoint/users(?:\\?[\\w\\s_=\\/%,&@.-]+)?": [
 			"UserEndpoint",
 			"getUsersByKey"
 		]

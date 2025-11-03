@@ -39,7 +39,7 @@ async function searchForWorker(e, projectId) {
         Dialog.somethingWentWrong()
         return
     }
-    const noWorkersWall = workerList.parentElement.querySelector('.no-workers-wall')
+    const noWorkersWall = workerList.closest('.worker-list')?.parentElement?.querySelector('.no-workers-wall')
 
     workerList.textContent = ''
 

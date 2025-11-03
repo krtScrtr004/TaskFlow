@@ -30,8 +30,13 @@ async function fetchFromDatabase(endpoint, key = null, offset) {
         }
         isFetchingWorkers = true
 
-        const param = (key) ? key : ''
-        const response = await Http.GET(`${endpoint}&key=${param}&offset=${offset}`)
+        const [path, queryString] = endpoint.split('?')
+        const params = new URLSearchParams(queryString)
+
+        params.append('key', key || '')
+        params.append('offset', offset)
+
+        const response = await Http.GET(`${path}?${params.toString()}`)
         if (!response) {
             throw new Error('Workers data not found!')
         }
