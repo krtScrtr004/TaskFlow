@@ -30,6 +30,7 @@ async function fetchFromDatabase(url, key = null, offset) {
         }
         isFetchingWorkers = true
 
+        // Construct the full URL with query parameters
         const [path, queryString] = url.split('?')
         const params = new URLSearchParams(queryString)
 

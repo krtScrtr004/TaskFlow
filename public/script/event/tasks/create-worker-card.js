@@ -7,35 +7,50 @@ let isLoading = false
 
 const viewTaskInfo = document.querySelector('.view-task-info')
 const workerGrid = viewTaskInfo.querySelector('.worker-grid')
-if (workerGrid) {
-    workerGrid.addEventListener('click', async e => {
-        const workerCard = e.target.closest('.user-grid-card')
-        if (!workerCard) return
-
-        const projectId = viewTaskInfo.dataset.projectid
-        if (!projectId || projectId.trim() === '') {
-            console.error('Project ID is missing.')
-            Dialog.somethingWentWrong()
-            return
-        }
-
-        const workerId = workerCard.dataset.userid
-        if (!workerId || workerId.trim() === '') {
-            console.error('Worker ID is missing.')
-            Dialog.somethingWentWrong()
-            return
-        }
-
-        try {
-            userInfoCard(workerId, () => fetchUserInfo(projectId, workerId))
-        } catch (error) {
-            handleException(error, 'Error displaying user info card:', error)
-        }
-    })
-} else {
+if (!workerGrid) {
     console.error('Workers grid not found!')
 }
 
+workerGrid?.addEventListener('click', async e => {
+    const workerCard = e.target.closest('.user-grid-card')
+    if (!workerCard) {
+        return
+    }
+
+    const projectId = viewTaskInfo.dataset.projectid
+    if (!projectId || projectId.trim() === '') {
+        console.error('Project ID is missing.')
+        Dialog.somethingWentWrong()
+        return
+    }
+
+    const workerId = workerCard.dataset.userid
+    if (!workerId || workerId.trim() === '') {
+        console.error('Worker ID is missing.')
+        Dialog.somethingWentWrong()
+        return
+    }
+
+    try {
+        // Render user info card
+        userInfoCard(workerId, () => fetchUserInfo(projectId, workerId))
+    } catch (error) {
+        handleException(error, 'Error displaying user info card:', error)
+    }
+})
+
+/**
+ * Fetches user information for a specific worker in a project.
+ *
+ * This asynchronous function retrieves detailed information about a user (worker)
+ * associated with a given project by making an HTTP GET request. It prevents
+ * concurrent requests using an `isLoading` flag and validates the provided user ID.
+ *
+ * @param {string|number} projectId - The unique identifier of the project.
+ * @param {string|number} userId - The unique identifier of the user (worker) to fetch.
+ * @returns {Promise<Object>} Resolves to the user data object if successful.
+ * @throws {Error} Throws an error if the user ID is missing, the request fails, or the response is invalid.
+ */
 async function fetchUserInfo(projectId, userId) {
     try {
         if (isLoading) {

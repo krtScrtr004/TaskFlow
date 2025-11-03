@@ -18,6 +18,29 @@ use PDOException;
 class TaskWorkerModel extends Model
 {
 
+    /**
+     * Finds and retrieves worker(s) with associated task and job title information.
+     *
+     * This static method executes a complex SQL query to fetch worker details, including:
+     * - User information (id, publicId, names, bio, gender, email, contact number, profile link)
+     * - Worker status in project tasks
+     * - Aggregated job titles (as an array)
+     * - Total number of tasks assigned to the worker
+     * - Number of completed tasks assigned to the worker
+     *
+     * The method supports dynamic WHERE clauses, query parameters, and additional query options.
+     * It returns a WorkerContainer with Worker instances, each containing:
+     * - jobTitles as an array of strings
+     * - additionalInfo array with totalTasks, completedTasks, totalProjects, completedProjects
+     *
+     * @param string $whereClause Optional SQL WHERE clause to filter results
+     * @param array $params Parameters to bind to the prepared statement
+     * @param array $options Additional options for query customization (e.g., ORDER BY, LIMIT)
+     *
+     * @return WorkerContainer|null Container of Worker objects if found, or null if no data is found
+     *
+     * @throws DatabaseException If a PDOException occurs during query execution
+     */
     protected static function find(string $whereClause = '', array $params = [], array $options = []): ?WorkerContainer
     {
         $instance = new self();
@@ -92,6 +115,23 @@ class TaskWorkerModel extends Model
         }
     }
 
+    /**
+     * Finds a Worker instance by worker ID, with optional task and project filtering.
+     *
+     * This method retrieves a Worker based on the provided worker ID, and can further filter
+     * the result by task ID and/or project ID. The method supports both integer and UUID formats
+     * for all IDs. It validates the input parameters and constructs the appropriate SQL WHERE clause
+     * for the query. If a matching Worker is found, it is returned; otherwise, null is returned.
+     *
+     * @param int|UUID $workerId The worker's unique identifier (integer or UUID).
+     * @param int|UUID|null $taskId (optional) The task's unique identifier to filter by (integer or UUID).
+     * @param int|UUID|null $projectId (optional) The project's unique identifier to filter by (integer or UUID).
+     *
+     * @throws InvalidArgumentException If any provided ID is invalid (e.g., integer less than 1).
+     * @throws Exception If an error occurs during the query execution.
+     *
+     * @return Worker|null The found Worker instance, or null if no matching worker is found.
+     */
     public static function findById(int|UUID $workerId, int|UUID|null $taskId = null, int|UUID|null $projectId = null): ?Worker
     {
         if (is_int($workerId) && $workerId < 1) {
@@ -210,6 +250,24 @@ class TaskWorkerModel extends Model
         }
     }
 
+    /**
+     * Finds a WorkerContainer instance by the given task ID.
+     *
+     * This method supports searching by either an integer task ID or a UUID. It constructs
+     * the appropriate SQL WHERE clause and parameter binding based on the type of $taskId:
+     * - If $taskId is an integer, it uses the internal numeric task ID.
+     * - If $taskId is a UUID, it uses the publicId field and converts the UUID to binary.
+     *
+     * Throws an InvalidArgumentException if an invalid integer task ID is provided.
+     * Any exceptions during the find operation are rethrown.
+     *
+     * @param int|UUID $taskId The task identifier, either as an integer (internal ID) or UUID (public ID).
+     *
+     * @return WorkerContainer|null The found WorkerContainer instance, or null if not found.
+     *
+     * @throws InvalidArgumentException If an invalid integer task ID is provided.
+     * @throws Exception If an error occurs during the find operation.
+     */
     public static function findByTaskId(int|UUID $taskId): ?WorkerContainer
     {
         if (is_int($taskId) && $taskId < 1) {
@@ -270,10 +328,11 @@ class TaskWorkerModel extends Model
                         `projectWorker` AS pw
                     ON
                         u.id = pw.workerId
-                        AND pw.projectId = " . (is_int($projectId) 
-                            ? ":projectIdJoin" 
-                            : "(SELECT id FROM `project` WHERE publicId = :projectIdJoin)") . "
-                        AND pw.status = :assignedProjectStatus
+                    AND pw.projectId = " . (is_int($projectId) 
+                        ? ":projectIdJoin" 
+                        : "(SELECT id FROM `project` WHERE publicId = :projectIdJoin)") . "
+                    AND 
+                        pw.status = :assignedProjectStatus
                     LEFT JOIN
                         `userJobTitle` AS ujt
                     ON
@@ -307,7 +366,7 @@ class TaskWorkerModel extends Model
                         pt2.projectId = pw.projectId
                 )";
 
-                if ($taskId && ($options['excludeTaskTerminated'] ?? true)) {
+                if ($taskId && ($options['excludeTaskTerminated'])) {
                     // Exclude workers terminated from this specific task
                     $where[] = "NOT EXISTS (
                         SELECT 1

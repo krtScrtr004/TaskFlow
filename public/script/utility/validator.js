@@ -10,6 +10,18 @@ const LENGTH_VALIDATION = {
     'budget':           { min: 0, max: 999999999999 }
 }
 
+/**
+ * Validates a date string in the format 'YYYY-MM-DD'.
+ *
+ * This helper function checks if the provided date string is valid by:
+ * - Ensuring the input is a non-empty string
+ * - Splitting the string into year, month, and day components
+ * - Passing the components to the isValidDate function for validation
+ *
+ * @param {string} date Date string in the format 'YYYY-MM-DD'
+ * @throws {Error} If the input is not a valid date string
+ * @returns {boolean} True if the date is valid, false otherwise
+ */
 function isValidDateHelper(date) {
     if (!date || typeof date !== 'string') {
         throw new Error('A valid date string is required.')
@@ -19,6 +31,26 @@ function isValidDateHelper(date) {
     return isValidDate(year, month, day)
 }
 
+/**
+ * Returns the validation rules for user input fields.
+ *
+ * Each rule provides a `condition` function that takes an `inputs` object and returns an array of error messages
+ * if the input is invalid. The rules cover the following fields:
+ * - firstName: Validates presence, length, and allowed characters.
+ * - middleName: Validates length and allowed characters if provided.
+ * - lastName: Validates presence, length, and allowed characters.
+ * - bio: Validates length if provided.
+ * - gender: Validates presence and allowed values ('male', 'female', case-insensitive).
+ * - birthDate: Validates presence, date format, and minimum age (18 years).
+ * - jobTitles: Validates presence and length.
+ * - contactNumber: Validates presence and length.
+ * - email: Validates presence, length, and email format.
+ * - password: Validates presence, length, required character types, and allowed special characters.
+ * - role: Validates presence and allowed values ('projectManager', 'worker').
+ *
+ * @function
+ * @returns {Object.<string, {condition: function(Object): string[]}>} An object mapping field names to their validation rule.
+ */
 export function userValidationRules() {
     return {
         'firstName': {
@@ -165,8 +197,25 @@ export function userValidationRules() {
 }
 
 /**
- * Default validation rules for work (project, phase, task) inputs
- * @returns {Array} Array of validation rule objects
+ * Returns a set of validation rules for work/task-related input fields.
+ *
+ * Each rule contains a `condition` function that validates a specific field in the input object.
+ * The function returns an array of error messages if validation fails, or an empty array if valid.
+ * 
+ * The following fields are validated:
+ * - name: Required. Must be a string between LENGTH_VALIDATION.name.min and LENGTH_VALIDATION.name.max characters.
+ * - description: Optional. If provided, must be between LENGTH_VALIDATION.longText.min and LENGTH_VALIDATION.longText.max characters.
+ * - budget: Required. Must be a number between LENGTH_VALIDATION.budget.min and LENGTH_VALIDATION.budget.max.
+ * - startDateTime: Required. Must be a valid date string not in the past (compared to current date).
+ * - completionDateTime: Required. Must be a valid date string after the startDateTime.
+ *
+ * @param {Object} inputs The input object containing the fields to validate:
+ *      - name: {string} The name of the work/task.
+ *      - description: {string} (optional) The description of the work/task.
+ *      - budget: {number|string} The budget value.
+ *      - startDateTime: {string|Date} The start date and time.
+ *      - completionDateTime: {string|Date} The completion date and time.
+ * @returns {Object} An object mapping field names to their validation rule objects, each with a `condition(inputs)` function.
  */
 export function workValidationRules() {
     return {
@@ -277,6 +326,7 @@ export function validateInputs(inputs = {}, validationRules) {
         }
     }
 
+    // If there are validation errors, show them in a dialog
     if (errors.length > 0) {
         errorListDialog('Validation Errors', errors)
         return false

@@ -6,6 +6,7 @@ const taskGridContainer = document.querySelector('.task-grid-container')
 
 try {
     const searchBarForm = taskGridContainer?.parentElement.querySelector('form.search-bar')
+    // Initialize search functionality for tasks
     search(searchBarForm)
 } catch (error) {
     handleException(error, 'Error initializing search functionality:', error)

@@ -56,5 +56,6 @@ export function selectWorker() {
         }
     })
 
+    // Mark that the event listener has been initialized
     isSelectWorkerEventInitialized = true
 }

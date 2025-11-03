@@ -21,19 +21,28 @@ use App\Utility\WorkerPerformanceCalculator;
 
 class TaskWorkerEndpoint
 {
-    // private static function createResponseArrayData(Worker $worker): array
-    // {
-    //     $worker->setRole(Role::WORKER);
-    //     $projects = ProjectModel::all();
-    //     $workerPerformanceProject = WorkerPerformanceCalculator::calculate($projects);
-    //     return [
-    //         ...$worker->toArray(),
-    //         'totalProjects' => $workerPerformanceProject['totalProjects'],
-    //         'completedProjects' => $projects->getCountByStatus(WorkStatus::COMPLETED),
-    //         'performance' => $workerPerformanceProject['overallScore'],
-    //     ];
-    // }
-
+    /**
+     * Retrieves a TaskWorker by its ID, with optional project and task context.
+     *
+     * This method performs the following actions:
+     * - Ensures the request is a GET request and the user session is authorized.
+     * - Validates and converts provided workerId, projectId, and taskId to UUID objects.
+     * - Checks for the existence of the specified project and task.
+     * - Fetches the TaskWorker using the provided identifiers.
+     * - Returns the worker data in a successful response, or appropriate error responses on failure.
+     *
+     * @param array $args Associative array of arguments with the following keys:
+     *      - workerId: string|UUID Required. The unique identifier of the worker.
+     *      - projectId: string|UUID|null Optional. The unique identifier of the project.
+     *      - taskId: string|UUID|null Optional. The unique identifier of the task.
+     *
+     * @return void Outputs a JSON response with the worker data or error information.
+     *
+     * @throws ForbiddenException If the request method is not GET, the session is unauthorized, or required IDs are missing.
+     * @throws NotFoundException If the specified project, task, or worker is not found.
+     * @throws ValidationException If validation of input data fails.
+     * @throws Exception For any other unexpected errors.
+     */
     public static function getById($args = []): void
     {
         try {
@@ -92,7 +101,43 @@ class TaskWorkerEndpoint
         }
     }
 
-    // Used to fetch multiple workers by IDs or name filter (eg. /get-worker-info?ids=1,2,3 or /get-worker-info?name=John)
+    /**
+     * Retrieves task workers based on provided criteria.
+     *
+     * This method handles GET requests to fetch task workers associated with a specific task and project.
+     * It performs authentication and authorization checks, validates input parameters, and supports
+     * searching by worker IDs, key, status, and additional filters.
+     *
+     * The following logic is applied:
+     * - Ensures the request method is GET.
+     * - Checks for an authorized user session.
+     * - Validates and converts projectId and taskId to UUID objects.
+     * - Fetches the corresponding Project and Task models.
+     * - If 'ids' are provided in the query, fetches multiple workers by their IDs.
+     * - Otherwise, supports searching by 'key', 'status', and 'excludeTaskTerminated' flag.
+     * - Supports pagination via 'limit' and 'offset' query parameters.
+     * - Returns a success response with the list of workers or an empty array if none found.
+     * - Handles validation, forbidden access, and unexpected errors with appropriate responses.
+     *
+     * @param array $args Associative array of arguments, including:
+     *      - projectId: string|UUID|null Project identifier (optional, required for some filters)
+     *      - taskId: string|UUID Task identifier (required)
+     *
+     * Query parameters supported (via $_GET):
+     *      - ids: string Comma-separated list of worker IDs to fetch
+     *      - key: string Search key for filtering workers
+     *      - status: string Worker status filter
+     *      - excludeTaskTerminated: bool Exclude workers from terminated tasks (requires projectId)
+     *      - limit: int Maximum number of workers to return (default: 10)
+     *      - offset: int Offset for pagination (default: 0)
+     *
+     * @return void Outputs a JSON response with the list of workers or error information.
+     *
+     * @throws ValidationException If input validation fails.
+     * @throws ForbiddenException If the request is not allowed or session is unauthorized.
+     * @throws NotFoundException If the specified project or task is not found.
+     * @throws Exception For any other unexpected errors.
+     */
     public static function getByKey(array $args = []): void
     {
         try {
@@ -185,6 +230,34 @@ class TaskWorkerEndpoint
         }
     }
 
+    /**
+     * Adds multiple workers to a specific task within a project.
+     *
+     * This method performs the following actions:
+     * - Checks if the user session is authorized.
+     * - Validates CSRF token.
+     * - Decodes input data from the request body.
+     * - Validates and retrieves the project and task by their IDs.
+     * - Validates the list of worker IDs to be added.
+     * - Converts worker IDs to UUID objects.
+     * - Associates the specified workers with the given task.
+     * - Returns a success response if all operations succeed.
+     * - Handles and returns appropriate error responses for validation, authorization, and unexpected errors.
+     *
+     * @param array $args Associative array containing:
+     *      - projectId: string|UUID Project identifier (required)
+     *      - taskId: string|UUID Task identifier (required)
+     *
+     * Input JSON body should contain:
+     *      - workerIds: array List of worker IDs (string or UUID) to be added to the task (required)
+     *
+     * @throws ValidationException If input data is invalid or cannot be decoded.
+     * @throws ForbiddenException If session is unauthorized, project/task/worker IDs are missing, or CSRF fails.
+     * @throws NotFoundException If the specified project or task does not exist.
+     * @throws Exception For any other unexpected errors.
+     *
+     * @return void
+     */
     public static function add(array $args = []): void
     {
         try {
@@ -241,6 +314,31 @@ class TaskWorkerEndpoint
         }
     }
 
+    /**
+     * Edits the status of a worker assigned to a specific task within a project.
+     *
+     * This method performs the following actions:
+     * - Validates the user's session and CSRF token.
+     * - Ensures required parameters (projectId, taskId, workerId) are present and valid UUIDs.
+     * - Checks if the specified task and worker exist within the given project.
+     * - Decodes the input data and updates the worker's status for the task.
+     * - Handles and responds to validation, authorization, and unexpected errors.
+     *
+     * @param array $args Associative array containing the following keys:
+     *      - projectId: string|UUID Project identifier (required)
+     *      - taskId: string|UUID Task identifier (required)
+     *      - workerId: string|UUID Worker identifier (required)
+     *
+     * Input Data (from php://input):
+     *      - status: string|WorkerStatus New status for the worker (optional)
+     *
+     * @throws ForbiddenException If the user is not authorized or required parameters are missing.
+     * @throws NotFoundException If the specified task or worker does not exist.
+     * @throws ValidationException If the input data cannot be decoded or is invalid.
+     * @throws Exception For any other unexpected errors.
+     *
+     * @return void Responds with a success message or error details.
+     */
     public static function edit(array $args = []): void
     {
         try {

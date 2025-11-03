@@ -12,18 +12,39 @@ let isLoading = false
 
 const addTaskForm = document.querySelector('#add_task_form')
 const addTaskButton = addTaskForm?.querySelector('#add_new_task_button')
-if (addTaskButton) {
-    const add = debounceAsync(e => submitForm(e), 300)
-    addTaskButton.addEventListener('click', e => add(e))
-    addTaskForm.addEventListener('submit', e => add(e))
-} else {
+if (!addTaskButton) {
     console.error('Add Task button not found.')
     Dialog.somethingWentWrong()
 }
 
+const add = debounceAsync(e => submitForm(e), 300)
+addTaskButton?.addEventListener('click', e => add(e))
+addTaskForm?.addEventListener('submit', e => add(e))
+
+/**
+ * Handles the submission of the "Add Task" form, including validation, confirmation, and backend communication.
+ *
+ * This function performs the following steps:
+ * - Prevents the default form submission behavior.
+ * - Displays a confirmation dialog to the user.
+ * - Shows a loading indicator on the submit button.
+ * - Retrieves and validates form input values.
+ * - Sends the task data to the backend for creation.
+ * - Handles success and error responses, including user feedback and redirection.
+ * - Cleans up the loading indicator after completion.
+ *
+ * @async
+ * @function
+ * @param {Event} e The form submission event.
+ * 
+ * @throws {Error} If required form inputs are not found, project ID is missing, or backend response is invalid.
+ * 
+ * @returns {Promise<void>} Resolves when the form submission process is complete.
+ */
 async function submitForm(e) {
     e.preventDefault()
 
+    // Show confirmation dialog
     if (!await confirmationDialog(
         'Confirm Add Task',
         'Are you sure you want to add this task?'
@@ -31,6 +52,7 @@ async function submitForm(e) {
 
     Loader.patch(addTaskButton.querySelector('.text-w-icon'))
     try {
+        // Retrieve input fields from the form
         const nameInput = addTaskForm.querySelector('#task_name')
         const startDateInput = addTaskForm.querySelector('#task_start_date')
         const completionDateInput = addTaskForm.querySelector('#task_completion_date')
@@ -49,7 +71,10 @@ async function submitForm(e) {
             workerIds: workerIds ? workerIds : {}
         }
 
-        if (!validateInputs(params, workValidationRules())) return
+        // Validate inputs
+        if (!validateInputs(params, workValidationRules())) {
+            return
+        }
 
         const projectId = addTaskForm.dataset.projectid
         if (!projectId) {
@@ -59,11 +84,9 @@ async function submitForm(e) {
         if (!response) {
             throw new Error('No response from server.')
         }
-        Dialog.operationSuccess('Task Added.', 'The task has been added to the project.')
 
-        if (response) {
-            setTimeout(() => window.location.href = `/TaskFlow/project/${projectId}/task/${response.id}`, 1500)
-        }
+        setTimeout(() => window.location.href = `/TaskFlow/project/${projectId}/task/${response.id}`, 1500)
+        Dialog.operationSuccess('Task Added.', 'The task has been added to the project.')
     } catch (error) {
         handleException(error, 'Error submitting form:', error)
     } finally {

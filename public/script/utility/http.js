@@ -1,5 +1,54 @@
 const apiUrl = 'http://localhost/TaskFlow/endpoint/'
 
+/**
+ * Http utility module for making HTTP requests with error handling and CSRF protection.
+ *
+ * Provides methods for GET, POST, PUT, PATCH, and DELETE requests. Handles JSON serialization,
+ * CSRF token inclusion, and error parsing for JSON and non-JSON responses.
+ *
+ * @namespace Http
+ *
+ * @function GET
+ * @memberof Http
+ * @description Sends a GET request to the specified endpoint.
+ * @param {string} endpoint The API endpoint to request.
+ * @returns {Promise<Object|boolean>} Resolves with parsed JSON response, or true for 204/302 status.
+ * @throws {Error} Throws error if the request fails or response is not JSON.
+ *
+ * @function POST
+ * @memberof Http
+ * @description Sends a POST request to the specified endpoint.
+ * @param {string} endpoint The API endpoint to request.
+ * @param {Object|FormData|null} [body=null] The request body. Serialized as JSON by default.
+ * @param {boolean} [serialize=true] Whether to serialize the body as JSON. Set to false for FormData.
+ * @returns {Promise<Object|boolean>} Resolves with parsed JSON response, or true for 204/302 status.
+ * @throws {Error} Throws error if the request fails or response is not JSON.
+ *
+ * @function PUT
+ * @memberof Http
+ * @description Sends a PUT request to the specified endpoint.
+ * @param {string} endpoint The API endpoint to request.
+ * @param {Object|FormData|null} [body=null] The request body. Serialized as JSON by default.
+ * @param {boolean} [serialize=true] Whether to serialize the body as JSON. Set to false for FormData.
+ * @returns {Promise<Object|boolean>} Resolves with parsed JSON response, or true for 204/302 status.
+ * @throws {Error} Throws error if the request fails or response is not JSON.
+ *
+ * @function PATCH
+ * @memberof Http
+ * @description Sends a PATCH request to the specified endpoint.
+ * @param {string} endpoint The API endpoint to request.
+ * @param {Object|FormData|null} [body=null] The request body. Serialized as JSON by default.
+ * @param {boolean} [serialize=true] Whether to serialize the body as JSON. Set to false for FormData.
+ * @returns {Promise<Object|boolean>} Resolves with parsed JSON response, or true for 204/302 status.
+ * @throws {Error} Throws error if the request fails or response is not JSON.
+ *
+ * @function DELETE
+ * @memberof Http
+ * @description Sends a DELETE request to the specified endpoint.
+ * @param {string} endpoint The API endpoint to request.
+ * @returns {Promise<boolean>} Resolves with true if the request succeeds.
+ * @throws {Error} Throws error if the request fails.
+ */
 export const Http = (() => {
     const makeRequest = async (endpoint, method = 'GET', body = null, serialize = true) => {
         try {

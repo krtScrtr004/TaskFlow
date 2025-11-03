@@ -1,9 +1,11 @@
 import { formatDate } from '../../utility/utility.js'
 
 const taskGridContainer = document.querySelector('.task-grid-container')
+
 const projectId = taskGridContainer?.dataset.projectid
-if (!projectId || projectId.trim() === '')
+if (!projectId || projectId.trim() === '') {
     console.warn('Project ID not found.')
+}
 
 /**
  * Creates a task grid card DOM element

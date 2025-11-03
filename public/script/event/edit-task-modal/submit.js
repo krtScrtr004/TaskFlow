@@ -8,25 +8,47 @@ import { debounceAsync } from '../../utility/debounce.js'
 import { handleException } from '../../utility/handle-exception.js'
 
 let isLoading = false
+
 const editTaskModalTemplate = document.querySelector('#edit_task_modal_template')
 const editTaskForm = editTaskModalTemplate?.querySelector('#edit_task_form')
 const editTaskButton = editTaskModalTemplate?.querySelector('#edit_task_button')
 
-if (editTaskButton) {
-    editTaskButton.addEventListener('click', e => debounceAsync(submitForm(e), 300))
-} else {
+if (!editTaskButton) {
     console.error('Edit Task button not found.')
     Dialog.somethingWentWrong()
 }
 
+editTaskButton?.addEventListener('click', e => debounceAsync(submitForm(e), 300))
+
+/**
+ * Handles the submission of the Edit Task form, including validation, confirmation, and backend update.
+ *
+ * This function performs the following steps:
+ * - Prevents the default form submission behavior.
+ * - Prompts the user for confirmation before proceeding.
+ * - Retrieves and validates input fields from the Edit Task form.
+ * - Extracts project and task IDs from the DOM.
+ * - Shows a loading indicator and sends the updated task data to the backend.
+ * - Handles errors and displays appropriate dialogs.
+ * - Reloads the page after a successful update and notifies the user.
+ *
+ * @async
+ * @param {Event} e The form submission event.
+ * 
+ * @throws {Error} If required DOM elements are not found or if the backend request fails.
+ * 
+ * @returns {Promise<void>} Resolves when the form submission process is complete.
+ */
 async function submitForm(e) {
     e.preventDefault()
 
+    // Show confirmation dialog
     if (!await confirmationDialog(
         'Confirm Edit Task',
         'Are you sure you want to save these changes to the task?'
     )) return
 
+    // Retrieve input fields from the form
     const nameInput = editTaskForm.querySelector('#task_name')
     const descriptionInput = editTaskForm.querySelector('#task_description')
     const startDateInput = editTaskForm.querySelector('#task_start_datetime')
@@ -45,6 +67,8 @@ async function submitForm(e) {
         completionDateTime: completionDateInput ? completionDateInput.value : '',
         priority: prioritySelect ? prioritySelect.value : '',
     }
+
+    // Validate inputs
     if (!validateInputs(params, workValidationRules())) return
 
     const viewTaskInfo = document.querySelector('.view-task-info.main-page')
@@ -73,17 +97,14 @@ async function submitForm(e) {
         isLoading = true
         await sendToBackend(projectId, taskId, params)
 
-        setInterval(() => {
-            window.location.reload()
-        }, 3000)
+        setInterval(() => window.location.reload(), 3000)
+        Dialog.operationSuccess('Task Updated.', 'The task has been successfully updated.')
     } catch (error) {
         handleException(error, `Error submitting form: ${error}`)
     } finally {
         Loader.delete()
         isLoading = false
     }
-
-    Dialog.operationSuccess('Task Updated.', 'The task has been successfully updated.')
 }
 
 /**
@@ -100,7 +121,6 @@ async function sendToBackend(projectId, taskId, inputs) {
             return
         }
         isLoading = true
-
 
         if (!projectId || projectId.trim() === '') {
             throw new Error('Project ID is required.')

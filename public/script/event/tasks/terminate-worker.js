@@ -4,6 +4,7 @@ import { handleException } from '../../utility/handle-exception.js'
 
 try {
     const viewTaskInfo = document.querySelector('.view-task-info')
+    
     const projectId = viewTaskInfo?.dataset.projectid
     if (!projectId) {
         throw new Error('Project ID not found.')
@@ -16,6 +17,7 @@ try {
 
     const endpoint = `projects/${projectId}/tasks/${taskId}`
     const workerContainer = viewTaskInfo?.querySelector('.worker-grid')
+    // Initialize worker termination functionality
     terminateWorker(projectId, workerContainer, '.user-grid-card', endpoint)
 } catch (error) {
     handleException(error, 'Error terminating worker:', error)

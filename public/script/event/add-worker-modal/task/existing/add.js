@@ -4,6 +4,7 @@ import { Dialog } from '../../../../render/dialog.js'
 import { Notification } from '../../../../render/notification.js'
 
 let isLoading = false
+
 const viewTaskInfo = document.querySelector('.view-task-info')
 const thisProjectId = viewTaskInfo?.dataset.projectid
 if (!thisProjectId || thisProjectId.trim() === '') {
@@ -11,7 +12,6 @@ if (!thisProjectId || thisProjectId.trim() === '') {
     Dialog.somethingWentWrong()
 }
 
-// Just add workers with default behavior
 await addWorker(
     thisProjectId,
     async (projectId, workerIds) => await sendToBackend(projectId, workerIds),
@@ -23,6 +23,21 @@ await addWorker(
     }
 )
 
+/**
+ * Sends a request to the backend to add workers to a specific task within a project.
+ *
+ * - Checks if a request is already in progress and prevents duplicate submissions.
+ * - Validates the presence of required parameters: projectId, taskId (from DOM), and workerIds.
+ * - Sends a POST request to the backend with the provided worker IDs for the specified project and task.
+ * - Handles errors and ensures loading state is properly managed.
+ *
+ * @async
+ * @function
+ * @param {string} projectId - The ID of the project to which the task belongs.
+ * @param {string[]} workerIds - An array of worker IDs to be added to the task.
+ * @returns {Promise<any>} The response from the backend if the request is successful.
+ * @throws {Error} If required parameters are missing, the request is already in progress, or the backend returns an error.
+ */
 async function sendToBackend(projectId, workerIds) {
     try {
         if (isLoading) {

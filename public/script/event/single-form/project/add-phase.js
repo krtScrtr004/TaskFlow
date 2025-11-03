@@ -33,6 +33,28 @@ export function addPhase(params = {}) {
     addPhaseForm.addEventListener('submit', e => submit(e))
 }
 
+/**
+ * Handles the submission of the "Add Phase" form for a project.
+ *
+ * This function performs the following operations:
+ * - Prevents the default form submission behavior.
+ * - Validates the presence of the form element.
+ * - Retrieves and trims values from the form fields: name, description, start date/time, and completion date/time.
+ * - Validates required fields using custom validation rules.
+ * - Checks for schedule conflicts and phase overlaps within the project.
+ * - Shows error dialogs if validation fails.
+ * - Calls a custom action if provided in params.
+ * - Closes the modal dialog upon successful submission.
+ * - Shows a success dialog and updates the phase list UI.
+ * - Resets the form fields after successful submission.
+ *
+ * @param {Event} e The form submission event.
+ * @param {Object} params Additional parameters for submission.
+ * @param {Function} [params.action] Optional callback function to handle the form data object.
+ * @param {boolean} [params.allowDisable=true] Whether to allow disabling the phase card after addition.
+ *
+ * @throws {Error} If the form element is not found or if an error occurs during submission.
+ */
 function submitForm(e, params) {
     e.preventDefault()
     

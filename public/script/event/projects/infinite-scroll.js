@@ -5,17 +5,21 @@ import { formatDate } from '../../utility/utility.js'
 import { handleException } from '../../utility/handle-exception.js'
 
 let isLoading = false
+
 const projectGridContainer = document.querySelector('.project-grid-container')
+
 const projectGrid = projectGridContainer?.querySelector('.project-grid')
-const sentinel = projectGridContainer?.querySelector('.sentinel')
-
-if (!projectGrid)
+if (!projectGrid) {
     console.warn('Project Grid element not found.')
+}
 
-if (!sentinel)
+const sentinel = projectGridContainer?.querySelector('.sentinel')
+if (!sentinel) {
     console.warn('Sentinel element not found.')
+}
 
 try {
+    // Initialize infinite scroll for loading projects
     infiniteScroll(
         projectGrid,
         sentinel,
@@ -27,12 +31,37 @@ try {
     handleException(error, 'Error initializing infinite scroll:', error)
 }
 
+/**
+ * Retrieves the current count of existing project items displayed or specified by the URL.
+ *
+ * This function checks the current page's URL for an 'offset' query parameter.
+ * - If 'offset' is present, its value is returned as the count of existing items.
+ * - If 'offset' is not present, the function counts the number of elements with the
+ *   class 'project-grid-card' within the 'projectGrid' container and returns that count.
+ *
+ * @returns {number|string} The number of existing project items, either from the 'offset'
+ *   query parameter (as a string) or by counting '.project-grid-card' elements (as a number).
+ */
 function getExistingItemsCount() {
     const queryParams = new URLSearchParams(window.location.search)
     return queryParams.get('offset') ??
         projectGrid.querySelectorAll('.project-grid-card').length
 }
 
+/**
+ * Fetches project data asynchronously from the server using an offset for pagination.
+ *
+ * This function manages loading state to prevent concurrent requests and validates the offset parameter:
+ * - Throws an error if the offset is missing, not a number, or negative.
+ * - Sends a GET request to the 'projects' endpoint with the specified offset.
+ * - Throws an error if the server response is missing.
+ * - Returns the data property from the server response.
+ * - Ensures the loading state is reset after the request completes.
+ *
+ * @param {number} offset The offset value for pagination; must be a non-negative number.
+ * @returns {Promise<any>} A promise that resolves to the project data returned by the server.
+ * @throws {Error} If the offset is invalid, if a request is already in progress, or if the server response is missing.
+ */
 async function asyncFunction(offset) {
     try {
         if (isLoading) {

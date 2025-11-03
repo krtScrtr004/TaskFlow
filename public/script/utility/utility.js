@@ -19,6 +19,17 @@ export function isValidDate(year, month, day) {
     );
 }
 
+/**
+ * Formats a date string into a human-readable date.
+ *
+ * This function parses the provided date string and returns it in the format:
+ * "Month Day, Year" (e.g., "January 1, 2024"), using the user's locale.
+ * Throws an error if the input is missing or invalid.
+ *
+ * @param {string} dateString The date string to format. Should be a valid date string parseable by the Date constructor.
+ * @throws {Error} If the date string is not provided or is invalid.
+ * @return {string} The formatted date string in "Month Day, Year" format.
+ */
 export function formatDate(dateString) {
     if (!dateString) {
         throw new Error('Date string is required.')
@@ -33,6 +44,17 @@ export function formatDate(dateString) {
     return date.toLocaleDateString(undefined, options)
 }
 
+/**
+ * Formats a Date object into a string in the format 'YYYY-MM-DD'.
+ *
+ * This function takes a JavaScript Date object and returns a string
+ * representing the date in ISO 8601 format (without the time component).
+ * Throws an error if the input is not a valid Date object.
+ *
+ * @param {Date} date The Date object to format.
+ * @throws {Error} If the date parameter is missing or not a valid Date object.
+ * @returns {string} The formatted date string in 'YYYY-MM-DD' format.
+ */
 export function formatDateToString(date) {
     if (!date) {
         throw new Error('Date is required.')

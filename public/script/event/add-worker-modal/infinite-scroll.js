@@ -21,11 +21,13 @@ export function infiniteScrollWorkers(projectId, localEndpoint, searchKey = '') 
     const workerList = addWorkerModalTemplate?.querySelector('.worker-list > .list ')
     const sentinel = addWorkerModalTemplate?.parentElement.querySelector('.sentinel')
 
-    if (!workerList)
+    if (!workerList) {
         throw new Error('Worker List element not found.')
+    }
 
-    if (!sentinel)
+    if (!sentinel) {
         throw new Error('Sentinel element not found.')
+    }
 
     try {
         // Create a new observer with a closure that captures the search key
@@ -44,6 +46,20 @@ export function infiniteScrollWorkers(projectId, localEndpoint, searchKey = '') 
     }
 }
 
+/**
+ * Creates an IntersectionObserver to implement infinite scroll for loading workers.
+ *
+ * This function observes a sentinel element at the end of a worker list and fetches more workers
+ * from the server when the sentinel becomes visible (i.e., when the user scrolls near the bottom).
+ * It handles loading state, error reporting, and appends new worker cards to the list.
+ *
+ * @param {HTMLElement} workerList The container element holding the list of worker items.
+ * @param {HTMLElement} sentinel The DOM element used as the scroll sentinel for triggering loading.
+ * @param {string|number} projectId The identifier of the current project (used for fetching workers).
+ * @param {string} searchKey The current search/filter key for fetching workers.
+ *
+ * @returns {IntersectionObserver} The IntersectionObserver instance managing infinite scroll.
+ */
 function createInfiniteScrollObserver(workerList, sentinel, projectId, searchKey) {
     let offset = getExistingItemsCount()
 
@@ -60,6 +76,7 @@ function createInfiniteScrollObserver(workerList, sentinel, projectId, searchKey
                         continue
                     }
 
+                    // No more workers to load; stop observing
                     if (!workers || workers.length === 0) {
                         observer.unobserve(sentinel)
                         return
@@ -86,6 +103,13 @@ function createInfiniteScrollObserver(workerList, sentinel, projectId, searchKey
     }
 }
 
+/**
+ * Disconnects the current infinite scroll observer if it exists.
+ *
+ * - Checks if there is an active infinite scroll observer.
+ * - If present, disconnects the observer to stop observing DOM changes.
+ * - Sets the observer reference to null to clean up and prevent memory leaks.
+ */
 export function disconnectInfiniteScroll() {
     if (currentInfiniteScrollObserver) {
         currentInfiniteScrollObserver.observer.disconnect()

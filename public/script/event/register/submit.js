@@ -9,25 +9,42 @@ import { handleException } from '../../utility/handle-exception.js'
 
 let isLoading = false
 
-const registerForm = document.querySelector('#register_form')
 const registerButton = registerForm?.querySelector('#register_button')
-if (registerButton) {
-    registerButton.addEventListener('click', e => debounceAsync(submit(e), 300))
-} else {
+if (!registerButton) {
     console.error('Register button not found.')
     Dialog.somethingWentWrong()
 }
 
-if (registerForm) {
-    registerForm.addEventListener('submit', e => debounceAsync(submit(e), 300))
-} else {
+registerButton?.addEventListener('click', e => debounceAsync(submit(e), 300))
+
+const registerForm = document.querySelector('#register_form')
+if (!registerForm) {
     console.error('Register form not found.')
     Dialog.somethingWentWrong()
 }
 
+registerForm?.addEventListener('submit', e => debounceAsync(submit(e), 300))
+
+
+/**
+ * Handles the registration form submission event.
+ *
+ * This function collects user input from the registration form, validates the inputs,
+ * displays a loading indicator, sends the data to the backend, and handles the response.
+ * On successful registration, it shows a notification and redirects the user to the home page.
+ * On error, it displays an error notification.
+ *
+ * @async
+ * @param {Event} e The form submission event.
+ * 
+ * @throws {Error} If one or more required form inputs are not found in the DOM.
+ *
+ * @returns {Promise<void>} Resolves when the registration process is complete.
+ */
 async function submit(e) {
     e.preventDefault()
 
+    // Retrieve input fields from the form
     const firstNameInput = registerForm.querySelector('#register_first_name')
     const middleNameInput = registerForm.querySelector('#register_middle_name')
     const lastNameInput = registerForm.querySelector('#register_last_name')
@@ -56,15 +73,18 @@ async function submit(e) {
         role: roleInput.value.trim()
     }
 
-    if (!validateInputs(inputs, userValidationRules())) return
+    // Validate inputs
+    if (!validateInputs(inputs, userValidationRules())) {
+        return
+    }
 
     Loader.patch(registerButton.querySelector('.text-w-icon'))
     try {
         await sendToBackend(...Object.values(inputs))
 
         const delay = 1500
-        Notification.success('Registration successful!', delay)
         setTimeout(() => window.location.href = '/TaskFlow/home', delay)
+        Notification.success('Registration successful!', delay)
     } catch (error) {
         handleException(error, `Error during register: ${error}`)
     } finally {
@@ -72,6 +92,27 @@ async function submit(e) {
     }
 }
 
+/**
+ * Sends user registration data to the backend for account creation.
+ *
+ * This function performs client-side validation on the provided user details before sending them
+ * to the backend API endpoint for registration. It prevents duplicate submissions by checking
+ * the loading state, and throws errors for missing or invalid required fields.
+ *
+ * @param {string} firstName User's first name (required)
+ * @param {string} middleName User's middle name (optional)
+ * @param {string} lastName User's last name (required)
+ * @param {string} gender User's gender (required)
+ * @param {string} birthDate User's birth date in ISO format or a valid date string (required)
+ * @param {string} jobTitles User's job titles (optional)
+ * @param {string} contactNumber User's contact number (required)
+ * @param {string} email User's email address (required)
+ * @param {string} password User's password (required)
+ * @param {string} role User's role (required)
+ *
+ * @throws {Error} If any required field is missing or invalid, or if a request is already in progress.
+ * @returns {Promise<void>} Resolves when the registration request completes successfully.
+ */
 async function sendToBackend(
     firstName,
     middleName,

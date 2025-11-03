@@ -12,6 +12,7 @@ try {
 
     const endpoint = `projects/${projectId}`
     const workerContainer = projectContainer?.querySelector('.worker-list')
+    // Initialize terminate worker functionality
     terminateWorker(projectId, workerContainer, '.worker-list-card', endpoint)
 } catch (error) {
     handleException(error, 'Error initializing terminate worker functionality:', error)

@@ -11,6 +11,7 @@ if (passwordElement) {
         const count = password.length
         const [lowerCase, upperCase, characters] = [patterns[0].test(password), patterns[1].test(password), patterns[2].test(password)]
 
+        // Update rule colors based on validation
         rules?.forEach(rule => {
             if (rule.id === 'lower_case') {
                 rule.style.color = (lowerCase) ? green : red

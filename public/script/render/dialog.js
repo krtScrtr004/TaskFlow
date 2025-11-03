@@ -3,6 +3,22 @@ import { hideModal } from '../utility/hide-modal.js'
 const ICON_PATH = 'asset/image/icon/'
 const icons = ['confirm.svg', 'reject.svg']
 
+/**
+ * Renders a modal dialog with a status icon, title, message, and an OKAY button.
+ *
+ * This function creates and inserts a modal dialog element into the DOM. The dialog displays
+ * a status icon (success or error), a title, a message, and an OKAY button. The modal is
+ * inserted as the first child of the specified parent element.
+ *
+ * @param {boolean} status Indicates the status of the dialog (true for success, false for error).
+ * @param {string} id Unique identifier for the modal dialog instance.
+ * @param {string} title The title text to display in the dialog.
+ * @param {string} message The message text to display in the dialog.
+ * @param {Element} [parent=document.querySelector('body')] The parent DOM element to which the modal will be appended.
+ * @param {string} [statusIcon=status ? icons[0] : icons[1]] The icon filename to use for the status (defaults to success or error icon based on status).
+ *
+ * @returns {void}
+ */
 function render(
     status,
     id,
@@ -37,6 +53,51 @@ function render(
     hideModal(modalWrapper)
 }
 
+/**
+ * Dialog utility for rendering various modal dialogs in the application.
+ *
+ * Provides methods to display dialogs for different scenarios such as operation success, errors,
+ * password changes, report submissions, link sending, and too many attempts.
+ *
+ * Each method internally calls the `render` function with appropriate parameters to display the dialog.
+ *
+ * @namespace Dialog
+ * 
+ * @function operationSuccess
+ * @memberof Dialog
+ * @description Renders a dialog indicating a successful operation.
+ * @param {string} title - The title of the dialog.
+ * @param {string} message - The message to display in the dialog.
+ * 
+ * @function errorOccurred
+ * @memberof Dialog
+ * @description Renders a dialog indicating an error has occurred.
+ * @param {string} message - The error message to display.
+ * 
+ * @function somethingWentWrong
+ * @memberof Dialog
+ * @description Renders a dialog for unexpected errors with a generic message.
+ * 
+ * @function changePassword
+ * @memberof Dialog
+ * @description Renders a dialog indicating the result of a password change attempt.
+ * @param {boolean} status - The status of the password change (true for success, false for error).
+ * 
+ * @function reportResult
+ * @memberof Dialog
+ * @description Renders a dialog indicating the result of a report submission.
+ * @param {boolean} status - The status of the report submission (true for success, false for failure).
+ * 
+ * @function sendLink
+ * @memberof Dialog
+ * @description Renders a dialog indicating the result of sending a link.
+ * @param {boolean} status - The status of the link sending operation (true for success, false for error).
+ * 
+ * @function tooManyAttempt
+ * @memberof Dialog
+ * @description Renders a dialog indicating that there have been too many attempts.
+ * 
+ */
 export const Dialog = (() => {
     return {
         operationSuccess: function (title, message) {

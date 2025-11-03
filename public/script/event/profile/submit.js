@@ -8,47 +8,73 @@ import { debounce, debounceAsync } from '../../utility/debounce.js'
 import { handleException } from '../../utility/handle-exception.js'
 
 let [isLoading, hasSomethingChanged] = [false, false]
+
 const profile = document.querySelector('.profile')
-const editableProfileDetailsForm = profile?.querySelector('#editable_profile_details_form')
-const saveChangesButton = editableProfileDetailsForm?.querySelector('#save_changes_button')
-const myId = profile?.dataset.myid
 
 // Store original values
 const originalValues = {}
 
-if (editableProfileDetailsForm) {
-    // Capture initial values when the page loads
-    storeOriginalValues()
-
-    editableProfileDetailsForm.addEventListener('input', debounce(e => {
-        if (e.target.matches('input, textarea') && !hasSomethingChanged) {
-            saveChangesButton.disabled = false
-            hasSomethingChanged = true
-        }
-    }, 300))
-
-    editableProfileDetailsForm.addEventListener('submit', e => debounceAsync(() => submit(e), 300))
-} else {
+const editableProfileDetailsForm = profile?.querySelector('#editable_profile_details_form')
+if (!editableProfileDetailsForm) {
     console.error('Editable profile details form not found.')
 }
 
-if (saveChangesButton) {
-    saveChangesButton.addEventListener('click', e => debounceAsync(() => submit(e), 300))
-} else {
+// Capture initial values when the page loads
+storeOriginalValues()
+
+// Enable save button on input change
+editableProfileDetailsForm?.addEventListener('input', debounce(e => {
+    if (e.target.matches('input, textarea') && !hasSomethingChanged) {
+        saveChangesButton.disabled = false
+        hasSomethingChanged = true
+    }
+}, 300))
+// Handle form submission
+editableProfileDetailsForm?.addEventListener('submit', e => debounceAsync(() => submit(e), 300))
+
+const saveChangesButton = editableProfileDetailsForm?.querySelector('#save_changes_button')
+if (!saveChangesButton) {
     console.error('Save Changes button not found.')
 }
 
-if (!myId || myId.trim() === '')
-    console.error('User ID not found in form dataset.')
+saveChangesButton?.addEventListener('click', e => debounceAsync(() => submit(e), 300))
 
+const myId = profile?.dataset.myid
+if (!myId || myId.trim() === '') {
+    console.error('User ID not found in form dataset.')
+}
+
+/**
+ * Handles the submission of the editable profile details form.
+ *
+ * This function performs the following steps:
+ * - Prevents the default form submission behavior.
+ * - Prompts the user for confirmation before saving changes.
+ * - Retrieves and validates all required profile input fields.
+ * - Validates the input values using custom validation rules.
+ * - Determines which fields have changed compared to the original profile data.
+ * - If no changes are detected, notifies the user and aborts the operation.
+ * - If changes are detected, sends only the changed values to the backend for updating.
+ * - Displays a loader during the update process.
+ * - On success, notifies the user and reloads the page after a short delay.
+ * - Handles and displays any errors that occur during the update process.
+ * - Cleans up the loader after the operation completes.
+ *
+ * @async
+ * @function
+ * @param {Event} e The form submission event.
+ * @returns {Promise<void>} Resolves when the profile update process is complete.
+ */
 async function submit(e) {
     e.preventDefault()
 
+    // Show confirmation dialog
     if (!await confirmationDialog(
         'Confirm Save Changes',
         'Are you sure you want to save the changes to your profile?'
     )) return
 
+    // Retrieve input fields from the form
     const firstNameInput = editableProfileDetailsForm.querySelector('#first_name')
     const middleNameInput = editableProfileDetailsForm.querySelector('#middle_name')
     const lastNameInput = editableProfileDetailsForm.querySelector('#last_name')
@@ -73,7 +99,11 @@ async function submit(e) {
         bio: bioInput.value,
         jobTitles: jobTitlesInput.value
     }
-    if (!validateInputs(params, userValidationRules())) return
+
+    // Validate inputs
+    if (!validateInputs(params, userValidationRules())) { 
+        return
+    }
 
     // Get only the changed values
     const changedParams = getChangedValues(params)
@@ -91,12 +121,11 @@ async function submit(e) {
     try {
         await sendToBackend(changedParams)
 
-        const delay = 3000
+        setTimeout(() => window.location.reload(), 3000)
         Dialog.operationSuccess(
             'Profile Updated',
             `Your profile has been successfully updated`
         )
-        setTimeout(() => window.location.reload(), delay)
     } catch (error) {
         handleException(error, `Error during profile update: ${error}`)
     } finally {
@@ -104,6 +133,24 @@ async function submit(e) {
     }
 }
 
+/**
+ * Stores the current values of the editable profile form fields into the `originalValues` object.
+ *
+ * This function queries the form for the following fields and saves their current values:
+ * - first name
+ * - middle name
+ * - last name
+ * - email
+ * - contact number
+ * - gender (radio input)
+ * - bio
+ * - job titles
+ *
+ * If a field is not present, its value is set to an empty string.
+ *
+ * @function
+ * @returns {void}
+ */
 function storeOriginalValues() {
     const firstNameInput = editableProfileDetailsForm.querySelector('#first_name')
     const middleNameInput = editableProfileDetailsForm.querySelector('#middle_name')
@@ -124,6 +171,18 @@ function storeOriginalValues() {
     originalValues.jobTitles = jobTitlesInput?.value || ''
 }
 
+/**
+ * Returns an object containing only the properties from currentParams that have changed compared to originalValues.
+ *
+ * This function compares each key-value pair in currentParams with the corresponding value in originalValues.
+ * If a value has changed, it is included in the returned object.
+ *
+ * @param {Object} currentParams - An object representing the current parameter values, with keys as parameter names and values as their current state.
+ *      - [key: string]: any The current value for each parameter.
+ * 
+ * @returns {Object} An object containing only the changed key-value pairs.
+ *      - [key: string]: any The new value for each parameter that has changed.
+ */
 function getChangedValues(currentParams) {
     const changedValues = {}
 
@@ -137,6 +196,27 @@ function getChangedValues(currentParams) {
     return changedValues
 }
 
+/**
+ * Sends updated user profile data to the backend via a PATCH request.
+ *
+ * This function performs validation only on the fields present in the `params` object.
+ * It ensures required fields are not empty if they are being updated, converts the `jobTitles`
+ * string to an array, and prevents concurrent requests using an `isLoading` flag.
+ *
+ * @param {Object} params Object containing the fields to update. Possible keys:
+ *      - firstName: {string} (optional) User's first name
+ *      - lastName: {string} (optional) User's last name
+ *      - email: {string} (optional) User's email address
+ *      - contactNumber: {string} (optional) User's contact number
+ *      - gender: {string} (optional) User's gender
+ *      - jobTitles: {string} (optional) Comma-separated job titles
+ *      - [other fields]: {any} (optional) Any additional fields to update
+ *
+ * @throws {Error} If a required field is missing or empty, if user ID is not found,
+ *                 if a request is already in progress, or if the server does not respond.
+ *
+ * @returns {Promise<void>} Resolves when the request completes successfully.
+ */
 async function sendToBackend(params) {
     try {
         if (isLoading) {

@@ -136,6 +136,18 @@ async function addWorkerButtonEvent(e, projectId, confirmAddWorkerButton, asyncF
     }
 }
 
+/**
+ * Toggles the visibility of the "No Workers Wall" and the worker list in the Add Worker modal.
+ *
+ * This function shows or hides the "No Workers Wall" element and the worker list container
+ * based on the provided boolean flag. It manipulates CSS classes to control the display:
+ * - When `show` is true, the "No Workers Wall" is displayed and the worker list is hidden.
+ * - When `show` is false, the worker list is displayed and the "No Workers Wall" is hidden.
+ *
+ * @param {boolean} show Determines whether to show the "No Workers Wall" (`true`) or the worker list (`false`).
+ *
+ * @throws Will log an error to the console if the "No Workers Wall" or worker list container elements are not found.
+ */
 export function toggleNoWorkerWall(show) {
     const noWorkersWall = addWorkerModalTemplate?.querySelector('.no-workers-wall')
     if (!noWorkersWall) {
