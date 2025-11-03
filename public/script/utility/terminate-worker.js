@@ -5,14 +5,16 @@ import { confirmationDialog } from '../render/confirmation-dialog.js'
 
 let isLoading = false
 let targetUser = null
-const userInfoCardTemplate = document.querySelector('#user_info_card_template')
 let thisUserContainer = null
+let endpoint = ''
+const userInfoCardTemplate = document.querySelector('#user_info_card_template')
 
-export function terminateWorker(projectId, userContainer, userCardSelector) {
+export function terminateWorker(projectId, userContainer, userCardSelector, localEndpoint) {
     if (!userContainer) {
         return
     }
     thisUserContainer = userContainer
+    endpoint = localEndpoint
 
     userContainer.addEventListener('click', e => {
         targetUser = e.target.closest(userCardSelector)
@@ -86,7 +88,7 @@ async function sendToBackend(projectId, userId) {
             throw new Error('User ID is required.')
         }
 
-        const response = await Http.PATCH(`projects/${projectId}/workers/${userId}`, { status: 'terminated' })
+        const response = await Http.PATCH(`${endpoint}/workers/${userId}`, { status: 'terminated' })
         if (!response) {
             throw new Error('Failed to terminate worker from project.')
         }

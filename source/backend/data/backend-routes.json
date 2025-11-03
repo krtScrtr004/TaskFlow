@@ -91,6 +91,10 @@
 		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/workers/{workerId:[\\w+_-]+}": [
 			"ProjectWorkerEndpoint",
 			"edit"
+		],
+		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}/workers/{workerId:[\\w+_-]+}": [
+			"TaskWorkerEndpoint",
+			"edit"
 		]
 	},
 
@@ -106,6 +110,10 @@
 		],
 		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/workers/{workerId:[\\w+_-]+}": [
 			"ProjectWorkerEndpoint",
+			"edit"
+		],
+		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}/workers/{workerId:[\\w+_-]+}": [
+			"TaskWorkerEndpoint",
 			"edit"
 		]
 	},

@@ -4,20 +4,33 @@ import { handleException } from '../../../../utility/handle-exception.js'
 import { fetchWorkers } from '../../fetch.js'
 import { createWorkerListCard } from '../../render.js'
 import { selectWorker } from '../../select.js'
+import { toggleNoWorkerWall } from '../../modal.js'
 import { initializeAddWorkerModal } from '../../modal.js'
 
 const viewTaskInfo = document.querySelector('.view-task-info')
 const addWorkerButton = viewTaskInfo?.querySelector('#add_worker_button')
 const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
 const projectId = viewTaskInfo.dataset.projectid
+const taskId = viewTaskInfo.dataset.taskid
+
 if (!projectId || projectId.trim() === '') {
     console.error('Project ID not found.')
     Dialog.somethingWentWrong()
 }
 
+if (!taskId || taskId.trim() === '') {
+    console.error('Task ID not found.')
+    Dialog.somethingWentWrong()
+}
+
 if (addWorkerModalTemplate) {
     addWorkerButton.addEventListener('click', async () => {
-        initializeAddWorkerModal(projectId)
+        const params = new URLSearchParams()
+        params.append('status', 'unassigned')
+
+        const endpoint = `projects/${projectId}/tasks/${taskId}/workers?${params.toString()}`
+
+        initializeAddWorkerModal(projectId, endpoint)
 
         addWorkerModalTemplate.classList.add('flex-col')
         addWorkerModalTemplate.classList.remove('no-display')
@@ -30,7 +43,12 @@ if (addWorkerModalTemplate) {
                 throw new Error('Project ID is missing.')
             }
 
-            const workers = await fetchWorkers(projectId)
+            const workers = await fetchWorkers(endpoint)
+            if (workers.length === 0) {
+                toggleNoWorkerWall(true)
+                return
+            }
+
             workers.forEach(worker => createWorkerListCard(worker))
             selectWorker()
         } catch (error) {

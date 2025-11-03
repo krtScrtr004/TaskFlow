@@ -10,9 +10,11 @@ use App\Enumeration\WorkStatus;
 use App\Exception\ForbiddenException;
 use App\Exception\NotFoundException;
 use App\Exception\ValidationException;
+use App\Middleware\Csrf;
 use App\Middleware\Response;
 use App\Model\ProjectModel;
 use App\Model\ProjectWorkerModel;
+use App\Model\TaskModel;
 use App\Model\TaskWorkerModel;
 use App\Model\UserModel;
 use App\Utility\WorkerPerformanceCalculator;
@@ -57,11 +59,21 @@ class TaskWorkerEndpoint
                 throw new ForbiddenException('Project ID is required.');
             }
 
+            $project = ProjectModel::findById($projectId);
+            if (isset($projectId) && !$project) {
+                throw new NotFoundException('Project not found.');
+            }
+
             $taskId =  isset($args['taskId'])
                 ? UUID::fromString($args['taskId'])
                 : null;
 
-            $worker = TaskWorkerModel::findById($workerId,  $projectId, $taskId);
+            $task = TaskModel::findById($taskId);
+            if (!$task) {
+                throw new NotFoundException('Task not found.');
+            }
+
+            $worker = TaskWorkerModel::findById($workerId,  $task->getId() ?? null, $project->getId() ?? null);
             if (!$worker) {
                 throw new NotFoundException('Worker not found.');
             } 
@@ -95,10 +107,26 @@ class TaskWorkerEndpoint
             $projectId = isset($args['projectId'])
                 ? UUID::fromString($args['projectId'])
                 : null;
+            if (isset($args['projectId']) && !$projectId) {
+                throw new ForbiddenException('Project ID is required.');
+            }
+
+            $project = ProjectModel::findById($projectId);
+            if (isset($projectId) && !$project) {
+                throw new NotFoundException('Project not found.');
+            }
 
             $taskId = isset($args['taskId'])
                 ? UUID::fromString($args['taskId'])
                 : null;
+            if (!$taskId) {
+                throw new ForbiddenException('Task ID is required.');
+            }
+
+            $task = TaskModel::findById($taskId);
+            if (!$task) {
+                throw new NotFoundException('Task not found.');
+            }
 
             $workers = [];
             if (isset($_GET['ids']) && trim($_GET['ids']) !== '') {
@@ -107,7 +135,7 @@ class TaskWorkerEndpoint
                 foreach ($ids as $id) {
                     $uuids[] = UUID::fromString($id);
                 }
-                $workers = TaskWorkerModel::findMultipleById($uuids, $taskId, $projectId);
+                $workers = TaskWorkerModel::findMultipleById($uuids, $task->getId() ?? null, $project->getId() ?? null);
             } else {
                 $key = null;
                 if (isset($_GET['key']) && trim($_GET['key']) !== '') {
@@ -129,8 +157,8 @@ class TaskWorkerEndpoint
 
                 $workers = TaskWorkerModel::search(
                     $key,
-                    $taskId,
-                    $projectId,
+                    $task->getId() ?? null,
+                    $project->getId() ?? null,
                     $status,
                     [
                         'excludeTaskTerminated'  => $excludeTaskTerminated,
@@ -157,59 +185,121 @@ class TaskWorkerEndpoint
         }
     }
 
-
-
-
-
     public static function add(array $args = []): void
     {
-    //     $data = decodeData('php://input');
-    //     if (!$data) {
-    //         Response::error('Invalid data provided');
-    //     }
+        try {
+            if (!SessionAuth::hasAuthorizedSession()) {
+                throw new ForbiddenException('User session is not authorized to perform this action.');
+            }
+            Csrf::protect();
 
-    //     if (!isset($args['projectId'])) {
-    //         Response::error('Project ID is required');
-    //     }
+            $data = decodeData('php://input');
+            if (!$data) {
+                throw new ValidationException('Cannot decode data.');
+            }
 
-    //     if (!isset($args['taskId'])) {
-    //         Response::error('Task ID is required');
-    //     }
+            $projectId = isset($args['projectId'])
+                ? UUID::fromString($args['projectId'])
+                : null;
+            if (!isset($projectId)) {
+                throw new ForbiddenException('Project ID is required.');
+            }
+            $project = ProjectModel::findById($projectId);
+            if ($project === null) {
+                throw new NotFoundException('Project not found.');
+            }
 
-    //     $workerIds = $data['workerIds'] ?? null;
-    //     if (!isset($data['workerIds']) || !is_array($data['workerIds']) || count($data['workerIds']) < 1) {
-    //         Response::error('Worker IDs are required');
-    //     }
+            $taskId = isset($args['taskId'])
+                ? UUID::fromString($args['taskId'])
+                : null;
+            if (!isset($taskId)) {
+                throw new ForbiddenException('Task ID is required.');
+            }
+            $task = TaskModel::findById($taskId);
+            if ($task === null) {
+                throw new NotFoundException('Task not found.');
+            }
 
-    //     $returnData = $data['returnData'] ?? false;
-
-    //     // TODO: Add worker to project logic
-
-    //     $returnDataArray = [];
-    //     if ($returnData) {
-    //         foreach ($workerIds as $workerId) {
-    //             // TODO: Fetch User
-    //             $user = UserModel::all()[0];
-
-    //             $userPerformance = WorkerPerformanceCalculator::calculate(ProjectModel::all());
-    //             $returnDataArray[] = [
-    //                 'id' => $user->getPublicId(),
-    //                 'name' => $user->getFirstName() . ' ' . $user->getLastName(),
-    //                 'profilePicture' => $user->getProfileLink(),
-    //                 'bio' => $user->getBio(),
-    //                 'email' => $user->getEmail(),
-    //                 'contactNumber' => $user->getContactNumber(),
-    //                 'role' => $user->getRole()->value,
-    //                 'jobTitles' => $user->getJobTitles()->toArray(),
-    //                 'totalTasks' => count(ProjectModel::all()),
-    //                 'completedTasks' => ProjectModel::all()->getCountByStatus(WorkStatus::COMPLETED),
-    //                 'performance' => $userPerformance['overallScore'],
-    //             ];
-    //         }
-
-    //     }
-
-    //     Response::success($returnDataArray, 'Worker added successfully');
+            $workerIds = $data['workerIds'] ?? null;
+            if (!isset($data['workerIds']) || !is_array($data['workerIds']) || count($data['workerIds']) < 1) {
+                throw new ForbiddenException('Worker IDs are required.');
+            }
+            
+            $ids = [];
+            foreach ($workerIds as $workerId) {
+                $ids[] = UUID::fromString($workerId);
+            }
+            TaskWorkerModel::createMultiple($task->getId(), $ids);
+            
+            Response::success([], 'Workers added successfully.');
+        } catch (ValidationException $e) {
+            Response::error('Validation Failed.',$e->getErrors(),422);
+        } catch (ForbiddenException $e) {
+            Response::error('Forbidden.', [], 403);
+        } catch (Exception $e) {
+            Response::error('Unexpected Error.', ['An unexpected error occurred. Please try again.'], 500);
+        }
     }
 
+    public static function edit(array $args = []): void
+    {
+        try {
+            if (!SessionAuth::hasAuthorizedSession()) {
+                throw new ForbiddenException('User session is not authorized to perform this action.');
+            }
+            Csrf::protect();
+
+            $projectId = isset($args['projectId'])
+                ? UUID::fromString($args['projectId'])
+                : null;
+            if (!isset($projectId)) {
+                throw new ForbiddenException('Project ID is required.');
+            }
+
+            $taskId = isset($args['taskId'])
+                ? UUID::fromString($args['taskId']) 
+                : null;
+            if (!isset($taskId)) {
+                throw new ForbiddenException('Task ID is required.');
+            }
+
+            $task = TaskModel::findById($taskId);
+            if (!$task) {
+                throw new NotFoundException('Task not found.');
+            }
+
+            $workerId = $args['workerId'] ?? null;
+            if (!isset($workerId)) {
+                throw new ForbiddenException('Worker ID is required.');
+            }
+
+            $worker = TaskWorkerModel::findById(
+                UUID::fromString($workerId),
+                null,
+                ProjectModel::findById($projectId)?->getId() ?? null
+            );
+            if (!$worker) {
+                throw new NotFoundException('Worker not found.');
+            }
+
+            $data = decodeData('php://input');
+            if (!$data) {
+                throw new ValidationException('Cannot decode data.');
+            }
+
+            TaskWorkerModel::save([
+                'taskId'        => $task->getId(),
+                'workerId'      => $worker->getId(),
+                'status'        => isset($data['status']) ? WorkerStatus::from($data['status']) : null,
+            ]);
+
+            Response::success([], 'Worker status updated successfully.');
+        } catch (ValidationException $e) {
+            Response::error('Validation Failed.',$e->getErrors(),422);
+        } catch (ForbiddenException $e) {
+            Response::error('Forbidden.', [], 403);
+        } catch (Exception $e) {
+            Response::error('Unexpected Error.', ['An unexpected error occurred. Please try again.'], 500);
+        }
+    }
 }

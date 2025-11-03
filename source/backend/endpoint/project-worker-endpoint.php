@@ -73,8 +73,13 @@ class ProjectWorkerEndpoint
                 throw new ForbiddenException('Project ID is required.');
             }
 
+            $project = ProjectModel::findById($projectId);
+            if (!isset($projectId) && !$project) {
+                throw new NotFoundException('Project not found.');
+            }
 
-            $worker = ProjectWorkerModel::findById($workerId,  $projectId, true);
+
+            $worker = ProjectWorkerModel::findById($workerId,  $project->getId() ?? null, true);
             if (!$worker) {
                 throw new NotFoundException('Worker not found.');
             } 
@@ -112,6 +117,11 @@ class ProjectWorkerEndpoint
                 throw new ForbiddenException('Project ID is required.');
             }
 
+            $project = ProjectModel::findById($projectId);
+            if (!isset($projectId) && !$project) {
+                throw new NotFoundException('Project not found.');
+            }
+
             $workers = [];
             if (isset($_GET['ids']) && trim($_GET['ids']) !== '') {
                 $ids = explode(',', trimOrNull($_GET['ids'] ?? ''));
@@ -119,7 +129,7 @@ class ProjectWorkerEndpoint
                 foreach ($ids as $id) {
                     $uuids[] = UUID::fromString($id);
                 }
-                $workers = ProjectWorkerModel::findMultipleById($uuids, $projectId, false);
+                $workers = ProjectWorkerModel::findMultipleById($uuids, $project->getId() ?? null, false);
             } else {
                 $key = null;
                 if (isset($_GET['key']) && trim($_GET['key']) !== '') {
@@ -141,7 +151,7 @@ class ProjectWorkerEndpoint
 
                 $workers = ProjectWorkerModel::search(
                     $key,
-                    $projectId,
+                    $project->getId() ?? $projectId,
                     $status,
                     [
                         'excludeProjectTerminated'  => $excludeProjectTerminated,
@@ -213,6 +223,11 @@ class ProjectWorkerEndpoint
                 throw new ForbiddenException('Project ID is required.');
             }
 
+            $project = ProjectModel::findById($projectId);
+            if (!$project) {
+                throw new NotFoundException('Project not found.');
+            }
+
             $workerIds = $data['workerIds'] ?? null;
             if (!isset($data['workerIds']) || !is_array($data['workerIds']) || count($data['workerIds']) < 1) {
                 throw new ForbiddenException('Worker IDs are required.');
@@ -222,7 +237,7 @@ class ProjectWorkerEndpoint
             foreach ($workerIds as $workerId) {
                 $ids[] = UUID::fromString($workerId);
             }
-            ProjectWorkerModel::createMultiple($projectId, $ids);
+            ProjectWorkerModel::createMultiple($project->getId(), $ids);
             
             Response::success([], 'Workers added successfully.');
         } catch (ValidationException $e) {
@@ -233,8 +248,6 @@ class ProjectWorkerEndpoint
             Response::error('Unexpected Error.', ['An unexpected error occurred. Please try again.'], 500);
         }
     }
-
-
 
     public static function edit(array $args = []): void
     {
@@ -251,9 +264,19 @@ class ProjectWorkerEndpoint
                 throw new ForbiddenException('Project ID is required.');
             }
 
+            $project = ProjectModel::findById($projectId);
+            if (!$project) {
+                throw new NotFoundException('Project not found.');
+            }
+
             $workerId = $args['workerId'] ?? null;
             if (!isset($workerId)) {
                 throw new ForbiddenException('Worker ID is required.');
+            }
+
+            $worker = ProjectWorkerModel::findById($workerId, $project->getId(), true);
+            if (!$worker) {
+                throw new NotFoundException('Worker not found.');
             }
 
             $data = decodeData('php://input');
@@ -262,8 +285,8 @@ class ProjectWorkerEndpoint
             }
 
             ProjectWorkerModel::save([
-                'projectId'     => $projectId,
-                'workerId'      => UUID::fromString($workerId),
+                'projectId'     => $project->getId(),
+                'workerId'      => $worker->getId(),
                 'status'        => isset($data['status']) ? WorkerStatus::from($data['status']) : null,
             ]);
 
@@ -275,27 +298,5 @@ class ProjectWorkerEndpoint
         } catch (Exception $e) {
             Response::error('Unexpected Error.', ['An unexpected error occurred. Please try again.'], 500);
         }
-    }
-
-    public static function terminate(): void
-    {
-        $data = decodeData('php://input');
-        if (!$data) {
-            Response::error('Invalid data provided');
-        }
-
-        if (!isset($data['projectId'])) {
-            Response::error('Project ID is required');
-        }
-
-        if (!isset($data['workerIds']) || !is_array($data['workerIds']) || count($data['workerIds']) < 1) {
-            Response::error('Worker IDs are required');
-        }
-
-        // TODO: Terminate worker from project logic
-
-        Response::success([
-            'message' => 'Worker terminated successfully'
-        ], 'Worker terminated successfully');
     }
 }

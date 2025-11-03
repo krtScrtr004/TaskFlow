@@ -6,11 +6,13 @@ import { handleException } from '../../utility/handle-exception.js'
 try {
     const projectContainer = document.querySelector('.project-container')
     const projectId = projectContainer?.dataset.projectid
-    if (!projectId)
+    if (!projectId) {
         throw new Error('Project ID not found.')
+    }
 
+    const endpoint = `projects/${projectId}`
     const workerContainer = projectContainer?.querySelector('.worker-list')
-    terminateWorker(projectId, workerContainer, '.worker-list-card')
+    terminateWorker(projectId, workerContainer, '.worker-list-card', endpoint)
 } catch (error) {
     handleException(error, 'Error initializing terminate worker functionality:', error)
 }

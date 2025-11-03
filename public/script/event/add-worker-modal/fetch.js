@@ -22,7 +22,7 @@ export async function fetchWorkers(endpoint, key = null, offset = 0) {
  * Internal function to perform the actual HTTP request.
  * Prevents duplicate requests by checking isFetchingWorkers flag.
  */
-async function fetchFromDatabase(endpoint, key = null, offset) {
+async function fetchFromDatabase(url, key = null, offset) {
     try {
         if (isFetchingWorkers) {
             console.warn('Request already in progress. Please wait.')
@@ -30,13 +30,14 @@ async function fetchFromDatabase(endpoint, key = null, offset) {
         }
         isFetchingWorkers = true
 
-        const [path, queryString] = endpoint.split('?')
+        const [path, queryString] = url.split('?')
         const params = new URLSearchParams(queryString)
 
         params.append('key', key || '')
         params.append('offset', offset)
 
-        const response = await Http.GET(`${path}?${params.toString()}`)
+        const endpoint = `${path}?${params.toString()}`
+        const response = await Http.GET(endpoint)
         if (!response) {
             throw new Error('Workers data not found!')
         }

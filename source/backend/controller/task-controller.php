@@ -21,7 +21,26 @@ class TaskController implements Controller
     {
     }
 
-    public static function index(array $args = []): void
+    public static function index(): void {}
+
+    /**
+     * Displays the task grid view for a specific project.
+     *
+     * This method checks user session authorization and validates the provided project ID.
+     * It retrieves the list of tasks for the project, either all tasks (if the user is a project manager)
+     * or only those assigned to the current worker. If no tasks are found, an empty TaskContainer is used.
+     * The method then loads the corresponding view for displaying tasks.
+     * Handles forbidden and not found exceptions by delegating to the error controller.
+     *
+     * @param array $args Associative array of arguments with the following keys:
+     *      - projectId: string|UUID The public identifier of the project to view tasks for.
+     *
+     * @throws ForbiddenException If the user is not authorized or projectId is missing.
+     * @throws NotFoundException If the specified project does not exist.
+     *
+     * @return void
+     */
+    public static function viewGrid(array $args): void
     {
         try {
             if (!SessionAuth::hasAuthorizedSession()) {
@@ -52,23 +71,43 @@ class TaskController implements Controller
         }
     }
 
-
-
-    
-
-    public static function viewTask(array $args = []): void
+    public static function viewInfo(array $args = []): void
     {
-        $projectId = $args['projectId'] ?? null;
-        if (!$projectId)
-            throw new InvalidArgumentException('Project ID is required.');
-        $taskId = $args['taskId'] ?? null;
-        if (!$taskId)
-            throw new InvalidArgumentException('Task ID is required.');
+        try {
+            if (!SessionAuth::hasAuthorizedSession()) {
+                throw new ForbiddenException();
+            }
 
-        $project = ProjectModel::all()->getItems()[0]; // Temporary placeholder
-        $task = TaskModel::all()->getItems()[0]; // Temporary placeholder
+            $projectId = isset($args['projectId']) 
+                ? UUID::fromString($args['projectId']) 
+                : null;
+            if (!$projectId) {
+                throw new ForbiddenException('Project ID is required.');
+            } 
+            
+            $project = ProjectModel::findById($projectId);
+            if ($project === null) {
+                throw new NotFoundException('Project not found.');
+            }
 
-        require_once SUB_VIEW_PATH . 'task.php';
+            $taskId = isset($args['taskId']) 
+                ? UUID::fromString($args['taskId']) 
+                : null;
+            if (!$taskId) {
+                throw new ForbiddenException('Task ID is required.');
+            }
+
+            $task = TaskModel::findById($taskId, $project->getId());
+            if ($task === null) {
+                throw new NotFoundException('Task not found.');
+            }
+
+            require_once SUB_VIEW_PATH . 'task.php';
+        } catch (NotFoundException $e) {
+            ErrorController::notFound();
+        } catch (ForbiddenException $e) {
+            ErrorController::forbidden();
+        }
     }
 
 }

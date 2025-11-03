@@ -72,6 +72,12 @@ class WorkerContainer extends Container
             || isset($this->terminated[$item->getId()]);
     }
 
+    public function first(): ?Worker
+    {
+        $allItems = array_merge($this->unassigned, $this->assigned, $this->terminated);
+        return reset($allItems) ?: null;
+    }
+
     /**
      * Gets workers with 'unassigned' status.
      *
@@ -144,7 +150,7 @@ class WorkerContainer extends Container
      *
      * @return array Combined array of assigned and terminated items
      */
-    public function getItems(): array 
+    public function getItems(): array|Worker
     {
         return array_merge($this->unassigned, $this->assigned, $this->terminated);
     }

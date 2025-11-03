@@ -129,7 +129,7 @@ class TaskWorkerModel extends Model
             $options = ['limit' => 1];
 
             $worker = self::find($whereClause, $params, $options);
-            return $worker?->getItems() ?? null;
+            return $worker->first() ?? null;
         } catch (Exception $e) {
             throw $e;
         }
@@ -456,43 +456,61 @@ class TaskWorkerModel extends Model
         return null;
     }
 
+    /**
+     * Creates multiple task-worker assignments for a given task.
+     *
+     * This method inserts multiple worker assignments into the `projectTaskWorker` table for the specified task.
+     * It uses a transaction to ensure all assignments are created atomically. Each worker is referenced by their
+     * public UUID, which is converted to binary if necessary. The task is also referenced by its public UUID.
+     * The status for each assignment is set to WorkerStatus::ASSIGNED.
+     *
+     * The query uses a CROSS JOIN with WHERE filters to match the task and worker by their public UUIDs,
+     * then extracts their internal IDs for insertion. If a duplicate taskId-workerId pair exists,
+     * the status is updated to the new value (upsert behavior).
+     *
+     * @param int|UUID $taskId The public UUID or integer ID of the task to assign workers to.
+     * @param array $data Array of worker public UUIDs or binary IDs to be assigned to the task.
+     *
+     * @throws InvalidArgumentException If the data array is empty.
+     * @throws DatabaseException If a database error occurs during the transaction.
+     * 
+     * @return void
+     */
     public static function createMultiple(int|UUID $taskId, array $data): void
     {
         if (empty($data)) {
             throw new InvalidArgumentException('No data provided.');
         }
 
-        $taskId = ($taskId instanceof UUID)
-            ? UUID::toBinary($taskId)
-            : $taskId;
-
         $instance = new self();
         try {
             $instance->connection->beginTransaction();
 
+            $isTaskInt = is_int($taskId);
+            $isWorkerInt = is_int($data[0]);
+            
             $insertQuery = "
-                INSERT INTO `projectTaskWorker` (
-                    taskId, 
-                    workerId, 
-                    status
-                ) VALUES (
-                    (
-                        SELECT id 
-                        FROM `projectTask` 
-                        WHERE publicId = :taskId
-                    ),
-                    (
-                        SELECT id 
-                        FROM `user` 
-                        WHERE publicId = :workerId
-                    ),
+                INSERT INTO `projectTaskWorker`
+                    (taskId, workerId, status)
+                VALUES (
+                    " . ($isTaskInt 
+                        ? ":taskId" 
+                        : "(SELECT id FROM `projectTask` WHERE publicId = :taskId)") . ",
+                    " . ($isWorkerInt 
+                        ? ":workerId" 
+                        : "(SELECT id FROM `user` WHERE publicId = :workerId)") . ",
                     :status
-                ) ON DUPLICATE KEY UPDATE 
+                )
+                ON DUPLICATE KEY UPDATE 
                     status = VALUES(status)";
+            
             $statement = $instance->connection->prepare($insertQuery);
+            
+            $taskIdParam = ($taskId instanceof UUID) ? UUID::toBinary($taskId) : $taskId;
+            
             foreach ($data as $id) {    
                 $statement->execute([
-                    ':taskId'   => $taskId,
+                    ':taskId'   => $taskIdParam,
                     ':workerId' => ($id instanceof UUID) ? UUID::toBinary($id) : $id,
                     ':status'   => WorkerStatus::ASSIGNED->value
                 ]);
@@ -505,7 +523,76 @@ class TaskWorkerModel extends Model
         }
     }
 
+	public static function save(array $data): bool
+	{
+        $instance = new self();
+        try {
+            $instance->connection->beginTransaction();
 
+            $updateFields = [];
+            $params = [];
+
+            // Determine identifier clause: prefer numeric/internal id when provided
+            if (isset($data['id'])) {
+                $where = 'id = :id';
+                $params[':id'] = $data['id'];
+            } else {
+                // Require taskId and workerId when id is not provided
+                if (!isset($data['taskId'])) {
+                    throw new InvalidArgumentException('Task ID must be provided.');
+                }
+
+                if (!isset($data['workerId'])) {
+                    throw new InvalidArgumentException('Worker ID must be provided.');
+                }
+
+                $whereParts = [];
+                // taskId may be int or UUID
+                if ($data['taskId'] instanceof UUID) {
+                    $whereParts[] = 'taskId = (SELECT id FROM `projectTask` WHERE publicId = :taskPublicId)';
+                    $params[':taskPublicId'] = UUID::toBinary($data['taskId']);
+                } else {
+                    $whereParts[] = 'taskId = :taskId';
+                    $params[':taskId'] = $data['taskId'];
+                }
+
+                // workerId may be int or UUID
+                if ($data['workerId'] instanceof UUID) {
+                    $whereParts[] = 'workerId = (SELECT id FROM `user` WHERE publicId = :workerPublicId)';
+                    $params[':workerPublicId'] = UUID::toBinary($data['workerId']);
+                } else {
+                    $whereParts[] = 'workerId = :workerId';
+                    $params[':workerId'] = $data['workerId'];
+                }
+
+                $where = implode(' AND ', $whereParts);
+            }
+
+            // Build update fields
+            if (isset($data['status'])) {
+                $updateFields[] = 'status = :status';
+                $params[':status'] = ($data['status'] instanceof WorkerStatus)
+                    ? $data['status']->value
+                    : $data['status'];
+            }
+
+            // Nothing to update
+            if (empty($updateFields)) {
+                $instance->connection->commit();
+                return true;
+            }
+
+            $query = 'UPDATE `projectTaskWorker` SET ' . implode(', ', $updateFields) . ' WHERE ' . $where;
+            $statement = $instance->connection->prepare($query);
+            $statement->execute($params);
+
+            $instance->connection->commit();
+            return true;
+        } catch (PDOException $e) {
+            $instance->connection->rollBack();
+            throw new DatabaseException($e->getMessage());
+        }
+	}
 
 
 
@@ -518,9 +605,4 @@ class TaskWorkerModel extends Model
         return false;
     }
 
-    public static function save(array $data): bool
-    {
-        // TODO: Implement logic to save a task worker
-        return false;
-    }
 }

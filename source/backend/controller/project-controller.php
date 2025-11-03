@@ -50,7 +50,7 @@ class ProjectController implements Controller
      *
      * @return void
      */
-    public static function viewHomeProject(): void
+    public static function viewHome(): void
     {
         try {
             if (!SessionAuth::hasAuthorizedSession()) {

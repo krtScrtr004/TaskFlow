@@ -39,6 +39,9 @@ export function cancelAddWorkerModal() {
 
         if (workerContainer) workerContainer.textContent = ''
         selectedUsers.clear()
+
+        const searchBarForm = addWorkerModalTemplate?.querySelector('form.search-bar')
+        searchBarForm.reset()
     })
 }
 
@@ -130,5 +133,33 @@ async function addWorkerButtonEvent(e, projectId, confirmAddWorkerButton, asyncF
         handleException(error, `Error adding workers: ${error.message}`)
     } finally {
         Loader.delete()
+    }
+}
+
+export function toggleNoWorkerWall(show) {
+    const noWorkersWall = addWorkerModalTemplate?.querySelector('.no-workers-wall')
+    if (!noWorkersWall) {
+        console.error('No Worker Wall element not found.')
+        return
+    }
+
+    const listContainer = addWorkerModalTemplate.querySelector('.worker-list > .list')
+    if (!listContainer) {
+        console.error('Worker list container not found.')
+        return
+    }
+
+    if (show) {
+        noWorkersWall.classList.add('flex-col')
+        noWorkersWall.classList.remove('no-display')
+
+        listContainer.classList.remove('flex-col')
+        listContainer.classList.add('no-display')
+    } else {
+        noWorkersWall.classList.add('no-display')
+        noWorkersWall.classList.remove('flex-col')
+
+        listContainer.classList.add('flex-col')
+        listContainer.classList.remove('no-display')
     }
 }

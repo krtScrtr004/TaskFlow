@@ -1023,8 +1023,12 @@ class ProjectWorkerModel extends Model
                 $params[':id'] = $data['id'];
             } else {
                 // Require projectId and workerId when id is not provided
-                if (!isset($data['projectId']) || !isset($data['workerId'])) {
-                    throw new InvalidArgumentException('Either id or both projectId and workerId must be provided.');
+                if (!isset($data['projectId'])) {
+                    throw new InvalidArgumentException('Project ID must be provided.');
+                }
+
+                if (!isset($data['workerId'])) {
+                    throw new InvalidArgumentException('Worker ID must be provided.');
                 }
 
                 $whereParts = [];

@@ -80,6 +80,7 @@ class TaskModel extends Model
                 'contactNumber' => $worker['workerContactNumber'],
                 'profileLink' => $worker['workerProfileLink'],
                 'gender' => Gender::from($worker['workerGender']),
+                'status' => WorkerStatus::from($worker['workerStatus']),
                 'jobTitles' => isset($worker['workerJobTitles'])
                     ? new JobTitleContainer(json_decode($worker['workerJobTitles'], true))
                     : new JobTitleContainer()
@@ -136,6 +137,7 @@ class TaskModel extends Model
                                     'workerContactNumber', u.contactNumber,
                                     'workerProfileLink', u.profileLink,
                                     'workerGender', u.gender,
+                                    'workerStatus', ptw.status,
                                     'workerJobTitles', COALESCE(
                                         (
                                             SELECT CONCAT('[', GROUP_CONCAT(CONCAT('\"', wjt.title, '\"')), ']')
@@ -155,9 +157,13 @@ class TaskModel extends Model
                 FROM 
                     `projectTask` AS pt
                 INNER JOIN 
-                    `project` AS p ON pt.projectId = p.id
+                    `project` AS p 
+                ON 
+                    pt.projectId = p.id
                 LEFT JOIN 
-                    `projectTaskWorker` AS ptw ON pt.id = ptw.taskId
+                    `projectTaskWorker` AS ptw 
+                ON 
+                    pt.id = ptw.taskId
                 LEFT JOIN 
                     `user` AS u ON ptw.workerId = u.id
             ";
@@ -264,15 +270,15 @@ class TaskModel extends Model
 
             if ($projectId) {
                 $whereClause .= is_int($projectId)
-                    ? ' p.id = :projectId'
-                    : ' p.publicId = :projectId';
+                    ? ' AND p.id = :projectId'
+                    : ' AND p.publicId = :projectId';
                 $params[':projectId'] = is_int($projectId)
                     ? $projectId
                     : UUID::toBinary($projectId);
             }
 
             $tasks = self::find($whereClause, $params);
-            return $tasks?->getItems() ?? null;
+            return $tasks->first() ?? null;
         } catch (Exception $e) {
             throw $e;
         }

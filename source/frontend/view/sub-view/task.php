@@ -1,31 +1,35 @@
 <?php
 
 use App\Core\Me;
+use App\Core\UUID;
 use App\Entity\Project;
 use App\Entity\Task;
 use App\Enumeration\Role;
 use App\Enumeration\WorkStatus;
 use App\Enumeration\TaskPriority;
+use App\Exception\NotFoundException;
 
-if (!isset($project) || !$project instanceof Project)
-    throw new InvalidArgumentException('Project is not defined.');
+if (!isset($project) || !$project instanceof Project) {
+    throw new NotFoundException('Project is not defined.');
+}
 
-if (!isset($task) || !$task instanceof Task)
-    throw new InvalidArgumentException('Task is not defined.');
+if (!isset($task) || !$task instanceof Task) {
+    throw new NotFoundException('Task is not defined.');
+}
 
 $projectData = [
-    'id' => htmlspecialchars($project->getPublicId())
+    'id' => htmlspecialchars(UUID::toString($project->getPublicId()))
 ];
 
 $taskData = [
-    'id' => htmlspecialchars($task->getPublicId()),
-    'name' => htmlspecialchars($task->getName()),
-    'description' => htmlspecialchars($task->getDescription()),
-    'workers' => $task->getWorkers(),
-    'startDateTime' => $task->getStartDateTime(),
-    'completionDateTime' => $task->getCompletionDateTime(),
-    'status' => $task->getStatus(),
-    'priority' => $task->getPriority(),
+    'id'                    => htmlspecialchars(UUID::toString($task->getPublicId())),
+    'name'                  => htmlspecialchars($task->getName()),
+    'description'           => htmlspecialchars($task->getDescription()),
+    'workers'               => $task->getWorkers()->getAssigned(),
+    'startDateTime'         => $task->getStartDateTime(),
+    'completionDateTime'    => $task->getCompletionDateTime(),
+    'status'                => $task->getStatus(),
+    'priority'              => $task->getPriority(),
 ];
 
 ?>

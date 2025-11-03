@@ -427,7 +427,7 @@ class ProjectModel extends Model
                 : UUID::toBinary($projectId);
 
             $projects = self::find($whereClause, $params);
-            return $projects?->getItems() ?? null;
+            return $projects->first() ?? null;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
@@ -549,7 +549,7 @@ class ProjectModel extends Model
             ];
 
             $projects = self::find($whereClause, $param, $options);
-            return $projects?->getItems() ?? null;
+            return $projects?->first() ?? null;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }

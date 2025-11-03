@@ -5,6 +5,7 @@ import { createWorkerListCard } from './render.js'
 import { selectedUsers } from './select.js'
 
 let endpoint = ''
+let isLoading = false
 let currentInfiniteScrollObserver = null // Store the current observer to allow resetting
 
 export function infiniteScrollWorkers(projectId, localEndpoint, searchKey = '') {
@@ -45,7 +46,6 @@ export function infiniteScrollWorkers(projectId, localEndpoint, searchKey = '') 
 
 function createInfiniteScrollObserver(workerList, sentinel, projectId, searchKey) {
     let offset = getExistingItemsCount()
-    let isLoading = false
 
     const observer = new IntersectionObserver(async (entries) => {
         for (const entry of entries) {
@@ -57,7 +57,7 @@ function createInfiniteScrollObserver(workerList, sentinel, projectId, searchKey
                     const workers = await fetchWorkers(endpoint, searchKey, offset)
                     if (workers === false) {
                         // Fetch was already in progress; skip this cycle
-                        return
+                        continue
                     }
 
                     if (!workers || workers.length === 0) {

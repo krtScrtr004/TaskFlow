@@ -40,8 +40,14 @@ abstract class Model
 
     protected function appendWhereClause(string $query, string $where): string 
     {
-        if ($where && $where !== '') {
+        if ($where && is_string($where) && $where !== '') {
             $query .= " WHERE " . $where;
+        } elseif (is_array($where) && !empty($where)) {
+            $conditions = [];
+            foreach ($where as $key => $value) {
+                $conditions[] = "$key = :$key";
+            }
+            $query .= " WHERE " . implode(" AND ", $conditions);
         }
         return $query;
     }

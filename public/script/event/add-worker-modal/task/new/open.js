@@ -4,6 +4,7 @@ import { handleException } from '../../../../utility/handle-exception.js'
 import { fetchWorkers } from '../../fetch.js'
 import { createWorkerListCard } from '../../render.js'
 import { selectWorker } from '../../select.js'
+import { toggleNoWorkerWall } from '../../modal.js'
 import { initializeAddWorkerModal } from '../../modal.js'
 
 const addTaskForm = document.querySelector('#add_task_form')
@@ -37,6 +38,11 @@ if (addWorkerModalTemplate) {
             }
 
             const workers = await fetchWorkers(endpoint)
+            if (workers.length === 0) {
+                toggleNoWorkerWall(true)
+                return
+            }
+            
             workers.forEach(worker => createWorkerListCard(worker))
             selectWorker()
         } catch (error) {

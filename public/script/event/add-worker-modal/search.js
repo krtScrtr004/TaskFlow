@@ -3,6 +3,7 @@ import { Dialog } from '../../render/dialog.js'
 import { debounceAsync } from '../../utility/debounce.js'
 import { fetchWorkers } from './fetch.js'
 import { createWorkerListCard } from './render.js'
+import { toggleNoWorkerWall } from './modal.js'
 import { infiniteScrollWorkers, disconnectInfiniteScroll } from './infinite-scroll.js'
 
 let endpoint = ''
@@ -39,16 +40,11 @@ async function searchForWorker(e, projectId) {
         Dialog.somethingWentWrong()
         return
     }
-    const noWorkersWall = workerList.closest('.worker-list')?.parentElement?.querySelector('.no-workers-wall')
 
     workerList.textContent = ''
 
     // Hide no workers message and show worker list
-    noWorkersWall?.classList.remove('flex-col')
-    noWorkersWall?.classList.add('no-display')
-
-    workerList.classList.add('flex-col')
-    workerList.classList.remove('no-display')
+    toggleNoWorkerWall(false)
 
     Loader.full(workerList)
 
@@ -70,11 +66,7 @@ async function searchForWorker(e, projectId) {
             infiniteScrollWorkers(projectId, endpoint, searchTerm)
         } else {
             // Show no workers message if no results
-            noWorkersWall?.classList.add('flex-col')
-            noWorkersWall?.classList.remove('no-display')
-
-            workerList.classList.remove('flex-col')
-            workerList.classList.add('no-display')
+            toggleNoWorkerWall(true)
 
             // Disconnect infinite scroll observer when no results
             disconnectInfiniteScroll()

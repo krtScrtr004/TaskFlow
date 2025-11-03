@@ -4,6 +4,7 @@ import { fetchWorkers } from '../fetch.js'
 import { createWorkerListCard } from '../render.js'
 import { selectWorker } from '../select.js'
 import { initializeAddWorkerModal } from '../modal.js'
+import { toggleNoWorkerWall } from '../modal.js'
 import { handleException } from '../../../utility/handle-exception.js'
 
 const projectContainer = document.querySelector('.project-container')
@@ -33,6 +34,11 @@ if (addWorkerModalTemplate) {
             Loader.full(workerList)
 
             const workers = await fetchWorkers(endpoint)
+            if (workers.length === 0) {
+                toggleNoWorkerWall(true)
+                return
+            }
+
             workers.forEach(worker => createWorkerListCard(worker))
             selectWorker()
         } catch (error) {
