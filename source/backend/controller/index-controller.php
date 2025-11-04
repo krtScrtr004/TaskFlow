@@ -46,6 +46,9 @@ class IndexController implements Controller
         
         if (!Csrf::get()) {
             Csrf::generate();
+            // Force session write to ensure CSRF token is persisted
+            session_write_close();
+            Session::restore();  // Reopen session for the rest of the request
         }
 
         // Dynamically display appropriate page (login / signup) based on URL

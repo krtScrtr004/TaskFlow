@@ -4,12 +4,32 @@ namespace App\Core;
 
 use App\Middleware\Csrf;
 
+define('SESSION_LIFETIME', 3600);
+define('SESSION_PATH', '/TaskFlow/');  // Must match your web application path, not file system path
+define('SESSION_DOMAIN', 'localhost');
+define('SESSION_SECURE', false);  // Set to true only when using HTTPS in production
+define('SESSION_HTTPONLY', true);
+
 class Session
 {
     private static ?Session $session = null;
 
     private function __construct()
     {
+        // Must set these BEFORE session_start() to take effect
+        if (session_status() === PHP_SESSION_NONE) {
+            ini_set('session.use_only_cookies', 1);
+            ini_set('session.use_strict_mode', 1);
+
+            session_set_cookie_params([
+                'lifetime' => SESSION_LIFETIME,
+                'path' => SESSION_PATH,
+                'domain' => SESSION_DOMAIN,
+                'secure' => SESSION_SECURE,
+                'httponly' => SESSION_HTTPONLY
+            ]);
+        }
+
         if (session_status() !== PHP_SESSION_ACTIVE) {
             session_start();
         }

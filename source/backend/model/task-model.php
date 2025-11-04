@@ -695,6 +695,35 @@ class TaskModel extends Model
         }
     }
 
+    /**
+     * Inserts a new Task into the database and assigns workers to it.
+     *
+     * This method performs the following operations within a transaction:
+     * - Validates that the provided object is an instance of Task.
+     * - Generates or retrieves the publicId for the task.
+     * - Extracts and formats task properties (name, description, priority, status, start and completion dates).
+     * - Inserts the task into the `projectTask` table.
+     * - Assigns workers to the task by inserting records into the `projectTaskWorker` table.
+     * - Commits the transaction if all operations succeed.
+     * - Rolls back the transaction and throws an exception if any error occurs.
+     *
+     * @param Task $task The Task object to be inserted. Must provide:
+     *      - projectId: string|int Project identifier (from additional info)
+     *      - publicId: string|UUID|null Task public identifier (optional)
+     *      - name: string|null Task name
+     *      - description: string|null Task description
+     *      - priority: TaskPriority Task priority enum
+     *      - status: TaskStatus Task status enum
+     *      - workers: WorkerContainer Container of Worker objects assigned to the task
+     *      - startDateTime: DateTimeInterface|null Task start date and time
+     *      - completionDateTime: DateTimeInterface|null Task completion date and time
+     *
+     * @throws InvalidArgumentException If the provided object is not a Task instance.
+     * @throws DatabaseException If a PDOException occurs during database operations.
+     * @throws Exception For any other errors during the process.
+     *
+     * @return Task The Task object with updated id and publicId after successful insertion.
+     */
     public static function create(mixed $task): mixed
     {
         if (!($task instanceof Task)) {
@@ -782,6 +811,26 @@ class TaskModel extends Model
         }
     }
 
+    /**
+     * Updates an existing task in the database with the provided data.
+     *
+     * This method updates the fields of a task record in the `projectTask` table based on the keys present in the input array.
+     * It also saves associated worker data if provided.
+     * The update is performed within a transaction to ensure data integrity.
+     *
+     * @param array $data Associative array containing task data with the following keys:
+     *      - id: int Task ID (required)
+     *      - name: string|null Task name (optional)
+     *      - description: string|null Task description (optional)
+     *      - status: TaskStatusEnum Task status enum (optional)
+     *      - startDateTime: string|DateTime Task start date and time (optional)
+     *      - completionDateTime: string|DateTime Task scheduled completion date and time (optional)
+     *      - actualCompletionDateTime: string|DateTime|null Actual completion date and time (optional)
+     *      - workers: WorkerContainer|null Container of worker objects associated with the task (optional)
+     *
+     * @throws DatabaseException If a database error occurs during the update process.
+     * @return bool True on successful update, false otherwise.
+     */
     public static function save(array $data): bool
     {
         $instance = new self();

@@ -286,6 +286,27 @@ class TaskWorkerModel extends Model
         }
     }
 
+    /**
+     * Searches for workers based on various criteria such as key, task, project, and status.
+     *
+     * This method supports searching for unassigned, assigned, or terminated workers within a project or task context.
+     * It can filter by full-text search, project, task, worker status, and supports pagination and exclusion of terminated workers.
+     * The returned result is a WorkerContainer containing partial Worker objects.
+     *
+     * @param string|null $key Optional full-text search key for worker's name, bio, or email.
+     * @param int|UUID|null $taskId Optional task ID or public UUID to filter workers by a specific task.
+     * @param int|UUID|null $projectId Optional project ID or public UUID to filter workers by a specific project.
+     * @param WorkerStatus|null $status Optional status to filter workers (e.g., UNASSIGNED, ASSIGNED, TERMINATED).
+     * @param array $options Optional associative array of search options:
+     *      - excludeTaskTerminated: bool Whether to exclude workers terminated from the specified task (default: false).
+     *      - limit: int Maximum number of results to return (default: 10).
+     *      - offset: int Number of results to skip for pagination (default: 0).
+     *
+     * @throws InvalidArgumentException If projectId is not provided when searching for unassigned workers.
+     * @throws DatabaseException If a database error occurs during the search.
+     *
+     * @return WorkerContainer|null A container of Worker objects matching the search criteria, or null if no workers found.
+     */
     public static function search(
         string|null $key = null,
         int|UUID|null $taskId = null,
@@ -486,6 +507,20 @@ class TaskWorkerModel extends Model
         }
     }
 
+    /**
+     * Retrieves a paginated list of all worker containers.
+     *
+     * This method fetches worker records from the data source with optional pagination and ordering.
+     * It validates the provided offset and limit parameters before querying.
+     *
+     * @param int $offset The starting index for the records to retrieve (must be >= 0).
+     * @param int $limit The maximum number of records to retrieve (must be >= 1).
+     *
+     * @throws InvalidArgumentException If the offset is negative or the limit is less than 1.
+     * @throws Exception If an error occurs during the retrieval process.
+     *
+     * @return WorkerContainer|null A container of worker records, or null if none found.
+     */
     public static function all(int $offset = 0, int $limit = 10): ?WorkerContainer
     {
         if ($offset < 0) {
@@ -509,6 +544,16 @@ class TaskWorkerModel extends Model
         }
     }
 
+    /**
+     * Creates a TaskWorker instance from the provided data.
+     *
+     * This method is intended to instantiate a TaskWorker object from an array or object of data.
+     * Currently, this method is not implemented as there is no use case for creating TaskWorker instances in this way.
+     *
+     * @param mixed $data Data used to create a TaskWorker instance. Expected to be an associative array or object with relevant fields.
+     * 
+     * @return mixed Returns null as this method is not implemented.
+     */
     public static function create(mixed $data): mixed
     {
         // Not implemented (No use case)
@@ -653,14 +698,17 @@ class TaskWorkerModel extends Model
         }
 	}
 
-
-
-
-
-
+    /**
+     * Deletes a task-worker record.
+     *
+     * This method is currently not implemented as there is no use case for deleting task-worker records.
+     * Always returns false.
+     *
+     * @return bool Always returns false indicating the operation is not supported.
+     */
     protected static function delete(): bool
     {
-        // TODO: Implement logic to delete a task worker
+        // Not implemented (No use case)
         return false;
     }
 
