@@ -114,6 +114,14 @@ $taskData = [
 
             <!-- Buttons -->
             <section class="action-buttons flex-row flex-child-end-v">
+                <!-- Complete Task Button -->
+                <button id="complete_task_button" type="button" class="green-bg">
+                    <div class="text-w-icon">
+                        <img src="<?= ICON_PATH . 'complete_w.svg' ?>" alt="Complete Task" title="Complete Task" height="20">
+                        <h3>Complete</h3>
+                    </div>
+                </button>
+
                 <!-- Edit Task Button -->
                 <button id="edit_task_button" type="button" class="blue-bg">
                     <div class="text-w-icon">
