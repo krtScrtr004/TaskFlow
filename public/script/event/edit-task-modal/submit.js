@@ -8,6 +8,7 @@ import { debounceAsync } from '../../utility/debounce.js'
 import { handleException } from '../../utility/handle-exception.js'
 
 let isLoading = false
+let originalValues = {}
 
 const editTaskModalTemplate = document.querySelector('#edit_task_modal_template')
 const editTaskForm = editTaskModalTemplate?.querySelector('#edit_task_form')
@@ -18,7 +19,38 @@ if (!editTaskButton) {
     Dialog.somethingWentWrong()
 }
 
+// Store original values when modal is opened
+const editTaskOpenButton = document.querySelector('#edit_task_button')
+if (editTaskOpenButton) {
+    editTaskOpenButton.addEventListener('click', () => {
+        // Wait for modal to be visible and inputs to be populated
+        setTimeout(() => {
+            storeOriginalValues()
+        }, 100)
+    })
+}
+
 editTaskButton?.addEventListener('click', e => debounceAsync(submitForm(e), 300))
+
+/**
+ * Stores the original values from the form inputs for comparison later.
+ * This allows us to detect which fields have actually changed.
+ */
+function storeOriginalValues() {
+    const nameInput = editTaskForm?.querySelector('#task_name')
+    const descriptionInput = editTaskForm?.querySelector('#task_description')
+    const startDateInput = editTaskForm?.querySelector('#task_start_datetime')
+    const completionDateInput = editTaskForm?.querySelector('#task_completion_datetime')
+    const prioritySelect = editTaskForm?.querySelector('#task_priority')
+
+    originalValues = {
+        name: nameInput?.value || '',
+        description: descriptionInput?.value || '',
+        startDateTime: startDateInput?.value || '',
+        completionDateTime: completionDateInput?.value || '',
+        priority: prioritySelect?.value || ''
+    }
+}
 
 /**
  * Handles the submission of the Edit Task form, including validation, confirmation, and backend update.
@@ -60,7 +92,7 @@ async function submitForm(e) {
         return
     }
 
-    const params = {
+    const currentValues = {
         name: nameInput ? nameInput.value : '',
         description: descriptionInput ? descriptionInput.value : '',
         startDateTime: startDateInput ? startDateInput.value : '',
@@ -68,7 +100,24 @@ async function submitForm(e) {
         priority: prioritySelect ? prioritySelect.value : '',
     }
 
-    // Validate inputs
+    // Build params object with only changed values
+    const params = {}
+    let hasChanges = false
+
+    for (const [key, value] of Object.entries(currentValues)) {
+        if (value !== originalValues[key]) {
+            params[key] = value
+            hasChanges = true
+        }
+    }
+
+    // Check if there are any changes
+    if (!hasChanges) {
+        Dialog.operationSuccess('No Changes', 'No changes were made to the task.')
+        return
+    }
+
+    // Validate only the changed inputs
     if (!validateInputs(params, workValidationRules())) return
 
     const viewTaskInfo = document.querySelector('.view-task-info.main-page')
@@ -94,7 +143,6 @@ async function submitForm(e) {
 
     Loader.patch(editTaskButton.querySelector('.text-w-icon'))
     try {
-        isLoading = true
         await sendToBackend(projectId, taskId, params)
 
         setInterval(() => window.location.reload(), 3000)
@@ -103,7 +151,6 @@ async function submitForm(e) {
         handleException(error, `Error submitting form: ${error}`)
     } finally {
         Loader.delete()
-        isLoading = false
     }
 }
 

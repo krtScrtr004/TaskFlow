@@ -17,7 +17,7 @@ if (!thisProjectId || thisProjectId.trim() === '') {
 }
 
 if (addWorkerModalTemplate) {
-    addWorkerButton.addEventListener('click', async () => {
+    addWorkerButton?.addEventListener('click', async () => {
         const params = new URLSearchParams()
         params.append('status', 'unassigned')
         params.append('excludeProjectTerminated', 'true')

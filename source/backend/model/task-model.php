@@ -8,6 +8,7 @@ use App\Container\WorkerContainer;
 use App\Container\TaskContainer;
 use App\Core\UUID;
 use App\Dependent\Worker;
+use App\Entity\Project;
 use App\Exception\ValidationException;
 use App\Exception\DatabaseException;
 use App\Model\UserModel;
@@ -658,6 +659,93 @@ class TaskModel extends Model
     }   
 
     /**
+     * Finds and returns the Project that owns a given Task.
+     *
+     * This method retrieves the project associated with the specified task ID (either integer or UUID).
+     * It joins the project, user (manager), and projectTask tables to fetch project details and its manager's information.
+     * Returns a partial Project instance with the manager as a partial User instance, or null if not found.
+     *
+     * @param int|UUID $taskId The ID or public UUID of the task whose owning project is to be found.
+     *
+     * @throws ValidationException If the provided task ID is invalid.
+     * @throws DatabaseException If a database error occurs during the query.
+     *
+     * @return Project|null The owning Project instance, or null if no project is found for the given task.
+     */
+    public static function findOwningProject(int|UUID $taskId): ?Project
+    {
+        if (is_int($taskId) && $taskId < 1) {
+            throw new ValidationException('Invalid Task ID');
+        }
+
+        $instance = new self();
+        try {
+            $query = "
+                SELECT 
+                    p.*,
+                    u.id AS managerId,
+                    u.publicId AS managerPublicId,
+                    u.firstName AS managerFirstName,
+                    u.middleName AS managerMiddleName,
+                    u.lastName AS managerLastName,
+                    u.gender AS managerGender,
+                    u.email AS managerEmail,
+                    u.profileLink AS managerProfileLink 
+                FROM 
+                    `project` AS p
+                INNER JOIN
+                    `user` AS u 
+                ON 
+                    p.managerId = u.id
+                LEFT JOIN 
+                    `projectTask` AS pt
+                ON
+                    p.id = pt.projectId
+                WHERE 
+                    " . (is_int($taskId) 
+                        ? 'pt.id = :taskId' 
+                        : 'pt.publicId = :taskId');
+            $statement = $instance->connection->prepare($query);
+            $statement->execute([
+                ':taskId' => is_int($taskId) 
+                    ? $taskId 
+                    : UUID::toBinary($taskId)
+            ]);
+            $result = $statement->fetch();
+
+            if (!$instance->hasData($result)) {
+                return null;
+            }
+
+            $project = Project::createPartial([
+                'id'                        => $result['id'],
+                'publicId'                  => $result['publicId'],
+                'name'                      => $result['name'],
+                'description'               => $result['description'],
+                'budget'                    => $result['budget'],
+                'status'                    => $result['status'],
+                'startDateTime'             => new DateTime($result['startDateTime']),
+                'completionDateTime'        => new DateTime($result['completionDateTime']),
+                'actualCompletionDateTime'  => new DateTime($result['actualCompletionDateTime']),
+                'createdAt'                 => new DateTime($result['createdAt']),
+                'manager'                   => User::createPartial([
+                    'id'           => $result['managerId'],
+                    'publicId'     => $result['managerPublicId'],
+                    'firstName'    => $result['managerFirstName'],
+                    'middleName'   => $result['managerMiddleName'],
+                    'lastName'     => $result['managerLastName'],
+                    'gender'       => $result['managerGender'],
+                    'email'        => $result['managerEmail'],
+                    'profileLink'  => $result['managerProfileLink'],
+                ]),
+            ]);
+            return $project;
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
+        }
+    }
+
+    /**
      * Retrieves all tasks with pagination.
      *
      * This method fetches tasks from the database with optional pagination parameters:
@@ -848,6 +936,11 @@ class TaskModel extends Model
             if (isset($data['description'])) {
                 $updateFields[] = 'description = :description';
                 $params[':description'] = trimOrNull($data['description']);
+            }
+
+            if (isset($data['priority'])) {
+                $updateFields[] = 'priority = :priority';
+                $params[':priority'] = $data['priority']->value;
             }
 
             if (isset($data['status'])) {

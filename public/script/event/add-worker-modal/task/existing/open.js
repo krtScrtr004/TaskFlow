@@ -24,7 +24,7 @@ if (!taskId || taskId.trim() === '') {
 }
 
 if (addWorkerModalTemplate) {
-    addWorkerButton.addEventListener('click', async () => {
+    addWorkerButton?.addEventListener('click', async () => {
         // Prepare URL parameters to fetch only unassigned and non-terminated workers
         const params = new URLSearchParams()
         params.append('status', 'unassigned')

@@ -109,7 +109,7 @@ class ProjectEndpoint
                 throw new ForbiddenException('User already has an active project.');
             }
 
-            self::sanitizeData($project);
+            sanitizeData($project);
 
             $validator = new WorkValidator();
 
@@ -126,7 +126,7 @@ class ProjectEndpoint
                     throw new ValidationException('Phase Validation Failed.', $validator->getErrors());
                 }
 
-                self::sanitizeData($phase);
+                sanitizeData($phase);
 
                 // Temporarily assign index as ID to avoid replacing other inserted fields in the container
                 $phase['id'] = $index++;
@@ -286,7 +286,7 @@ class ProjectEndpoint
             $phasesArray = $data['phase'] ?? [];
             foreach ($phasesArray as $key => &$arr) {
                 foreach ($arr as &$value) {
-                    self::sanitizeData($value);
+                    sanitizeData($value);
 
                     if ($key === 'toEdit' || $key === 'toAdd') {
                         $validator->validateDateBounds(
@@ -337,12 +337,12 @@ class ProjectEndpoint
             }
 
             // Save project edits
-            if ($projectData) {
+            if ($projectData && count($projectData) > 1) {
                 $validator->validateMultiple($projectData);
                 if ($validator->hasErrors()) {
                     throw new ValidationException('Project Validation Failed.', $validator->getErrors());
                 }
-                self::sanitizeData($projectData);
+                sanitizeData($projectData);
                 ProjectModel::save($projectData);
             }
             if ($phases['toAdd']->count() > 0) {
@@ -364,41 +364,6 @@ class ProjectEndpoint
         }
     }
 
-    /**
-     * Sanitizes data by trimming whitespace from specified fields.
-     *
-     * This method iterates through the provided data array and trims whitespace
-     * from the beginning and end of values for fields specified in the trimmable
-     * fields list. The data array is modified in place (passed by reference).
-     *
-     * @param array $data Associative array containing data to be sanitized.
-     *                    The array is passed by reference and modified directly.
-     * @param array $trimmableFields List of field names whose values should be trimmed.
-     *                               Default fields include:
-     *                               - name: Project name
-     *                               - description: Project description
-     *                               - startDateTime: Project start date/time
-     *                               - completionDateTime: Project completion date/time
-     *                               - actionDateTime: Project action date/time
-     * 
-     * @return void This method does not return a value; it modifies $data in place.
-     */
-    private static function sanitizeData(
-        array &$data,
-        array $trimmableFields = [
-            'name',
-            'description',
-            'startDateTime',
-            'completionDateTime',
-            'actionDateTime'
-        ]
-    ): void {
-        foreach ($data as $key => $value) {
-            if (in_array($key, $trimmableFields, true)) {
-                $data[$key] = trim($value);
-            }
-        }
-    }
 
 
 

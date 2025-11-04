@@ -11,9 +11,6 @@ if (!$project) {
     throw new Exception('Project data is required to render this component.');
 }
 
-require_once COMPONENT_PATH . 'template/user-info-card.php';
-require_once COMPONENT_PATH . 'template/add-worker-modal.php';
-
 $projectData = [
     'id'                    => htmlspecialchars(UUID::toString($project->getPublicId())),
     'name'                  => htmlspecialchars($project->getName()),
@@ -26,6 +23,10 @@ $projectData = [
     'phases'                => $project->getPhases(),
     'workers'               => $project->getWorkers()->getAssigned(),
 ];
+
+require_once COMPONENT_PATH . 'template/user-info-card.php';
+require_once COMPONENT_PATH . 'template/add-worker-modal.php';
+
 ?>
 <!-- Main Content -->
 <section class="project-container main-project-content flex-col" data-projectid="<?= $projectData['id'] ?>">

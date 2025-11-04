@@ -39,6 +39,11 @@
         <section class="user-statistics-container flex-row">
 
             <?php
+
+use App\Core\Me;
+use App\Enumeration\Role;
+use App\Enumeration\WorkStatus;
+
             $isUsersPage = strpos($_SERVER['REQUEST_URI'], 'users') !== false;
             if ($isUsersPage): ?>
                 <!-- Total Projects -->
@@ -111,7 +116,13 @@
             </div>
         </section>
 
-        <?php if (!$isUsersPage): ?>
+        <?php
+        $workStatus = $projectData['status'] ?? $taskData['status'] ?? null;    
+        if (!$isUsersPage && 
+            Role::isProjectManager(Me::getInstance()) &&
+            $workStatus !== WorkStatus::COMPLETED && 
+            $workStatus !== WorkStatus::CANCELLED): 
+            ?>
             <!-- Terminate user Button -->
             <button id="terminate_worker_button" type="button" class="red-bg">
                 <div class="text-w-icon">

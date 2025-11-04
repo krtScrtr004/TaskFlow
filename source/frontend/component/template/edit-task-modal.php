@@ -1,5 +1,7 @@
 <?php
 
+use App\Entity\Task;
+use App\Enumeration\TaskPriority;
 use App\Enumeration\WorkStatus;
 
 if (!$task)
@@ -117,10 +119,9 @@ $uiState = [
                 </label>
 
                 <select name="task_priority" id="task_priority" <?= $uiState['taskIsCompleted'] ?>>
-                    <?php $taskPriorityName = $taskData['priority']->getDisplayName() ?>
-                    <option value="Low" <?= $taskPriorityName === 'Low' ? 'selected' : '' ?>>Low</option>
-                    <option value="Medium" <?= $taskPriorityName === 'Medium' ? 'selected' : '' ?>>Medium</option>
-                    <option value="High" <?= $taskPriorityName === 'High' ? 'selected' : '' ?>>High</option>
+                    <option value="<?= TaskPriority::LOW->value ?>" <?= $taskData['priority'] === TaskPriority::LOW ? 'selected' : '' ?>>Low</option>
+                    <option value="<?= TaskPriority::MEDIUM->value ?>" <?= $taskData['priority'] === TaskPriority::MEDIUM ? 'selected' : '' ?>>Medium</option>
+                    <option value="<?= TaskPriority::HIGH->value ?>" <?= $taskData['priority'] === TaskPriority::HIGH ? 'selected' : '' ?>>High</option>
                 </select>
             </div>
 

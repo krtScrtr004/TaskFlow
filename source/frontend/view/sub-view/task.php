@@ -33,6 +33,7 @@ $taskData = [
     'priority'                  => $task->getPriority(),
 ];
 
+$isTaskEditable = $task->getStatus() !== WorkStatus::COMPLETED && $task->getStatus() !== WorkStatus::CANCELLED;
 ?>
 
 <!DOCTYPE html>
@@ -132,29 +133,33 @@ $taskData = [
 
             <!-- Buttons -->
             <section class="action-buttons flex-row flex-child-end-v">
-                <!-- Complete Task Button -->
-                <button id="complete_task_button" type="button" class="green-bg">
-                    <div class="text-w-icon">
-                        <img src="<?= ICON_PATH . 'complete_w.svg' ?>" alt="Complete Task" title="Complete Task" height="20">
-                        <h3>Complete</h3>
-                    </div>
-                </button>
+                <?php if ($isTaskEditable): ?>
+                    <!-- Complete Task Button -->
+                    <button id="complete_task_button" type="button" class="green-bg">
+                        <div class="text-w-icon">
+                            <img src="<?= ICON_PATH . 'complete_w.svg' ?>" alt="Complete Task" title="Complete Task" height="20">
+                            <h3>Complete</h3>
+                        </div>
+                    </button>
 
-                <!-- Edit Task Button -->
-                <button id="edit_task_button" type="button" class="blue-bg">
-                    <div class="text-w-icon">
-                        <img src="<?= ICON_PATH . 'edit_w.svg' ?>" alt="Edit Task" title="Edit Task" height="20">
-                        <h3>Edit</h3>
-                    </div>
-                </button>
+                    <?php if (Role::isProjectManager(Me::getInstance())): ?>
+                        <!-- Edit Task Button -->
+                        <button id="edit_task_button" type="button" class="blue-bg">
+                            <div class="text-w-icon">
+                                <img src="<?= ICON_PATH . 'edit_w.svg' ?>" alt="Edit Task" title="Edit Task" height="20">
+                                <h3>Edit</h3>
+                            </div>
+                        </button>
 
-                <!-- Cancel Button -->
-                <button id="cancel_task_button" type="button" class="red-bg">
-                    <div class="text-w-icon">
-                        <img src="<?= ICON_PATH . 'delete_w.svg' ?>" alt="Cancel Task" title="Cancel Task" height="20">
-                        <h3>Cancel</h3>
-                    </div>
-                </button>
+                        <!-- Cancel Button -->
+                        <button id="cancel_task_button" type="button" class="red-bg">
+                            <div class="text-w-icon">
+                                <img src="<?= ICON_PATH . 'delete_w.svg' ?>" alt="Cancel Task" title="Cancel Task" height="20">
+                                <h3>Cancel</h3>
+                            </div>
+                        </button>
+                    <?php endif; ?>
+                <?php endif; ?>
             </section>
 
         </section>
@@ -187,7 +192,7 @@ $taskData = [
                 } ?>
             </section>
 
-            <?php if (Role::isProjectManager(Me::getInstance())): ?>
+            <?php if (Role::isProjectManager(Me::getInstance()) && $isTaskEditable): ?>
                 <!-- Add Worker Button -->
                 <button id="add_worker_button" type="button" class="transparent-bg">
                     <div class="text-w-icon">

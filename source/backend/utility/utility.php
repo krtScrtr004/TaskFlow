@@ -89,3 +89,20 @@ function trimOrNull(?string $string): ?string
     $trimmed = trim((string) $string);
     return $trimmed === '' ? null : $trimmed;
 }
+
+function sanitizeData(
+    array &$data,
+    array $trimmableFields = [
+        'name',
+        'description',
+        'startDateTime',
+        'completionDateTime',
+        'actionDateTime'
+    ]
+): void {
+    foreach ($data as $key => $value) {
+        if (in_array($key, $trimmableFields, true)) {
+            $data[$key] = trim($value);
+        }
+    }
+}

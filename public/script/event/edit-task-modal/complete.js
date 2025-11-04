@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
  * - Displays a confirmation dialog to the user.
  * - Retrieves the project and task IDs from the viewTaskInfo element's dataset.
  * - Shows an error dialog if required IDs are missing.
- * - Shows a loading indicator on the cancel task button.
+ * - Shows a loading indicator on the complete task button.
  * - Sends a request to the backend to complete the task.
  * - Reloads the page upon successful completion to reflect changes.
  * - Handles any errors by displaying an appropriate error message.
@@ -71,7 +71,7 @@ async function submit(e) {
         return
     }
 
-    Loader.patch(cancelTaskButton.querySelector('.text-w-icon'))
+    Loader.patch(completeTaskButton.querySelector('.text-w-icon'))
     try {
         await sendToBackend(projectId, taskId)
         // Reload the page to reflect changes
