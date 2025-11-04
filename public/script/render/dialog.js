@@ -14,8 +14,10 @@ const icons = ['confirm.svg', 'reject.svg']
  * @param {string} id Unique identifier for the modal dialog instance.
  * @param {string} title The title text to display in the dialog.
  * @param {string} message The message text to display in the dialog.
- * @param {Element} [parent=document.querySelector('body')] The parent DOM element to which the modal will be appended.
- * @param {string} [statusIcon=status ? icons[0] : icons[1]] The icon filename to use for the status (defaults to success or error icon based on status).
+ * @param {Object} [option={}] Optional configuration object for additional settings.
+ * @param {HTMLElement} [option.parent=document.querySelector('body')] The parent element to which the modal will be appended.
+ * @param {string} [option.statusIcon] The filename of the status icon to display (overrides default based on status).
+ * @param {string} [option.okayButtonClass] The CSS class to apply to the OKAY button (overrides default based on status).
  *
  * @returns {void}
  */
@@ -24,30 +26,33 @@ function render(
     id,
     title,
     message,
-    parent = document.querySelector('body'),
-    statusIcon = status ? icons[0] : icons[1]
+    option = {}
 ) {
+    option.parent = option.parent ?? document.querySelector('body'),
+    option.statusIcon = option.statusIcon ?? (status ? icons[0] : icons[1])
+    option.okayButtonClass = option.okayButtonClass ?? (status ? 'blue-bg' : 'red-bg')
+
     const html = `
         <section id="${id}_wrapper" class="modal-wrapper flex-col">
             <section class="dialog black-bg flex-col">
                 <img 
-                    src="${ICON_PATH + statusIcon}" 
+                    src="${ICON_PATH + option.statusIcon}" 
                     alt="Result icon" 
                     title="Result icon" 
-                    height="69" 
-                    width="69" />
+                    height="75" 
+                    width="75" />
 
                     <div>
                         <h1 class="center-text">${title}</h1>
                         <p class="center-text">${message}</p>
                     </div>
 
-                <button class="okay-button ${status ? 'blue-bg' : 'red-bg'} white-text">OKAY</button>
+                <button class="okay-button ${option.okayButtonClass} white-text">OKAY</button>
             </section>
         </section>
         `
 
-    parent.insertAdjacentHTML('afterbegin', html)
+    option.parent.insertAdjacentHTML('afterbegin', html)
 
     const modalWrapper = document.querySelector(`#${id}_wrapper`)
     hideModal(modalWrapper)
@@ -175,6 +180,19 @@ export const Dialog = (() => {
                 'too_many_attempt_dialog',
                 'Too Many Attempt',
                 'Access temporarily locked due to multiple failed attempts. Try again in 2 minutes.'
+            )
+        },
+
+        taskDelayed: function (name) {
+            render(
+                false,
+                'task_delayed_dialog',
+                'Task Delayed',
+                `The task "${name}" is delayed. Please take necessary actions to address the delay.`,
+                {
+                    statusIcon: 'warning.svg',
+                    okayButtonClass: 'orange-bg'
+                }
             )
         }
     }

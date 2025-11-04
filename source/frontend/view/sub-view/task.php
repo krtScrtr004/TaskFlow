@@ -22,14 +22,15 @@ $projectData = [
 ];
 
 $taskData = [
-    'id'                    => htmlspecialchars(UUID::toString($task->getPublicId())),
-    'name'                  => htmlspecialchars($task->getName()),
-    'description'           => htmlspecialchars($task->getDescription()),
-    'workers'               => $task->getWorkers()->getAssigned(),
-    'startDateTime'         => $task->getStartDateTime(),
-    'completionDateTime'    => $task->getCompletionDateTime(),
-    'status'                => $task->getStatus(),
-    'priority'              => $task->getPriority(),
+    'id'                        => htmlspecialchars(UUID::toString($task->getPublicId())),
+    'name'                      => htmlspecialchars($task->getName()),
+    'description'               => htmlspecialchars($task->getDescription()),
+    'workers'                   => $task->getWorkers()->getAssigned(),
+    'startDateTime'             => $task->getStartDateTime(),
+    'completionDateTime'        => $task->getCompletionDateTime(),
+    'actualCompletionDateTime'  => $task->getActualCompletionDateTime(),
+    'status'                    => $task->getStatus(),
+    'priority'                  => $task->getPriority(),
 ];
 
 ?>
@@ -93,7 +94,11 @@ $taskData = [
                     <img src="<?= ICON_PATH . 'start_w.svg' ?>" alt="Task Start Date" title="Task Start Date"
                         height="16">
 
-                    <p>Start Date: <?= htmlspecialchars(dateToWords($taskData['startDateTime'])) ?></p>
+                    <p>Start Date: 
+                        <span class="task-start-datetime" data-startDatetime="<?= htmlspecialchars(formatDateTime($taskData['startDateTime'])) ?>">
+                            <?= htmlspecialchars(dateToWords($taskData['startDateTime'])) ?>
+                        </span>
+                    </p>
                 </div>
 
                 <!-- Task Completion Date -->
@@ -101,9 +106,22 @@ $taskData = [
                     <img src="<?= ICON_PATH . 'complete_w.svg' ?>" alt="Task Completion Date"
                         title="Task Completion Date" height="16">
 
-                    <p>Completion Date: <?= htmlspecialchars(dateToWords($taskData['completionDateTime'])) ?></p>
+                    <p>Completion Date: 
+                        <span class="task-completion-datetime" data-completionDatetime="<?= htmlspecialchars(formatDateTime($taskData['completionDateTime'])) ?>">
+                            <?= htmlspecialchars(dateToWords($taskData['completionDateTime'])) ?>
+                        </span>
+                    </p>
                 </div>
 
+                <!-- Task Actual Completion Date -->
+                <div 
+                    class="task-actual-completion-datetime no-display" 
+                    data-actualCompletionDatetime="<?= 
+                        $taskData['actualCompletionDateTime'] ?
+                        htmlspecialchars(
+                            formatDateTime($taskData['actualCompletionDateTime']))
+                            : null ?>">
+                </div>
             </div>
 
             <!-- Task Priority -->
@@ -193,6 +211,7 @@ $taskData = [
         defer></script>
 
     <script type="module" src="<?= EVENT_PATH . 'edit-task-modal' . DS . 'open.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'edit-task-modal' . DS . 'complete.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'edit-task-modal' . DS . 'cancel.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'edit-task-modal' . DS . 'submit.js' ?>" defer></script>
 </body>
