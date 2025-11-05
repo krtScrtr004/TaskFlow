@@ -20,8 +20,6 @@ function userGridCard(User|Worker $user): string
 
     $isUsersPage = strpos($_SERVER['REQUEST_URI'], 'users') !== false;
 
-    $performance = WorkerPerformanceCalculator::calculate(ProjectModel::all());
-
     ob_start();
     ?>
     <button class="user-grid-card unset-button" data-userid="<?= $id ?>">
@@ -48,17 +46,37 @@ function userGridCard(User|Worker $user): string
 
         <!-- Worker Statistics -->
         <section class="user-statistics flex-col">
-            <?php if ($isUsersPage):
-                $projects = ProjectModel::all(); ?>
-                <!-- Completed Projects -->
-                <p>Completed Projects: <?= $performance['totalProjects'] ?></p>
-            <?php else: ?>
-                <!-- Completed Tasks -->
-                <p>Completed Tasks: <?= $performance['totalTasks'] ?></p>
-            <?php endif; ?>
+            <?php if ($isUsersPage): 
+                $totalTasks = htmlspecialchars($user->getAdditionalInfo('totalProjects') ?? 0);
+                $completedProject = htmlspecialchars($user->getAdditionalInfo('completedProjects') ?? 0);
+            ?>
+                <!-- Total Projects -->
+                <div class="text-w-icon">
+                    <img src="<?= ICON_PATH . 'project_w.svg' ?>" alt="Total Project" title="Total Project" height="20">
+                    <p>Total Projects: <?= $totalTasks ?></p>
+                </div>
 
-            <!-- Performance -->
-            <p>Performance: <?= $performance['overallScore'] ?>%</p>
+                <!-- Completed Projects -->
+                <div class="text-w-icon">
+                    <img src="<?= ICON_PATH . 'complete_w.svg' ?>" alt="Completed Projects" title="Completed Projects" height="20">
+                    <p>Completed Projects: <?= $completedProject ?></p>    
+                </div>
+            <?php else: 
+                $totalTasks = htmlspecialchars($user->getAdditionalInfo('totalTasks') ?? 0);
+                $completedTask = htmlspecialchars($user->getAdditionalInfo('completedTasks') ?? 0);
+            ?>
+                <!-- Total Tasks -->
+                <div class="text-w-icon">
+                    <img src="<?= ICON_PATH . 'task_w.svg' ?>" alt="Total Task" title="Total Task" height="20">
+                    <p>Total Tasks: <?= $totalTasks ?></p>
+                </div>
+
+                <!-- Completed Tasks -->
+                <div class="text-w-icon">
+                    <img src="<?= ICON_PATH . 'complete_w.svg' ?>" alt="Total Task" title="Total Task" height="20">
+                    <p>Completed Tasks: <?= $completedTask ?></p>
+                </div>
+            <?php endif; ?>
         </section>
 
         <hr>

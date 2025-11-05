@@ -84,7 +84,11 @@ class TaskModel extends Model
                 'status' => WorkerStatus::from($worker['workerStatus']),
                 'jobTitles' => isset($worker['workerJobTitles'])
                     ? new JobTitleContainer(json_decode($worker['workerJobTitles'], true))
-                    : new JobTitleContainer()
+                    : new JobTitleContainer(),
+                'additionalInfo' => [
+                    'totalTasks' => (int)$worker['workerTotalTasks'],
+                    'completedTasks' => (int)$worker['workerCompletedTasks']
+                ]
             ]));
         }
         return $task;
@@ -146,6 +150,18 @@ class TaskModel extends Model
                                             WHERE wjt.userId = u.id
                                         ),
                                         '[]'
+                                    ),
+                                    'workerTotalTasks', (
+                                        SELECT COUNT(*)
+                                        FROM projectTaskWorker ptw2
+                                        WHERE ptw2.workerId = u.id
+                                    ),
+                                    'workerCompletedTasks', (
+                                        SELECT COUNT(*)
+                                        FROM projectTaskWorker ptw3
+                                        INNER JOIN projectTask pt3 ON ptw3.taskId = pt3.id
+                                        WHERE ptw3.workerId = u.id
+                                        AND pt3.status = 'completed'
                                     )
                                 ) ORDER BY u.lastName SEPARATOR ','
                             ), ']')

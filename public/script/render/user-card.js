@@ -94,6 +94,7 @@ function addInfoToCard(card, user) {
 
     // Determine if the current page is the home page, to adjust statistics content
     const isHomePage = window.location.href.includes('home')
+    const isTaskPage = window.location.href.includes('task')
 
     // Add user info to card
     userProfilePicture.src = user.profileLink ?? `${ICON_PATH}profile_w.svg`
@@ -103,10 +104,10 @@ function addInfoToCard(card, user) {
         `<span class="job-title-chip">${title}</span>`
     ).join('')
     userBio.textContent = user.bio ?? 'No bio available'
-    userTotalStatistics.textContent = (isHomePage) 
+    userTotalStatistics.textContent = (isHomePage || isTaskPage) 
         ? user.additionalInfo.totalTasks 
         : user.additionalInfo.totalProjects
-    userCompletedStatistics.textContent = (isHomePage)
+    userCompletedStatistics.textContent = (isHomePage || isTaskPage)
         ? user.additionalInfo.completedTasks 
         : user.additionalInfo.completedProjects
     userPerformance.textContent = (user.additionalInfo.performance ?? 0) + '%'

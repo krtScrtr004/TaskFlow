@@ -10,7 +10,6 @@ use App\Core\UUID;
 use App\Dependent\Worker;
 use App\Entity\Project;
 use App\Entity\Task;
-use App\Entity\User;
 use App\Enumeration\Gender;
 use App\Enumeration\Role;
 use App\Enumeration\WorkerStatus;
@@ -117,7 +116,7 @@ class ProjectWorkerModel extends Model
                     'totalTasks'         => (int)$row['totalTasks'],
                     'completedTasks'     => (int)$row['completedTasks'],
                     'totalProjects'      => (int)$row['totalProjects'],
-                    'completedProjects'  => (int)$row['completedProjects'],
+                    'completedProjects'  => (int)$row['completedProjects']
                 ];
                 $workers->add(Worker::createPartial($row));
             }
@@ -340,7 +339,7 @@ class ProjectWorkerModel extends Model
                                         SELECT CONCAT('[', GROUP_CONCAT(
                                             JSON_OBJECT(
                                                 'id', t.id,
-                                                'publicId', HEX(t.id),
+                                                'publicId', HEX(t.publicId),
                                                 'name', t.name,
                                                 'status', t.status,
                                                 'startDateTime', t.startDateTime,
@@ -361,6 +360,7 @@ class ProjectWorkerModel extends Model
                             INNER JOIN `projectWorker` AS pw4
                             ON p2.id = pw4.projectId
                             WHERE pw4.workerId = u.id
+                            LIMIT 10
                         ),
                         '[]'
                     ) AS projectHistory"
@@ -480,7 +480,8 @@ class ProjectWorkerModel extends Model
                         'actualCompletionDateTime'  => $project['actualCompletionDateTime']
                     ]);
 
-                    foreach ($project['tasks'] as &$task) {
+                    $tasks = json_decode($project['tasks'], true);
+                    foreach ($tasks as &$task) {
                         $entry->addTask(
                             Task::createPartial([
                                 'id'                        => $task['id'],
