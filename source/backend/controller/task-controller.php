@@ -7,13 +7,17 @@ use App\Container\TaskContainer;
 use App\Core\Me;
 use App\Core\UUID;
 use App\Enumeration\Role;
+use App\Enumeration\TaskPriority;
+use App\Enumeration\WorkStatus;
 use App\Exception\ForbiddenException;
 use App\Exception\NotFoundException;
 use App\Interface\Controller;
 use App\Middleware\Response;
 use App\Model\ProjectModel;
 use App\Model\TaskModel;
+use Error;
 use InvalidArgumentException;
+use ValueError;
 
 class TaskController implements Controller
 {
@@ -56,9 +60,38 @@ class TaskController implements Controller
                 throw new NotFoundException('Project not found.');
             }
 
-            $tasks = Role::isProjectManager(Me::getInstance())
-                ? TaskModel::findAllByProjectId($projectId)
-                : TaskModel::findAssignedToWorker(Me::getInstance()->getId(), $projectId);
+            // Obtain filter from query parameters (one filter type only)
+            $filter = null;
+            if (isset($_GET['filter']) && strcasecmp($_GET['filter'], 'all') !== 0) {
+                $filterValue = $_GET['filter'];
+                // Try to parse as WorkStatus first, then TaskPriority if later fails
+                try {
+                    $filter = WorkStatus::from($filterValue);
+                } catch (ValueError $e) {
+                    $filter = TaskPriority::from($filterValue);
+                }
+            }
+
+            $options = [
+                'offset' => isset($_GET['offset']) ? (int)$_GET['offset'] : 0,
+                'limit' => isset($_GET['limit']) ? (int)$_GET['limit'] : 50,
+            ];
+
+            $tasks = null;
+            if (isset($_GET['key']) && trim($_GET['key']) !== '') {
+                $key = trimOrNull($_GET['key']);
+                $tasks = TaskModel::search(
+                    $key, 
+                    Me::getInstance()->getId(), 
+                    $projectId, 
+                    $filter, 
+                    $options
+                );
+            } else {
+                $tasks = Role::isProjectManager(Me::getInstance())
+                    ? TaskModel::findAllByProjectId($projectId, $filter, $options)
+                    : TaskModel::findAssignedToWorker(Me::getInstance()->getId(), $projectId, $filter, $options);
+            }
             if (!$tasks) {
                 // No tasks found, assign an empty container
                 $tasks = new TaskContainer();

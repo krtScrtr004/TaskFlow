@@ -214,7 +214,9 @@ class TaskModel extends Model
      * Supports pagination through limit and offset options.
      *
      * @param string $key The search keyword to match against task name and description.
+     * @param int|UUID|null $userId (optional) The user ID or UUID to filter tasks created by / assigned to a specific user. If null, searches across all users.
      * @param int|UUID|null $projectId (optional) The project ID or UUID to filter tasks by project. If null, searches across all projects.
+     * @param WorkStatus|TaskPriority|null $filter (optional) Filter to apply on task status or priority.
      * @param array $options (optional) Search options:
      *      - limit: int Maximum number of results to return (default: 10)
      *      - offset: int Number of results to skip for pagination (default: 0)
@@ -225,7 +227,9 @@ class TaskModel extends Model
      * @return TaskContainer|null A container of found tasks, or null if no tasks match the search criteria.
      */
     public static function search( string $key,
+        int|UUID|null $userId = null,
         int|UUID|null $projectId = null,
+        WorkStatus|TaskPriority|null $filter = null,
         array $options = [
             'limit' => 10,
             'offset' => 0,
@@ -244,6 +248,53 @@ class TaskModel extends Model
                 ':limit'    => $options['limit'] ?? 10,
                 ':offset'   => $options['offset'] ?? 0
             ];
+
+            // Filter by user role if provided
+            if ($userId) {
+                $whereClause .= is_int($userId) 
+                    ? ' AND (p.managerId = :userId1
+                        OR pt.id IN (
+                            SELECT ptw.taskId 
+                            FROM projectTaskWorker ptw 
+                            WHERE ptw.workerId = :userId2)
+                        )'
+                    : ' AND (p.managerId IN (
+                            SELECT id
+                            FROM `user` 
+                            WHERE publicId = :userId1)
+                        pt.id IN (
+                            SELECT ptw.taskId 
+                            FROM projectTaskWorker ptw 
+                            INNER JOIN `user` u ON ptw.workerId = u.id
+                            WHERE u.publicId = :userId2)
+                        )';
+                $params[':userId1'] = is_int($userId) 
+                    ? $userId 
+                    : UUID::toBinary($userId);
+                $params[':userId2'] = $params[':userId1'];
+            }
+
+            // Narrow by project if provided
+            if ($projectId !== null) {
+                $whereClause .= is_int($projectId) 
+                    ? ' AND pt.projectId = :projectId'
+                    : ' AND pt.projectId IN (
+                        SELECT id 
+                        FROM `project` 
+                        WHERE publicId = :projectId)';
+                $params[':projectId'] = is_int($projectId) 
+                    ? $projectId 
+                    : UUID::toBinary($projectId);
+            }
+
+            // Apply status / priority filter if provided
+            if ($filter instanceof WorkStatus) {
+                $whereClause .= ' AND pt.status = :status';
+                $params[':status'] = $filter->value;
+            } elseif ($filter instanceof TaskPriority) {
+                $whereClause .= ' AND pt.priority = :priority';
+                $params[':priority'] = $filter->value;
+            }
 
             return self::find($whereClause, $params, $options);
         } catch (Exception $e) {
@@ -310,6 +361,7 @@ class TaskModel extends Model
      * - If $projectId is a UUID, it is converted to binary and used in a subquery to resolve the internal project ID.
      *
      * @param int|UUID $projectId The project ID (integer or UUID as string).
+     * @param WorkStatus|TaskPriority|null $filter Optional filter to narrow down tasks by status or priority.
      * @param array $options Optional query options:
      *      - offset: int (default 0) The starting point for the result set.
      *      - limit: int (default 10) The maximum number of tasks to return.
@@ -321,6 +373,7 @@ class TaskModel extends Model
      */
     public static function findAllByProjectId(
         int|UUID $projectId,
+        WorkStatus|TaskPriority|null $filter = null,
         array $options = [
             'offset' => 0,
             'limit' => 10,
@@ -343,6 +396,14 @@ class TaskModel extends Model
                     : UUID::toBinary($projectId)
             ];
 
+            if ($filter instanceof WorkStatus) {
+                $whereClause .= ' AND pt.status = :status';
+                $params[':status'] = $filter->value;
+            } elseif ($filter instanceof TaskPriority) {
+                $whereClause .= ' AND pt.priority = :priority';
+                $params[':priority'] = $filter->value;
+            }
+
             return self::find($whereClause,$params, $options);
         } catch (Exception $e) {
             throw $e;
@@ -358,6 +419,7 @@ class TaskModel extends Model
      *
      * @param int|UUID $workerId The worker's identifier (integer ID or UUID).
      * @param int|UUID|null $projectId (Optional) The project's identifier (integer ID or UUID). If null, tasks from all projects are included.
+     * @param WorkStatus|TaskPriority|null $filter Optional filter to narrow down tasks by status or priority.
      * @param array $options (Optional) Query options:
      *      - offset: int (default 0) The number of records to skip.
      *      - limit: int (default 10) The maximum number of records to return.
@@ -370,6 +432,7 @@ class TaskModel extends Model
     public static function findAssignedToWorker(
         int|UUID $workerId,
         int|UUID|null $projectId,
+        WorkStatus|TaskPriority|null $filter = null,
         array $options = [
             'offset' => 0,
             'limit' => 10,
@@ -400,6 +463,14 @@ class TaskModel extends Model
                 $params[':projectId'] = is_int($projectId)
                     ? $projectId
                     : UUID::toBinary($projectId);
+            }
+
+            if ($filter instanceof WorkStatus) {
+                $whereClause .= ' AND pt.status = :status';
+                $params[':status'] = $filter->value;
+            } elseif ($filter instanceof TaskPriority) {
+                $whereClause .= ' AND pt.priority = :priority';
+                $params[':priority'] = $filter->value;
             }
 
             return self::find($whereClause,$params, $options);

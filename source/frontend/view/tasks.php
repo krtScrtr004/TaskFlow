@@ -42,7 +42,6 @@ if (!isset($tasks)) {
         <section>
             <?= searchBar([
                 'Status' => [
-                    'All Statuses',
                     WorkStatus::PENDING->getDisplayName(),
                     WorkStatus::ON_GOING->getDisplayName(),
                     WorkStatus::COMPLETED->getDisplayName(),
@@ -50,7 +49,6 @@ if (!isset($tasks)) {
                     WorkStatus::CANCELLED->getDisplayName()
                 ],
                 'Priority' => [
-                    'All Priorities',
                     TaskPriority::HIGH->getDisplayName(),
                     TaskPriority::MEDIUM->getDisplayName(),
                     TaskPriority::LOW->getDisplayName()
