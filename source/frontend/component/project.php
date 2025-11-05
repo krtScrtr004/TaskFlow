@@ -298,7 +298,9 @@ require_once COMPONENT_PATH . 'template/add-worker-modal.php';
             </div>
 
             <!-- Add Worker Button -->
-            <?php if (Role::isProjectManager(Me::getInstance())): ?>
+            <?php if (Role::isProjectManager(Me::getInstance()) && 
+                        $projectData['status'] !== WorkStatus::COMPLETED && 
+                        $projectData['status'] !== WorkStatus::CANCELLED): ?>
                 <div class="">
                     <button id="add_worker_button" type="button" class="float-right blue-bg">
                         <div class="heading-title text-w-icon center-child">

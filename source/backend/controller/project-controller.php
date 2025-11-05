@@ -36,7 +36,7 @@ class ProjectController implements Controller
     }
 
     /**
-     * Displays the home project dashboard for the currently authenticated user.
+     * Displays the active project dashboard for the currently authenticated user.
      *
      * This method checks if the user has an authorized session and determines the user's active project
      * based on their role (project manager or worker). If an active project is found and is not cancelled,
@@ -81,6 +81,60 @@ class ProjectController implements Controller
         }
     }
 
+    /**
+     * Displays the dashboard view for a specific project for authorized users.
+     *
+     * This static method checks if the current session is authorized, retrieves the project information
+     * based on the provided project ID, and renders the dashboard for that project. If the project is not found
+     * or the user is not authorized, appropriate error handlers are invoked.
+     *
+     * @param array $args Optional associative array of arguments:
+     *      - projectId: string|null The UUID string of the project to view.
+     *
+     * @throws NotFoundException If the project is not found.
+     * @throws ForbiddenException If the user is not authorized to view the project.
+     *
+     * @return void
+     */
+    public static function viewOther(array $args = []): void
+    {
+        try {
+            if (!SessionAuth::hasAuthorizedSession()) {
+                throw new ForbiddenException();
+            }
+
+            $instance = new self();
+
+            $projectId = isset($args['projectId'])
+                ? UUID::fromString($args['projectId'])
+                : null;
+
+            $fullProjectInfo = $instance->getProjectInfo($projectId);        
+            if (!$fullProjectInfo) {
+                throw new NotFoundException('Project not found.');
+            }
+
+            $instance->renderDashboard($fullProjectInfo);
+        } catch (NotFoundException $e) {
+            ErrorController::notFound();
+        } catch (ForbiddenException $e) {
+            ErrorController::forbidden();
+        }
+    }
+    
+    /**
+     * Displays the project grid view for the currently authenticated user.
+     *
+     * This method checks if the user has an authorized session. If authorized, it determines
+     * whether the user is a project manager or a worker and fetches the corresponding projects.
+     * The appropriate view is then loaded to display the projects grid.
+     * Handles forbidden and not found exceptions by delegating to the error controller.
+     *
+     * @throws NotFoundException If the requested resource is not found.
+     * @throws ForbiddenException If the user does not have permission to view the projects.
+     *
+     * @return void
+     */
     public static function viewGrid(): void
     {
         try {
