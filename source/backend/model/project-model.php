@@ -441,6 +441,7 @@ class ProjectModel extends Model
      * handles potential database errors.
      *
      * @param int|UUID $managerId The ID (integer or UUID) of the manager whose projects to retrieve
+     * @param WorkStatus|null $status Optional status filter to retrieve projects with a specific status
      * 
      * @return ProjectContainer|null Container with projects managed by the specified manager,
      *                               or null if no projects are found.
@@ -448,7 +449,7 @@ class ProjectModel extends Model
      * @throws InvalidArgumentException If the provided manager ID is less than 1.
      * @throws DatabaseException If a database error occurs during the query execution.
      */
-    public static function findByManagerId(int|UUID $managerId): ?ProjectContainer
+    public static function findByManagerId(int|UUID $managerId, WorkStatus|null $status = null): ?ProjectContainer
     {
         if (is_int($managerId) && $managerId < 1) {
             throw new InvalidArgumentException('Invalid manager ID provided.');
@@ -463,6 +464,11 @@ class ProjectModel extends Model
                 ? $managerId
                 : UUID::toBinary($managerId);
 
+            if ($status) {
+                $whereClause .= ' AND p.status = :status';
+                $params['status'] = $status->value;
+            }
+
             return self::find($whereClause, $params);
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
@@ -476,17 +482,19 @@ class ProjectModel extends Model
      * projects that have an entry in the projectWorker table referencing the worker:
      * - Validates that $workerId is a positive integer (>= 1)
      * - Executes a SELECT with a subquery: id IN (SELECT projectId FROM projectWorker WHERE userId = :workerId)
+     * - Optionally filters by project status if $status is provided
      * - Uses a prepared/bound parameter (:workerId) to avoid SQL injection
      * - Wraps lower-level PDO exceptions in a DatabaseException
      *
      * @param int $workerId Positive integer ID of the worker whose projects should be retrieved
+     * @param WorkStatus|null $status Optional status filter to retrieve projects with a specific status
      *
      * @return ProjectContainer|null ProjectContainer containing the found project(s) or null if none found
      *
      * @throws InvalidArgumentException If $workerId is not a valid positive integer
      * @throws DatabaseException If a database error occurs (wraps the underlying PDOException)
      */
-    public static function findByWorkerId(int|UUID $workerId): ?ProjectContainer
+    public static function findByWorkerId(int|UUID $workerId, WorkStatus|null $status = null): ?ProjectContainer
     {
         if (is_int($workerId) && $workerId < 1) {
             throw new InvalidArgumentException('Invalid worker ID provided.');
@@ -509,6 +517,11 @@ class ProjectModel extends Model
             $param['workerId'] = is_int($workerId) 
                 ? $workerId
                 : UUID::toBinary($workerId);
+
+            if ($status) {
+                $whereClause .= ' AND p.status = :status';
+                $param['status'] = $status->value;
+            }
 
             return self::find($whereClause,$param);
         } catch (PDOException $e) {
@@ -638,6 +651,88 @@ class ProjectModel extends Model
         }
     }
 
+    /**
+     * Searches for projects based on provided criteria.
+     *
+     * This static method allows searching for projects using a keyword, user ID (either integer or UUID),
+     * project status, and additional options such as pagination and sorting. It constructs a dynamic SQL
+     * WHERE clause based on the provided parameters and delegates the actual data retrieval to the `find` method.
+     *
+     * - If a search key is provided, it performs a full-text search on project name and description.
+     * - If a user ID is provided, it filters projects managed by or assigned to the user (supports both integer and UUID).
+     * - If a status is provided, it filters projects by the specified status.
+     * - Additional options can be set for offset, limit, and order.
+     *
+     * @param string $key Optional search keyword for full-text search on project name and description.
+     * @param int|UUID|null $userId Optional user identifier (integer ID or UUID) to filter projects by manager or worker.
+     * @param WorkStatus|null $status Optional project status to filter results.
+     * @param array $options Optional associative array for query options:
+     *      - offset: int (default 0) Number of records to skip.
+     *      - limit: int (default 10) Maximum number of records to return.
+     *      - orderBy: string (default 'createdAt DESC') SQL ORDER BY clause.
+     *
+     * @throws InvalidArgumentException If an invalid user ID is provided.
+     * @throws DatabaseException If a database error occurs during the search.
+     *
+     * @return ProjectContainer|null A container of found projects, or null if no projects match the criteria.
+     */
+    public static function search(
+        string $key = '',
+        int|UUID|null $userId = null,
+        WorkStatus|null $status = null,
+        array $options = [
+            'offset'    => 0,
+            'limit'     => 10,
+            'orderBy'   => 'createdAt DESC',
+        ]
+    ): ?ProjectContainer {
+        if (isset($userId) && is_int($userId) && $userId < 1) {
+            throw new InvalidArgumentException('Invalid user ID provided.');
+        }
+
+        try {
+            $whereClauses = [];
+            $params = [];
+
+            if (!empty($key)) {
+                $whereClauses[] = 'MATCH(p.name, p.description) AGAINST (:searchKey IN NATURAL LANGUAGE MODE)';
+                $params[':searchKey'] = $key;
+            }
+
+            if ($userId) {
+                if (is_int($userId)) {
+                    $whereClauses[] = '(p.managerId = :userId1 
+                    OR p.id IN (
+                        SELECT projectId 
+                        FROM projectWorker 
+                        WHERE workerId = :userId2
+                    ))';
+                    $params[':userId1'] = $userId;
+                    $params[':userId2'] = $userId;
+                } else {
+                    $whereClauses[] = '(p.managerId = (SELECT id FROM user WHERE publicId = :userId1) 
+                    OR p.id IN (
+                        SELECT projectId 
+                        FROM projectWorker 
+                        WHERE workerId = (SELECT id FROM user WHERE publicId = :userId2)
+                    ))';
+                    $params[':userId1'] = UUID::toBinary($userId);
+                    $params[':userId2'] = UUID::toBinary( $userId);
+                }
+            }
+
+            if ($status) {
+                $whereClauses[] = 'p.status = :status';
+                $params[':status'] = $status->value;
+            }
+
+            $whereClause = implode(' AND ', $whereClauses);
+
+            return self::find($whereClause, $params, $options);
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
+        }
+    }
 
     /**
      * Retrieves a paginated collection of Project entities.

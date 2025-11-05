@@ -163,11 +163,11 @@ if (isset($projects)) {
 
             <div class="sentinel"></div>
 
-             <div
+            <div
                 class="no-projects-wall no-content-wall <?= $projects?->count() < 1 ? 'flex-col' : 'no-display' ?>">
                 <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No projects available" title="No projects available"
                     height="70">
-                <h3 class="center-text">You have no project history.</h3>
+                <h3 class="center-text">No projects found.</h3>
             </div>
         </section>
 

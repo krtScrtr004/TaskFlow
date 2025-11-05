@@ -13,7 +13,7 @@ function searchBar(
         throw new InvalidArgumentException('Filter options must be an associative array.');
 
     $searchKey = isset($_GET['key']) ? htmlspecialchars($_GET['key']) : '';
-    $searchFilter = isset($_GET['filter']) ? htmlspecialchars($_GET['filter']) : 'all';
+    $searchFilter = htmlspecialchars($_GET['filter'] ?? 'all');
 
     ob_start();
     ?>

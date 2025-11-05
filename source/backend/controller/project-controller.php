@@ -142,9 +142,28 @@ class ProjectController implements Controller
                 throw new ForbiddenException();
             }
 
-            $projects = Role::isProjectManager(Me::getInstance())
-                ? ProjectModel::findByManagerId(Me::getInstance()->getId())
-                : ProjectModel::findByWorkerId(Me::getInstance()->getId());
+            // Only status can be filtered here
+            $status = isset($_GET['filter']) && strcasecmp($_GET['filter'], 'all') !== 0
+                ? WorkStatus::from($_GET['filter']) 
+                : null;
+
+            $projects = null;
+            if (isset($_GET['key'])) {
+                $key = trim($_GET['key']);
+
+                $projects = ProjectModel::search(
+                    $key, 
+                    Me::getInstance()->getId(), 
+                    $status,
+                    [
+                        'limit' => 50,
+                        'offset' => 0
+                    ]);
+            } else {
+                $projects = Role::isProjectManager(Me::getInstance())
+                    ? ProjectModel::findByManagerId(Me::getInstance()->getId(), $status)
+                    : ProjectModel::findByWorkerId(Me::getInstance()->getId(), $status);
+            }
 
             require_once VIEW_PATH . 'projects.php';
         } catch (NotFoundException $e) {
