@@ -456,8 +456,8 @@ class ProjectModel extends Model
 
         try {
             $whereClause = is_int($managerId) 
-                ? 'p.id = :managerId' 
-                : 'p.publicId = :managerId';
+                ? 'p.managerId = :managerId' 
+                : 'p.publicId = (SELECT id FROM user WHERE publicId = :managerId)';
 
             $params['managerId'] = is_int($managerId) 
                 ? $managerId

@@ -10,6 +10,7 @@ use App\Entity\User;
 use App\Enumeration\Gender;
 use App\Enumeration\Role;
 use App\Enumeration\WorkerStatus;
+use App\Enumeration\WorkStatus;
 use App\Exception\DatabaseException;
 use App\Middleware\Csrf;
 use DateTime;
@@ -43,12 +44,28 @@ class UserModel extends Model
             $queryString = "    
                 SELECT 
                     u.*,
-                    GROUP_CONCAT(ujt.title) AS jobTitles
+                    GROUP_CONCAT(ujt.title) AS jobTitles,
+                    (
+                        SELECT COUNT(*)
+                        FROM `project` p
+                        JOIN `projectWorker` pw ON p.id = pw.projectId
+                        WHERE pw.workerId = u.id 
+                        AND p.status = :cancelledStatus
+                    ) AS cancelledProjectCount,
+                    (
+                        SELECT COUNT(*)
+                        FROM `projectWorker` pw
+                        WHERE pw.workerId = u.id
+                        AND pw.status = :terminatedStatus
+                    ) AS terminatedProjectCount
                 FROM `user` u
                 LEFT JOIN `userJobTitle` ujt ON u.id = ujt.userId";
             $query = $instance->appendOptionsToFindQuery(
                 $instance->appendWhereClause($queryString, $whereClause),
             $options);
+
+            $params[':cancelledStatus'] = WorkStatus::CANCELLED->value;
+            $params[':terminatedStatus'] = WorkerStatus::TERMINATED->value;
 
             $statement = $instance->connection->prepare($query);
             $statement->execute($params);
@@ -61,6 +78,11 @@ class UserModel extends Model
             $users = [];
             foreach ($result as $row) {
                 $row['jobTitles'] = explode(',', $row['jobTitles']);
+                $row['additionalInfo'] = [
+                    'cancelledProjectCount'     => (int) $row['cancelledProjectCount'] ?? 0,
+                    'terminatedProjectCount'    => (int) $row['terminatedProjectCount'] ?? 0
+                ];
+
                 $users[] = User::fromArray($row);
             }
             return $users;

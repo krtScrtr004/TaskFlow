@@ -81,6 +81,25 @@ class ProjectController implements Controller
         }
     }
 
+    public static function viewGrid(): void
+    {
+        try {
+            if (!SessionAuth::hasAuthorizedSession()) {
+                throw new ForbiddenException();
+            }
+
+            $projects = Role::isProjectManager(Me::getInstance())
+                ? ProjectModel::findByManagerId(Me::getInstance()->getId())
+                : ProjectModel::findByWorkerId(Me::getInstance()->getId());
+
+            require_once VIEW_PATH . 'projects.php';
+        } catch (NotFoundException $e) {
+            ErrorController::notFound();
+        } catch (ForbiddenException $e) {
+            ErrorController::forbidden();
+        }
+    }
+
     /**
      * Retrieves detailed information about a project by its UUID.
      *
@@ -160,13 +179,4 @@ class ProjectController implements Controller
 
         require_once VIEW_PATH . 'home.php';
     }
-
-    public static function viewProjectGrid(): void
-    {
-        $projects = ProjectModel::all();
-
-        require_once VIEW_PATH . 'projects.php';
-    }
-
-    // 
 }
