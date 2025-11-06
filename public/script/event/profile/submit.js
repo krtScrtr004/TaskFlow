@@ -14,6 +14,9 @@ const profile = document.querySelector('.profile')
 // Store original values
 const originalValues = {}
 
+const jobTitleToAdd = []
+const jobTitleToRemove = []
+
 const editableProfileDetailsForm = profile?.querySelector('#editable_profile_details_form')
 if (!editableProfileDetailsForm) {
     console.error('Editable profile details form not found.')
@@ -89,7 +92,7 @@ async function submit(e) {
         return
     }
 
-    const params = {
+    const currentValues = {
         firstName: firstNameInput.value,
         middleName: middleNameInput.value,
         lastName: lastNameInput.value,
@@ -100,13 +103,8 @@ async function submit(e) {
         jobTitles: jobTitlesInput.value
     }
 
-    // Validate inputs
-    if (!validateInputs(params, userValidationRules())) { 
-        return
-    }
-
     // Get only the changed values
-    const changedParams = getChangedValues(params)
+    const changedParams = getChangedValues(currentValues)
 
     // If nothing changed, don't send request
     if (Object.keys(changedParams).length === 0) {
@@ -114,6 +112,25 @@ async function submit(e) {
             'No Changes',
             'No changes were detected in your profile.'
         )
+        return
+    }
+
+    // If job titles changed, populate the add/remove arrays
+    if (changedParams.hasOwnProperty('jobTitles')) {
+        getJobTitleChanges(
+            originalValues.jobTitles,
+            currentValues.jobTitles
+        )
+
+        // Set jobTitles to an object with toAdd and toRemove arrays
+        changedParams.jobTitles = {
+            toAdd: jobTitleToAdd,
+            toRemove: jobTitleToRemove
+        }
+    }
+
+    // Validate only the changed inputs
+    if (!validateInputs(changedParams, userValidationRules())) { 
         return
     }
 
@@ -197,6 +214,44 @@ function getChangedValues(currentParams) {
 }
 
 /**
+ * Compares original and current job titles and returns arrays of added and removed titles.
+ *
+ * This function parses comma-separated job title strings, normalizes them by trimming whitespace,
+ * and identifies which titles were added (present in current but not in original) and which were
+ * removed (present in original but not in current).
+ *
+ * @param {string} originalJobTitles - Comma-separated string of original job titles
+ * @param {string} currentJobTitles - Comma-separated string of current job titles
+ * 
+ * @returns {void}
+ * 
+ */
+function getJobTitleChanges(originalJobTitles, currentJobTitles) {
+    // Parse and normalize job titles
+    const originalTitles = originalJobTitles
+        .split(',')
+        .map(title => title.trim())
+        .filter(title => title !== '')
+    
+    const currentTitles = currentJobTitles
+        .split(',')
+        .map(title => title.trim())
+        .filter(title => title !== '')
+    
+    // Find added titles (in current but not in original)
+    const addedTitles = currentTitles.filter(title => !originalTitles.includes(title))
+    
+    // Find removed titles (in original but not in current)
+    const removedTitles = originalTitles.filter(title => !currentTitles.includes(title))
+    
+     // Clear and populate the arrays
+    jobTitleToAdd.length = 0
+    jobTitleToRemove.length = 0
+    jobTitleToAdd.push(...addedTitles)
+    jobTitleToRemove.push(...removedTitles)
+}
+
+/**
  * Sends updated user profile data to the backend via a PATCH request.
  *
  * This function performs validation only on the fields present in the `params` object.
@@ -249,10 +304,14 @@ async function sendToBackend(params) {
             throw new Error('Job titles are required.')
         }
 
-        // Convert jobTitles to array if it exists in changed params
+        // Build request params
         const requestParams = { ...params }
+        
+        // If job titles changed, send the add/remove arrays instead of full list
         if (requestParams.hasOwnProperty('jobTitles')) {
-            requestParams.jobTitles = requestParams.jobTitles.split(',').map(title => title.trim()).filter(title => title !== '')
+            delete requestParams.jobTitles
+            requestParams.jobTitlesToAdd = jobTitleToAdd
+            requestParams.jobTitlesToRemove = jobTitleToRemove
         }
 
         const response = await Http.PATCH(`users/${myId}`, requestParams)

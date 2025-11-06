@@ -2,7 +2,6 @@ import { Http } from '../../utility/http.js'
 import { confirmationDialog } from '../../render/confirmation-dialog.js'
 import { Dialog } from '../../render/dialog.js'
 import { Loader } from '../../render/loader.js'
-import { errorListDialog } from '../../render/error-list-dialog.js'
 import { handleException } from '../../utility/handle-exception.js'
 
 let isLoading = false
