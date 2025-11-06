@@ -17,6 +17,7 @@ use App\Enumeration\WorkerStatus;
 use App\Enumeration\WorkStatus;
 use App\Utility\WorkerPerformanceCalculator;
 use Exception;
+use ValueError;
 
 class UserEndpoint
 {
@@ -41,14 +42,22 @@ class UserEndpoint
     public static function getUserById(array $args = []): void
     {
         try {
-            $userId = (isset($args['userId']))
+            if (!HttpAuth::isGETRequest()) {
+                throw new ForbiddenException('Invalid request method. GET request required.');
+            }
+
+            if (!SessionAuth::hasAuthorizedSession()) {
+                throw new ForbiddenException('User session is not authorized to perform this action.');
+            }
+
+            $userId = isset($args['userId'])
                 ? UUID::fromString($args['userId']) 
                 : null;
             if (!$userId) {
                 throw new ValidationException('User ID is required.');
             }
-
-            $user = UserModel::finById($userId); 
+            
+            $user = UserModel::findById($userId);
             if (!$user) {
                 Response::error('User not found.', [], 404);
             } else {
@@ -98,22 +107,24 @@ class UserEndpoint
                 throw new ForbiddenException('User session is not authorized to perform this action.');
             }
 
-            $users = [];
-            // Check if 'key' parameter is present in the query string
-            if (isset($_GET['key']) && trim($_GET['key']) !== '') {
-                $users = UserModel::search(
-                    trim($_GET['key']),
-                    [
-                        'limit'     => isset($_GET['limit']) ? (int)$_GET['limit'] : 10,
-                        'offset'    => isset($_GET['offset']) ? (int)$_GET['offset'] : 0
-                    ]
-                );
-            } else {
-                $users = UserModel::all(
-                    isset($_GET['offset']) ? (int)$_GET['offset'] : 0,
-                    isset($_GET['limit']) ? (int)$_GET['limit'] : 10
-                );
+            $filter = null;
+            if (isset($_GET['filter']) && trim($_GET['filter']) !== '') {
+                try {
+                    $filter = Role::from($_GET['filter']);
+                } catch (ValueError $e) {
+                    WorkStatus::from($_GET['filter']);
+                }
             }
+
+            $users = UserModel::search(
+                isset($_GET['key']) ? trim($_GET['key']) : '',
+                $filter instanceof Role ? $filter : null,
+                $filter instanceof WorkStatus ? $filter : null,
+                [
+                    'limit'     => isset($_GET['limit']) ? (int)$_GET['limit'] : 10,
+                    'offset'    => isset($_GET['offset']) ? (int)$_GET['offset'] : 0
+                ]
+            );
 
             if (!$users) {
                 Response::success([], 'No users found.');
@@ -142,19 +153,6 @@ class UserEndpoint
 
 
 
-
-
-
-
-    public static function create(): void
-    {
-        $data = decodeData('php://input');
-        if (!$data)
-            Response::error('Cannot decode data.');
-
-        Response::success([], 'User added successfully.', 201);
-    }
-
     public static function edit(): void
     {
         if (count($_FILES) > 0) {
@@ -167,31 +165,5 @@ class UserEndpoint
         }
 
         Response::success([], 'User edited successfully.');
-    }
-
-    public static function delete(array $args = []): void
-    {
-        $userId = $args['userId'] ?? null;
-        if (!$userId)
-            Response::error('User ID is required.');
-
-        // Response::error('Active Project', [
-        //     'You are assigned to an active project. Complete the project or ask for termination before deleting.'
-        // ]);
-
-        Response::success([], 'User deleted successfully.');
-    }
-
-    private static function createResponseArrayData(Worker $worker): array
-    {
-        $worker->setRole(Role::WORKER);
-        $projects = ProjectModel::all();
-        $workerPerformanceProject = WorkerPerformanceCalculator::calculate($projects);
-        return [
-            ...$worker->toArray(),
-            'totalProjects' => count($projects),
-            'completedProjects' => $projects->getCountByStatus(WorkStatus::COMPLETED),
-            'performance' => $workerPerformanceProject['overallScore'],
-        ];
     }
 }

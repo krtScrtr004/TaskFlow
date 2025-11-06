@@ -37,16 +37,12 @@ if (!isset($users))
         <section>
             <?= searchBar([
                 'Role' => [
-                    'All Roles',
                     Role::PROJECT_MANAGER->getDisplayName(),
                     Role::WORKER->getDisplayName()
                 ],
                 'Status' => [
-                    'All Statuses',
                     WorkerStatus::ASSIGNED->getDisplayName(),
                     WorkerStatus::UNASSIGNED->getDisplayName(),
-                    // WorkerStatus::ON_LEAVE->getDisplayName(),
-                    WorkerStatus::TERMINATED->getDisplayName()
                 ]
             ]) ?>
         </section>
@@ -63,6 +59,12 @@ if (!isset($users))
             <!-- Sentinel -->
             <div class="sentinel"></div>
 
+            <div
+                class="no-users-wall no-content-wall <?= count($users) > 0 ? 'no-display' : 'flex-col' ?>">
+                <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No users available" title="No users available"
+                    height="70">
+                <h3 class="center-text">No users available found.</h3>
+            </div>
         </section>
     </main>
 

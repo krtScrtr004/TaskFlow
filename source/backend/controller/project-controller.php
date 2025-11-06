@@ -125,13 +125,19 @@ class ProjectController implements Controller
     /**
      * Displays the project grid view for the currently authenticated user.
      *
-     * This method checks if the user has an authorized session. If authorized, it determines
-     * whether the user is a project manager or a worker and fetches the corresponding projects.
-     * The appropriate view is then loaded to display the projects grid.
-     * Handles forbidden and not found exceptions by delegating to the error controller.
+     * This method checks for an authorized session and retrieves a list of projects
+     * for the current user, supporting optional filtering by project status and search key.
+     * - If a search key is provided via the 'key' GET parameter, it performs a search for projects
+     *   matching the key, limited to 50 results.
+     * - If no search key is provided, it fetches projects based on the user's role:
+     *   - Project managers see projects they manage.
+     *   - Other users see projects they are assigned to as workers.
+     * - The 'filter' GET parameter can be used to filter projects by status; if set to 'all' or omitted,
+     *   no status filter is applied.
+     * - Handles forbidden and not found exceptions by delegating to the appropriate error controller methods.
      *
+     * @throws ForbiddenException If the user does not have an authorized session.
      * @throws NotFoundException If the requested resource is not found.
-     * @throws ForbiddenException If the user does not have permission to view the projects.
      *
      * @return void
      */
@@ -148,8 +154,8 @@ class ProjectController implements Controller
                 : null;
 
             $projects = null;
-            if (isset($_GET['key'])) {
-                $key = trim($_GET['key']);
+            if (isset($_GET['key']) && trim($_GET['key']) !== '') {
+                $key = trimOrNull($_GET['key']);
 
                 $projects = ProjectModel::search(
                     $key, 

@@ -28,19 +28,24 @@ class TaskController implements Controller
     public static function index(): void {}
 
     /**
-     * Displays the task grid view for a specific project.
+     * Displays a grid view of tasks for a specific project, with optional filtering and search.
      *
-     * This method checks user session authorization and validates the provided project ID.
-     * It retrieves the list of tasks for the project, either all tasks (if the user is a project manager)
-     * or only those assigned to the current worker. If no tasks are found, an empty TaskContainer is used.
-     * The method then loads the corresponding view for displaying tasks.
-     * Handles forbidden and not found exceptions by delegating to the error controller.
+     * This method checks user authorization, validates the project ID, and retrieves tasks
+     * for the specified project. Tasks can be filtered by status or priority, and searched
+     * by a keyword. The method supports pagination via 'offset' and 'limit' query parameters.
+     * The resulting tasks are passed to the view for rendering.
      *
-     * @param array $args Associative array of arguments with the following keys:
-     *      - projectId: string|UUID The public identifier of the project to view tasks for.
+     * @param array $args Associative array of arguments, expected to contain:
+     *      - projectId: string Project UUID as a string
      *
-     * @throws ForbiddenException If the user is not authorized or projectId is missing.
-     * @throws NotFoundException If the specified project does not exist.
+     * Query Parameters (via $_GET):
+     *      - filter: string (optional) Filter tasks by WorkStatus or TaskPriority; 'all' disables filtering
+     *      - key: string (optional) Search keyword for tasks
+     *      - offset: int (optional) Pagination offset (default: 0)
+     *      - limit: int (optional) Pagination limit (default: 50)
+     *
+     * @throws ForbiddenException If the user is not authorized or projectId is missing
+     * @throws NotFoundException If the specified project does not exist
      *
      * @return void
      */

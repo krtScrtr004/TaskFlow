@@ -14,6 +14,7 @@ use App\Enumeration\WorkStatus;
 use App\Exception\DatabaseException;
 use App\Middleware\Csrf;
 use DateTime;
+use Exception;
 use InvalidArgumentException;
 use PDOException;
 
@@ -37,6 +38,13 @@ class UserModel extends Model
      */
     protected static function find(string $whereClause = '', array $params = [], array $options = []): ?array
     {
+        $options = [
+            'limit'     => $options['limit'] ?? 10,
+            'offset'    => $options['offset'] ?? 0,
+            'orderBy'   => $options['orderBy'] ?? 'u.firstName DESC',
+            'groupBy'   => $options['groupBy'] ?? 'u.id'
+        ];
+
         $instance = new self();
         try {
             Csrf::protect();
@@ -45,6 +53,21 @@ class UserModel extends Model
                 SELECT 
                     u.*,
                     GROUP_CONCAT(ujt.title) AS jobTitles,
+                    (
+                        SELECT COUNT(*)
+                        FROM `project` p
+                        JOIN `projectWorker` pw ON p.id = pw.projectId
+                        WHERE p.managerId = u.id
+                        OR pw.workerId = u.id
+                    ) AS totalProjects,
+                    (
+                        SELECT COUNT(*)
+                        FROM `project` p
+                        JOIN `projectWorker` pw ON p.id = pw.projectId
+                        WHERE (p.managerId = u.id
+                        OR pw.workerId = u.id)
+                        AND p.status = :completedStatus
+                    ) AS completedProjects,
                     (
                         SELECT COUNT(*)
                         FROM `project` p
@@ -64,6 +87,7 @@ class UserModel extends Model
                 $instance->appendWhereClause($queryString, $whereClause),
             $options);
 
+            $params[':completedStatus'] = WorkStatus::COMPLETED->value;
             $params[':cancelledStatus'] = WorkStatus::CANCELLED->value;
             $params[':terminatedStatus'] = WorkerStatus::TERMINATED->value;
 
@@ -79,6 +103,8 @@ class UserModel extends Model
             foreach ($result as $row) {
                 $row['jobTitles'] = explode(',', $row['jobTitles']);
                 $row['additionalInfo'] = [
+                    'totalProjects'             => (int) $row['totalProjects'] ?? 0,
+                    'completedProjects'         => (int) $row['completedProjects'] ?? 0,
                     'cancelledProjectCount'     => (int) $row['cancelledProjectCount'] ?? 0,
                     'terminatedProjectCount'    => (int) $row['terminatedProjectCount'] ?? 0
                 ];
@@ -101,14 +127,18 @@ class UserModel extends Model
      * @return User|null The User object if found, null otherwise
      * @throws DatabaseException If a database error occurs during the search
      */
-    public static function finById(int|UUID $userId): ?User
+    public static function findById(int|UUID $userId): ?User
     {
         if (is_int($userId) && $userId < 1) {
             throw new InvalidArgumentException('Invalid user ID provided.');
         }
 
-        $whereClause = is_int($userId) ? 'id = :id' : 'publicId = :publicId';
-        $params = is_int($userId) ? [':id' => $userId] : [':publicId' => UUID::toBinary($userId)];
+        $whereClause = is_int($userId) 
+            ? 'id = :id' 
+            : 'publicId = :publicId';
+        $params = is_int($userId) 
+            ? [':id' => $userId] 
+            : [':publicId' => UUID::toBinary($userId)];
 
         try {
             $result = self::find($whereClause, $params, ['limit' => 1]);
@@ -169,29 +199,106 @@ class UserModel extends Model
         }
     }
 
+    /**
+     * Searches for users based on provided criteria.
+     *
+     * This method allows searching users by keyword, role, and worker status, with support for pagination.
+     * - Keyword search uses full-text matching on first name, middle name, last name, email, and bio.
+     * - Role filter restricts results to users with the specified role.
+     * - Worker status filter supports special handling for "UNASSIGNED" status, checking for absence of active work as manager or worker.
+     * - Supports pagination via 'limit' and 'offset' options.
+     *
+     * @param string $key Optional search keyword for full-text search.
+     * @param Role|null $role Optional role filter (Role enum).
+     * @param WorkerStatus|null $status Optional worker status filter (WorkerStatus enum).
+     * @param array $options Optional search options:
+     *      - limit: int Maximum number of results to return (default: 10)
+     *      - offset: int Number of results to skip (default: 0)
+     *
+     * @return array|null Array of matching users or null if none found.
+     *
+     * @throws Exception If an error occurs during search.
+     */
     public static function search(
-        string $key,
+        string $key = '',
+        Role|null $role = null,
+        WorkerStatus|null $status = null,
         array $options = [
             'limit' => 10,
             'offset' => 0,
         ]): ?array
     {
-        if (trimOrNull($key) === null) {
-            throw new InvalidArgumentException('Search key cannot be empty.');
-        }
-
-        $instance = new self();
         try {
-            return $instance->find(
-                '
-                    MATCH(firstName, middleName, lastName, email, bio)
+            $where = [];
+            $params = [];
+
+            if (trimOrNull($key)) {
+                $where[] = "
+                    MATCH(u.firstName, u.middleName, u.lastName, u.email, u.bio)
                     AGAINST (:key IN NATURAL LANGUAGE MODE)
-                ',
-                [':key' => $key],
-                $options
-            );
-        } catch (PDOException $e) {
-            throw new DatabaseException($e->getMessage());
+                ";
+                $params[':key'] = $key;
+            }
+
+            if ($role) {
+                $where[] = "u.role = :role";
+                $params[':role'] = $role->value;
+            }
+
+            if ($status) {
+                // Special case: UNASSIGNED means no active work as manager OR worker
+                if ($status === WorkerStatus::UNASSIGNED) {
+                    $where[] = "
+                        NOT EXISTS (
+                            SELECT 1
+                            FROM `project` AS p
+                            WHERE p.managerId = u.id
+                            AND p.status NOT IN (:completedStatusUnassigned1, :cancelledStatusUnassigned1)
+                        )
+                        AND NOT EXISTS (
+                            SELECT 1
+                            FROM `projectWorker` AS pw
+                            JOIN `project` AS p ON pw.projectId = p.id
+                            WHERE pw.workerId = u.id
+                            AND p.status NOT IN (:completedStatusUnassigned2, :cancelledStatusUnassigned2)
+                        )
+                        AND NOT EXISTS (
+                            SELECT 1
+                            FROM `projectTaskWorker` AS ptw
+                            JOIN `projectTask` AS pt ON ptw.taskId = pt.id
+                            WHERE ptw.workerId = u.id
+                            AND pt.status NOT IN (:completedStatusUnassigned3, :cancelledStatusUnassigned3)
+                        )
+                    ";
+                    $params[':completedStatusUnassigned1'] = WorkStatus::COMPLETED->value;
+                    $params[':cancelledStatusUnassigned1'] = WorkStatus::CANCELLED->value;
+                    $params[':completedStatusUnassigned2'] = WorkStatus::COMPLETED->value;
+                    $params[':cancelledStatusUnassigned2'] = WorkStatus::CANCELLED->value;
+                    $params[':completedStatusUnassigned3'] = WorkStatus::COMPLETED->value;
+                    $params[':cancelledStatusUnassigned3'] = WorkStatus::CANCELLED->value;
+                } else {
+                    $where[] = "
+                        (EXISTS (
+                            SELECT 1
+                            FROM `projectWorker` pw
+                            WHERE pw.workerId = u.id
+                            AND pw.status = :workerStatus1
+                        ) OR EXISTS (
+                            SELECT 1
+                            FROM `projectTaskWorker` ptw
+                            WHERE ptw.workerId = u.id
+                            AND ptw.status = :workerStatus2
+                        ))
+                    ";
+                    $params[':workerStatus1'] = $status->value;
+                    $params[':workerStatus2'] = $status->value;
+                }
+            }
+
+            $whereClause = !empty($where) ? implode(' AND ', $where) : '';
+            return self::find($whereClause, $params, $options);
+        } catch (Exception $e) {
+            throw $e;
         }
     }
 
