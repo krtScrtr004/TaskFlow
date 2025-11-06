@@ -46,6 +46,7 @@
 }
 
 .profile .bio {
+    width: 80ch;
     font-size: 1.1rem;
     font-weight: 300;
     margin-top: 1rem;
