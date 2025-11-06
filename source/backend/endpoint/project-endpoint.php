@@ -363,47 +363,4 @@ class ProjectEndpoint
             Response::error('Project Edit Failed.', ['An unexpected error occurred. Please try again later.'], 500);
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    public static function getProjectById(array $args = []): void
-    {
-        $projectId = $args['projectId'] ?? null; // Temporary placeholder
-        if (!$projectId)
-            Response::error('Project ID is required.');
-
-        $projects = ProjectModel::all();
-        Response::success([$projects->getItems()[0]], 'Project retrieved successfully.');
-    }
-
-    public static function getProjectByKey(): void
-    {
-        $key = $_GET['key'] ?? '';
-
-        $offset = isset($_GET['offset']) ? (int) $_GET['offset'] : 0;
-
-        $projects = ProjectModel::all();
-        Response::success([$projects->getItems()[0]], 'Projects retrieved successfully.');
-    }
-
-
-
-
 }

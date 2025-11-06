@@ -33,14 +33,14 @@ editableProfileDetailsForm?.addEventListener('input', debounce(e => {
     }
 }, 300))
 // Handle form submission
-editableProfileDetailsForm?.addEventListener('submit', e => debounceAsync(() => submit(e), 300))
+editableProfileDetailsForm?.addEventListener('submit', e => debounceAsync(submit(e), 300))
 
 const saveChangesButton = editableProfileDetailsForm?.querySelector('#save_changes_button')
 if (!saveChangesButton) {
     console.error('Save Changes button not found.')
 }
 
-saveChangesButton?.addEventListener('click', e => debounceAsync(() => submit(e), 300))
+saveChangesButton?.addEventListener('click', e => debounceAsync(submit(e), 300))
 
 const myId = profile?.dataset.myid
 if (!myId || myId.trim() === '') {
@@ -115,6 +115,11 @@ async function submit(e) {
         return
     }
 
+     // Validate only the changed inputs
+    if (!validateInputs(changedParams, userValidationRules())) { 
+        return
+    }
+
     // If job titles changed, populate the add/remove arrays
     if (changedParams.hasOwnProperty('jobTitles')) {
         getJobTitleChanges(
@@ -127,11 +132,6 @@ async function submit(e) {
             toAdd: jobTitleToAdd,
             toRemove: jobTitleToRemove
         }
-    }
-
-    // Validate only the changed inputs
-    if (!validateInputs(changedParams, userValidationRules())) { 
-        return
     }
 
     Loader.patch(saveChangesButton.querySelector('.text-w-icon'))
@@ -300,19 +300,14 @@ async function sendToBackend(params) {
         if (params.hasOwnProperty('gender') && (!params.gender || params.gender.trim() === '')) {
             throw new Error('Gender is required.')
         }
-        if (params.hasOwnProperty('jobTitles') && (!params.jobTitles || params.jobTitles.trim() === '')) {
+        if (params.hasOwnProperty('jobTitles') && 
+            params['jobTitles']['toAdd'].length === 0 && 
+            params['jobTitles']['toRemove'].length === 0) {
             throw new Error('Job titles are required.')
         }
 
         // Build request params
         const requestParams = { ...params }
-        
-        // If job titles changed, send the add/remove arrays instead of full list
-        if (requestParams.hasOwnProperty('jobTitles')) {
-            delete requestParams.jobTitles
-            requestParams.jobTitlesToAdd = jobTitleToAdd
-            requestParams.jobTitlesToRemove = jobTitleToRemove
-        }
 
         const response = await Http.PATCH(`users/${myId}`, requestParams)
         if (!response) {

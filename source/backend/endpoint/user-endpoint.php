@@ -4,18 +4,25 @@ namespace App\Endpoint;
 
 use App\Auth\HttpAuth;
 use App\Auth\SessionAuth;
+use App\Container\JobTitleContainer;
+use App\Core\Me;
+use App\Core\Session;
 use App\Core\UUID;
 use App\Exception\ForbiddenException;
 use App\Exception\ValidationException;
+use App\Middleware\Csrf;
 use App\Middleware\Response;
 use App\Model\ProjectModel;
 use App\Model\ProjectWorkerModel;
 use App\Model\UserModel;
 use App\Enumeration\Role;
 use App\Dependent\Worker;
+use App\Enumeration\Gender;
 use App\Enumeration\WorkerStatus;
 use App\Enumeration\WorkStatus;
+use App\Exception\NotFoundException;
 use App\Utility\WorkerPerformanceCalculator;
+use App\Validator\UserValidator;
 use Exception;
 use ValueError;
 
@@ -51,12 +58,12 @@ class UserEndpoint
             }
 
             $userId = isset($args['userId'])
-                ? UUID::fromString($args['userId']) 
+                ? UUID::fromString($args['userId'])
                 : null;
             if (!$userId) {
                 throw new ValidationException('User ID is required.');
             }
-            
+
             $user = UserModel::findById($userId);
             if (!$user) {
                 Response::error('User not found.', [], 404);
@@ -64,7 +71,7 @@ class UserEndpoint
                 Response::success([$user], 'User fetched successfully.');
             }
         } catch (ValidationException $e) {
-            Response::error('Validation Failed.',$e->getErrors(),422);
+            Response::error('Validation Failed.', $e->getErrors(), 422);
         } catch (ForbiddenException $e) {
             Response::error('Forbidden.', [], 403);
         } catch (Exception $e) {
@@ -121,8 +128,8 @@ class UserEndpoint
                 $filter instanceof Role ? $filter : null,
                 $filter instanceof WorkStatus ? $filter : null,
                 [
-                    'limit'     => isset($_GET['limit']) ? (int)$_GET['limit'] : 10,
-                    'offset'    => isset($_GET['offset']) ? (int)$_GET['offset'] : 0
+                    'limit' => isset($_GET['limit']) ? (int) $_GET['limit'] : 10,
+                    'offset' => isset($_GET['offset']) ? (int) $_GET['offset'] : 0
                 ]
             );
 
@@ -136,7 +143,7 @@ class UserEndpoint
                 Response::success($return, 'Users fetched successfully.');
             }
         } catch (ValidationException $e) {
-            Response::error('Validation Failed.',$e->getErrors(),422);
+            Response::error('Validation Failed.', $e->getErrors(), 422);
         } catch (ForbiddenException $e) {
             Response::error('Forbidden.', [], 403);
         } catch (Exception $e) {
@@ -155,15 +162,119 @@ class UserEndpoint
 
     public static function edit(): void
     {
-        if (count($_FILES) > 0) {
-            // Handle file upload
-            $profilePicture = $_FILES['profilePicture'] ?? null;
-        } else {
-            $data = decodeData('php://input');
-            if (!$data)
-                Response::error('Cannot decode data.');
-        }
+        try {
+            if (!SessionAuth::hasAuthorizedSession()) {
+                throw new ForbiddenException('User session is not allowed to edit projects.');
+            }
+            Csrf::protect();
 
-        Response::success([], 'User edited successfully.');
+            $data = decodeData('php://input');
+            if (!$data) {
+                throw new ValidationException('Cannot decode data.');
+            }
+
+            $profileData = [];
+            if (isset($data['firstName'])) {
+                $profileData['firstName'] = trim($data['firstName']);
+            }
+
+            if (isset($data['middleName'])) {
+                $profileData['middleName'] = trim($data['middleName']);
+            }
+
+            if (isset($data['lastName'])) {
+                $profileData['lastName'] = trim($data['lastName']);
+            }
+
+            if (isset($data['gender'])) {
+                $profileData['gender'] = Gender::from($data['gender']);
+            }
+
+            if (isset($data['email'])) {
+                $profileData['email'] = trim($data['email']);
+            }
+
+            if (isset($data['contactNumber'])) {
+                $profileData['contactNumber'] = trim($data['contactNumber']);
+            }
+
+            if (isset($data['bio'])) {
+                $profileData['bio'] = trim($data['bio']);
+            }
+
+            if (isset($data['jobTitles'])) {
+                $profileData['jobTitles']['toAdd'] = JobTitleContainer::fromArray($data['jobTitles']['toAdd'] ?? []);
+                $profileData['jobTitles']['toRemove'] = JobTitleContainer::fromArray($data['jobTitles']['toRemove'] ?? []);
+            }
+
+            if (isset($data['password'])) {
+                $profileData['password'] = $data['password'];
+            }
+
+            if (count($_FILES) > 0 && isset($_FILES['profileLink'])) {
+                // TODO: Handle profile picture upload
+            }
+
+            // Validate and update profile data
+            $validator = new UserValidator();
+            $validator->validateMultiple([
+                'firstName' => $profileData['firstName'] ?? null,
+                'middleName' => $profileData['middleName'] ?? null,
+                'lastName' => $profileData['lastName'] ?? null,
+                'email' => $profileData['email'] ?? null,
+                'contactNumber' => $profileData['contactNumber'] ?? null,
+                'bio' => $profileData['bio'] ?? null,
+                'password' => $profileData['password'] ?? null
+            ]);
+            if (isset($profileData['jobTitles']['toAdd'])) {
+                $validator->validateJobTitles($profileData['jobTitles']['toAdd']);
+            }
+            if (isset($profileData['jobTitles']['toRemove'])) {
+                $validator->validateJobTitles($profileData['jobTitles']['toRemove']);
+            }
+            if ($validator->hasErrors()) {
+                throw new ValidationException('Profile edit failed.', $validator->getErrors());
+            }
+
+            if (count($profileData) > 0) {
+                $myId = Me::getInstance()->getId();
+
+                $profileData['id'] = $myId;
+                UserModel::save($profileData);
+
+                // Reset the Me instance and session data
+                Me::destroy();
+                Me::instantiate(UserModel::findById($myId));
+                if (Session::has('userData')) {
+                    $updatedUser = Me::getInstance();
+                    Session::set('userData', [
+                        'id'                => $updatedUser->getId(),
+                        'publicId'          => UUID::toString($updatedUser->getPublicId()),
+                        'firstName'         => $updatedUser->getFirstName(),
+                        'middleName'        => $updatedUser->getMiddleName(),
+                        'lastName'          => $updatedUser->getLastName(),
+                        'gender'            => $updatedUser->getGender()->value,
+                        'birthDate'         => $updatedUser->getBirthDate()?->format('Y-m-d'),
+                        'role'              => $updatedUser->getRole()->value,
+                        'jobTitles'         => implode(',', $updatedUser->getJobTitles()->toArray()),
+                        'contactNumber'     => $updatedUser->getContactNumber(),
+                        'email'             => $updatedUser->getEmail(),
+                        'bio'               => $updatedUser->getBio(),
+                        'profileLink'       => $updatedUser->getProfileLink(),
+                        'createdAt'         => $updatedUser->getCreatedAt()->format('Y-m-d H:i:s'),
+                        'additionalInfo'    => $updatedUser->getAdditionalInfo()
+                    ]);
+                }
+            }
+            Response::success([], 'User edited successfully.');
+        } catch (ValidationException $e) {
+            Response::error('Profile Edit Failed.', $e->getErrors(), 422);
+        } catch (NotFoundException $e) {
+            Response::error('Profile Edit Failed.', ['Profile not found.'], 404);
+        } catch (ForbiddenException $e) {
+            Response::error('Profile Edit Failed. ' . $e->getMessage(), [], 403);
+        } catch (Exception $e) {
+            Response::error('Profile Edit Failed.', ['An unexpected error occurred. Please try again later.'], 500);
+        }
     }
 }

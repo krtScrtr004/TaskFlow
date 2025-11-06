@@ -5,6 +5,7 @@ namespace App\Model;
 use App\Abstract\Model;
 use App\Core\Connection;
 use App\Container\JobTitleContainer;
+use App\Core\Me;
 use App\Core\UUID;
 use App\Entity\User;
 use App\Enumeration\Gender;
@@ -12,6 +13,7 @@ use App\Enumeration\Role;
 use App\Enumeration\WorkerStatus;
 use App\Enumeration\WorkStatus;
 use App\Exception\DatabaseException;
+use App\Exception\ValidationException;
 use App\Middleware\Csrf;
 use DateTime;
 use Exception;
@@ -134,8 +136,8 @@ class UserModel extends Model
         }
 
         $whereClause = is_int($userId) 
-            ? 'id = :id' 
-            : 'publicId = :publicId';
+            ? 'u.id = :id' 
+            : 'u.publicId = :publicId';
         $params = is_int($userId) 
             ? [':id' => $userId] 
             : [':publicId' => UUID::toBinary($userId)];
@@ -417,6 +419,40 @@ class UserModel extends Model
         }
     }
 
+    /**
+     * Updates an existing user record in the database with provided data.
+     *
+     * This method performs an update operation on the user table, supporting updates by either user ID or publicId.
+     * It handles the following fields:
+     * - firstName, middleName, lastName: Trims and updates name fields
+     * - bio: Trims and updates user biography
+     * - gender: Updates gender using the enum value
+     * - email: Trims and updates email address
+     * - contactNumber: Trims and updates contact number
+     * - profileLink: Trims and updates profile link
+     * - password: Hashes and updates password using Argon2ID
+     * - jobTitles: Updates job titles using the updateJobTitles method
+     *
+     * All updates are performed within a transaction. If any error occurs, the transaction is rolled back.
+     *
+     * @param array $data Associative array containing user data to update. Supported keys:
+     *      - id: int User ID (required if publicId is not provided)
+     *      - publicId: string|binary User public identifier (required if id is not provided)
+     *      - firstName: string User's first name
+     *      - middleName: string User's middle name
+     *      - lastName: string User's last name
+     *      - bio: string User's biography
+     *      - gender: Gender User's gender (enum)
+     *      - email: string User's email address
+     *      - contactNumber: string User's contact number
+     *      - profileLink: string User's profile link
+     *      - password: string User's password (will be hashed)
+     *      - jobTitles: array Contains 'toRemove' and 'toAdd' arrays for job titles
+     *
+     * @throws DatabaseException If a database error occurs
+     * @throws ValidationException If validation fails (e.g., missing ID or publicId)
+     * @return bool True on successful update, false otherwise
+     */
     public static function save(array $data): bool
     {
         $instance = new self();
@@ -424,7 +460,14 @@ class UserModel extends Model
             $instance->connection->beginTransaction();
 
             $updateFields = [];
-            $params = [':id' => $data['id']];
+            $params = [];
+            if (isset($data['id'])) {
+                $params[':id'] = $data['id'];
+            } elseif (isset($data['publicId'])) {
+                $params[':publicId'] = UUID::toBinary($data['publicId']);
+            } else {
+                throw new InvalidArgumentException('User ID or Public ID is required for update.');
+            }
 
             if (isset($data['firstName'])) {
                 $updateFields[] = 'firstName = :firstName';
@@ -461,24 +504,107 @@ class UserModel extends Model
                 $params[':contactNumber'] = trimOrNull($data['contactNumber']);
             }
 
+            if (isset($data['profileLink'])) {
+                $updateFields[] = 'profileLink = :profileLink';
+                $params[':profileLink'] = trimOrNull($data['profileLink']);
+            }
+
             if (isset($data['password'])) {
                 $updateFields[] = 'password = :password';
                 $params[':password'] = password_hash(trimOrNull($data['password']), PASSWORD_ARGON2ID);
             }
 
             if (!empty($updateFields)) {
-                $projectQuery = "UPDATE `projectTask` SET " . implode(', ', $updateFields) . " WHERE id = :id";
+                $projectQuery = "UPDATE `user` SET " . implode(', ', $updateFields) . " WHERE id = " . (isset($params[':id']) ? ":id" : "(SELECT id FROM users WHERE publicId = :publicId)") . "";
                 $statement = $instance->connection->prepare($projectQuery);
                 $statement->execute($params);
             }
 
-            // TODO: Update Job Titles
-            // TODO: Create version for project and task workers
+            if (isset($data['jobTitles'])) {
+                self::updateJobTitles(
+                    $params[':id'] ?? $data['publicId'],
+                    $data['jobTitles']['toRemove'],
+                    $data['jobTitles']['toAdd']
+                );
+            }
 
             $instance->connection->commit();
             return true;
         } catch (PDOException $e) {
             $instance->connection->rollBack();
+            throw new DatabaseException($e->getMessage());
+        } catch (InvalidArgumentException $e) {
+            $instance->connection->rollBack();
+            throw new ValidationException('Profile edit failed.', [$e->getMessage()]);
+        }
+    }
+
+    /**
+     * Updates the job titles associated with a user by adding and/or deleting specified titles.
+     *
+     * This method performs the following operations:
+     * - Deletes job titles from the user if provided in $jobTitlesToDelete.
+     * - Adds job titles to the user if provided in $jobTitlesToAdd.
+     * - Handles both integer user IDs and UUIDs (publicId).
+     * - Skips execution if both $jobTitlesToDelete and $jobTitlesToAdd are empty or null.
+     * - Throws an exception if the user ID is invalid.
+     * - Uses prepared statements to prevent SQL injection.
+     *
+     * @param int|UUID $userId The user's unique identifier (integer ID or UUID).
+     * @param JobTitleContainer|null $jobTitlesToDelete Container of job titles to be deleted from the user (optional).
+     * @param JobTitleContainer|null $jobTitlesToAdd Container of job titles to be added to the user (optional).
+     *
+     * @throws InvalidArgumentException If an invalid user ID is provided.
+     * @throws DatabaseException If a database error occurs during the update.
+     * @return void
+     */
+    private static function updateJobTitles(int|UUID $userId, JobTitleContainer|null $jobTitlesToDelete = null, JobTitleContainer|null $jobTitlesToAdd = null): void
+    {
+        if (is_int($userId) && $userId < 1) {
+            throw new InvalidArgumentException('Invalid user ID provided for job title update.');
+        }
+
+        if ($jobTitlesToDelete?->count() === 0 && $jobTitlesToAdd?->count() === 0) {
+            return;
+        }
+
+        $instance = new self();
+        try {        
+            if (count($jobTitlesToDelete) > 0) {
+                $deleteQuery = "
+                    DELETE FROM `userJobTitle`
+                    WHERE userId = " . (is_int($userId) ? ":userId" : "(SELECT id FROM users WHERE publicId = :userId)") . "
+                    AND title = :title
+                ";
+
+                foreach ($jobTitlesToDelete as $title) {
+                    $deleteStatement = $instance->connection->prepare($deleteQuery);
+                    $deleteStatement->execute([
+                        ':userId' => is_int($userId) ? $userId : UUID::toBinary($userId),
+                        ':title' => $title
+                    ]);
+                }
+            }
+
+            if (count($jobTitlesToAdd) > 0) {
+                $insertQuery = "
+                    INSERT INTO `userJobTitle` (userId, title)
+                    VALUES (
+                        " . (is_int($userId) ? ":userId" : "(SELECT id FROM users WHERE publicId = :userId)") . "   
+                        , :title
+                    )
+                ";
+
+                foreach ($jobTitlesToAdd as $title) {
+                    $insertStatement = $instance->connection->prepare($insertQuery);
+                    $insertStatement->execute([
+                        ':userId' => is_int($userId) ? $userId : UUID::toBinary($userId),
+                        ':title' => $title
+                    ]);
+                }
+            }
+
+        } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
     }
