@@ -1,5 +1,7 @@
 TODO
 
+*.env
+
 node_modules/
 vendor/
 
