@@ -54,20 +54,24 @@ abstract class Model
 
     protected function appendOptionsToFindQuery(string $query, array $options): string
     {
-        if (isset($options['groupBy'])) {
+        if (isset($options['groupBy']) || isset($options[':options'])) {
             $query .= " GROUP BY " . $options['groupBy'];
         }
 
-        if (isset($options['orderBy'])) {
+        if (isset($options['orderBy']) || isset($options[':options'])) {
             $query .= " ORDER BY " . $options['orderBy'];
         }
 
-        if (isset($options['limit']) && is_numeric($options['limit'])) {
-            $query .= " LIMIT " . intval($options['limit']);
+        $limit = $options['limit'] ?? $options[':limit'] ?? 10;
+        if ((isset($options['limit']) && is_numeric($options['limit'])) || 
+            (isset($options[':limit']) && is_numeric($options[':limit']))) {
+            $query .= " LIMIT " . (is_int($limit) ? $limit : intval($limit));
         }
 
-        if (isset($options['offset']) && is_numeric($options['offset'])) {
-            $query .= " OFFSET " . intval($options['offset']);
+        $offset = $options['offset'] ?? $options[':offset'] ?? 0;
+        if ((isset($options['offset']) && is_numeric($options['offset'])) ||
+            (isset($options[':offset']) && is_numeric($options[':offset']))) {
+            $query .= " OFFSET " . (is_int($offset) ? $offset : intval($offset));
         }
 
         return $query;

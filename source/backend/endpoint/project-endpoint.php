@@ -26,10 +26,76 @@ use App\Validator\WorkValidator;
 use DateTime;
 use Exception;
 use InvalidArgumentException;
+use ValueError;
 
 class ProjectEndpoint
 {
-        /**
+    public static function getByKey(array $args = []): void
+    {
+        try {
+            if (!HttpAuth::isGETRequest()) {
+                throw new ForbiddenException('Invalid request method. GET request required.');
+            }
+
+            if (!SessionAuth::hasAuthorizedSession()) {
+                throw new ForbiddenException();
+            }
+
+            $projectId = isset($args['projectId'])
+                ? UUID::fromString($args['projectId'])
+                : null;
+            if (isset($args['projectId']) && !$projectId) {
+                throw new ForbiddenException('Project ID is required.');
+            }
+
+            // Check if 'key' parameter is present in the query string
+            $key = '';
+            if (isset($_GET['key']) && trim($_GET['key']) !== '') {
+                $key = trim($_GET['key']);
+            }
+
+            // Obtain filter from query parameters (one filter type only)
+            $status = null;
+            if (isset($_GET['filter']) && strcasecmp($_GET['filter'], 'all') !== 0) {
+                $filterValue = $_GET['filter'];
+                // Try to parse as WorkStatus first, then TaskPriority if later fails
+                try {
+                    $status = WorkStatus::from($filterValue);
+                } catch (ValueError $e) {
+                    // Do nothing
+                }
+            }
+
+            $options = [
+                'offset' => isset($_GET['offset']) ? (int)$_GET['offset'] : 0,
+                'limit' => isset($_GET['limit']) ? (int)$_GET['limit'] : 50,
+            ];
+
+            $projects = ProjectModel::search(
+                $key, 
+                Me::getInstance()->getId(), 
+                $status,
+                $options);
+    
+            if (!$projects) {
+                Response::success([], 'No tasks found for the specified project.');
+            } else {
+                $return = [];
+                foreach ($projects as $project) {
+                    $return[] = $project;
+                }
+                Response::success($return, 'Tasks fetched successfully.');
+            }
+        } catch (ValidationException $e) {
+            Response::error('Validation Failed.',$e->getErrors(),422);
+        } catch (ForbiddenException $e) {
+            Response::error('Forbidden.', [], 403);
+        } catch (Exception $e) {
+            Response::error('Unexpected Error.', ['An unexpected error occurred. Please try again.'], 500);
+        }
+    }
+
+    /**
      * Creates a new project with associated phases.
      *
      * This endpoint handles project creation with the following validations and operations:

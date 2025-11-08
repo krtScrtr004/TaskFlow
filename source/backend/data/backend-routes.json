@@ -15,11 +15,11 @@
 
 		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}/tasks/{taskId:[\\w_-]+}": [
 			"TaskEndpoint",
-			"getTaskById"
+			"getById"
 		],
 		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}/tasks(?:\\?[\\w\\s_=\\/%,&.@-]+)?": [
 			"TaskEndpoint",
-			"getTaskByKey"
+			"getByKey"
 		],
 
 		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}/workers/{workerId:[\\w_-]+}": [
@@ -33,11 +33,11 @@
 
 		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}": [
 			"ProjectEndpoint",
-			"getProjectById"
+			"getById"
 		],
 		"TaskFlow/endpoint/projects(?:\\?[\\w\\s_=\\/%,&@.-]+)?": [
 			"ProjectEndpoint",
-			"getProjectByKey"
+			"getByKey"
 		],
 
 		"TaskFlow/endpoint/workers/{workerId:[\\w_-]+}": [
@@ -52,7 +52,7 @@
 		"TaskFlow/endpoint/users/{userId:[\\w_-]+}": ["UserEndpoint", "getUserById"],
 		"TaskFlow/endpoint/users(?:\\?[\\w\\s_=\\/%,&@.-]+)?": [
 			"UserEndpoint",
-			"getUsersByKey"
+			"getByKey"
 		]
 	},
 

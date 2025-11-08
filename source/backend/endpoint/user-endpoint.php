@@ -47,7 +47,7 @@ class UserEndpoint
      *
      * @return void Outputs a JSON response with user data or error message.
      */
-    public static function getUserById(array $args = []): void
+    public static function getById(array $args = []): void
     {
         try {
             if (!HttpAuth::isGETRequest()) {
@@ -104,7 +104,7 @@ class UserEndpoint
      *
      * @return void Outputs a JSON response with user data or error information
      */
-    public static function getUsersByKey(): void
+    public static function getByKey(): void
     {
         try {
             if (!HttpAuth::isGETRequest()) {
@@ -120,7 +120,7 @@ class UserEndpoint
                 try {
                     $filter = Role::from($_GET['filter']);
                 } catch (ValueError $e) {
-                    WorkStatus::from($_GET['filter']);
+                    $filter = WorkStatus::from($_GET['filter']);
                 }
             }
 

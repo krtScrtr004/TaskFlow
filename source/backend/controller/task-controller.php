@@ -65,6 +65,11 @@ class TaskController implements Controller
                 throw new NotFoundException('Project not found.');
             }
 
+            $key = '';
+            if (isset($_GET['key']) && trim($_GET['key']) !== '') {
+                $key = trim($_GET['key']);
+            }
+
             // Obtain filter from query parameters (one filter type only)
             $filter = null;
             if (isset($_GET['filter']) && strcasecmp($_GET['filter'], 'all') !== 0) {
@@ -82,21 +87,13 @@ class TaskController implements Controller
                 'limit' => isset($_GET['limit']) ? (int)$_GET['limit'] : 50,
             ];
 
-            $tasks = null;
-            if (isset($_GET['key']) && trim($_GET['key']) !== '') {
-                $key = trimOrNull($_GET['key']);
-                $tasks = TaskModel::search(
-                    $key, 
-                    Me::getInstance()->getId(), 
-                    $projectId, 
-                    $filter, 
-                    $options
-                );
-            } else {
-                $tasks = Role::isProjectManager(Me::getInstance())
-                    ? TaskModel::findAllByProjectId($projectId, $filter, $options)
-                    : TaskModel::findAssignedToWorker(Me::getInstance()->getId(), $projectId, $filter, $options);
-            }
+            $tasks = TaskModel::search(
+                $key, 
+                Me::getInstance()->getId(), 
+                $projectId, 
+                $filter, 
+                $options
+            );
             if (!$tasks) {
                 // No tasks found, assign an empty container
                 $tasks = new TaskContainer();

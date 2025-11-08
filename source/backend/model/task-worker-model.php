@@ -308,7 +308,7 @@ class TaskWorkerModel extends Model
      * @return WorkerContainer|null A container of Worker objects matching the search criteria, or null if no workers found.
      */
     public static function search(
-        string|null $key = null,
+        string|null $key = '',
         int|UUID|null $taskId = null,
         int|UUID|null $projectId = null,
         WorkerStatus|null $status = null,
@@ -463,7 +463,7 @@ class TaskWorkerModel extends Model
             }
 
             // Full-text search (applies to both queries)
-            if ($key && !empty($key))  {
+            if (trimOrNull($key))  {
                 $where[] = "MATCH(u.firstName, u.middleName, u.lastName, u.bio, u.email) 
                     AGAINST (:key IN NATURAL LANGUAGE MODE)";
                 $params[':key'] = $key;

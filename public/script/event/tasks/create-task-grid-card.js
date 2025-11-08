@@ -36,7 +36,7 @@ export function createTaskGridCard(task) {
     taskIcon.height = 24
 
     const taskName = document.createElement('h3')
-    taskName.className = 'task-name'
+    taskName.className = 'task-name single-line-ellipsis'
     taskName.textContent = task.name
 
     textWithIcon.appendChild(taskIcon)

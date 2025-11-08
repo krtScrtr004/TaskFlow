@@ -226,7 +226,8 @@ class TaskModel extends Model
      *
      * @return TaskContainer|null A container of found tasks, or null if no tasks match the search criteria.
      */
-    public static function search( string $key,
+    public static function search( 
+        string $key = '',
         int|UUID|null $userId = null,
         int|UUID|null $projectId = null,
         WorkStatus|TaskPriority|null $filter = null,
@@ -235,15 +236,15 @@ class TaskModel extends Model
             'offset' => 0,
         ]): ?TaskContainer 
     {
-        if (trimOrNull($key) === null) {
-            throw new InvalidArgumentException('Search key cannot be empty.');
-        }
-
         try {
+            $where = [];
             $params = [];
 
-            $whereClause = "MATCH(pt.name, pt.description) AGAINST (:key IN NATURAL LANGUAGE MODE)";
-            $params = [':key' => $key];
+            if (trimOrNull($key)) {
+                $where[] = "MATCH(pt.name, pt.description) AGAINST (:key IN NATURAL LANGUAGE MODE)";
+                $params[':key'] = $key;
+            }
+
             $options = [
                 ':limit'    => $options['limit'] ?? 10,
                 ':offset'   => $options['offset'] ?? 0
@@ -251,14 +252,14 @@ class TaskModel extends Model
 
             // Filter by user role if provided
             if ($userId) {
-                $whereClause .= is_int($userId) 
-                    ? ' AND (p.managerId = :userId1
+                $where[] = is_int($userId) 
+                    ? ' (p.managerId = :userId1
                         OR pt.id IN (
                             SELECT ptw.taskId 
                             FROM projectTaskWorker ptw 
                             WHERE ptw.workerId = :userId2)
                         )'
-                    : ' AND (p.managerId IN (
+                    : ' (p.managerId IN (
                             SELECT id
                             FROM `user` 
                             WHERE publicId = :userId1)
@@ -276,9 +277,9 @@ class TaskModel extends Model
 
             // Narrow by project if provided
             if ($projectId !== null) {
-                $whereClause .= is_int($projectId) 
-                    ? ' AND pt.projectId = :projectId'
-                    : ' AND pt.projectId IN (
+                $where[] = is_int($projectId) 
+                    ? ' pt.projectId = :projectId'
+                    : ' pt.projectId IN (
                         SELECT id 
                         FROM `project` 
                         WHERE publicId = :projectId)';
@@ -289,13 +290,14 @@ class TaskModel extends Model
 
             // Apply status / priority filter if provided
             if ($filter instanceof WorkStatus) {
-                $whereClause .= ' AND pt.status = :status';
+                $where[] = ' pt.status = :status';
                 $params[':status'] = $filter->value;
             } elseif ($filter instanceof TaskPriority) {
-                $whereClause .= ' AND pt.priority = :priority';
+                $where[] = ' pt.priority = :priority';
                 $params[':priority'] = $filter->value;
             }
 
+            $whereClause = implode(' AND ', $where);
             return self::find($whereClause, $params, $options);
         } catch (Exception $e) {
             throw $e;

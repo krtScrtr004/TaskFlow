@@ -118,7 +118,7 @@ class TaskEndpoint
      *      - 422: Validation failed, with error details
      *      - 500: Unexpected server error
      */
-    public static function getTaskByKey(array $args = []): void
+    public static function getByKey(array $args = []): void
     {
         try {
             if (!HttpAuth::isGETRequest()) {
@@ -139,7 +139,7 @@ class TaskEndpoint
             // Check if 'key' parameter is present in the query string
             $key = '';
             if (isset($_GET['key']) && trim($_GET['key']) !== '') {
-                $key = trimOrNull($_GET['key'] ?? '') ?? '';
+                $key = trim($_GET['key']);
             }
 
             // Obtain filter from query parameters (one filter type only)
@@ -159,28 +159,20 @@ class TaskEndpoint
                 'limit' => isset($_GET['limit']) ? (int)$_GET['limit'] : 50,
             ];
 
-            $tasks = null;
-            if (isset($_GET['key']) && trim($_GET['key']) !== '') {
-                $key = trimOrNull($_GET['key']);
-                $tasks = TaskModel::search(
-                    $key, 
-                    Me::getInstance()->getId(), 
-                    $projectId, 
-                    $filter, 
-                    $options
-                );
-            } else {
-                $tasks = Role::isProjectManager(Me::getInstance())
-                    ? TaskModel::findAllByProjectId($projectId, $filter, $options)
-                    : TaskModel::findAssignedToWorker(Me::getInstance()->getId(), $projectId, $filter, $options);
-            }
+            $tasks = TaskModel::search(
+                $key, 
+                Me::getInstance()->getId(), 
+                $projectId, 
+                $filter, 
+                $options
+            );
     
             if (!$tasks) {
                 Response::success([], 'No tasks found for the specified project.');
             } else {
                 $return = [];
-                foreach ($tasks as $worker) {
-                    $return[] = $worker;
+                foreach ($tasks as $task) {
+                    $return[] = $task;
                 }
                 Response::success($return, 'Tasks fetched successfully.');
             }

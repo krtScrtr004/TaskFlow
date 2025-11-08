@@ -282,6 +282,12 @@ class UserModel extends Model
                     $where[] = "
                         (EXISTS (
                             SELECT 1
+                            FROM `project` p
+                            WHERE p.managerId = u.id
+                            AND p.status NOT IN (:completedStatusUnassigned, :cancelledStatusUnassigned)
+                        )) OR
+                        (EXISTS (
+                            SELECT 1
                             FROM `projectWorker` pw
                             WHERE pw.workerId = u.id
                             AND pw.status = :workerStatus1
@@ -292,6 +298,8 @@ class UserModel extends Model
                             AND ptw.status = :workerStatus2
                         ))
                     ";
+                    $params[':completedStatusUnassigned'] = WorkStatus::COMPLETED->value;
+                    $params[':cancelledStatusUnassigned'] = WorkStatus::CANCELLED->value;
                     $params[':workerStatus1'] = $status->value;
                     $params[':workerStatus2'] = $status->value;
                 }

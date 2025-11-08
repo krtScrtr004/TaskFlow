@@ -694,7 +694,7 @@ class ProjectModel extends Model
             $whereClauses = [];
             $params = [];
 
-            if (!empty($key)) {
+            if (trimOrNull($key)) {
                 $whereClauses[] = 'MATCH(p.name, p.description) AGAINST (:searchKey IN NATURAL LANGUAGE MODE)';
                 $params[':searchKey'] = $key;
             }

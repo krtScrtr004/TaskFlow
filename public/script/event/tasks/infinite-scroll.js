@@ -6,7 +6,6 @@ import { createTaskGridCard } from './create-task-grid-card.js'
 import { handleException } from '../../utility/handle-exception.js'
 
 let isLoading = false
-const taskGrid = taskGridContainer?.querySelector('.task-grid')
 
 const taskGridContainer = document.querySelector('.task-grid-container')
 if (!taskGridContainer) {
@@ -22,6 +21,7 @@ if (!projectId || projectId.trim() === '') {
     console.warn('Project ID not found.')
 }
 
+const taskGrid = taskGridContainer?.querySelector('.task-grid')
 try {
     // Initialize infinite scroll for loading tasks
     infiniteScroll(
@@ -45,8 +45,10 @@ try {
  */
 function getExistingItemsCount() {
     const queryParams = new URLSearchParams(window.location.search)
-    return queryParams.get('offset') ??
-        taskGrid.querySelectorAll('.task-grid-card:not(.add-task-button)').length
+    const fromQueryParams = queryParams.get('offset')
+    const fromDOM = taskGrid.querySelectorAll('.task-grid-card:not(.add-task-button)').length
+
+    return Math.max(fromQueryParams ? parseInt(fromQueryParams, 10) : 0, fromDOM)
 }
 
 /**
@@ -79,7 +81,10 @@ async function asyncFunction(offset) {
             throw new Error('Project ID not found.')
         }
 
-        const response = await Http.GET(`projects/${projectId}/tasks?offset=${offset}`)
+        const queryParams = new URLSearchParams(window.location.search)
+        queryParams.set('offset', offset)
+
+        const response = await Http.GET(`projects/${projectId}/tasks?${queryParams.toString()}`)
         if (!response) {
             throw new Error('No response from server.')
         }

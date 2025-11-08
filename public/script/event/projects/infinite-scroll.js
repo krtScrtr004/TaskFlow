@@ -44,8 +44,10 @@ try {
  */
 function getExistingItemsCount() {
     const queryParams = new URLSearchParams(window.location.search)
-    return queryParams.get('offset') ??
-        projectGrid.querySelectorAll('.project-grid-card').length
+    const fromQueryParams = queryParams.get('offset')
+    const fromDOM = projectGrid.querySelectorAll('.project-grid-card').length
+
+    return Math.max(fromQueryParams ? parseInt(fromQueryParams, 10) : 0, fromDOM)
 }
 
 /**
@@ -74,7 +76,10 @@ async function asyncFunction(offset) {
             throw new Error('Invalid offset value.')
         }
 
-        const response = await Http.GET(`projects?offset=${offset}`)
+        const queryParams = new URLSearchParams(window.location.search)
+        queryParams.set('offset', offset)
+
+        const response = await Http.GET(`projects?${queryParams.toString()}`)
         if (!response) {
             throw new Error('No response from server.')
         }

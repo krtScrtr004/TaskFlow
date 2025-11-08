@@ -148,7 +148,7 @@ class ProjectWorkerModel extends Model
      * @throws DatabaseException If a database error occurs during the search.
      */
     public static function search(
-        string|null $key = null,
+        string|null $key = '',
         int|UUID|null $projectId = null,
         WorkerStatus|null $status = null,
         $options = [
@@ -187,7 +187,7 @@ class ProjectWorkerModel extends Model
                     u.id = ujt.userId
             ";
 
-            if ($key && !empty(trim($key)))  {
+            if (trimOrNull($key))  {
                 $where[] = "
                     MATCH(u.firstName, u.middleName, u.lastName, u.bio, u.email) 
                     AGAINST (:key IN NATURAL LANGUAGE MODE)
