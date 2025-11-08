@@ -30,20 +30,22 @@ class PictureUpload
      */
     private function __construct()
     {
-        if (!isset($_ENV['CLOUDINARY_NAME'], $_ENV['CLOUDINARY_API'], $_ENV['CLOUDINARY_SECRET'])) {
-            throw new Exception("Cloudinary environment variables are not set");
-        }
+        if (!self::$instance) {
+            if (!isset($_ENV['CLOUDINARY_NAME'], $_ENV['CLOUDINARY_API'], $_ENV['CLOUDINARY_SECRET'])) {
+                throw new Exception("Cloudinary environment variables are not set");
+            }
 
-        Configuration::instance([
-            'cloud' => [
-                'cloud_name' => $_ENV['CLOUDINARY_NAME'],
-                'api_key' => $_ENV['CLOUDINARY_API'],
-                'api_secret' => $_ENV['CLOUDINARY_SECRET']
-            ],
-            'url' => [
-                'secure' => true
-            ]
-        ]);
+            Configuration::instance([
+                'cloud' => [
+                    'cloud_name' => $_ENV['CLOUDINARY_NAME'],
+                    'api_key' => $_ENV['CLOUDINARY_API'],
+                    'api_secret' => $_ENV['CLOUDINARY_SECRET']
+                ],
+                'url' => [
+                    'secure' => true
+                ]
+            ]);
+        }
     }
 
     /**
