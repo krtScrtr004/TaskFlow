@@ -109,6 +109,24 @@ class TaskController implements Controller
         }
     }
 
+    /**
+     * Displays detailed information about a specific task within a project.
+     *
+     * This method performs the following actions:
+     * - Checks if the current session is authorized.
+     * - Validates and converts the provided projectId and taskId to UUID objects.
+     * - Ensures both projectId and taskId are present; throws ForbiddenException if missing.
+     * - Retrieves the project by its ID; throws NotFoundException if not found.
+     * - Retrieves the task by its ID within the specified project; throws NotFoundException if not found.
+     * - Loads the task view for displaying task information.
+     * - Handles forbidden and not found errors by delegating to the ErrorController.
+     *
+     * @param array $args Associative array containing:
+     *      - projectId: string|UUID Project identifier
+     *      - taskId: string|UUID Task identifier
+     * 
+     * @return void
+     */
     public static function viewInfo(array $args = []): void
     {
         try {

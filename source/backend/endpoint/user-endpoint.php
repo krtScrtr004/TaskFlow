@@ -152,15 +152,31 @@ class UserEndpoint
         }
     }
 
-
-
-
-
-
-
-
-
-
+    /**
+     * Edits the current user's profile information.
+     *
+     * This method performs the following actions:
+     * - Checks if the user session is authorized to edit profile data.
+     * - Protects against CSRF attacks.
+     * - Decodes input data from the request body.
+     * - Collects and trims profile fields such as first name, middle name, last name, gender, email, contact number, bio, job titles, and password.
+     * - Handles profile picture upload if provided.
+     * - Validates the collected profile data using UserValidator.
+     * - Throws a ValidationException if validation fails.
+     * - Updates the user's profile in the database if there are changes.
+     * - Resets and updates the session data with the new user information.
+     * - Returns a success response if the profile is edited successfully.
+     * - Handles and returns appropriate error responses for validation, not found, forbidden, and unexpected exceptions.
+     *
+     * No parameters are accepted; all data is retrieved from the request body and session.
+     *
+     * @throws ValidationException If profile data validation fails.
+     * @throws NotFoundException If the user profile is not found.
+     * @throws ForbiddenException If the user session is not authorized.
+     * @throws Exception For any unexpected errors during the process.
+     *
+     * @return void
+     */
     public static function edit(): void
     {
         try {
@@ -214,7 +230,7 @@ class UserEndpoint
             }
 
             if (count($_FILES) > 0 && isset($_FILES['profilePicture'])) {
-                // TODO: Handle profile picture upload
+                // Handle profile picture upload
                 $profileLink = PictureUpload::upload($_FILES['profilePicture']);
                 $profileData['profileLink'] = $profileLink;
             }

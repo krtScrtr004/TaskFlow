@@ -19,11 +19,6 @@ if (!sentinel) {
     console.warn('Sentinel element not found.')
 }
 
-const projectId = userGridContainer?.dataset.projectid
-if (!projectId || projectId.trim() === '') {
-    console.warn('Project ID not found.')
-}
-
 try {
     // Initialize infinite scroll for loading users
     infiniteScroll(
@@ -74,10 +69,6 @@ async function asyncFunction(offset) {
 
         if (!offset || isNaN(offset) || offset < 0) {
             throw new Error('Invalid offset value.')
-        }
-
-        if (!projectId || projectId.trim() === '') {
-            throw new Error('Project ID not found.')
         }
 
         const response = await Http.GET(`users?offset=${offset}`)

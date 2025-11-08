@@ -48,7 +48,7 @@ if (!isset($users))
         </section>
 
         <!-- User Grid -->
-        <section class="user-grid-container" data-projectid="<?= $projectId ?>">
+        <section class="user-grid-container">
 
             <section class="user-grid grid">
                 <?php foreach ($users as $user) {
