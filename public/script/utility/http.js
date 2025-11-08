@@ -66,7 +66,11 @@ export const Http = (() => {
                 } else {
                     // Don't set Content-Type for FormData - browser will set it with boundary
                     options.body = body
+                    options.headers = {
+                        'X-CSRF-Token': document.querySelector('input[type="hidden"]#csrf_token').value
+                    }
                 }
+                
             }
 
             const request = await fetch(`${apiUrl}${endpoint}`, options)

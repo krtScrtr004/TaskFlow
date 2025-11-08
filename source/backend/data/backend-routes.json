@@ -57,7 +57,7 @@
 	},
 
 	"POST": {
-		"TaskFlow/endpoint/users(?:/[\\w_-]+)?": ["UserEndpoint", "edit"],
+		"TaskFlow/endpoint/users/{userId:[\\w+_-]+}": ["UserEndpoint", "edit"],
 		"TaskFlow/endpoint/users": ["UserEndpoint", "create"],
 
 		"TaskFlow/endpoint/projects": ["ProjectEndpoint", "create"],

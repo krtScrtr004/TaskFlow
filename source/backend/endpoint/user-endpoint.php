@@ -21,6 +21,7 @@ use App\Enumeration\Gender;
 use App\Enumeration\WorkerStatus;
 use App\Enumeration\WorkStatus;
 use App\Exception\NotFoundException;
+use App\Utility\PictureUpload;
 use App\Utility\WorkerPerformanceCalculator;
 use App\Validator\UserValidator;
 use Exception;
@@ -168,9 +169,10 @@ class UserEndpoint
             }
             Csrf::protect();
 
-            $data = decodeData('php://input');
-            if (!$data) {
-                throw new ValidationException('Cannot decode data.');
+            try {
+                $data = decodeData('php://input');
+            } catch (Exception $e) {
+                $data = [];
             }
 
             $profileData = [];
@@ -211,8 +213,10 @@ class UserEndpoint
                 $profileData['password'] = $data['password'];
             }
 
-            if (count($_FILES) > 0 && isset($_FILES['profileLink'])) {
+            if (count($_FILES) > 0 && isset($_FILES['profilePicture'])) {
                 // TODO: Handle profile picture upload
+                $profileLink = PictureUpload::upload($_FILES['profilePicture']);
+                $profileData['profileLink'] = $profileLink;
             }
 
             // Validate and update profile data
