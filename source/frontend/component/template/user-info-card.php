@@ -1,3 +1,9 @@
+<?php
+use App\Core\Me;
+use App\Enumeration\Role;
+use App\Enumeration\WorkStatus;
+?>
+
 <!-- Modal Container -->
 <section id="user_info_card_template" class="modal-wrapper no-display">
     <!-- Modal -->
@@ -5,7 +11,7 @@
         <!-- Primary Info -->
         <section class="primary-info flex-row flex-space-between">
             <div class="flex-row flex-child-center-v">
-                <img class="user-profile-picture circle fit-contain" src="" alt="" height="60" width="60">
+                <img class="user-profile-picture circle fit-cover" src="" alt="" loading="lazy" height="60" width="80">
 
                 <div class="flex-col">
                     <div class="flex-col flex-child-center-v">
@@ -39,12 +45,7 @@
         <section class="user-statistics-container flex-row">
 
             <?php
-
-use App\Core\Me;
-use App\Enumeration\Role;
-use App\Enumeration\WorkStatus;
-
-            $isUsersPage = strpos($_SERVER['REQUEST_URI'], 'users') !== false;
+                $isUsersPage = strpos($_SERVER['REQUEST_URI'], 'users') !== false;
             if ($isUsersPage): ?>
                 <!-- Total Projects -->
                 <div class="user-total-projects user-total-statistics user-statistic flex-col flex-child-center-h">

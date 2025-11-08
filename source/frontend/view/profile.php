@@ -55,8 +55,8 @@ $myData = [
             <!-- Profile Picture -->
             <section class="flex-col">
                 <!-- Profile Picture Overview -->
-                <img class="circle fit-contain" id="profile_picture_overview" src="<?= $myData['profileLink'] ?>"
-                    alt="<?= $myData['fullName'] ?>" title="<?= $myData['fullName'] ?>" height="100">
+                <img class="circle fit-cover" id="profile_picture_overview" src="<?= $myData['profileLink'] ?>"
+                    alt="<?= $myData['fullName'] ?>" title="<?= $myData['fullName'] ?>" loading="lazy" height="100">
 
                 <div>
                     <input class="no-display" type="file" name="profile_picker" id="profile_picker"

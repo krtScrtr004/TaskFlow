@@ -119,6 +119,8 @@
 	font-size: 0.9rem;
 	font-weight: 300;
 	max-width: 90ch;
+	margin-top: 0.3rem;
+	line-height: 1.6rem;
 }
 
 .phase-list-card .phase-dates {

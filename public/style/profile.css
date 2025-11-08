@@ -52,6 +52,12 @@
     margin-top: 1rem;
 }
 
+#profile_picture_overview {
+    height: 15rem;
+    width: 15rem;
+    margin: 0 auto;
+}
+
 #pick_profile_picture_button {
     width: 100%;
     margin: 0.8rem 0;

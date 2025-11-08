@@ -401,7 +401,9 @@ button > .text-w-icon {
 }
 
 .user-info-card .user-profile-picture {
-	margin-right: 0.5rem;
+	height: 5rem;
+	width: 5rem;
+	margin-right: 1.2rem;
 }
 
 .user-info-card .user-name {
@@ -598,7 +600,7 @@ button > .text-w-icon {
 }
 
 .user-grid-card .user-primary-info {
-	gap: 0.5rem;
+	gap: 1rem;
 }
 
 .user-grid-card .user-name {

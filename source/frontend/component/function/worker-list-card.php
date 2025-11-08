@@ -16,7 +16,7 @@ function workerListCard(Worker $worker): string
     ?>
     <!-- Worker List Card -->
     <button class="worker-list-card unset-button" data-id="<?= $id ?>">
-        <img src="<?= $profileLink ?>" alt="<?= $name ?>" title="<?= $name ?>" height="40">
+        <img class="circle fit-cover" src="<?= $profileLink ?>" alt="<?= $name ?>" title="<?= $name ?>" loading="lazy" height="40">
 
         <div class="flex-col">
 

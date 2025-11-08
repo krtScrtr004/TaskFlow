@@ -27,7 +27,7 @@ function userGridCard(User|Worker $user): string
         <!-- User Primary Info -->
         <section class="user-primary-info flex-row flex-child-center-h">
             <!-- User Profile Picture -->
-            <img class="circle fit-contain" src="<?= $profileLink ?>" alt="<?= $name ?>" title="<?= $name ?>" height="32">
+            <img class="user-profile circle fit-cover" src="<?= $profileLink ?>" alt="<?= $name ?>" title="<?= $name ?>" loading="lazy" height="42">
 
             <div class="flex-col">
                 <!-- Worker Name -->

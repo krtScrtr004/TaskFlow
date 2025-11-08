@@ -24,11 +24,12 @@ export function createUserGridCard(user) {
     primaryInfo.className = 'user-primary-info flex-row flex-child-center-h'
     
     const profileImg = document.createElement('img')
-    profileImg.className = 'circle fit-contain'
+    profileImg.className = 'user-profile circle fit-cover'
     profileImg.src = profileLink
     profileImg.alt = name
     profileImg.title = name
-    profileImg.height = 32
+    profileImg.loading = 'lazy'
+    profileImg.height = 40
     
     const nameContainer = document.createElement('div')
     nameContainer.className = 'flex-col'
