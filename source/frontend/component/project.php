@@ -16,6 +16,7 @@ $projectData = [
     'name'                  => htmlspecialchars($project->getName()),
     'description'           => htmlspecialchars($project->getDescription()),
     'budget'                => htmlspecialchars(formatNumber($project->getBudget())),
+    'manager'               => $project->getManager(),
     'startDateTime'         => htmlspecialchars(dateToWords($project->getStartDateTime())),
     'completionDateTime'    => htmlspecialchars(dateToWords($project->getCompletionDateTime())),
     'status'                => $project->getStatus(),
@@ -268,49 +269,64 @@ require_once COMPONENT_PATH . 'template/add-worker-modal.php';
             <?php endif; ?>
         </div>
 
-        <!-- Project Workers -->
-        <section class="project-workers content-section-block flex-col">
-            <div class="heading-title text-w-icon">
-                <img src="<?= ICON_PATH . 'worker_w.svg' ?>" alt="Assigned Workers" title="Assigned Workers"
-                    height="20">
+        <section>
+            <section class="project-manager content-section-block flex-col">
+                <div class="heading-title text-w-icon">
+                    <img src="<?= ICON_PATH . 'manager_w.svg' ?>" alt="Project Manager" title="Project Manager"
+                        height="20">
 
-                <h3>Assigned Workers</h3>
-            </div>
-
-            <!-- Worker List -->
-            <div class="worker-list">
-                <section class="list">
-                    <?php foreach ($projectData['workers'] as $worker) {
-                        // Worker List Card
-                        echo workerListCard($worker);
-                    } ?>
-                </section>
-
-                <div class="sentinel"></div>
-
-                <!-- No Workers Wall -->
-                <div
-                    class="no-workers-wall no-content-wall <?= count($projectData['workers']) > 0 ? 'no-display' : 'flex-col' ?>">
-                    <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No workers assigned" title="No workers assigned"
-                        height="70">
-                    <h3 class="center-text">No workers assigned to this project.</h3>
+                    <h3>Project Manager</h3>
                 </div>
-            </div>
 
-            <!-- Add Worker Button -->
-            <?php if (Role::isProjectManager(Me::getInstance()) && 
-                        $projectData['status'] !== WorkStatus::COMPLETED && 
-                        $projectData['status'] !== WorkStatus::CANCELLED): ?>
-                <div class="">
-                    <button id="add_worker_button" type="button" class="float-right blue-bg">
-                        <div class="heading-title text-w-icon center-child">
-                            <img src="<?= ICON_PATH . 'add_w.svg' ?>" alt="Add Worker" title="Add Worker" height="18">
+                <?= userListCard($projectData['manager']) ?>
+            </section>
 
-                            <h3 class="white-text">Add Worker</h3>
-                        </div>
-                    </button>
+
+            <!-- Project Workers -->
+            <section class="project-workers content-section-block flex-col">
+                <div class="heading-title text-w-icon">
+                    <img src="<?= ICON_PATH . 'worker_w.svg' ?>" alt="Assigned Workers" title="Assigned Workers"
+                        height="20">
+
+                    <h3>Assigned Workers</h3>
                 </div>
-            <?php endif; ?>
+
+                <!-- Worker List -->
+                <div class="worker-list">
+                    <section class="list">
+                        <?php foreach ($projectData['workers'] as $worker) {
+                            // Worker List Card
+                            echo userListCard($worker);
+                        } ?>
+                    </section>
+
+                    <div class="sentinel"></div>
+
+                    <!-- No Workers Wall -->
+                    <div
+                        class="no-workers-wall no-content-wall <?= count($projectData['workers']) > 0 ? 'no-display' : 'flex-col' ?>">
+                        <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No workers assigned" title="No workers assigned"
+                            height="70">
+                        <h3 class="center-text">No workers assigned to this project.</h3>
+                    </div>
+                </div>
+
+                <!-- Add Worker Button -->
+                <?php if (Role::isProjectManager(Me::getInstance()) && 
+                            $projectData['status'] !== WorkStatus::COMPLETED && 
+                            $projectData['status'] !== WorkStatus::CANCELLED): ?>
+                    <div class="">
+                        <button id="add_worker_button" type="button" class="float-right blue-bg">
+                            <div class="heading-title text-w-icon center-child">
+                                <img src="<?= ICON_PATH . 'add_w.svg' ?>" alt="Add Worker" title="Add Worker" height="18">
+
+                                <h3 class="white-text">Add Worker</h3>
+                            </div>
+                        </button>
+                    </div>
+                <?php endif; ?>
+            </section>
+
         </section>
     </div>
 </section>

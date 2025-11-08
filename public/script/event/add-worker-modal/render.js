@@ -28,7 +28,7 @@ export function createWorkerListCard(worker) {
     // Create label
     const label = document.createElement('label')
     label.htmlFor = worker.id
-    label.className = 'worker-list-card'
+    label.className = 'user-list-card'
     label.dataset.id = worker.id
 
     // Create image container

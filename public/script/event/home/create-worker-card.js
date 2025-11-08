@@ -5,6 +5,25 @@ import { Http } from '../../utility/http.js'
 
 let isLoading = false
 
+const managerContainer = document.querySelector('.project-manager')
+if (!managerContainer) {
+    console.error('Project manager container not found!')
+    Dialog.somethingWentWrong()
+}
+
+managerContainer?.addEventListener('click', e => {
+    const managerCard = e.target.closest('.user-list-card')
+    if (!managerCard) { 
+        return
+    }
+    const managerId = managerCard.getAttribute('data-id')
+    try {
+        userInfoCard(managerId, () => fetchManagerInfo(managerId))
+    } catch (error) {
+        handleException(error, `Error fetching manager info: ${error}`)
+    }
+})
+
 const workerList = document.querySelector('.project-workers > .worker-list')
 if (!workerList) {
     console.error('Worker list container not found!')
@@ -19,34 +38,23 @@ if (!projectId || projectId.trim() === '') {
 } 
 
 workerList?.addEventListener('click', e => {
-    const workerCard = e.target.closest('.worker-list-card')
+    const workerCard = e.target.closest('.user-list-card')
     if (!workerCard) { 
         return
     }
 
     const workerId = workerCard.getAttribute('data-id')
     try {
-        // Render user info card
-        userInfoCard(workerId, () => fetchUserInfo(projectId, workerId))
+        userInfoCard(workerId, () => fetchWorkerInfo(projectId, workerId))
     } catch (error) {
         handleException(error, `Error fetching worker info: ${error}`)
     }
 })
 
-
 /**
  * Fetches user information for a specific worker in a project.
- *
- * This asynchronous function retrieves user data from the server using the provided
- * project and user IDs. It prevents concurrent requests by checking a loading flag,
- * and throws an error if the user ID is missing or invalid.
- *
- * @param {string|number} projectId - The unique identifier of the project.
- * @param {string|number} userId - The unique identifier of the user (worker) to fetch.
- * @returns {Promise<Object>} Resolves with the user data object if the request is successful.
- * @throws {Error} Throws if the userId is missing, if the request fails, or if a request is already in progress.
  */
-async function fetchUserInfo(projectId, userId) {
+async function fetchWorkerInfo(projectId, userId) {
     try {
         if (isLoading) {
             console.warn('Request already in progress. Please wait.')
@@ -59,7 +67,33 @@ async function fetchUserInfo(projectId, userId) {
 
         const response = await Http.GET(`projects/${projectId}/workers/${userId}`)
         if (!response)
-            throw error
+            throw new Error('No response from server.')
+
+        return response.data
+    } catch (error) {
+        throw error
+    } finally {
+        isLoading = false
+    }
+}
+
+/**
+ * Fetches user information for a manager.
+ */
+async function fetchManagerInfo(userId) {
+    try {
+        if (isLoading) {
+            console.warn('Request already in progress. Please wait.')
+            return
+        }
+        isLoading = true
+
+        if (!userId || userId === '')
+            throw new Error('User ID is required.')
+
+        const response = await Http.GET(`users/${userId}`)
+        if (!response)
+            throw new Error('No response from server.')
 
         return response.data
     } catch (error) {

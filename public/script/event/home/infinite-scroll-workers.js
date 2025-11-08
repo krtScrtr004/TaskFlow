@@ -50,7 +50,7 @@ try {
 function getExistingItemsCount() {
     const queryParams = new URLSearchParams(window.location.search)
     return queryParams.get('offset') ??
-        workerList.querySelectorAll('.worker-list-card').length
+        workerList.querySelectorAll('.user-list-card').length
 }
 
 /**

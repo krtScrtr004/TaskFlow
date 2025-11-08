@@ -27,7 +27,7 @@ export function createWorkerListCard(worker) {
 
     // Create main button container
     const button = document.createElement('button')
-    button.className = 'worker-list-card unset-button'
+    button.className = 'user-list-card unset-button'
     button.dataset.id = id
 
     // Create profile image

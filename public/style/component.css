@@ -425,6 +425,10 @@ button > .text-w-icon {
 	font-size: 1rem;
 }
 
+.user-info-card > .user-statistics-container {
+	gap: 1rem;
+}
+
 .user-info-card > .user-statistics-container > * {
 	flex: 1;
 }
@@ -467,9 +471,9 @@ button > .text-w-icon {
 	gap: 0.5rem;
 }
 
-/* ---------------- WORKER LIST CARD ---------------- */
+/* ---------------- USER LIST CARD ---------------- */
 
-.worker-list-card {
+.user-list-card {
 	height: fit-content;
 	display: flex;
 	gap: 0.5rem;
@@ -477,17 +481,17 @@ button > .text-w-icon {
 	overflow: hidden;
 }
 
-.worker-list-card p {
+.user-list-card p {
 	max-width: unset !important;
 	font-size: 0.8rem;
 	font-weight: 300;
 }
 
-.worker-list-card .id {
+.user-list-card .id {
 	max-width: fit-content;
 }
 
-.worker-list-card .job-titles {
+.user-list-card .job-titles {
 	padding: 0.3rem 0;
 	gap: 0.3rem;
 }

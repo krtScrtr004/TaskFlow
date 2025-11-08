@@ -92,9 +92,9 @@ function addInfoToCard(card, user) {
         userEmail, userContact, userJobTitles
     } = domElements
 
-    // Determine if the current page is the home page, to adjust statistics content
-    const isHomePage = window.location.href.includes('home')
-    const isTaskPage = window.location.href.includes('task')
+    // Check page context to determine which statistics to show
+    const isUsersPage = window.location.pathname.includes('users')
+    const isProjectPage = window.location.pathname.includes('project') || window.location.pathname.includes('home')
 
     // Add user info to card
     userProfilePicture.src = user.profileLink ?? `${ICON_PATH}profile_w.svg`
@@ -104,12 +104,61 @@ function addInfoToCard(card, user) {
         `<span class="job-title-chip">${title}</span>`
     ).join('')
     userBio.textContent = user.bio ?? 'No bio available'
-    userTotalStatistics.textContent = (isHomePage || isTaskPage) 
-        ? user.additionalInfo.totalTasks 
-        : user.additionalInfo.totalProjects
-    userCompletedStatistics.textContent = (isHomePage || isTaskPage)
-        ? user.additionalInfo.completedTasks 
-        : user.additionalInfo.completedProjects
+    
+    // Get both project and task statistic elements
+    const projectElements = {
+        total: card.querySelector('.user-total-projects'),
+        completed: card.querySelector('.user-completed-projects'),
+        totalValue: card.querySelector('.user-total-projects h4'),
+        completedValue: card.querySelector('.user-completed-projects h4')
+    }
+    const taskElements = {
+        total: card.querySelector('.user-total-tasks'),
+        completed: card.querySelector('.user-completed-tasks'),
+        totalValue: card.querySelector('.user-total-tasks h4'),
+        completedValue: card.querySelector('.user-completed-tasks h4')
+    }
+    
+    // Display statistics based on page context and user role
+    const shouldShowProjects = isUsersPage || (isProjectPage && user.role === 'projectManager')
+
+    const terminateWorkerButton = card.querySelector('#terminate_worker_button')
+    if (user.role === 'projectManager') {
+        terminateWorkerButton?.classList.add('no-display')
+    } else {
+        terminateWorkerButton?.classList.remove('no-display')
+    }
+    
+    if (shouldShowProjects) {        
+        // Show project statistics
+        projectElements.total.classList.remove('no-display')
+        projectElements.total.classList.add('flex-col', 'flex-child-center-h')
+        projectElements.completed.classList.remove('no-display')
+        projectElements.completed.classList.add('flex-col', 'flex-child-center-h')
+
+        taskElements.total.classList.add('no-display')
+        taskElements.total.classList.remove('flex-col', 'flex-child-center-h')
+        taskElements.completed.classList.add('no-display')
+        taskElements.completed.classList.remove('flex-col', 'flex-child-center-h')
+        
+        projectElements.totalValue.textContent = user.additionalInfo.totalProjects ?? 0
+        projectElements.completedValue.textContent = user.additionalInfo.completedProjects ?? 0
+    } else {
+        // Show task statistics
+        projectElements.total.classList.remove('flex-col', 'flex-child-center-h')
+        projectElements.total.classList.add('no-display')
+        projectElements.completed.classList.remove('flex-col', 'flex-child-center-h')
+        projectElements.completed.classList.add('no-display')
+
+        taskElements.total.classList.remove('no-display')
+        taskElements.total.classList.add('flex-col', 'flex-child-center-h')
+        taskElements.completed.classList.remove('no-display')
+        taskElements.completed.classList.add('flex-col', 'flex-child-center-h')
+        
+        taskElements.totalValue.textContent = user.additionalInfo.totalTasks ?? 0
+        taskElements.completedValue.textContent = user.additionalInfo.completedTasks ?? 0
+    }
+    
     userPerformance.textContent = (user.additionalInfo.performance ?? 0) + '%'
     userEmail.textContent = user.email ?? 'N/A'
     userContact.textContent = user.contactNumber ?? 'N/A'
