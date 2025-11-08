@@ -1075,14 +1075,16 @@ class TaskModel extends Model
     }
 
     /**
-     * Deletes a task from the data source.
+     * Deletes a phase entity.
      *
-     * This method is currently not implemented as there is no use case for deleting tasks.
+     * This method is currently not implemented as there is no use case for deleting a phase.
      * Always returns false.
+     * 
+     * @param mixed $data Data that would be used to delete a phase (unused)
      *
-     * @return bool Returns false, indicating the operation is not supported.
+     * @return bool Always returns false to indicate deletion is not supported.
      */
-    public static function delete(): bool
+    public static function delete(mixed $data): bool
     {
         // Not implemented (No use case)
         return false;

@@ -1080,9 +1080,19 @@ class ProjectWorkerModel extends Model
         }
 	}
 
-	public static function delete(): bool
-	{
+    /**
+     * Deletes a phase entity.
+     *
+     * This method is currently not implemented as there is no use case for deleting a phase.
+     * Always returns false.
+     * 
+     * @param mixed $data Data that would be used to delete a phase (unused)
+     *
+     * @return bool Always returns false to indicate deletion is not supported.
+     */
+    public static function delete(mixed $data): bool
+    {
         // Not implemented (No use case)
-		return false;
-	}
+        return false;
+    }
 }

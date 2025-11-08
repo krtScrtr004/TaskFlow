@@ -85,5 +85,5 @@ abstract class Model
     
     abstract public static function save(array $data): bool;
     
-    abstract static protected function delete(): bool;
+    abstract static protected function delete(mixed $data): bool;
 }

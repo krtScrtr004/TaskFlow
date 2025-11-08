@@ -699,17 +699,18 @@ class TaskWorkerModel extends Model
 	}
 
     /**
-     * Deletes a task-worker record.
+     * Deletes a phase entity.
      *
-     * This method is currently not implemented as there is no use case for deleting task-worker records.
+     * This method is currently not implemented as there is no use case for deleting a phase.
      * Always returns false.
+     * 
+     * @param mixed $data Data that would be used to delete a phase (unused)
      *
-     * @return bool Always returns false indicating the operation is not supported.
+     * @return bool Always returns false to indicate deletion is not supported.
      */
-    protected static function delete(): bool
+    public static function delete(mixed $data): bool
     {
         // Not implemented (No use case)
         return false;
     }
-
 }

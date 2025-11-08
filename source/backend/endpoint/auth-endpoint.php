@@ -31,6 +31,23 @@ class AuthEndpoint implements Controller
     {
     }
 
+    /**
+     * Handles user login authentication.
+     *
+     * This method performs the following steps:
+     * - Protects against CSRF attacks.
+     * - Decodes incoming JSON data from the request body.
+     * - Validates the provided email and password using UserValidator.
+     * - Checks user credentials against the database.
+     * - Regenerates the session ID to prevent session fixation attacks.
+     * - Creates an authorized user session upon successful authentication.
+     * - Returns appropriate success or error responses.
+     *
+     * @throws ValidationException If input validation fails.
+     * @throws Exception For unexpected errors during authentication.
+     *
+     * @return void
+     */
     public static function login(): void
     {
         try {
@@ -183,6 +200,26 @@ class AuthEndpoint implements Controller
         }
     }
 
+    public static function forgotPassword(): void
+    {
+        try {
+            //code...
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+    }
+
+    /**
+     * Logs out the current user by destroying the session and user context.
+     *
+     * This method performs the following actions:
+     * - Destroys the current session using Session::destroy()
+     * - Removes the current user context with Me::destroy()
+     * - Returns a success response if logout is successful
+     * - Handles exceptions and returns an error response if logout fails
+     *
+     * @return void
+     */
     public static function logout(): void
     {
         try {
