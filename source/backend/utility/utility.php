@@ -1,5 +1,20 @@
 <?php
 
+// Helper to get a request header in a portable way
+function getRequestHeader(string $name): ?string {
+    // try getallheaders() first (nicest)
+    if (function_exists('getallheaders')) {
+        $headers = getallheaders();
+        foreach ($headers as $k => $v) {
+            if (strcasecmp($k, $name) === 0) return $v;
+        }
+    }
+
+    // fallback to $_SERVER superglobal (common in many setups)
+    $serverName = 'HTTP_' . str_replace('-', '_', strtoupper($name));
+    return $_SERVER[$serverName] ?? null;
+}
+
 function decodeData(String $rawData): array
 {
     if (!$rawData)
@@ -73,4 +88,32 @@ function trimOrNull(?string $string): ?string
 
     $trimmed = trim((string) $string);
     return $trimmed === '' ? null : $trimmed;
+}
+
+function sanitizeData(
+    array &$data,
+    array $trimmableFields = [
+        'name',
+        'description',
+        'startDateTime',
+        'completionDateTime',
+        'actionDateTime'
+    ]
+): void {
+    foreach ($data as $key => $value) {
+        if (in_array($key, $trimmableFields, true)) {
+            $data[$key] = trim($value);
+        }
+    }
+}
+
+function generateRandomString(int $length = 16): string
+{
+    $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $charactersLength = strlen($characters);
+    $randomString = '';
+    for ($i = 0; $i < $length; $i++) {
+        $randomString .= $characters[random_int(0, $charactersLength - 1)];
+    }
+    return $randomString;
 }

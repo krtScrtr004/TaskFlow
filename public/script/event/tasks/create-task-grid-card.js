@@ -1,9 +1,11 @@
 import { formatDate } from '../../utility/utility.js'
 
 const taskGridContainer = document.querySelector('.task-grid-container')
+
 const projectId = taskGridContainer?.dataset.projectid
-if (!projectId || projectId.trim() === '')
+if (!projectId || projectId.trim() === '') {
     console.warn('Project ID not found.')
+}
 
 /**
  * Creates a task grid card DOM element
@@ -34,7 +36,7 @@ export function createTaskGridCard(task) {
     taskIcon.height = 24
 
     const taskName = document.createElement('h3')
-    taskName.className = 'task-name'
+    taskName.className = 'task-name single-line-ellipsis'
     taskName.textContent = task.name
 
     textWithIcon.appendChild(taskIcon)

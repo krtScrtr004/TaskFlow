@@ -6,8 +6,12 @@ use App\Interface\Entity;
 use App\Enumeration\WorkStatus;
 use App\Core\UUID;
 use App\Exception\ValidationException;
+use App\Model\PhaseModel;
 use App\Validator\WorkValidator;
 use DateTime;
+use Exception;
+use InvalidArgumentException;
+use Ramsey\Uuid\Exception\InvalidArgumentException as ExceptionInvalidArgumentException;
 
 class Phase implements Entity
 {
@@ -17,7 +21,6 @@ class Phase implements Entity
     private ?string $description;
     private DateTime $startDateTime;
     private DateTime $completionDateTime;
-    private ?DateTime $actualCompletionDateTime;
     private WorkStatus $status;
 
     protected WorkValidator $workValidator;
@@ -34,7 +37,6 @@ class Phase implements Entity
      * @param string|null $description Phase description (5-500 characters) (optional)
      * @param DateTime $startDateTime Phase start date and time (cannot be in the past)
      * @param DateTime $completionDateTime Expected phase completion date and time (must be after start date)
-     * @param DateTime|null $actualCompletionDateTime Actual completion date and time (null if not completed)
      * @param WorkStatus $status Current status of the phase (enum)
      * 
      * @throws ValidationException If any of the provided data fails validation
@@ -46,7 +48,6 @@ class Phase implements Entity
         ?string $description,
         DateTime $startDateTime,
         DateTime $completionDateTime,
-        ?DateTime $actualCompletionDateTime,
         WorkStatus $status
     ) {
         try {
@@ -57,7 +58,7 @@ class Phase implements Entity
                 'startDateTime' => $startDateTime,
                 'completionDateTime' => $completionDateTime
             ]);
-            
+
             if ($this->workValidator->hasErrors()) {
                 throw new ValidationException("Phase validation failed", $this->workValidator->getErrors());
             }
@@ -71,7 +72,6 @@ class Phase implements Entity
         $this->description = trimOrNull($description);
         $this->startDateTime = $startDateTime;
         $this->completionDateTime = $completionDateTime;
-        $this->actualCompletionDateTime = $actualCompletionDateTime;
         $this->status = $status;
     }
 
@@ -135,16 +135,6 @@ class Phase implements Entity
     public function getCompletionDateTime(): DateTime
     {
         return $this->completionDateTime;
-    }
-
-    /**
-     * Gets the actual completion date and time.
-     *
-     * @return DateTime|null The DateTime object representing when the phase was completed, or null if not completed
-     */
-    public function getActualCompletionDateTime(): ?DateTime
-    {
-        return $this->actualCompletionDateTime;
     }
 
     /**
@@ -249,16 +239,6 @@ class Phase implements Entity
         $this->completionDateTime = $completionDateTime;
     }
 
-    /**
-     * Sets the actual completion date and time.
-     *
-     * @param DateTime|null $actualCompletionDateTime The actual completion date and time, or null if not completed
-     * @return void
-     */
-    public function setActualCompletionDateTime(?DateTime $actualCompletionDateTime): void
-    {
-        $this->actualCompletionDateTime = $actualCompletionDateTime;
-    }
 
     /**
      * Sets the phase status.
@@ -272,6 +252,88 @@ class Phase implements Entity
     }
 
     // Other methods (Utility)
+
+    /**
+     * Creates a Phase instance from an array of data with partial information.
+     *
+     * This method provides a flexible way to create a Phase instance without requiring
+     * all fields to be present, supplying default values where necessary. It also
+     * handles different data formats and converts them to appropriate types:
+     * - Converts publicId to UUID object
+     * - Converts startDateTime string to DateTime
+     * - Converts completionDateTime string to DateTime
+     * - Converts actualCompletionDateTime string to DateTime
+     * - Ensures status is a WorkStatus enum
+     *
+     * @param array $data Associative array containing phase data with following possible keys:
+     *      - id: int|null Phase ID
+     *      - publicId: string|UUID|null Public identifier
+     *      - name: string Phase name
+     *      - description: string|null Phase description
+     *      - startDateTime: string|DateTime|null Phase start date and time
+     *      - completionDateTime: string|DateTime|null Expected completion date and time
+     *      - actualCompletionDateTime: string|DateTime|null Actual completion date and time
+     *      - status: string|WorkStatus|null Current work status of the phase
+     * 
+     * @return self New Phase instance created from provided data with defaults for missing values
+     */
+    public static function createPartial(array $data): self
+    {
+        // Provide default values for required fields
+        $defaults = [
+            'id' => $data['id'] ?? 0,
+            'publicId' => $data['publicId'] ?? UUID::get(),
+            'name' => $data['name'] ?? 'Untitled Phase',
+            'description' => $data['description'] ?? null,
+            'startDateTime' => $data['startDateTime'] ?? new DateTime(),
+            'completionDateTime' => $data['completionDateTime'] ?? new DateTime('+7 days'),
+            'actualCompletionDateTime' => $data['actualCompletionDateTime'] ?? null,
+            'status' => $data['status'] ?? WorkStatus::PENDING
+        ];
+
+        // Handle UUID conversion
+        if (isset($data['publicId']) && !($data['publicId'] instanceof UUID)) {
+            try {
+                $defaults['publicId'] = UUID::fromString($data['publicId']);
+            } catch (ExceptionInvalidArgumentException $e) {
+                $defaults['publicId'] = UUID::fromBinary($data['publicId']);
+            }
+
+        }
+
+        // Handle DateTime conversions
+        if (isset($data['startDateTime']) && !($data['startDateTime'] instanceof DateTime)) {
+            $defaults['startDateTime'] = new DateTime(trimOrNull($data['startDateTime']));
+        }
+
+        if (isset($data['completionDateTime']) && !($data['completionDateTime'] instanceof DateTime)) {
+            $defaults['completionDateTime'] = new DateTime(trimOrNull($data['completionDateTime']));
+        }
+
+        if (isset($data['actualCompletionDateTime']) && !($data['actualCompletionDateTime'] instanceof DateTime)) {
+            $defaults['actualCompletionDateTime'] = is_string($data['actualCompletionDateTime'])
+                ? new DateTime(trimOrNull($data['actualCompletionDateTime']))
+                : null;
+        }
+
+        // Handle enum conversion
+        if (isset($data['status']) && !($data['status'] instanceof WorkStatus)) {
+            $defaults['status'] = WorkStatus::from(trimOrNull($data['status']));
+        }
+
+        // Create instance with default values
+        $instance = new self(
+            id: $defaults['id'],
+            publicId: $defaults['publicId'],
+            name: $defaults['name'],
+            description: $defaults['description'],
+            startDateTime: $defaults['startDateTime'],
+            completionDateTime: $defaults['completionDateTime'],
+            status: $defaults['status']
+        );
+
+        return $instance;
+    }
 
     /**
      * Converts the Phase object to an associative array representation.
@@ -293,15 +355,11 @@ class Phase implements Entity
     public function toArray(): array
     {
         return [
-            'id' => $this->publicId,
+            'id' => UUID::toString($this->publicId),
             'name' => $this->name,
             'description' => $this->description,
             'startDateTime' => formatDateTime($this->startDateTime, DateTime::ATOM),
             'completionDateTime' => formatDateTime($this->completionDateTime, DateTime::ATOM),
-            'actualCompletionDateTime' => 
-                $this->actualCompletionDateTime 
-                    ? formatDateTime($this->actualCompletionDateTime, DateTime::ATOM) 
-                    : null,
             'status' => $this->status->value
         ];
     }
@@ -345,10 +403,6 @@ class Phase implements Entity
             ? new DateTime(trimOrNull($data['completionDateTime']))
             : $data['completionDateTime'];
 
-        $actualCompletionDateTime = (is_string($data['actualCompletionDateTime']))
-            ? new DateTime(trimOrNull($data['actualCompletionDateTime']))
-            : $data['actualCompletionDateTime'];
-
         $status = (is_string($data['status']))
             ? WorkStatus::fromString(trimOrNull($data['status']))
             : $data['status'];
@@ -360,7 +414,6 @@ class Phase implements Entity
             description: trimOrNull($data['description']),
             startDateTime: $startDateTime,
             completionDateTime: $completionDateTime,
-            actualCompletionDateTime: $actualCompletionDateTime,
             status: $status
         );
     }

@@ -32,6 +32,8 @@ define('EXCEPTION_PATH', BACKEND_PATH . 'exception' . DS);
 define('INTERFACE_PATH', BACKEND_PATH . 'interface' . DS);
 define('MIDDLEWARE_PATH', BACKEND_PATH . 'middleware' . DS);
 define('MODEL_PATH', BACKEND_PATH . 'model' . DS);
+define('LOG_PATH', BACKEND_PATH . 'log' . DS);
+define('SERVICE_PATH', BACKEND_PATH . 'service' . DS);
 define('ROUTER_PATH', BACKEND_PATH . 'router' . DS);
 define('VALIDATOR_PATH', BACKEND_PATH . 'validator' . DS);
 

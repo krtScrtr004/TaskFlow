@@ -9,6 +9,7 @@ if (!$component)
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrfToken" content="<?= App\Middleware\Csrf::get() ?>">
 
     <title><?= $component['title'] ?></title>
 
@@ -42,6 +43,7 @@ if (!$component)
     </main>
 
     <script type="module" src="<?= EVENT_PATH . 'back-button.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'logout.js' ?>" defer></script>
     <?php if ($scripts): ?>
         <?php foreach ($scripts as $script):
             $scriptPath = EVENT_PATH . $script . '.js';

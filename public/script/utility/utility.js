@@ -1,21 +1,68 @@
+/**
+ * @param {number} year
+ * @param {number} month - 1-based (1 = January, 12 = December)
+ * @param {number} day
+ * @returns {boolean}
+ */
+export function isValidDate(year, month, day) {
+    if (
+        typeof year !== 'number' ||
+        typeof month !== 'number' ||
+        typeof day !== 'number'
+    ) return false;
+    // JavaScript Date months are 0-based, so subtract 1 from month
+    const date = new Date(year, month - 1, day);
+    return (
+        date.getFullYear() === year &&
+        date.getMonth() === month - 1 &&
+        date.getDate() === day
+    );
+}
+
+/**
+ * Formats a date string into a human-readable date.
+ *
+ * This function parses the provided date string and returns it in the format:
+ * "Month Day, Year" (e.g., "January 1, 2024"), using the user's locale.
+ * Throws an error if the input is missing or invalid.
+ *
+ * @param {string} dateString The date string to format. Should be a valid date string parseable by the Date constructor.
+ * @throws {Error} If the date string is not provided or is invalid.
+ * @return {string} The formatted date string in "Month Day, Year" format.
+ */
 export function formatDate(dateString) {
-    if (!dateString) 
+    if (!dateString) {
         throw new Error('Date string is required.')
+    }
 
     const date = new Date(dateString)
-    if (isNaN(date.getTime())) 
+    if (isNaN(date.getTime())) {
         throw new Error('Invalid date string.')
+    }
 
     const options = { year: 'numeric', month: 'long', day: 'numeric' }
     return date.toLocaleDateString(undefined, options)
 }
 
+/**
+ * Formats a Date object into a string in the format 'YYYY-MM-DD'.
+ *
+ * This function takes a JavaScript Date object and returns a string
+ * representing the date in ISO 8601 format (without the time component).
+ * Throws an error if the input is not a valid Date object.
+ *
+ * @param {Date} date The Date object to format.
+ * @throws {Error} If the date parameter is missing or not a valid Date object.
+ * @returns {string} The formatted date string in 'YYYY-MM-DD' format.
+ */
 export function formatDateToString(date) {
-    if (!date) 
+    if (!date) {
         throw new Error('Date is required.')
+    }
 
-    if (!(date instanceof Date)) 
+    if (!(date instanceof Date)) {
         throw new Error('Invalid \'date\' is not a valid Date object.')
+    }
 
     return date.toISOString().split('T')[0]
 }
@@ -28,14 +75,16 @@ export function formatDateToString(date) {
  * @throws {Error} If either date string is invalid or missing
  */
 export function compareDates(date1, date2) {
-    if (!date1 || !date2)
+    if (!date1 || !date2) {
         throw new Error('Both date strings are required.')
+    }
     
     const d1 = new Date(date1)
     const d2 = new Date(date2)
     
-    if (isNaN(d1.getTime()) || isNaN(d2.getTime()))
+    if (isNaN(d1.getTime()) || isNaN(d2.getTime())) {
         throw new Error('Invalid date string.')
+    }
         
     if (d1.getTime() > d2.getTime()) return -1
     if (d1.getTime() < d2.getTime()) return 1

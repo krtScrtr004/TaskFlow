@@ -11,21 +11,23 @@ if (!$project) {
     throw new Exception('Project data is required to render this component.');
 }
 
+$projectData = [
+    'id'                    => htmlspecialchars(UUID::toString($project->getPublicId())),
+    'name'                  => htmlspecialchars($project->getName()),
+    'description'           => htmlspecialchars($project->getDescription()),
+    'budget'                => htmlspecialchars(formatNumber($project->getBudget())),
+    'manager'               => $project->getManager(),
+    'startDateTime'         => htmlspecialchars(dateToWords($project->getStartDateTime())),
+    'completionDateTime'    => htmlspecialchars(dateToWords($project->getCompletionDateTime())),
+    'status'                => $project->getStatus(),
+    'tasks'                 => $project->getTasks(),
+    'phases'                => $project->getPhases(),
+    'workers'               => $project->getWorkers()->getAssigned(),
+];
+
 require_once COMPONENT_PATH . 'template/user-info-card.php';
 require_once COMPONENT_PATH . 'template/add-worker-modal.php';
 
-$projectData = [
-    'id' => htmlspecialchars(UUID::toString($project->getPublicId())),
-    'name' => htmlspecialchars($project->getName()),
-    'description' => htmlspecialchars($project->getDescription()),
-    'budget' => htmlspecialchars(formatNumber($project->getBudget())),
-    'startDateTime' => htmlspecialchars(dateToWords($project->getStartDateTime())),
-    'completionDateTime' => htmlspecialchars(dateToWords($project->getCompletionDateTime())),
-    'status' => $project->getStatus(),
-    'tasks' => $project->getTasks(),
-    'phases' => $project->getPhases(),
-    'workers' => $project->getWorkers(),
-];
 ?>
 <!-- Main Content -->
 <section class="project-container main-project-content flex-col" data-projectid="<?= $projectData['id'] ?>">
@@ -125,8 +127,17 @@ $projectData = [
                 <!-- Right Side -->
                 <div class="right">
                     <?php
-                    $projectProgress = ProjectProgressCalculator::calculate($projectData['tasks']);
-                    $progressPercentage = htmlspecialchars(formatNumber($projectProgress['progressPercentage']));
+                    $projectProgress = null;
+                    if ($projectData['tasks']?->count() > 0) {
+                        $projectProgress = ProjectProgressCalculator::calculate($projectData['tasks']);
+                    } else {
+                        $projectProgress = [
+                            'progressPercentage'    => 0.0,
+                            'statusBreakdown'       => [],
+                            'priorityBreakdown'     => []
+                        ];
+                    }
+                    $progressPercentage = htmlspecialchars(formatNumber($projectProgress['progressPercentage'] ?? 0.0));
                     ?>
 
                     <div class="text-w-icon">
@@ -155,7 +166,7 @@ $projectData = [
 
                         <h3>Task Statistics</h3>
                     </div>
-                    <!-- TODO: Add redirect link -->
+                    
                     <a href="<?= REDIRECT_PATH . 'project' . DS . $projectData['id'] . DS . 'task' ?>"
                         class="blue-text">See All</a>
                 </div>
@@ -168,13 +179,12 @@ $projectData = [
                         <?php
                         $statusBreakdown = $projectProgress['statusBreakdown'];
                         $statusPercentages = [
-                            'pending' => $statusBreakdown[WorkStatus::PENDING->value]['percentage'] ?? 0,
-                            'ongoing' => $statusBreakdown[WorkStatus::ON_GOING->value]['percentage'] ?? 0,
+                            'pending'   => $statusBreakdown[WorkStatus::PENDING->value]['percentage'] ?? 0,
+                            'ongoing'   => $statusBreakdown[WorkStatus::ON_GOING->value]['percentage'] ?? 0,
                             'completed' => $statusBreakdown[WorkStatus::COMPLETED->value]['percentage'] ?? 0,
-                            'delayed' => $statusBreakdown[WorkStatus::DELAYED->value]['percentage'] ?? 0,
+                            'delayed'   => $statusBreakdown[WorkStatus::DELAYED->value]['percentage'] ?? 0,
                             'cancelled' => $statusBreakdown[WorkStatus::CANCELLED->value]['percentage'] ?? 0,
                         ];
-
                         ?>
                         <div data-pending="<?= $statusPercentages['pending'] ?>"
                             data-ongoing=" <?= $statusPercentages['ongoing'] ?>"
@@ -198,14 +208,15 @@ $projectData = [
                         <?php
                         $priorityBreakdown = $projectProgress['priorityBreakdown'];
                         $priorityPercentages = [
-                            'low' => $priorityBreakdown[TaskPriority::LOW->value]['percentage'] ?? 0,
-                            'medium' => $priorityBreakdown[TaskPriority::MEDIUM->value]['percentage'] ?? 0,
-                            'high' => $priorityBreakdown[TaskPriority::HIGH->value]['percentage'] ?? 0,
+                            'low'       => $priorityBreakdown[TaskPriority::LOW->value]['percentage'] ?? 0,
+                            'medium'    => $priorityBreakdown[TaskPriority::MEDIUM->value]['percentage'] ?? 0,
+                            'high'      => $priorityBreakdown[TaskPriority::HIGH->value]['percentage'] ?? 0,
                         ];
                         ?>
                         <div data-low="<?= $priorityPercentages['low'] ?>"
-                            data-medium=" <?= $priorityPercentages['medium'] ?>" data-high="
-        <?= $priorityPercentages['high'] ?>" class="priority-percentage no-display">
+                            data-medium="<?= $priorityPercentages['medium'] ?>"
+                            data-high="<?= $priorityPercentages['high'] ?>" 
+                            class="priority-percentage no-display">
                         </div>
 
                         <div class="first-col text-w-icon">
@@ -258,47 +269,64 @@ $projectData = [
             <?php endif; ?>
         </div>
 
-        <!-- Project Workers -->
-        <section class="project-workers content-section-block flex-col">
-            <div class="heading-title text-w-icon">
-                <img src="<?= ICON_PATH . 'worker_w.svg' ?>" alt="Assigned Workers" title="Assigned Workers"
-                    height="20">
+        <section>
+            <section class="project-manager content-section-block flex-col">
+                <div class="heading-title text-w-icon">
+                    <img src="<?= ICON_PATH . 'manager_w.svg' ?>" alt="Project Manager" title="Project Manager"
+                        height="20">
 
-                <h3>Assigned Workers</h3>
-            </div>
-
-            <!-- Worker List -->
-            <div class="worker-list">
-                <section class="list">
-                    <?php foreach ($projectData['workers'] as $worker) {
-                        // Worker List Card
-                        echo workerListCard($worker);
-                    } ?>
-                </section>
-
-                <div class="sentinel"></div>
-
-                <!-- No Workers Wall -->
-                <div
-                    class="no-workers-wall no-content-wall <?= $projectData['workers']->count() > 0 ? 'no-display' : 'flex-col' ?>">
-                    <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No workers assigned" title="No workers assigned"
-                        height="70">
-                    <h3 class="center-text">No workers assigned to this project.</h3>
+                    <h3>Project Manager</h3>
                 </div>
-            </div>
 
-            <!-- Add Worker Button -->
-            <?php if (Role::isProjectManager(Me::getInstance())): ?>
-                <div class="">
-                    <button id="add_worker_button" type="button" class="float-right blue-bg">
-                        <div class="heading-title text-w-icon center-child">
-                            <img src="<?= ICON_PATH . 'add_w.svg' ?>" alt="Add Worker" title="Add Worker" height="18">
+                <?= userListCard($projectData['manager']) ?>
+            </section>
 
-                            <h3 class="white-text">Add Worker</h3>
-                        </div>
-                    </button>
+
+            <!-- Project Workers -->
+            <section class="project-workers content-section-block flex-col">
+                <div class="heading-title text-w-icon">
+                    <img src="<?= ICON_PATH . 'worker_w.svg' ?>" alt="Assigned Workers" title="Assigned Workers"
+                        height="20">
+
+                    <h3>Assigned Workers</h3>
                 </div>
-            <?php endif; ?>
+
+                <!-- Worker List -->
+                <div class="worker-list">
+                    <section class="list">
+                        <?php foreach ($projectData['workers'] as $worker) {
+                            // Worker List Card
+                            echo userListCard($worker);
+                        } ?>
+                    </section>
+
+                    <div class="sentinel"></div>
+
+                    <!-- No Workers Wall -->
+                    <div
+                        class="no-workers-wall no-content-wall <?= count($projectData['workers']) > 0 ? 'no-display' : 'flex-col' ?>">
+                        <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No workers assigned" title="No workers assigned"
+                            height="70">
+                        <h3 class="center-text">No workers assigned to this project.</h3>
+                    </div>
+                </div>
+
+                <!-- Add Worker Button -->
+                <?php if (Role::isProjectManager(Me::getInstance()) && 
+                            $projectData['status'] !== WorkStatus::COMPLETED && 
+                            $projectData['status'] !== WorkStatus::CANCELLED): ?>
+                    <div class="">
+                        <button id="add_worker_button" type="button" class="float-right blue-bg">
+                            <div class="heading-title text-w-icon center-child">
+                                <img src="<?= ICON_PATH . 'add_w.svg' ?>" alt="Add Worker" title="Add Worker" height="18">
+
+                                <h3 class="white-text">Add Worker</h3>
+                            </div>
+                        </button>
+                    </div>
+                <?php endif; ?>
+            </section>
+
         </section>
     </div>
 </section>

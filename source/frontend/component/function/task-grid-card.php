@@ -7,7 +7,7 @@ use App\Enumeration\WorkStatus;
 
 function taskGridCard(Task $task, $projectId): string
 {
-    $id = htmlspecialchars($task->getPublicId());
+    $id = htmlspecialchars(UUID::toString($task->getPublicId()));
     $name = htmlspecialchars($task->getName());
     $description = htmlspecialchars($task->getDescription());
     $startDateTime = htmlspecialchars(dateToWords($task->getStartDateTime()));
@@ -15,7 +15,7 @@ function taskGridCard(Task $task, $projectId): string
     $status = $task->getStatus();
     $priority = $task->getPriority();
 
-    $redirect = REDIRECT_PATH . 'project' . DS . $projectId . DS . 'task' . DS . $id;
+    $redirect = REDIRECT_PATH . 'project' . DS . UUID::toString($projectId) . DS . 'task' . DS . $id;
 
     ob_start();
     ?>
@@ -24,7 +24,7 @@ function taskGridCard(Task $task, $projectId): string
             <section>
                 <div class="text-w-icon">
                     <img src="<?= ICON_PATH . 'task_w.svg' ?>" alt="Task" title="Task" height="24">
-                    <h3 class="task-name"><?= $name ?></h3>
+                    <h3 class="task-name single-line-ellipsis"><?= $name ?></h3>
                 </div>
                 <p class="task-id"><em><?= $id ?></em></p>
             </section>

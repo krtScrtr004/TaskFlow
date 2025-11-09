@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Auth\SessionAuth;
 use App\Interface\Controller;
 use App\Core\Session;
+use App\Middleware\Csrf;
 
 class IndexController implements Controller
 {
@@ -31,8 +32,23 @@ class IndexController implements Controller
 
     public static function index(): void
     {
+        // If user is already logged in, redirect to homepage instead of showing login page
         if (SessionAuth::hasAuthorizedSession()) {
-            SessionAuth::destroySession();
+            $projectId = Session::get('activeProjectId') ?? '';
+            header('Location: ' . REDIRECT_PATH . 'home' . DS . $projectId);
+            exit();
+        }
+
+        // For unauthenticated users, ensure session exists and CSRF token is set
+        if (!Session::isSet()) {
+            Session::create();
+        }
+        
+        if (!Csrf::get()) {
+            Csrf::generate();
+            // Force session write to ensure CSRF token is persisted
+            session_write_close();
+            Session::restore();  // Reopen session for the rest of the request
         }
 
         // Dynamically display appropriate page (login / signup) based on URL

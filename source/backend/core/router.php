@@ -53,7 +53,11 @@ class Router
             // If the class name doesn't have a namespace, assume it's in App\Controller
             $className = $action[0];
             if (strpos($className, '\\') === false) {
-                $className = 'App\\Controller\\' . $className;
+                if (stripos($className, 'Controller') === false) {
+                    $className = 'App\\Endpoint\\' . $className;
+                } else {
+                    $className = 'App\\Controller\\' . $className;
+                }
             }
             return call_user_func([$className, $action[1]], $routeParams);
         }

@@ -80,11 +80,6 @@ class WorkerPerformanceCalculator
                     $totalTaskCount++;
                 }
 
-                // Track project-level metrics
-                $projectStatus = $project->getStatus()->value;
-                $projectMetrics['projectsByStatus'][$projectStatus] =
-                    ($projectMetrics['projectsByStatus'][$projectStatus] ?? 0) + 1;
-
                 // Calculate task completion rate for this project
                 $completedTasks = 0;
                 foreach ($tasks as $task) {
@@ -96,6 +91,11 @@ class WorkerPerformanceCalculator
                 $projectMetrics['projectCompletionRates'][] = $completionRate;
             }
         }
+
+         // Track project-level metrics
+        $projectStatus = $project->getStatus()->value;
+        $projectMetrics['projectsByStatus'][$projectStatus] =
+            ($projectMetrics['projectsByStatus'][$projectStatus] ?? 0) + 1;
 
         // Calculate average tasks per project
         $projectMetrics['averageTasksPerProject'] = $projects->count() > 0

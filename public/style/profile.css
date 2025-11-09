@@ -46,9 +46,16 @@
 }
 
 .profile .bio {
+    width: 80ch;
     font-size: 1.1rem;
     font-weight: 300;
     margin-top: 1rem;
+}
+
+#profile_picture_overview {
+    height: 15rem;
+    width: 15rem;
+    margin: 0 auto;
 }
 
 #pick_profile_picture_button {

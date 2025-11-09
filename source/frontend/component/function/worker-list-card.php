@@ -1,28 +1,29 @@
 <?php
 
-use App\Dependent\Worker;
+use App\Core\UUID;
+use App\Entity\User;
 
-function workerListCard(Worker $worker): string
+function userListCard(User $user): string
 {
     $profileLink =
-        htmlspecialchars($worker->getProfileLink()) ?:
+        htmlspecialchars($user->getProfileLink()) ?:
         ICON_PATH . 'profile_w.svg';
-    $name = htmlspecialchars($worker->getFirstName() . ' ' . $worker->getLastName());
-    $id = htmlspecialchars($worker->getPublicId());
-    $jobTitles = $worker->getJobTitles();
+    $name = htmlspecialchars($user->getFirstName() . ' ' . $user->getLastName());
+    $id = htmlspecialchars(UUID::toString($user->getPublicId()));
+    $jobTitles = $user->getJobTitles();
 
     ob_start();
     ?>
-    <!-- Worker List Card -->
-    <button class="worker-list-card unset-button" data-id="<?= $id ?>">
-        <img src="<?= $profileLink ?>" alt="<?= $name ?>" title="<?= $name ?>" height="40">
+    <!-- user List Card -->
+    <button class="user-list-card unset-button" data-id="<?= $id ?>">
+        <img class="circle fit-cover" src="<?= $profileLink ?>" alt="<?= $name ?>" title="<?= $name ?>" loading="lazy" height="40">
 
         <div class="flex-col">
 
             <!-- Name and ID -->
             <div>
                 <h4 class="wrap-text"><?= $name ?></h4>
-                <p><em><?= $id ?></em></p>
+                <p><em class="id"><?= $id ?></em></p>
             </div>
 
             <div class="job-titles flex-row flex-wrap">

@@ -3,11 +3,11 @@
 define('STRICT_TYPES', 1);
 define('DS', '/');
 
-require_once __DIR__ . DS . 'path.php';
-
+require_once dirname(__DIR__, 1) . DS . 'data' . DS . 'path.php';
 require_once VENDOR_PATH . 'autoload.php';
+require_once DATA_PATH . 'data-length.php';
 
-// require_once __DIR__ . DS . 'env.php';
+require_once __DIR__ . DS . 'env.php';
 
 spl_autoload_register(function ($class) {
     // Map namespace folders to actual paths
@@ -28,6 +28,7 @@ spl_autoload_register(function ($class) {
     'router' => ROUTER_PATH,
     'middleware' => MIDDLEWARE_PATH,
     'model' => MODEL_PATH,
+    'service' => SERVICE_PATH,
     'validator' => VALIDATOR_PATH,
     ];
 
@@ -85,6 +86,13 @@ foreach ($paths as $path) {
     }
 }
 
-// Restore user session if it exists
-use App\Auth\SessionAuth;
-SessionAuth::restoreSession();
+/**
+ * Error Handling Config
+ */
+ini_set('error_reporting', E_ALL);          // Report all errors
+ini_set('display_errors', 0);               // Do not display errors on browser
+set_error_handler(['Logger', 'logError']);
+set_exception_handler(['Logger', 'logException']);
+
+App\Core\Session::restore();
+

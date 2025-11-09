@@ -17,6 +17,13 @@
 	gap: var(--space);
 }
 
+.projects > .statistics .total > h3, 
+.projects > .statistics .completed > h3, 
+.projects > .statistics .cancelled > h3, 
+.projects > .statistics .cancel-terminate > h3 {
+	width: 10ch;
+}
+
 .projects > .statistics > div {
 	gap: 1rem;
 }
@@ -75,4 +82,18 @@
 
 .project-status {
     flex: 1;
+}
+
+.no-projects-wall {
+	height: 60vh;
+}
+
+.no-projects-wall > img {
+	height: 10rem;
+}
+
+.no-projects-wall > h3 {
+	margin-top: 0.8rem;
+	font-size: 1.3rem;
+	font-weight: 300;
 }

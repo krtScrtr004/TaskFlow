@@ -1,11 +1,16 @@
-import { addWorker } from '../../shared.js'
+import { addWorker } from '../../modal.js'
 import { Dialog } from '../../../../render/dialog.js'
 import { Http } from '../../../../utility/http.js'
+import { handleException } from '../../../../utility/handle-exception.js'
+import { fetchWorkers } from '../../fetch.js'
 
 let isLoading = false
-export const assignedWorkers = {}
+
+export const workerIds = {}
+
 const addTaskForm = document.querySelector('#add_task_form')
 const noAssignedWorkerWall = addTaskForm?.querySelector('.no-assigned-worker-wall')
+
 const thisProjectId = addTaskForm?.dataset.projectid
 if (!thisProjectId || thisProjectId.trim() === '') {
     console.error('Project ID not found.')
@@ -23,28 +28,29 @@ try {
     )
 
     const taskWorkerList = addTaskForm.querySelector('.task-worker > .list')
-    if (taskWorkerList) {
-        taskWorkerList.addEventListener('click', e => {
-            e.preventDefault()
+    taskWorkerList?.addEventListener('click', e => {
+        e.preventDefault()
 
-            const removeWorkerButton = e.target.closest('#remove_worker_button')
-            if (!removeWorkerButton) return
+        const removeWorkerButton = e.target.closest('#remove_worker_button')
+        if (!removeWorkerButton) return
 
-            const workerCard = removeWorkerButton.closest('.task-worker-card')
-            if (!workerCard)
-                throw new Error('Worker card element not found.')
+        const workerCard = removeWorkerButton.closest('.task-worker-card')
+        if (!workerCard) {
+            throw new Error('Worker card element not found.')
+        }
 
-            delete assignedWorkers[workerCard.dataset.id]
-            workerCard.remove()
-            if (Object.keys(assignedWorkers).length === 0 && noAssignedWorkerWall) {
-                noAssignedWorkerWall.classList.remove('no-display')
-                noAssignedWorkerWall.classList.add('flex-col')
-            }
-        })
-    }
+        // Remove the worker from the workerIds tracking object
+        delete workerIds[workerCard.dataset.id]
+        // Remove the worker card element from the DOM
+        workerCard.remove()
+        // If there are no more assigned workers, show the "no assigned worker" wall
+        if (Object.keys(workerIds).length === 0 && noAssignedWorkerWall) {
+            noAssignedWorkerWall.classList.remove('no-display')
+            noAssignedWorkerWall.classList.add('flex-col')
+        }
+    })
 } catch (error) {
-    console.error('Error adding worker:', error)
-    Dialog.somethingWentWrong()
+    handleException(error, `Error adding worker: ${error}`)
 }
 
 /**
@@ -249,16 +255,19 @@ async function sendToBackend(projectId, workerIds) {
         }
         isLoading = true
 
-        if (!projectId || projectId.trim() === '')
+        if (!projectId || projectId.trim() === '') {
             throw new Error('Project ID is required.')
+        }
 
-        if (!workerIds || workerIds.length === 0)
+        if (!workerIds || workerIds.length === 0) {
             throw new Error('No worker IDs provided.')
+        }
 
         const idParams = workerIds.map(id => `${id}`).join(',')
         const response = await Http.GET(`projects/${projectId}/workers?ids=${idParams}`)
-        if (!response) 
+        if (!response) {
             throw new Error('No response from server.')
+        }
         return response.data
     } catch (error) {
         throw error
@@ -267,16 +276,48 @@ async function sendToBackend(projectId, workerIds) {
     }
 }
 
+/**
+ * Adds worker cards to the task worker list in the UI for each worker in the provided data array.
+ *
+ * Iterates through the given array of worker data objects, and for each worker:
+ * - Skips the worker if their ID already exists in the `workerIds` map.
+ * - Creates a task worker card element using the worker's details.
+ * - Finds the task worker list container in the DOM and throws an error if not found.
+ * - Appends the created worker card to the task worker list.
+ * - Updates the UI to hide the "no assigned worker" wall if present.
+ * - Adds the worker's data to the `workerIds` map to prevent duplicates.
+ *
+ * @param {Array<Object>} workersData - Array of worker data objects to be added.
+ * @throws {Error} If the task worker list container is not found in the DOM.
+ */
 function action(workersData) {
     workersData.forEach(workerData => {
-        const taskWorkerCard = createTaskWorkerCard(workerData)
-        const taskWorkerList = document.querySelector('#add_task_form .task-worker > .list')
-        if (!taskWorkerList) throw new Error('Task worker list container not found.')
+        if (workerIds[workerData.id]) {
+            return
+        }
 
+        const taskWorkerCard = createTaskWorkerCard({
+            name: `${workerData.firstName} ${workerData.lastName}`,
+            id: workerData.id,
+            jobTitles: workerData.jobTitles,
+            performance: workerData.additionalInfo.performance,
+            completedTasks: workerData.additionalInfo.completedTasks,
+            profileImage: workerData.profilePicture
+        })
+        const taskWorkerList = document.querySelector('#add_task_form .task-worker > .list')
+        if (!taskWorkerList) {
+            throw new Error('Task worker list container not found.')
+        }
+
+        // Append the worker card to the task worker list
         taskWorkerList.appendChild(taskWorkerCard)
+
+        // Hide the "no assigned worker" wall if it exists
         noAssignedWorkerWall?.classList.add('no-display')
         noAssignedWorkerWall?.classList.remove('flex-col')
-        assignedWorkers[workerData.id] = workerData
+
+        // Track the added worker to prevent duplicates
+        workerIds[workerData.id] = workerData 
     })
 }
 

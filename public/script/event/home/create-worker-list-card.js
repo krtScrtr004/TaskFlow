@@ -27,7 +27,7 @@ export function createWorkerListCard(worker) {
 
     // Create main button container
     const button = document.createElement('button')
-    button.className = 'worker-list-card unset-button'
+    button.className = 'user-list-card unset-button'
     button.dataset.id = id
 
     // Create profile image
@@ -76,6 +76,13 @@ export function createWorkerListCard(worker) {
     button.appendChild(infoContainer)
 
     const workerList = document.querySelector('.project-workers > .worker-list > .list')
-    if (!workerList) console.error('Worker list container not found!')
-    else workerList.appendChild(button)
+    if (!workerList) {
+        console.error('Worker list container not found!')
+    } else {
+        const noWorkersWall = workerList.parentElement.querySelector('.no-workers-wall')
+        noWorkersWall?.classList.remove('flex-col', 'flex-row')
+        noWorkersWall?.classList.add('no-display')
+
+        workerList.appendChild(button)
+    }
 }

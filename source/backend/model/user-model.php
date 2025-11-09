@@ -5,12 +5,18 @@ namespace App\Model;
 use App\Abstract\Model;
 use App\Core\Connection;
 use App\Container\JobTitleContainer;
+use App\Core\Me;
 use App\Core\UUID;
 use App\Entity\User;
 use App\Enumeration\Gender;
 use App\Enumeration\Role;
+use App\Enumeration\WorkerStatus;
+use App\Enumeration\WorkStatus;
 use App\Exception\DatabaseException;
+use App\Exception\ValidationException;
+use App\Middleware\Csrf;
 use DateTime;
+use Exception;
 use InvalidArgumentException;
 use PDOException;
 
@@ -34,17 +40,58 @@ class UserModel extends Model
      */
     protected static function find(string $whereClause = '', array $params = [], array $options = []): ?array
     {
+        $options = [
+            'limit'     => $options['limit'] ?? 10,
+            'offset'    => $options['offset'] ?? 0,
+            'orderBy'   => $options['orderBy'] ?? 'u.firstName DESC',
+            'groupBy'   => $options['groupBy'] ?? 'u.id'
+        ];
+
         $instance = new self();
         try {
+            Csrf::protect();
+
             $queryString = "    
                 SELECT 
                     u.*,
-                    GROUP_CONCAT(ujt.title) AS jobTitles
+                    GROUP_CONCAT(ujt.title) AS jobTitles,
+                    (
+                        SELECT COUNT(*)
+                        FROM `project` p
+                        JOIN `projectWorker` pw ON p.id = pw.projectId
+                        WHERE p.managerId = u.id
+                        OR pw.workerId = u.id
+                    ) AS totalProjects,
+                    (
+                        SELECT COUNT(*)
+                        FROM `project` p
+                        JOIN `projectWorker` pw ON p.id = pw.projectId
+                        WHERE (p.managerId = u.id
+                        OR pw.workerId = u.id)
+                        AND p.status = :completedStatus
+                    ) AS completedProjects,
+                    (
+                        SELECT COUNT(*)
+                        FROM `project` p
+                        JOIN `projectWorker` pw ON p.id = pw.projectId
+                        WHERE pw.workerId = u.id 
+                        AND p.status = :cancelledStatus
+                    ) AS cancelledProjectCount,
+                    (
+                        SELECT COUNT(*)
+                        FROM `projectWorker` pw
+                        WHERE pw.workerId = u.id
+                        AND pw.status = :terminatedStatus
+                    ) AS terminatedProjectCount
                 FROM `user` u
                 LEFT JOIN `userJobTitle` ujt ON u.id = ujt.userId";
             $query = $instance->appendOptionsToFindQuery(
                 $instance->appendWhereClause($queryString, $whereClause),
             $options);
+
+            $params[':completedStatus'] = WorkStatus::COMPLETED->value;
+            $params[':cancelledStatus'] = WorkStatus::CANCELLED->value;
+            $params[':terminatedStatus'] = WorkerStatus::TERMINATED->value;
 
             $statement = $instance->connection->prepare($query);
             $statement->execute($params);
@@ -57,11 +104,18 @@ class UserModel extends Model
             $users = [];
             foreach ($result as $row) {
                 $row['jobTitles'] = explode(',', $row['jobTitles']);
+                $row['additionalInfo'] = [
+                    'totalProjects'             => (int) $row['totalProjects'] ?? 0,
+                    'completedProjects'         => (int) $row['completedProjects'] ?? 0,
+                    'cancelledProjectCount'     => (int) $row['cancelledProjectCount'] ?? 0,
+                    'terminatedProjectCount'    => (int) $row['terminatedProjectCount'] ?? 0
+                ];
+
                 $users[] = User::fromArray($row);
             }
             return $users;
-        } catch (PDOException $th) {
-            throw new DatabaseException($th->getMessage());
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
         }
     }
 
@@ -71,17 +125,28 @@ class UserModel extends Model
      * This method searches for a user in the database using the provided UUID.
      * The UUID is converted to binary format for database search.
      * 
-     * @param UUID $publicId The public UUID to search for
+     * @param int|UUID $userId The user ID (integer) or public UUID to search for
      * @return User|null The User object if found, null otherwise
      * @throws DatabaseException If a database error occurs during the search
      */
-    public static function findByPublicId(UUID $publicId): ?User
+    public static function findById(int|UUID $userId): ?User
     {
+        if (is_int($userId) && $userId < 1) {
+            throw new InvalidArgumentException('Invalid user ID provided.');
+        }
+
+        $whereClause = is_int($userId) 
+            ? 'u.id = :id' 
+            : 'u.publicId = :publicId';
+        $params = is_int($userId) 
+            ? [':id' => $userId] 
+            : [':publicId' => UUID::toBinary($userId)];
+
         try {
-            $result = self::find('publicId = :publicId', [':publicId' => UUID::toBinary($publicId)], ['limit' => 1]);
+            $result = self::find($whereClause, $params, ['limit' => 1]);
             return $result ? $result[0] : null;
-        } catch (PDOException $th) {
-            throw new DatabaseException($th->getMessage());
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
         }
     }
 
@@ -101,8 +166,8 @@ class UserModel extends Model
         try {
             $result = self::find('email = :email', [':email' => $email], ['limit' => 1]);
             return $result ? $result[0] : null;
-        } catch (PDOException $th) {
-            throw new DatabaseException($th->getMessage());
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
         }
     }
 
@@ -131,8 +196,119 @@ class UserModel extends Model
 
         try {
             return self::find('', [], ['offset' => $offset, 'limit' => $limit]) ?: null;
-        } catch (PDOException $th) {
-            throw new DatabaseException($th->getMessage());
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
+        }
+    }
+
+    /**
+     * Searches for users based on provided criteria.
+     *
+     * This method allows searching users by keyword, role, and worker status, with support for pagination.
+     * - Keyword search uses full-text matching on first name, middle name, last name, email, and bio.
+     * - Role filter restricts results to users with the specified role.
+     * - Worker status filter supports special handling for "UNASSIGNED" status, checking for absence of active work as manager or worker.
+     * - Supports pagination via 'limit' and 'offset' options.
+     *
+     * @param string $key Optional search keyword for full-text search.
+     * @param Role|null $role Optional role filter (Role enum).
+     * @param WorkerStatus|null $status Optional worker status filter (WorkerStatus enum).
+     * @param array $options Optional search options:
+     *      - limit: int Maximum number of results to return (default: 10)
+     *      - offset: int Number of results to skip (default: 0)
+     *
+     * @return array|null Array of matching users or null if none found.
+     *
+     * @throws Exception If an error occurs during search.
+     */
+    public static function search(
+        string $key = '',
+        Role|null $role = null,
+        WorkerStatus|null $status = null,
+        array $options = [
+            'limit' => 10,
+            'offset' => 0,
+        ]): ?array
+    {
+        try {
+            $where = [];
+            $params = [];
+
+            if (trimOrNull($key)) {
+                $where[] = "
+                    MATCH(u.firstName, u.middleName, u.lastName, u.email, u.bio)
+                    AGAINST (:key IN NATURAL LANGUAGE MODE)
+                ";
+                $params[':key'] = $key;
+            }
+
+            if ($role) {
+                $where[] = "u.role = :role";
+                $params[':role'] = $role->value;
+            }
+
+            if ($status) {
+                // Special case: UNASSIGNED means no active work as manager OR worker
+                if ($status === WorkerStatus::UNASSIGNED) {
+                    $where[] = "
+                        NOT EXISTS (
+                            SELECT 1
+                            FROM `project` AS p
+                            WHERE p.managerId = u.id
+                            AND p.status NOT IN (:completedStatusUnassigned1, :cancelledStatusUnassigned1)
+                        )
+                        AND NOT EXISTS (
+                            SELECT 1
+                            FROM `projectWorker` AS pw
+                            JOIN `project` AS p ON pw.projectId = p.id
+                            WHERE pw.workerId = u.id
+                            AND p.status NOT IN (:completedStatusUnassigned2, :cancelledStatusUnassigned2)
+                        )
+                        AND NOT EXISTS (
+                            SELECT 1
+                            FROM `projectTaskWorker` AS ptw
+                            JOIN `projectTask` AS pt ON ptw.taskId = pt.id
+                            WHERE ptw.workerId = u.id
+                            AND pt.status NOT IN (:completedStatusUnassigned3, :cancelledStatusUnassigned3)
+                        )
+                    ";
+                    $params[':completedStatusUnassigned1'] = WorkStatus::COMPLETED->value;
+                    $params[':cancelledStatusUnassigned1'] = WorkStatus::CANCELLED->value;
+                    $params[':completedStatusUnassigned2'] = WorkStatus::COMPLETED->value;
+                    $params[':cancelledStatusUnassigned2'] = WorkStatus::CANCELLED->value;
+                    $params[':completedStatusUnassigned3'] = WorkStatus::COMPLETED->value;
+                    $params[':cancelledStatusUnassigned3'] = WorkStatus::CANCELLED->value;
+                } else {
+                    $where[] = "
+                        (EXISTS (
+                            SELECT 1
+                            FROM `project` p
+                            WHERE p.managerId = u.id
+                            AND p.status NOT IN (:completedStatusUnassigned, :cancelledStatusUnassigned)
+                        )) OR
+                        (EXISTS (
+                            SELECT 1
+                            FROM `projectWorker` pw
+                            WHERE pw.workerId = u.id
+                            AND pw.status = :workerStatus1
+                        ) OR EXISTS (
+                            SELECT 1
+                            FROM `projectTaskWorker` ptw
+                            WHERE ptw.workerId = u.id
+                            AND ptw.status = :workerStatus2
+                        ))
+                    ";
+                    $params[':completedStatusUnassigned'] = WorkStatus::COMPLETED->value;
+                    $params[':cancelledStatusUnassigned'] = WorkStatus::CANCELLED->value;
+                    $params[':workerStatus1'] = $status->value;
+                    $params[':workerStatus2'] = $status->value;
+                }
+            }
+
+            $whereClause = !empty($where) ? implode(' AND ', $where) : '';
+            return self::find($whereClause, $params, $options);
+        } catch (Exception $e) {
+            throw $e;
         }
     }
 
@@ -155,27 +331,27 @@ class UserModel extends Model
      */
     public static function create(mixed $user): User
     {
-        if (!($user instanceof User)) {
+        $instance = new self();
+        try {
+            if (!($user instanceof User)) {
                 throw new InvalidArgumentException('Expected instance of User');
             }
 
-        $uuid = UUID::get();
-        $firstName = trim($user->getFirstName()) ?: null;
-        $middleName = trim($user->getMiddleName()) ?: null;
-        $lastName = trim($user->getLastName()) ?: null;
-        $gender = $user->getGender()?->value;
-        $birthDate = $user->getBirthDate() ? formatDateTime($user->getBirthDate()) : null;
-        $role = $user->getRole()?->value;
-        $jobTitles = $user->getJobTitles()?->toArray();
-        $contactNumber = trim($user->getContactNumber()) ?: null;
-        $email = trim($user->getEmail()) ?: null;
-        $bio = trim($user->getBio()) ?: null;
-        $profileLink = trim($user->getProfileLink()) ?: null;
-        $password = $user->getPassword() ?: null;
-
-        $conn = Connection::getInstance();
-        try {
-            $conn->beginTransaction();
+            $uuid               =   $user->getPublicId() ?? UUID::get();
+            $firstName          =   trimOrNull($user->getFirstName());
+            $middleName         =   trimOrNull($user->getMiddleName());
+            $lastName           =   trimOrNull($user->getLastName());
+            $gender             =   $user->getGender()->value;
+            $birthDate          =   $user->getBirthDate(); 
+            $role               =   $user->getRole()->value;
+            $jobTitles          =   $user->getJobTitles()?->toArray();
+            $contactNumber      =   trimOrNull($user->getContactNumber());
+            $email              =   trimOrNull($user->getEmail());
+            $bio                =   trimOrNull($user->getBio());
+            $profileLink        =   trimOrNull($user->getProfileLink());
+            $password           =   $user->getPassword();
+            
+            $instance->connection->beginTransaction();
 
             // Insert User Data
             $userQuery = "
@@ -207,14 +383,14 @@ class UserModel extends Model
                     :password
                 )
             ";
-            $statement = $conn->prepare($userQuery);
+            $statement = $instance->connection->prepare($userQuery);
             $statement->execute([
                 ':publicId' => UUID::toBinary($uuid),
                 ':firstName' => $firstName,
                 ':middleName' => $middleName,
                 ':lastName' => $lastName,
                 ':gender' => $gender,
-                ':birthDate' => $birthDate,
+                ':birthDate' => formatDateTime($birthDate, DateTime::ATOM),
                 ':role' => $role,
                 ':contactNumber' => $contactNumber,
                 ':email' => $email,
@@ -222,7 +398,7 @@ class UserModel extends Model
                 ':profileLink' => $profileLink,
                 ':password' => password_hash($password, PASSWORD_ARGON2ID)
             ]);
-            $userId = $conn->lastInsertId();
+            $userId = $instance->connection->lastInsertId();
 
             // Insert Job Titles, if any
             if (!empty($jobTitles)) {
@@ -230,7 +406,7 @@ class UserModel extends Model
                     INSERT INTO `userJobTitle` (userId, title)
                     VALUES (:userId, :title)
                 ";
-                $jobTitleStatement = $conn->prepare($jobTitleQuery);
+                $jobTitleStatement = $instance->connection->prepare($jobTitleQuery);
                 foreach ($jobTitles as $title) {
                     $jobTitleStatement->execute([
                         ':userId' => $userId,
@@ -239,47 +415,221 @@ class UserModel extends Model
                 }
             }
 
-            $conn->commit();
+            $instance->connection->commit();
 
             $user->setId((int)$userId);
             $user->setPublicId($uuid);
             $user->setPassword(null);
             return $user;
         } catch (PDOException $e) {
-            $conn->rollBack();
+            $instance->connection->rollBack();
             throw new DatabaseException($e->getMessage());
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // 
-
-    public function get()
+    /**
+     * Updates an existing user record in the database with provided data.
+     *
+     * This method performs an update operation on the user table, supporting updates by either user ID or publicId.
+     * It handles the following fields:
+     * - firstName, middleName, lastName: Trims and updates name fields
+     * - bio: Trims and updates user biography
+     * - gender: Updates gender using the enum value
+     * - email: Trims and updates email address
+     * - contactNumber: Trims and updates contact number
+     * - profileLink: Trims and updates profile link
+     * - password: Hashes and updates password using Argon2ID
+     * - jobTitles: Updates job titles using the updateJobTitles method
+     *
+     * All updates are performed within a transaction. If any error occurs, the transaction is rolled back.
+     *
+     * @param array $data Associative array containing user data to update. Supported keys:
+     *      - id: int User ID (required if publicId is not provided)
+     *      - publicId: string|binary User public identifier (required if id is not provided)
+     *      - firstName: string User's first name
+     *      - middleName: string User's middle name
+     *      - lastName: string User's last name
+     *      - bio: string User's biography
+     *      - gender: Gender User's gender (enum)
+     *      - email: string User's email address
+     *      - contactNumber: string User's contact number
+     *      - profileLink: string User's profile link
+     *      - password: string User's password (will be hashed)
+     *      - jobTitles: array Contains 'toRemove' and 'toAdd' arrays for job titles
+     *
+     * @throws DatabaseException If a database error occurs
+     * @throws ValidationException If validation fails (e.g., missing ID or publicId)
+     * @return bool True on successful update, false otherwise
+     */
+    public static function save(array $data): bool
     {
-        return [];
+        $instance = new self();
+        try {
+            $instance->connection->beginTransaction();
+
+            $updateFields = [];
+            $params = [];
+            if (isset($data['id'])) {
+                $params[':id'] = $data['id'];
+            } elseif (isset($data['publicId'])) {
+                $params[':publicId'] = UUID::toBinary($data['publicId']);
+            } else {
+                throw new InvalidArgumentException('User ID or Public ID is required for update.');
+            }
+
+            if (isset($data['firstName'])) {
+                $updateFields[] = 'firstName = :firstName';
+                $params[':firstName'] = trimOrNull($data['firstName']);
+            }
+
+            if (isset($data['middleName'])) {
+                $updateFields[] = 'middleName = :middleName';
+                $params[':middleName'] = trimOrNull($data['middleName']);
+            }
+
+            if (isset($data['lastName'])) {
+                $updateFields[] = 'lastName = :lastName';
+                $params[':lastName'] = trimOrNull($data['lastName']);
+            }
+
+            if (isset($data['bio'])) {
+                $updateFields[] = 'bio = :bio';
+                $params[':bio'] = trimOrNull($data['bio']);
+            }
+
+            if (isset($data['gender'])) {
+                $updateFields[] = 'gender = :gender';
+                $params[':gender'] = $data['gender']->value;
+            }
+
+            if (isset($data['email'])) {
+                $updateFields[] = 'email = :email';
+                $params[':email'] = trimOrNull($data['email']);
+            }
+            
+            if (isset($data['contactNumber'])) {
+                $updateFields[] = 'contactNumber = :contactNumber';
+                $params[':contactNumber'] = trimOrNull($data['contactNumber']);
+            }
+
+            if (isset($data['profileLink'])) {
+                $updateFields[] = 'profileLink = :profileLink';
+                $params[':profileLink'] = trimOrNull($data['profileLink']);
+            }
+
+            if (isset($data['password'])) {
+                $updateFields[] = 'password = :password';
+                $params[':password'] = password_hash(trimOrNull($data['password']), PASSWORD_ARGON2ID);
+            }
+
+            if (!empty($updateFields)) {
+                $projectQuery = "UPDATE `user` SET " . implode(', ', $updateFields) . " WHERE id = " . (isset($params[':id']) ? ":id" : "(SELECT id FROM users WHERE publicId = :publicId)") . "";
+                $statement = $instance->connection->prepare($projectQuery);
+                $statement->execute($params);
+            }
+
+            if (isset($data['jobTitles'])) {
+                self::updateJobTitles(
+                    $params[':id'] ?? $data['publicId'],
+                    $data['jobTitles']['toRemove'],
+                    $data['jobTitles']['toAdd']
+                );
+            }
+
+            $instance->connection->commit();
+            return true;
+        } catch (PDOException $e) {
+            $instance->connection->rollBack();
+            throw new DatabaseException($e->getMessage());
+        } catch (InvalidArgumentException $e) {
+            $instance->connection->rollBack();
+            throw new ValidationException('Profile edit failed.', [$e->getMessage()]);
+        }
     }
 
-
-    public function save(): bool
+    /**
+     * Updates the job titles associated with a user by adding and/or deleting specified titles.
+     *
+     * This method performs the following operations:
+     * - Deletes job titles from the user if provided in $jobTitlesToDelete.
+     * - Adds job titles to the user if provided in $jobTitlesToAdd.
+     * - Handles both integer user IDs and UUIDs (publicId).
+     * - Skips execution if both $jobTitlesToDelete and $jobTitlesToAdd are empty or null.
+     * - Throws an exception if the user ID is invalid.
+     * - Uses prepared statements to prevent SQL injection.
+     *
+     * @param int|UUID $userId The user's unique identifier (integer ID or UUID).
+     * @param JobTitleContainer|null $jobTitlesToDelete Container of job titles to be deleted from the user (optional).
+     * @param JobTitleContainer|null $jobTitlesToAdd Container of job titles to be added to the user (optional).
+     *
+     * @throws InvalidArgumentException If an invalid user ID is provided.
+     * @throws DatabaseException If a database error occurs during the update.
+     * @return void
+     */
+    private static function updateJobTitles(int|UUID $userId, JobTitleContainer|null $jobTitlesToDelete = null, JobTitleContainer|null $jobTitlesToAdd = null): void
     {
-        return true;
+        if (is_int($userId) && $userId < 1) {
+            throw new InvalidArgumentException('Invalid user ID provided for job title update.');
+        }
+
+        if ($jobTitlesToDelete?->count() === 0 && $jobTitlesToAdd?->count() === 0) {
+            return;
+        }
+
+        $instance = new self();
+        try {        
+            if (count($jobTitlesToDelete) > 0) {
+                $deleteQuery = "
+                    DELETE FROM `userJobTitle`
+                    WHERE userId = " . (is_int($userId) ? ":userId" : "(SELECT id FROM users WHERE publicId = :userId)") . "
+                    AND title = :title
+                ";
+
+                foreach ($jobTitlesToDelete as $title) {
+                    $deleteStatement = $instance->connection->prepare($deleteQuery);
+                    $deleteStatement->execute([
+                        ':userId' => is_int($userId) ? $userId : UUID::toBinary($userId),
+                        ':title' => $title
+                    ]);
+                }
+            }
+
+            if (count($jobTitlesToAdd) > 0) {
+                $insertQuery = "
+                    INSERT INTO `userJobTitle` (userId, title)
+                    VALUES (
+                        " . (is_int($userId) ? ":userId" : "(SELECT id FROM users WHERE publicId = :userId)") . "   
+                        , :title
+                    )
+                ";
+
+                foreach ($jobTitlesToAdd as $title) {
+                    $insertStatement = $instance->connection->prepare($insertQuery);
+                    $insertStatement->execute([
+                        ':userId' => is_int($userId) ? $userId : UUID::toBinary($userId),
+                        ':title' => $title
+                    ]);
+                }
+            }
+
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
+        }
     }
 
-    public function delete(): bool
+    /**
+     * Deletes a phase entity.
+     *
+     * This method is currently not implemented as there is no use case for deleting a phase.
+     * Always returns false.
+     * 
+     * @param mixed $data Data that would be used to delete a phase (unused)
+     *
+     * @return bool Always returns false to indicate deletion is not supported.
+     */
+    public static function delete(mixed $data): bool
     {
-        return true;
+        // Not implemented (No use case)
+        return false;
     }
 }

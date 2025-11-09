@@ -22,6 +22,7 @@ class JobTitleContainer extends Container
         if (!is_string($jobTitle)) {
             throw new InvalidArgumentException('Only String instances can be added to JobTitlesContainer.');
         }
+
         $this->items[] = $jobTitle;
     }
 
@@ -36,6 +37,14 @@ class JobTitleContainer extends Container
             array_splice($this->items, $index, 1);
         }
     }
+
+        public function contains($item): bool
+        {
+            if (!is_string($item)) {
+                throw new InvalidArgumentException('Only String instances can be checked in JobTitleContainer.');
+            }
+            return in_array($item, $this->items, true);
+        }
 
     /**
      * Creates a new JobTitleContainer instance from an array of data.

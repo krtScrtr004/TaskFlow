@@ -89,6 +89,7 @@
 	height: fit-content;
 	max-height: 35rem;
 	width: 23rem;
+	margin-top: 1.5rem;
 	gap: 0.5rem;
 }
 
@@ -118,7 +119,9 @@
 .phase-list-card .phase-description {
 	font-size: 0.9rem;
 	font-weight: 300;
-	max-width: 40ch;
+	max-width: 90ch;
+	margin-top: 0.3rem;
+	line-height: 1.6rem;
 }
 
 .phase-list-card .phase-dates {

@@ -5,43 +5,57 @@ import { Loader } from '../../render/loader.js'
 import { Notification } from '../../render/notification.js'
 import { validateInputs, userValidationRules } from '../../utility/validator.js'
 import { debounceAsync } from '../../utility/debounce.js'
+import { handleException } from '../../utility/handle-exception.js'
 
 let isLoading = false
 
 const registerForm = document.querySelector('#register_form')
-const registerButton = registerForm?.querySelector('#register_button')
-if (registerButton) {
-    registerButton.addEventListener('click', e => debounceAsync(submit(e), 300))
-} else {
-    console.error('Register button not found.')
-    Dialog.somethingWentWrong()
-}
-
-if (registerForm) {
-    registerForm.addEventListener('submit', e => debounceAsync(submit(e), 300))
-} else {
+if (!registerForm) {
     console.error('Register form not found.')
     Dialog.somethingWentWrong()
 }
 
+registerForm?.addEventListener('submit', e => debounceAsync(submit(e), 300))
+
+const registerButton = registerForm?.querySelector('#register_button')
+if (!registerButton) {
+    console.error('Register button not found.')
+    Dialog.somethingWentWrong()
+}
+
+registerButton?.addEventListener('click', e => debounceAsync(submit(e), 300))
+
+/**
+ * Handles the registration form submission event.
+ *
+ * This function collects user input from the registration form, validates the inputs,
+ * displays a loading indicator, sends the data to the backend, and handles the response.
+ * On successful registration, it shows a notification and redirects the user to the home page.
+ * On error, it displays an error notification.
+ *
+ * @async
+ * @param {Event} e The form submission event.
+ * 
+ * @throws {Error} If one or more required form inputs are not found in the DOM.
+ *
+ * @returns {Promise<void>} Resolves when the registration process is complete.
+ */
 async function submit(e) {
     e.preventDefault()
 
+    // Retrieve input fields from the form
     const firstNameInput = registerForm.querySelector('#register_first_name')
     const middleNameInput = registerForm.querySelector('#register_middle_name')
     const lastNameInput = registerForm.querySelector('#register_last_name')
     const genderInput = registerForm.querySelector('input[name="gender"]:checked')
-    const dayOfBirthInput = registerForm.querySelector('#day_of_birth')
-    const monthOfBirthInput = registerForm.querySelector('#month_of_birth')
-    const yearOfBirthInput = registerForm.querySelector('#year_of_birth')
+    const birthDateInput = registerForm.querySelector('#register_birth_date')
     const jobTitlesInput = registerForm.querySelector('#register_job_titles')
     const contactInput = registerForm.querySelector('#register_contact')
     const emailInput = registerForm.querySelector('#register_email')
     const passwordInput = registerForm.querySelector('#register_password')
     const roleInput = registerForm.querySelector('input[name="role"]:checked')
     if (!firstNameInput || !middleNameInput || !lastNameInput || !genderInput ||
-        !dayOfBirthInput || !monthOfBirthInput || !yearOfBirthInput ||
-        !jobTitlesInput || !emailInput || !passwordInput || !roleInput) {
+        !birthDateInput || !jobTitlesInput || !emailInput || !passwordInput || !roleInput) {
         throw new Error('One or more form inputs not found.')
     }
 
@@ -50,9 +64,7 @@ async function submit(e) {
         middleName: middleNameInput.value.trim(),
         lastName: lastNameInput.value.trim(),
         gender: genderInput.value.trim(),
-        birthDate: new Date(
-            `${yearOfBirthInput.value.trim()}-${monthOfBirthInput.value.trim().padStart(2, '0')}-${dayOfBirthInput.value.trim().padStart(2, '0')}`
-        ),
+        birthDate: birthDateInput.value.trim(),
         jobTitles: jobTitlesInput.value.trim(),
         contactNumber: contactInput.value.trim(),
         email: emailInput.value.trim(),
@@ -60,27 +72,46 @@ async function submit(e) {
         role: roleInput.value.trim()
     }
 
-    if (!validateInputs(inputs, userValidationRules())) return
+    // Validate inputs
+    if (!validateInputs(inputs, userValidationRules())) {
+        return
+    }
 
     Loader.patch(registerButton.querySelector('.text-w-icon'))
     try {
         await sendToBackend(...Object.values(inputs))
 
         const delay = 1500
-        Notification.success('Registration successful!', delay)
         setTimeout(() => window.location.href = '/TaskFlow/home', delay)
+        Notification.success('Registration successful!', delay)
     } catch (error) {
-        console.error('Error during register:', error)
-        if (error?.errors) {
-            errorListDialog(error?.message, error.errors)
-        } else {
-            Dialog.somethingWentWrong()
-        }
+        handleException(error, `Error during register: ${error}`)
     } finally {
         Loader.delete()
     }
 }
 
+/**
+ * Sends user registration data to the backend for account creation.
+ *
+ * This function performs client-side validation on the provided user details before sending them
+ * to the backend API endpoint for registration. It prevents duplicate submissions by checking
+ * the loading state, and throws errors for missing or invalid required fields.
+ *
+ * @param {string} firstName User's first name (required)
+ * @param {string} middleName User's middle name (optional)
+ * @param {string} lastName User's last name (required)
+ * @param {string} gender User's gender (required)
+ * @param {string} birthDate User's birth date in ISO format or a valid date string (required)
+ * @param {string} jobTitles User's job titles (optional)
+ * @param {string} contactNumber User's contact number (required)
+ * @param {string} email User's email address (required)
+ * @param {string} password User's password (required)
+ * @param {string} role User's role (required)
+ *
+ * @throws {Error} If any required field is missing or invalid, or if a request is already in progress.
+ * @returns {Promise<void>} Resolves when the registration request completes successfully.
+ */
 async function sendToBackend(
     firstName,
     middleName,
@@ -100,36 +131,44 @@ async function sendToBackend(
         }
         isLoading = true
 
-        if (!firstName || firstName.trim() === '')
+        if (!firstName || firstName.trim() === '') {
             throw new Error('First name is required.')
+        }
 
-        if (!lastName || lastName.trim() === '')
+        if (!lastName || lastName.trim() === '') {
             throw new Error('Last name is required.')
+        }
 
-        if (!gender || gender.trim() === '')
+        if (!gender || gender.trim() === '') {
             throw new Error('Gender is required.')
+        }
 
-        if (!birthDate || isNaN(new Date(birthDate).getTime()))
+        if (!birthDate || isNaN(new Date(birthDate).getTime())) {
             throw new Error('Valid date of birth is required.')
+        }
 
-        if (!contactNumber || contactNumber.trim() === '')
+        if (!contactNumber || contactNumber.trim() === '') {
             throw new Error('Contact number is required.')
+        }
 
-        if (!email || email.trim() === '')
+        if (!email || email.trim() === '') {
             throw new Error('Email is required.')
+        }
 
-        if (!password || password.trim() === '')
+        if (!password || password.trim() === '') {
             throw new Error('Password is required.')
+        }
 
-        if (!role || role.trim() === '')
+        if (!role || role.trim() === '') {
             throw new Error('Role is required.')
+        }
 
         await Http.POST('auth/register', {
             firstName: firstName.trim(),
             middleName: middleName?.trim(),
             lastName: lastName.trim(),
             gender: gender.trim(),
-            birthDate: new Date(birthDate).toISOString(),
+            birthDate: birthDate.trim(),
             jobTitles: jobTitles?.trim(),
             contactNumber: contactNumber.trim(),
             email: email.trim(),

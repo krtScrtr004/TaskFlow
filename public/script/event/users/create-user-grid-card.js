@@ -24,11 +24,12 @@ export function createUserGridCard(user) {
     primaryInfo.className = 'user-primary-info flex-row flex-child-center-h'
     
     const profileImg = document.createElement('img')
-    profileImg.className = 'circle fit-contain'
+    profileImg.className = 'user-profile circle fit-cover'
     profileImg.src = profileLink
     profileImg.alt = name
     profileImg.title = name
-    profileImg.height = 32
+    profileImg.loading = 'lazy'
+    profileImg.height = 40
     
     const nameContainer = document.createElement('div')
     nameContainer.className = 'flex-col'
@@ -71,18 +72,74 @@ export function createUserGridCard(user) {
     statistics.className = 'user-statistics flex-col'
         
     if (isUsersPage) {
-        const completedProjects = document.createElement('p')
-        completedProjects.textContent = `Completed Projects: ${user.completedProjects || 0}`
-        statistics.appendChild(completedProjects)
+        // Total Projects
+        const totalProjectsDiv = document.createElement('div')
+        totalProjectsDiv.className = 'text-w-icon'
+        
+        const totalProjectsIcon = document.createElement('img')
+        totalProjectsIcon.src = 'asset/image/icon/project_w.svg'
+        totalProjectsIcon.alt = 'Total Project'
+        totalProjectsIcon.title = 'Total Project'
+        totalProjectsIcon.height = 20
+        
+        const totalProjectsText = document.createElement('p')
+        totalProjectsText.textContent = `Total Projects: ${user.totalProjects || 0}`
+        
+        totalProjectsDiv.appendChild(totalProjectsIcon)
+        totalProjectsDiv.appendChild(totalProjectsText)
+        statistics.appendChild(totalProjectsDiv)
+        
+        // Completed Projects
+        const completedProjectsDiv = document.createElement('div')
+        completedProjectsDiv.className = 'text-w-icon'
+        
+        const completedProjectsIcon = document.createElement('img')
+        completedProjectsIcon.src = 'asset/image/icon/complete_w.svg'
+        completedProjectsIcon.alt = 'Completed Projects'
+        completedProjectsIcon.title = 'Completed Projects'
+        completedProjectsIcon.height = 20
+        
+        const completedProjectsText = document.createElement('p')
+        completedProjectsText.textContent = `Completed Projects: ${user.completedProjects || 0}`
+        
+        completedProjectsDiv.appendChild(completedProjectsIcon)
+        completedProjectsDiv.appendChild(completedProjectsText)
+        statistics.appendChild(completedProjectsDiv)
     } else {
-        const completedTasks = document.createElement('p')
-        completedTasks.textContent = `Completed Tasks: ${user.completedTasks || 0}`
-        statistics.appendChild(completedTasks)
+        // Total Tasks
+        const totalTasksDiv = document.createElement('div')
+        totalTasksDiv.className = 'text-w-icon'
+        
+        const totalTasksIcon = document.createElement('img')
+        totalTasksIcon.src = 'asset/image/icon/task_w.svg'
+        totalTasksIcon.alt = 'Total Task'
+        totalTasksIcon.title = 'Total Task'
+        totalTasksIcon.height = 20
+        
+        const totalTasksText = document.createElement('p')
+        totalTasksText.textContent = `Total Tasks: ${user.totalTasks || 0}`
+        
+        totalTasksDiv.appendChild(totalTasksIcon)
+        totalTasksDiv.appendChild(totalTasksText)
+        statistics.appendChild(totalTasksDiv)
+        
+        // Completed Tasks
+        const completedTasksDiv = document.createElement('div')
+        completedTasksDiv.className = 'text-w-icon'
+        
+        const completedTasksIcon = document.createElement('img')
+        completedTasksIcon.src = 'asset/image/icon/complete_w.svg'
+        completedTasksIcon.alt = 'Total Task'
+        completedTasksIcon.title = 'Total Task'
+        completedTasksIcon.height = 20
+        
+        const completedTasksText = document.createElement('p')
+        completedTasksText.textContent = `Completed Tasks: ${user.completedTasks || 0}`
+        
+        completedTasksDiv.appendChild(completedTasksIcon)
+        completedTasksDiv.appendChild(completedTasksText)
+        statistics.appendChild(completedTasksDiv)
     }
-    
-    const performanceScore = document.createElement('p')
-    performanceScore.textContent = `Performance: ${user.performance || 0}%`
-    statistics.appendChild(performanceScore)
     
     card.appendChild(statistics)
     
@@ -105,6 +162,8 @@ export function createUserGridCard(user) {
     emailIcon.height = 20
     
     const emailText = document.createElement('p')
+    emailText.className = 'single-line-ellipsis'
+    emailText.title = email
     emailText.textContent = `Email: ${email}`
     
     emailDiv.appendChild(emailIcon)
@@ -121,6 +180,8 @@ export function createUserGridCard(user) {
     contactIcon.height = 20
     
     const contactText = document.createElement('p')
+    contactText.className = 'single-line-ellipsis'
+    contactText.title = contact
     contactText.textContent = `Contact: ${contact}`
     
     contactDiv.appendChild(contactIcon)

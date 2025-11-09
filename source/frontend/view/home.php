@@ -47,6 +47,7 @@ use App\Enumeration\Role;
         } ?>
     </main>
 
+    <script type="module" src="<?= EVENT_PATH . 'logout.js' ?>" defer></script>
     <?php if (isset($project)): ?>
         <script src="<?= PUBLIC_PATH . 'chart.umd.min.js' ?>"></script>
 

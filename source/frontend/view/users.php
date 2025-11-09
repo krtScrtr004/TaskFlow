@@ -37,22 +37,18 @@ if (!isset($users))
         <section>
             <?= searchBar([
                 'Role' => [
-                    'All Roles',
                     Role::PROJECT_MANAGER->getDisplayName(),
                     Role::WORKER->getDisplayName()
                 ],
                 'Status' => [
-                    'All Statuses',
                     WorkerStatus::ASSIGNED->getDisplayName(),
                     WorkerStatus::UNASSIGNED->getDisplayName(),
-                    // WorkerStatus::ON_LEAVE->getDisplayName(),
-                    WorkerStatus::TERMINATED->getDisplayName()
                 ]
             ]) ?>
         </section>
 
         <!-- User Grid -->
-        <section class="user-grid-container" data-projectid="<?= $projectId ?>">
+        <section class="user-grid-container">
 
             <section class="user-grid grid">
                 <?php foreach ($users as $user) {
@@ -63,10 +59,17 @@ if (!isset($users))
             <!-- Sentinel -->
             <div class="sentinel"></div>
 
+            <div
+                class="no-users-wall no-content-wall <?= count($users) > 0 ? 'no-display' : 'flex-col' ?>">
+                <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No users available" title="No users available"
+                    height="70">
+                <h3 class="center-text">No users available found.</h3>
+            </div>
         </section>
     </main>
 
     <script type="module" src="<?= EVENT_PATH . 'break-text-fallback.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'logout.js' ?>" defer></script>
 
     <script type="module" src="<?= EVENT_PATH . 'users' . DS . 'search.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'users' . DS . 'infinite-scroll.js' ?>" defer></script>

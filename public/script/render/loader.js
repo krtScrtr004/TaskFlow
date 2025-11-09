@@ -1,3 +1,44 @@
+/**
+ * Loader utility for rendering and managing loading indicators within DOM elements.
+ *
+ * Provides methods to display different types of loaders (full, lead, trail) and to patch
+ * existing elements or text nodes with a loader, restoring the original content when done.
+ *
+ * @namespace Loader
+ *
+ * @function full
+ * Renders a full overlay loader inside the specified parent element, covering its entire area.
+ * 
+ * @param {HTMLElement} parentElem The parent element to overlay the loader on.
+ *
+ * @function lead
+ * Renders a loader at the leading (top) position of the specified parent element.
+ * 
+ * @param {HTMLElement} parentElem The parent element to display the loader in.
+ *
+ * @function trail
+ * Renders a loader at the trailing (bottom) position of the specified parent element.
+ * 
+ * @param {HTMLElement} parentElem The parent element to display the loader in.
+ *
+ * @function patch
+ * Replaces an element or text node with a loader, preserving the original content and restoring it when the loader is removed.
+ * 
+ * @param {HTMLElement|Text} elementToPatch The element or text node to patch with a loader.
+ *   - If patching a text node, use the parent element's firstChild as the argument.
+ *   - If patching an element, pass the element directly.
+ *
+ * @function delete
+ * Removes the loader from the parent element and restores any patched content to its original state.
+ *
+ * @private
+ * @function render
+ * Internal method to insert loader HTML into the parent element at the specified position.
+ * 
+ * @param {HTMLElement} parentElem The parent element to render the loader in.
+ * @param {string} loaderHtml The HTML string for the loader.
+ * @param {InsertPosition} position The position relative to the parent element where the loader should be inserted.
+ */
 export const Loader = (() => {
     let parent;
     let patchedElem = null
@@ -50,6 +91,7 @@ export const Loader = (() => {
          * the element as the argument
          */
         patch: function (elementToPatch) {
+            // If patching a text node, use the parent element's firstChild as the argument.
             patchedElem = {
                 type: elementToPatch instanceof Element ? 'element' : 'text',
                 elem: elementToPatch,
@@ -59,6 +101,7 @@ export const Loader = (() => {
             }
 
             let elemHeight = 0
+            // If patching an element, use the element directly.
             if (patchedElem.type === 'element') {
                 elemHeight = elementToPatch.clientHeight
             } else {
@@ -86,6 +129,7 @@ export const Loader = (() => {
                         <span class="loader" style="height:${elemHeight}px; width:${elemHeight}px"></span>
                 </div>`
 
+            // Patch the element with loader
             if (patchedElem.type === 'element') {
                 patchedElem.style = elementToPatch.style.display
                 elementToPatch.style.display = 'none'
@@ -101,6 +145,7 @@ export const Loader = (() => {
             createdLoader?.remove()
 
             if (patchedElem) {
+                // Restore the patched element
                 if (patchedElem.type === 'element') {
                     patchedElem.elem.style.display = patchedElem.style
                 } else {

@@ -15,10 +15,13 @@ use App\Validator\UserValidator;
 use App\Validator\UuidValidator;
 use App\Validator\UrlValidator;
 use DateTime;
+use Exception;
+use InvalidArgumentException;
+use Ramsey\Uuid\Exception\InvalidArgumentException as ExceptionInvalidArgumentException;
 
 require_once ENUM_PATH . 'role.php';
 
-class User extends UserModel implements Entity
+class User implements Entity
 {
     private ?int $id;
     private ?UUID $publicId;
@@ -282,11 +285,14 @@ class User extends UserModel implements Entity
     /**
      * Gets the additional information associated with the user.
      *
-     * @return array An array containing any additional user information
+     * @param string $key Optional key to retrieve specific additional info
+     * @return mixed Array containing all additional user information, specific info if key is provided, or null if key not found
      */
-    public function getAdditionalInfo(): array
+    public function getAdditionalInfo(string $key = ''): mixed
     {
-        return $this->additionalInfo;
+        return trimOrNull($key) 
+            ? ($this->additionalInfo[$key] ?? null) 
+            : $this->additionalInfo;
     }
 
     // SETTERS
@@ -569,6 +575,13 @@ class User extends UserModel implements Entity
         $this->additionalInfo[$key] = $value;
     }
 
+    public function removeAdditionalInfo(string $key): void
+    {
+        if (isset($this->additionalInfo[$key])) {
+            unset($this->additionalInfo[$key]);
+        }
+    }
+
     /**
      * Creates a User instance from an array of data with partial information.
      *
@@ -626,9 +639,11 @@ class User extends UserModel implements Entity
 
         // Handle UUID conversion
         if (isset(($data['publicId'])) && !($data['publicId'] instanceof UUID)) {
-            $defaults['publicId'] = is_string($data['publicId'])
-                ? UUID::fromString(trimOrNull($data['publicId']))
-                : null;
+            try {
+                $defaults['publicId'] = UUID::fromString($data['publicId']);
+            } catch (ExceptionInvalidArgumentException $e) {
+                $defaults['publicId'] = UUID::fromBinary($data['publicId']);
+            }
         }
 
         // Handle DateTime conversions
@@ -743,7 +758,7 @@ class User extends UserModel implements Entity
     public function toArray(): array
     {
         return [
-            'id' => $this->publicId,
+            'id' => UUID::toString($this->publicId),
             'firstName' => $this->firstName,
             'middleName' => $this->middleName,
             'lastName' => $this->lastName,

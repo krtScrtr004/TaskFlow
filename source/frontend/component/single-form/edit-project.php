@@ -1,36 +1,41 @@
 <?php
 
+use App\Core\UUID;
 use App\Enumeration\WorkStatus;
 use App\Model\ProjectModel;
 
-$projectId = $args['projectId'] ?? null;
-if (!$projectId) {
+$projectId = isset($args['projectId']) 
+    ? UUID::fromString($args['projectId']) 
+    : null;if (!$projectId) {
     throw new ErrorException('Project ID is required to edit a project.');
 }
 
-// TODO: Fetch project data from the database using the provided project ID
-$projects = ProjectModel::all();
-$project = $projects->getItems()[0];
-if (!$project)
+// Fetch project data from the database using the provided project ID
+$project = ProjectModel::findFull(
+    $projectId,
+    ['phases' => true]
+);
+if (!$project) {
     throw new ErrorException('Project data is required to edit a project.');
+}
 
 $projectData = [
-    'id' => htmlspecialchars($project->getPublicId()),
-    'name' => htmlspecialchars($project->getName()),
-    'description' => htmlspecialchars($project->getDescription()),
-    'budget' => htmlspecialchars(formatBudgetToPesos($project->getBudget())),
-    'startDate' => $project->getStartDateTime()->format('Y-m-d'),
-    'completionDate' => $project->getCompletionDateTime()->format('Y-m-d'),
-    'status' => WorkStatus::PENDING,
-    'phases' => $project->getPhases()
+    'id'                => htmlspecialchars(UUID::toString($project->getPublicId())),
+    'name'              => htmlspecialchars($project->getName()),
+    'description'       => htmlspecialchars($project->getDescription()),
+    'budget'            => htmlspecialchars($project->getBudget()),
+    'startDate'         => htmlspecialchars(formatDateTime($project->getStartDateTime(), 'Y-m-d')),
+    'completionDate'    => htmlspecialchars(formatDateTime($project->getCompletionDateTime(), 'Y-m-d')),
+    'status'            => WorkStatus::PENDING,
+    'phases'            => $project->getPhases()
 ];
 
 // Prepare UI state flags
 $uiState = [
-    'projectHasStarted' => $projectData['status'] === WorkStatus::PENDING ? '' : 'disabled',
-    'projectIsCompleted' => in_array($projectData['status'], [WorkStatus::COMPLETED, WorkStatus::CANCELLED]) ? 'disabled' : '',
-    'canEdit' => !in_array($projectData['status'], [WorkStatus::COMPLETED, WorkStatus::CANCELLED]),
-    'showWarning' => in_array($projectData['status'], [WorkStatus::COMPLETED, WorkStatus::CANCELLED])
+    'projectHasStarted'     => $projectData['status'] === WorkStatus::PENDING ? '' : 'disabled',
+    'projectIsCompleted'    => in_array($projectData['status'], [WorkStatus::COMPLETED, WorkStatus::CANCELLED]) ? 'disabled' : '',
+    'canEdit'               => !in_array($projectData['status'], [WorkStatus::COMPLETED, WorkStatus::CANCELLED]),
+    'showWarning'           => in_array($projectData['status'], [WorkStatus::COMPLETED, WorkStatus::CANCELLED])
 ];
 
 require_once COMPONENT_PATH . 'template/add-phase-modal.php';
@@ -47,10 +52,10 @@ require_once COMPONENT_PATH . 'template/add-phase-modal.php';
             </div>
         <?php endif; ?>
 
-        <div class="title flex-row flex-child-center-h">
+        <div class="title flex-row flex-child-center-h flex-wrap">
             <div class="project-name text-w-icon">
                 <img src="<?= ICON_PATH . 'project_w.svg' ?>" alt="<?= $projectData['name'] ?>" title="<?= $projectData['name'] ?>" height="40">
-                <h1><?= $projectData['name'] ?></h1>
+                <h1 class="single-line-ellipsis" title="<?= $projectData['name'] ?>"><?= $projectData['name'] ?></h1>
             </div>
 
             <p class="project-id">
@@ -63,6 +68,7 @@ require_once COMPONENT_PATH . 'template/add-phase-modal.php';
 
     <!-- Editable Details Form -->
     <form id="editable_project_details" class="flex-col" action="" method="POST" data-projectId="<?= $projectData['id'] ?>">
+        <?= hiddenCsrfInput() ?>
 
         <!-- Main Details Field -->
         <fieldset class="main-details-field flex-col" <?= $uiState['projectIsCompleted'] ?>>
@@ -75,7 +81,8 @@ require_once COMPONENT_PATH . 'template/add-phase-modal.php';
                         <p>Description</p>
                     </div>
                 </label>
-                <textarea name="project-description" id="project_description" rows="5" cols="10"><?= $projectData['description'] ?></textarea>
+
+                <textarea name="project-description" id="project_description" rows="5" cols="10" min="<?= LONG_TEXT_MIN ?>" max="<?= LONG_TEXT_MAX ?>"><?= $projectData['description'] ?></textarea>
             </div>
 
             <!-- Project Secondary Info -->
@@ -88,8 +95,9 @@ require_once COMPONENT_PATH . 'template/add-phase-modal.php';
                             <p>Budget</p>
                         </div>
                     </label>
+
                     <input type="number" name="project_budget" id="project_budget" value="<?= $projectData['budget'] ?>"
-                        min="0" max="9999999999" <?= $uiState['projectHasStarted'] ?> required>
+                        min="<?= BUDGET_MIN ?>" max="<?= BUDGET_MAX ?>" <?= $uiState['projectHasStarted'] ?> required>
                 </div>
 
                 <!-- Start Date -->
@@ -100,6 +108,7 @@ require_once COMPONENT_PATH . 'template/add-phase-modal.php';
                             <p>Start Date</p>
                         </div>
                     </label>
+
                     <input type="date" name="project-start-date" id="project_start_date"
                         value="<?= $projectData['startDate'] ?>" <?= $uiState['projectHasStarted'] ?> required>
                 </div>
@@ -112,6 +121,7 @@ require_once COMPONENT_PATH . 'template/add-phase-modal.php';
                             <p>Completion Date</p>
                         </div>
                     </label>
+
                     <input type="date" name="project-completion-date" id="project_completion_date"
                         value="<?= $projectData['completionDate'] ?>" required>
                 </div>
@@ -122,7 +132,7 @@ require_once COMPONENT_PATH . 'template/add-phase-modal.php';
         <hr>
 
         <!-- Phase Details -->
-        <fieldset class="phase-details flex-col" <?= $uiState['projectIsCompleted'] ?>>
+        <fieldset id="phase_fieldset" class="phase-details flex-col" <?= $uiState['projectIsCompleted'] ?>>
             <!-- Heading -->
             <section class="heading">
                 <h3>Project Phases</h3>
@@ -132,17 +142,17 @@ require_once COMPONENT_PATH . 'template/add-phase-modal.php';
             <section class="phases flex-col">
                 <?php foreach ($projectData['phases'] as $phase):
                     $phaseData = [
-                        'id' => htmlspecialchars($phase->getPublicId()),
-                        'name' => htmlspecialchars($phase->getName()),
-                        'description' => htmlspecialchars($phase->getDescription()),
-                        'startDate' => $phase->getStartDateTime()->format('Y-m-d'),
-                        'completionDate' => $phase->getCompletionDateTime()->format('Y-m-d'),
-                        'status' => $phase->getStatus()
+                        'id'            => htmlspecialchars(UUID::toString($phase->getPublicId())),
+                        'name'          => htmlspecialchars($phase->getName()),
+                        'description'   => htmlspecialchars($phase->getDescription()),
+                        'startDate'     => htmlspecialchars(formatDateTime($phase->getStartDateTime(), 'Y-m-d')),
+                        'completionDate'=> htmlspecialchars(formatDateTime($phase->getCompletionDateTime(), 'Y-m-d')),
+                        'status'        => $phase->getStatus()
                     ];
 
                     $phaseUiState = [
-                        'hasStarted' => $phaseData['status'] === WorkStatus::PENDING ? '' : 'disabled',
-                        'isCompleted' => in_array($phaseData['status'], [WorkStatus::COMPLETED, WorkStatus::CANCELLED]) ? 'disabled' : ''
+                        'hasStarted'    => $phaseData['status'] === WorkStatus::PENDING ? '' : 'disabled',
+                        'isCompleted'   => in_array($phaseData['status'], [WorkStatus::COMPLETED, WorkStatus::CANCELLED]) ? 'disabled' : ''
                     ];
                 ?>
 
@@ -156,7 +166,7 @@ require_once COMPONENT_PATH . 'template/add-phase-modal.php';
                                     <img src="<?= ICON_PATH . 'phase_w.svg' ?>" alt="<?= $phaseData['name'] ?>" title="<?= $phaseData['name'] ?>"
                                         height="22">
 
-                                    <h3 class="phase-name wrap-text"><?= $phaseData['name'] ?></h3>
+                                    <h3 class="phase-name wrap-text single-line-ellipsis" title="<?= $phaseData['name'] ?>"><?= $phaseData['name'] ?></h3>
                                 </div>
 
                                 <?= WorkStatus::badge($phaseData['status']) ?>
@@ -182,8 +192,9 @@ require_once COMPONENT_PATH . 'template/add-phase-modal.php';
                                         <p>Description</p>
                                     </div>
                                 </label>
+
                                 <textarea class="phase-description" name="<?= $phaseData['name'] ?>_description" id="<?= $phaseData['name'] ?>_description" rows="5"
-                                    cols="10" <?= $phaseUiState['isCompleted'] ?>><?= $phaseData['description'] ?></textarea>
+                                    cols="10" min="<?= LONG_TEXT_MIN ?>" max="<?= LONG_TEXT_MAX ?>" <?= $phaseUiState['isCompleted'] ?>><?= $phaseData['description'] ?></textarea>
                             </div>
 
                             <!-- Phase Secondary Info -->
@@ -199,6 +210,7 @@ require_once COMPONENT_PATH . 'template/add-phase-modal.php';
                                             <p>Start Date</p>
                                         </div>
                                     </label>
+
                                     <input type="date" class="phase-start-datetime" name="<?= $phaseData['name'] ?>_start_date" id="<?= $phaseData['name'] ?>_start_date"
                                         value="<?= $phaseData['startDate'] ?>" <?= $phaseUiState['hasStarted'] ?> required>
                                 </div>
@@ -213,6 +225,7 @@ require_once COMPONENT_PATH . 'template/add-phase-modal.php';
                                             <p>Completion Date</p>
                                         </div>
                                     </label>
+                                    
                                     <input type="date" class="phase-completion-datetime" name="<?= $phaseData['name'] ?>_completion_date" id="<?= $phaseData['name'] ?>_completion_date"
                                         value="<?= $phaseData['completionDate'] ?>" <?= $phaseUiState['isCompleted'] ?> required>
                                 </div>

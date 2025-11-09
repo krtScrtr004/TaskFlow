@@ -26,7 +26,8 @@
                         <p>Name</p>
                     </div>
                 </label>
-                <input type="text" name="phase_name" id="phase_name" min="1" max="255" placeholder="Phase Name" required>
+
+                <input type="text" name="phase_name" id="phase_name" min="<?= NAME_MIN ?>" max="<?= NAME_MAX ?>" placeholder="Phase Name" required>
             </div>
 
             <!-- Description -->
@@ -39,7 +40,8 @@
                         <p>Description</p>
                     </div>
                 </label>
-                <textarea name="phase_description" id="phase_description" rows="4" placeholder="Phase Description (optional)"></textarea>
+
+                <textarea name="phase_description" id="phase_description" rows="4" min="<?= LONG_TEXT_MIN ?>" max="<?= LONG_TEXT_MAX ?>" placeholder="Phase Description (optional)"></textarea>
             </div>
 
             <div class="phase-secondary-info flex-row">
@@ -53,8 +55,9 @@
                             <p>Start Date</p>
                         </div>
                     </label>
+
                     <input type="date" name="phase_start_datetime" id="phase_start_datetime"
-                        value="<?= (new DateTime())->format('Y-m-d') ?>" required>
+                        value="<?= formatDateTime(new DateTime(), 'Y-m-d') ?>" required>
                 </div>
 
                 <!-- Completion Date -->
@@ -67,8 +70,9 @@
                             <p>Completion Date</p>
                         </div>
                     </label>
+                    
                     <input type="date" name="phase_completion_datetime" id="phase_completion_datetime"
-                        value="<?= (new DateTime())->format('Y-m-d') ?>" required>
+                        value="<?= formatDateTime(new DateTime(), 'Y-m-d') ?>" required>
                 </div>
             </div>
 

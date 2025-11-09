@@ -1,15 +1,10 @@
-<p class="center-text"><?= $component['description']; ?></p>
-
 <form id="change_password_form" class="flex-col" action="" method="POST">
-    <input 
-        class="validate-password"
-        type="text" 
-        name="password" 
-        id="password" 
-        placeholder="Enter your password here" 
-        min="8" 
-        max="255"
-        required>
+    <p class="center-text"><?= $component['description']; ?></p>
+
+    <?= hiddenCsrfInput() ?>
+
+    <input class="validate-password" type="text" name="password" id="password" placeholder="Enter your password here"
+        min="<?= PASSWORD_MIN ?>" max="<?= PASSWORD_MAX ?>" required>
 
     <!-- Password validator guide -->
     <ul class="flex-col password-list-validator">
@@ -19,5 +14,5 @@
         <li id="characters">Only letters, numbers, and common punctuation (! @ ' . -) can be used</li>
     </ul>
 
-    <button class="blue-bg white-text" type="submit">SUBMIT</button>
+    <button id="change_password_button" class="blue-bg white-text" type="submit">SUBMIT</button>
 </form>

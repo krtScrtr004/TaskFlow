@@ -1,6 +1,9 @@
 TODO
 
+*.env
+
 node_modules/
 vendor/
 
+log/
 example/

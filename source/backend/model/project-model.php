@@ -3,7 +3,11 @@
 namespace App\Model;
 
 use App\Abstract\Model;
+use App\Container\JobTitleContainer;
+use App\Container\PhaseContainer;
 use App\Container\TaskContainer;
+use App\Dependent\Phase;
+use App\Enumeration\TaskPriority;
 use App\Model\UserModel;
 use App\Model\TaskModel;
 use App\Core\UUID;
@@ -17,11 +21,13 @@ use App\Dependent\Worker;
 use App\Enumeration\Role;
 use App\Core\Me;
 use App\Core\Connection;
+use App\Enumeration\WorkerStatus;
 use App\Exception\ValidationException;
 use App\Exception\DatabaseException;
 use App\Validator\UuidValidator;
 use InvalidArgumentException;
 use DateTime;
+use Exception;
 use PDOException;
 
 class ProjectModel extends Model
@@ -67,8 +73,26 @@ class ProjectModel extends Model
     {
         $instance = new self();
         try {
+            $queryString = "
+                SELECT 
+                    p.*,
+                    u.id AS managerId,
+                    u.publicId AS managerPublicId,
+                    u.firstName AS managerFirstName,
+                    u.middleName AS managerMiddleName,
+                    u.lastName AS managerLastName,
+                    u.gender AS managerGender,
+                    u.email AS managerEmail,
+                    u.profileLink AS managerProfileLink 
+                FROM 
+                    `project` AS p
+                INNER JOIN
+                    `user` AS u 
+                ON 
+                    p.managerId = u.id
+            ";
             $query = $instance->appendOptionsToFindQuery(
-                $instance->appendWhereClause("SELECT * FROM `project`", $whereClause), 
+                $instance->appendWhereClause($queryString, $whereClause), 
                 $options);
 
             $statement = $instance->connection->prepare($query);
@@ -81,7 +105,17 @@ class ProjectModel extends Model
 
             $projects = new ProjectContainer();
             foreach ($result as $row) {
-                $projects->add(Project::fromArray($row));
+                $row['manager'] = User::createPartial([
+                    'id'            => $row['managerId'],
+                    'publicId'      => UUID::fromBinary($row['managerPublicId']),
+                    'firstName'     => $row['managerFirstName'],
+                    'middleName'    => $row['managerMiddleName'],
+                    'lastName'      => $row['managerLastName'],
+                    'gender'        => $row['managerGender'],
+                    'email'         => $row['managerEmail'],
+                    'profileLink'   => $row['managerProfileLink'],
+                ]);
+                $projects->add(Project::createPartial($row));
             }
             return $projects;
         } catch (PDOException $e) {
@@ -89,100 +123,272 @@ class ProjectModel extends Model
         }
     }
 
-    public static function findFull(int $projectId, array $options = ['workerLimit' => 10,]): mixed
-    {
-        if ($projectId < 1) {
-            throw new InvalidArgumentException('Invalid project ID provided.');
-        }
-
+    /**
+     * Finds and retrieves a project with conditionally included related data.
+     *
+     * This method performs an optimized database query to fetch a project along with:
+     * - Project basic information and manager details with job titles (always included)
+     * - Project phases (optional, based on options array)
+     * - Project tasks (optional, based on options array)
+     * - Project workers with their job titles (optional, based on options array)
+     * 
+     * The method uses JSON aggregation in SQL to efficiently fetch related data in a single query.
+     * By default, only basic project and manager information is fetched. Additional related data
+     * (phases, tasks, workers) are only queried when explicitly requested through the options array,
+     * improving query performance when the full dataset is not needed.
+     *
+     * @param UUID $projectId The public UUID of the project to find
+     * @param array $options Optional configuration array with following keys:
+     *      - phases: bool (default: false) Include project phases if true
+     *      - tasks: bool (default: false) Include project tasks if true
+     *      - workers: bool (default: false) Include project workers if true
+     * 
+     * @return Project|null Returns a Project object with requested associated data if found, null if project doesn't exist
+     * 
+     * @throws DatabaseException If a database error occurs during query execution
+     */
+    public static function findFull(
+        UUID $projectId, 
+        array $options = [
+            'phases' => false,
+            'tasks' => false,
+            'workers' => false
+        ]
+    ): mixed {
         $instance = new self();
         try {
-            $query = "
-                SELECT 
-                    p.id AS projectId,
-                    p.publicId AS projectPublicId,
-                    p.name AS projectName,
-                    p.description AS projectDescription,
-                    p.budget AS projectBudget,
-                    p.status AS projectStatus,
-                    p.startDateTime AS projectStartDateTime,
-                    p.completionDateTime AS projectCompletionDateTime,
-                    p.actualCompletionDateTime AS projectActualCompletionDateTime,
-                    p.createdAt AS projectCreatedAt,
+            // Default options
+            $includePhases = $options['phases'] ?? false;
+            $includeTasks = $options['tasks'] ?? false;
+            $includeWorkers = $options['workers'] ?? false;
 
-                    JSON_OBJECT(
-                        'managerId', u.id,
-                        'managerPublicId', u.publicId,
-                        'managerFirstName', u.firstName,
-                        'managerMiddleName', u.middleName,
-                        'managerLastName', u.lastName,
-                        'managerEmail', u.email,
-                        'managerProfileLink', u.profileLink,
-                        'managerJobTitles', (
-                            SELECT JSON_ARRAYAGG(pjt.name)
-                            FROM `userJobTitle` AS pjt
-                            WHERE pjt.userId = u.id
-                        )
-                    ) AS projectManager,
-
-                    (
-                        SELECT JSON_ARRAYAGG(
-                            JSON_OBJECT(
-                                'workerId', pw.id,
-                                'workerPublicId', pw.publicId,
-                                'workerFirstName', pw.firstName,
-                                'workerMiddleName', pw.middleName,
-                                'workerLastName', pw.lastName,
-                                'workerEmail', pw.email,
-                                'workerProfileLink', pw.profileLink,
-                                'workerJobTitles', (
-                                    SELECT JSON_ARRAYAGG(pjt.name)
-                                    FROM `userJobTitle` AS pjt
-                                    WHERE pjt.userId = pw.id
-                                )
-                            )
-                            LIMIT " . $options['workerLimit'] .
-                ")
-                        FROM 
-                            `projectWorker` AS pw
-                        INNER JOIN 
-                            `user` AS u ON pw.userId = u.id
-                        WHERE 
-                            pw.projectId = p.id
-                        
-                    ) AS projectWorkers,
-
-                    (
-                        SELECT COUNT(*)
-                        FROM `projectTask` AS pt
-                        WHERE pt.projectId = p.id
-                        GROUP BY pt.status
-                    ) AS projectTaskStatusCounts,
-
-                    (
-                        SELECT COUNT(*)
-                        FROM `projectTask` AS pt
-                        WHERE pt.projectId = p.id
-                        GROUP BY pt.priority
-                    ) AS projectTaskPriorityCounts
+            // Build dynamic query parts
+            $selectFields = [
+                'p.id AS projectId',
+                'p.publicId AS projectPublicId',
+                'p.name AS projectName',
+                'p.description AS projectDescription',
+                'p.budget AS projectBudget',
+                'p.status AS projectStatus',
+                'p.startDateTime AS projectStartDateTime',
+                'p.completionDateTime AS projectCompletionDateTime',
+                'p.actualCompletionDateTime AS projectActualCompletionDateTime',
+                'p.createdAt AS projectCreatedAt',
                 
-                FROM 
-                    `project` AS p
-                INNER JOIN
-                    `user` AS u ON p.managerId = u.id
-                WHERE 
-                    p.id = :projectId
+                // Manager JSON object (always included)
+                "JSON_OBJECT(
+                    'managerId', m.id,
+                    'managerPublicId', HEX(m.publicId),
+                    'managerFirstName', m.firstName,
+                    'managerMiddleName', m.middleName,
+                    'managerLastName', m.lastName,
+                    'managerEmail', m.email,
+                    'managerProfileLink', m.profileLink,
+                    'managerGender', m.gender,
+                    'managerJobTitles', COALESCE(
+                        (
+                            SELECT CONCAT('[', GROUP_CONCAT(CONCAT('\"', mjt.title, '\"')), ']')
+                            FROM userJobTitle AS mjt
+                            WHERE mjt.userId = m.id
+                        ),
+                        '[]'
+                    )
+                ) AS projectManager"
+            ];
+
+            // Conditionally add phases subquery
+            if ($includePhases) {
+                $selectFields[] = "COALESCE(
+                    (
+                        SELECT CONCAT('[', GROUP_CONCAT(
+                            JSON_OBJECT(
+                                'phaseId', pp.id,
+                                'phasePublicId', HEX(pp.publicId),
+                                'phaseName', pp.name,
+                                'phaseDescription', pp.description,
+                                'phaseStatus', pp.status,
+                                'phaseStartDateTime', pp.startDateTime,
+                                'phaseCompletionDateTime', pp.completionDateTime
+                            )
+                        ), ']')
+                        FROM projectPhase pp
+                        WHERE pp.projectId = p.id
+                    ),
+                    '[]'
+                ) AS projectPhases";
+            }
+
+            // Conditionally add workers subquery
+            if ($includeWorkers) {
+                $selectFields[] = "COALESCE(
+                    (
+                        SELECT CONCAT('[', GROUP_CONCAT(
+                            JSON_OBJECT(
+                                'workerId', w.id,
+                                'workerPublicId', HEX(w.publicId),
+                                'workerFirstName', w.firstName,
+                                'workerMiddleName', w.middleName,
+                                'workerLastName', w.lastName,
+                                'workerEmail', w.email,
+                                'workerProfileLink', w.profileLink,
+                                'workerGender', w.gender,
+                                'workerStatus', pw.status,
+                                'workerJobTitles', COALESCE(
+                                    (
+                                        SELECT CONCAT('[', GROUP_CONCAT(CONCAT('\"', wjt.title, '\"')), ']')
+                                        FROM userJobTitle wjt
+                                        WHERE wjt.userId = w.id
+                                    ),
+                                    '[]'
+                                )
+                            ) ORDER BY w.lastName SEPARATOR ','
+                        ), ']')
+                        FROM projectWorker pw
+                        INNER JOIN user w ON pw.workerId = w.id
+                        WHERE pw.projectId = p.id
+                    ),
+                    '[]'
+                ) AS projectWorkers";
+            }
+
+            // Conditionally add tasks subquery
+            if ($includeTasks) {
+                $selectFields[] = "COALESCE(
+                    (
+                        SELECT CONCAT('[', GROUP_CONCAT(
+                            JSON_OBJECT(
+                                'taskId', pt.id,
+                                'taskPublicId', HEX(pt.publicId),
+                                'taskName', pt.name,
+                                'taskDescription', pt.description,
+                                'taskStatus', pt.status,
+                                'taskPriority', pt.priority,
+                                'taskStartDateTime', pt.startDateTime,
+                                'taskCompletionDateTime', pt.completionDateTime,
+                                'taskCreatedAt', pt.createdAt
+                            ) ORDER BY pt.createdAt SEPARATOR ','
+                        ), ']')
+                        FROM `projectTask` AS pt
+                        WHERE pt.projectId = p.id
+                    ),
+                    '[]'
+                ) AS projectTasks";
+            }
+
+            // Build the final query
+            $query = "
+                SELECT *
+                FROM (
+                    SELECT 
+                        " . implode(",\n                        ", $selectFields) . "
+                    FROM 
+                        project p
+                    INNER JOIN
+                        user m ON p.managerId = m.id
+                    WHERE 
+                        p.publicId = :projectId
+                ) AS projectData
             ";
 
             $statement = $instance->connection->prepare($query);
-            $statement->execute([':projectId' => $projectId]);
+            $statement->execute([':projectId' => UUID::toBinary($projectId)]);
             $result = $statement->fetch();
 
-            // TODO: Process result into ProjectFull object
+            // Process result into Project object
+            if (!$instance->hasData($result)) {
+                return null;
+            }
 
-            return empty($result) ? null : User::fromArray($result);
-        } catch (PDOException $th) {
-            throw new DatabaseException($th->getMessage());
+            $mangerData = json_decode($result['projectManager'], true);
+            $manager = User::createPartial([
+                'id'            => $mangerData['managerId'],
+                'publicId'      => UUID::fromHex($mangerData['managerPublicId']),
+                'firstName'     => $mangerData['managerFirstName'],
+                'middleName'    => $mangerData['managerMiddleName'],
+                'lastName'      => $mangerData['managerLastName'],
+                'email'         => $mangerData['managerEmail'],
+                'profileLink'   => $mangerData['managerProfileLink'],
+                'jobTitles'    => new JobTitleContainer(json_decode($mangerData['managerJobTitles'], true))
+            ]);
+
+            $project = new Project(
+                id: $result['projectId'],
+                publicId: UUID::fromBinary($result['projectPublicId']),
+                name: $result['projectName'],
+                description: $result['projectDescription'],
+                manager: $manager,
+                budget: $result['projectBudget'],
+                tasks: new TaskContainer(),
+                workers: new WorkerContainer(),
+                phases: new PhaseContainer(),
+                startDateTime: new DateTime($result['projectStartDateTime']),
+                completionDateTime: new DateTime($result['projectCompletionDateTime']),
+                actualCompletionDateTime: $result['projectActualCompletionDateTime'] 
+                    ? new DateTime($result['projectActualCompletionDateTime']) 
+                    : null,
+                status: WorkStatus::from($result['projectStatus']),
+                createdAt: new DateTime($result['projectCreatedAt']),
+            );
+
+            // Process phases if included
+            if ($includePhases && isset($result['projectPhases'])) {
+                $projectPhases = json_decode($result['projectPhases'], true);
+                foreach ($projectPhases as $phase) {
+                    $project->addPhase(new Phase(
+                        id: $phase['phaseId'],
+                        publicId: UUID::fromHex($phase['phasePublicId']),
+                        name: $phase['phaseName'],
+                        description: $phase['phaseDescription'],
+                        status: WorkStatus::from($phase['phaseStatus']),
+                        startDateTime: new DateTime($phase['phaseStartDateTime']),
+                        completionDateTime: new DateTime($phase['phaseCompletionDateTime'])
+                    ));
+                }
+            }
+
+            // Process tasks if included
+            if ($includeTasks && isset($result['projectTasks'])) {
+                $projectTask = json_decode($result['projectTasks'], true);
+                foreach ($projectTask as $task) {
+                    $project->addTask(new Task(
+                        id: $task['taskId'],
+                        publicId: UUID::fromHex($task['taskPublicId']),
+                        name: $task['taskName'],
+                        description: $task['taskDescription'],
+                        status: WorkStatus::from($task['taskStatus']),
+                        priority: TaskPriority::from($task['taskPriority']),
+                        workers: new WorkerContainer(),
+                        startDateTime: new DateTime($task['taskStartDateTime']),
+                        completionDateTime: new DateTime($task['taskCompletionDateTime']),
+                        actualCompletionDateTime: $task['taskActualCompletionDateTime'] 
+                            ? new DateTime($task['taskActualCompletionDateTime']) 
+                            : null,
+                        createdAt: new DateTime($task['taskCreatedAt'])
+                    ));
+                }
+            }
+
+            // Process workers if included
+            if ($includeWorkers && isset($result['projectWorkers'])) {
+                $projectWorkers = json_decode($result['projectWorkers'], true);
+                foreach ($projectWorkers as $worker) {
+                    $project->addWorker(Worker::createPartial([
+                        'id'            => $worker['workerId'],
+                        'publicId'      => UUID::fromHex($worker['workerPublicId']),
+                        'firstName'     => $worker['workerFirstName'],
+                        'middleName'    => $worker['workerMiddleName'] ?? null,
+                        'lastName'      => $worker['workerLastName'],
+                        'email'         => $worker['workerEmail'] ?? null,
+                        'profileLink'   => $worker['workerProfileLink'] ?? null,
+                        'status'        => WorkerStatus::from($worker['workerStatus']),
+                        'jobTitles'     => new JobTitleContainer(json_decode($worker['workerJobTitles'], true))
+                    ]));
+                }
+            }
+                    
+            return $project;
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
         }
     }
 
@@ -198,56 +404,30 @@ class ProjectModel extends Model
      * - Returns the first matching Project or null if none exists.
      * - Catches low-level PDOException and rethrows it as a DatabaseException while preserving the original message.
      *
-     * @param int $projectId Numeric project identifier (must be >= 1)
+     * @param int|UUID $projectId The numeric ID or UUID of the project to retrieve.
      *
      * @return Project|null The matching Project instance, or null if not found
      *
      * @throws InvalidArgumentException If the provided $projectId is invalid (< 1)
      * @throws DatabaseException If a database error occurs (wraps the underlying PDOException)
      */
-    public function findById(int $projectId): ?Project
+    public static function findById(int|UUID $projectId): ?Project
     {
-        if ($projectId < 1) {
+        if (is_int($projectId) && $projectId < 1) {
             throw new InvalidArgumentException('Invalid Project ID.');
         }
 
         try {
-            return self::find('id = :projectId', ['projectId' => $projectId])->get(0) ?? null;
-        } catch (PDOException $e) {
-            throw new DatabaseException($e->getMessage());
-        }
-    }
+            $whereClause = is_int($projectId) 
+                ? 'p.id = :projectId' 
+                : 'p.publicId = :projectId';
 
-    /**
-     * Finds a Project by its public UUID.
-     *
-     * This method validates the provided UUID, converts it to the binary representation
-     * used by storage, and attempts to retrieve the first matching Project record.
-     * - Validates the $publicId using UuidValidator
-     * - Converts the validated UUID to binary via UUID::toBinary
-     * - Queries the data store for a Project with the matching binary publicId
-     *
-     * @param UUID $publicId Public identifier for the project to locate
-     *
-     * @return Project|null The found Project instance, or null if no matching project exists
-     *
-     * @throws ValidationException If the provided UUID fails validation (validator errors accessible from the validator)
-     * @throws DatabaseException If a database error occurs while performing the lookup (wraps underlying PDO errors)
-     */
-    public function findByPublicId(UUID $publicId): ?Project
-    {
-        $uuidValidator = new UuidValidator();
-        $uuidValidator->validateUuid($publicId);
-        if ($uuidValidator->hasErrors()) {
-            throw new ValidationException(
-                'Invalid Project ID',
-                $uuidValidator->getErrors()
-            );
-        }
+            $params['projectId'] = is_int($projectId) 
+                ? $projectId 
+                : UUID::toBinary($projectId);
 
-        $binaryUuid = UUID::toBinary($publicId);
-        try {
-            return self::find('publicId = :publicId', ['publicId' => $binaryUuid])->get(0) ?? null;
+            $projects = self::find($whereClause, $params);
+            return $projects->first() ?? null;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
@@ -260,8 +440,8 @@ class ProjectModel extends Model
      * the provided ID. It validates the manager ID before executing the query and
      * handles potential database errors.
      *
-     * @param int $managerId The ID of the manager whose projects should be retrieved.
-     *                       Must be a positive integer greater than 0.
+     * @param int|UUID $managerId The ID (integer or UUID) of the manager whose projects to retrieve
+     * @param WorkStatus|null $status Optional status filter to retrieve projects with a specific status
      * 
      * @return ProjectContainer|null Container with projects managed by the specified manager,
      *                               or null if no projects are found.
@@ -269,14 +449,27 @@ class ProjectModel extends Model
      * @throws InvalidArgumentException If the provided manager ID is less than 1.
      * @throws DatabaseException If a database error occurs during the query execution.
      */
-    public static function findByManagerId(int $managerId): ?ProjectContainer
+    public static function findByManagerId(int|UUID $managerId, WorkStatus|null $status = null): ?ProjectContainer
     {
-        if ($managerId < 1) {
+        if (is_int($managerId) && $managerId < 1) {
             throw new InvalidArgumentException('Invalid manager ID provided.');
         }
 
         try {
-            return self::find('managerId = :managerId', [':managerId' => $managerId]);
+            $whereClause = is_int($managerId) 
+                ? 'p.managerId = :managerId' 
+                : 'p.managerId = (SELECT id FROM user WHERE publicId = :managerId)';
+
+            $params['managerId'] = is_int($managerId) 
+                ? $managerId
+                : UUID::toBinary($managerId);
+
+            if ($status) {
+                $whereClause .= ' AND p.status = :status';
+                $params['status'] = $status->value;
+            }
+
+            return self::find($whereClause, $params);
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
@@ -289,31 +482,48 @@ class ProjectModel extends Model
      * projects that have an entry in the projectWorker table referencing the worker:
      * - Validates that $workerId is a positive integer (>= 1)
      * - Executes a SELECT with a subquery: id IN (SELECT projectId FROM projectWorker WHERE userId = :workerId)
+     * - Optionally filters by project status if $status is provided
      * - Uses a prepared/bound parameter (:workerId) to avoid SQL injection
      * - Wraps lower-level PDO exceptions in a DatabaseException
      *
      * @param int $workerId Positive integer ID of the worker whose projects should be retrieved
+     * @param WorkStatus|null $status Optional status filter to retrieve projects with a specific status
      *
      * @return ProjectContainer|null ProjectContainer containing the found project(s) or null if none found
      *
      * @throws InvalidArgumentException If $workerId is not a valid positive integer
      * @throws DatabaseException If a database error occurs (wraps the underlying PDOException)
      */
-    public static function findByWorkerId(int $workerId): ?ProjectContainer
+    public static function findByWorkerId(int|UUID $workerId, WorkStatus|null $status = null): ?ProjectContainer
     {
-        if ($workerId < 1) {
+        if (is_int($workerId) && $workerId < 1) {
             throw new InvalidArgumentException('Invalid worker ID provided.');
         }
 
         try {
-            return self::find(
-                'id IN (
+            $whereClause = is_int($workerId) 
+                ? 'p.id IN (
                     SELECT projectId 
                     FROM projectWorker 
-                    WHERE userId = :workerId
-                )',
-                [':workerId' => $workerId],
-            );
+                    WHERE workerId = :workerId
+                )' 
+                : 'p.id IN (
+                    SELECT projectId 
+                    FROM projectWorker pw
+                    INNER JOIN user u ON pw.workerId = u.id
+                    WHERE u.publicId = :workerId
+                )';
+
+            $param['workerId'] = is_int($workerId) 
+                ? $workerId
+                : UUID::toBinary($workerId);
+
+            if ($status) {
+                $whereClause .= ' AND p.status = :status';
+                $param['status'] = $status->value;
+            }
+
+            return self::find($whereClause,$param);
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
@@ -328,26 +538,31 @@ class ProjectModel extends Model
      *
      * @param int $managerId The ID of the manager whose active projects to retrieve
      * 
-     * @return ProjectContainer|null Container with active projects, or null if none found
+     * @return Project|null Active Project, or null if none found
      * 
      * @throws InvalidArgumentException If managerId is less than 1
      * @throws DatabaseException If a database error occurs during the query
      */
-    public static function findManagerActiveProjectsByManagerId(int $managerId): ?ProjectContainer
+    public static function findManagerActiveProjectByManagerId(int $managerId): ?Project
     {
         if ($managerId < 1) {
             throw new InvalidArgumentException('Invalid manager ID provided.');
         }
 
         try {
-            $projects = self::find(
-                'managerId = :managerId AND status != :completedStatus',
-                [
-                    ':managerId' => $managerId,
-                    ':completedStatus' => WorkStatus::COMPLETED->value,
-                ],
-            );
-            return $projects;
+            $whereClause = 'p.managerId = :managerId AND p.status != :completedStatus AND p.status != :cancelledStatus';
+            $param = [
+                ':managerId'        => $managerId,
+                ':completedStatus'  => WorkStatus::COMPLETED->value,
+                ':cancelledStatus'  => WorkStatus::CANCELLED->value,
+            ];
+            $options = [
+                'limit'     => 1,
+                'orderBy'   => 'createdAt DESC',
+            ];
+
+            $projects = self::find($whereClause, $param, $options);
+            return $projects?->first() ?? null;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
@@ -363,84 +578,160 @@ class ProjectModel extends Model
      *
      * @param int $workerId The ID of the worker whose active projects should be retrieved
      * 
-     * @return ProjectContainer|null Container with active projects for the worker, or null if none found
+     * @return Project|null Active Project, or null if none found
      * 
      * @throws InvalidArgumentException If the worker ID is less than 1
      * @throws DatabaseException If a database error occurs during the query execution
      */
-    public static function findWorkerActiveProjectsByWorkerId(int $workerId): ?ProjectContainer
+    public static function findWorkerActiveProjectByWorkerId(int $workerId): ?Project
     {
         if ($workerId < 1) {
             throw new InvalidArgumentException('Invalid worker ID provided.');
         }
 
+        $instance = new self();
         try {
-            $projects = self::find(
-                'id IN (
-                    SELECT projectId 
-                    FROM projectWorker 
-                    WHERE userId = :workerId
-                ) AND status != :completedStatus',
-                [
-                    ':workerId' => $workerId,
-                    ':completedStatus' => WorkStatus::COMPLETED->value,
-                ],
-            );
-            return $projects;
+            $query = "
+                SELECT
+                    p.*,
+                    u.id AS managerId,
+                    u.publicId AS managerPublicId,
+                    u.firstName AS managerFirstName,
+                    u.middleName AS managerMiddleName,
+                    u.lastName AS managerLastName,
+                    u.gender AS managerGender,
+                    u.email AS managerEmail,
+                    u.profileLink AS managerProfileLink
+                FROM
+                    `project` AS p
+                INNER JOIN 
+                    `user` AS u
+                ON
+                    p.managerId = u.id
+                LEFT JOIN
+                    `projectWorker` AS pw
+                ON	
+                    pw.projectId = p.id
+                WHERE	
+                    pw.workerId = :workerId
+                AND
+                    p.status != :completedStatus
+                AND 
+                    p.status != :cancelledStatus
+                AND
+                    pw.status != :terminatedStatus
+                LIMIT 1
+            ";
+            $statement = $instance->connection->prepare($query);
+            $statement->execute([
+                ':workerId'         => $workerId,
+                ':completedStatus'  => WorkStatus::COMPLETED->value,
+                ':cancelledStatus'  => WorkStatus::CANCELLED->value,
+                ':terminatedStatus' => WorkerStatus::TERMINATED->value,
+            ]);
+            $result = $statement->fetch();
+
+            if (!$instance->hasData($result)) {
+                return null;
+            }
+
+            $result['manager'] = User::createPartial([
+                'id'            => $result['managerId'],
+                'publicId'      => UUID::fromBinary($result['managerPublicId']),
+                'firstName'     => $result['managerFirstName'],
+                'middleName'    => $result['managerMiddleName'],
+                'lastName'      => $result['managerLastName'],
+                'gender'        => $result['managerGender'],
+                'email'         => $result['managerEmail'],
+                'profileLink'   => $result['managerProfileLink'],
+            ]);
+            return Project::createPartial($result);;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
     }
 
     /**
-     * Finds and retrieves all workers associated with a specific project.
+     * Searches for projects based on provided criteria.
      *
-     * This method queries the database to fetch all users who are assigned as workers
-     * to the specified project by joining the user and projectWorker tables. It returns
-     * a WorkerContainer with all matching workers, or null if no workers are found.
+     * This static method allows searching for projects using a keyword, user ID (either integer or UUID),
+     * project status, and additional options such as pagination and sorting. It constructs a dynamic SQL
+     * WHERE clause based on the provided parameters and delegates the actual data retrieval to the `find` method.
      *
-     * @param int $projectId The ID of the project to find workers for
-     * 
-     * @return WorkerContainer|null Container with Worker objects if workers are found,
-     *                              null if no workers are associated with the project
-     * 
-     * @throws InvalidArgumentException If projectId is less than 1
-     * @throws DatabaseException If a database error occurs during the query execution
+     * - If a search key is provided, it performs a full-text search on project name and description.
+     * - If a user ID is provided, it filters projects managed by or assigned to the user (supports both integer and UUID).
+     * - If a status is provided, it filters projects by the specified status.
+     * - Additional options can be set for offset, limit, and order.
+     *
+     * @param string $key Optional search keyword for full-text search on project name and description.
+     * @param int|UUID|null $userId Optional user identifier (integer ID or UUID) to filter projects by manager or worker.
+     * @param WorkStatus|null $status Optional project status to filter results.
+     * @param array $options Optional associative array for query options:
+     *      - offset: int (default 0) Number of records to skip.
+     *      - limit: int (default 10) Maximum number of records to return.
+     *      - orderBy: string (default 'createdAt DESC') SQL ORDER BY clause.
+     *
+     * @throws InvalidArgumentException If an invalid user ID is provided.
+     * @throws DatabaseException If a database error occurs during the search.
+     *
+     * @return ProjectContainer|null A container of found projects, or null if no projects match the criteria.
      */
-    public static function findWorkersByProjectId(int $projectId): ?WorkerContainer
-    {
-        if ($projectId < 1) {
-            throw new InvalidArgumentException('Invalid project ID provided.');
+    public static function search(
+        string $key = '',
+        int|UUID|null $userId = null,
+        WorkStatus|null $status = null,
+        array $options = [
+            'offset'    => 0,
+            'limit'     => 10,
+            'orderBy'   => 'createdAt DESC',
+        ]
+    ): ?ProjectContainer {
+        if (isset($userId) && is_int($userId) && $userId < 1) {
+            throw new InvalidArgumentException('Invalid user ID provided.');
         }
 
-        $instance = new self();
         try {
-            $query = "
-                SELECT 
-                    u.*
-                FROM 
-                    `user` AS u
-                INNER JOIN 
-                    `projectWorker` AS pw ON u.id = pw.userId
-                WHERE 
-                    pw.projectId = :projectId
-            ";
-            $statement = $instance->connection->prepare($query);
-            $statement->execute([':projectId' => $projectId]);
-            $result = $statement->fetchAll();
+            $whereClauses = [];
+            $params = [];
 
-            if (empty($result)) {
-                return null;
+            if (trimOrNull($key)) {
+                $whereClauses[] = 'MATCH(p.name, p.description) AGAINST (:searchKey IN NATURAL LANGUAGE MODE)';
+                $params[':searchKey'] = $key;
             }
 
-            $workers = new WorkerContainer();
-            foreach ($result as $row) {
-                $workers->add(Worker::fromArray($row));
+            if ($userId) {
+                if (is_int($userId)) {
+                    $whereClauses[] = '(p.managerId = :userId1 
+                    OR p.id IN (
+                        SELECT projectId 
+                        FROM projectWorker 
+                        WHERE workerId = :userId2
+                    ))';
+                    $params[':userId1'] = $userId;
+                    $params[':userId2'] = $userId;
+                } else {
+                    $whereClauses[] = '(p.managerId = (SELECT id FROM user WHERE publicId = :userId1) 
+                    OR p.id IN (
+                        SELECT projectId 
+                        FROM projectWorker 
+                        WHERE workerId = (SELECT id FROM user WHERE publicId = :userId2)
+                    ))';
+                    $params[':userId1'] = UUID::toBinary($userId);
+                    $params[':userId2'] = UUID::toBinary( $userId);
+                }
             }
-            return $workers;
+
+            if ($status) {
+                $whereClauses[] = 'p.status = :status';
+                $params[':status'] = $status->value;
+            }
+
+            $whereClause = implode(' AND ', $whereClauses);
+
+            return self::find($whereClause, $params, $options);
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
-        }   
+        }
     }
 
     /**
@@ -475,40 +766,256 @@ class ProjectModel extends Model
         }
 
         try {
-            return self::find('', [], [
-                'offset' => $offset,
-                'limit' => $limit,
-                'orderBy' => 'createdAt DESC',
-            ]);
+            $options = [
+                'offset'    => $offset,
+                'limit'     => $limit,
+                'orderBy'   => 'createdAt DESC',
+            ];
+            return self::find('', [], $options);
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-    public function save(): bool
+    /**
+     * Creates and persists a new Project instance to the database.
+     *
+     * This method handles the complete creation of a project including:
+     * - Validation of the Project instance
+     * - Generation of UUID if not provided
+     * - Insertion of project data into the database
+     * - Creation of associated project phases if any exist
+     * - Transaction management to ensure data integrity
+     *
+     * @param mixed $project Project instance to be created. Must be an instance of Project class.
+     *
+     * @return Project The created Project instance with updated id and publicId from database
+     *
+     * @throws InvalidArgumentException If the provided parameter is not an instance of Project
+     * @throws DatabaseException If any database operation fails during the transaction
+     *
+     */
+    public static function create(mixed $project): Project
     {
-        return true;
-    }
-
-    public function delete(): bool
-    {
-        return true;
-    }
-
-    public static function create(mixed $data): void
-    {
-        if (!($data instanceof self)) {
-            throw new InvalidArgumentException('Expected instance of ProjectModel');
+        if (!($project instanceof Project)) {
+            throw new InvalidArgumentException('Expected instance of Project');
         }
+
+        $instance = new self();
+
+        try {
+            $instance->connection->beginTransaction();
+
+            $projectPublicId           =   $project->getPublicId() ?? UUID::get();
+            $projectName               =   trimOrNull($project->getName());
+            $projectDescription        =   trimOrNull($project->getDescription());
+            $projectBudget             =   ($project->getBudget()) ?? 0.00;
+            $projectStatus             =   $project->getStatus() ?? WorkStatus::PENDING;
+            $projectStartDateTime      =   formatDateTime($project->getStartDateTime());
+            $projectCompletionDateTime =   formatDateTime($project->getCompletionDateTime());
+            $projectPhases             =   $project->getPhases();
+
+            
+            $projectQuery = "
+                INSERT INTO `project` (
+                    publicId,
+                    name,
+                    description,
+                    budget,
+                    status,
+                    startDateTime,
+                    completionDateTime,
+                    managerId
+                ) VALUES (
+                    :publicId,
+                    :name,
+                    :description,
+                    :budget,
+                    :status,
+                    :startDateTime,
+                    :completionDateTime,
+                    :managerId
+                )";
+            $statement = $instance->connection->prepare($projectQuery);
+            $statement->execute([
+                ':publicId'             => UUID::toBinary($projectPublicId),
+                ':name'                 => $projectName,
+                ':description'          => $projectDescription,
+                ':budget'               => $projectBudget,
+                ':status'               => $projectStatus->value,
+                ':startDateTime'        => $projectStartDateTime,
+                ':completionDateTime'   => $projectCompletionDateTime,
+                ':managerId'            => Me::getInstance()->getId(),
+            ]);
+            $projectId = intval($instance->connection->lastInsertId());
+
+            if ($projectPhases && $projectPhases->count() > 0) {
+                $projectPhaseQuery = "
+                    INSERT INTO `projectPhase` (
+                        projectId,
+                        publicId,
+                        name,
+                        description,
+                        startDateTime,
+                        completionDateTime,
+                        status
+                    ) VALUES (
+                        :projectId,
+                        :publicId,
+                        :name,
+                        :description,
+                        :startDateTime,
+                        :completionDateTime,
+                        :status
+                    )";
+                $phaseStatement = $instance->connection->prepare($projectPhaseQuery);                       
+                foreach ($projectPhases as $phase) {
+                    $phaseStatement->execute([
+                        ':projectId'            => $projectId,
+                        ':publicId'             => UUID::toBinary($phase->getPublicId()),
+                        ':name'                 => $phase->getName(),
+                        ':description'          => $phase->getDescription(),
+                        ':startDateTime'        => formatDateTime($phase->getStartDateTime()),
+                        ':completionDateTime'   => formatDateTime($phase->getCompletionDateTime()),
+                        ':status'               => $phase->getStatus()->value,
+                    ]);
+                }
+            }
+
+            $instance->connection->commit();
+
+            $project->setId($projectId);
+            $project->setPublicId($projectPublicId);
+            return $project;
+        } catch (PDOException $e) {
+            $instance->connection->rollBack();
+            throw new DatabaseException($e->getMessage());
+        } catch (Exception $e) {
+            $instance->connection->rollBack();
+            throw $e;
+        }
+    }
+
+    /**
+     * Saves or updates a project with its associated data in the database.
+     *
+     * This method performs a transactional update of project data. It dynamically builds
+     * an UPDATE query based on provided fields and handles various data conversions:
+     * - Trims string fields (name, description) or sets them to null
+     * - Converts status enum to its value
+     * - Formats DateTime objects to ATOM format for storage
+     * - Handles nullable actualCompletionDateTime field
+     * - Recursively saves associated tasks if provided
+     * - Uses either 'id' or 'publicId' for identifying the project record
+     *
+     * @param array $data Associative array containing project data with following keys:
+     *      - id: int|UUID Project ID to identify the project to update
+     *      - name: string (optional) Project name
+     *      - description: string (optional) Project description
+     *      - budget: float|int (optional) Project budget amount
+     *      - status: ProjectStatus (optional) Project status enum
+     *      - startDateTime: DateTime|string (optional) Project start date and time
+     *      - completionDateTime: DateTime|string (optional) Planned completion date and time
+     *      - actualCompletionDateTime: DateTime|string|null (optional) Actual completion date and time
+     *      - tasks: TaskContainer (optional) Container of associated Task objects to be saved
+     * 
+     * @return bool Returns true if save operation was successful
+     * 
+     * @throws DatabaseException If a database error occurs during the transaction
+     */
+    public static function save(array $data): bool
+    {
+        $instance = new self();
+        try {
+            $instance->connection->beginTransaction();
+
+            $updateFields = [];
+            $params = [];
+
+            if (isset($data['id']) && is_int($data['id'])) {
+                $params[':id'] = $data['id'];
+            } elseif (isset($data['publicId']) && $data['publicId'] instanceof UUID) {
+                $params[':id'] = UUID::toBinary($data['publicId']);
+            } else {
+                throw new InvalidArgumentException('Project ID or Public ID must be provided for saving.');
+            }
+
+            if (isset($data['name'])) {
+                $updateFields[] = 'name = :name';
+                $params[':name'] = trimOrNull($data['name']);
+            }
+
+            if (isset($data['description'])) {
+                $updateFields[] = 'description = :description';
+                $params[':description'] = trimOrNull($data['description']);
+            }
+
+            if (isset($data['budget'])) {
+                $updateFields[] = 'budget = :budget';
+                $params[':budget'] = $data['budget'];
+            }
+
+            if (isset($data['status'])) {
+                $updateFields[] = 'status = :status';
+                $params[':status'] = $data['status']->value;
+            }
+
+            if (isset($data['startDateTime'])) {
+                $updateFields[] = 'startDateTime = :startDateTime';
+                $params[':startDateTime'] = formatDateTime($data['startDateTime']);
+            }
+
+            if (isset($data['completionDateTime'])) {
+                $updateFields[] = 'completionDateTime = :completionDateTime';
+                $params[':completionDateTime'] = formatDateTime($data['completionDateTime']);
+            }
+
+            if (isset($data['actualCompletionDateTime'])) {
+                $updateFields[] = 'actualCompletionDateTime = :actualCompletionDateTime';
+                $params[':actualCompletionDateTime'] = $data['actualCompletionDateTime'] !== null 
+                    ? formatDateTime($data['actualCompletionDateTime']) 
+                    : null;
+            }
+
+            if (!empty($updateFields)) {
+                $projectQuery = "
+                    UPDATE `project` 
+                    SET " . implode(', ', $updateFields) . 
+                    " WHERE " . (
+                        is_int($data['id']) 
+                        ? 'id' 
+                        : 'publicId') . " = :id";
+                $statement = $instance->connection->prepare($projectQuery);
+                $statement->execute($params);
+            }
+
+            if (isset($data['tasks']) && $data['tasks'] instanceof TaskContainer) {
+                foreach ($data['tasks'] as $task) {
+                    $task->save();
+                }
+            }
+
+            $instance->connection->commit();
+            return true;
+        } catch (PDOException $e) {
+            $instance->connection->rollBack();
+            throw new DatabaseException($e->getMessage());
+        }
+    }
+
+    /**
+     * Deletes a phase entity.
+     *
+     * This method is currently not implemented as there is no use case for deleting a phase.
+     * Always returns false.
+     * 
+     * @param mixed $data Data that would be used to delete a phase (unused)
+     *
+     * @return bool Always returns false to indicate deletion is not supported.
+     */
+    public static function delete(mixed $data): bool
+    {
+        // Not implemented (No use case)
+        return false;
     }
 }

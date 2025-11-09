@@ -43,6 +43,7 @@ if (!isset($component)) {
             </div>
         </div>
     </main>
+
 </body>
 
 </html>

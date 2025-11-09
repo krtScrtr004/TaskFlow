@@ -2,87 +2,431 @@
 
 namespace App\Endpoint;
 
+use App\Auth\HttpAuth;
+use App\Auth\SessionAuth;
+use App\Container\PhaseContainer;
+use App\Core\Me;
+use App\Core\UUID;
+use App\Dependent\Phase;
+use App\Entity\Project;
+use App\Enumeration\Role;
+use App\Enumeration\WorkStatus;
+use App\Exception\DatabaseException;
+use App\Exception\ForbiddenException;
+use App\Exception\NotFoundException;
 use App\Exception\ValidationException;
 use App\Interface\Controller;
 use App\Middleware\Response;
+use App\Model\PhaseModel;
 use App\Model\ProjectModel;
 use App\Validator\UuidValidator;
+use App\Middleware\Csrf;
+use App\Model\TaskModel;
+use App\Validator\WorkValidator;
+use DateTime;
+use Exception;
 use InvalidArgumentException;
+use ValueError;
 
 class ProjectEndpoint
 {
-        public static function getProjectById(array $args = []): void
+    public static function getByKey(array $args = []): void
     {
-        $projectId = $args['projectId'] ?? null; // Temporary placeholder
-        if (!$projectId)
-            Response::error('Project ID is required.');
+        try {
+            if (!HttpAuth::isGETRequest()) {
+                throw new ForbiddenException('Invalid request method. GET request required.');
+            }
 
-        $projects = ProjectModel::all();
-        Response::success([$projects->getItems()[0]], 'Project retrieved successfully.');
+            if (!SessionAuth::hasAuthorizedSession()) {
+                throw new ForbiddenException();
+            }
+
+            $projectId = isset($args['projectId'])
+                ? UUID::fromString($args['projectId'])
+                : null;
+            if (isset($args['projectId']) && !$projectId) {
+                throw new ForbiddenException('Project ID is required.');
+            }
+
+            // Check if 'key' parameter is present in the query string
+            $key = '';
+            if (isset($_GET['key']) && trim($_GET['key']) !== '') {
+                $key = trim($_GET['key']);
+            }
+
+            // Obtain filter from query parameters (one filter type only)
+            $status = null;
+            if (isset($_GET['filter']) && strcasecmp($_GET['filter'], 'all') !== 0) {
+                $filterValue = $_GET['filter'];
+                // Try to parse as WorkStatus first, then TaskPriority if later fails
+                try {
+                    $status = WorkStatus::from($filterValue);
+                } catch (ValueError $e) {
+                    // Do nothing
+                }
+            }
+
+            $options = [
+                'offset' => isset($_GET['offset']) ? (int)$_GET['offset'] : 0,
+                'limit' => isset($_GET['limit']) ? (int)$_GET['limit'] : 50,
+            ];
+
+            $projects = ProjectModel::search(
+                $key, 
+                Me::getInstance()->getId(), 
+                $status,
+                $options);
+    
+            if (!$projects) {
+                Response::success([], 'No tasks found for the specified project.');
+            } else {
+                $return = [];
+                foreach ($projects as $project) {
+                    $return[] = $project;
+                }
+                Response::success($return, 'Tasks fetched successfully.');
+            }
+        } catch (ValidationException $e) {
+            Response::error('Validation Failed.',$e->getErrors(),422);
+        } catch (ForbiddenException $e) {
+            Response::error('Forbidden.', [], 403);
+        } catch (Exception $e) {
+            Response::error('Unexpected Error.', ['An unexpected error occurred. Please try again.'], 500);
+        }
     }
 
-    public static function getProjectByKey(): void
+    /**
+     * Creates a new project with associated phases.
+     *
+     * This endpoint handles project creation with the following validations and operations:
+     * - Verifies that the request is from an API client (not a user session)
+     * - Validates CSRF token
+     * - Validates required project and phases data
+     * - Ensures user doesn't already have an active project
+     * - Sanitizes all input data
+     * - Determines phase and project status based on dates
+     * - Creates partial Phase entities and adds them to a container
+     * - Creates and persists the project with all phases
+     *
+     * @throws ForbiddenException If user session attempts to create project or user already has active project (403)
+     * @throws ValidationException If data cannot be decoded or required fields are missing/empty (422)
+     * @throws Exception If an unexpected error occurs during project creation (500)
+     *
+     * @return void Sends JSON response with projectId on success (201) or error message on failure
+     * 
+     * Expected input format (php://input):
+     * {
+     *     "project": {
+     *         "name": string,
+     *         "description": string,
+     *         "budget": float,
+     *         "startDateTime": string (datetime),
+     *         "completionDateTime": string (datetime)
+     *     },
+     *     "phases": [
+     *         {
+     *             "startDateTime": string (datetime),
+     *             "completionDateTime": string (datetime),
+     *             ...other phase fields
+     *         }
+     *     ]
+     * }
+     * 
+     * Success response (201):
+     * {
+     *     "projectId": string (UUID)
+     * }
+     * 
+     * Error responses:
+     * - 422: Validation errors
+     * - 403: Forbidden (session user or duplicate project)
+     * - 500: Unexpected server error
+     */
+    public static function create(): void
     {
-        $key = $_GET['key'] ?? '';
+        try {
+            if (!SessionAuth::hasAuthorizedSession()) {
+                throw new ForbiddenException('User session is not allowed to create projects.');
+            }
 
-        $offset = isset($_GET['offset']) ? (int) $_GET['offset'] : 0;
+            if (!Role::isProjectManager(Me::getInstance())) {
+                throw new ForbiddenException('Only Project Managers can create projects.');
+            }
 
-        $projects = ProjectModel::all();
-        Response::success([$projects->getItems()[0]], 'Projects retrieved successfully.');
+            Csrf::protect();
+
+            $data = decodeData('php://input');
+            if (!$data) {
+                throw new ValidationException('Cannot decode data.');
+            }
+
+            $project = $data['project'] ?? null;
+            if (!$project || empty($project)) {
+                throw new ValidationException('Project data is required.');
+            }
+
+            $phases = $data['phases'] ?? null;
+            if (!$phases || empty($phases)) {
+                throw new ValidationException('Phases data is required.');
+            }
+
+            // Check if user has active project 
+            if (ProjectModel::findManagerActiveProjectByManagerId(Me::getInstance()->getId())) {
+                throw new ForbiddenException('User already has an active project.');
+            }
+
+            sanitizeData($project);
+
+            $validator = new WorkValidator();
+
+            $index = 0;
+            $phasesContainer = new PhaseContainer();
+            foreach ($phases as &$phase) {
+                $validator->validateDateBounds(
+                    new DateTime($phase['startDateTime']),
+                    new DateTime($phase['completionDateTime']),
+                    new DateTime($project['startDateTime']),
+                    new DateTime($project['completionDateTime'])
+                );
+                if ($validator->hasErrors()) {
+                    throw new ValidationException('Phase Validation Failed.', $validator->getErrors());
+                }
+
+                sanitizeData($phase);
+
+                // Temporarily assign index as ID to avoid replacing other inserted fields in the container
+                $phase['id'] = $index++;
+                // Determine phase status
+                $phase['status'] = WorkStatus::getStatusFromDates(
+                    new DateTime($phase['startDateTime']), 
+                    new DateTime($phase['completionDateTime'])
+                );
+
+                // Create partial Phase entity and add to container
+                $phasesContainer->add(Phase::createPartial($phase));
+            }
+
+            // Create partial Project entity
+            $newProject = Project::createPartial([
+                'name' => $project['name'],
+                'description' => $project['description'],
+                'budget' => floatval($project['budget']) ?? 0.00,
+                'startDateTime' => $project['startDateTime'],
+                'completionDateTime' => $project['completionDateTime'],
+                'phases' => $phasesContainer,
+                'tasks' => [],
+                'status' => WorkStatus::getStatusFromDates(new DateTime($project['startDateTime']), new DateTime($project['completionDateTime']))
+            ]);
+            $newProject = ProjectModel::create($newProject);
+
+            Response::success([
+                'projectId' => UUID::toString($newProject->getPublicId())
+            ], 'Project created successfully.', 201);
+        } catch (ValidationException $e) {
+            Response::error($e->getMessage(), $e->getErrors(), 422);
+        } catch (ForbiddenException $e) {
+            Response::error('Project Creation Failed. ' . $e->getMessage(), [], 403);
+        } catch (Exception $e) {
+            Response::error('Project Creation Failed.', ['An unexpected error occurred. Please try again later.'], 500);
+        }
     }
 
-    public static function createProject(): void
+    /**
+     * Edits an existing project and its associated phases.
+     *
+     * This endpoint handles project editing including:
+     * - Updates project details (description, budget, dates, status)
+     * - Edits existing phases (description, dates, status)
+     * - Adds new phases to the project
+     * - Cancels phases by updating their status
+     *
+     * Expected data structure in request body:
+     * {
+     *   "project": {
+     *     "description": string,
+     *     "budget": float,
+     *     "startDateTime": string (ISO 8601 format),
+     *     "completionDateTime": string (ISO 8601 format)
+     *   },
+     *   "phase": {
+     *     "toEdit": [
+     *       {
+     *         "id": string (UUID),
+     *         "description": string,
+     *         "startDateTime": string (ISO 8601 format),
+     *         "completionDateTime": string (ISO 8601 format)
+     *       }
+     *     ],
+     *     "toAdd": [
+     *       {
+     *         "name": string,
+     *         "description": string,
+     *         "startDateTime": string (ISO 8601 format),
+     *         "completionDateTime": string (ISO 8601 format)
+     *       }
+     *     ],
+     *     "toCancel": [
+     *       {
+     *         "id": string (UUID)
+     *       }
+     *     ]
+     *   }
+     * }
+     *
+     * @param array $args Associative array containing route parameters:
+     *      - projectId: string UUID of the project to edit
+     * 
+     * @return void Outputs JSON response directly
+     * 
+     * @throws ValidationException When project ID is missing, data is invalid, or phases data is malformed (HTTP 422)
+     * @throws ForbiddenException When user sessions attempt to edit projects (HTTP 403)
+     * @throws NotFoundException When project with given ID is not found (HTTP 404)
+     * @throws Exception For any unexpected errors (HTTP 500)
+     * 
+     * @response success JSON with projectId on successful edit
+     * @response error JSON with error message and details on failure
+     */
+    public static function edit(array $args = []): void
     {
-        /**
-         * Requirements:
-         * Project:
-         * - Name: string
-         * - Description: string
-         * - Budget: float
-         * - Start Date: string (YYYY-MM-DD)
-         * - Completion Date: string (YYYY-MM-DD)
-         * 
-         * Phases: Array
-         * - Name: string
-         * - Description: string
-         * - Start Date: string (YYYY-MM-DD)
-         * - Completion Date: string (YYYY-MM-DD)
-         */
-        $data = decodeData('php://input');
-        if (!$data)
-            Response::error('Cannot decode data.');
+        try {
+            if (!SessionAuth::hasAuthorizedSession()) {
+                throw new ForbiddenException('User session is not allowed to edit projects.');
+            }
 
-        // TODO: Validate and sanitize $data
+            if (!Role::isProjectManager(Me::getInstance())) {
+                throw new ForbiddenException('Only Project Managers can edit projects.');
+            }
+            Csrf::protect();
 
-        Response::success(['id' => uniqid()], 'Project created successfully.', 201);
-    }
+            $projectId = isset($args['projectId'])
+                ? UUID::fromString($args['projectId'])
+                : null;
+            if (!$projectId) {
+                throw new ValidationException('Project ID is required to edit a project.');
+            }
 
-    public static function editProject(array $args = []): void
-    {
-        /** 
-         * Requirements :
-         * Project
-         * - Project : ID, Description, Budget, Start Date, Completion Date
-         * 
-         * Phases
-         * - Edited Phases : ID, Description, Start Date, Completion Date
-         * - New Phases :Name, Description, Start Date, Completion Date
-         * - Cancelled Phases : ID
-         * */
+            $data = decodeData('php://input');
+            if (!$data) {
+                throw new ValidationException('Cannot decode data.');
+            }
 
-        $projectId = $args['projectId'] ?? null; // Temporary placeholder
-        if (!$projectId)
-            throw new InvalidArgumentException('Project ID is required.');
+            $project = ProjectModel::findById($projectId);
+            if (!$project) {
+                throw new NotFoundException('Project is not found.');
+            }
 
-        $data = decodeData('php://input');
-        if (!$data)
-            Response::error('Cannot decode data.', []);
+            $validator = new WorkValidator();
 
-        // TODO: Validate and sanitize $data
+            $projectData = ['id' => $project->getId()];
 
-        $phasesToAdd = $data['phasesToAdd'] ?? [];
-        // TODO: Use PhaseController to add phases and get their IDs
+            if (isset($data['project']['description'])) {
+                $projectData['description'] = $data['project']['description'];
+            }
 
-        Response::success(['id' => $projectId], 'Project edited successfully.');
+            if (isset($data['project']['budget'])) {
+                $projectData['budget'] = floatval($data['project']['budget']) ?? 0.00;
+            }
+
+            if (isset($data['project']['startDateTime'])) {
+                $projectData['startDateTime'] = new DateTime($data['project']['startDateTime']);
+            }
+
+            if (isset($data['project']['completionDateTime'])) {
+                $projectData['completionDateTime'] = new DateTime($data['project']['completionDateTime']);
+            }
+
+            if (isset($data['project']['status'])) {
+                $projectData['status'] = WorkStatus::from($data['project']['status']);
+            } else {
+                $projectData['status'] = WorkStatus::getStatusFromDates(
+                    $projectData['startDateTime'] ?? $project->getStartDateTime(),
+                    $projectData['completionDateTime'] ?? $project->getCompletionDateTime()
+                );
+            }
+
+            $phases = [
+                'toEdit' => [],
+                'toAdd' => new PhaseContainer(),
+            ];
+
+            $phasesArray = $data['phase'] ?? [];
+            foreach ($phasesArray as $key => &$arr) {
+                foreach ($arr as &$value) {
+                    sanitizeData($value);
+
+                    if ($key === 'toEdit' || $key === 'toAdd') {
+                        $validator->validateDateBounds(
+                            new DateTime($value['startDateTime']),
+                            new DateTime($value['completionDateTime']),
+                            $projectData['startDateTime'] ?? $project->getStartDateTime(),
+                            $projectData['completionDateTime'] ?? $project->getCompletionDateTime()
+                        );
+                        if ($validator->hasErrors()) {
+                            throw new ValidationException('Phase Validation Failed.', $validator->getErrors());
+                        }
+                    }
+
+                    if ($key === 'toEdit') {
+                        // Phase to edit
+                        $validator->validateMultiple([
+                            'description'           => $value['description'],
+                            'startDateTime'         => new DateTime($value['startDateTime']),
+                            'completionDateTime'    => new DateTime($value['completionDateTime'])
+                        ]);
+                        if ($validator->hasErrors()) {
+                            throw new ValidationException('Phase Validation Failed.', $validator->getErrors());
+                        }
+                        $phases['toEdit'][] = [
+                            'publicId'              => UUID::fromString($value['id']),
+                            'description'           => $value['description'],
+                            'startDateTime'         => new DateTime($value['startDateTime']),
+                            'completionDateTime'    => new DateTime($value['completionDateTime']),
+                            'status'                => WorkStatus::getStatusFromDates(new DateTime($value['startDateTime']), new DateTime($value['completionDateTime']))
+                        ];
+                    } elseif ($key === 'toAdd') {
+                        // New phase to add
+                        $phases['toAdd']->add(Phase::createPartial([
+                            'name'                  => $value['name'],
+                            'description'           => $value['description'],
+                            'startDateTime'         => new DateTime($value['startDateTime']),
+                            'completionDateTime'    => new DateTime($value['completionDateTime']),
+                            'status'                => WorkStatus::getStatusFromDates(new DateTime($value['startDateTime']), new DateTime($value['completionDateTime']))
+                        ]));
+                    } else {
+                        // Phase to cancel
+                        $phases['toEdit'][] = [
+                            'publicId'              => UUID::fromString($value['id']),
+                            'status'                => WorkStatus::CANCELLED
+                        ];
+                    }
+                }
+            }
+
+            // Save project edits
+            if ($projectData && count($projectData) > 1) {
+                $validator->validateMultiple($projectData);
+                if ($validator->hasErrors()) {
+                    throw new ValidationException('Project Validation Failed.', $validator->getErrors());
+                }
+                sanitizeData($projectData);
+                ProjectModel::save($projectData);
+            }
+            if ($phases['toAdd']->count() > 0) {
+                PhaseModel::createMultiple($project->getId(), $phases['toAdd']);
+            }
+            if (count($phases['toEdit']) > 0) {
+                PhaseModel::saveMultiple($phases['toEdit']);
+            }
+
+            Response::success(['projectId' => UUID::toString($project->getPublicId())], 'Project edited successfully.');
+        } catch (ValidationException $e) {
+            Response::error('Project Edit Failed.', $e->getErrors(), 422);
+        } catch (NotFoundException $e) {
+            Response::error('Project Edit Failed.', ['Project not found.'], 404);
+        } catch (ForbiddenException $e) {
+            Response::error('Project Edit Failed. ' . $e->getMessage(), [], 403);
+        } catch (Exception $e) {
+            Response::error('Project Edit Failed.', ['An unexpected error occurred. Please try again later.'], 500);
+        }
     }
 }

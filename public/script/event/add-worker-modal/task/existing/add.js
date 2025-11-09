@@ -1,9 +1,10 @@
-import { addWorker } from '../../shared.js'
+import { addWorker } from '../../modal.js'
 import { Http } from '../../../../utility/http.js'
 import { Dialog } from '../../../../render/dialog.js'
 import { Notification } from '../../../../render/notification.js'
 
 let isLoading = false
+
 const viewTaskInfo = document.querySelector('.view-task-info')
 const thisProjectId = viewTaskInfo?.dataset.projectid
 if (!thisProjectId || thisProjectId.trim() === '') {
@@ -11,7 +12,6 @@ if (!thisProjectId || thisProjectId.trim() === '') {
     Dialog.somethingWentWrong()
 }
 
-// Just add workers with default behavior
 await addWorker(
     thisProjectId,
     async (projectId, workerIds) => await sendToBackend(projectId, workerIds),
@@ -23,6 +23,21 @@ await addWorker(
     }
 )
 
+/**
+ * Sends a request to the backend to add workers to a specific task within a project.
+ *
+ * - Checks if a request is already in progress and prevents duplicate submissions.
+ * - Validates the presence of required parameters: projectId, taskId (from DOM), and workerIds.
+ * - Sends a POST request to the backend with the provided worker IDs for the specified project and task.
+ * - Handles errors and ensures loading state is properly managed.
+ *
+ * @async
+ * @function
+ * @param {string} projectId - The ID of the project to which the task belongs.
+ * @param {string[]} workerIds - An array of worker IDs to be added to the task.
+ * @returns {Promise<any>} The response from the backend if the request is successful.
+ * @throws {Error} If required parameters are missing, the request is already in progress, or the backend returns an error.
+ */
 async function sendToBackend(projectId, workerIds) {
     try {
         if (isLoading) {
@@ -31,19 +46,23 @@ async function sendToBackend(projectId, workerIds) {
         }
         isLoading = true
 
-        if (!projectId || projectId.trim() === '')
+        if (!projectId || projectId.trim() === '') {
             throw new Error('Project ID is required.')
+        }
 
         const taskId = viewTaskInfo?.dataset.taskid
-        if (!taskId || taskId.trim() === '')
+        if (!taskId || taskId.trim() === '') {
             throw new Error('Task ID not found in the DOM.')
+        }
 
-        if (!workerIds || workerIds.length === 0)
+        if (!workerIds || workerIds.length === 0) {
             throw new Error('No worker IDs provided.')
+        }
 
         const response = await Http.POST(`projects/${projectId}/tasks/${taskId}/workers`, { workerIds })
-        if (!response)
+        if (!response) {
             throw new Error('No response from server.')
+        }
 
         return response
     } catch (error) {
@@ -303,26 +322,3 @@ export function renderWorkerGridCards(workersData, container, clearContainer = t
         container.appendChild(workerCard)
     })
 }
-
-// Example usage:
-/*
-const workerData = {
-    id: 'WKR-12345',
-    firstName: 'John',
-    lastName: 'Doe',
-    email: 'john.doe@example.com',
-    contactNumber: '+1234567890',
-    profileLink: 'path/to/profile.jpg', // optional
-    status: 'ACTIVE',
-    completedTasks: 15,
-    performance: 92
-}
-
-const container = document.querySelector('.workers-grid')
-const workerCard = createWorkerGridCard(workerData)
-container.appendChild(workerCard)
-
-// Or render multiple cards:
-const workersArray = [workerData1, workerData2, workerData3]
-renderWorkerGridCards(workersArray, container)
-*/

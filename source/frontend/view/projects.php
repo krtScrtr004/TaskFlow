@@ -7,28 +7,23 @@ use App\Enumeration\WorkStatus;
 use App\Utility\ProjectManagerPerformanceCalculator;
 use App\Utility\WorkerPerformanceCalculator;
 
-
-if (!isset($projects))
-    throw new ErrorException('Projects data are required to render this view');
-
 $additionalInfo = Me::getInstance()->getAdditionalInfo();
-$terminationCount = array_key_exists('terminationCount', $additionalInfo)
-    ? htmlspecialchars(formatNumber($additionalInfo['terminationCount'])) : 0;
+$terminatedProjectCount = array_key_exists('terminatedProjectCount', $additionalInfo)
+    ? htmlspecialchars(formatNumber($additionalInfo['terminatedProjectCount'])) : 0;
 
 $statisticsData = [
-    'total' => htmlspecialchars(formatNumber($projects->count())),
-    'completed' => htmlspecialchars(formatNumber($projects->getCountByStatus(WorkStatus::COMPLETED))),
-    'cancelled' => htmlspecialchars(formatNumber($projects->getCountByStatus(WorkStatus::CANCELLED)))
+    'performance'   => 0,
+    'total'         => htmlspecialchars(formatNumber($projects?->count() ?? 0)),
+    'completed'     => htmlspecialchars(formatNumber($projects?->getCountByStatus(WorkStatus::COMPLETED) ?? 0)),
+    'cancelled'     => htmlspecialchars(formatNumber($projects?->getCountByStatus(WorkStatus::CANCELLED) ?? 0))
 ];
 
-$calculateStatistics = [];
-if (Role::isProjectManager(Me::getInstance())) {
-    $calculateStatistics = ProjectManagerPerformanceCalculator::calculate($projects);
-} else {
-    // TODO: Get all user tasks (LATEST 10 projects only)
-    $calculateStatistics = WorkerPerformanceCalculator::calculate(ProjectModel::all());
+if (isset($projects)) {
+    $calculateStatistics = Role::isProjectManager(Me::getInstance())
+        ? ProjectManagerPerformanceCalculator::calculate($projects)
+        : WorkerPerformanceCalculator::calculate($projects);
+    $statisticsData['performance'] = htmlspecialchars(formatNumber($calculateStatistics['overallScore']));
 }
-$statisticsData['performance'] = htmlspecialchars(formatNumber($calculateStatistics['overallScore']));
 
 ?>
 
@@ -75,16 +70,12 @@ $statisticsData['performance'] = htmlspecialchars(formatNumber($calculateStatist
                     <img src="<?= ICON_PATH . 'progress_w.svg' ?>" alt="Performance" title="Performance" height="45">
 
                     <?php
-                    switch ($statisticsData['performance']) {
-                        case $statisticsData['performance'] >= 90:
-                            $performanceClass = 'green-text';
-                            break;
-                        case $statisticsData['performance'] >= 75:
-                            $performanceClass = 'yellow-text';
-                            break;
-                        default:
-                            $performanceClass = 'red-text';
-                            break;
+                    if ($statisticsData['performance'] >= 90) {
+                        $performanceClass = 'green-text';
+                    } elseif ($statisticsData['performance'] >= 75) {
+                        $performanceClass = 'yellow-text';
+                    } else {
+                        $performanceClass = 'red-text';
                     }
                     ?>
                     <h1 class="<?= $performanceClass ?>">
@@ -96,7 +87,7 @@ $statisticsData['performance'] = htmlspecialchars(formatNumber($calculateStatist
             <hr>
 
             <!-- Total -->
-            <div class="flex-col flex-child-center-v">
+            <div class="total flex-col flex-child-center-v">
                 <h3 class="start-text">Total</h3>
 
                 <div class="text-w-icon">
@@ -108,7 +99,7 @@ $statisticsData['performance'] = htmlspecialchars(formatNumber($calculateStatist
             <hr>
 
             <!-- Completed -->
-            <div class="flex-col flex-child-center-v">
+            <div class="completed flex-col flex-child-center-v">
                 <h3 class="start-text">Completed</h3>
 
                 <div class="text-w-icon">
@@ -121,7 +112,7 @@ $statisticsData['performance'] = htmlspecialchars(formatNumber($calculateStatist
             <hr>
 
             <!-- Canceled -->
-            <div class="cancel flex-col flex-child-center-v">
+            <div class="cancel cancelled flex-col flex-child-center-v">
                 <h3 class="start-text">Canceled</h3>
 
                 <div class="text-w-icon">
@@ -141,7 +132,7 @@ $statisticsData['performance'] = htmlspecialchars(formatNumber($calculateStatist
                     <div class="text-w-icon">
                         <img src="<?= ICON_PATH . 'close_w.svg' ?>" alt="Terminated Projects" title="Terminated Projects"
                             height="30">
-                        <h3><?= $terminationCount ?></h3>
+                        <h3><?= $terminatedProjectCount ?></h3>
                     </div>
                 </div>
             <?php endif; ?>
@@ -171,9 +162,18 @@ $statisticsData['performance'] = htmlspecialchars(formatNumber($calculateStatist
             </section>
 
             <div class="sentinel"></div>
+
+            <div
+                class="no-projects-wall no-content-wall <?= $projects?->count() < 1 ? 'flex-col' : 'no-display' ?>">
+                <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No projects available" title="No projects available"
+                    height="70">
+                <h3 class="center-text">No projects found.</h3>
+            </div>
         </section>
 
     </main>
+
+    <script type="module" src="<?= EVENT_PATH . 'logout.js' ?>" defer></script>
 
     <script type="module" src="<?= EVENT_PATH . 'projects' . DS . 'infinite-scroll.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'projects' . DS . 'search.js' ?>" defer></script>

@@ -39,8 +39,8 @@ class TaskContainer extends Container
         if (!$task instanceof Task) {
             throw new InvalidArgumentException("Only Task instances can be added to TaskContainer.");
         }
-        $this->items[] = $task;
         $this->increaseTaskCount($task);
+        $this->items[$task->getId()] = $task;
     }
 
     public function remove($item): void
@@ -49,11 +49,16 @@ class TaskContainer extends Container
             throw new InvalidArgumentException('Only Task instances can be removed from TaskContainer.');
         }
 
-        $index = array_search($item, $this->items, true);
-        if ($index !== false) {
-            array_splice($this->items, $index, 1);
-        }
         $this->decreaseTaskCount($item);
+        unset($this->items[$item->getId()]);
+    }
+
+    public function contains($item): bool
+    {
+        if (!$item instanceof Task) {
+            throw new InvalidArgumentException('Only Task instances can be checked in TaskContainer.');
+        }
+        return isset($this->items[$item->getId()]);
     }
 
     private function increaseTaskCount(Task $task): void
@@ -106,7 +111,11 @@ class TaskContainer extends Container
 
     public function toArray(): array
     {
-        return array_map(fn($task) => $task->toArray(), $this->items);
+        $tasksArray = [];
+        foreach ($this->items as $task) {
+            $tasksArray[] = $task->toArray();
+        }
+        return $tasksArray;
     }
 
     /**

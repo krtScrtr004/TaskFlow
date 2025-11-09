@@ -7,21 +7,21 @@
  */
 function searchBar(
     ?array $filterOptions = null,
-    string $placeholder = 'Search by Name or ID'
+    string $placeholder = 'Search...'
 ): string {
     if (!isAssociativeArray($filterOptions)) 
         throw new InvalidArgumentException('Filter options must be an associative array.');
 
     $searchKey = isset($_GET['key']) ? htmlspecialchars($_GET['key']) : '';
-    $searchFilter = isset($_GET['filter']) ? htmlspecialchars($_GET['filter']) : 'all';
+    $searchFilter = htmlspecialchars($_GET['filter'] ?? 'all');
 
     ob_start();
     ?>
     <form class="search-bar" action="" method="POST">
         <div>
             <input class="search-input" type="text" name="search_bar_input" id="search_bar_input"
-                placeholder="<?= $placeholder ?>" min="1" max="255" value="<?= $searchKey ?>" autocomplete="on" required>
-            <button class="search-button" id="search_bar_button" type="button">
+                placeholder="<?= $placeholder ?>" min="<?= NAME_MIN ?>" max="<?= NAME_MAX ?>" value="<?= $searchKey ?>" autocomplete="on" required>
+            <button class="search-button" id="search_bar_button" type="submit">
                 <img src="<?= ICON_PATH . 'search_w.svg' ?>" alt="Search" title="Search" height="20">
             </button>
         </div>

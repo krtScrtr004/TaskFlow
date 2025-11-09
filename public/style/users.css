@@ -9,3 +9,16 @@
 	gap: 1rem;
 }
 
+.no-users-wall {
+	height: 60vh;
+}
+
+.no-users-wall > img {
+	height: 10rem;
+}
+
+.no-users-wall > h3 {
+	margin-top: 0.8rem;
+	font-size: 1.3rem;
+	font-weight: 300;
+}

@@ -1,11 +1,12 @@
 <?php
 
 use App\Entity\Project;
+use App\Core\UUID;
 use App\Enumeration\WorkStatus;
 
 function projectGridCard(Project $project): string
 {
-    $id = htmlspecialchars($project->getPublicId());
+    $id = htmlspecialchars(UUID::toString($project->getPublicId()));
     $name = htmlspecialchars($project->getName());
     $description = htmlspecialchars($project->getDescription()) ?? 'No description provided';
     $startDateTime = htmlspecialchars(
@@ -19,7 +20,7 @@ function projectGridCard(Project $project): string
     ob_start();
     ?>
     <div class="project-grid-card">
-        <a class="full-body-content flex-col" href="<?= REDIRECT_PATH . 'home' . DS . $id ?>">
+        <a class="full-body-content flex-col" href="<?= REDIRECT_PATH . 'project' . DS . $id ?>">
 
             <!-- Primary Info -->
             <section class="project-primary-info">

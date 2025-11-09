@@ -3,6 +3,8 @@
 <!-- Create Project Form -->
 <form id="create_project_form" class="create-project flex-col" action="" method="POST">
 
+    <?= hiddenCsrfInput() ?>
+
     <!-- Project Details -->
     <fieldset class="project-details flex-col">
         <!-- Project Name -->
@@ -11,10 +13,11 @@
                 <div class="text-w-icon">
                     <img src="<?= ICON_PATH . 'name_w.svg' ?>" alt="Project Name" title="Project Name" height="20">
 
-                    <p class="">Project Name</p>
+                    <p>Project Name</p>
                 </div>
             </label>
-            <input type="text" name="project_name" id="project_name" placeholder="Enter project name" required>
+            <input type="text" name="project_name" id="project_name" placeholder="Enter project name"
+                min="<?= NAME_MIN ?>" max="<?= NAME_MAX ?>" required>
         </div>
 
         <!-- Project Description -->
@@ -26,7 +29,9 @@
                     <p>Description</p>
                 </div>
             </label>
-            <textarea name="project-description" id="project_description" rows="5" cols="10"></textarea>
+
+            <textarea name="project-description" id="project_description" rows="5" cols="10" min="<?= LONG_TEXT_MIN ?>"
+                max="<?= LONG_TEXT_MAX ?>" placeholder="(Optional) Type here..."></textarea>
         </div>
 
         <!-- Project Secondary Info -->
@@ -40,7 +45,8 @@
                         <p>Budget</p>
                     </div>
                 </label>
-                <input type="number" name="project-budget" id="project_budget" value="0" min="0" max="9999999999"
+
+                <input type="number" name="project-budget" id="project_budget" value="0" min="<?= BUDGET_MIN ?>" max="<?= BUDGET_MAX ?>"
                     required>
             </div>
 
@@ -53,6 +59,7 @@
                         <p>Start Date</p>
                     </div>
                 </label>
+
                 <input type="date" name="project-start-date" id="project_start_date"
                     value="<?= (new DateTime())->format('Y-m-d') ?>" required>
             </div>
@@ -66,6 +73,7 @@
                         <p>Completion Date</p>
                     </div>
                 </label>
+                
                 <input type="date" name="project-completion-date" id="project_completion_date"
                     value="<?= (new DateTime())->format('Y-m-d') ?>" required>
             </div>
@@ -76,7 +84,7 @@
     <hr>
 
     <!-- Phases Field -->
-    <fieldset class="phase-details flex-col">
+    <fieldset id="phase_fieldset" class="phase-details flex-col">
 
         <!-- Heading -->
         <section class="heading">
@@ -103,7 +111,7 @@
     </fieldset>
 
     <!-- Submit Button -->
-    <button id="submit_project_button" type="button" class="blue-bg">
+    <button id="submit_project_button" type="submit" class="blue-bg">
         <div class="text-w-icon">
             <img src="<?= ICON_PATH . 'save_w.svg' ?>" alt="Submit Project" title="Submit Project" height="20">
             <h3 class="white-text">Submit</h3>

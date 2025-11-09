@@ -1,8 +1,11 @@
-import { addPhase } from '../add-phase.js';
+import { addPhase } from '../add-phase.js'
+import { Dialog } from '../../../../render/dialog.js'
+import { handleException } from '../../../../utility/handle-exception.js'
 
 try {
+    // Initialize the add phase functionality
     addPhase({
-        allowDisable: false,
+        allowDisable: false, // Disabling phases input is not allowed when creating a project
         action: function () {
             const noPhasesWall = document.querySelector('.no-phases-wall')
             noPhasesWall?.classList.remove('flex-col')
@@ -10,6 +13,5 @@ try {
         }
     })
 } catch (error) {
-    console.error('Error initializing addPhase:', error)
-    Dialog.errorOccurred('Failed to initialize add phase functionality. Please refresh the page and try again.')
+    handleException(error, 'Error initializing addPhase:', error)
 }

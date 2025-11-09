@@ -23,6 +23,22 @@
 	--card-height: 300px;
 }
 
+@font-face {
+	font-family: 'NunitoSans';
+	src: url('../font/RobotoCondensed-VariableFont_wght.ttf') format('truetype');
+	font-weight: 100 900; /* Variable font weight range */
+	font-style: normal;
+	font-display: swap; /* Prevents FOIT (Flash of Invisible Text) */
+}
+
+@font-face {
+	font-family: 'NunitoSans';
+	src: url('../font/RobotoCondensed-Italic-VariableFont_wght.ttf') format('truetype');
+	font-weight: 100 900;
+	font-style: italic;
+	font-display: swap;
+}
+
 /* For Webkit browsers (Chrome, Safari, Edge) */
 ::-webkit-scrollbar {
 	width: 8px;
@@ -64,8 +80,7 @@ body {
 	width: 100%;
 	height: 100%;
 	position: relative;
-	font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS',
-		sans-serif;
+	font-family: 'NunitoSans', 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
 	scroll-behavior: smooth;
 }
 

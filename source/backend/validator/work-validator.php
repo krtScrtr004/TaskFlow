@@ -12,8 +12,8 @@ class WorkValidator extends Validator
      */
     public function validateName(?string $name): void
     {
-        if ($name === null || strlen(trim($name)) < 3 || strlen(trim($name)) > 255) {
-            $this->errors['name'] = 'Name must be between 3 and 255 characters long.';
+        if ($name === null || strlen(trim($name)) < NAME_MIN || strlen(trim($name)) > NAME_MAX) {
+            $this->errors[] = 'Name must be between ' . NAME_MIN . ' and ' . NAME_MAX . ' characters long.';
         }
     }
 
@@ -22,8 +22,8 @@ class WorkValidator extends Validator
      */
     public function validateDescription(?string $description): void
     {
-        if ($description !== null && (strlen(trim($description)) < 5 || strlen(trim($description)) > 500)) {
-            $this->errors['description'] = 'Description must be between 5 and 500 characters long.';
+        if ($description !== null && (strlen(trim($description)) < LONG_TEXT_MIN || strlen(trim($description)) > LONG_TEXT_MAX)) {
+            $this->errors[] = 'Description must be between ' . LONG_TEXT_MIN . ' and ' . LONG_TEXT_MAX . ' characters long.';
         }
     }
 
@@ -32,8 +32,8 @@ class WorkValidator extends Validator
      */
     public function validateBudget($budget): void
     {
-        if ($budget === null || !is_numeric($budget) || $budget < 0 || $budget > 1000000) {
-            $this->errors['budget'] = 'Budget must be a number between 0 and 1,000,000.';
+        if ($budget === null || !is_numeric($budget) || $budget < BUDGET_MIN || $budget > BUDGET_MAX) {
+            $this->errors[] = 'Budget must be a number between ' . BUDGET_MIN . ' and ' . BUDGET_MAX . '.';
         }
     }
 
@@ -43,14 +43,14 @@ class WorkValidator extends Validator
     public function validateStartDateTime(?DateTime $startDateTime): void
     {
         if ($startDateTime === null) {
-            $this->errors['startDateTime'] = 'Invalid start date and time.';
+            $this->errors[] = 'Invalid start date and time.';
             return;
         }
 
-        $currentDate = new DateTime();
-        if ($startDateTime < $currentDate) {
-            $this->errors['startDateTime'] = 'Start date cannot be in the past.';
-        }
+        // $currentDate = new DateTime();
+        // if ($startDateTime < $currentDate) {
+        //     $this->errors[] = 'Start date cannot be in the past.';
+        // }
     }
 
     /**
@@ -59,12 +59,51 @@ class WorkValidator extends Validator
     public function validateCompletionDateTime(?DateTime $completionDateTime, ?DateTime $startDateTime = null): void
     {
         if ($completionDateTime === null) {
-            $this->errors['completionDateTime'] = 'Invalid completion date and time.';
+            $this->errors[] = 'Invalid completion date and time.';
             return;
         }
 
         if ($startDateTime !== null && $completionDateTime <= $startDateTime) {
-            $this->errors['completionDateTime'] = 'Completion date must be after the start date.';
+            $this->errors[] = 'Completion date must be after the start date.';
+        }
+    }
+
+    /**
+     * Validate that phase/task dates are within project date bounds
+     * 
+     * @param DateTime|null $startDateTime The phase/task start date
+     * @param DateTime|null $completionDateTime The phase/task completion date
+     * @param DateTime|null $projectStartDateTime The project start date
+     * @param DateTime|null $projectCompletionDateTime The project completion date
+     * @return void
+     */
+    public function validateDateBounds(
+        ?DateTime $startDateTime,
+        ?DateTime $completionDateTime,
+        ?DateTime $projectStartDateTime,
+        ?DateTime $projectCompletionDateTime
+    ): void {
+        if ($startDateTime === null || $completionDateTime === null) {
+            $this->errors[] = 'Start date and completion date are required.';
+            return;
+        }
+        
+
+        if ($projectStartDateTime === null || $projectCompletionDateTime === null) {
+            $this->errors[] = 'Project start date and completion date are required.';
+            return;
+        }
+
+        if ($startDateTime < $projectStartDateTime) {
+            $this->errors[] = 'Start date cannot be before project start date.';
+        }
+
+        if ($startDateTime > $projectCompletionDateTime) {
+            $this->errors[] = 'Start date cannot be after project completion date.';
+        }
+
+        if ($completionDateTime > $projectCompletionDateTime) {
+            $this->errors[] = 'Completion date cannot be after project completion date.';
         }
     }
 

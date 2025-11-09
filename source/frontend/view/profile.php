@@ -1,6 +1,7 @@
 <?php
 
 use App\Core\Me;
+use App\Core\UUID;
 use App\Enumeration\Gender;
 use App\Enumeration\Role;
 
@@ -9,7 +10,7 @@ if (!$me)
     throw new Exception("User is required to view profile.");
 
 $myData = [
-    'id' => htmlspecialchars($me->getPublicId()),
+    'id' => htmlspecialchars(UUID::toString($me->getPublicId())),
     'firstName' => htmlspecialchars($me->getFirstName()),
     'middleName' => htmlspecialchars($me->getMiddleName()),
     'lastName' => htmlspecialchars($me->getLastName()),
@@ -54,8 +55,8 @@ $myData = [
             <!-- Profile Picture -->
             <section class="flex-col">
                 <!-- Profile Picture Overview -->
-                <img class="circle fit-contain" id="profile_picture_overview" src="<?= $myData['profileLink'] ?>"
-                    alt="<?= $myData['fullName'] ?>" title="<?= $myData['fullName'] ?>" height="100">
+                <img class="circle fit-cover" id="profile_picture_overview" src="<?= $myData['profileLink'] ?>"
+                    alt="<?= $myData['fullName'] ?>" title="<?= $myData['fullName'] ?>" loading="lazy" height="100">
 
                 <div>
                     <input class="no-display" type="file" name="profile_picker" id="profile_picker"
@@ -108,6 +109,7 @@ $myData = [
 
         <!-- Editable Profile Details -->
         <form id="editable_profile_details_form" class="content-section-block flex-col" action="" method="POST">
+            <?= hiddenCsrfInput() ?>
 
             <!-- Heading-->
             <div class="text-w-icon">
@@ -274,6 +276,8 @@ $myData = [
         </section>
 
     </main>
+
+    <script type="module" src="<?= EVENT_PATH . 'logout.js' ?>" defer></script>
 
     <script type="module" src="<?= EVENT_PATH . 'profile' . DS . 'change-profile.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'profile' . DS . 'submit.js' ?>" defer></script>

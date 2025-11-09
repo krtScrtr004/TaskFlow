@@ -11,10 +11,11 @@ use DateTime;
 
 class Me extends User
 {
-    private static Me $me;
+    private static ?Me $me = null;
 
     public static function instantiate(User|array $data): void
     {
+        // Allow re-instantiation to update the Me instance with new data
         if ($data instanceof User) {
             self::$me = new self(
                 id: $data->getId(),
@@ -57,5 +58,10 @@ class Me extends User
     public static function getInstance(): ?self
     {
         return self::$me ?? null;
+    }
+
+    public static function destroy(): void
+    {
+        self::$me = null;
     }
 }
