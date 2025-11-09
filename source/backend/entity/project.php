@@ -620,7 +620,7 @@ class Project implements Entity
         if (isset($data['publicId']) && !($data['publicId'] instanceof UUID)) {
             try {
                 $defaults['publicId'] = UUID::fromString($data['publicId']);
-            } catch (ExceptionInvalidArgumentException $e) {
+            } catch (Exception $e) {
                 $defaults['publicId'] = UUID::fromBinary($data['publicId']);
             }
         }
