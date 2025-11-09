@@ -17,6 +17,7 @@ use App\Validator\UrlValidator;
 use DateTime;
 use Exception;
 use InvalidArgumentException;
+use Ramsey\Uuid\Exception\InvalidArgumentException as ExceptionInvalidArgumentException;
 
 require_once ENUM_PATH . 'role.php';
 
@@ -640,7 +641,7 @@ class User implements Entity
         if (isset(($data['publicId'])) && !($data['publicId'] instanceof UUID)) {
             try {
                 $defaults['publicId'] = UUID::fromString($data['publicId']);
-            } catch (Exception $e) {
+            } catch (ExceptionInvalidArgumentException $e) {
                 $defaults['publicId'] = UUID::fromBinary($data['publicId']);
             }
         }

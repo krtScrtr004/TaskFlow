@@ -11,6 +11,7 @@ use App\Validator\WorkValidator;
 use DateTime;
 use Exception;
 use InvalidArgumentException;
+use Ramsey\Uuid\Exception\InvalidArgumentException as ExceptionInvalidArgumentException;
 
 class Phase implements Entity
 {
@@ -294,7 +295,7 @@ class Phase implements Entity
         if (isset($data['publicId']) && !($data['publicId'] instanceof UUID)) {
             try {
                 $defaults['publicId'] = UUID::fromString($data['publicId']);
-            } catch (Exception $e) {
+            } catch (ExceptionInvalidArgumentException $e) {
                 $defaults['publicId'] = UUID::fromBinary($data['publicId']);
             }
 

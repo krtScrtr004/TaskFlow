@@ -103,9 +103,7 @@ class TaskWorkerModel extends Model
                 $row['jobTitles'] = explode(',', $row['jobTitles']);
                 $row['additionalInfo'] = [
                     'totalTasks'        => (int) $row['totalTasks'],
-                    'completedTasks'    => (int) $row['completedTasks'],
-                    'totalProjects'     => (int) $row['totalProjects'],
-                    'completedProjects' => (int) $row['completedProjects'],
+                    'completedTasks'    => (int) $row['completedTasks']
                 ];
                 $workers->add(Worker::createPartial($row));
             }

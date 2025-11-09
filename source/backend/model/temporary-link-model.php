@@ -39,6 +39,7 @@ class TemporaryLinkModel extends Model
         try {
             $instance = new self();
 
+            $hashedToken = hash('sha256', $data['token']);
             $query = "
                 INSERT INTO `temporaryLink` (userEmail, token) 
                 VALUES (:email, :token1) 
@@ -47,10 +48,9 @@ class TemporaryLinkModel extends Model
             $statement = $instance->connection->prepare($query);
             $statement->execute([
                 ':email' => $data['email'],
-                ':token1' => $data['token'],
-                ':token2' => $data['token']
+                ':token1' => $hashedToken,
+                ':token2' => $hashedToken
             ]);
-            $statement->execute();
             
             return true;
         } catch (PDOException $e) {

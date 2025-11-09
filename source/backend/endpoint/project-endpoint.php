@@ -171,7 +171,7 @@ class ProjectEndpoint
             }
 
             // Check if user has active project 
-            if (ProjectModel::findByManagerId(Me::getInstance()->getId())) {
+            if (ProjectModel::findManagerActiveProjectByManagerId(Me::getInstance()->getId())) {
                 throw new ForbiddenException('User already has an active project.');
             }
 

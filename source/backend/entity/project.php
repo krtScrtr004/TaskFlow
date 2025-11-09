@@ -19,6 +19,7 @@ use BcMath\Number;
 use DateTime;
 use Exception;
 use Ramsey\Collection\Exception\InvalidArgumentException;
+use Ramsey\Uuid\Exception\InvalidArgumentException as ExceptionInvalidArgumentException;
 
 class Project implements Entity
 {
@@ -619,7 +620,7 @@ class Project implements Entity
         if (isset($data['publicId']) && !($data['publicId'] instanceof UUID)) {
             try {
                 $defaults['publicId'] = UUID::fromString($data['publicId']);
-            } catch (Exception $e) {
+            } catch (ExceptionInvalidArgumentException $e) {
                 $defaults['publicId'] = UUID::fromBinary($data['publicId']);
             }
         }

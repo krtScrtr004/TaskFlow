@@ -556,7 +556,7 @@ class ProjectWorkerModel extends Model
                                         SELECT CONCAT('[', GROUP_CONCAT(
                                             JSON_OBJECT(
                                                 'id', t.id,
-                                                'publicId', HEX(t.id),
+                                                'publicId', HEX(t.publicId),
                                                 'name', t.name,
                                                 'status', t.status,
                                                 'startDateTime', t.startDateTime,

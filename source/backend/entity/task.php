@@ -15,6 +15,7 @@ use App\Validator\WorkValidator;
 use DateTime;
 use Exception;
 use Ramsey\Collection\Exception\InvalidArgumentException;
+use Ramsey\Uuid\Exception\InvalidArgumentException as ExceptionInvalidArgumentException;
 
 class Task implements Entity
 {
@@ -453,7 +454,7 @@ class Task implements Entity
         if (isset($data['publicId']) && !($data['publicId'] instanceof UUID)) {
             try {
                 $defaults['publicId'] = UUID::fromString($data['publicId']);
-            } catch (Exception $e) {
+            } catch (ExceptionInvalidArgumentException $e) {
                 // fall back to generated UUID
                 $defaults['publicId'] = UUID::fromBinary($data['publicId']);
             }
