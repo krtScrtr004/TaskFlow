@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 30, 2025 at 03:15 PM
+-- Generation Time: Nov 09, 2025 at 09:37 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -49,10 +49,6 @@ DELIMITER $$
 CREATE TRIGGER `cancelProject` AFTER UPDATE ON `project` FOR EACH ROW BEGIN
     -- Only act when status changes to 'cancelled'
     IF NEW.status = 'cancelled' AND OLD.status <> 'cancelled' THEN
-        UPDATE projectWorker
-        SET status = 'unassigned'
-        WHERE projectId = NEW.id;
-
         UPDATE projectPhase
         SET status = 'cancelled'
         WHERE projectId = NEW.id;
@@ -67,7 +63,7 @@ DELIMITER ;
 DELIMITER $$
 CREATE TRIGGER `checkProjectDatesBeforeInsert` BEFORE INSERT ON `project` FOR EACH ROW BEGIN
     -- 1. Check that startDateTime is not in the past (allow current moment)
-    IF NEW.startDateTime < DATE_SUB(NOW(), INTERVAL 1 SECOND) THEN
+    IF NEW.startDateTime < CURRENT_DATE() THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'startDateTime cannot be in the past.';
     END IF;
@@ -95,7 +91,7 @@ CREATE TRIGGER `checkProjectDatesBeforeUpdate` BEFORE UPDATE ON `project` FOR EA
         OR NEW.actualCompletionDateTime <> OLD.actualCompletionDateTime) THEN
         
         -- 1. startDateTime cannot be in the past (allow current moment)
-        IF NEW.startDateTime < DATE_SUB(NOW(), INTERVAL 1 SECOND) THEN
+        IF NEW.startDateTime < CURRENT_DATE() THEN
             SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'startDateTime cannot be in the past.';
         END IF;
@@ -139,7 +135,7 @@ CREATE TABLE `projectphase` (
 --
 DELIMITER $$
 CREATE TRIGGER `checkProjectPhaseDatesBeforeInsert` BEFORE INSERT ON `projectphase` FOR EACH ROW BEGIN
-    IF NEW.startDateTime < DATE_SUB(NOW(), INTERVAL 1 SECOND) THEN
+    IF NEW.startDateTime < CURRENT_DATE() THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'startDateTime cannot be in the past.';
     END IF;
@@ -153,7 +149,7 @@ $$
 DELIMITER ;
 DELIMITER $$
 CREATE TRIGGER `checkProjectPhaseDatesBeforeUpdate` BEFORE UPDATE ON `projectphase` FOR EACH ROW BEGIN
-    IF NEW.startDateTime < DATE_SUB(NOW(), INTERVAL 1 SECOND) THEN
+    IF NEW.startDateTime < CURRENT_DATE() THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'startDateTime cannot be in the past.';
     END IF;
@@ -191,20 +187,9 @@ CREATE TABLE `projecttask` (
 -- Triggers `projecttask`
 --
 DELIMITER $$
-CREATE TRIGGER `cancelTask` AFTER UPDATE ON `projecttask` FOR EACH ROW BEGIN
-    -- Only act when task status changes to 'cancelled'
-    IF NEW.status = 'cancelled' AND OLD.status <> 'cancelled' THEN
-        UPDATE projectTaskWorker
-        SET status = 'unassigned'
-        WHERE taskId = NEW.id;
-    END IF;
-END
-$$
-DELIMITER ;
-DELIMITER $$
 CREATE TRIGGER `checkProjectTaskDatesBeforeInsert` BEFORE INSERT ON `projecttask` FOR EACH ROW BEGIN
     -- 1. Check that startDateTime is not in the past (allow current moment)
-    IF NEW.startDateTime < DATE_SUB(NOW(), INTERVAL 1 SECOND) THEN
+    IF NEW.startDateTime < CURRENT_DATE() THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'startDateTime cannot be in the past.';
     END IF;
@@ -232,7 +217,7 @@ CREATE TRIGGER `checkProjectTaskDatesBeforeUpdate` BEFORE UPDATE ON `projecttask
         OR NEW.actualCompletionDateTime <> OLD.actualCompletionDateTime) THEN
         
         -- 1. startDateTime cannot be in the past (allow current moment)
-        IF NEW.startDateTime < DATE_SUB(NOW(), INTERVAL 1 SECOND) THEN
+        IF NEW.startDateTime < CURRENT_DATE() THEN
             SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'startDateTime cannot be in the past.';
         END IF;
@@ -264,7 +249,7 @@ CREATE TABLE `projecttaskworker` (
   `id` int(11) NOT NULL,
   `workerId` int(11) NOT NULL,
   `taskId` int(11) NOT NULL,
-  `status` varchar(25) NOT NULL CHECK (`status` in ('assigned','unassigned','terminated'))
+  `status` varchar(25) DEFAULT NULL CHECK (`status` in ('assigned','terminated'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -277,7 +262,21 @@ CREATE TABLE `projectworker` (
   `id` int(11) NOT NULL,
   `workerId` int(11) NOT NULL,
   `projectId` int(11) NOT NULL,
-  `status` varchar(25) NOT NULL CHECK (`status` in ('assigned','unassigned','terminated'))
+  `status` varchar(25) DEFAULT NULL CHECK (`status` in ('assigned','terminated'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `temporarylink`
+--
+
+CREATE TABLE `temporarylink` (
+  `id` int(11) NOT NULL,
+  `userEmail` varchar(255) DEFAULT NULL,
+  `token` varchar(255) NOT NULL,
+  `createdAt` datetime DEFAULT current_timestamp(),
+  `updatedAt` datetime DEFAULT NULL ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -380,13 +379,20 @@ ALTER TABLE `projectworker`
   ADD KEY `projectId` (`projectId`);
 
 --
+-- Indexes for table `temporarylink`
+--
+ALTER TABLE `temporarylink`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `userEmail` (`userEmail`);
+
+--
 -- Indexes for table `user`
 --
 ALTER TABLE `user`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `email` (`email`),
   ADD UNIQUE KEY `publicId` (`publicId`);
-ALTER TABLE `user` ADD FULLTEXT KEY `userFulltextIndex` (`firstName`,`middleName`,`lastName`,`bio`,`email`);
+ALTER TABLE `user` ADD FULLTEXT KEY `userFullTextIndex` (`firstName`,`middleName`,`lastName`,`bio`,`email`);
 
 --
 -- Indexes for table `userjobtitle`
@@ -404,13 +410,13 @@ ALTER TABLE `userjobtitle`
 -- AUTO_INCREMENT for table `project`
 --
 ALTER TABLE `project`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `projectphase`
 --
 ALTER TABLE `projectphase`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `projecttask`
@@ -428,19 +434,25 @@ ALTER TABLE `projecttaskworker`
 -- AUTO_INCREMENT for table `projectworker`
 --
 ALTER TABLE `projectworker`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `temporarylink`
+--
+ALTER TABLE `temporarylink`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `user`
 --
 ALTER TABLE `user`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `userjobtitle`
 --
 ALTER TABLE `userjobtitle`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- Constraints for dumped tables
@@ -477,6 +489,12 @@ ALTER TABLE `projecttaskworker`
 ALTER TABLE `projectworker`
   ADD CONSTRAINT `projectworker_ibfk_1` FOREIGN KEY (`workerId`) REFERENCES `user` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `projectworker_ibfk_2` FOREIGN KEY (`projectId`) REFERENCES `project` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `temporarylink`
+--
+ALTER TABLE `temporarylink`
+  ADD CONSTRAINT `temporarylink_ibfk_1` FOREIGN KEY (`userEmail`) REFERENCES `user` (`email`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `userjobtitle`
