@@ -47,7 +47,11 @@ async function sendLink(e) {
         Dialog.sendLink(true)
     } catch (error) {
         console.error('Error sending password reset link:', error)
-        Dialog.sendLink(false)
+        if (error?.status === 422) {
+            Dialog.errorOccurred('Invalid email address provided.')
+        } else {
+            Dialog.sendLink(false)
+        }
     } finally {
         Loader.delete()
         isLoading = false

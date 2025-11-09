@@ -86,13 +86,13 @@ function userGridCard(User|Worker $user): string
             <!-- Worker Email -->
             <div class="text-w-icon">
                 <img src="<?= ICON_PATH . 'email_w.svg' ?>" alt="Worker Email" title="Worker Email" height="20">
-                <p>Email: <?= $email ?></p>
+                <p class="single-line-ellipsis" title="<?= $email ?>">Email: <?= $email ?></p>
             </div>
 
             <!-- Contact Number -->
             <div class="text-w-icon">
                 <img src="<?= ICON_PATH . 'contact_w.svg' ?>" alt="Contact Number" title="Contact Number" height="20">
-                <p>Contact: <?= $contact ?></p>
+                <p class="single-line-ellipsis" title="<?= $contact ?>">Contact: <?= $contact ?></p>
             </div>
         </section>
 

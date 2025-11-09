@@ -162,6 +162,8 @@ export function createUserGridCard(user) {
     emailIcon.height = 20
     
     const emailText = document.createElement('p')
+    emailText.className = 'single-line-ellipsis'
+    emailText.title = email
     emailText.textContent = `Email: ${email}`
     
     emailDiv.appendChild(emailIcon)
@@ -178,6 +180,8 @@ export function createUserGridCard(user) {
     contactIcon.height = 20
     
     const contactText = document.createElement('p')
+    contactText.className = 'single-line-ellipsis'
+    contactText.title = contact
     contactText.textContent = `Contact: ${contact}`
     
     contactDiv.appendChild(contactIcon)

@@ -49,7 +49,7 @@
 			"getByKey"
 		],
 
-		"TaskFlow/endpoint/users/{userId:[\\w_-]+}": ["UserEndpoint", "getUserById"],
+		"TaskFlow/endpoint/users/{userId:[\\w_-]+}": ["UserEndpoint", "getById"],
 		"TaskFlow/endpoint/users(?:\\?[\\w\\s_=\\/%,&@.-]+)?": [
 			"UserEndpoint",
 			"getByKey"
