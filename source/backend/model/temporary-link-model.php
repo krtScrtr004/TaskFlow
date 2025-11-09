@@ -73,7 +73,7 @@ class TemporaryLinkModel extends Model
      * @throws ValidationException If the provided email is invalid.
      * @throws DatabaseException If a database error occurs during the search.
      */
-    public static function search(string $email): mixed 
+    public static function search(string $email, string $token): mixed 
     {
         if (!trimOrNull($email)) {
             throw new ValidationException('Invalid email provided for TemporaryLink search.');
@@ -85,13 +85,21 @@ class TemporaryLinkModel extends Model
             $query = "
                 SELECT * FROM `temporaryLink`
                 WHERE userEmail = :email
+                AND token = :token
                 LIMIT 1
             ";
             $statement = $instance->connection->prepare($query);
-            $statement->execute([':email' => $email]);
+            $statement->execute([
+                ':email' => $email,
+                ':token' => hash('sha256', $token)
+            ]);
             $result = $statement->fetch();
 
-            return $result ?: null;
+            if (!$instance->hasData($result)) {
+                return null;
+            }
+
+            return $result;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }

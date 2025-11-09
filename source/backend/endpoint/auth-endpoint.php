@@ -15,6 +15,8 @@ use App\Enumeration\Gender;
 use App\Auth\SessionAuth;
 use App\Container\JobTitleContainer;
 use App\Core\Me;
+use App\Exception\ForbiddenException;
+use App\Exception\NotFoundException;
 use App\Exception\ValidationException;
 use App\Model\TemporaryLinkModel;
 use App\Service\AuthService;
@@ -129,7 +131,7 @@ class AuthEndpoint implements Controller
 
             $data = decodeData('php://input');
             if (!$data) {
-                throw new \BadFunctionCallException('Cannot decode data.');
+                throw new ValidationException('Cannot decode data.');
             }
 
             // Extract Data
@@ -204,6 +206,32 @@ class AuthEndpoint implements Controller
     }
 
     /**
+     * Logs out the current user by destroying the session and user context.
+     *
+     * This method performs the following actions:
+     * - Destroys the current session using Session::destroy()
+     * - Removes the current user context with Me::destroy()
+     * - Returns a success response if logout is successful
+     * - Handles exceptions and returns an error response if logout fails
+     *
+     * @return void
+     */
+    public static function logout(): void
+    {
+        try {
+            Session::destroy();
+            
+            Me::destroy();
+
+            Response::success([], 'Logout successful.');
+        } catch (Exception $e) {
+            Response::error('Logout Failed.', [
+                'An unexpected error occurred. Please try again.'
+            ], 500);
+        }
+    }
+
+    /**
      * Handles password reset requests by generating and sending a reset link to the user's email.
      *
      * This method performs the following steps:
@@ -230,7 +258,7 @@ class AuthEndpoint implements Controller
 
             $data = decodeData('php://input');
             if (!$data) {
-                throw new \BadFunctionCallException('Cannot decode data.');
+                throw new ValidationException('Cannot decode data.');
             }
 
             // Extract Data
@@ -252,16 +280,17 @@ class AuthEndpoint implements Controller
                 throw new ValidationException('Reset Password Failed.', ['Email not found.']);
             }
 
-            $token = generateRandomString(32);
+            $token = bin2hex(random_bytes(16));
             TemporaryLinkModel::create([
                 'email' => $email,
-                'token' => $token
+                'token' => hash('sha256', $token)
             ]);
 
             // Send reset password link to email 
             if (!$instance->service->sendTemporaryLink($email, $token)) {
                 throw new Exception('Failed to send reset password email.');
             }
+            Session::set('temporaryResetEmail', $email);
 
             Response::success([], 'Reset password link has been sent to your email.');
         } catch (ValidationException $e) {
@@ -278,28 +307,78 @@ class AuthEndpoint implements Controller
     }
 
     /**
-     * Logs out the current user by destroying the session and user context.
+     * Changes the password for a user identified by a temporary reset email or session.
      *
-     * This method performs the following actions:
-     * - Destroys the current session using Session::destroy()
-     * - Removes the current user context with Me::destroy()
-     * - Returns a success response if logout is successful
-     * - Handles exceptions and returns an error response if logout fails
+     * This method performs the following steps:
+     * - Protects against CSRF attacks.
+     * - Extracts the user's email from session or authenticated user instance.
+     * - Validates the existence of the user by email.
+     * - Decodes and validates the new password from the request body.
+     * - Updates the user's password in the database.
+     * - Deletes any temporary password reset link associated with the email.
+     * - Removes the temporary reset email from the session.
+     * - Returns a success response if the password is changed successfully.
+     * - Handles validation, forbidden, not found, and unexpected errors with appropriate responses.
+     *
+     * @throws ValidationException If validation fails for email or password.
+     * @throws ForbiddenException If the operation is not permitted.
+     * @throws NotFoundException If the user is not found.
+     * @throws Exception For any other unexpected errors.
      *
      * @return void
      */
-    public static function logout(): void
+    public static function changePassword(): void
     {
         try {
-            Session::destroy();
-            
-            Me::destroy();
+            Csrf::protect();
 
-            Response::success([], 'Logout successful.');
+            // Extract email from session or Me instance
+            $email = Session::get('temporaryResetEmail') ?? Me::getInstance()?->getEmail() ?? null;
+            if (!$email || !trimOrNull($email)) {
+                throw new ValidationException('Email not found for password reset.');
+            }
+
+            $user = UserModel::findByEmail($email);
+            if (!$user) {
+                throw new NotFoundException('User not found.');
+            }
+
+            $data = decodeData('php://input');
+            if (!$data) {
+                throw new ValidationException('Cannot decode data.');
+            }
+
+            $newPassword = trimOrNull($data['password']);
+            $validator = new UserValidator();
+            $validator->validatePassword($newPassword);
+            if ($validator->hasErrors()) {
+                throw new ValidationException(
+                    'Change Password Failed.',
+                    $validator->getErrors()
+                );
+            }
+
+            // Update password
+            UserModel::save([
+                'id'        => $user->getId(),
+                'password'  => $newPassword
+            ]);
+
+            // Delete temporary link token in the database
+            TemporaryLinkModel::delete($email);
+
+            // Remove temporary reset email from session
+            Session::remove('temporaryResetEmail');
+
+            Response::success([], 'Password changed successfully.');
+        } catch (ValidationException $e) {
+            Response::error('Change Password Failed.', $e->getErrors(), 422);
+        } catch (ForbiddenException $e) {
+            Response::error('Change Password Failed.', $e->getErrors(), 403);
+        } catch (NotFoundException $e) {
+            Response::error('Change Password Failed.', ['User not found.'], 404);
         } catch (Exception $e) {
-            Response::error('Logout Failed.', [
-                'An unexpected error occurred. Please try again.'
-            ], 500);
+            Response::error('Change Password Failed.', ['An unexpected error occurred. Please try again.'], 500);
         }
     }
 }
