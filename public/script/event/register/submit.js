@@ -9,14 +9,6 @@ import { handleException } from '../../utility/handle-exception.js'
 
 let isLoading = false
 
-const registerButton = registerForm?.querySelector('#register_button')
-if (!registerButton) {
-    console.error('Register button not found.')
-    Dialog.somethingWentWrong()
-}
-
-registerButton?.addEventListener('click', e => debounceAsync(submit(e), 300))
-
 const registerForm = document.querySelector('#register_form')
 if (!registerForm) {
     console.error('Register form not found.')
@@ -25,6 +17,13 @@ if (!registerForm) {
 
 registerForm?.addEventListener('submit', e => debounceAsync(submit(e), 300))
 
+const registerButton = registerForm?.querySelector('#register_button')
+if (!registerButton) {
+    console.error('Register button not found.')
+    Dialog.somethingWentWrong()
+}
+
+registerButton?.addEventListener('click', e => debounceAsync(submit(e), 300))
 
 /**
  * Handles the registration form submission event.

@@ -3,6 +3,6 @@
         "TaskFlow/endpoint/auth/login": ["AuthEndpoint", "login"],
         "TaskFlow/endpoint/auth/register": ["AuthEndpoint", "register"],
         "TaskFlow/endpoint/auth/logout": ["AuthEndpoint", "logout"],
-        "TaskFlow/endpoint/auth/verify-email": ["AuthEndpoint", "verifyEmail"]
+        "TaskFlow/endpoint/auth/reset-password": ["AuthEndpoint", "resetPassword"]
     }
 }

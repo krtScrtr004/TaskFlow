@@ -65,18 +65,23 @@
 			"ProjectWorkerEndpoint",
 			"add"
 		],
+
 		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/phases": [
 			"PhaseEndpoint",
 			"add"
 		],
+
 		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/tasks": [
 			"TaskEndpoint",
 			"add"
 		],
+		
 		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}/workers": [
 			"TaskWorkerEndpoint",
 			"add"
 		]
+
+
 	},
 
 	"PUT": {

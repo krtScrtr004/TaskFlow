@@ -62,18 +62,14 @@ class Email
      *
      * @return bool True if the email was sent successfully, false otherwise.
      */
-    public static function send(string $to, string $subject, string $body, array $data): bool
+    public static function send(string $to, string $subject, string $body, array $data = []): bool
     {
         try {
-            if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException();
-            }
-
             // Create a new instance to ensure fresh state
             new self();
 
             // Recipients
-            self::$mail->setFrom($_ENV['MAIL_USERNAME'], 'pichive.com');
+            self::$mail->setFrom($_ENV['MAIL_USERNAME'], 'TaskFlow.com');
             self::$mail->addAddress($to, $data['username']); // Name is optional
 
             // Content

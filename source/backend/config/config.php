@@ -28,6 +28,7 @@ spl_autoload_register(function ($class) {
     'router' => ROUTER_PATH,
     'middleware' => MIDDLEWARE_PATH,
     'model' => MODEL_PATH,
+    'service' => SERVICE_PATH,
     'validator' => VALIDATOR_PATH,
     ];
 

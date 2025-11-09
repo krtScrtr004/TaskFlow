@@ -2,7 +2,9 @@
 
 namespace App\Controller;
 
+use App\Core\Session;
 use App\Interface\Controller;
+use App\Middleware\Csrf;
 
 class SingleFormController implements Controller
 {
@@ -59,6 +61,18 @@ class SingleFormController implements Controller
 
     public static function index(array $args = []): void
     {
+        // For unauthenticated users, ensure session exists and CSRF token is set
+        if (!Session::isSet()) {
+            Session::create();
+        }
+
+        if (!Csrf::get()) {
+            Csrf::generate();
+            // Force session write to ensure CSRF token is persisted
+            session_write_close();
+            Session::restore();  // Reopen session for the rest of the request
+        }
+
         $instance = new self();
         $components = $instance->components;
 

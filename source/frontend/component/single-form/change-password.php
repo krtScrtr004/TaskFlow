@@ -1,6 +1,8 @@
 <p class="center-text"><?= $component['description']; ?></p>
 
 <form id="change_password_form" class="flex-col" action="" method="POST">
+    <?= hiddenCsrfInput() ?>
+
     <input 
         class="validate-password"
         type="text" 

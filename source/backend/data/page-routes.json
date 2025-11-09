@@ -5,7 +5,7 @@
 		"TaskFlow/register": "IndexController",
 
 		"TaskFlow/reset-password": "SingleFormController",
-		"TaskFlow/change-password": "SingleFormController",
+		"TaskFlow/change-password?token={\\w+\\s_=\\/\\?,%&@-]+}": "SingleFormController",
 		"TaskFlow/create-project": "SingleFormController",
 		"TaskFlow/edit-project/{projectId:[\\w+_-]+}": "SingleFormController",
 		"TaskFlow/add-task/{projectId:[\\w+_-]+}": "SingleFormController",
