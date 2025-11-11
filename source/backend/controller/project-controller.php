@@ -17,6 +17,7 @@ use App\Middleware\Csrf;
 use App\Middleware\Response;
 use App\Model\ProjectModel;
 use App\Model\ProjectWorkerModel;
+use App\Utility\ProjectProgressCalculator;
 use App\Validator\UuidValidator;
 use InvalidArgumentException;
 use DateTime;
@@ -63,7 +64,7 @@ class ProjectController implements Controller
             $activeProject = (Role::isProjectManager(Me::getInstance()))
                 ? ProjectModel::findManagerActiveProjectByManagerId(Me::getInstance()->getId())
                 : ProjectModel::findWorkerActiveProjectByWorkerId(Me::getInstance()->getId());
-        
+
             // If projectId is provided, verify that the project is not cancelled
             if ($activeProject && $activeProject->getStatus() !== WorkStatus::CANCELLED) {
                 $fullProjectInfo = $instance->getProjectInfo($activeProject->getPublicId());
@@ -109,7 +110,7 @@ class ProjectController implements Controller
                 ? UUID::fromString($args['projectId'])
                 : null;
 
-            $fullProjectInfo = $instance->getProjectInfo($projectId);        
+            $fullProjectInfo = $instance->getProjectInfo($projectId);
             if (!$fullProjectInfo) {
                 throw new NotFoundException('Project not found.');
             }
@@ -121,7 +122,7 @@ class ProjectController implements Controller
             ErrorController::forbidden();
         }
     }
-    
+
     /**
      * Displays the project grid view for the currently authenticated user.
      *
@@ -155,17 +156,18 @@ class ProjectController implements Controller
 
             // Only status can be filtered here
             $status = isset($_GET['filter']) && strcasecmp($_GET['filter'], 'all') !== 0
-                ? WorkStatus::from($_GET['filter']) 
+                ? WorkStatus::from($_GET['filter'])
                 : null;
 
             $projects = ProjectModel::search(
-            $key, 
-            Me::getInstance()->getId(), 
-            $status,
-            [
-                'limit' => 50,
-                'offset' => 0
-            ]);
+                $key,
+                Me::getInstance()->getId(),
+                $status,
+                [
+                    'limit' => 50,
+                    'offset' => 0
+                ]
+            );
 
             require_once VIEW_PATH . 'projects.php';
         } catch (NotFoundException $e) {
@@ -190,7 +192,7 @@ class ProjectController implements Controller
         if (!$projectId) {
             return null;
         }
-        
+
         return ProjectModel::findFull($projectId, [
             'phases' => true,
             'tasks' => true,
@@ -217,6 +219,8 @@ class ProjectController implements Controller
      */
     private function renderDashboard(Project|null $project): void
     {
+        $projectProgress = null;
+
         if ($project) {
             $status = $project->getStatus();
             $startDateTime = $project->getStartDateTime();
@@ -230,17 +234,19 @@ class ProjectController implements Controller
                     'id' => $project->getId(),
                     'status' => WorkStatus::ON_GOING
                 ]);
-            } elseif ($completionDateTime && $currentDateTime > $completionDateTime && 
-                    ($status === WorkStatus::PENDING || $status === WorkStatus::ON_GOING)) {
-                // Check if the project is already completed or delayed based on current date and tasks status
-                $hasPendingTasks = false;
-                foreach ($project->getTasks() as $task) {
-                    if ($task->getStatus() !== WorkStatus::COMPLETED && $task->getStatus() !== WorkStatus::CANCELLED) {
-                        $hasPendingTasks = true;
-                        break;
-                    }
-                }
-                if ($hasPendingTasks) {
+            } elseif (
+                $completionDateTime && $currentDateTime > $completionDateTime &&
+                ($status === WorkStatus::PENDING || $status === WorkStatus::ON_GOING)
+            ) {
+                $tasks = $project->getTasks();
+                $projectProgress = ($tasks?->count() > 0)
+                    ? ProjectProgressCalculator::calculate($tasks)
+                    : [
+                        'progressPercentage' => 0.0,
+                        'statusBreakdown' => [],
+                        'priorityBreakdown' => []
+                    ];
+                if ($projectProgress['progressPercentage'] < 100.0) {
                     $project->setStatus(WorkStatus::DELAYED);
                     ProjectModel::save([
                         'id' => $project->getId(),

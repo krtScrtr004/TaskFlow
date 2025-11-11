@@ -30,12 +30,27 @@ class IndexController implements Controller
 
     private function __construct() {}
 
+    /**
+     * Handles the logic for displaying the index page (login/signup) and session management.
+     *
+     * This method performs the following actions:
+     * - Redirects authenticated users to the homepage.
+     * - Ensures a session exists for unauthenticated users.
+     * - Generates and persists a CSRF token if not already set.
+     * - Dynamically determines which page component (login/signup) to display based on the URL.
+     * - Loads the appropriate scripts for the selected component.
+     * - Renders the main index view.
+     *
+     * No parameters are required.
+     *
+     * @return void
+     */
     public static function index(): void
     {
         // If user is already logged in, redirect to homepage instead of showing login page
         if (SessionAuth::hasAuthorizedSession()) {
             $projectId = Session::get('activeProjectId') ?? '';
-            header('Location: ' . REDIRECT_PATH . 'home' . DS . $projectId);
+            header('Location: ' . REDIRECT_PATH . 'home');
             exit();
         }
 

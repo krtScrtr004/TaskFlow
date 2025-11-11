@@ -2,14 +2,21 @@
 
 namespace App\Controller;
 
+use App\Auth\SessionAuth;
 use App\Core\Me;
 use App\Core\Session;
+use App\Core\UUID;
+use App\Dependent\Phase;
 use App\Exception\ForbiddenException;
 use App\Exception\NotFoundException;
 use App\Interface\Controller;
 use App\Middleware\Csrf;
+use App\Model\PhaseModel;
+use App\Model\ProjectModel;
 use App\Model\TemporaryLinkModel;
+use Cloudinary\Api\Exception\NotFound;
 use DateTime;
+use Exception;
 
 class SingleFormController implements Controller
 {
@@ -39,7 +46,7 @@ class SingleFormController implements Controller
                 'single-form/project/create/cancel-phase',
                 'single-form/project/create/submit',
             ]
-        ], 
+        ],
         'editProject' => [
             'title' => 'Edit Project Details',
             'description' => 'Modify the details of your project below.',
@@ -90,14 +97,29 @@ class SingleFormController implements Controller
         $page = kebabToCamelCase($segments[2] ?? '') ?: 'forgetPassword';
         $component = $components[$page];
 
+        $scripts = $component['script'];
+        $form = 'single-form' . DS . camelToKebabCase($component['form']) . '.php';
+
         try {
-            // Check token validity for change password page
-            if ($page === 'changePassword') {
-                $instance->changePassword();
+            // Ensure user is authorized for protected pages
+            if (!array_key_exists($page, ['createPassword', 'editProject', 'addTask'])) {
+                if (!SessionAuth::hasAuthorizedSession()) {
+                    throw new ForbiddenException("You must be logged in to access this page.");
+                }
             }
 
-            $scripts = $component['script'];
-            $form = 'single-form' . DS . camelToKebabCase($component['form']) . '.php';
+            // Special handling for certain pages
+            if ($page === 'addTask') {
+                // Handle add task separately to fetch project and active phase
+                $projectId = $args['projectId'] ?? null;
+                [$project, $activePhase] = $instance->addTask($projectId);
+
+                require_once VIEW_PATH . 'single-form.php';
+                return;
+            } elseif ($page === 'changePassword') {
+                // Check token validity for change password page
+                $instance->changePassword();
+            }
 
             require_once VIEW_PATH . 'single-form.php';
         } catch (ForbiddenException $e) {
@@ -105,6 +127,42 @@ class SingleFormController implements Controller
         } catch (NotFoundException $e) {
             ErrorController::notFound();
         }
+    }
+
+    /**
+     * Retrieves the project and its active phase for adding a new task.
+     *
+     * This method performs the following steps:
+     * - Validates the provided project ID.
+     * - Finds the project by its UUID.
+     * - Retrieves the ongoing (active) phase associated with the project.
+     * - Throws NotFoundException if the project ID is missing, the project does not exist, or no active phase is found.
+     *
+     * @param string $projectId The UUID string of the project to which the task will be added.
+     * 
+     * @return array An array containing:
+     *      - ProjectModel $project The found project instance.
+     *      - PhaseModel $activePhase The ongoing phase of the project.
+     * 
+     * @throws NotFoundException If the project ID is missing, the project is not found, or no active phase exists.
+     */
+    private function addTask(string $projectId): array
+    {
+        if (!isset($projectId) && !trimOrNull($projectId)) {
+            throw new NotFoundException("Project ID is required to add a task.");
+        }
+
+        $project = ProjectModel::findById(UUID::fromString($projectId));
+        if (!$project) {
+            throw new NotFoundException("Project not found.");
+        }
+
+        $activePhase = PhaseModel::findOnGoingByProjectId($project->getId());
+        if (!$activePhase) {
+            throw new NotFoundException("No active phase found for the project.");
+        }
+
+        return [$project, $activePhase];
     }
 
     /**

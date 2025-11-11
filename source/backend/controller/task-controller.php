@@ -13,8 +13,10 @@ use App\Exception\ForbiddenException;
 use App\Exception\NotFoundException;
 use App\Interface\Controller;
 use App\Middleware\Response;
+use App\Model\PhaseModel;
 use App\Model\ProjectModel;
 use App\Model\TaskModel;
+use DateTime;
 use Error;
 use InvalidArgumentException;
 use ValueError;
@@ -25,29 +27,36 @@ class TaskController implements Controller
     {
     }
 
-    public static function index(): void {}
+    public static function index(): void
+    {
+    }
 
     /**
-     * Displays a grid view of tasks for a specific project, with optional filtering and search.
+     * Displays the grid view of tasks for a specific project.
      *
-     * This method checks user authorization, validates the project ID, and retrieves tasks
-     * for the specified project. Tasks can be filtered by status or priority, and searched
-     * by a keyword. The method supports pagination via 'offset' and 'limit' query parameters.
-     * The resulting tasks are passed to the view for rendering.
+     * This method performs the following actions:
+     * - Checks if the user has an authorized session.
+     * - Validates and parses the project ID from the arguments.
+     * - Retrieves the project by its ID and ensures it exists.
+     * - Optionally filters tasks by a search key or a single filter (WorkStatus or TaskPriority) from query parameters.
+     * - Supports pagination via 'offset' and 'limit' query parameters.
+     * - Fetches tasks for the project using the provided filters and options.
+     * - Loads the grid view for tasks.
+     * - Handles forbidden and not found exceptions by delegating to the error controller.
      *
-     * @param array $args Associative array of arguments, expected to contain:
-     *      - projectId: string Project UUID as a string
-     *
-     * Query Parameters (via $_GET):
-     *      - filter: string (optional) Filter tasks by WorkStatus or TaskPriority; 'all' disables filtering
+     * @param array $args Associative array containing:
+     *      - projectId: string|UUID Project identifier (required)
+     * 
+     * Query parameters (via $_GET):
      *      - key: string (optional) Search keyword for tasks
+     *      - filter: string (optional) Filter by WorkStatus or TaskPriority; 'all' disables filtering
      *      - offset: int (optional) Pagination offset (default: 0)
      *      - limit: int (optional) Pagination limit (default: 50)
-     *
-     * @throws ForbiddenException If the user is not authorized or projectId is missing
-     * @throws NotFoundException If the specified project does not exist
-     *
+     * 
      * @return void
+     * 
+     * @throws ForbiddenException If the session is unauthorized or projectId is missing
+     * @throws NotFoundException If the project does not exist
      */
     public static function viewGrid(array $args): void
     {
@@ -56,14 +65,19 @@ class TaskController implements Controller
                 throw new ForbiddenException();
             }
 
-            $projectId = isset($args['projectId']) 
-                ? UUID::fromString($args['projectId']) 
+            $projectId = isset($args['projectId'])
+                ? UUID::fromString($args['projectId'])
                 : null;
             if (!$projectId) {
                 throw new ForbiddenException('Project ID is required.');
-            } elseif (ProjectModel::findById($projectId) === null) {
+            }
+
+            $project = ProjectModel::findById($projectId);
+            if (!$project) {
                 throw new NotFoundException('Project not found.');
             }
+
+            // NOTE: No need for active phase check when viewing tasks in grid view
 
             $key = '';
             if (isset($_GET['key']) && trim($_GET['key']) !== '') {
@@ -83,15 +97,17 @@ class TaskController implements Controller
             }
 
             $options = [
-                'offset' => isset($_GET['offset']) ? (int)$_GET['offset'] : 0,
-                'limit' => isset($_GET['limit']) ? (int)$_GET['limit'] : 50,
+                'offset' => isset($_GET['offset']) ? (int) $_GET['offset'] : 0,
+                'limit' => isset($_GET['limit']) ? (int) $_GET['limit'] : 50,
             ];
 
+            // Get all tasks from the project
             $tasks = TaskModel::search(
-                $key, 
-                Me::getInstance()->getId(), 
-                $projectId, 
-                $filter, 
+                $key,
+                Me::getInstance()->getId(),
+                null,
+                $projectId,
+                $filter,
                 $options
             );
             if (!$tasks) {
@@ -106,23 +122,28 @@ class TaskController implements Controller
         }
     }
 
+
     /**
-     * Displays detailed information about a specific task within a project.
+     * Displays detailed information about a specific task within a project phase.
      *
      * This method performs the following actions:
      * - Checks if the current session is authorized.
-     * - Validates and converts the provided projectId and taskId to UUID objects.
-     * - Ensures both projectId and taskId are present; throws ForbiddenException if missing.
-     * - Retrieves the project by its ID; throws NotFoundException if not found.
-     * - Retrieves the task by its ID within the specified project; throws NotFoundException if not found.
-     * - Loads the task view for displaying task information.
+     * - Validates and converts projectId, phaseId, and taskId from the input arguments to UUID objects.
+     * - Retrieves the corresponding Project, Phase, and Task models from the database.
+     * - Throws appropriate exceptions if any entity is not found or required IDs are missing.
+     * - Checks the task's status and start date; if the task is pending and its start date has passed, updates its status to ongoing.
+     * - Loads the task sub-view for rendering.
      * - Handles forbidden and not found errors by delegating to the ErrorController.
      *
-     * @param array $args Associative array containing:
+     * @param array $args Associative array containing identifiers:
      *      - projectId: string|UUID Project identifier
+     *      - phaseId: string|UUID Phase identifier
      *      - taskId: string|UUID Task identifier
      * 
      * @return void
+     * 
+     * @throws ForbiddenException If session is unauthorized or required IDs are missing
+     * @throws NotFoundException If project, phase, or task is not found
      */
     public static function viewInfo(array $args = []): void
     {
@@ -131,30 +152,55 @@ class TaskController implements Controller
                 throw new ForbiddenException();
             }
 
-            $projectId = isset($args['projectId']) 
-                ? UUID::fromString($args['projectId']) 
+            $projectId = isset($args['projectId'])
+                ? UUID::fromString($args['projectId'])
                 : null;
             if (!$projectId) {
                 throw new ForbiddenException('Project ID is required.');
-            } 
-            
+            }
+
             $project = ProjectModel::findById($projectId);
             if ($project === null) {
                 throw new NotFoundException('Project not found.');
             }
 
-            $taskId = isset($args['taskId']) 
-                ? UUID::fromString($args['taskId']) 
+            $phaseId = isset($args['phaseId'])
+                ? UUID::fromString($args['phaseId'])
+                : null;
+            if (!$phaseId) {
+                throw new ForbiddenException('Phase ID is required.');
+            }
+
+            $phase = PhaseModel::findById($phaseId);
+            if ($phase === null) {
+                throw new NotFoundException('Phase not found.');
+            }
+
+            $taskId = isset($args['taskId'])
+                ? UUID::fromString($args['taskId'])
                 : null;
             if (!$taskId) {
                 throw new ForbiddenException('Task ID is required.');
             }
 
-            $task = TaskModel::findById($taskId, $project->getId());
+            $task = TaskModel::findById($taskId, $phase->getId(), $project->getId());
             if ($task === null) {
                 throw new NotFoundException('Task not found.');
             }
 
+            $status = $task->getStatus();
+            $startDateTime = $task->getStartDateTime();
+            $completionDateTime = $task->getCompletionDateTime();
+            $currentDateTime = new DateTime();  
+
+            // Check if the task is already ongoing
+            if ($startDateTime && $currentDateTime >= $startDateTime && $status === WorkStatus::PENDING) {
+                $task->setStatus(WorkStatus::ON_GOING);
+                TaskModel::save([
+                    'id' => $task->getId(),
+                    'status' => WorkStatus::ON_GOING
+                ]);
+            } 
             require_once SUB_VIEW_PATH . 'task.php';
         } catch (NotFoundException $e) {
             ErrorController::notFound();
