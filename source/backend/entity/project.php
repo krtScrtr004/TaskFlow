@@ -161,6 +161,7 @@ class Project implements Entity
     /**
      * Gets all tasks associated with the project.
      *
+     * @deprecated Tasks are now managed at the phase level. Access tasks via: $project->getPhases()->...->getTasks()
      * @return TaskContainer|null The container with the project's tasks or null if not set
      */
     public function getTasks(): ?TaskContainer
@@ -620,7 +621,7 @@ class Project implements Entity
         if (isset($data['publicId']) && !($data['publicId'] instanceof UUID)) {
             try {
                 $defaults['publicId'] = UUID::fromString($data['publicId']);
-            } catch (ExceptionInvalidArgumentException $e) {
+            } catch (Exception $e) {
                 $defaults['publicId'] = UUID::fromBinary($data['publicId']);
             }
         }
