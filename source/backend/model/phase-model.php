@@ -4,6 +4,7 @@ namespace App\Model;
 
 use App\Abstract\Model;
 use App\Container\PhaseContainer;
+use App\Container\TaskContainer;
 use App\Core\UUID;
 use App\Enumeration\WorkStatus;
 use App\Dependent\Phase;
@@ -50,11 +51,100 @@ class PhaseModel extends Model
 
             $phases = new PhaseContainer();
             foreach ($result as $item) {
-                $phases->add(Phase::fromArray($item));
+                $phases->add(Phase::createPartial($item));
             }
             return $phases;
         } catch (PDOException $th) {
             throw new DatabaseException($th->getMessage());
+        }
+    }
+
+    /**
+     * Finds a Phase instance by its ID or public UUID.
+     *
+     * This method retrieves a Phase from the database using either its integer ID or its public UUID.
+     * - If an integer is provided, it searches by the 'id' column.
+     * - If a UUID is provided, it searches by the 'publicId' column after converting the UUID to binary.
+     * - Throws InvalidArgumentException if the provided ID is invalid.
+     * - Throws DatabaseException if a PDO error occurs during the query.
+     *
+     * @param int|UUID $phaseId The Phase identifier, either as an integer ID or a UUID object.
+     * 
+     * @return Phase|null The found Phase instance, or null if not found.
+     *
+     * @throws InvalidArgumentException If the provided Phase ID is invalid.
+     * @throws DatabaseException If a database error occurs.
+     */
+    public static function findById(int|UUID $phaseId): ?Phase
+    {
+        if (!$phaseId) {
+            throw new InvalidArgumentException('Invalid Phase ID.');
+        }
+
+        try {
+            $whereClause = is_int($phaseId) 
+                ? 'id = :phaseId' 
+                : 'publicId = :phaseId';
+            $params = [
+                'phaseId' => is_int($phaseId) 
+                    ? $phaseId 
+                    : UUID::toBinary($phaseId)
+            ];
+
+            $options = [
+                'limit' => 1
+            ];
+
+            return self::find($whereClause, $params, $options)->first();
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
+        }
+    }
+
+    /**
+     * Finds the ongoing Phase for a given Project ID.
+     *
+     * This method retrieves the first Phase instance with an "ON_GOING" status
+     * associated with the specified project. It supports both integer and UUID
+     * project identifiers:
+     * - If an integer is provided, it is used directly as the project ID.
+     * - If a UUID is provided, it is converted to binary and matched against the project's publicId.
+     *
+     * Throws an InvalidArgumentException if the project ID is invalid (less than 1).
+     * Throws a DatabaseException if a PDO error occurs during the query.
+     *
+     * @param int|UUID $projectId The project identifier, either as an integer or UUID.
+     * 
+     * @return Phase|null The ongoing Phase instance if found, or null if none exists.
+     *
+     * @throws InvalidArgumentException If the project ID is invalid.
+     * @throws DatabaseException If a database error occurs.
+     */
+    public static function findOnGoingByProjectId(int|UUID $projectId): ?Phase
+    {
+        if ($projectId < 1) {
+            throw new InvalidArgumentException('Invalid Project ID.');
+        }
+
+        try {
+            $whereClause = is_int($projectId) 
+                ? 'projectId = :projectId AND status = :status' 
+                : 'projectId = (SELECT id FROM `project` WHERE publicId = :projectId) AND status = :status';
+
+            $params = [
+                'projectId' => is_int($projectId) 
+                    ? $projectId 
+                    : UUID::toBinary($projectId),
+                'status' => WorkStatus::ON_GOING->value
+            ];
+
+            $options = [
+                'limit' => 1
+            ];
+
+            return self::find($whereClause, $params, $options)->first();
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
         }
     }
 
@@ -341,6 +431,72 @@ class PhaseModel extends Model
         }
     }
 
+
+
+    /**
+     * Retrieves all tasks associated with a specific phase.
+     *
+     * This method fetches tasks for the given phase ID by delegating to TaskModel.
+     *
+     * @param int|UUID $phaseId The phase identifier (integer ID or UUID)
+     * @param array $options Pagination options:
+     *      - offset: int (default 0) Number of records to skip
+     *      - limit: int (default 10) Maximum number of records to return
+     * 
+     * @return TaskContainer|null Container with tasks for the phase, or null if none found
+     * @throws DatabaseException If a database error occurs
+     */
+    public static function getTasks(int|UUID $phaseId, array $options = []): ?TaskContainer
+    {
+        try {
+            return TaskModel::findAllByPhaseId($phaseId, null, null, $options);
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
+        }
+    }
+
+    /**
+     * Finds a phase with all its associated tasks.
+     *
+     * This method retrieves a specific phase and populates its tasks container
+     * with all associated tasks.
+     *
+     * @param int|UUID $phaseId The phase identifier (integer ID or UUID)
+     * 
+     * @return Phase|null The Phase object with tasks populated, or null if not found
+     * @throws DatabaseException If a database error occurs
+     */
+    public static function findFull(int|UUID $phaseId): ?Phase
+    {
+        try {
+            // Find the phase
+            $whereClause = is_int($phaseId) 
+                ? 'id = :phaseId'
+                : 'publicId = :phaseId';
+            $params = [
+                ':phaseId' => is_int($phaseId) 
+                    ? $phaseId
+                    : UUID::toBinary($phaseId)
+            ];
+            
+            $phases = self::find($whereClause, $params);
+            if (!$phases || $phases->count() === 0) {
+                return null;
+            }
+            
+            $phase = $phases->first();
+            
+            // Get all tasks for the phase
+            $tasks = TaskModel::findAllByPhaseId($phaseId);
+            if ($tasks) {
+                $phase->setTasks($tasks);
+            }
+            
+            return $phase;
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
+        }
+    }
 
     /**
      * Deletes a phase entity.

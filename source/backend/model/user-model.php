@@ -22,21 +22,31 @@ use PDOException;
 
 class UserModel extends Model
 {
+
     /**
-     * Finds a user in the database based on specified conditions.
+     * Finds and retrieves user records from the database with aggregated project statistics.
      *
-     * This method retrieves a single user record from the database that matches
-     * the provided WHERE clause. It supports pagination through limit and offset options.
+     * This method executes a complex SQL query to fetch user data along with related job titles and project statistics:
+     * - Aggregates job titles using GROUP_CONCAT
+     * - Calculates total, completed, cancelled, and terminated project counts for each user
+     * - Supports filtering, ordering, grouping, limiting, and offsetting via parameters
+     * - Converts jobTitles string to array and attaches additionalInfo with project statistics
      *
-     * @param string $whereClause SQL WHERE clause to filter results (without the 'WHERE' keyword)
-     * @param array $params Parameters to be bound to the prepared statement
-     * @param array $options Additional query options:
-     *      - limit: int (optional) Maximum number of records to return
-     *      - offset: int (optional) Number of records to skip
-     *      - orderBy: string (optional) ORDER BY clause (without the 'ORDER BY' keywords)
-     * 
-     * @return array|null Array of User if found, null otherwise
-     * @throws DatabaseException If there is an error executing the query
+     * @param string $whereClause Optional SQL WHERE clause for filtering users
+     * @param array $params Parameters for prepared statement and status values:
+     *      - :completedStatus: int Status value for completed projects
+     *      - :cancelledStatus: int Status value for cancelled projects
+     *      - :terminatedStatus: int Status value for terminated project workers
+     *      - Additional parameters for filtering (if any)
+     * @param array $options Query options:
+     *      - limit: int Maximum number of records to return (default: 10)
+     *      - offset: int Number of records to skip (default: 0)
+     *      - orderBy: string SQL ORDER BY clause (default: 'u.firstName DESC')
+     *      - groupBy: string SQL GROUP BY clause (default: 'u.id')
+     *
+     * @return array|null Array of User instances with attached project statistics, or null if no data found
+     *
+     * @throws DatabaseException If a database error occurs during query execution
      */
     protected static function find(string $whereClause = '', array $params = [], array $options = []): ?array
     {
@@ -56,35 +66,42 @@ class UserModel extends Model
                     u.*,
                     GROUP_CONCAT(ujt.title) AS jobTitles,
                     (
-                        SELECT COUNT(*)
-                        FROM `project` p
-                        JOIN `projectWorker` pw ON p.id = pw.projectId
+                        SELECT COUNT(DISTINCT p.id)
+                        FROM `project` AS p
+                        LEFT JOIN `projectWorker` AS pw 
+                        ON p.id = pw.projectId
                         WHERE p.managerId = u.id
                         OR pw.workerId = u.id
                     ) AS totalProjects,
                     (
-                        SELECT COUNT(*)
-                        FROM `project` p
-                        JOIN `projectWorker` pw ON p.id = pw.projectId
+                        SELECT COUNT(DISTINCT p.id)
+                        FROM `project` AS p
+                        LEFT JOIN `projectWorker` AS pw 
+                        ON p.id = pw.projectId
                         WHERE (p.managerId = u.id
                         OR pw.workerId = u.id)
                         AND p.status = :completedStatus
                     ) AS completedProjects,
                     (
-                        SELECT COUNT(*)
-                        FROM `project` p
-                        JOIN `projectWorker` pw ON p.id = pw.projectId
+                        SELECT COUNT(DISTINCT p.id)
+                        FROM `project` AS p
+                        LEFT JOIN `projectWorker` AS pw 
+                        ON p.id = pw.projectId
                         WHERE pw.workerId = u.id 
                         AND p.status = :cancelledStatus
                     ) AS cancelledProjectCount,
                     (
                         SELECT COUNT(*)
-                        FROM `projectWorker` pw
+                        FROM `projectWorker` AS pw
                         WHERE pw.workerId = u.id
                         AND pw.status = :terminatedStatus
                     ) AS terminatedProjectCount
-                FROM `user` u
-                LEFT JOIN `userJobTitle` ujt ON u.id = ujt.userId";
+                FROM 
+                    `user` AS u
+                LEFT JOIN 
+                    `userJobTitle` AS ujt 
+                ON 
+                    u.id = ujt.userId";
             $query = $instance->appendOptionsToFindQuery(
                 $instance->appendWhereClause($queryString, $whereClause),
             $options);
@@ -266,8 +283,8 @@ class UserModel extends Model
                         )
                         AND NOT EXISTS (
                             SELECT 1
-                            FROM `projectTaskWorker` AS ptw
-                            JOIN `projectTask` AS pt ON ptw.taskId = pt.id
+                            FROM `phaseTaskWorker` AS ptw
+                            JOIN `phaseTask` AS pt ON ptw.taskId = pt.id
                             WHERE ptw.workerId = u.id
                             AND pt.status NOT IN (:completedStatusUnassigned3, :cancelledStatusUnassigned3)
                         )
@@ -280,7 +297,7 @@ class UserModel extends Model
                     $params[':cancelledStatusUnassigned3'] = WorkStatus::CANCELLED->value;
                 } else {
                     $where[] = "
-                        (EXISTS (
+                        ((EXISTS (
                             SELECT 1
                             FROM `project` p
                             WHERE p.managerId = u.id
@@ -293,10 +310,10 @@ class UserModel extends Model
                             AND pw.status = :workerStatus1
                         ) OR EXISTS (
                             SELECT 1
-                            FROM `projectTaskWorker` ptw
+                            FROM `phaseTaskWorker` ptw
                             WHERE ptw.workerId = u.id
                             AND ptw.status = :workerStatus2
-                        ))
+                        )))
                     ";
                     $params[':completedStatusUnassigned'] = WorkStatus::COMPLETED->value;
                     $params[':cancelledStatusUnassigned'] = WorkStatus::CANCELLED->value;
