@@ -2,6 +2,7 @@
 
 use App\Core\Me;
 use App\Core\UUID;
+use App\Dependent\Phase;
 use App\Entity\Project;
 use App\Entity\Task;
 use App\Enumeration\Role;
@@ -13,12 +14,17 @@ if (!isset($project) || !$project instanceof Project) {
     throw new NotFoundException('Project is not defined.');
 }
 
+if (!isset($phase) || !$phase instanceof Phase) {
+    throw new NotFoundException('Phase is not defined.');
+}
+
 if (!isset($task) || !$task instanceof Task) {
     throw new NotFoundException('Task is not defined.');
 }
 
-$projectData = [
-    'id' => htmlspecialchars(UUID::toString($project->getPublicId()))
+$otherData = [
+    'projectId' => htmlspecialchars(UUID::toString($project->getPublicId())),
+    'phaseId'   => htmlspecialchars(UUID::toString($phase->getPublicId()))
 ];
 
 $taskData = [
@@ -63,7 +69,9 @@ $isTaskEditable = $task->getStatus() !== WorkStatus::COMPLETED && $task->getStat
     require_once COMPONENT_PATH . 'template/add-worker-modal.php';
     ?>
 
-    <main class="view-task-info main-page flex-col" data-projectid="<?= $projectData['id'] ?>"
+    <main class="view-task-info main-page flex-col" 
+        data-projectid="<?= $otherData['projectId'] ?>"
+        data-phaseid="<?= $otherData['phaseId'] ?>"
         data-taskid="<?= $taskData['id'] ?>">
 
         <!-- Task Info -->

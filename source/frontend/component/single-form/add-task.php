@@ -1,13 +1,25 @@
 <?php
-$projectId = $args['projectId'] ?? null;
-if ($projectId === null)
-    throw new ErrorException("Project ID is required to add a task.");
+
+use App\Core\UUID;
+use App\Exception\ForbiddenException;
+if (!isset($project) ?? !trimOrNull($project)) {
+    throw new ForbiddenException("Project is required to add a task.");
+}
+
+if (!isset($activePhase)) {
+    throw new ForbiddenException("No active phase found for the project.");
+}
+
+$ids = [
+    'projectId' => UUID::toString($project->getPublicId()),
+    'phaseId' => UUID::toString($activePhase->getPublicId())
+];
 
 require_once COMPONENT_PATH . 'template' . DS . 'add-worker-modal.php';
 ?>
 
 <!-- Add Task Form -->
-<form id="add_task_form" class="add-task flex-row" action="" method="POST" data-projectid="<?= $projectId ?>">
+<form id="add_task_form" class="add-task flex-row" action="" method="POST" data-projectid="<?= $ids['projectId'] ?>" data-phaseid="<?= $ids['phaseId'] ?>">
 
     <!-- Task Details -->
     <fieldset class="task-detail flex-col">

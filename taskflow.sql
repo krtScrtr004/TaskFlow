@@ -265,6 +265,25 @@ CREATE TABLE `projectworker` (
   `status` varchar(25) DEFAULT NULL CHECK (`status` in ('assigned','terminated'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Triggers `projectworker`
+--
+DELIMITER $$
+CREATE TRIGGER `terminateWorkerTasksOnProjectWorkerTermination` AFTER UPDATE ON `projectworker` FOR EACH ROW BEGIN
+    -- When a worker is terminated from a project, terminate all their active task assignments in that project
+    IF NEW.status = 'terminated' AND OLD.status <> 'terminated' THEN
+        UPDATE `phaseTaskWorker` AS ptw
+        INNER JOIN `phaseTask` AS pt ON ptw.taskId = pt.id
+        INNER JOIN `projectPhase` AS pp ON pt.phaseId = pp.id
+        SET ptw.status = 'terminated'
+        WHERE ptw.workerId = NEW.workerId
+        AND pp.projectId = NEW.projectId
+        AND ptw.status = 'assigned';
+    END IF;
+END
+$$
+DELIMITER ;
+
 -- --------------------------------------------------------
 
 --

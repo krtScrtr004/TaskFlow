@@ -80,12 +80,18 @@ async function submitForm(e) {
         if (!projectId) {
             throw new Error('Project ID not found in form dataset.')
         }
-        const response = await sendToBackend(params, projectId)
+
+        const phaseId = addTaskForm.dataset.phaseid
+        if (!phaseId) {
+            throw new Error('Phase ID not found in form dataset.')
+        }
+
+        const response = await sendToBackend(params, phaseId, projectId)
         if (!response) {
             throw new Error('No response from server.')
         }
 
-        setTimeout(() => window.location.href = `/TaskFlow/project/${projectId}/task/${response.id}`, 1500)
+        setTimeout(() => window.location.href = `/TaskFlow/project/${projectId}/phase/${phaseId}/task/${response.id}`, 1500)
         Dialog.operationSuccess('Task Added.', 'The task has been added to the project.')
     } catch (error) {
         handleException(error, 'Error submitting form:', error)
@@ -105,7 +111,7 @@ async function submitForm(e) {
  * @param {Object} inputs.workerIds - Object of assigned workers
  * @returns {Promise<void>} - Resolves when the task is successfully added
  */
-async function sendToBackend(inputs = {}, projectId) {
+async function sendToBackend(inputs = {}, phaseId, projectId) {
     try {
         if (isLoading) {
             console.warn('Request already in progress. Please wait.')
@@ -115,6 +121,10 @@ async function sendToBackend(inputs = {}, projectId) {
 
         if (!inputs) {
             throw new Error('No input data provided to send to backend.')
+        }
+
+        if (!phaseId || phaseId.trim() === '') {
+            throw new Error('Phase ID is required.')
         }
 
         if (!projectId || projectId.trim() === '') {
@@ -130,7 +140,7 @@ async function sendToBackend(inputs = {}, projectId) {
             workerIds
         } = inputs
 
-        const response = await Http.POST(`projects/${projectId}/tasks`, {
+        const response = await Http.POST(`projects/${projectId}/phases/${phaseId}/tasks`, {
             name: name.trim(),
             description: description.trim(),
             startDateTime,

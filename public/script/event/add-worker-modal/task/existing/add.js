@@ -6,9 +6,16 @@ import { Notification } from '../../../../render/notification.js'
 let isLoading = false
 
 const viewTaskInfo = document.querySelector('.view-task-info')
+
 const thisProjectId = viewTaskInfo?.dataset.projectid
 if (!thisProjectId || thisProjectId.trim() === '') {
     console.error('Project ID not found.')
+    Dialog.somethingWentWrong()
+}
+
+const phaseId = viewTaskInfo.dataset.phaseid
+if (!phaseId || phaseId.trim() === '') {
+    console.error('Phase ID not found.')
     Dialog.somethingWentWrong()
 }
 
@@ -24,19 +31,25 @@ await addWorker(
 )
 
 /**
- * Sends a request to the backend to add workers to a specific task within a project.
+ * Sends a request to the backend to add workers to a specific task within a project phase.
  *
- * - Checks if a request is already in progress and prevents duplicate submissions.
- * - Validates the presence of required parameters: projectId, taskId (from DOM), and workerIds.
- * - Sends a POST request to the backend with the provided worker IDs for the specified project and task.
- * - Handles errors and ensures loading state is properly managed.
+ * This function performs several validation checks before making the request:
+ * - Ensures no concurrent requests are in progress
+ * - Validates that projectId and taskId are present and non-empty
+ * - Validates that workerIds is a non-empty array
+ * - Throws descriptive errors for missing or invalid parameters
+ * - Sends a POST request to the backend with the provided worker IDs
  *
- * @async
- * @function
- * @param {string} projectId - The ID of the project to which the task belongs.
- * @param {string[]} workerIds - An array of worker IDs to be added to the task.
- * @returns {Promise<any>} The response from the backend if the request is successful.
- * @throws {Error} If required parameters are missing, the request is already in progress, or the backend returns an error.
+ * @param {string} projectId - The unique identifier of the project.
+ * @param {string[]} workerIds - Array of worker IDs to be added to the task.
+ * 
+ * @throws {Error} If projectId is missing or empty.
+ * @throws {Error} If taskId is missing or empty in the DOM.
+ * @throws {Error} If workerIds is missing or empty.
+ * @throws {Error} If no response is received from the server.
+ * @throws {Error} For any other errors encountered during the request.
+ * 
+ * @returns {Promise<Object>} The response object from the backend if successful.
  */
 async function sendToBackend(projectId, workerIds) {
     try {
@@ -59,7 +72,7 @@ async function sendToBackend(projectId, workerIds) {
             throw new Error('No worker IDs provided.')
         }
 
-        const response = await Http.POST(`projects/${projectId}/tasks/${taskId}/workers`, { workerIds })
+        const response = await Http.POST(`projects/${projectId}/phases/${phaseId}/tasks/${taskId}/workers`, { workerIds })
         if (!response) {
             throw new Error('No response from server.')
         }
@@ -72,19 +85,29 @@ async function sendToBackend(projectId, workerIds) {
     }
 }
 
+
 /**
- * Creates a worker grid card element matching the PHP workerGridCard function
- * @param {Object} workerData - The worker data object
- * @param {string} workerData.id - Worker public ID
- * @param {string} workerData.firstName - Worker first name
- * @param {string} workerData.lastName - Worker last name
- * @param {string} workerData.email - Worker email
- * @param {string} workerData.contactNumber - Worker contact number
- * @param {string} [workerData.profileLink] - Optional profile image URL
- * @param {string} workerData.status - Worker status
- * @param {number} [workerData.completedTasks=0] - Number of completed tasks
- * @param {number} [workerData.performance=0] - Worker performance percentage (0-100)
- * @returns {HTMLElement} The rendered worker grid card element
+ * Creates a worker grid card element for displaying worker information.
+ *
+ * This function generates a button element representing a worker, including:
+ * - Primary info (name, profile image, ID)
+ * - Statistics (completed tasks, performance)
+ * - Contact info (email, contact number)
+ * - Status section
+ * - Horizontal rule for separation
+ *
+ * @param {Object} workerData Object containing worker data with the following properties:
+ *      - id {string|number} Unique worker identifier
+ *      - firstName {string} Worker's first name
+ *      - lastName {string} Worker's last name
+ *      - email {string} Worker's email address
+ *      - contactNumber {string} Worker's contact number
+ *      - profileLink {string} (optional) URL to worker's profile image
+ *      - status {string} Worker's current status
+ *      - completedTasks {number} (optional) Number of completed tasks (default: 0)
+ *      - performance {number} (optional) Performance score (default: 0)
+ *
+ * @returns {HTMLButtonElement} Button element representing the worker grid card
  */
 function createWorkerGridCard(workerData) {
     const {

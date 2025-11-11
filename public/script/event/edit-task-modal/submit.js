@@ -20,7 +20,7 @@ if (!editTaskButton) {
 }
 
 // Store original values when modal is opened
-const editTaskOpenButton = document.querySelector('#edit_task_button')
+const editTaskOpenButton = document.querySelector('.view-task-info #edit_task_button')
 if (editTaskOpenButton) {
     editTaskOpenButton.addEventListener('click', () => {
         // Wait for modal to be visible and inputs to be populated
@@ -53,23 +53,25 @@ function storeOriginalValues() {
 }
 
 /**
- * Handles the submission of the Edit Task form, including validation, confirmation, and backend update.
+ * Handles the submission of the Edit Task form, including validation, change detection, and backend update.
  *
  * This function performs the following steps:
- * - Prevents the default form submission behavior.
- * - Prompts the user for confirmation before proceeding.
- * - Retrieves and validates input fields from the Edit Task form.
- * - Extracts project and task IDs from the DOM.
- * - Shows a loading indicator and sends the updated task data to the backend.
- * - Handles errors and displays appropriate dialogs.
- * - Reloads the page after a successful update and notifies the user.
+ * - Prevents default form submission behavior.
+ * - Displays a confirmation dialog to the user.
+ * - Retrieves and checks all required input fields from the form.
+ * - Compares current input values with original values to detect changes.
+ * - Validates only the changed input fields using provided validation rules.
+ * - Extracts project, phase, and task IDs from the DOM.
+ * - Sends the changed data to the backend for updating the task.
+ * - Displays success or error dialogs based on the outcome.
+ * - Reloads the page after a successful update.
  *
  * @async
+ * @function submitForm
  * @param {Event} e The form submission event.
- * 
- * @throws {Error} If required DOM elements are not found or if the backend request fails.
- * 
  * @returns {Promise<void>} Resolves when the form submission process is complete.
+ *
+ * @throws {Error} If required input fields or IDs are missing, or if the backend update fails.
  */
 async function submitForm(e) {
     e.preventDefault()
@@ -134,6 +136,13 @@ async function submitForm(e) {
         return
     }
 
+    const phaseId = viewTaskInfo.dataset.phaseid
+    if (!phaseId || phaseId === '') {
+        console.error('Phase ID not found.')
+        Dialog.somethingWentWrong()
+        return
+    }
+
     const taskId = viewTaskInfo.dataset.taskid
     if (!taskId || taskId === '') {
         console.error('Task ID not found.')
@@ -143,9 +152,9 @@ async function submitForm(e) {
 
     Loader.patch(editTaskButton.querySelector('.text-w-icon'))
     try {
-        await sendToBackend(projectId, taskId, params)
+        await sendToBackend(projectId, phaseId, taskId, params)
 
-        setInterval(() => window.location.reload(), 3000)
+        setTimeout(() => window.location.reload(), 1500)
         Dialog.operationSuccess('Task Updated.', 'The task has been successfully updated.')
     } catch (error) {
         handleException(error, `Error submitting form: ${error}`)
@@ -155,13 +164,23 @@ async function submitForm(e) {
 }
 
 /**
- * Sends task update to the backend
- * @param {string} projectId - The project ID
- * @param {string} taskId - The task ID
- * @param {Object} inputs - Task data to update
- * @returns {Promise<Object|null>} - The response data or null if failed
+ * Sends updated task data to the backend for a specific project, phase, and task.
+ *
+ * This function performs validation on the provided identifiers and input data before making an HTTP PUT request.
+ * It prevents concurrent requests using an isLoading flag and throws descriptive errors for invalid input.
+ *
+ * @param {string} projectId - The unique identifier of the project. Must be a non-empty string.
+ * @param {string} phaseId - The unique identifier of the phase within the project. Must be a non-empty string.
+ * @param {string} taskId - The unique identifier of the task within the phase. Must be a non-empty string.
+ * @param {Object} inputs - An object containing the updated task data to send to the backend. Must not be empty.
+ *      - [key: string]: any - Key-value pairs representing task fields and their updated values.
+ *
+ * @throws {Error} If any of the required identifiers are missing or empty, or if no input data is provided.
+ * @throws {Error} If the backend request fails or returns no response.
+ *
+ * @return {Promise<Object>} The response object from the backend after updating the task.
  */
-async function sendToBackend(projectId, taskId, inputs) {
+async function sendToBackend(projectId, phaseId, taskId, inputs) {
     try {
         if (isLoading) {
             console.log('Request already in progress')
@@ -173,6 +192,10 @@ async function sendToBackend(projectId, taskId, inputs) {
             throw new Error('Project ID is required.')
         }
 
+        if (!phaseId || phaseId.trim() === '') {
+            throw new Error('Phase ID is required.')
+        }
+
         if (!taskId || taskId.trim() === '') {
             throw new Error('Task ID is required.')
         }
@@ -181,7 +204,7 @@ async function sendToBackend(projectId, taskId, inputs) {
             throw new Error('No input data provided to send to backend.')
         }
 
-        const response = await Http.PUT(`projects/${projectId}/tasks/${taskId}`, inputs)
+        const response = await Http.PUT(`projects/${projectId}/phases/${phaseId}/tasks/${taskId}`, inputs)
         if (!response) {
             throw new Error('Failed to update task.')
         }

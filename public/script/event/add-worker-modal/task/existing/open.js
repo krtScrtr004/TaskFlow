@@ -17,6 +17,12 @@ if (!projectId || projectId.trim() === '') {
     Dialog.somethingWentWrong()
 }
 
+const phaseId = viewTaskInfo.dataset.phaseid
+if (!phaseId || phaseId.trim() === '') {
+    console.error('Phase ID not found.')
+    Dialog.somethingWentWrong()
+}
+
 const taskId = viewTaskInfo.dataset.taskid
 if (!taskId || taskId.trim() === '') {
     console.error('Task ID not found.')
@@ -30,7 +36,7 @@ if (addWorkerModalTemplate) {
         params.append('status', 'unassigned')
         params.append('excludeTaskTerminated', true)
 
-        const endpoint = `projects/${projectId}/tasks/${taskId}/workers?${params.toString()}`
+        const endpoint = `projects/${projectId}/phases/${phaseId}/tasks/${taskId}/workers?${params.toString()}`
 
         // Initialize the add worker modal with the current project and endpoint
         initializeAddWorkerModal(projectId, endpoint)
