@@ -90,6 +90,14 @@ class UserValidator extends Validator
             $this->errors[] = 'Date of birth must be in the past.';
         }
 
+        if (checkdate((int) $birthDate->format('m'), (int) $birthDate->format('d'), (int) $birthDate->format('Y')) === false) {
+            $this->errors[] = 'Date of birth is not a valid date.';
+        }
+
+        if (!self::isValidYear((int) $birthDate->format('Y'))) {
+            $this->errors[] = 'Date of birth year is not valid.';
+        }
+
         // Calculate age
         $age = $now->diff($birthDate)->y;
         if ($age < 18) {

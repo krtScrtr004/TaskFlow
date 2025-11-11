@@ -47,6 +47,14 @@ class WorkValidator extends Validator
             return;
         }
 
+        if (checkdate((int) $startDateTime->format('m'), (int) $startDateTime->format('d'), (int) $startDateTime->format('Y')) === false) {
+            $this->errors[] = 'Start date is not a valid date.';
+        }
+
+        if (!self::isValidYear((int) $startDateTime->format('Y'))) {
+            $this->errors[] = 'Start date year is not valid.';
+        }
+
         // $currentDate = new DateTime();
         // if ($startDateTime < $currentDate) {
         //     $this->errors[] = 'Start date cannot be in the past.';
@@ -61,6 +69,14 @@ class WorkValidator extends Validator
         if ($completionDateTime === null) {
             $this->errors[] = 'Invalid completion date and time.';
             return;
+        }
+
+        if (checkdate((int) $completionDateTime->format('m'), (int) $completionDateTime->format('d'), (int) $completionDateTime->format('Y')) === false) {
+            $this->errors[] = 'Completion date is not a valid date.';
+        }
+
+        if (!self::isValidYear((int) $completionDateTime->format('Y'))) {
+            $this->errors[] = 'Completion date year is not valid.';
         }
 
         if ($startDateTime !== null && $completionDateTime <= $startDateTime) {
@@ -87,7 +103,6 @@ class WorkValidator extends Validator
             $this->errors[] = 'Start date and completion date are required.';
             return;
         }
-        
 
         if ($projectStartDateTime === null || $projectCompletionDateTime === null) {
             $this->errors[] = 'Project start date and completion date are required.';
