@@ -6,7 +6,7 @@ const LENGTH_VALIDATION = {
     'uri':              { min: 3, max: 255 },
     'contactNumber':    { min: 11, max: 20 },
     'password':         { min: 8, max: 255 },
-    'longText':         { min: 10, max: 500 },
+    'longText':         { min: 10, max: 1000 },
     'budget':           { min: 0, max: 999999999999 }
 }
 
