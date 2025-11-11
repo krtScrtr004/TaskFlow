@@ -6,7 +6,7 @@ abstract class Validator {
     protected array $errors = [];
 
     protected function isValidYear(int $year): bool {
-        return $year >= 1900 && $year <= (int)date('Y');
+        return $year >= 1900 && $year <= (int)date('Y') + 100;
     }
 
     public function addError(string $key, string $message): void {

@@ -202,7 +202,7 @@ async function submitForm(e) {
         phaseToEdit.length = 0
         phaseToCancel.clear()
 
-        setTimeout(() => window.location.href = `/TaskFlow/home/${response.projectId}`, 1500)
+        setTimeout(() => window.location.href = `/TaskFlow/home`, 1500)
         Dialog.operationSuccess('Project Edited.', 'The project has been successfully edited.')
     } catch (error) {
         handleException(error, `Error submitting form: ${error}`)

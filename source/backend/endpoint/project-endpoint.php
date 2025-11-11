@@ -354,10 +354,27 @@ class ProjectEndpoint
                 foreach ($arr as &$value) {
                     sanitizeData($value);
 
-                    if ($key === 'toEdit' || $key === 'toAdd') {
+                    $existingPhase = null;
+                    // Phase to edit / cancel - fetch existing phase for date bounds
+                    if ($key === 'toEdit' || $key === 'toCancel') {
+                        $existingPhase = PhaseModel::findById(UUID::fromString($value['id']));
+                        if (!$existingPhase) {
+                            throw new ValidationException('Phase to edit not found.');
+                        }
+                    }
+
+                    $startDateTime = isset($value['startDateTime'])
+                        ? new DateTime($value['startDateTime']) 
+                        : $existingPhase->getStartDateTime();
+                    $completionDateTime = isset($value['completionDateTime'])
+                        ? new DateTime($value['completionDateTime'])
+                        : $existingPhase->getCompletionDateTime();
+
+                    // Validate date bounds for edits and additions
+                    if ($key === 'toAdd' || $key === 'toEdit') {
                         $validator->validateDateBounds(
-                            new DateTime($value['startDateTime']),
-                            new DateTime($value['completionDateTime']),
+                            $startDateTime,
+                            $completionDateTime,
                             $projectData['startDateTime'] ?? $project->getStartDateTime(),
                             $projectData['completionDateTime'] ?? $project->getCompletionDateTime()
                         );
@@ -370,8 +387,8 @@ class ProjectEndpoint
                         // Phase to edit
                         $validator->validateMultiple([
                             'description'           => $value['description'],
-                            'startDateTime'         => new DateTime($value['startDateTime']),
-                            'completionDateTime'    => new DateTime($value['completionDateTime'])
+                            'startDateTime'         => $startDateTime,
+                            'completionDateTime'    => $completionDateTime
                         ]);
                         if ($validator->hasErrors()) {
                             throw new ValidationException('Phase Validation Failed.', $validator->getErrors());
@@ -379,18 +396,18 @@ class ProjectEndpoint
                         $phases['toEdit'][] = [
                             'publicId'              => UUID::fromString($value['id']),
                             'description'           => $value['description'],
-                            'startDateTime'         => new DateTime($value['startDateTime']),
-                            'completionDateTime'    => new DateTime($value['completionDateTime']),
-                            'status'                => WorkStatus::getStatusFromDates(new DateTime($value['startDateTime']), new DateTime($value['completionDateTime']))
+                            'startDateTime'         => $startDateTime,
+                            'completionDateTime'    => $completionDateTime,
+                            'status'                => WorkStatus::getStatusFromDates($startDateTime, $completionDateTime)
                         ];
                     } elseif ($key === 'toAdd') {
                         // New phase to add
                         $phases['toAdd']->add(Phase::createPartial([
                             'name'                  => $value['name'],
                             'description'           => $value['description'],
-                            'startDateTime'         => new DateTime($value['startDateTime']),
-                            'completionDateTime'    => new DateTime($value['completionDateTime']),
-                            'status'                => WorkStatus::getStatusFromDates(new DateTime($value['startDateTime']), new DateTime($value['completionDateTime']))
+                            'startDateTime'         => $startDateTime,
+                            'completionDateTime'    => $completionDateTime,
+                            'status'                => WorkStatus::getStatusFromDates($startDateTime, $completionDateTime)
                         ]));
                     } else {
                         // Phase to cancel

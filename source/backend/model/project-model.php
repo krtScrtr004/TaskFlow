@@ -210,6 +210,7 @@ class ProjectModel extends Model
                                 'phaseStartDateTime', pp.startDateTime,
                                 'phaseCompletionDateTime', pp.completionDateTime
                             )
+                            ORDER BY pp.startDateTime ASC
                         ), ']')
                         FROM projectPhase pp
                         WHERE pp.projectId = p.id
