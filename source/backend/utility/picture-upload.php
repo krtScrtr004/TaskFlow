@@ -13,7 +13,7 @@ class PictureUpload
 {
     private const URL = "https://api.imghippo.com/v1/upload";
     private const ALLOWED_TYPES = ['image/jpeg', 'image/png'];
-    private static self $instance;
+    private static ?self $instance = null;
 
     /**
      * Initializes Cloudinary configuration using environment variables.
@@ -30,30 +30,38 @@ class PictureUpload
      */
     private function __construct()
     {
-        if (!self::$instance) {
-            if (!isset($_ENV['CLOUDINARY_NAME'], $_ENV['CLOUDINARY_API'], $_ENV['CLOUDINARY_SECRET'])) {
-                throw new Exception("Cloudinary environment variables are not set");
-            }
-
-            Configuration::instance([
-                'cloud' => [
-                    'cloud_name' => $_ENV['CLOUDINARY_NAME'],
-                    'api_key' => $_ENV['CLOUDINARY_API'],
-                    'api_secret' => $_ENV['CLOUDINARY_SECRET']
-                ],
-                'url' => [
-                    'secure' => true
-                ]
-            ]);
+        if (!isset($_ENV['CLOUDINARY_NAME'], $_ENV['CLOUDINARY_API'], $_ENV['CLOUDINARY_SECRET'])) {
+            throw new Exception("Cloudinary environment variables are not set");
         }
+
+        Configuration::instance([
+            'cloud' => [
+                'cloud_name' => $_ENV['CLOUDINARY_NAME'],
+                'api_key' => $_ENV['CLOUDINARY_API'],
+                'api_secret' => $_ENV['CLOUDINARY_SECRET']
+            ],
+            'url' => [
+                'secure' => true
+            ]
+        ]);
+    }
+
+    /**
+     * Gets the singleton instance of PictureUpload.
+     *
+     * @throws Exception If Cloudinary environment variables are not set
+     * @return self The singleton instance
+     */
+    private static function getInstance(): self
+    {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
     }
 
     /**
      * Uploads a picture file to the cloud storage.
-     *
-     * This method validates the file type against allowed types and uploads the file to a cloud service.
-     * If the file type is invalid, a ValidationException is thrown.
-     * On successful upload, returns the URL of the uploaded picture.
      *
      * @param array $file Associative array containing file upload data with the following keys:
      *      - name: string Original filename
@@ -67,20 +75,16 @@ class PictureUpload
      *
      * @return string URL of the uploaded picture
      */
-    public static function upload(array $file)
+    public static function upload(array $file): string
     {
         try {
-            self::$instance = new self();
+            self::getInstance(); // Initialize singleton
 
             if (!in_array($file['type'], self::ALLOWED_TYPES)) {
                 throw new ValidationException("Invalid file type");
             }
 
-            $filePath = $file['tmp_name'];
-            $fileName = $file['name'];
-            $url = self::uploadToCloud($filePath, $fileName);
-
-            return $url;
+            return self::uploadToCloud($file['tmp_name'], $file['name']);
         } catch (Exception $e) {
             throw $e;
         }
@@ -89,18 +93,14 @@ class PictureUpload
     /**
      * Uploads an image file to the cloud storage and returns its secure URL.
      *
-     * This method uploads the specified image file to a cloud storage provider using the UploadApi.
-     * The image is stored in the 'profile_pictures' folder with a unique public ID generated from the file name and a UUID.
-     * The upload will overwrite any existing file with the same public ID.
-     *
      * @param string $filePath The local file path of the image to upload.
      * @param string $fileName The original name of the image file.
      *
      * @throws Exception If the upload fails or no secure URL is returned.
      *
-     * @return string|null The secure URL of the uploaded image, or null if not available.
+     * @return string The secure URL of the uploaded image.
      */
-    public static function uploadToCloud($filePath, $fileName)
+    public static function uploadToCloud(string $filePath, string $fileName): string
     {
         try {
             $uploadResult = (new UploadApi())->upload($filePath, [
@@ -114,7 +114,7 @@ class PictureUpload
                 throw new Exception("Image upload failed: No secure URL returned");
             }
 
-            return $response['secure_url'] ?? null;
+            return $response['secure_url'];
         } catch (Exception $e) {
             throw $e;
         }
