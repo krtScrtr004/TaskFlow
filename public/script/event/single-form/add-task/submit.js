@@ -7,6 +7,7 @@ import { workerIds } from '../../add-worker-modal/task/new/add.js'
 import { validateInputs, workValidationRules } from '../../../utility/validator.js'
 import { debounceAsync } from '../../../utility/debounce.js'
 import { handleException } from '../../../utility/handle-exception.js'
+import { normalizeDateFormat } from '../../../utility/utility.js'
 
 let isLoading = false
 
@@ -64,8 +65,8 @@ async function submitForm(e) {
 
         const params = {
             name: nameInput ? nameInput.value : '',
-            startDateTime: startDateInput ? startDateInput.value : '',
-            completionDateTime: completionDateInput ? completionDateInput.value : '',
+            startDateTime: normalizeDateFormat(startDateInput.value),
+            completionDateTime: normalizeDateFormat(completionDateInput.value),
             description: descriptionInput ? descriptionInput.value : '',
             priority: prioritySelect ? prioritySelect.value : '',
             workerIds: workerIds ? workerIds : {}

@@ -6,6 +6,7 @@ import { validateInputs, userValidationRules } from '../../utility/validator.js'
 import { errorListDialog } from '../../render/error-list-dialog.js'
 import { debounce, debounceAsync } from '../../utility/debounce.js'
 import { handleException } from '../../utility/handle-exception.js'
+import { normalizeDateFormat } from '../../utility/utility.js'
 
 let [isLoading, hasSomethingChanged] = [false, false]
 
@@ -84,9 +85,10 @@ async function submit(e) {
     const emailInput = editableProfileDetailsForm.querySelector('#email')
     const contactNumberInput = editableProfileDetailsForm.querySelector('#contact_number')
     const genderInput = editableProfileDetailsForm.querySelector('input[name="gender"]:checked')
+    const birthDateInput = editableProfileDetailsForm.querySelector('#birth_date')
     const bioInput = editableProfileDetailsForm.querySelector('#bio')
     const jobTitlesInput = editableProfileDetailsForm.querySelector('#job_titles')
-    if (!firstNameInput || !middleNameInput || !lastNameInput || !emailInput || !contactNumberInput || !genderInput || !bioInput || !jobTitlesInput) {
+    if (!firstNameInput || !middleNameInput || !lastNameInput || !emailInput || !contactNumberInput || !genderInput || !birthDateInput || !bioInput || !jobTitlesInput) {
         console.error('One or more profile form inputs not found.')
         Dialog.somethingWentWrong()
         return
@@ -109,6 +111,7 @@ async function submit(e) {
         email: emailInput.value,
         contactNumber: contactNumberInput.value,
         gender: genderInput.value,
+        birthDate: normalizeDateFormat(birthDateInput.value),
         bio: bioInput.value,
         jobTitles: jobTitlesValue
     }
@@ -170,6 +173,7 @@ async function submit(e) {
  * - email
  * - contact number
  * - gender (radio input)
+ * - birth date
  * - bio
  * - job titles
  *
@@ -185,6 +189,7 @@ function storeOriginalValues() {
     const emailInput = editableProfileDetailsForm.querySelector('#email')
     const contactNumberInput = editableProfileDetailsForm.querySelector('#contact_number')
     const genderInput = editableProfileDetailsForm.querySelector('input[name="gender"]:checked')
+    const birthDateInput = editableProfileDetailsForm.querySelector('#birth_date')
     const bioInput = editableProfileDetailsForm.querySelector('#bio')
     const jobTitlesInput = editableProfileDetailsForm.querySelector('#job_titles')
 
@@ -194,6 +199,7 @@ function storeOriginalValues() {
     originalValues.email = emailInput?.value || ''
     originalValues.contactNumber = contactNumberInput?.value || ''
     originalValues.gender = genderInput?.value || ''
+    originalValues.birthDate = normalizeDateFormat(birthDateInput?.value) || ''
     originalValues.bio = bioInput?.value || ''
     originalValues.jobTitles = jobTitlesInput?.value || ''
 }
@@ -274,6 +280,7 @@ function getJobTitleChanges(originalJobTitles, currentJobTitles) {
  *      - email: {string} (optional) User's email address
  *      - contactNumber: {string} (optional) User's contact number
  *      - gender: {string} (optional) User's gender
+ *      - birthDate: {string} (optional) User's birth date (YYYY-MM-DD)
  *      - jobTitles: {string} (optional) Comma-separated job titles
  *      - [other fields]: {any} (optional) Any additional fields to update
  *
@@ -309,6 +316,9 @@ async function sendToBackend(params) {
         }
         if (params.hasOwnProperty('gender') && (!params.gender || params.gender.trim() === '')) {
             throw new Error('Gender is required.')
+        }
+        if (params.hasOwnProperty('birthDate') && (!params.birthDate || params.birthDate.trim() === '')) {
+            throw new Error('Birth date is required.')
         }
         if (params.hasOwnProperty('jobTitles') &&
             params['jobTitles']['toAdd'].length === 0 &&

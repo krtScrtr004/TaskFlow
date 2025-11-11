@@ -6,6 +6,7 @@ import { debounceAsync } from '../../../../utility/debounce.js'
 import { phaseToCancel } from './cancel-phase.js'
 import { validateInputs, workValidationRules } from '../../../../utility/validator.js'
 import { handleException } from '../../../../utility/handle-exception.js'
+import { normalizeDateFormat } from '../../../../utility/utility.js'
 
 let isLoading = false
 
@@ -28,14 +29,6 @@ if (!saveProjectInfoButton) {
 
 saveProjectInfoButton?.addEventListener('click', e => debounceAsync(submitForm(e), 300))
 
-
-// Helper: normalize date input to ISO string or null
-const normalizeDate = (val) => {
-    if (!val) return null
-    const d = new Date(val)
-    return Number.isNaN(d.getTime()) ? val : d.toISOString()
-}
-
 // Capture original project state (normalize once on load)
 const descriptionInput = document.querySelector('#project_description')
 const budgetInput = document.querySelector('#project_budget')
@@ -45,8 +38,8 @@ const completionDateInput = document.querySelector('#project_completion_date')
 const originalProject = {
     description: descriptionInput ? (descriptionInput.value?.trim() || null) : null,
     budget: budgetInput ? (budgetInput.value ? parseFloat(budgetInput.value) : null) : null,
-    startDateTime: startDateInput ? normalizeDate(startDateInput.value) : null,
-    completionDateTime: completionDateInput ? normalizeDate(completionDateInput.value) : null
+    startDateTime: startDateInput ? normalizeDateFormat(startDateInput.value) || null : null,
+    completionDateTime: completionDateInput ? normalizeDateFormat(completionDateInput.value) || null : null
 }
 
 // Capture original phases state
@@ -65,8 +58,8 @@ phaseContainers.forEach(pc => {
     // Normalize and store original phase data
     originalPhases[pid] = {
         description: descInput ? (descInput.value?.trim() || null) : null,
-        startDateTime: startInput ? normalizeDate(startInput.value) : null,
-        completionDateTime: completionInput ? normalizeDate(completionInput.value) : null
+        startDateTime: startInput ? normalizeDateFormat(startInput.value) || null : null,
+        completionDateTime: completionInput ? normalizeDateFormat(completionInput.value) || null : null
     }
 })
 
@@ -140,8 +133,8 @@ async function submitForm(e) {
         const currentProject = {
             description: descriptionInput.value?.trim() || null,
             budget: budgetInput.value ? parseFloat(budgetInput.value) : null,
-            startDateTime: normalizeDate(startDateInput.value),
-            completionDateTime: normalizeDate(completionDateInput.value)
+            startDateTime: normalizeDateFormat(startDateInput.value) || null,
+            completionDateTime: normalizeDateFormat(completionDateInput.value) || null
         }
 
         // Build changedProject by comparing to originalProject captured on load
@@ -252,8 +245,8 @@ function addPhaseForm(phaseContainer) {
     // Normalize current values
     const cur = {
         description: descriptionInput.value ? descriptionInput.value.trim() : null,
-        startDateTime: normalizeDate(startDateInput.value),
-        completionDateTime: normalizeDate(completionDateInput.value)
+        startDateTime: normalizeDateFormat(startDateInput.value) || null,
+        completionDateTime: normalizeDateFormat(completionDateInput.value) || null
     }
 
     // Only track existing phases that have been edited

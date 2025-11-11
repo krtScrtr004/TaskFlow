@@ -4,6 +4,7 @@ import { Loader } from '../../../render/loader.js'
 import { Dialog } from '../../../render/dialog.js'
 import { debounceAsync } from '../../../utility/debounce.js'
 import { errorListDialog } from '../../../render/error-list-dialog.js'
+import { normalizeDateFormat } from '../../../utility/utility.js'
 
 const addPhaseModal = document.querySelector('#add_phase_modal')
 const addPhaseForm = addPhaseModal.querySelector('#add_phase_form')
@@ -69,8 +70,8 @@ function submitForm(e, params) {
 
     const name = nameInput.value.trim()
     const description = descriptionInput.value.trim()
-    const startDateTime = startDateTimeInput.value.trim()
-    const completionDateTime = completionDateTimeInput.value.trim()
+    const startDateTime = normalizeDateFormat(startDateTimeInput.value)
+    const completionDateTime = normalizeDateFormat(completionDateTimeInput.value)
 
     // Check required fields
     if (!validateInputs({

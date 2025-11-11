@@ -16,6 +16,7 @@ $myData = [
     'lastName' => htmlspecialchars($me->getLastName()),
     'fullName' => htmlspecialchars($me->getFirstName()) . ($me->getMiddleName() ? ' ' . htmlspecialchars($me->getMiddleName()) . ' ' : ' ') . htmlspecialchars($me->getLastName()),
     'gender' => $me->getGender(),
+    'birthDate' => $me->getBirthDate() ? htmlspecialchars(formatDateTime($me->getBirthDate(), 'Y-m-d')) : null,
     'bio' => $me->getBio() ? htmlspecialchars($me->getBio()) : null,
     'role' => $me->getRole(),
     'email' => htmlspecialchars($me->getEmail()),
@@ -118,7 +119,7 @@ $myData = [
                 <h3>Edit Profile Details</h3>
             </div>
 
-            <div class="name-inputs flex-row">
+            <div class="name-inputs three-input-layout flex-row">
                 <!-- First Name -->
                 <div class="input-label-container">
                     <label for="first_name">
@@ -180,21 +181,25 @@ $myData = [
                             <p>Contact Number</p>
                         </div>
                     </label>
+
                     <input type="tel" name="contact_number" id="contact_number" placeholder="Contact Number"
-                        pattern="\+?[\d\s\-\(\)]{11,20}" value="<?= $myData['contactNumber'] ?>" minlength="11" maxlength="20"
-                        required>
+                        pattern="\+?[\d\s\-\(\)]{11,20}" value="<?= $myData['contactNumber'] ?>" minlength="11"
+                        maxlength="20" required>
                 </div>
 
-                <!-- Password -->
-                <div class="input-label-container">
-                    <div>
-                        <div class="text-w-icon">
-                            <img src="<?= ICON_PATH . 'password_w.svg' ?>" alt="Password" title="Password" height="20">
-                            <p>Password</p>
-                        </div>
-                    </div>
+            </section>
 
-                    <a href="<?= REDIRECT_PATH . 'reset-password' ?>" class="blue-text">Change Password</a>
+            <div class="three-input-layout flex-row">
+                <!-- Birth Date -->
+                <div class="input-label-container">
+                    <label for="birth_date">
+                        <div class="text-w-icon">
+                            <img src="<?= ICON_PATH . 'date_w.svg' ?>" alt="Birth Date" title="Birth Date" height="20">
+                            <p>Birth Date</p>
+                        </div>
+                    </label>
+
+                    <input type="date" name="birth_date" id="birth_date" value="<?= $myData['birthDate'] ?>" required>
                 </div>
 
                 <!-- Gender -->
@@ -221,7 +226,18 @@ $myData = [
                     </div>
                 </div>
 
-            </section>
+                <!-- Password -->
+                <div class="input-label-container">
+                    <div>
+                        <div class="text-w-icon">
+                            <img src="<?= ICON_PATH . 'password_w.svg' ?>" alt="Password" title="Password" height="20">
+                            <p>Password</p>
+                        </div>
+                    </div>
+
+                    <a href="<?= REDIRECT_PATH . 'reset-password' ?>" class="blue-text">Change Password</a>
+                </div>
+            </div>
 
             <!--Job Titles -->
             <div class="input-label-container">

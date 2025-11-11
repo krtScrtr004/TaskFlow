@@ -24,6 +24,7 @@ use App\Exception\NotFoundException;
 use App\Utility\PictureUpload;
 use App\Utility\WorkerPerformanceCalculator;
 use App\Validator\UserValidator;
+use DateTime;
 use Exception;
 use ValueError;
 
@@ -220,6 +221,10 @@ class UserEndpoint
                 $profileData['bio'] = trim($data['bio']);
             }
 
+            if (isset($data['birthDate'])) {
+                $profileData['birthDate'] = new DateTime(trim($data['birthDate']));
+            }
+
             if (isset($data['jobTitles'])) {
                 $profileData['jobTitles']['toAdd'] = JobTitleContainer::fromArray($data['jobTitles']['toAdd'] ?? []);
                 $profileData['jobTitles']['toRemove'] = JobTitleContainer::fromArray($data['jobTitles']['toRemove'] ?? []);
@@ -262,6 +267,7 @@ class UserEndpoint
                 'middleName' => $profileData['middleName'] ?? null,
                 'lastName' => $profileData['lastName'] ?? null,
                 'email' => $profileData['email'] ?? null,
+                'birthDate' => $profileData['birthDate'] ?? null,
                 'contactNumber' => $profileData['contactNumber'] ?? null,
                 'bio' => $profileData['bio'] ?? null,
                 'password' => $profileData['password'] ?? null

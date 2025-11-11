@@ -6,6 +6,7 @@ import { confirmationDialog } from '../../render/confirmation-dialog.js'
 import { validateInputs, workValidationRules } from '../../utility/validator.js'
 import { debounceAsync } from '../../utility/debounce.js'
 import { handleException } from '../../utility/handle-exception.js'
+import { normalizeDateFormat } from '../../utility/utility.js'
 
 let isLoading = false
 let originalValues = {}
@@ -46,8 +47,8 @@ function storeOriginalValues() {
     originalValues = {
         name: nameInput?.value || '',
         description: descriptionInput?.value || '',
-        startDateTime: startDateInput?.value || '',
-        completionDateTime: completionDateInput?.value || '',
+        startDateTime: normalizeDateFormat(startDateInput?.value) || '',
+        completionDateTime: normalizeDateFormat(completionDateInput?.value) || '',
         priority: prioritySelect?.value || ''
     }
 }
@@ -97,8 +98,8 @@ async function submitForm(e) {
     const currentValues = {
         name: nameInput ? nameInput.value : '',
         description: descriptionInput ? descriptionInput.value : '',
-        startDateTime: startDateInput ? startDateInput.value : '',
-        completionDateTime: completionDateInput ? completionDateInput.value : '',
+        startDateTime: normalizeDateFormat(startDateInput?.value) || '',
+        completionDateTime: normalizeDateFormat(completionDateInput?.value) || '',
         priority: prioritySelect ? prioritySelect.value : '',
     }
 

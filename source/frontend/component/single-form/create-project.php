@@ -61,7 +61,7 @@
                 </label>
 
                 <input type="date" name="project-start-date" id="project_start_date"
-                    value="<?= (new DateTime())->format('Y-m-d') ?>" required>
+                    value="<?= formatDateTime(new DateTime(), 'Y-m-d') ?>" required>
             </div>
 
             <!-- Completion Date -->
@@ -75,7 +75,7 @@
                 </label>
                 
                 <input type="date" name="project-completion-date" id="project_completion_date"
-                    value="<?= (new DateTime())->format('Y-m-d') ?>" required>
+                    value="<?= formatDateTime(new DateTime(), 'Y-m-d') ?>" required>
             </div>
         </div>
 

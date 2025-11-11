@@ -6,6 +6,7 @@ import { confirmationDialog } from '../../../../render/confirmation-dialog.js'
 import { debounceAsync } from '../../../../utility/debounce.js'
 import { validateInputs, workValidationRules } from '../../../../utility/validator.js'
 import { handleException } from '../../../../utility/handle-exception.js'
+import { normalizeDateFormat } from '../../../../utility/utility.js'
 
 let isLoading = false
 const phaseToAdd = []
@@ -86,8 +87,8 @@ async function submitForm(e) {
                 name: nameInput.value.trim(),
                 description: descriptionInput.value.trim(),
                 budget: parseFloat(budgetInput.value),
-                startDateTime: startDateInput.value.trim(),
-                completionDateTime: completionDateInput.value.trim(),
+                startDateTime: normalizeDateFormat(startDateInput.value),
+                completionDateTime: normalizeDateFormat(completionDateInput.value),
             },
             phases: phaseToAdd,
         })

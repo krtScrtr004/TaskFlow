@@ -6,6 +6,7 @@ import { Notification } from '../../render/notification.js'
 import { validateInputs, userValidationRules } from '../../utility/validator.js'
 import { debounceAsync } from '../../utility/debounce.js'
 import { handleException } from '../../utility/handle-exception.js'
+import { normalizeDateFormat } from '../../utility/utility.js'
 
 let isLoading = false
 
@@ -74,7 +75,7 @@ async function submit(e) {
         middleName: middleNameInput.value.trim(),
         lastName: lastNameInput.value.trim(),
         gender: genderInput.value.trim(),
-        birthDate: birthDateInput.value.trim(),
+        birthDate: normalizeDateFormat(birthDateInput.value),
         jobTitles: jobTitlesValue,
         contactNumber: contactInput.value.trim(),
         email: emailInput.value.trim(),

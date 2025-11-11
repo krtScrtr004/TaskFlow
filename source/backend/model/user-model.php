@@ -620,6 +620,11 @@ class UserModel extends Model
                 $params[':gender'] = $data['gender']->value;
             }
 
+            if (isset($data['birthDate'])) {
+                $updateFields[] = 'birthDate = :birthDate';
+                $params[':birthDate'] = formatDateTime($data['birthDate']);
+            }
+
             if (isset($data['email'])) {
                 $updateFields[] = 'email = :email';
                 $params[':email'] = trimOrNull($data['email']);
