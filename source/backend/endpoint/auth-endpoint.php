@@ -175,11 +175,19 @@ class AuthEndpoint implements Controller
                 );
             }
 
-            // Check if user already exists
-            if (UserModel::findByEmail($email)) {
-                throw new ValidationException('Registration Failed.', [
-                    'Email is already in use.'
-                ]);
+            // Check if email / contact number already exists
+            $hasDuplicate = UserModel::hasDuplicateInfo($email, $contactNumber);
+            if ($hasDuplicate['hasDuplicates']) {
+                $duplicateErrors = [];
+                if (isset($hasDuplicate['email']) && $hasDuplicate['email']) {
+                    $duplicateErrors[] = 'Email is already in use by another user.';
+                }
+                if (isset($hasDuplicate['contactNumber']) && $hasDuplicate['contactNumber']) {
+                    $duplicateErrors[] = 'Contact number is already in use by another user.';
+                }
+                if (count($duplicateErrors) > 0) {
+                    throw new ValidationException('Registration Failed.', $duplicateErrors);
+                }
             }
 
             // Create user

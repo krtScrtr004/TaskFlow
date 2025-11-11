@@ -235,6 +235,26 @@ class UserEndpoint
                 $profileData['profileLink'] = $profileLink;
             }
 
+            if (isset($profileData['email']) || isset($profileData['contactNumber'])) {
+                // Check for duplicate email or contact number
+                $duplicates = UserModel::hasDuplicateInfo(
+                    $profileData['email'] ?? null,
+                    $profileData['contactNumber'] ?? null,
+                    Me::getInstance()->getId()
+                );
+
+                $duplicateErrors = [];
+                if (isset($duplicates['email']) && $duplicates['email']) {
+                    $duplicateErrors[] = 'Email is already in use by another user.';
+                }
+                if (isset($duplicates['contactNumber']) && $duplicates['contactNumber']) {
+                    $duplicateErrors[] = 'Contact number is already in use by another user.';
+                }
+                if (count($duplicateErrors) > 0) {
+                    throw new ValidationException('Duplicate fields found.', $duplicateErrors);
+                }
+            }
+
             // Validate and update profile data
             $validator = new UserValidator();
             $validator->validateMultiple([

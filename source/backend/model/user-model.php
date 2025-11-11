@@ -189,6 +189,100 @@ class UserModel extends Model
     }
 
     /**
+     * Checks if email or contact number already exists in the database.
+     *
+     * This method verifies whether the provided email address or contact number
+     * is already registered by another user using a single query. It returns an array 
+     * indicating which fields (if any) are duplicates. This is useful for registration 
+     * and profile update validation.
+     *
+     * @param string|null $email Email address to check for duplicates
+     * @param string|null $contactNumber Contact number to check for duplicates
+     * @param int|UUID|null $excludeUserId User ID to exclude from duplicate check (for updates)
+     *
+     * @return array Associative array with duplicate status:
+     *      - email: bool True if email is duplicate, false otherwise
+     *      - contactNumber: bool True if contact number is duplicate, false otherwise
+     *      - hasDuplicates: bool True if any field is duplicate, false otherwise
+     *
+     * @throws DatabaseException If a database error occurs during the query
+     */
+    public static function hasDuplicateInfo(
+        ?string $email = null,
+        ?string $contactNumber = null,
+        int|UUID|null $excludeUserId = null
+    ): array {
+        $instance = new self();
+        $result = [
+            'email' => false,
+            'contactNumber' => false,
+            'hasDuplicates' => false
+        ];
+
+        try {
+            // Skip if both fields are empty
+            if (!$email && !$contactNumber) {
+                return $result;
+            }
+
+            // Build single query to check both fields
+            $whereConditions = [];
+            $params = [];
+
+            if ($email) {
+                $whereConditions[] = "email = :email";
+                $params[':email1'] = $email;
+                $params[':email2'] = $email;
+            }
+
+            if ($contactNumber) {
+                $whereConditions[] = "contactNumber = :contactNumber";
+                $params[':contactNumber1'] = $contactNumber;
+                $params[':contactNumber2'] = $contactNumber;
+            }
+
+            if ($excludeUserId) {
+                $whereConditions[] = is_int($excludeUserId) 
+                    ? "id != :excludeUserId" 
+                    : "publicId != :excludeUserId";
+                $params[':excludeUserId'] = is_int($excludeUserId) 
+                    ? $excludeUserId 
+                    : UUID::toBinary($excludeUserId);
+            }
+
+            $query = "
+                SELECT 
+                    (CASE WHEN " . ($email ? "email = :email1" : "0") . " THEN 1 ELSE 0 END) as email_duplicate,
+                    (CASE WHEN " . ($contactNumber ? "contactNumber = :contactNumber1" : "0") . " THEN 1 ELSE 0 END) as contact_duplicate
+                FROM `user`
+                WHERE " . implode(" OR ", array_filter([
+                    $email ? "email = :email2" : null,
+                    $contactNumber ? "contactNumber = :contactNumber2" : null
+                ]));
+
+            if ($excludeUserId) {
+                $query .= (is_int($excludeUserId) ? " AND id != :excludeUserId" : " AND publicId != :excludeUserId");
+            }
+
+            $query .= " LIMIT 1";
+
+            $statement = $instance->connection->prepare($query);
+            $statement->execute($params);
+            $row = $statement->fetch();
+
+            if ($row) {
+                $result['email'] = (bool) $row['email_duplicate'];
+                $result['contactNumber'] = (bool) $row['contact_duplicate'];
+                $result['hasDuplicates'] = $result['email'] || $result['contactNumber'];
+            }
+
+            return $result;
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
+        }
+    }
+
+    /**
      * Retrieves all users with pagination support.
      *
      * This method fetches all users from the database with optional pagination 
