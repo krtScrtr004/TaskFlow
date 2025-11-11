@@ -20,7 +20,7 @@
 			"TaskController", 
 			"viewGrid"
 		],
-		"TaskFlow/project/{projectId:[\\w+_-]+}/task/{taskId:[\\w+_-]+}": [
+		"TaskFlow/project/{projectId:[\\w+_-]+}/phase/{phaseId:[\\w+_-]+}/task/{taskId:[\\w+_-]+}": [
 			"TaskController",
 			"viewInfo"
 		],
