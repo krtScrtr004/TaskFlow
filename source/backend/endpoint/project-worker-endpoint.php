@@ -279,6 +279,33 @@ class ProjectWorkerEndpoint
         }
     }
 
+    /**
+     * Edits the status of a worker assigned to a project.
+     *
+     * This method performs the following actions:
+     * - Checks if the user session is authorized.
+     * - Protects against CSRF attacks.
+     * - Validates and retrieves the project ID and worker ID from the input arguments.
+     * - Finds the corresponding project and worker records.
+     * - Decodes the input data from the request body.
+     * - Updates the worker's status for the specified project.
+     * - Returns a success response if the update is successful.
+     * - Handles validation, authorization, and unexpected errors with appropriate responses.
+     *
+     * @param array $args Associative array containing:
+     *      - projectId: string|UUID Project identifier
+     *      - workerId: string|UUID Worker identifier
+     * 
+     * Input Data (decoded from request body):
+     *      - status: string|WorkerStatus New status for the worker
+     *
+     * @throws ForbiddenException If the session is unauthorized or required IDs are missing.
+     * @throws NotFoundException If the project or worker is not found.
+     * @throws ValidationException If the input data cannot be decoded or is invalid.
+     * @throws Exception For any other unexpected errors.
+     *
+     * @return void
+     */
     public static function edit(array $args = []): void
     {
         try {
@@ -299,7 +326,9 @@ class ProjectWorkerEndpoint
                 throw new NotFoundException('Project not found.');
             }
 
-            $workerId = $args['workerId'] ?? null;
+            $workerId = isset($args['workerId']) 
+                ? UUID::fromString($args['workerId']) 
+                : null;
             if (!isset($workerId)) {
                 throw new ForbiddenException('Worker ID is required.');
             }

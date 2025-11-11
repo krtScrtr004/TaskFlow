@@ -116,7 +116,7 @@ class UserEndpoint
             }
 
             $filter = null;
-            if (isset($_GET['filter']) && trim($_GET['filter']) !== '') {
+            if (isset($_GET['filter']) && trim($_GET['filter']) !== '' && $_GET['filter'] !== 'all') {
                 try {
                     $filter = Role::from($_GET['filter']);
                 } catch (ValueError $e) {

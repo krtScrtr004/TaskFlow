@@ -70,13 +70,13 @@ class AuthEndpoint implements Controller
             $validator->validateEmail($email);
             $validator->validatePassword($password);
             if ($validator->hasErrors()) {
-                Response::error('Login Failed.', $validator->getErrors());
+                throw new ValidationException('Login Failed.', $validator->getErrors());
             }
 
             // Verify credentials
             $user = UserModel::findByEmail($email);
             if (!$user || !password_verify($password, $user->getPassword())) {
-                Response::error('Login Failed.', [
+                throw new ValidationException('Login Failed.', [
                     'Invalid email or password.'
                 ]);
             }
