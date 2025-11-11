@@ -56,21 +56,20 @@ export const Http = (() => {
                 method
             }
 
-            if (body !== null && ['POST', 'PUT', 'PATCH'].includes(method)) {
-                if (serialize) {
-                    options.headers = {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-Token': document.querySelector('input[type="hidden"]#csrf_token').value
-                    }
-                    options.body = JSON.stringify(body)
-                } else {
-                    // Don't set Content-Type for FormData - browser will set it with boundary
-                    options.body = body
-                    options.headers = {
-                        'X-CSRF-Token': document.querySelector('input[type="hidden"]#csrf_token').value
+            if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+                options.headers = {
+                    'X-CSRF-Token': document.querySelector('input[type="hidden"]#csrf_token').value
+                }
+
+                if (body) {
+                    if (serialize) {
+                        options.headers['Content-Type'] = 'application/json'
+                        options.body = JSON.stringify(body)
+                    } else {
+                        // Don't set Content-Type for FormData - browser will set it with boundary
+                        options.body = body
                     }
                 }
-                
             }
 
             const request = await fetch(`${apiUrl}${endpoint}`, options)

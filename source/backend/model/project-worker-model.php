@@ -265,6 +265,8 @@ class ProjectWorkerModel extends Model
             $where[] = "u.role = :role";
             $params[':role'] = Role::WORKER->value;
 
+            $where[] = "u.deletedAt IS NULL";
+
             if (!empty($where)) {
                 $query .= " WHERE " . implode(' AND ', $where);
             }

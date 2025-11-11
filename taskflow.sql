@@ -318,6 +318,7 @@ CREATE TABLE `user` (
   `password` varchar(255) NOT NULL,
   `bio` varchar(500) DEFAULT NULL,
   `profileLink` varchar(255) DEFAULT NULL,
+  `deletedAt` datetime DEFAULT NULL,
   `createdAt` datetime DEFAULT current_timestamp(),
   `updatedAt` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -330,6 +331,31 @@ CREATE TRIGGER `checkUserAgeBeforeInsert` BEFORE INSERT ON `user` FOR EACH ROW B
     IF NEW.birthDate > DATE_SUB(CURDATE(), INTERVAL 18 YEAR) THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'User must be at least 18 years old.';
+    END IF;
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `anonymizeUserOnDelete` BEFORE UPDATE ON `user` FOR EACH ROW BEGIN
+    -- When deletedAt is set to a non-NULL value, anonymize sensitive user attributes
+    IF NEW.deletedAt IS NOT NULL AND OLD.deletedAt IS NULL THEN
+        -- Anonymize personal information
+        SET NEW.firstName = 'Deleted';
+        SET NEW.middleName = NULL;
+        SET NEW.lastName = 'User';
+        SET NEW.email = CONCAT('deleted_', NEW.id, '@deleted.local');
+        SET NEW.contactNumber = SUBSTRING(REPLACE(UUID(), '-', ''), 1, 11);
+        SET NEW.bio = NULL;
+        SET NEW.profileLink = NULL;
+    END IF;
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `deleteJobTitlesOnUserDelete` AFTER UPDATE ON `user` FOR EACH ROW BEGIN
+    -- When a user is deleted (deletedAt is set), remove all their job titles
+    IF NEW.deletedAt IS NOT NULL AND OLD.deletedAt IS NULL THEN
+        DELETE FROM `userJobTitle` WHERE userId = NEW.id;
     END IF;
 END
 $$

@@ -148,7 +148,7 @@ async function submit(e) {
     try {
         await sendToBackend(changedParams)
 
-        setTimeout(() => window.location.reload(), 3000)
+        setTimeout(() => window.location.reload(), 1500)
         Dialog.operationSuccess(
             'Profile Updated',
             `Your profile has been successfully updated`

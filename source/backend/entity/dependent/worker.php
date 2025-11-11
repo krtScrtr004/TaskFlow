@@ -54,6 +54,7 @@ class Worker extends User
         ?string $profileLink,
         WorkerStatus $status,
         DateTime $createdAt,
+        ?DateTime $deletedAt = null,
         array $additionalInfo = []
     ) {
         parent::__construct(
@@ -192,6 +193,7 @@ class Worker extends User
             bio: $worker->getBio(),
             profileLink: $worker->getProfileLink(),
             createdAt: $worker->getCreatedAt(),
+            deletedAt: $worker->getDeletedAt(),
             password: $worker->getPassword(),
             additionalInfo: $worker->getAdditionalInfo()
         );
@@ -230,6 +232,7 @@ class Worker extends User
             profileLink: $user->getProfileLink(),
             status: WorkerStatus::ASSIGNED,
             createdAt: $user->getCreatedAt(),
+            deletedAt: $user->getDeletedAt(),
             additionalInfo: $user->getAdditionalInfo()
         );
     }
@@ -301,6 +304,7 @@ class Worker extends User
             profileLink: $user->getProfileLink(),
             status: $status,
             createdAt: $user->getCreatedAt(),
+            deletedAt: $user->getDeletedAt(),
             additionalInfo: $user->getAdditionalInfo()
         );
     }

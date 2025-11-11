@@ -38,6 +38,7 @@ class User implements Entity
     protected ?string $bio;
     protected ?string $profileLink;
     protected ?DateTime $createdAt;
+    protected ?DateTime $deletedAt;
     protected array $additionalInfo;
 
     protected UserValidator $userValidator;
@@ -83,6 +84,7 @@ class User implements Entity
         ?string $profileLink,
         DateTime $createdAt,
         ?string $password = null,
+        ?DateTime $deletedAt = null,
         array $additionalInfo = []
     ) {
         try {
@@ -121,6 +123,7 @@ class User implements Entity
         $this->bio = trimOrNull($bio);
         $this->profileLink = trimOrNull($profileLink);
         $this->createdAt = $createdAt;
+        $this->deletedAt = $deletedAt;
         $this->password = $password;
         $this->additionalInfo = $additionalInfo;
     }
@@ -280,6 +283,16 @@ class User implements Entity
     public function getCreatedAt(): DateTime
     {
         return $this->createdAt;
+    }
+
+    /**
+     * Gets the deletion timestamp of the user account.
+     *
+     * @return DateTime|null The DateTime object representing when the user was deleted, or null if not deleted
+     */
+    public function getDeletedAt(): ?DateTime
+    {
+        return $this->deletedAt;
     }
 
     /**
@@ -557,6 +570,21 @@ class User implements Entity
         $this->createdAt = $createdAt;
     }
 
+    /**
+     * Sets the user deletion timestamp.
+     *
+     * @param DateTime|null $deletedAt The deletion timestamp to set, or null if not deleted
+     * @throws ValidationException If the deletion date is in the future
+     * @return void
+     */
+    public function setDeletedAt(?DateTime $deletedAt): void
+    {
+        if ($deletedAt !== null && $deletedAt > new DateTime()) {
+            throw new ValidationException("Invalid Deleted At Date");
+        }
+        $this->deletedAt = $deletedAt;
+    }
+
     // OTHER METHODS (UTILITY)
 
     /**
@@ -633,6 +661,7 @@ class User implements Entity
             'bio' => $data['bio'] ?? null,
             'profileLink' => $data['profileLink'] ?? null,
             'createdAt' => $data['createdAt'] ?? new DateTime(),
+            'deletedAt' => $data['deletedAt'] ?? null,
             'password' => $data['password'] ?? null,
             'additionalInfo' => $data['additionalInfo'] ?? []
         ];
@@ -653,6 +682,10 @@ class User implements Entity
 
         if (isset($data['createdAt']) && !($data['createdAt'] instanceof DateTime)) {
             $defaults['createdAt'] = new DateTime(trimOrNull($data['createdAt']));
+        }
+
+        if (isset($data['deletedAt']) && !($data['deletedAt'] instanceof DateTime) && $data['deletedAt'] !== null) {
+            $defaults['deletedAt'] = new DateTime(trimOrNull($data['deletedAt']));
         }
 
         // Handle enum conversions
@@ -687,6 +720,7 @@ class User implements Entity
             bio: $defaults['bio'],
             profileLink: $defaults['profileLink'],
             createdAt: $defaults['createdAt'],
+            deletedAt: $defaults['deletedAt'],
             password: $defaults['password'],
             additionalInfo: $defaults['additionalInfo']
         );
@@ -723,6 +757,7 @@ class User implements Entity
             profileLink: $this->profileLink,
             status: WorkerStatus::ASSIGNED,
             createdAt: new DateTime(),
+            deletedAt: $this->deletedAt,
             additionalInfo: $this->additionalInfo
         );
     }
@@ -771,6 +806,7 @@ class User implements Entity
             'bio' => $this->bio,
             'profileLink' => $this->profileLink,
             'createdAt' => $this->createdAt->format('Y-m-d H:i:s'),
+            'deletedAt' => $this->deletedAt ? $this->deletedAt->format('Y-m-d H:i:s') : null,
             'additionalInfo' => $this->additionalInfo
         ];
     }
@@ -835,6 +871,10 @@ class User implements Entity
             ? new DateTime(trimOrNull($data['createdAt']))
             : $data['createdAt'];
 
+        $deletedAt = (isset($data['deletedAt']) && is_string($data['deletedAt']))
+            ? new DateTime(trimOrNull($data['deletedAt']))
+            : ($data['deletedAt'] ?? null);
+
         return new User(
             id: $data['id'],
             publicId: $publicId,
@@ -850,6 +890,7 @@ class User implements Entity
             bio: trimOrNull($data['bio']),
             profileLink: trimOrNull($data['profileLink']),
             createdAt: $createdAt,
+            deletedAt: $deletedAt,
             additionalInfo: $data['additionalInfo'] ?? [],
             password: $data['password'] ?? null
         );

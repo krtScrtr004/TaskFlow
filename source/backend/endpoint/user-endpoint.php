@@ -62,7 +62,7 @@ class UserEndpoint
                 ? UUID::fromString($args['userId'])
                 : null;
             if (!$userId) {
-                throw new ValidationException('User ID is required.');
+                throw new ValidationException('Validation Failed.', ['User ID is required.']);
             }
 
             $user = UserModel::findById($userId);
@@ -74,7 +74,7 @@ class UserEndpoint
         } catch (ValidationException $e) {
             Response::error('Validation Failed.', $e->getErrors(), 422);
         } catch (ForbiddenException $e) {
-            Response::error('Forbidden.', [], 403);
+            Response::error('Forbidden.', [$e->getMessage()], 403);
         } catch (Exception $e) {
             Response::error('Unexpected Error.', ['An unexpected error occurred. Please try again.'], 500);
         }
@@ -146,7 +146,7 @@ class UserEndpoint
         } catch (ValidationException $e) {
             Response::error('Validation Failed.', $e->getErrors(), 422);
         } catch (ForbiddenException $e) {
-            Response::error('Forbidden.', [], 403);
+            Response::error('Forbidden.',  [$e->getMessage()], 403);
         } catch (Exception $e) {
             Response::error('Unexpected Error.', ['An unexpected error occurred. Please try again.'], 500);
         }
@@ -273,7 +273,7 @@ class UserEndpoint
                 $validator->validateJobTitles($profileData['jobTitles']['toRemove']);
             }
             if ($validator->hasErrors()) {
-                throw new ValidationException('Profile edit failed.', $validator->getErrors());
+                throw new ValidationException('Profile Edit failed.', $validator->getErrors());
             }
 
             if (count($profileData) > 0) {
@@ -312,9 +312,79 @@ class UserEndpoint
         } catch (NotFoundException $e) {
             Response::error('Profile Edit Failed.', ['Profile not found.'], 404);
         } catch (ForbiddenException $e) {
-            Response::error('Profile Edit Failed. ' . $e->getMessage(), [], 403);
+            Response::error('Profile Edit Failed. ',  [$e->getMessage()], 403);
         } catch (Exception $e) {
             Response::error('Profile Edit Failed.', ['An unexpected error occurred. Please try again later.'], 500);
+        }
+    }
+
+    /**
+     * Deletes a user profile based on provided arguments.
+     *
+     * This method performs the following actions:
+     * - Checks if the current session is authorized to delete profiles.
+     * - Protects against CSRF attacks.
+     * - Validates the presence and format of the user ID.
+     * - Finds the user by ID and ensures the user exists.
+     * - Checks if the user is assigned to any active projects (as manager or worker).
+     * - Deletes the user profile if all checks pass.
+     * - Destroys the session and user context upon successful deletion.
+     * - Handles and responds to various exceptions (validation, not found, forbidden, unexpected errors).
+     *
+     * @param array $args Associative array of arguments with the following key:
+     *      - userId: string UUID of the user to be deleted.
+     *
+     * @throws ValidationException If validation fails (e.g., missing user ID, user assigned to active projects).
+     * @throws NotFoundException If the user is not found.
+     * @throws ForbiddenException If the session is not authorized.
+     * @throws Exception For unexpected errors during deletion.
+     *
+     * @return void
+     */
+    public static function delete(array $args = []): void
+    {
+        try {
+            if (!SessionAuth::hasAuthorizedSession()) {
+                throw new ForbiddenException('User session is not allowed to delete profiles.');
+            }
+            Csrf::protect();
+
+            $userId = isset($args['userId'])
+                ? UUID::fromString($args['userId'])
+                : null;
+            if (!$userId) {
+                throw new ValidationException('Delete Failed.', ['User ID is required.']);
+            }
+
+            $user = UserModel::findById($userId);
+            if (!$user) {
+                throw new NotFoundException('User not found.');
+            }
+
+            // Check if user is assigned to any active projects
+            $hasActiveProject = Role::isProjectManager($user)
+                ? ProjectModel::findManagerActiveProjectByManagerId($user->getId())
+                : ProjectModel::findWorkerActiveProjectByWorkerId($user->getId());
+            if ($hasActiveProject) {
+                throw new ValidationException('Delete Failed.', ['Your account cannot be deleted while assigned to an active projects.']);
+            }
+
+            if (UserModel::delete($user)) {
+                Response::success([], 'User deleted successfully.');
+
+                Session::destroy();
+                Me::destroy();
+            } else {
+                throw new Exception('User deletion failed.');
+            }
+        } catch (ValidationException $e) {
+            Response::error('Delete Failed.', $e->getErrors(), 422);
+        } catch (NotFoundException $e) {
+            Response::error('Delete Failed.', ['Profile not found.'], 404);
+        } catch (ForbiddenException $e) {
+            Response::error('Delete Failed. ',  [$e->getMessage()], 403);
+        } catch (Exception $e) {
+            Response::error('Delete Failed.', ['An unexpected error occurred. Please try again later.'], 500);
         }
     }
 }

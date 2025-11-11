@@ -85,6 +85,14 @@
 	height: 300px !important;
 }
 
+.team-members {
+	width: 25rem;
+}
+
+.team-members > section {
+	width: 100%;
+}
+
 .project-workers {
 	height: fit-content;
 	max-height: 35rem;

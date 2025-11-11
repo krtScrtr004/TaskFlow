@@ -258,7 +258,7 @@ require_once COMPONENT_PATH . 'template/add-worker-modal.php';
             <?php endif; ?>
         </div>
 
-        <section>
+        <section class="team-members">
             <section class="project-manager content-section-block flex-col">
                 <div class="heading-title text-w-icon">
                     <img src="<?= ICON_PATH . 'manager_w.svg' ?>" alt="Project Manager" title="Project Manager"

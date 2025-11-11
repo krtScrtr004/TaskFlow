@@ -75,7 +75,7 @@ class AuthEndpoint implements Controller
 
             // Verify credentials
             $user = UserModel::findByEmail($email);
-            if (!$user || !password_verify($password, $user->getPassword())) {
+            if (!$user || !password_verify($password, $user->getPassword()) || $user->getDeletedAt() !== null) {
                 throw new ValidationException('Login Failed.', [
                     'Invalid email or password.'
                 ]);

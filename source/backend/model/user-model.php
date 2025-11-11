@@ -159,6 +159,8 @@ class UserModel extends Model
             ? [':id' => $userId] 
             : [':publicId' => UUID::toBinary($userId)];
 
+        $whereClause .= ' AND u.deletedAt IS NULL';
+
         try {
             $result = self::find($whereClause, $params, ['limit' => 1]);
             return $result ? $result[0] : null;
@@ -181,7 +183,7 @@ class UserModel extends Model
     public static function findByEmail(string $email): ?User
     {
         try {
-            $result = self::find('email = :email', [':email' => $email], ['limit' => 1]);
+            $result = self::find('email = :email AND deletedAt IS NULL', [':email' => $email], ['limit' => 1]);
             return $result ? $result[0] : null;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
@@ -290,12 +292,13 @@ class UserModel extends Model
      *
      * @param int $offset Number of records to skip (for pagination)
      * @param int $limit Maximum number of records to return (default 10)
+     * @param bool $includeDeleted Whether to include deleted users in the results (default false)
      * @return array Array of User objects or empty array if no users found
      * 
      * @throws InvalidArgumentException If offset is negative or limit is less than 1
      * @throws DatabaseException When database query fails
      */
-    public static function all(int $offset = 0, int $limit = 10): ?array
+    public static function all(int $offset = 0, int $limit = 10, bool $includeDeleted = false): ?array
     {
         if ($offset < 0) {
             throw new InvalidArgumentException('Invalid offset value.');
@@ -306,7 +309,8 @@ class UserModel extends Model
         }
 
         try {
-            return self::find('', [], ['offset' => $offset, 'limit' => $limit]) ?: null;
+            $whereClause = $includeDeleted ? '' : 'deletedAt IS NULL';
+            return self::find($whereClause, [], ['offset' => $offset, 'limit' => $limit]) ?: null;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
@@ -415,6 +419,9 @@ class UserModel extends Model
                     $params[':workerStatus2'] = $status->value;
                 }
             }
+
+            // Exclude deleted users
+            $where[] = "deletedAt IS NULL";
 
             $whereClause = !empty($where) ? implode(' AND ', $where) : '';
             return self::find($whereClause, $params, $options);
@@ -633,13 +640,18 @@ class UserModel extends Model
                 $params[':password'] = password_hash(trimOrNull($data['password']), PASSWORD_ARGON2ID);
             }
 
+            if (isset($data['delete'])) {
+                $updateFields[] = 'deletedAt = :deletedAt';
+                $params[':deletedAt'] = formatDateTime(new DateTime());
+            }
+
             if (!empty($updateFields)) {
                 $projectQuery = "UPDATE `user` SET " . implode(', ', $updateFields) . " WHERE id = " . (isset($params[':id']) ? ":id" : "(SELECT id FROM users WHERE publicId = :publicId)") . "";
                 $statement = $instance->connection->prepare($projectQuery);
                 $statement->execute($params);
             }
 
-            if (isset($data['jobTitles'])) {
+            if (!isset($data['delete']) && isset($data['jobTitles'])) {
                 self::updateJobTitles(
                     $params[':id'] ?? $data['publicId'],
                     $data['jobTitles']['toRemove'],
@@ -728,19 +740,37 @@ class UserModel extends Model
         }
     }
 
+
     /**
-     * Deletes a phase entity.
+     * Deletes a User instance from the data source.
      *
-     * This method is currently not implemented as there is no use case for deleting a phase.
-     * Always returns false.
+     * This method expects a User object and marks it as deleted by updating its record.
+     * Internally, it calls the save method with the user's ID and a delete flag.
+     * Throws an InvalidArgumentException if the provided data is not a User instance.
+     * Any exceptions during the deletion process are rethrown.
+     *
+     * @param mixed $data Instance of User to be deleted.
      * 
-     * @param mixed $data Data that would be used to delete a phase (unused)
-     *
-     * @return bool Always returns false to indicate deletion is not supported.
+     * @return bool Returns true if the deletion was successful.
+     * 
+     * @throws InvalidArgumentException If $data is not an instance of User.
+     * @throws Exception If an error occurs during the deletion process.
      */
     public static function delete(mixed $data): bool
     {
-        // Not implemented (No use case)
-        return false;
+        if (!$data instanceof User) {
+            throw new InvalidArgumentException('Expected instance of User');
+        }
+
+        try {
+            $instance = new self();
+            $instance->save([
+                'id' => $data->getId(),
+                'delete' => true
+            ]);
+            return true;
+        } catch (Exception $e) {
+            throw $e;
+        }
     }
 }
