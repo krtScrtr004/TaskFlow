@@ -92,6 +92,16 @@ async function submit(e) {
         return
     }
 
+    // Handle job titles trailing comma
+    let jobTitlesValue = jobTitlesInput.value.trim()
+    for (const char of jobTitlesInput.value) {
+        if (jobTitlesValue.slice(-1) === ',' || jobTitlesValue.slice(-1) === ' ') {
+            jobTitlesValue = jobTitlesValue.slice(0, -1)
+        } else {
+            break
+        }
+    }
+
     const currentValues = {
         firstName: firstNameInput.value,
         middleName: middleNameInput.value,
@@ -100,7 +110,7 @@ async function submit(e) {
         contactNumber: contactNumberInput.value,
         gender: genderInput.value,
         bio: bioInput.value,
-        jobTitles: jobTitlesInput.value
+        jobTitles: jobTitlesValue
     }
 
     // Get only the changed values
@@ -115,8 +125,8 @@ async function submit(e) {
         return
     }
 
-     // Validate only the changed inputs
-    if (!validateInputs(changedParams, userValidationRules())) { 
+    // Validate only the changed inputs
+    if (!validateInputs(changedParams, userValidationRules())) {
         return
     }
 
@@ -232,19 +242,19 @@ function getJobTitleChanges(originalJobTitles, currentJobTitles) {
         .split(',')
         .map(title => title.trim())
         .filter(title => title !== '')
-    
+
     const currentTitles = currentJobTitles
         .split(',')
         .map(title => title.trim())
         .filter(title => title !== '')
-    
+
     // Find added titles (in current but not in original)
     const addedTitles = currentTitles.filter(title => !originalTitles.includes(title))
-    
+
     // Find removed titles (in original but not in current)
     const removedTitles = originalTitles.filter(title => !currentTitles.includes(title))
-    
-     // Clear and populate the arrays
+
+    // Clear and populate the arrays
     jobTitleToAdd.length = 0
     jobTitleToRemove.length = 0
     jobTitleToAdd.push(...addedTitles)
@@ -300,8 +310,8 @@ async function sendToBackend(params) {
         if (params.hasOwnProperty('gender') && (!params.gender || params.gender.trim() === '')) {
             throw new Error('Gender is required.')
         }
-        if (params.hasOwnProperty('jobTitles') && 
-            params['jobTitles']['toAdd'].length === 0 && 
+        if (params.hasOwnProperty('jobTitles') &&
+            params['jobTitles']['toAdd'].length === 0 &&
             params['jobTitles']['toRemove'].length === 0) {
             throw new Error('Job titles are required.')
         }

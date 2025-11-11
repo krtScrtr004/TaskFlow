@@ -59,13 +59,23 @@ async function submit(e) {
         throw new Error('One or more form inputs not found.')
     }
 
+    // Handle job titles trailing comma
+    let jobTitlesValue = jobTitlesInput.value.trim()
+    for (const char of jobTitlesInput.value) {
+        if (jobTitlesValue.slice(-1) === ',' || jobTitlesValue.slice(-1) === ' ') {
+            jobTitlesValue = jobTitlesValue.slice(0, -1)
+        } else {
+            break
+        }
+    }
+
     const inputs = {
         firstName: firstNameInput.value.trim(),
         middleName: middleNameInput.value.trim(),
         lastName: lastNameInput.value.trim(),
         gender: genderInput.value.trim(),
         birthDate: birthDateInput.value.trim(),
-        jobTitles: jobTitlesInput.value.trim(),
+        jobTitles: jobTitlesValue,
         contactNumber: contactInput.value.trim(),
         email: emailInput.value.trim(),
         password: passwordInput.value.trim(),

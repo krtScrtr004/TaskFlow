@@ -122,6 +122,11 @@ class UserValidator extends Validator
                 $this->errors[] = 'Each job title must be between 1 and 20 characters long.';
                 break;
             }
+
+            if (preg_match("/[^a-zA-Z0-9\s'\-]/", $jobTitle)) {
+                $this->errors[] = 'Job title "' . $jobTitle . '" contains invalid characters.';
+                break;
+            }
         }
     }
 

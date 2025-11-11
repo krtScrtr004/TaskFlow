@@ -246,10 +246,10 @@ class UserEndpoint
                 'bio' => $profileData['bio'] ?? null,
                 'password' => $profileData['password'] ?? null
             ]);
-            if (isset($profileData['jobTitles']['toAdd'])) {
+            if (isset($profileData['jobTitles']['toAdd']) && $profileData['jobTitles']['toAdd']->count() > 0) {
                 $validator->validateJobTitles($profileData['jobTitles']['toAdd']);
             }
-            if (isset($profileData['jobTitles']['toRemove'])) {
+            if (isset($profileData['jobTitles']['toRemove']) && $profileData['jobTitles']['toRemove']->count() > 0) {
                 $validator->validateJobTitles($profileData['jobTitles']['toRemove']);
             }
             if ($validator->hasErrors()) {

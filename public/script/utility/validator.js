@@ -139,6 +139,21 @@ export function userValidationRules() {
                 if (!inputs.jobTitles || inputs.jobTitles.trim() === '' || inputs.jobTitles.length < 1 || inputs.jobTitles.length > 500) {
                     errors.push(`Job titles must be between ${LENGTH_VALIDATION.longText.min} and ${LENGTH_VALIDATION.longText.max} characters long.`)
                 }
+
+                if (inputs.jobTitles) {
+                    const titles = inputs.jobTitles.split(',').map(title => title.trim())
+                    for (const title of titles) {
+                        if (title.length < 1 || title.length > 20) {
+                            errors.push('Each job title must be between 1 and 20 characters long.')
+                            break
+                        }
+                        
+                        if (/[^a-zA-Z0-9\s'\-]/.test(title)) {
+                            errors.push(`Job title "${title}" contains invalid characters.`)
+                            break
+                        }
+                    }
+                }
                 return errors
             }
         },
