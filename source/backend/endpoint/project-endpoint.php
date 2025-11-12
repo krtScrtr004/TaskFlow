@@ -22,19 +22,44 @@ use App\Model\ProjectModel;
 use App\Validator\UuidValidator;
 use App\Middleware\Csrf;
 use App\Model\TaskModel;
+use App\Utility\ResponseExceptionHandler;
 use App\Validator\WorkValidator;
 use DateTime;
 use Exception;
 use InvalidArgumentException;
+use Throwable;
 use ValueError;
 
 class ProjectEndpoint
 {
+    /**
+     * Retrieves projects by key with optional filtering and pagination.
+     *
+     * This endpoint handles GET requests to fetch projects based on a search key, user authorization, and optional status filtering.
+     * It validates the request method and session, parses query parameters, and returns a list of projects matching the criteria.
+     *
+     * Query parameters supported:
+     * - key: string (optional) Search key for project lookup
+     * - filter: string (optional) Status filter (e.g., WorkStatus value; 'all' for no filter)
+     * - offset: int (optional) Pagination offset (default: 0)
+     * - limit: int (optional) Pagination limit (default: 50)
+     *
+     * @param array $args Optional arguments for project lookup:
+     *      - projectId: string|UUID|null Project identifier (optional)
+     *
+     * @throws ForbiddenException If the request method is not GET or session is unauthorized, or if projectId is invalid.
+     * @throws ValidationException If validation fails for input parameters.
+     * @throws Exception For unexpected errors.
+     *
+     * @return void Outputs a JSON response with:
+     *      - Success: Array of projects and a success message
+     *      - Failure: Error message and appropriate HTTP status code
+     */
     public static function getByKey(array $args = []): void
     {
         try {
             if (!HttpAuth::isGETRequest()) {
-                throw new ForbiddenException('Invalid request method. GET request required.');
+                throw new ForbiddenException('Invalid HTTP request method.');
             }
 
             if (!SessionAuth::hasAuthorizedSession()) {
@@ -86,12 +111,8 @@ class ProjectEndpoint
                 }
                 Response::success($return, 'Tasks fetched successfully.');
             }
-        } catch (ValidationException $e) {
-            Response::error('Validation Failed.',$e->getErrors(),422);
-        } catch (ForbiddenException $e) {
-            Response::error('Forbidden.', [], 403);
-        } catch (Exception $e) {
-            Response::error('Unexpected Error.', ['An unexpected error occurred. Please try again.'], 500);
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Fetch Projects Failed.', $e);
         }
     }
 
@@ -146,14 +167,18 @@ class ProjectEndpoint
     {
         try {
             if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException('User session is not allowed to create projects.');
+                throw new ForbiddenException();
             }
+            Csrf::protect();
 
             if (!Role::isProjectManager(Me::getInstance())) {
                 throw new ForbiddenException('Only Project Managers can create projects.');
             }
 
-            Csrf::protect();
+            // Check if user has active project 
+            if (ProjectModel::findManagerActiveProjectByManagerId(Me::getInstance()->getId())) {
+                throw new ForbiddenException('User already has an active project.');
+            }
 
             $data = decodeData('php://input');
             if (!$data) {
@@ -168,11 +193,6 @@ class ProjectEndpoint
             $phases = $data['phases'] ?? null;
             if (!$phases || empty($phases)) {
                 throw new ValidationException('Phases data is required.');
-            }
-
-            // Check if user has active project 
-            if (ProjectModel::findManagerActiveProjectByManagerId(Me::getInstance()->getId())) {
-                throw new ForbiddenException('User already has an active project.');
             }
 
             sanitizeData($project);
@@ -222,12 +242,8 @@ class ProjectEndpoint
             Response::success([
                 'projectId' => UUID::toString($newProject->getPublicId())
             ], 'Project created successfully.', 201);
-        } catch (ValidationException $e) {
-            Response::error($e->getMessage(), $e->getErrors(), 422);
-        } catch (ForbiddenException $e) {
-            Response::error('Project Creation Failed. ' . $e->getMessage(), [], 403);
-        } catch (Exception $e) {
-            Response::error('Project Creation Failed.', ['An unexpected error occurred. Please try again later.'], 500);
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Project Creation Failed.', $e);
         }
     }
 
@@ -290,19 +306,19 @@ class ProjectEndpoint
     {
         try {
             if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException('User session is not allowed to edit projects.');
+                throw new ForbiddenException();
             }
+            Csrf::protect();
 
             if (!Role::isProjectManager(Me::getInstance())) {
                 throw new ForbiddenException('Only Project Managers can edit projects.');
             }
-            Csrf::protect();
 
             $projectId = isset($args['projectId'])
                 ? UUID::fromString($args['projectId'])
                 : null;
             if (!$projectId) {
-                throw new ValidationException('Project ID is required to edit a project.');
+                throw new ForbiddenException('Project ID is required.');
             }
 
             $data = decodeData('php://input');
@@ -359,7 +375,7 @@ class ProjectEndpoint
                     if ($key === 'toEdit' || $key === 'toCancel') {
                         $existingPhase = PhaseModel::findById(UUID::fromString($value['id']));
                         if (!$existingPhase) {
-                            throw new ValidationException('Phase to edit not found.');
+                            throw new NotFoundException('Phase to edit not found.');
                         }
                     }
 
@@ -436,14 +452,8 @@ class ProjectEndpoint
             }
 
             Response::success(['projectId' => UUID::toString($project->getPublicId())], 'Project edited successfully.');
-        } catch (ValidationException $e) {
-            Response::error('Project Edit Failed.', $e->getErrors(), 422);
-        } catch (NotFoundException $e) {
-            Response::error('Project Edit Failed.', ['Project not found.'], 404);
-        } catch (ForbiddenException $e) {
-            Response::error('Project Edit Failed. ' . $e->getMessage(), [], 403);
-        } catch (Exception $e) {
-            Response::error('Project Edit Failed.', ['An unexpected error occurred. Please try again later.'], 500);
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Project Edit Failed.', $e);
         }
     }
 }

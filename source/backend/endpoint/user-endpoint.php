@@ -22,10 +22,12 @@ use App\Enumeration\WorkerStatus;
 use App\Enumeration\WorkStatus;
 use App\Exception\NotFoundException;
 use App\Utility\PictureUpload;
+use App\Utility\ResponseExceptionHandler;
 use App\Utility\WorkerPerformanceCalculator;
 use App\Validator\UserValidator;
 use DateTime;
 use Exception;
+use Throwable;
 use ValueError;
 
 class UserEndpoint
@@ -52,18 +54,18 @@ class UserEndpoint
     {
         try {
             if (!HttpAuth::isGETRequest()) {
-                throw new ForbiddenException('Invalid request method. GET request required.');
+                throw new ForbiddenException('Invalid HTTP request method.');
             }
 
             if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException('User session is not authorized to perform this action.');
+                throw new ForbiddenException();
             }
 
             $userId = isset($args['userId'])
                 ? UUID::fromString($args['userId'])
                 : null;
             if (!$userId) {
-                throw new ValidationException('Validation Failed.', ['User ID is required.']);
+                throw new ForbiddenException('User ID is required.');
             }
 
             $user = UserModel::findById($userId);
@@ -72,12 +74,8 @@ class UserEndpoint
             } else {
                 Response::success([$user], 'User fetched successfully.');
             }
-        } catch (ValidationException $e) {
-            Response::error('Validation Failed.', $e->getErrors(), 422);
-        } catch (ForbiddenException $e) {
-            Response::error('Forbidden.', [$e->getMessage()], 403);
-        } catch (Exception $e) {
-            Response::error('Unexpected Error.', ['An unexpected error occurred. Please try again.'], 500);
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Get User Failed.', $e);
         }
     }
 
@@ -109,11 +107,11 @@ class UserEndpoint
     {
         try {
             if (!HttpAuth::isGETRequest()) {
-                throw new ForbiddenException('Invalid request method. GET request required.');
+                throw new ForbiddenException('Invalid HTTP request method.');
             }
 
             if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException('User session is not authorized to perform this action.');
+                throw new ForbiddenException();
             }
 
             $filter = null;
@@ -144,12 +142,8 @@ class UserEndpoint
                 }
                 Response::success($return, 'Users fetched successfully.');
             }
-        } catch (ValidationException $e) {
-            Response::error('Validation Failed.', $e->getErrors(), 422);
-        } catch (ForbiddenException $e) {
-            Response::error('Forbidden.',  [$e->getMessage()], 403);
-        } catch (Exception $e) {
-            Response::error('Unexpected Error.', ['An unexpected error occurred. Please try again.'], 500);
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Get Users Failed.', $e);
         }
     }
 
@@ -182,7 +176,7 @@ class UserEndpoint
     {
         try {
             if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException('User session is not allowed to edit projects.');
+                throw new ForbiddenException();
             }
             Csrf::protect();
 
@@ -319,14 +313,8 @@ class UserEndpoint
                 }
             }
             Response::success([], 'User edited successfully.');
-        } catch (ValidationException $e) {
-            Response::error('Profile Edit Failed.', $e->getErrors(), 422);
-        } catch (NotFoundException $e) {
-            Response::error('Profile Edit Failed.', ['Profile not found.'], 404);
-        } catch (ForbiddenException $e) {
-            Response::error('Profile Edit Failed. ',  [$e->getMessage()], 403);
-        } catch (Exception $e) {
-            Response::error('Profile Edit Failed.', ['An unexpected error occurred. Please try again later.'], 500);
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Profile Edit Failed.', $e);
         }
     }
 
@@ -357,7 +345,7 @@ class UserEndpoint
     {
         try {
             if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException('User session is not allowed to delete profiles.');
+                throw new ForbiddenException();
             }
             Csrf::protect();
 
@@ -365,7 +353,7 @@ class UserEndpoint
                 ? UUID::fromString($args['userId'])
                 : null;
             if (!$userId) {
-                throw new ValidationException('Delete Failed.', ['User ID is required.']);
+                throw new ForbiddenException('User ID is required.');
             }
 
             $user = UserModel::findById($userId);
@@ -378,7 +366,7 @@ class UserEndpoint
                 ? ProjectModel::findManagerActiveProjectByManagerId($user->getId())
                 : ProjectModel::findWorkerActiveProjectByWorkerId($user->getId());
             if ($hasActiveProject) {
-                throw new ValidationException('Delete Failed.', ['Your account cannot be deleted while assigned to an active projects.']);
+                throw new ForbiddenException('Your account cannot be deleted while assigned to an active projects.');
             }
 
             if (UserModel::delete($user)) {
@@ -389,14 +377,8 @@ class UserEndpoint
             } else {
                 throw new Exception('User deletion failed.');
             }
-        } catch (ValidationException $e) {
-            Response::error('Delete Failed.', $e->getErrors(), 422);
-        } catch (NotFoundException $e) {
-            Response::error('Delete Failed.', ['Profile not found.'], 404);
-        } catch (ForbiddenException $e) {
-            Response::error('Delete Failed. ',  [$e->getMessage()], 403);
-        } catch (Exception $e) {
-            Response::error('Delete Failed.', ['An unexpected error occurred. Please try again later.'], 500);
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('User Deletion Failed.', $e);
         }
     }
 }

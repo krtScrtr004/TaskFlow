@@ -20,8 +20,11 @@ use App\Exception\NotFoundException;
 use App\Exception\ValidationException;
 use App\Model\TemporaryLinkModel;
 use App\Service\AuthService;
+use App\Utility\ResponseExceptionHandler;
+use Cloudinary\Transformation\ForegroundObject;
 use DateTime;
 use Exception;
+use Throwable;
 
 class AuthEndpoint implements Controller
 {
@@ -82,9 +85,7 @@ class AuthEndpoint implements Controller
             }
 
             if ($user->getConfirmedAt() === null) {
-                throw new ValidationException('Login Failed.', [
-                    'Please verify your email before logging in.'
-                ]);
+                throw new ForbiddenException('Please verify your email before logging in.');
             }
 
             // Regenerate session ID to prevent session fixation attacks
@@ -94,12 +95,8 @@ class AuthEndpoint implements Controller
             SessionAuth::setAuthorizedSession($user);
 
             Response::success([], 'Login successful.');
-        } catch (ValidationException $e) {
-            Response::error('Login Failed.', $e->getErrors(), 422);
-        } catch (Exception $e) {
-            Response::error('Login Failed.', [
-                'An unexpected error occurred. Please try again.'
-            ]);
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Login Failed.', $e);
         }
     }
 
@@ -221,12 +218,8 @@ class AuthEndpoint implements Controller
             $instance->service->sendLinkForEmailVerification($email, $token);
 
             Response::success([], 'Registration successful. Please verify your email before logging in.', 201);
-        } catch (ValidationException $e) {
-            // Catch validation errors
-            Response::error('Registration Failed.',$e->getErrors(),422);
-        } catch (Exception $e) {
-            // Catch all other errors
-            Response::error('Registration Failed.', ['An unexpected error occurred. Please try again.'], 500);
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Registration Failed.', $e);
         }
     }
 
@@ -249,10 +242,8 @@ class AuthEndpoint implements Controller
             Me::destroy();
 
             Response::success([], 'Logout successful.');
-        } catch (Exception $e) {
-            Response::error('Logout Failed.', [
-                'An unexpected error occurred. Please try again.'
-            ], 500);
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Logout Failed.', $e);
         }
     }
 
@@ -294,7 +285,7 @@ class AuthEndpoint implements Controller
 
             $token = trimOrNull($data['token']);
             if (!$token) {
-                throw new ValidationException('Token is required.');
+                throw new ForbiddenException('Token is required.');
             }
 
             $isValid = TemporaryLinkModel::search($token);
@@ -304,7 +295,7 @@ class AuthEndpoint implements Controller
 
             $email = $isValid['userEmail'];
             if (!$email || !trimOrNull($email)) {
-                throw new ValidationException('Email not found for confirmation.');
+                throw new NotFoundException('Email not found.');
             }
 
             $user = UserModel::findByEmail($email);
@@ -327,12 +318,8 @@ class AuthEndpoint implements Controller
             TemporaryLinkModel::delete($token);
 
             Response::success([], 'Email confirmed successfully.');
-        } catch (ValidationException $e) {
-            Response::error('Email Confirmation Failed.', $e->getErrors(), 422);
-        } catch (NotFoundException $e) {
-            Response::error('Email Confirmation Failed.', [$e->getMessage()], 404);
-        } catch (Exception $e) {
-            Response::error('Email Confirmation Failed.', ['An unexpected error occurred. Please try again.'], 500);
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Email Confirmation Failed.', $e);
         }
     }
 
@@ -382,7 +369,7 @@ class AuthEndpoint implements Controller
             // Check if user exists
             $user = UserModel::findByEmail($email);
             if (!$user) {
-                throw new ValidationException('Reset Password Failed.', ['Email not found.']);
+                throw new NotFoundException('Email not found.');
             }
 
             $token = bin2hex(random_bytes(16));
@@ -397,16 +384,10 @@ class AuthEndpoint implements Controller
             }
 
             Response::success([], 'Reset password link has been sent to your email.');
-        } catch (ValidationException $e) {
+        } catch (Throwable $e) {
             // Clean up the temporary link if email sending fails
             TemporaryLinkModel::delete($email); 
-
-            Response::error('Reset Password Failed.',$e->getErrors(),422);
-        } catch (Exception $e) {
-            // Clean up the temporary link if email sending fails
-            TemporaryLinkModel::delete($email); 
-
-            Response::error('Reset Password Failed.', ['An unexpected error occurred. Please try again.'], 500);
+            ResponseExceptionHandler::handle('Reset Password Failed.', $e);
         }
     }
 
@@ -443,7 +424,7 @@ class AuthEndpoint implements Controller
 
             $token = trimOrNull($data['token']);
             if (!$token) {
-                throw new ValidationException('Token is required for password change.');
+                throw new ForbiddenException('Token is required.');
             }
 
             // Verify token validity
@@ -454,7 +435,7 @@ class AuthEndpoint implements Controller
 
             $email = $isValid['userEmail'];
             if (!$email || !trimOrNull($email)) {
-                throw new ValidationException('Email not found for password reset.');
+                throw new NotFoundException('Email not found.');
             }
 
             // Check if the link has expired (valid for 5 minutes)
@@ -489,14 +470,8 @@ class AuthEndpoint implements Controller
             TemporaryLinkModel::delete($token);
 
             Response::success([], 'Password changed successfully.');
-        } catch (ValidationException $e) {
-            Response::error('Change Password Failed.', $e->getErrors(), 422);
-        } catch (ForbiddenException $e) {
-            Response::error('Change Password Failed.', $e->getErrors(), 403);
-        } catch (NotFoundException $e) {
-            Response::error('Change Password Failed.', [$e->getMessage()], 404);
-        } catch (Exception $e) {
-            Response::error('Change Password Failed.', ['An unexpected error occurred. Please try again.'], 500);
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Change Password Failed.', $e);
         }
     }
 }

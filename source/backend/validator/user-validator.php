@@ -25,6 +25,10 @@ class UserValidator extends Validator
         if (!preg_match("/^[a-zA-Z\s'\-]{" . NAME_MIN . "," . NAME_MAX . "}$/", $firstName)) {
             $this->errors[] = 'First name contains invalid characters.';
         }
+
+        if ($this->hasConsecutiveSpecialChars($firstName)) {
+            $this->errors[] = 'First name contains three or more consecutive special characters.';
+        }
     }
 
     /**
@@ -38,6 +42,10 @@ class UserValidator extends Validator
 
         if (!preg_match("/^[a-zA-Z\s'\-]{" . NAME_MIN . "," . NAME_MAX . "}$/", $middleName)) {
             $this->errors[] = 'Middle name contains invalid characters.';
+        }
+
+        if ($this->hasConsecutiveSpecialChars($middleName)) {
+            $this->errors[] = 'Middle name contains three or more consecutive special characters.';
         }
     }
 
@@ -53,6 +61,10 @@ class UserValidator extends Validator
         if (!preg_match("/^[a-zA-Z\s'\-]{" . NAME_MIN . "," . NAME_MAX . "}$/", $lastName)) {
             $this->errors[] = 'Last name contains invalid characters.';
         }
+
+        if ($this->hasConsecutiveSpecialChars($lastName)) {
+            $this->errors[] = 'Last name contains three or more consecutive special characters.';
+        }
     }
 
     /**
@@ -62,6 +74,10 @@ class UserValidator extends Validator
     {
         if ($bio !== null && (strlen(trim($bio)) < LONG_TEXT_MIN || strlen(trim($bio)) > LONG_TEXT_MAX)) {
             $this->errors[] = 'Bio must be between ' . LONG_TEXT_MIN . ' and ' . LONG_TEXT_MAX . ' characters long.';
+        }
+
+        if ($bio !== null && $this->hasConsecutiveSpecialChars($bio)) {
+            $this->errors[] = 'Bio contains three or more consecutive special characters.';
         }
     }
 

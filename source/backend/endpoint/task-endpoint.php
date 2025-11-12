@@ -20,9 +20,11 @@ use App\Middleware\Response;
 use App\Model\PhaseModel;
 use App\Model\ProjectModel;
 use App\Model\TaskModel;
+use App\Utility\ResponseExceptionHandler;
 use App\Validator\WorkValidator;
 use DateTime;
 use Exception;
+use Throwable;
 use ValueError;
 
 class TaskEndpoint
@@ -54,11 +56,11 @@ class TaskEndpoint
     {
         try {
             if (!HttpAuth::isGETRequest()) {
-                throw new ForbiddenException('Invalid request method. GET request required.');
+                throw new ForbiddenException('Invalid HTTP request method.');
             }
 
             if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException('User session is not authorized to perform this action.');
+                throw new ForbiddenException();
             }
 
             $projectId = isset($args['projectId'])
@@ -95,14 +97,8 @@ class TaskEndpoint
             }
 
             Response::success([], 'Task fetched successfully.');
-        } catch (ValidationException $e) {
-            Response::error('Validation Failed.', $e->getErrors(), 422);
-        } catch (ForbiddenException $e) {
-            Response::error('Forbidden.', [], 403);
-        } catch (NotFoundException $e) {
-            Response::error('Resource Not Found.', [$e->getMessage()], 404);
-        } catch (Exception $e) {
-            Response::error('Unexpected Error.', ['An unexpected error occurred. Please try again.'], 500);
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Get Task Failed.', $e);
         }
     }
 
@@ -146,7 +142,7 @@ class TaskEndpoint
     {
         try {
             if (!HttpAuth::isGETRequest()) {
-                throw new ForbiddenException('Invalid request method. GET request required.');
+                throw new ForbiddenException('Invalid HTTP request method.');
             }
 
             if (!SessionAuth::hasAuthorizedSession()) {
@@ -158,6 +154,8 @@ class TaskEndpoint
                 : null;
             if (!$projectId) {
                 throw new ForbiddenException('Project ID is required.');
+            } elseif (ProjectModel::findById($projectId) === null) {
+                throw new NotFoundException('Project not found.');
             }
 
             $phaseId = isset($args['phaseId'])
@@ -208,12 +206,8 @@ class TaskEndpoint
                 }
                 Response::success($return, 'Tasks fetched successfully.');
             }
-        } catch (ValidationException $e) {
-            Response::error('Validation Failed.',$e->getErrors(),422);
-        } catch (ForbiddenException $e) {
-            Response::error('Forbidden.', [], 403);
-        } catch (Exception $e) {
-            Response::error('Unexpected Error.', ['An unexpected error occurred. Please try again.'], 500);
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Get Task Failed.', $e);
         }
     }
 
@@ -257,9 +251,13 @@ class TaskEndpoint
     {
         try {
             if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException('User session is not authorized to perform this action.');
+                throw new ForbiddenException();
             }
             Csrf::protect();
+
+            if (!Role::isProjectManager(Me::getInstance())) {
+                throw new ForbiddenException('Only Project Managers are allowed to add tasks.');
+            }
 
             $data = decodeData('php://input');
             if (!$data) {
@@ -332,12 +330,8 @@ class TaskEndpoint
             $createdTask = TaskModel::create($task);
             $publicId = UUID::toString($createdTask->getPublicId());
             Response::success(['id' => $publicId], 'Workers added successfully.');
-        } catch (ValidationException $e) {
-            Response::error('Validation Failed.',$e->getErrors(),422);
-        } catch (ForbiddenException $e) {
-            Response::error('Forbidden.', [], 403);
-        } catch (Exception $e) {
-            Response::error('Unexpected Error.', ['An unexpected error occurred. Please try again.'], 500);
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Add Task Failed.', $e);
         }
     }
 
@@ -379,22 +373,28 @@ class TaskEndpoint
     {
         try {
             if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException('User session is not allowed to edit tasks.');
+                throw new ForbiddenException();
             }
             Csrf::protect();
+
+            if (!Role::isProjectManager(Me::getInstance())) {
+                throw new ForbiddenException('Only Project Managers are allowed to edit tasks.');
+            }
 
             $projectId = isset($args['projectId'])
                 ? UUID::fromString($args['projectId'])
                 : null;
             if (!$projectId) {
-                throw new ValidationException('Project ID is required to edit a task.');
+                throw new ForbiddenException('Project ID is required.');
+            } elseif (ProjectModel::findById($projectId) === null) {
+                throw new NotFoundException('Project not found.');
             }
 
             $phaseId = isset($args['phaseId'])
                 ? UUID::fromString($args['phaseId'])
                 : null;
             if (!$phaseId) {
-                throw new ValidationException('Phase ID is required to edit a task.');
+                throw new ForbiddenException('Phase ID is required.');
             }
 
             $phase = isset($args['phaseId'])
@@ -408,12 +408,12 @@ class TaskEndpoint
                 ? UUID::fromString($args['taskId'])
                 : null;
             if (!$taskId) {
-                throw new ValidationException('Task ID is required to edit a task.');
+                throw new ForbiddenException('Task ID is required.');
             }
 
             $task = TaskModel::findById($taskId, $phaseId);
             if (!$task) {
-                throw new NotFoundException('Task is not found.');
+                throw new NotFoundException('Task not found.');
             }
 
             $project = null;
@@ -422,7 +422,6 @@ class TaskEndpoint
             } else {
                 $project = TaskModel::findOwningProject($task->getId());
             }
-
 
             $data = decodeData('php://input');
             if (!$data) {
@@ -478,14 +477,8 @@ class TaskEndpoint
             }
 
             Response::success(['projectId' => UUID::toString($project->getPublicId())], 'Project edited successfully.');
-        } catch (ValidationException $e) {
-            Response::error('Project Edit Failed.', $e->getErrors(), 422);
-        } catch (NotFoundException $e) {
-            Response::error('Project Edit Failed.', ['Project not found.'], 404);
-        } catch (ForbiddenException $e) {
-            Response::error('Project Edit Failed. ' . $e->getMessage(), [], 403);
-        } catch (Exception $e) {
-            Response::error('Project Edit Failed.', ['An unexpected error occurred. Please try again later.'], 500);
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Edit Task Failed.', $e);
         }
     }
 }

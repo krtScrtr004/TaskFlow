@@ -18,6 +18,7 @@ use App\Model\ProjectWorkerModel;
 use App\Model\TaskModel;
 use App\Model\TaskWorkerModel;
 use App\Model\UserModel;
+use App\Utility\ResponseExceptionHandler;
 use App\Utility\WorkerPerformanceCalculator;
 
 class TaskWorkerEndpoint
@@ -49,11 +50,11 @@ class TaskWorkerEndpoint
     {
         try {
             if (!HttpAuth::isGETRequest()) {
-                throw new ForbiddenException('Invalid request method. GET request required.');
+                throw new ForbiddenException('Invalid HTTP request method.');
             }
 
             if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException('User session is not authorized to perform this action.');
+                throw new ForbiddenException();
             }
 
             $workerId = isset($args['workerId'])
@@ -99,17 +100,9 @@ class TaskWorkerEndpoint
                 throw new NotFoundException('Worker not found.');
             } 
 
-            // $performance = WorkerPerformanceCalculator::calculate($worker->getAdditionalInfo('projectHistory'));
-            // $worker->addAdditionalInfo('performance', $performance['overallScore']);
             Response::success([$worker], 'Worker fetched successfully.');
-        } catch (ValidationException $e) {
-            Response::error('Validation Failed.',$e->getErrors(),422);
-        } catch (NotFoundException $e) {
-            Response::error('Resource Not Found.', [$e->getMessage()], 404);
-        } catch (ForbiddenException $e) {
-            Response::error('Forbidden.', [], 403);
-        } catch (Exception $e) {
-            Response::error('Unexpected Error.', ['An unexpected error occurred. Please try again.'], 500);
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Worker Fetch Failed.', $e);
         }
     }
 
@@ -154,11 +147,11 @@ class TaskWorkerEndpoint
     {
         try {
             if (!HttpAuth::isGETRequest()) {
-                throw new ForbiddenException('Invalid request method. GET request required.');
+                throw new ForbiddenException('Invalid HTTP request method.');
             }
 
             if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException('User session is not authorized to perform this action.');
+                throw new ForbiddenException();
             }
 
             $projectId = isset($args['projectId'])
@@ -224,7 +217,7 @@ class TaskWorkerEndpoint
                 if (isset($_GET['excludeTaskTerminated']) && trim($_GET['excludeTaskTerminated']) !== '') {
                     $excludeTaskTerminated = (bool) $_GET['excludeTaskTerminated'];
                     if ($excludeTaskTerminated && !isset($projectId)) {
-                        throw new ForbiddenException('Project ID is required when excluding terminated task workers.');
+                        throw new ForbiddenException('Project ID is required to exclude terminated task workers.');
                     }
                 }
 
@@ -250,12 +243,8 @@ class TaskWorkerEndpoint
                 }
                 Response::success($return, 'Workers fetched successfully.');
             }
-        } catch (ValidationException $e) {
-            Response::error('Validation Failed.',$e->getErrors(),422);
-        } catch (ForbiddenException $e) {
-            Response::error('Forbidden.', [], 403);
-        } catch (Exception $e) {
-            Response::error('Unexpected Error.', ['An unexpected error occurred. Please try again.'], 500);
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Worker Fetch Failed.', $e);
         }
     }
 
@@ -293,7 +282,7 @@ class TaskWorkerEndpoint
     {
         try {
             if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException('User session is not authorized to perform this action.');
+                throw new ForbiddenException();
             }
             Csrf::protect();
 
@@ -345,12 +334,8 @@ class TaskWorkerEndpoint
             TaskWorkerModel::createMultiple($taskId, $ids);
             
             Response::success([], 'Workers added successfully.');
-        } catch (ValidationException $e) {
-            Response::error('Validation Failed.',$e->getErrors(),422);
-        } catch (ForbiddenException $e) {
-            Response::error('Forbidden.', [], 403);
-        } catch (Exception $e) {
-            Response::error('Unexpected Error.', ['An unexpected error occurred. Please try again.'], 500);
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Add Worker Failed.', $e);
         }
     }
 
@@ -386,7 +371,7 @@ class TaskWorkerEndpoint
     {
         try {
             if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException('User session is not authorized to perform this action.');
+                throw new ForbiddenException();
             }
             Csrf::protect();
 
@@ -443,12 +428,8 @@ class TaskWorkerEndpoint
             ]);
 
             Response::success([], 'Worker status updated successfully.');
-        } catch (ValidationException $e) {
-            Response::error('Validation Failed.',$e->getErrors(),422);
-        } catch (ForbiddenException $e) {
-            Response::error('Forbidden.', [], 403);
-        } catch (Exception $e) {
-            Response::error('Unexpected Error.', ['An unexpected error occurred. Please try again.'], 500);
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Edit Worker Status Failed.', $e);
         }
     }
 }

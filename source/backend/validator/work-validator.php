@@ -15,6 +15,10 @@ class WorkValidator extends Validator
         if ($name === null || strlen(trim($name)) < NAME_MIN || strlen(trim($name)) > NAME_MAX) {
             $this->errors[] = 'Name must be between ' . NAME_MIN . ' and ' . NAME_MAX . ' characters long.';
         }
+
+        if ($this->hasConsecutiveSpecialChars($name)) {
+            $this->errors[] = 'Name contains three or more consecutive special characters.';
+        }
     }
 
     /**
@@ -24,6 +28,10 @@ class WorkValidator extends Validator
     {
         if ($description !== null && (strlen(trim($description)) < LONG_TEXT_MIN || strlen(trim($description)) > LONG_TEXT_MAX)) {
             $this->errors[] = 'Description must be between ' . LONG_TEXT_MIN . ' and ' . LONG_TEXT_MAX . ' characters long.';
+        }
+
+        if ($description !== null && $this->hasConsecutiveSpecialChars($description)) {
+            $this->errors[] = 'Description contains three or more consecutive special characters.';
         }
     }
 

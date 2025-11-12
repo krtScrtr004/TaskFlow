@@ -421,7 +421,7 @@ class UserModel extends Model
             }
 
             // Exclude unconfirmed and deleted users
-            $where[] = "createdAt IS NOT NULL AND deletedAt IS NULL";
+            $where[] = "u.createdAt IS NOT NULL AND u.deletedAt IS NULL";
 
             $whereClause = !empty($where) ? implode(' AND ', $where) : '';
             return self::find($whereClause, $params, $options);

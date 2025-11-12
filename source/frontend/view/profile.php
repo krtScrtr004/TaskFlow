@@ -4,6 +4,7 @@ use App\Core\Me;
 use App\Core\UUID;
 use App\Enumeration\Gender;
 use App\Enumeration\Role;
+use App\Middleware\Csrf;
 
 $me = Me::getInstance();
 if (!$me)
@@ -32,6 +33,7 @@ $myData = [
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<?= Csrf::get() ?>">
 
     <title>Profile</title>
 
