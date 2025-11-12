@@ -54,7 +54,7 @@ phaseContainers.forEach(pc => {
     const descInput = pc.querySelector('.phase-description')
     const startInput = pc.querySelector('.phase-start-datetime')
     const completionInput = pc.querySelector('.phase-completion-datetime')
-    
+
     // Normalize and store original phase data
     originalPhases[pid] = {
         description: descInput ? (descInput.value?.trim() || null) : null,
@@ -87,6 +87,8 @@ phaseContainers.forEach(pc => {
  */
 async function submitForm(e) {
     e.preventDefault()
+
+    Loader.patch(saveProjectInfoButton.querySelector('.text-w-icon'))
 
     // Show confirmation dialog
     if (!await confirmationDialog(
@@ -127,64 +129,63 @@ async function submitForm(e) {
         return
     }
 
-    Loader.patch(saveProjectInfoButton.querySelector('.text-w-icon'))
-    try {
-        // Normalize current project
-        const currentProject = {
-            description: descriptionInput.value?.trim() || null,
-            budget: budgetInput.value ? parseFloat(budgetInput.value) : null,
-            startDateTime: normalizeDateFormat(startDateInput.value) || null,
-            completionDateTime: normalizeDateFormat(completionDateInput.value) || null
-        }
+    // Normalize current project
+    const currentProject = {
+        description: descriptionInput.value?.trim() || null,
+        budget: budgetInput.value ? parseFloat(budgetInput.value) : null,
+        startDateTime: normalizeDateFormat(startDateInput.value) || null,
+        completionDateTime: normalizeDateFormat(completionDateInput.value) || null
+    }
 
-        // Build changedProject by comparing to originalProject captured on load
-        const changedProject = {}
-        const orig = originalProject || {}
-        Object.keys(currentProject).forEach(key => {
-            // Special handling for budget (number comparison)
-            if (key === 'budget') {
-                const origNum = orig[key] === null || orig[key] === undefined ? null : Number(orig[key])
-                const curNum = currentProject[key] === null || currentProject[key] === undefined ? null : Number(currentProject[key])
-                if (origNum !== curNum) changedProject[key] = curNum
-                return
-            }
-
-            const origVal = orig[key] ?? null
-            const curVal = currentProject[key] ?? null
-            // Normalize values for comparison
-            if (origVal !== curVal) { 
-                changedProject[key] = curVal
-            }
-        })
-
-        const phasePayload = {
-            toAdd: phaseToAdd,
-            toEdit: phaseToEdit,
-            toCancel: phaseToCancel.size > 0 
-                ? Array.from(phaseToCancel.values()).map(phase => ({ id: phase }))
-                : null
-        }
-
-        const payload = {}
-        if (Object.keys(changedProject).length > 0) { 
-            payload.project = changedProject
-        }
-        // Check if there are any phase changes to include
-        const hasPhaseChanges = 
-            (phasePayload.toAdd && phasePayload.toAdd.length > 0) || 
-            (phasePayload.toEdit && phasePayload.toEdit.length > 0) || 
-            (phasePayload.toCancel && phasePayload.toCancel.length > 0)
-        if (hasPhaseChanges) { 
-            payload.phase = phasePayload
-        }
-
-        if (Object.keys(payload).length === 0) {
-            // Nothing changed — no backend call required
-            Dialog.operationSuccess('No changes', 'No changes detected to save.')
-            Loader.delete()
+    // Build changedProject by comparing to originalProject captured on load
+    const changedProject = {}
+    const orig = originalProject || {}
+    Object.keys(currentProject).forEach(key => {
+        // Special handling for budget (number comparison)
+        if (key === 'budget') {
+            const origNum = orig[key] === null || orig[key] === undefined ? null : Number(orig[key])
+            const curNum = currentProject[key] === null || currentProject[key] === undefined ? null : Number(currentProject[key])
+            if (origNum !== curNum) changedProject[key] = curNum
             return
         }
 
+        const origVal = orig[key] ?? null
+        const curVal = currentProject[key] ?? null
+        // Normalize values for comparison
+        if (origVal !== curVal) {
+            changedProject[key] = curVal
+        }
+    })
+
+    const phasePayload = {
+        toAdd: phaseToAdd,
+        toEdit: phaseToEdit,
+        toCancel: phaseToCancel.size > 0
+            ? Array.from(phaseToCancel.values()).map(phase => ({ id: phase }))
+            : null
+    }
+
+    const payload = {}
+    if (Object.keys(changedProject).length > 0) {
+        payload.project = changedProject
+    }
+    // Check if there are any phase changes to include
+    const hasPhaseChanges =
+        (phasePayload.toAdd && phasePayload.toAdd.length > 0) ||
+        (phasePayload.toEdit && phasePayload.toEdit.length > 0) ||
+        (phasePayload.toCancel && phasePayload.toCancel.length > 0)
+    if (hasPhaseChanges) {
+        payload.phase = phasePayload
+    }
+
+    if (Object.keys(payload).length === 0) {
+        // Nothing changed — no backend call required
+        Dialog.operationSuccess('No changes', 'No changes detected to save.')
+        Loader.delete()
+        return
+    }
+
+    try {
         const response = await sendToBackend(projectId, payload)
         if (!response) {
             throw new Error('No response from server.')
@@ -305,7 +306,7 @@ async function sendToBackend(projectId, data) {
             throw new Error('No data provided.')
         }
 
-    const response = await Http.PATCH(`projects/${projectId}`, data)
+        const response = await Http.PATCH(`projects/${projectId}`, data)
         if (!response) {
             throw new Error('No response from server.')
         }

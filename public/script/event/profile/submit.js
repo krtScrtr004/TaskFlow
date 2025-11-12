@@ -71,6 +71,8 @@ if (!myId || myId.trim() === '') {
  */
 async function submit(e) {
     e.preventDefault()
+        
+    Loader.patch(saveChangesButton.querySelector('.text-w-icon'))
 
     // Show confirmation dialog
     if (!await confirmationDialog(
@@ -145,7 +147,6 @@ async function submit(e) {
         }
     }
 
-    Loader.patch(saveChangesButton.querySelector('.text-w-icon'))
     try {
         await sendToBackend(changedParams)
 

@@ -45,13 +45,14 @@ async function submit(e) {
         return
     }
 
+    Loader.patch(changePasswordButton.firstChild)
+
     // Show confirmation dialog
     if (!await confirmationDialog(
         'Confirm Password Change',
         'Are you sure you want to change your password?'
     )) return
 
-    Loader.patch(changePasswordButton.firstChild)
     try {
         const newPasswordInput = changePasswordForm?.querySelector('#password').value
         await Http.POST('auth/change-password', { 

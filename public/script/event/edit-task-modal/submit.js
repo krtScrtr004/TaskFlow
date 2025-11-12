@@ -77,6 +77,8 @@ function storeOriginalValues() {
 async function submitForm(e) {
     e.preventDefault()
 
+    Loader.patch(editTaskButton.querySelector('.text-w-icon'))
+
     // Show confirmation dialog
     if (!await confirmationDialog(
         'Confirm Edit Task',
@@ -151,7 +153,6 @@ async function submitForm(e) {
         return
     }
 
-    Loader.patch(editTaskButton.querySelector('.text-w-icon'))
     try {
         await sendToBackend(projectId, phaseId, taskId, params)
 

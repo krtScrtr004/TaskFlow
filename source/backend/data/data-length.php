@@ -1,7 +1,7 @@
 <?php
 
 define('NAME_MIN', 1);
-define('NAME_MAX', 255);
+define('NAME_MAX', 50);
 
 define('URI_MIN', 3);
 define('URI_MAX', 255);

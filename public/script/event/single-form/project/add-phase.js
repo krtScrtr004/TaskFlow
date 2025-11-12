@@ -58,6 +58,8 @@ export function addPhase(params = {}) {
  */
 function submitForm(e, params) {
     e.preventDefault()
+
+    Loader.patch(addNewPhaseButton.querySelector('.text-w-icon'))
     
     if (!addPhaseForm) {
         throw new Error('Add Phase Form not found.')
@@ -88,7 +90,6 @@ function submitForm(e, params) {
         return
     }
 
-    Loader.patch(addNewPhaseButton.querySelector('.text-w-icon'))
     try {
         let body = {
             'name': name,

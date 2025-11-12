@@ -51,6 +51,8 @@ submitProjectButton?.addEventListener('click', e => debounceAsync(submitForm(e),
 async function submitForm(e) {
     e.preventDefault()
 
+    Loader.patch(submitProjectButton.querySelector('.text-w-icon'))
+
     if (!await confirmationDialog(
         'Add Project',
         'Are you sure you want to add this project?',
@@ -80,7 +82,6 @@ async function submitForm(e) {
     const phaseContainers = createProjectForm.querySelectorAll('.phase')
     phaseContainers.forEach(phaseContainer => addPhaseForm(phaseContainer))
 
-    Loader.patch(submitProjectButton.querySelector('.text-w-icon'))
     try {
         const response = await sendToBackend({
             project: {

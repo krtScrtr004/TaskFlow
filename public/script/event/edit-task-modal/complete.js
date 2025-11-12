@@ -19,13 +19,14 @@ completeTaskButton?.addEventListener('click', e => debounceAsync(submit(e), 3000
 
 // On page load, check if the task was completed late and show dialog if so
 document.addEventListener('DOMContentLoaded', () => {
+    const now = new Date()
     const taskCompletionDateTime = viewTaskInfo?.querySelector('.task-completion-datetime')?.dataset.completiondatetime
     const taskActualCompletionDateTime = viewTaskInfo?.querySelector('.task-actual-completion-datetime')?.dataset.actualcompletiondatetime
-
-    // Compare the dates and show dialog if delayed
-    if ((taskActualCompletionDateTime && taskActualCompletionDateTime !== '') && 
-        (compareDates(taskCompletionDateTime, taskActualCompletionDateTime) > 0)) {
-        // Show delayed task dialog
+    
+    // Check if task deadline has passed (now is AFTER the deadline)
+    if ((!taskActualCompletionDateTime || taskActualCompletionDateTime === '') &&
+        (taskCompletionDateTime && compareDates(now.toISOString(), taskCompletionDateTime) < 0)) {
+        // Show delayed task dialog - deadline has passed
         const taskName = viewTaskInfo?.querySelector('.task-name')?.textContent || 'This task'
         Dialog.taskDelayed(taskName)
     }
@@ -54,6 +55,8 @@ document.addEventListener('DOMContentLoaded', () => {
 async function submit(e) {
     e.preventDefault()
 
+    Loader.patch(completeTaskButton.querySelector('.text-w-icon'))
+
     // Show confirmation dialog
     if (!await confirmationDialog(
         'Complete Task',
@@ -81,7 +84,6 @@ async function submit(e) {
         return
     }
 
-    Loader.patch(completeTaskButton.querySelector('.text-w-icon'))
     try {
         await sendToBackend(projectId, phaseId, taskId)
         // Reload the page to reflect changes

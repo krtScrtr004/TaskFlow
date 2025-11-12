@@ -44,6 +44,8 @@ registerButton?.addEventListener('click', e => debounceAsync(submit(e), 300))
 async function submit(e) {
     e.preventDefault()
 
+    Loader.patch(registerButton.querySelector('.text-w-icon'))
+
     // Retrieve input fields from the form
     const firstNameInput = registerForm.querySelector('#register_first_name')
     const middleNameInput = registerForm.querySelector('#register_middle_name')
@@ -88,7 +90,6 @@ async function submit(e) {
         return
     }
 
-    Loader.patch(registerButton.querySelector('.text-w-icon'))
     try {
         await sendToBackend(...Object.values(inputs))
 

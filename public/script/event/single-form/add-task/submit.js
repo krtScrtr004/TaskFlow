@@ -45,48 +45,50 @@ addTaskForm?.addEventListener('submit', e => add(e))
 async function submitForm(e) {
     e.preventDefault()
 
+    Loader.patch(addTaskButton.querySelector('.text-w-icon'))
+
     // Show confirmation dialog
     if (!await confirmationDialog(
         'Confirm Add Task',
         'Are you sure you want to add this task?'
     )) return
 
-    Loader.patch(addTaskButton.querySelector('.text-w-icon'))
+    // Retrieve input fields from the form
+    const nameInput = addTaskForm.querySelector('#task_name')
+    const startDateInput = addTaskForm.querySelector('#task_start_date')
+    const completionDateInput = addTaskForm.querySelector('#task_completion_date')
+    const descriptionInput = addTaskForm.querySelector('#task_description')
+    const prioritySelect = addTaskForm.querySelector('#task_priority')
+    if (!nameInput || !startDateInput || !completionDateInput || !descriptionInput || !prioritySelect) {
+        throw new Error('One or more form inputs not found.')
+    }
+
+    const params = {
+        name: nameInput ? nameInput.value : '',
+        startDateTime: normalizeDateFormat(startDateInput.value),
+        completionDateTime: normalizeDateFormat(completionDateInput.value),
+        description: descriptionInput ? descriptionInput.value : '',
+        priority: prioritySelect ? prioritySelect.value : '',
+        workerIds: workerIds ? workerIds : {}
+    }
+
+    // Validate inputs
+    if (!validateInputs(params, workValidationRules())) {
+        return
+    }
+
+    const projectId = addTaskForm.dataset.projectid
+    if (!projectId) {
+        throw new Error('Project ID not found in form dataset.')
+    }
+
+    const phaseId = addTaskForm.dataset.phaseid
+    if (!phaseId) {
+        throw new Error('Phase ID not found in form dataset.')
+    }
+
+
     try {
-        // Retrieve input fields from the form
-        const nameInput = addTaskForm.querySelector('#task_name')
-        const startDateInput = addTaskForm.querySelector('#task_start_date')
-        const completionDateInput = addTaskForm.querySelector('#task_completion_date')
-        const descriptionInput = addTaskForm.querySelector('#task_description')
-        const prioritySelect = addTaskForm.querySelector('#task_priority')
-        if (!nameInput || !startDateInput || !completionDateInput || !descriptionInput || !prioritySelect) {
-            throw new Error('One or more form inputs not found.')
-        }
-
-        const params = {
-            name: nameInput ? nameInput.value : '',
-            startDateTime: normalizeDateFormat(startDateInput.value),
-            completionDateTime: normalizeDateFormat(completionDateInput.value),
-            description: descriptionInput ? descriptionInput.value : '',
-            priority: prioritySelect ? prioritySelect.value : '',
-            workerIds: workerIds ? workerIds : {}
-        }
-
-        // Validate inputs
-        if (!validateInputs(params, workValidationRules())) {
-            return
-        }
-
-        const projectId = addTaskForm.dataset.projectid
-        if (!projectId) {
-            throw new Error('Project ID not found in form dataset.')
-        }
-
-        const phaseId = addTaskForm.dataset.phaseid
-        if (!phaseId) {
-            throw new Error('Phase ID not found in form dataset.')
-        }
-
         const response = await sendToBackend(params, phaseId, projectId)
         if (!response) {
             throw new Error('No response from server.')

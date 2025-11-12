@@ -2,7 +2,7 @@ import { isValidDate } from './utility.js'
 import { errorListDialog } from '../render/error-list-dialog.js'
 
 const LENGTH_VALIDATION = {
-    'name':             { min: 1, max: 255 },
+    'name':             { min: 1, max: 50 },
     'uri':              { min: 3, max: 255 },
     'contactNumber':    { min: 11, max: 20 },
     'password':         { min: 8, max: 255 },

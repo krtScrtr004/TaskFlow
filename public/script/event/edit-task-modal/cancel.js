@@ -36,6 +36,8 @@ cancelTaskButton?.addEventListener('click', e => debounceAsync(submit(e), 3000))
 async function submit(e) {
     e.preventDefault()
 
+    Loader.patch(cancelTaskButton.querySelector('.text-w-icon'))
+
     // Show confirmation dialog
     if (!await confirmationDialog(
         'Cancel Task',
@@ -63,7 +65,6 @@ async function submit(e) {
         return
     }
 
-    Loader.patch(cancelTaskButton.querySelector('.text-w-icon'))
     try {
         await sendToBackend(projectId, phaseId, taskId)
         // Reload the page to reflect changes

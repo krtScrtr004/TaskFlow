@@ -68,7 +68,7 @@ export function formatDateToString(date) {
 }
 
 /**
- * Compares two date strings.
+ * Compares two date strings by date only (ignores time).
  * @param {string} date1 - First date string to compare
  * @param {string} date2 - Second date string to compare
  * @returns {number} -1 if date1 is later, 1 if date2 is later, 0 if equal
@@ -78,16 +78,20 @@ export function compareDates(date1, date2) {
     if (!date1 || !date2) {
         throw new Error('Both date strings are required.')
     }
-    
+
     const d1 = new Date(date1)
     const d2 = new Date(date2)
-    
+
     if (isNaN(d1.getTime()) || isNaN(d2.getTime())) {
         throw new Error('Invalid date string.')
     }
-        
-    if (d1.getTime() > d2.getTime()) return -1
-    if (d1.getTime() < d2.getTime()) return 1
+
+    // Compare only the date part (YYYY-MM-DD)
+    const ymd1 = `${d1.getFullYear()}-${String(d1.getMonth() + 1).padStart(2, '0')}-${String(d1.getDate()).padStart(2, '0')}`
+    const ymd2 = `${d2.getFullYear()}-${String(d2.getMonth() + 1).padStart(2, '0')}-${String(d2.getDate()).padStart(2, '0')}`
+
+    if (ymd1 > ymd2) return -1
+    if (ymd1 < ymd2) return 1
     return 0
 }
 
