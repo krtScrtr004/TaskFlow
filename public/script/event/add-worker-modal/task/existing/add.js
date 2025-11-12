@@ -13,12 +13,6 @@ if (!thisProjectId || thisProjectId.trim() === '') {
     Dialog.somethingWentWrong()
 }
 
-const phaseId = viewTaskInfo.dataset.phaseid
-if (!phaseId || phaseId.trim() === '') {
-    console.error('Phase ID not found.')
-    Dialog.somethingWentWrong()
-}
-
 await addWorker(
     thisProjectId,
     async (projectId, workerIds) => await sendToBackend(projectId, workerIds),
@@ -61,6 +55,11 @@ async function sendToBackend(projectId, workerIds) {
 
         if (!projectId || projectId.trim() === '') {
             throw new Error('Project ID is required.')
+        }
+
+        const phaseId = viewTaskInfo?.dataset.phaseid
+        if (!phaseId || phaseId.trim() === '') {
+            throw new Error('Phase ID not found in the DOM.')
         }
 
         const taskId = viewTaskInfo?.dataset.taskid

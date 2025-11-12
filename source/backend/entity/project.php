@@ -487,6 +487,22 @@ class Project implements Entity
     // OTHER METHODS (UTILITY)
 
     /**
+     * Checks if the specified key exists in the additionalInfo array.
+     *
+     * This method determines whether the given key is present in the project's additional information.
+     * The key can be either an integer or a string, and the method returns true if the key exists,
+     * otherwise false.
+     *
+     * @param int|string $key The key to check for existence in the additionalInfo array.
+     * 
+     * @return bool True if the key exists in additionalInfo, false otherwise.
+     */
+    public function additionalInfoContains(int|string $key): bool
+    {
+        return array_key_exists($key, $this->additionalInfo);
+    }
+
+    /**
      * Adds or updates additional information for the project.
      *
      * This method allows storing custom key-value pairs in the project's

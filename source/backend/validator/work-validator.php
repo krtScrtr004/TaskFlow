@@ -85,40 +85,43 @@ class WorkValidator extends Validator
     }
 
     /**
-     * Validate that phase/task dates are within project date bounds
+     * Validate that start and completion date-times are within given bounds
      * 
-     * @param DateTime|null $startDateTime The phase/task start date
-     * @param DateTime|null $completionDateTime The phase/task completion date
-     * @param DateTime|null $projectStartDateTime The project start date
-     * @param DateTime|null $projectCompletionDateTime The project completion date
-     * @return void
+     * @param DateTime|null $startDateTime Start date-time to validate
+     * @param DateTime|null $completionDateTime Completion date-time to validate
+     * @param DateTime|null $boundStartDateTime Lower bound start date-time
+     * @param DateTime|null $boundCompletionDateTime Upper bound completion date-time
+     * @param string $context Context for error messages (e.g., 'Project', 'Phase')
      */
     public function validateDateBounds(
         ?DateTime $startDateTime,
         ?DateTime $completionDateTime,
-        ?DateTime $projectStartDateTime,
-        ?DateTime $projectCompletionDateTime
+        ?DateTime $boundStartDateTime,
+        ?DateTime $boundCompletionDateTime,
+        string $context = 'Project'
     ): void {
+        $context = ucwords(trim($context));
+
         if ($startDateTime === null || $completionDateTime === null) {
             $this->errors[] = 'Start date and completion date are required.';
             return;
         }
 
-        if ($projectStartDateTime === null || $projectCompletionDateTime === null) {
-            $this->errors[] = 'Project start date and completion date are required.';
+        if ($boundStartDateTime === null || $boundCompletionDateTime === null) {
+            $this->errors[] = $context . ' start date and completion date are required.';
             return;
         }
 
-        if ($startDateTime < $projectStartDateTime) {
-            $this->errors[] = 'Start date cannot be before project start date.';
+        if ($startDateTime < $boundStartDateTime) {
+            $this->errors[] = 'Start date cannot be before ' . $context . ' start date.';
         }
 
-        if ($startDateTime > $projectCompletionDateTime) {
-            $this->errors[] = 'Start date cannot be after project completion date.';
+        if ($startDateTime > $boundCompletionDateTime) {
+            $this->errors[] = 'Start date cannot be after ' . $context . ' completion date.';
         }
 
-        if ($completionDateTime > $projectCompletionDateTime) {
-            $this->errors[] = 'Completion date cannot be after project completion date.';
+        if ($completionDateTime > $boundCompletionDateTime) {
+            $this->errors[] = 'Completion date cannot be after ' . $context . ' completion date.';
         }
     }
 

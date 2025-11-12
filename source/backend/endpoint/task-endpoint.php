@@ -285,9 +285,14 @@ class TaskEndpoint
                 throw new ForbiddenException('Phase ID is required.');
             }
 
+            // Search for phase by ID or by schedule boundary
             $phase = isset($args['phaseId'])
                 ? PhaseModel::findById($phaseId)
-                : PhaseModel::findOnGoingByProjectId($project->getId());
+                : PhaseModel::findByScheduleBoundary(
+                    $project->getId(), 
+                    $data['startDateTime'] ?? null, 
+                    $data['completionDateTime'] ?? null
+                );
             if (!$phase) {
                 throw new NotFoundException('Phase not found.');
             }
@@ -296,8 +301,9 @@ class TaskEndpoint
             $validator->validateDateBounds(
                 new DateTime($data['startDateTime']),
                 new DateTime($data['completionDateTime']),
-                $project->getStartDateTime(),
-                $project->getCompletionDateTime()
+                $phase->getStartDateTime(),
+                $phase->getCompletionDateTime(),
+                'Phase'
             );
             if ($validator->hasErrors()) {
                 throw new ValidationException('Task Validation Failed.', $validator->getErrors());

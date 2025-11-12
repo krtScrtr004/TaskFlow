@@ -263,27 +263,122 @@ class TaskWorkerEndpoint
      * Adds multiple workers to a specific task within a project phase.
      *
      * This method performs the following actions:
-     * - Validates user session authorization and CSRF protection.
-     * - Decodes input data from the request body.
-     * - Validates and retrieves the project, phase, and task by their UUIDs.
-     * - Validates the presence and format of worker IDs.
-     * - Converts worker IDs to UUID objects.
+     * - Checks if the user session is authorized.
+     * - Protects against CSRF attacks.
+     * - Decodes input data from the request.
+     * - Validates the existence of projectId, phaseId, and taskId in the arguments.
+     * - Ensures the referenced project, phase, and task exist.
+     * - Validates that workerIds are provided and are in the correct format.
+     * - Converts workerIds to UUID objects.
      * - Associates the specified workers with the given task.
-     * - Returns a success response if all operations succeed.
-     * - Handles validation, authorization, and unexpected errors with appropriate responses.
+     * - Returns a success response if workers are added successfully.
+     * - Handles validation, forbidden access, and unexpected errors with appropriate responses.
      *
-     * @param array $args Associative array containing identifiers:
+     * @param array $args Associative array containing:
      *      - projectId: string|UUID Project identifier
      *      - phaseId: string|UUID Phase identifier
      *      - taskId: string|UUID Task identifier
      * 
-     * Request body must contain:
+     * Input data (decoded from request body) must include:
      *      - workerIds: array List of worker identifiers (string|UUID)
      *
      * @throws ValidationException If input data is invalid or cannot be decoded.
-     * @throws ForbiddenException If session is unauthorized, or required IDs are missing.
-     * @throws NotFoundException If project or task cannot be found.
-     * @throws Exception For any other unexpected errors.
+     * @throws ForbiddenException If session is unauthorized or required IDs are missing.
+     * @throws NotFoundException If project or phase does not exist.
+     * @throws Exception For unexpected errors.
+     *
+     * @return void
+     */
+    public static function add(array $args = []): void
+    {
+        try {
+            if (!SessionAuth::hasAuthorizedSession()) {
+                throw new ForbiddenException('User session is not authorized to perform this action.');
+            }
+            Csrf::protect();
+
+            $data = decodeData('php://input');
+            if (!$data) {
+                throw new ValidationException('Cannot decode data.');
+            }
+
+            $projectId = isset($args['projectId'])
+                ? UUID::fromString($args['projectId'])
+                : null;
+            if (!isset($projectId)) {
+                throw new ForbiddenException('Project ID is required.');
+            }
+
+            $project = ProjectModel::findById($projectId);
+            if (!$project) {
+                throw new NotFoundException('Project not found.');
+            }
+
+            $phaseId = isset($args['phaseId'])
+                ? UUID::fromString($args['phaseId'])
+                : null;
+            if (!isset($phaseId)) {
+                throw new ForbiddenException('Phase ID is required.');
+            }
+
+            $phase = PhaseModel::findById($phaseId);
+            if (!$phase) {
+                throw new NotFoundException('Phase not found.');
+            }
+
+            $taskId = isset($args['taskId'])
+                ? UUID::fromString($args['taskId'])
+                : null;
+            if (!isset($taskId)) {
+                throw new ForbiddenException('Task ID is required.');
+            }
+
+            $workerIds = $data['workerIds'] ?? null;
+            if (!isset($data['workerIds']) || !is_array($data['workerIds']) || count($data['workerIds']) < 1) {
+                throw new ForbiddenException('Worker IDs are required.');
+            }
+            
+            $ids = [];
+            foreach ($workerIds as $workerId) {
+                $ids[] = UUID::fromString($workerId);
+            }
+            TaskWorkerModel::createMultiple($taskId, $ids);
+            
+            Response::success([], 'Workers added successfully.');
+        } catch (ValidationException $e) {
+            Response::error('Validation Failed.',$e->getErrors(),422);
+        } catch (ForbiddenException $e) {
+            Response::error('Forbidden.', [], 403);
+        } catch (Exception $e) {
+            Response::error('Unexpected Error.', ['An unexpected error occurred. Please try again.'], 500);
+        }
+    }
+
+
+    /**
+     * Edits the status of a worker assigned to a specific task within a project phase.
+     *
+     * This method performs the following actions:
+     * - Validates user session authorization and CSRF protection.
+     * - Ensures required identifiers (projectId, phaseId, taskId, workerId) are provided and valid UUIDs.
+     * - Retrieves the specified task and worker, throwing exceptions if not found.
+     * - Decodes input data and validates the worker status.
+     * - Updates the worker's status for the given task.
+     * - Returns a success response if the operation is successful, or appropriate error responses for validation, authorization, or unexpected errors.
+     *
+     * @param array $args Associative array containing required identifiers:
+     *      - projectId: string|UUID Project identifier
+     *      - phaseId: string|UUID Phase identifier
+     *      - taskId: string|UUID Task identifier
+     *      - workerId: string|UUID Worker identifier
+     * 
+     * Input data (decoded from request body):
+     *      - status: string|WorkerStatus New status for the worker
+     *
+     * @throws ForbiddenException If session is unauthorized or required identifiers are missing
+     * @throws NotFoundException If the specified task or worker is not found
+     * @throws ValidationException If input data is invalid or cannot be decoded
+     * @throws Exception For unexpected errors
      *
      * @return void
      */

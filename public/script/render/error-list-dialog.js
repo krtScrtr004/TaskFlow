@@ -24,7 +24,7 @@ export function errorListDialog(
             <section class="heading">
                 <div class="text-w-icon">
                     <img src="/TaskFlow/public/asset/image/icon/reject.svg" alt="Error" title="Error" height="28">
-                    <h3 class="red-text">${title}</h3>
+                    <h3 class="wrap-text red-text">${title}</h3>
                 </div>
             </section>
 

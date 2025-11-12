@@ -17,14 +17,28 @@ import { errorListDialog } from '../render/error-list-dialog.js'
  */
 export function handleException(exception, message = exception?.message || 'An error occurred') {
     console.error(`${message}: ${exception}`)
+    const status = exception?.status;
+    const hasErrors = Array.isArray(exception?.errors) && exception.errors.length > 0;
 
-    if (exception.status === 422) {
-        errorListDialog(exception?.message || message, exception.errors)
-    } else if (exception.status === 404) {
-        Dialog.errorOccurred('404 Requested resource not found.')
-    } else if (exception.status === 403) {
-        Dialog.errorOccurred('403 You do not have permission to perform this action.')
-    } else {
-        Dialog.somethingWentWrong()
+    switch (status) {
+        case 422:
+            errorListDialog(exception?.message || message, exception.errors);
+            break;
+        case 404:
+            if (hasErrors) {
+                errorListDialog(message || 'Not Found', exception.errors);
+            } else {
+                Dialog.errorOccurred('Requested resource not found.');
+            }
+            break;
+        case 403:
+            if (hasErrors) {
+                errorListDialog(message || 'Forbidden Action', exception.errors);
+            } else {
+                Dialog.errorOccurred('You do not have permission to perform this action.');
+            }
+            break;
+        default:
+            Dialog.somethingWentWrong();
     }
 }
