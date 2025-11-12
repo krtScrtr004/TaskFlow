@@ -238,23 +238,17 @@ class UserEndpoint
                 $profileData['profileLink'] = $profileLink;
             }
 
-            if (isset($profileData['email']) || isset($profileData['contactNumber'])) {
+            if (isset($profileData['contactNumber'])) {
                 // Check for duplicate email or contact number
                 $duplicates = UserModel::hasDuplicateInfo(
-                    $profileData['email'] ?? null,
+                    null,
                     $profileData['contactNumber'] ?? null,
                     Me::getInstance()->getId()
                 );
 
                 $duplicateErrors = [];
-                if (isset($duplicates['email']) && $duplicates['email']) {
-                    $duplicateErrors[] = 'Email is already in use by another user.';
-                }
                 if (isset($duplicates['contactNumber']) && $duplicates['contactNumber']) {
-                    $duplicateErrors[] = 'Contact number is already in use by another user.';
-                }
-                if (count($duplicateErrors) > 0) {
-                    throw new ValidationException('Duplicate fields found.', $duplicateErrors);
+                    throw new ValidationException('Profile Edit failed.', ['Contact number is already in use by another user.']);
                 }
             }
 
@@ -264,7 +258,6 @@ class UserEndpoint
                 'firstName' => $profileData['firstName'] ?? null,
                 'middleName' => $profileData['middleName'] ?? null,
                 'lastName' => $profileData['lastName'] ?? null,
-                'email' => $profileData['email'] ?? null,
                 'birthDate' => $profileData['birthDate'] ?? null,
                 'contactNumber' => $profileData['contactNumber'] ?? null,
                 'bio' => $profileData['bio'] ?? null,
@@ -302,7 +295,6 @@ class UserEndpoint
                         'role'              => $updatedUser->getRole()->value,
                         'jobTitles'         => implode(',', $updatedUser->getJobTitles()->toArray()),
                         'contactNumber'     => $updatedUser->getContactNumber(),
-                        'email'             => $updatedUser->getEmail(),
                         'bio'               => $updatedUser->getBio(),
                         'profileLink'       => $updatedUser->getProfileLink(),
                         'createdAt'         => $updatedUser->getCreatedAt()->format('Y-m-d H:i:s'),

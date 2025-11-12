@@ -24,10 +24,10 @@ export function handleException(exception, message = exception?.message || 'An e
             errorListDialog(exception?.message || message, exception.errors)
             break
         case 404:
-            Dialog.errorOccurred(message || 'Requested resource not found.');
+            Dialog.errorOccurred(exception?.errors[0] || 'Requested resource not found.');
             break
         case 403:
-            Dialog.errorOccurred(message || 'You do not have permission to perform this action.')
+            Dialog.errorOccurred(exception?.errors[0] || 'You do not have permission to perform this action.')
             break
         default:
             Dialog.somethingWentWrong()

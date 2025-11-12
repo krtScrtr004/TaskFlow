@@ -170,7 +170,7 @@ $myData = [
                         </div>
                     </label>
                     <input type="email" name="email" id="email" placeholder="Email" value="<?= $myData['email'] ?>"
-                        required>
+                        disabled>
                 </div>
 
                 <!--Contact Number -->

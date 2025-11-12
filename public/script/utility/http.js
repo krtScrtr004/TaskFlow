@@ -87,17 +87,17 @@ export const Http = (() => {
                     }
 
                     switch (request.status) {
-                        case 401:
-                            errorData.message = 'Unauthorized'
+                        case 422:
+                            errorData.message = 'Validation Error'
                             break
                         case 403:
-                            errorData.message = 'Forbidden'
+                            errorData.message = errorData.errors[0] || 'Forbidden'
                             break
                         case 404:
-                            errorData.message = 'Resource not found'
+                            errorData.message = errorData.errors[0] || 'Resource Not Found'
                             break
                         default:
-                            errorData.message = 'HTTP Error'
+                            errorData.message = errorData.errors[0] || 'HTTP Error'
                     }
                 }
 

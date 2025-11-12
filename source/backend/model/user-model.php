@@ -553,7 +553,6 @@ class UserModel extends Model
      * - firstName, middleName, lastName: Trims and updates name fields
      * - bio: Trims and updates user biography
      * - gender: Updates gender using the enum value
-     * - email: Trims and updates email address
      * - contactNumber: Trims and updates contact number
      * - profileLink: Trims and updates profile link
      * - password: Hashes and updates password using Argon2ID
@@ -569,7 +568,6 @@ class UserModel extends Model
      *      - lastName: string User's last name
      *      - bio: string User's biography
      *      - gender: Gender User's gender (enum)
-     *      - email: string User's email address
      *      - contactNumber: string User's contact number
      *      - profileLink: string User's profile link
      *      - password: string User's password (will be hashed)
@@ -623,11 +621,6 @@ class UserModel extends Model
             if (isset($data['birthDate'])) {
                 $updateFields[] = 'birthDate = :birthDate';
                 $params[':birthDate'] = formatDateTime($data['birthDate']);
-            }
-
-            if (isset($data['email'])) {
-                $updateFields[] = 'email = :email';
-                $params[':email'] = trimOrNull($data['email']);
             }
             
             if (isset($data['contactNumber'])) {
