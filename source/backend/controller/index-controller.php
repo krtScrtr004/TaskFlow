@@ -74,4 +74,33 @@ class IndexController implements Controller
 
         require_once VIEW_PATH . 'index.php';
     }
+
+    /**
+     * Handles the email confirmation view for unauthenticated users.
+     *
+     * This method ensures that a session exists and a CSRF token is set for security purposes.
+     * If the session is not initialized, it creates one. If the CSRF token is missing, it generates
+     * a new token, forces the session to be written and closed, then restores the session for the
+     * remainder of the request. Finally, it loads the email confirmation sub-view.
+     *
+     * No parameters are required.
+     *
+     * @return void
+     */
+    public static function confirmEmail(): void
+    {
+        // For unauthenticated users, ensure session exists and CSRF token is set
+        if (!Session::isSet()) {
+            Session::create();
+        }
+
+        if (!Csrf::get()) {
+            Csrf::generate();
+            // Force session write to ensure CSRF token is persisted
+            session_write_close();
+            Session::restore();  // Reopen session for the rest of the request
+        }
+
+        require_once SUB_VIEW_PATH . 'confirm-email.php';
+    }
 }

@@ -110,7 +110,6 @@ $myData = [
 
         <!-- Editable Profile Details -->
         <form id="editable_profile_details_form" class="content-section-block flex-col" action="" method="POST">
-            <?= hiddenCsrfInput() ?>
 
             <!-- Heading-->
             <div class="text-w-icon">

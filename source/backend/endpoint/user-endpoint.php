@@ -234,6 +234,10 @@ class UserEndpoint
                 $profileData['password'] = $data['password'];
             }
 
+            if (isset($data['confirm'])) {
+                $profileData['confirm'] = (bool) $data['confirm'];
+            }
+
             if (count($_FILES) > 0 && isset($_FILES['profilePicture'])) {
                 // Handle profile picture upload
                 $profileLink = PictureUpload::upload($_FILES['profilePicture']);
@@ -308,6 +312,8 @@ class UserEndpoint
                         'bio'               => $updatedUser->getBio(),
                         'profileLink'       => $updatedUser->getProfileLink(),
                         'createdAt'         => $updatedUser->getCreatedAt()->format('Y-m-d H:i:s'),
+                        'confirmedAt'       => $updatedUser->getConfirmedAt()?->format('Y-m-d H:i:s'),
+                        'deletedAt'         => $updatedUser->getDeletedAt()?->format('Y-m-d H:i:s'),
                         'additionalInfo'    => $updatedUser->getAdditionalInfo()
                     ]);
                 }

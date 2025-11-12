@@ -1,5 +1,4 @@
 <form id="login_form" class="index-form flex-col" action="" method="POST">
-    <?= hiddenCsrfInput() ?>
 
     <input type="text" id="login_email" name="login_email" min="<?= URI_MIN ?>" max="<?= URI_MAX ?>" placeholder="Please enter your email here"
         autocomplete="on" required>

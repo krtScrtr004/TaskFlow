@@ -38,6 +38,7 @@ class User implements Entity
     protected ?string $bio;
     protected ?string $profileLink;
     protected ?DateTime $createdAt;
+    protected ?DateTime $confirmedAt;
     protected ?DateTime $deletedAt;
     protected array $additionalInfo;
 
@@ -63,6 +64,8 @@ class User implements Entity
      * @param string|null$bio User's biography or description (optional)
      * @param string|null $profileLink Link to user's profile (optional)
      * @param DateTime $createdAt Timestamp when the user was created
+     * @param DateTime|null $confirmedAt Timestamp when the user was confirmed (optional)
+     * @param DateTime|null $deletedAt Timestamp when the user was deleted (optional)
      * @param string|null $password User's password (optional)
      * @param array $additionalInfo Additional information about the user (optional)
      * 
@@ -83,8 +86,9 @@ class User implements Entity
         ?string $bio,
         ?string $profileLink,
         DateTime $createdAt,
-        ?string $password = null,
+        ?DateTime $confirmedAt = null,
         ?DateTime $deletedAt = null,
+        ?string $password = null,
         array $additionalInfo = []
     ) {
         try {
@@ -123,6 +127,7 @@ class User implements Entity
         $this->bio = trimOrNull($bio);
         $this->profileLink = trimOrNull($profileLink);
         $this->createdAt = $createdAt;
+        $this->confirmedAt = $confirmedAt;
         $this->deletedAt = $deletedAt;
         $this->password = $password;
         $this->additionalInfo = $additionalInfo;
@@ -283,6 +288,16 @@ class User implements Entity
     public function getCreatedAt(): DateTime
     {
         return $this->createdAt;
+    }
+
+    /**
+     * Gets the confirmation timestamp of the user account.
+     *
+     * @return DateTime|null The DateTime object representing when the user was confirmed, or null if not confirmed
+     */
+    public function getConfirmedAt(): ?DateTime
+    {
+        return $this->confirmedAt;
     }
 
     /**
@@ -571,6 +586,21 @@ class User implements Entity
     }
 
     /**
+     * Sets the user confirmation timestamp.
+     *
+     * @param DateTime|null $confirmedAt The confirmation timestamp to set, or null if not confirmed
+     * @throws ValidationException If the confirmation date is in the future
+     * @return void
+     */
+    public function setConfirmedAt(?DateTime $confirmedAt): void
+    {
+        if ($confirmedAt !== null && $confirmedAt > new DateTime()) {
+            throw new ValidationException("Invalid Confirmed At Date");
+        }
+        $this->confirmedAt = $confirmedAt;
+    }
+
+    /**
      * Sets the user deletion timestamp.
      *
      * @param DateTime|null $deletedAt The deletion timestamp to set, or null if not deleted
@@ -688,6 +718,10 @@ class User implements Entity
             $defaults['deletedAt'] = new DateTime(trimOrNull($data['deletedAt']));
         }
 
+        if (isset($data['confirmedAt']) && !($data['confirmedAt'] instanceof DateTime) && $data['confirmedAt'] !== null) {
+            $defaults['confirmedAt'] = new DateTime(trimOrNull($data['confirmedAt']));
+        }   
+
         // Handle enum conversions
         if (isset($data['gender']) && !($data['gender'] instanceof Gender)) {
             $defaults['gender'] = Gender::from(trimOrNull($data['gender']));
@@ -720,6 +754,7 @@ class User implements Entity
             bio: $defaults['bio'],
             profileLink: $defaults['profileLink'],
             createdAt: $defaults['createdAt'],
+            confirmedAt: $defaults['confirmedAt'],
             deletedAt: $defaults['deletedAt'],
             password: $defaults['password'],
             additionalInfo: $defaults['additionalInfo']
@@ -757,6 +792,7 @@ class User implements Entity
             profileLink: $this->profileLink,
             status: WorkerStatus::ASSIGNED,
             createdAt: new DateTime(),
+            confirmedAt: $this->confirmedAt,
             deletedAt: $this->deletedAt,
             additionalInfo: $this->additionalInfo
         );
@@ -788,6 +824,8 @@ class User implements Entity
      *      - bio: string User's biography
      *      - profileLink: string User's profile link
      *      - createdAt: string User creation timestamp (Y-m-d H:i:s format)
+     *      - confirmedAt: string|null User confirmation timestamp (Y-m-d H:i:s format) or null if not confirmed
+     *      - deletedAt: string|null User deletion timestamp (Y-m-d H:i:s format) or null if not deleted
      *      - additionalInfo: array Additional user information
      */
     public function toArray(): array
@@ -806,6 +844,7 @@ class User implements Entity
             'bio' => $this->bio,
             'profileLink' => $this->profileLink,
             'createdAt' => $this->createdAt->format('Y-m-d H:i:s'),
+            'confirmedAt' => $this->confirmedAt ? $this->confirmedAt->format('Y-m-d H:i:s') : null,
             'deletedAt' => $this->deletedAt ? $this->deletedAt->format('Y-m-d H:i:s') : null,
             'additionalInfo' => $this->additionalInfo
         ];
@@ -837,6 +876,8 @@ class User implements Entity
      *      - bio: string User's biography
      *      - profileLink: string User's profile link
      *      - createdAt: string|DateTime User creation timestamp
+     *      - confirmedAt: string|DateTime|null User confirmation timestamp (optional)
+     *      - deletedAt: string|DateTime|null User deletion timestamp (optional)
      *      - additionalInfo: array (optional) Additional user information
      *      - password: string|null (optional) User's password
      * 
@@ -871,6 +912,10 @@ class User implements Entity
             ? new DateTime(trimOrNull($data['createdAt']))
             : $data['createdAt'];
 
+        $confirmedAt = (isset($data['confirmedAt']) && is_string($data['confirmedAt']))
+            ? new DateTime(trimOrNull($data['confirmedAt']))
+            : ($data['confirmedAt'] ?? null);
+
         $deletedAt = (isset($data['deletedAt']) && is_string($data['deletedAt']))
             ? new DateTime(trimOrNull($data['deletedAt']))
             : ($data['deletedAt'] ?? null);
@@ -890,6 +935,7 @@ class User implements Entity
             bio: trimOrNull($data['bio']),
             profileLink: trimOrNull($data['profileLink']),
             createdAt: $createdAt,
+            confirmedAt: $confirmedAt,
             deletedAt: $deletedAt,
             additionalInfo: $data['additionalInfo'] ?? [],
             password: $data['password'] ?? null

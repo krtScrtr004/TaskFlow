@@ -3,8 +3,6 @@
 <!-- Create Project Form -->
 <form id="create_project_form" class="create-project flex-col" action="" method="POST">
 
-    <?= hiddenCsrfInput() ?>
-
     <!-- Project Details -->
     <fieldset class="project-details flex-col">
         <!-- Project Name -->

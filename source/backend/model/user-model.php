@@ -420,8 +420,8 @@ class UserModel extends Model
                 }
             }
 
-            // Exclude deleted users
-            $where[] = "deletedAt IS NULL";
+            // Exclude unconfirmed and deleted users
+            $where[] = "createdAt IS NOT NULL AND deletedAt IS NULL";
 
             $whereClause = !empty($where) ? implode(' AND ', $where) : '';
             return self::find($whereClause, $params, $options);
@@ -645,7 +645,12 @@ class UserModel extends Model
                 $params[':password'] = password_hash(trimOrNull($data['password']), PASSWORD_ARGON2ID);
             }
 
-            if (isset($data['delete'])) {
+            if (isset($data['confirm']) && $data['confirm'] === true) {
+                $updateFields[] = 'confirmedAt = :confirmedAt';
+                $params[':confirmedAt'] = formatDateTime(new DateTime());
+            }
+
+            if (isset($data['delete']) && $data['delete'] === true) {
                 $updateFields[] = 'deletedAt = :deletedAt';
                 $params[':deletedAt'] = formatDateTime(new DateTime());
             }
@@ -776,6 +781,37 @@ class UserModel extends Model
             return true;
         } catch (Exception $e) {
             throw $e;
+        }
+    }
+
+    /**
+     * Permanently deletes a user record from the database.
+     *
+     * This method removes the user entry identified by its ID from the `user` table.
+     * It expects a valid User instance and throws an exception if the argument is invalid.
+     * Any database errors encountered during deletion are wrapped in a DatabaseException.
+     *
+     * @param mixed $data Instance of User to be deleted.
+     * 
+     * @throws InvalidArgumentException If $data is not an instance of User.
+     * @throws DatabaseException If a database error occurs during deletion.
+     * 
+     * @return bool Returns true if the deletion was successful.
+     */
+    public static function hardDelete(mixed $data): bool
+    {
+        if (!$data instanceof User) {
+            throw new InvalidArgumentException('Expected instance of User');
+        }
+
+        $instance = new self();
+        try {
+            $deleteQuery = "DELETE FROM `user` WHERE id = :id";
+            $statement = $instance->connection->prepare($deleteQuery);
+            $statement->execute([':id' => $data->getId()]);
+            return true;
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
         }
     }
 }

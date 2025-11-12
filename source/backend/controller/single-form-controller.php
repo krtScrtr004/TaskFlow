@@ -132,7 +132,7 @@ class SingleFormController implements Controller
         }
     }
 
-    /**
+        /**
      * Retrieves the project and its active phase for adding a new task.
      *
      * This method performs the following steps:
@@ -167,5 +167,4 @@ class SingleFormController implements Controller
 
         return [$project, $activePhase];
     }
-
 }

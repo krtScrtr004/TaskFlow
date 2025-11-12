@@ -2,6 +2,7 @@
 
 use App\Enumeration\Role;
 use App\Enumeration\WorkerStatus;
+use App\Middleware\Csrf;
 
 if (!isset($users))
     throw new Error('Users data is required.');
@@ -13,6 +14,8 @@ if (!isset($users))
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<?= Csrf::get() ?>">
+
     <title>Users</title>
 
     <base href="<?= PUBLIC_PATH ?>">

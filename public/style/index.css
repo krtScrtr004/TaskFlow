@@ -97,3 +97,19 @@ body.index > main {
 #register_button {
     width: 100% !important;
 }
+
+.confirm-email img {
+    margin-bottom: 2rem;
+}
+
+.confirm-email h1 {
+    margin-bottom: 1rem;
+}
+
+.confirm-email p {
+    font-size: 1.2rem;
+}
+
+.confirm-email a:hover {
+    text-decoration: underline;
+}

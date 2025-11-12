@@ -58,7 +58,7 @@ export const Http = (() => {
 
             if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
                 options.headers = {
-                    'X-CSRF-Token': document.querySelector('input[type="hidden"]#csrf_token').value
+                    'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 }
 
                 if (body) {

@@ -3,7 +3,6 @@ use App\Enumeration\Role;
 ?>
 
 <form id="register_form" class="index-form flex-col" action="" method="POST">
-    <?= hiddenCsrfInput() ?>
 
     <div class="separated-input flex-row">
         <!-- First Name -->

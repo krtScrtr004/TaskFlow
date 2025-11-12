@@ -92,9 +92,8 @@ async function submit(e) {
     try {
         await sendToBackend(...Object.values(inputs))
 
-        const delay = 1500
-        setTimeout(() => window.location.href = '/TaskFlow/home', delay)
-        Notification.success('Registration successful!', delay)
+        Dialog.operationSuccess('Registration Successful', 'A confirmation email has been sent to your email address. Please verify your email before logging in.')
+        setTimeout(() => window.location.href = '/TaskFlow/login', 2000)
     } catch (error) {
         handleException(error, `Error during register: ${error}`)
     } finally {
