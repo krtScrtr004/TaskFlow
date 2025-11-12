@@ -66,17 +66,17 @@ class TemporaryLinkModel extends Model
      * otherwise, null is returned. Throws a ValidationException if the email is invalid,
      * and a DatabaseException if a database error occurs.
      *
-     * @param string $email The email address to search for in the `temporaryLink` table.
+     * @param string $token The temporary token to search for in the `temporaryLink` table.
      * 
      * @return mixed The found temporary link record as an associative array, or null if not found.
      *
-     * @throws ValidationException If the provided email is invalid.
+     * @throws ValidationException If the provided token is invalid.
      * @throws DatabaseException If a database error occurs during the search.
      */
-    public static function search(string $email, string $token): mixed 
+    public static function search(string $token): mixed 
     {
-        if (!trimOrNull($email)) {
-            throw new ValidationException('Invalid email provided for TemporaryLink search.');
+        if (!trimOrNull($token)) {
+            throw new ValidationException('Invalid token provided for TemporaryLink search.');
         }
 
         try {
@@ -84,13 +84,11 @@ class TemporaryLinkModel extends Model
 
             $query = "
                 SELECT * FROM `temporaryLink`
-                WHERE userEmail = :email
-                AND token = :token
+                WHERE token = :token
                 LIMIT 1
             ";
             $statement = $instance->connection->prepare($query);
             $statement->execute([
-                ':email' => $email,
                 ':token' => hash('sha256', $token)
             ]);
             $result = $statement->fetch();
@@ -112,18 +110,18 @@ class TemporaryLinkModel extends Model
      * record from the `temporaryLink` table in the database. If the email is invalid,
      * a ValidationException is thrown. If a database error occurs, a DatabaseException is thrown.
      *
-     * @param mixed $email The email address associated with the temporary link to delete.
+     * @param mixed $token The token associated with the temporary link to delete.
      *                     Must be a non-empty string.
      *
-     * @throws ValidationException If the provided email is invalid.
+     * @throws ValidationException If the provided token is invalid.
      * @throws DatabaseException If a database error occurs during deletion.
      *
      * @return bool True if a record was deleted, false otherwise.
      */
-    public static function delete(mixed $email): bool
+    public static function delete(mixed $token): bool
 	{
-        if (!is_string($email) || !trimOrNull($email)) {
-            throw new ValidationException('Invalid email provided for TemporaryLink deletion.');
+        if (!is_string($token) || !trimOrNull($token)) {
+            throw new ValidationException('Invalid token provided for TemporaryLink deletion.');
         }
 
 		try {
@@ -131,10 +129,10 @@ class TemporaryLinkModel extends Model
 
             $query = "
                 DELETE FROM `temporaryLink`
-                WHERE userEmail = :email
+                WHERE token = :token    
             ";
             $statement = $instance->connection->prepare($query);
-            $statement->execute([':email' => $email]);
+            $statement->execute([':token' => hash('sha256', $token)]);
 
             return $statement->rowCount() > 0;
         } catch (PDOException $e) {

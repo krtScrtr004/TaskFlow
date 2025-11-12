@@ -4,7 +4,8 @@ namespace App\Core;
 
 use App\Middleware\Csrf;
 
-define('SESSION_LIFETIME', 3600);
+define('SESSION_LIFETIME', 3600);  // Cookie lifetime: 1 hour
+define('SESSION_ACTIVITY_TIMEOUT', 1800);  // Inactivity timeout: 30 minutes
 define('SESSION_PATH', '/TaskFlow/');  // Must match your web application path, not file system path
 define('SESSION_DOMAIN', 'localhost');
 define('SESSION_SECURE', false);  // Set to true only when using HTTPS in production
@@ -32,6 +33,42 @@ class Session
 
         if (session_status() !== PHP_SESSION_ACTIVE) {
             session_start();
+        }
+
+        // Check and handle session inactivity
+        $this->checkInactivity();
+    }
+
+    /**
+     * Checks if the session has been inactive for too long and destroys it if so.
+     * On every request, updates the last activity timestamp to track user activity.
+     * If user is active, the session is refreshed (renewed).
+     * 
+     * @return void
+     */
+    private function checkInactivity(): void
+    {
+        $now = time();
+        $lastActivity = $_SESSION['last_activity'] ?? 0;
+        $inactivityDuration = $now - $lastActivity;
+
+        // If session has no last_activity timestamp or user has been inactive too long, destroy it
+        if ($lastActivity === 0) {
+            // First request of the session - initialize timestamp
+            $_SESSION['last_activity'] = $now;
+        } elseif ($inactivityDuration > SESSION_ACTIVITY_TIMEOUT) {
+            // User inactive for more than SESSION_ACTIVITY_TIMEOUT seconds - expire the session
+            $this->destroy();
+        } else {
+            // User is active - update the last activity timestamp
+            $_SESSION['last_activity'] = $now;
+            
+            // Regenerate session ID every 5 minutes for security
+            $lastRegenerate = $_SESSION['last_regenerate'] ?? 0;
+            if ($now - $lastRegenerate > 300) {  // 300 seconds = 5 minutes
+                $this->regenerate(false);
+                $_SESSION['last_regenerate'] = $now;
+            }
         }
     }
 
@@ -79,7 +116,15 @@ class Session
     public static function regenerate(bool $deleteOldSession = true): void
     {
         if (self::isSet()) {
+            // Store CSRF token before regeneration to prevent losing it
+            $csrfToken = $_SESSION['csrf_token'] ?? null;
+            
             session_regenerate_id($deleteOldSession);
+            
+            // Restore CSRF token after regeneration
+            if ($csrfToken) {
+                $_SESSION['csrf_token'] = $csrfToken;
+            }
         }
     }
 

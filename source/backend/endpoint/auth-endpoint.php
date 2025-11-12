@@ -299,14 +299,13 @@ class AuthEndpoint implements Controller
             $token = bin2hex(random_bytes(16));
             TemporaryLinkModel::create([
                 'email' => $email,
-                'token' => hash('sha256', $token)
+                'token' => $token
             ]);
 
             // Send reset password link to email 
             if (!$instance->service->sendTemporaryLink($email, $token)) {
                 throw new Exception('Failed to send reset password email.');
             }
-            Session::set('temporaryResetEmail', $email);
 
             Response::success([], 'Reset password link has been sent to your email.');
         } catch (ValidationException $e) {
@@ -348,20 +347,37 @@ class AuthEndpoint implements Controller
         try {
             Csrf::protect();
 
-            // Extract email from session or Me instance
-            $email = Session::get('temporaryResetEmail') ?? Me::getInstance()?->getEmail() ?? null;
+            $data = decodeData('php://input');
+            if (!$data) {
+                throw new ValidationException('Cannot decode data.');
+            }
+
+            $token = trimOrNull($data['token']);
+            if (!$token) {
+                throw new ValidationException('Token is required for password change.');
+            }
+
+            // Verify token validity
+            $isValid = TemporaryLinkModel::search($token);
+            if (!$isValid) {
+                throw new NotFoundException('Invalid token provided.');
+            }
+
+            $email = $isValid['userEmail'];
             if (!$email || !trimOrNull($email)) {
                 throw new ValidationException('Email not found for password reset.');
+            }
+
+            // Check if the link has expired (valid for 5 minutes)
+            $createdAt = new DateTime($isValid['updatedAt'] ?? $isValid['createdAt']);
+            if ((new DateTime())->getTimestamp() - $createdAt->getTimestamp() > 300) {
+                TemporaryLinkModel::delete($token);
+                throw new ForbiddenException('The password reset link has expired. Please request a new one.');
             }
 
             $user = UserModel::findByEmail($email);
             if (!$user) {
                 throw new NotFoundException('User not found.');
-            }
-
-            $data = decodeData('php://input');
-            if (!$data) {
-                throw new ValidationException('Cannot decode data.');
             }
 
             $newPassword = trimOrNull($data['password']);
@@ -381,10 +397,7 @@ class AuthEndpoint implements Controller
             ]);
 
             // Delete temporary link token in the database
-            TemporaryLinkModel::delete($email);
-
-            // Remove temporary reset email from session
-            Session::remove('temporaryResetEmail');
+            TemporaryLinkModel::delete($token);
 
             Response::success([], 'Password changed successfully.');
         } catch (ValidationException $e) {
@@ -392,7 +405,7 @@ class AuthEndpoint implements Controller
         } catch (ForbiddenException $e) {
             Response::error('Change Password Failed.', $e->getErrors(), 403);
         } catch (NotFoundException $e) {
-            Response::error('Change Password Failed.', ['User not found.'], 404);
+            Response::error('Change Password Failed.', [$e->getMessage()], 404);
         } catch (Exception $e) {
             Response::error('Change Password Failed.', ['An unexpected error occurred. Please try again.'], 500);
         }
