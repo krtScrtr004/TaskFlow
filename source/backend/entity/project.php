@@ -161,7 +161,6 @@ class Project implements Entity
     /**
      * Gets all tasks associated with the project.
      *
-     * @deprecated Tasks are now managed at the phase level. Access tasks via: $project->getPhases()->...->getTasks()
      * @return TaskContainer|null The container with the project's tasks or null if not set
      */
     public function getTasks(): ?TaskContainer

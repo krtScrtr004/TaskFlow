@@ -95,14 +95,10 @@ async function submit(e) {
         return
     }
 
-    // Handle job titles trailing comma
+    // Handle job titles trailing comma and spaces
     let jobTitlesValue = jobTitlesInput.value.trim()
-    for (const char of jobTitlesInput.value) {
-        if (jobTitlesValue.slice(-1) === ',' || jobTitlesValue.slice(-1) === ' ') {
-            jobTitlesValue = jobTitlesValue.slice(0, -1)
-        } else {
-            break
-        }
+    while (jobTitlesValue.endsWith(',') || jobTitlesValue.endsWith(' ')) {
+        jobTitlesValue = jobTitlesValue.slice(0, -1).trim()
     }
 
     const currentValues = {
