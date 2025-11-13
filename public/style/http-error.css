@@ -9,8 +9,8 @@
 
 .marquee {
 	width: 360px;
-	border-bottom: 3px solid var(--black);
-	background-color: var(--black);
+	border-bottom: 3px solid var(--red);
+	background-color: var(--red);
 	white-space: nowrap;
 }
 
@@ -19,7 +19,7 @@
 	width: 260px;
 	font-size: 24px;
 	font-weight: bold;
-	color: var(--red);
+	color: var(--white);
 	animation: scroll 3s linear infinite;
 }
 
@@ -37,7 +37,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background-color: var(--red);
+	background-color: var(--black);
 }
 
 #ctn {
@@ -50,10 +50,10 @@
 	overflow: hidden;
 }
 
-#forbidden {
+#context {
 	display: inline-block;
 	padding: 5px 10px 5px 10px;
-	border: 2px solid var(--black);
+	border: 2px solid var(--red);
 	border-radius: 8px;
 	font-size: 50px;
 	animation: flash 1s linear infinite;

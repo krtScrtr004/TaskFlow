@@ -46,7 +46,8 @@ class UserController implements Controller
     {
         try {   
             if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException('User session is not authorized to perform this action.');
+                header('Location: ' . REDIRECT_PATH . 'login');
+                exit();
             }
 
             $filter = null;

@@ -62,7 +62,8 @@ class TaskController implements Controller
     {
         try {
             if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException();
+                header('Location: ' . REDIRECT_PATH . 'login');
+                exit();
             }
 
             $projectId = isset($args['projectId'])
@@ -149,7 +150,8 @@ class TaskController implements Controller
     {
         try {
             if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException();
+                header('Location: ' . REDIRECT_PATH . 'login');
+                exit();
             }
 
             $projectId = isset($args['projectId'])

@@ -31,7 +31,7 @@ if (!isset($component)) {
 
                 <div class="text-ctn">ERROR</div>
 
-                <div id="forbidden"><?= $component['title'] ?? 'ERROR OCCURRED' ?></div>
+                <div id="context"><?= $component['title'] ?? 'ERROR OCCURRED' ?></div>
 
                 <div class="text-ctn">HTTP<br><?= $component['status'] ?? '400' ?></div>
 

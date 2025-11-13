@@ -56,7 +56,8 @@ class ProjectController implements Controller
     {
         try {
             if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException();
+                header('Location: ' . REDIRECT_PATH . 'login');
+                exit();
             }
 
             $instance = new self();
@@ -189,7 +190,8 @@ class ProjectController implements Controller
     {
         try {
             if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException();
+                header('Location: ' . REDIRECT_PATH . 'login');
+                exit();
             }
 
             $instance = new self();
@@ -241,7 +243,8 @@ class ProjectController implements Controller
     {
         try {
             if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException();
+                header('Location: ' . REDIRECT_PATH . 'login');
+                exit();
             }
 
             $key = '';

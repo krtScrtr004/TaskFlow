@@ -104,7 +104,8 @@ class SingleFormController implements Controller
             // Ensure user is authorized for protected pages
             if (array_key_exists($page, ['createPassword', 'editProject', 'addTask'])) {
                 if (!SessionAuth::hasAuthorizedSession()) {
-                    throw new ForbiddenException("You must be logged in to access this page.");
+                    header('Location: ' . REDIRECT_PATH . 'login');
+                    exit();
                 }
             }
 
