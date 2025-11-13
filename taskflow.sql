@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 12, 2025 at 08:59 AM
+-- Generation Time: Nov 13, 2025 at 02:03 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -31,7 +31,7 @@ CREATE TABLE `phasetask` (
   `id` int(11) NOT NULL,
   `publicId` binary(16) NOT NULL,
   `phaseId` int(11) NOT NULL,
-  `name` varchar(255) NOT NULL,
+  `name` varchar(50) NOT NULL,
   `description` varchar(1000) DEFAULT NULL,
   `startDateTime` datetime NOT NULL,
   `completionDateTime` datetime NOT NULL,
@@ -102,7 +102,7 @@ CREATE TABLE `project` (
   `id` int(11) NOT NULL,
   `publicId` binary(16) NOT NULL,
   `managerId` int(11) NOT NULL,
-  `name` varchar(255) NOT NULL,
+  `name` varchar(50) NOT NULL,
   `description` varchar(1000) DEFAULT NULL,
   `budget` decimal(21,4) NOT NULL,
   `startDateTime` datetime NOT NULL,
@@ -177,7 +177,7 @@ CREATE TABLE `projectphase` (
   `id` int(11) NOT NULL,
   `publicId` binary(16) NOT NULL,
   `projectId` int(11) NOT NULL,
-  `name` varchar(255) NOT NULL,
+  `name` varchar(50) NOT NULL,
   `description` varchar(1000) DEFAULT NULL,
   `startDateTime` datetime NOT NULL,
   `completionDateTime` datetime NOT NULL,
@@ -269,9 +269,9 @@ CREATE TABLE `temporarylink` (
 CREATE TABLE `user` (
   `id` int(11) NOT NULL,
   `publicId` binary(16) DEFAULT NULL,
-  `firstName` varchar(255) NOT NULL,
-  `middleName` varchar(255) DEFAULT NULL,
-  `lastName` varchar(255) NOT NULL,
+  `firstName` varchar(50) NOT NULL,
+  `middleName` varchar(50) DEFAULT NULL,
+  `lastName` varchar(50) NOT NULL,
   `gender` varchar(10) NOT NULL CHECK (`gender` in ('male','female')),
   `birthDate` date NOT NULL,
   `role` varchar(20) NOT NULL,
@@ -352,6 +352,7 @@ ALTER TABLE `phasetask`
   ADD KEY `idx_phaseTask_phaseId` (`phaseId`),
   ADD KEY `idx_phaseTask_status` (`status`),
   ADD KEY `idx_phaseTask_priority` (`priority`);
+ALTER TABLE `phasetask` ADD FULLTEXT KEY `name` (`name`,`description`);
 
 --
 -- Indexes for table `phasetaskworker`
