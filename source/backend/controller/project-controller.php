@@ -204,7 +204,6 @@ class ProjectController implements Controller
                 $projectId,
                 [
                     'tasks' => true,
-                    'phases' => true,
                     'workers' => true
                 ]
             );
@@ -339,7 +338,7 @@ class ProjectController implements Controller
             if ($project->additionalInfoContains('progress')) {
                 $projectProgress = $project->getAdditionalInfo('progress');
             } else {
-                $phases = $project->getPhases();
+                $phases = PhaseModel::findAllByProjectId($project->getId(), true);
                 $projectProgress = ($phases?->count() > 0)
                     ? ProjectProgressCalculator::calculate($phases)
                     : [
