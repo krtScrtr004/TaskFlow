@@ -12,6 +12,7 @@ use App\Entity\Task;
 use App\Exception\DatabaseException;
 use App\Exception\ValidationException;
 use DateTime;
+use Exception;
 use InvalidArgumentException;
 use PDOException;
 
@@ -80,7 +81,7 @@ class PhaseModel extends Model
     public static function findById(int|UUID $phaseId): ?Phase
     {
         if (!$phaseId) {
-            throw new InvalidArgumentException('Invalid Phase ID.');
+            throw new InvalidArgumentException('Invalid phase ID provided.');
         }
 
         try {
@@ -98,8 +99,8 @@ class PhaseModel extends Model
             ];
 
             return self::find($whereClause, $params, $options)->first();
-        } catch (PDOException $e) {
-            throw new DatabaseException($e->getMessage());
+        } catch (Exception $e) {
+            throw $e;
         }
     }
 
@@ -125,7 +126,7 @@ class PhaseModel extends Model
     public static function findOnGoingByProjectId(int|UUID $projectId): ?Phase
     {
         if ($projectId < 1) {
-            throw new InvalidArgumentException('Invalid Project ID.');
+            throw new InvalidArgumentException('Invalid project ID provided.');
         }
 
         try {
@@ -145,8 +146,8 @@ class PhaseModel extends Model
             ];
 
             return self::find($whereClause, $params, $options)->first();
-        } catch (PDOException $e) {
-            throw new DatabaseException($e->getMessage());
+        } catch (Exception $e) {
+            throw $e;
         }
     }
 
@@ -164,7 +165,7 @@ class PhaseModel extends Model
      * @param DateTime|null $startDateTime The lower boundary for phase start date (inclusive).
      * @param DateTime|null $completionDateTime The upper boundary for phase completion date (inclusive).
      * 
-     * @throws ValidationException If projectId is invalid or both date boundaries are missing.
+     * @throws InvalidArgumentException If projectId is invalid or both date boundaries are missing.
      * 
      * @return self[]|null Array of phase instances matching the criteria, or null if an error occurs.
      */
@@ -174,11 +175,11 @@ class PhaseModel extends Model
         ?DateTime $completionDateTime,
     ) {
         if (is_int($projectId) && $projectId < 1) {
-            throw new ValidationException('Invalid Project ID.');
+            throw new InvalidArgumentException('Invalid project ID provided.');
         }
 
         if (!$startDateTime && !$completionDateTime) {
-            throw new ValidationException('At least one of start date or completion date must be provided.');
+            throw new InvalidArgumentException('At least one of start date or completion date must be provided.');
         }
 
         $instance = new self();
@@ -203,8 +204,8 @@ class PhaseModel extends Model
 
             $whereClause = implode(' AND ', $where);
             return self::find($whereClause, $params);
-        } catch (\Throwable $th) {
-            //throw $th;
+        } catch (Exception $e) {
+            throw $e;
         }
     }
 
@@ -226,7 +227,7 @@ class PhaseModel extends Model
     public static function findAllByProjectId(int|UUID $projectId, bool $includeTasks = false): ?PhaseContainer
     {
         if (is_int($projectId) && $projectId < 1) {
-            throw new InvalidArgumentException('Invalid Project ID.');
+            throw new InvalidArgumentException('Invalid project ID provided.');
         }
 
         try {
@@ -355,8 +356,8 @@ class PhaseModel extends Model
         try {
             $phases = self::find('', [], ['offset' => $offset, 'limit' => $limit]);
             return $phases;
-        } catch (PDOException $th) {
-            throw new DatabaseException($th->getMessage());
+        } catch (Exception $e) {
+            throw $e;
         }
     }
 
@@ -413,7 +414,7 @@ class PhaseModel extends Model
     public static function createMultiple(int $projectId, PhaseContainer $phases): void
     {
         if ($projectId < 1) {
-            throw new InvalidArgumentException('Invalid project ID.');
+            throw new InvalidArgumentException('Invalid project ID provided.');
         }
 
         if ($phases->count() === 0) {
@@ -536,6 +537,10 @@ class PhaseModel extends Model
                     throw new InvalidArgumentException('Phase ID / Public ID is required for each phase in the array.');
                 }
 
+                if (isset($data['id']) && is_int($data['id']) && $data['id'] < 1) {
+                    throw new InvalidArgumentException('Invalid phase ID provided.');
+                }
+
                 $updateFields = [];
                 $params = [];
                 if (isset($data['id'])) {
@@ -598,14 +603,20 @@ class PhaseModel extends Model
      *      - limit: int (default 10) Maximum number of records to return
      * 
      * @return TaskContainer|null Container with tasks for the phase, or null if none found
+     * 
+     * @throws InvalidArgumentException If the provided phase ID is invalid
      * @throws DatabaseException If a database error occurs
      */
     public static function getTasks(int|UUID $phaseId, array $options = []): ?TaskContainer
     {
+        if (is_int($phaseId) && $phaseId < 1) {
+            throw new InvalidArgumentException('Invalid phase ID provided.');
+        }
+
         try {
             return TaskModel::findAllByPhaseId($phaseId, null, null, $options);
-        } catch (PDOException $e) {
-            throw new DatabaseException($e->getMessage());
+        } catch (Exception $e) {
+            throw $e;
         }
     }
 
@@ -618,10 +629,15 @@ class PhaseModel extends Model
      * @param int|UUID $phaseId The phase identifier (integer ID or UUID)
      * 
      * @return Phase|null The Phase object with tasks populated, or null if not found
+     * 
+     * @throws InvalidArgumentException If the provided phase ID is invalid
      * @throws DatabaseException If a database error occurs
      */
     public static function findFull(int|UUID $phaseId): ?Phase
     {
+        if (is_int($phaseId) && $phaseId < 1) {
+            throw new InvalidArgumentException('Invalid phase ID provided.');
+        }
         try {
             // Find the phase
             $whereClause = is_int($phaseId) 

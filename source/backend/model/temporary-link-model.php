@@ -5,6 +5,7 @@ namespace App\Model;
 use App\Abstract\Model;
 use App\Exception\DatabaseException;
 use App\Exception\ValidationException;
+use InvalidArgumentException;
 use PDOException;
 
 class TemporaryLinkModel extends Model
@@ -21,7 +22,7 @@ class TemporaryLinkModel extends Model
      *      - email: string User's email address
      *      - token: string Temporary token for the link
      *
-     * @throws ValidationException If 'email' or 'token' is missing or invalid
+     * @throws InvalidArgumentException If 'email' or 'token' is missing or invalid
      * @throws DatabaseException If a database error occurs during insertion or update
      *
      * @return bool Returns true on successful creation or update of the temporary link
@@ -29,11 +30,11 @@ class TemporaryLinkModel extends Model
     public static function create(mixed $data): mixed
 	{
         if (!isset($data['email']) || !is_string($data['email']) || !trimOrNull($data['email'])) {
-            throw new ValidationException('Invalid email provided for TemporaryLink creation.');
+            throw new InvalidArgumentException('Invalid email provided.');
         }
 
         if (!isset($data['token']) || !is_string($data['token']) || !trimOrNull($data['token'])) {
-            throw new ValidationException('Invalid token provided for TemporaryLink creation.');
+            throw new InvalidArgumentException('Invalid token provided.');
         }
 
         try {
@@ -70,13 +71,13 @@ class TemporaryLinkModel extends Model
      * 
      * @return mixed The found temporary link record as an associative array, or null if not found.
      *
-     * @throws ValidationException If the provided token is invalid.
+     * @throws InvalidArgumentException If the provided token is invalid.
      * @throws DatabaseException If a database error occurs during the search.
      */
     public static function search(string $token): mixed 
     {
         if (!trimOrNull($token)) {
-            throw new ValidationException('Invalid token provided for TemporaryLink search.');
+            throw new InvalidArgumentException('Invalid token provided.');
         }
 
         try {
@@ -113,7 +114,7 @@ class TemporaryLinkModel extends Model
      * @param mixed $token The token associated with the temporary link to delete.
      *                     Must be a non-empty string.
      *
-     * @throws ValidationException If the provided token is invalid.
+     * @throws InvalidArgumentException If the provided token is invalid.
      * @throws DatabaseException If a database error occurs during deletion.
      *
      * @return bool True if a record was deleted, false otherwise.
@@ -121,7 +122,7 @@ class TemporaryLinkModel extends Model
     public static function delete(mixed $token): bool
 	{
         if (!is_string($token) || !trimOrNull($token)) {
-            throw new ValidationException('Invalid token provided for TemporaryLink deletion.');
+            throw new InvalidArgumentException('Invalid token provided.');
         }
 
 		try {

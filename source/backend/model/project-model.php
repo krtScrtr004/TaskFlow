@@ -419,7 +419,7 @@ class ProjectModel extends Model
     public static function findById(int|UUID $projectId): ?Project
     {
         if (is_int($projectId) && $projectId < 1) {
-            throw new InvalidArgumentException('Invalid Project ID.');
+            throw new InvalidArgumentException('Invalid project ID provided.');
         }
 
         try {
@@ -433,8 +433,8 @@ class ProjectModel extends Model
 
             $projects = self::find($whereClause, $params);
             return $projects->first() ?? null;
-        } catch (PDOException $e) {
-            throw new DatabaseException($e->getMessage());
+        } catch (Exception $e) {
+            throw $e;
         }
     }
 
@@ -475,8 +475,8 @@ class ProjectModel extends Model
             }
 
             return self::find($whereClause, $params);
-        } catch (PDOException $e) {
-            throw new DatabaseException($e->getMessage());
+        } catch (Exception $e) {
+            throw $e;
         }
     }
 
@@ -529,8 +529,8 @@ class ProjectModel extends Model
             }
 
             return self::find($whereClause,$param);
-        } catch (PDOException $e) {
-            throw new DatabaseException($e->getMessage());
+        } catch (Exception $e) {
+            throw $e;
         }
     }
 
@@ -568,8 +568,8 @@ class ProjectModel extends Model
 
             $projects = self::find($whereClause, $param, $options);
             return $projects?->first() ?? null;
-        } catch (PDOException $e) {
-            throw new DatabaseException($e->getMessage());
+        } catch (Exception $e) {
+            throw $e;
         }
     }
 
@@ -734,8 +734,8 @@ class ProjectModel extends Model
             $whereClause = implode(' AND ', $whereClauses);
 
             return self::find($whereClause, $params, $options);
-        } catch (PDOException $e) {
-            throw new DatabaseException($e->getMessage());
+        } catch (Exception $e) {
+            throw $e;
         }
     }
 
@@ -777,8 +777,8 @@ class ProjectModel extends Model
                 'orderBy'   => 'createdAt DESC',
             ];
             return self::find('', [], $options);
-        } catch (PDOException $e) {
-            throw new DatabaseException($e->getMessage());
+        } catch (Exception $e) {
+            throw $e;
         }
     }
 
@@ -803,7 +803,7 @@ class ProjectModel extends Model
     public static function create(mixed $project): Project
     {
         if (!($project instanceof Project)) {
-            throw new InvalidArgumentException('Expected instance of Project');
+            throw new InvalidArgumentException('Expected instance of Project.');
         }
 
         $instance = new self();
@@ -895,9 +895,6 @@ class ProjectModel extends Model
         } catch (PDOException $e) {
             $instance->connection->rollBack();
             throw new DatabaseException($e->getMessage());
-        } catch (Exception $e) {
-            $instance->connection->rollBack();
-            throw $e;
         }
     }
 
@@ -926,6 +923,7 @@ class ProjectModel extends Model
      * 
      * @return bool Returns true if save operation was successful
      * 
+     * @throws InvalidArgumentException If required fields are missing or invalid
      * @throws DatabaseException If a database error occurs during the transaction
      */
     public static function save(array $data): bool
@@ -937,12 +935,15 @@ class ProjectModel extends Model
             $updateFields = [];
             $params = [];
 
-            if (isset($data['id']) && is_int($data['id'])) {
+            if (isset($data['id'])) {
+                if (!is_int($data['id']) || $data['id'] < 1) {
+                    throw new InvalidArgumentException('Invalid Project ID provided.');
+                }
                 $params[':id'] = $data['id'];
             } elseif (isset($data['publicId']) && $data['publicId'] instanceof UUID) {
                 $params[':id'] = UUID::toBinary($data['publicId']);
             } else {
-                throw new InvalidArgumentException('Project ID or Public ID must be provided for saving.');
+                throw new InvalidArgumentException('Project ID or Public ID is required.');
             }
 
             if (isset($data['name'])) {

@@ -27,76 +27,6 @@ use PDOException;
 class TaskModel extends Model
 {
     /**
-     * Creates a Task instance from an associative array of database row data.
-     *
-     * This method converts raw database row data into a Task object, handling type conversions and
-     * nested objects as needed:
-     * - Converts date/time strings to DateTime objects
-     * - Converts priority and status to their respective enum types
-     * - Decodes the workers JSON and populates the WorkerContainer with Worker objects
-     * - Converts worker publicId to UUID object
-     * - Converts worker gender to Gender enum
-     * - Converts worker jobTitles JSON to JobTitleContainer
-     *
-     * @param array $row Associative array containing task data with the following keys:
-     *      - taskId: int Task ID
-     *      - taskPublicId: string Task public identifier
-     *      - taskName: string Task name
-     *      - taskDescription: string Task description
-     *      - taskWorkers: string JSON-encoded array of workers
-     *      - taskStartDateTime: string Task start date/time (Y-m-d H:i:s)
-     *      - taskCompletionDateTime: string Task expected completion date/time (Y-m-d H:i:s)
-     *      - taskActualCompletionDateTime: string|null Actual completion date/time (Y-m-d H:i:s) or null
-     *      - taskPriority: string|int Task priority (enum value)
-     *      - taskStatus: string|int Task status (enum value)
-     *      - taskCreatedAt: string Task creation timestamp (Y-m-d H:i:s)
-     *
-     * @return Task New Task instance created from provided data
-     */
-    private static function populate(array $row): Task {
-        $task = Task::createPartial([
-            'id'                        => $row['taskId'],
-            'publicId'                  => $row['taskPublicId'],
-            'name'                      => $row['taskName'],
-            'description'               => $row['taskDescription'],
-            'workers'                   => new WorkerContainer(),
-            'startDateTime'             => new DateTime($row['taskStartDateTime']),
-            'completionDateTime'        => new DateTime($row['taskCompletionDateTime']),
-            'actualCompletionDateTime'  => $row['taskActualCompletionDateTime']
-                ? new DateTime($row['taskActualCompletionDateTime'])
-                : null,
-            'priority'                  => TaskPriority::from($row['taskPriority']),
-            'status'                    => WorkStatus::from($row['taskStatus']),
-            'createdAt'                 => new DateTime($row['taskCreatedAt']),
-            'additionalInfo'            => ['phaseId' => UUID::fromBinary($row['taskPhaseId'])]
-        ]);
-
-        $workers = json_decode($row['taskWorkers'], true) ?? [];
-        foreach ($workers as $worker) {
-            $task->addWorker(Worker::createPartial([
-                'id' => $worker['workerId'],
-                'publicId' => UUID::fromHex($worker['workerPublicId']),
-                'firstName' => $worker['workerFirstName'],
-                'middleName' => $worker['workerMiddleName'],
-                'lastName' => $worker['workerLastName'],
-                'email' => $worker['workerEmail'],
-                'contactNumber' => $worker['workerContactNumber'],
-                'profileLink' => $worker['workerProfileLink'],
-                'gender' => Gender::from($worker['workerGender']),
-                'status' => WorkerStatus::from($worker['workerStatus']),
-                'jobTitles' => isset($worker['workerJobTitles'])
-                    ? new JobTitleContainer(json_decode($worker['workerJobTitles'], true))
-                    : new JobTitleContainer(),
-                'additionalInfo' => [
-                    'totalTasks' => (int)$worker['workerTotalTasks'],
-                    'completedTasks' => (int)$worker['workerCompletedTasks']
-                ]
-            ]));
-        }
-        return $task;
-    }
-
-    /**
      * Finds and retrieves tasks from the database based on specified criteria.
      *
      * This method executes a complex SQL query to fetch tasks along with their associated phase,
@@ -210,7 +140,46 @@ class TaskModel extends Model
 
             $tasks = new TaskContainer();
             foreach ($results as $row) {
-                $tasks->add(self::populate($row));
+                $task = Task::createPartial([
+                    'id'                        => $row['taskId'],
+                    'publicId'                  => $row['taskPublicId'],
+                    'name'                      => $row['taskName'],
+                    'description'               => $row['taskDescription'],
+                    'workers'                   => new WorkerContainer(),
+                    'startDateTime'             => new DateTime($row['taskStartDateTime']),
+                    'completionDateTime'        => new DateTime($row['taskCompletionDateTime']),
+                    'actualCompletionDateTime'  => $row['taskActualCompletionDateTime']
+                        ? new DateTime($row['taskActualCompletionDateTime'])
+                        : null,
+                    'priority'                  => TaskPriority::from($row['taskPriority']),
+                    'status'                    => WorkStatus::from($row['taskStatus']),
+                    'createdAt'                 => new DateTime($row['taskCreatedAt']),
+                    'additionalInfo'            => ['phaseId' => UUID::fromBinary($row['taskPhaseId'])]
+                ]);
+
+                $workers = json_decode($row['taskWorkers'], true) ?? [];
+                foreach ($workers as $worker) {
+                    $task->addWorker(Worker::createPartial([
+                        'id' => $worker['workerId'],
+                        'publicId' => UUID::fromHex($worker['workerPublicId']),
+                        'firstName' => $worker['workerFirstName'],
+                        'middleName' => $worker['workerMiddleName'],
+                        'lastName' => $worker['workerLastName'],
+                        'email' => $worker['workerEmail'],
+                        'contactNumber' => $worker['workerContactNumber'],
+                        'profileLink' => $worker['workerProfileLink'],
+                        'gender' => Gender::from($worker['workerGender']),
+                        'status' => WorkerStatus::from($worker['workerStatus']),
+                        'jobTitles' => isset($worker['workerJobTitles'])
+                            ? new JobTitleContainer(json_decode($worker['workerJobTitles'], true))
+                            : new JobTitleContainer(),
+                        'additionalInfo' => [
+                            'totalTasks' => (int)$worker['workerTotalTasks'],
+                            'completedTasks' => (int)$worker['workerCompletedTasks']
+                        ]
+                    ]));
+                }
+                $tasks->add($task);
             }
             return $tasks;
         } catch (PDOException $e) {
@@ -236,6 +205,7 @@ class TaskModel extends Model
      *
      * @return TaskContainer|null Container of found tasks, or null if no tasks match the criteria.
      *
+     * @throws InvalidArgumentException If an invalid ID is / are provided.
      * @throws Exception If an error occurs during the search operation.
      */
     public static function search( 
@@ -247,8 +217,20 @@ class TaskModel extends Model
         array $options = [
             'limit' => 10,
             'offset' => 0,
-        ]): ?TaskContainer 
-    {
+        ]
+    ): ?TaskContainer {
+        if ($userId && is_int($userId) && $userId < 1) {
+            throw new InvalidArgumentException('Invalid user ID.');
+        }
+
+        if ($phaseId && is_int($phaseId) && $phaseId < 1) {
+            throw new InvalidArgumentException('Invalid phase ID.');
+        }
+
+        if ($projectId && is_int($projectId) && $projectId < 1) {
+            throw new InvalidArgumentException('Invalid project ID.');
+        }
+
         try {
             $where = [];
             $params = [];
@@ -334,18 +316,18 @@ class TaskModel extends Model
      * @param int|UUID|null $phaseId (optional) The unique identifier of the phase (integer or UUID).
      * @param int|UUID|null $projectId (optional) The unique identifier of the project (integer or UUID).
      *
-     * @throws ValidationException If any provided ID is invalid (e.g., less than 1 for integers).
+     * @throws InvalidArgumentException If any provided ID is invalid (e.g., less than 1 for integers).
      * @throws Exception If an error occurs during the query execution.
      *
      * @return Task|null The found Task instance, or null if no matching task exists.
      */
     public static function findById(int|UUID $taskId, int|UUID|null $phaseId = null, int|UUID|null $projectId = null): ?Task {
         if (is_int($taskId) && $taskId < 1) {
-            throw new ValidationException('Invalid Task ID');
+            throw new InvalidArgumentException('Invalid task ID.');
         }
 
         if ($phaseId && is_int($phaseId) && $phaseId < 1) {
-            throw new ValidationException('Invalid Phase ID');
+            throw new InvalidArgumentException('Invalid phase ID.');
         }
 
         try {
@@ -399,7 +381,7 @@ class TaskModel extends Model
      *      - offset: int The starting index for results (default: 0).
      *      - limit: int The maximum number of results to return (default: 10).
      *
-     * @throws ValidationException If the provided phaseId is invalid.
+     * @throws InvalidArgumentException If the provided phaseId is invalid.
      * @throws Exception If an error occurs during query execution.
      *
      * @return TaskContainer|null A container of tasks matching the criteria, or null if none found.
@@ -414,7 +396,7 @@ class TaskModel extends Model
         ]
     ): ?TaskContainer {
         if (is_int($phaseId) && $phaseId < 1) {
-            throw new ValidationException('Invalid Phase ID');
+            throw new InvalidArgumentException('Invalid phase ID.');
         }
 
         try {
@@ -467,7 +449,7 @@ class TaskModel extends Model
      *      - offset: int (default 0) The number of records to skip.
      *      - limit: int (default 10) The maximum number of records to return.
      *
-     * @throws ValidationException If the worker or project ID is invalid.
+     * @throws InvalidArgumentException If the worker or project ID is invalid.
      * @throws Exception If an error occurs during the query.
      *
      * @return TaskContainer|null A container with the found tasks, or null if none found.
@@ -482,11 +464,11 @@ class TaskModel extends Model
         ]
     ): ?TaskContainer {
         if (is_int($workerId) && $workerId < 1) {
-            throw new ValidationException('Invalid Worker ID');
+            throw new InvalidArgumentException('Invalid worker ID.');
         }
 
         if ($projectId && is_int($projectId) && $projectId < 1) {
-            throw new ValidationException('Invalid Project ID');
+            throw new InvalidArgumentException('Invalid project ID.');
         }
 
         try {
@@ -530,14 +512,16 @@ class TaskModel extends Model
      * worker details.
      * 
      * @param int $taskId The ID of the task to find workers for
+     * 
      * @return WorkerContainer|null A container with all workers assigned to the task, or null if no workers are found
-     * @throws ValidationException If the task ID is less than 1
+     * 
+     * @throws InvalidArgumentException If the task ID is less than 1
      * @throws DatabaseException If a database error occurs during the query
      */
     public static function findWorkersByTaskId(int $taskId): ?WorkerContainer
     {
         if ($taskId < 1) {
-            throw new ValidationException('Invalid Task ID');
+            throw new InvalidArgumentException('Invalid task ID.');
         }
 
         $instance = new self();
@@ -693,13 +677,13 @@ class TaskModel extends Model
      *      - count: int The number of tasks with that status
      *      Returns null if no tasks are found for the phase
      * 
-     * @throws ValidationException If the provided phase ID is less than 1
+     * @throws InvalidArgumentException If the provided phase ID is less than 1
      * @throws DatabaseException If a database error occurs during query execution
      */
     public static function findStatusCountByPhaseId(int $phaseId): ?array
     {
         if ($phaseId < 1) {
-            throw new ValidationException('Invalid Phase ID');
+            throw new InvalidArgumentException('Invalid phase ID provided.');
         }
 
         $instance = new self();
@@ -748,13 +732,13 @@ class TaskModel extends Model
      *      - priority: string The priority level of the tasks
      *      - count: int The number of tasks with this priority
      * 
-     * @throws ValidationException If the provided phase ID is less than 1
+     * @throws InvalidArgumentException If the provided phase ID is less than 1
      * @throws DatabaseException If a database error occurs during query execution
      */
     public static function findPriorityCountByPhaseId(int $phaseId): ?array
     {
         if ($phaseId < 1) {
-            throw new ValidationException('Invalid Phase ID');
+            throw new InvalidArgumentException('Invalid phase ID provided.');
         }
 
         $instance = new self();
@@ -797,7 +781,7 @@ class TaskModel extends Model
      *
      * @param int|UUID $taskId The ID or public UUID of the task whose owning project is to be found.
      *
-     * @throws ValidationException If the provided task ID is invalid.
+     * @throws InvalidArgumentException If the provided task ID is invalid.
      * @throws DatabaseException If a database error occurs during the query.
      *
      * @return Project|null The owning Project instance, or null if no project is found for the given task.
@@ -805,7 +789,7 @@ class TaskModel extends Model
     public static function findOwningProject(int|UUID $taskId): ?Project
     {
         if (is_int($taskId) && $taskId < 1) {
-            throw new ValidationException('Invalid Task ID');
+            throw new InvalidArgumentException('Invalid task ID provided.');
         }
 
         $instance = new self();
@@ -942,7 +926,6 @@ class TaskModel extends Model
      *
      * @throws InvalidArgumentException If the provided object is not a Task instance.
      * @throws DatabaseException If a PDOException occurs during database operations.
-     * @throws Exception For any other errors during the process.
      *
      * @return Task The Task object with updated id and publicId after successful insertion.
      */
@@ -1029,9 +1012,6 @@ class TaskModel extends Model
         } catch (PDOException $e) {
             $instance->connection->rollBack();
             throw new DatabaseException($e->getMessage());
-        } catch (Exception $e) {
-            $instance->connection->rollBack();
-            throw $e;
         }
     }
 
@@ -1052,6 +1032,7 @@ class TaskModel extends Model
      *      - actualCompletionDateTime: string|DateTime|null Actual completion date and time (optional)
      *      - workers: WorkerContainer|null Container of worker objects associated with the task (optional)
      *
+     * @throws InvalidArgumentException If the provided task ID is invalid.
      * @throws DatabaseException If a database error occurs during the update process.
      * @return bool True on successful update, false otherwise.
      */
@@ -1062,7 +1043,18 @@ class TaskModel extends Model
             $instance->connection->beginTransaction();
 
             $updateFields = [];
-            $params = [':id' => $data['id']];
+            $params = [];
+            if (isset($data['id'])) {
+                if (!is_int($data['id']) || $data['id'] < 1) {
+                    throw new InvalidArgumentException('Invalid task ID.');
+                }
+
+                $params[':id'] = $data['id'];
+            } elseif (isset($data['publicId'])) {
+                $params[':publicId'] = UUID::toBinary($data['publicId']);
+            } else {
+                throw new InvalidArgumentException('Task ID or Public ID is required.');
+            }
 
             if (isset($data['name'])) {
                 $updateFields[] = 'name = :name';

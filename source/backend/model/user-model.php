@@ -164,8 +164,8 @@ class UserModel extends Model
         try {
             $result = self::find($whereClause, $params, ['limit' => 1]);
             return $result ? $result[0] : null;
-        } catch (PDOException $e) {
-            throw new DatabaseException($e->getMessage());
+        } catch (Exception $e) {
+            throw $e;
         }
     }
 
@@ -185,8 +185,8 @@ class UserModel extends Model
         try {
             $result = self::find('email = :email AND deletedAt IS NULL', [':email' => $email], ['limit' => 1]);
             return $result ? $result[0] : null;
-        } catch (PDOException $e) {
-            throw new DatabaseException($e->getMessage());
+        } catch (Exception $e) {
+            throw $e;
         }
     }
 
@@ -311,8 +311,8 @@ class UserModel extends Model
         try {
             $whereClause = $includeDeleted ? '' : 'deletedAt IS NULL';
             return self::find($whereClause, [], ['offset' => $offset, 'limit' => $limit]) ?: null;
-        } catch (PDOException $e) {
-            throw new DatabaseException($e->getMessage());
+        } catch (Exception $e) {
+            throw $e;
         }
     }
 
@@ -574,7 +574,7 @@ class UserModel extends Model
      *      - jobTitles: array Contains 'toRemove' and 'toAdd' arrays for job titles
      *
      * @throws DatabaseException If a database error occurs
-     * @throws ValidationException If validation fails (e.g., missing ID or publicId)
+     * @throws InvalidArgumentException If validation fails (e.g., missing ID or publicId)
      * @return bool True on successful update, false otherwise
      */
     public static function save(array $data): bool
@@ -586,11 +586,15 @@ class UserModel extends Model
             $updateFields = [];
             $params = [];
             if (isset($data['id'])) {
+                if (!is_int($data['id']) || $data['id'] < 1) {
+                    throw new InvalidArgumentException('Invalid user ID provided.');
+                }
+
                 $params[':id'] = $data['id'];
             } elseif (isset($data['publicId'])) {
                 $params[':publicId'] = UUID::toBinary($data['publicId']);
             } else {
-                throw new InvalidArgumentException('User ID or Public ID is required for update.');
+                throw new InvalidArgumentException('User ID or Public ID is required.');
             }
 
             if (isset($data['firstName'])) {
@@ -667,9 +671,6 @@ class UserModel extends Model
         } catch (PDOException $e) {
             $instance->connection->rollBack();
             throw new DatabaseException($e->getMessage());
-        } catch (InvalidArgumentException $e) {
-            $instance->connection->rollBack();
-            throw new ValidationException('Profile edit failed.', [$e->getMessage()]);
         }
     }
 

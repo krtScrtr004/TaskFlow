@@ -145,6 +145,7 @@ class ProjectWorkerModel extends Model
      *
      * @return WorkerContainer|null A WorkerContainer with matching Worker instances, or null if no results found.
      *
+     * @throws InvalidArgumentException If an invalid project ID is provided.
      * @throws DatabaseException If a database error occurs during the search.
      */
     public static function search(
@@ -156,6 +157,10 @@ class ProjectWorkerModel extends Model
             'offset' => 0,
         ]
     ): ?WorkerContainer {
+        if ($projectId && is_int($projectId) && $projectId < 1) {
+            throw new InvalidArgumentException('Invalid project ID provided.');
+        }
+
         try {
             $instance = new self();
 
@@ -895,6 +900,10 @@ class ProjectWorkerModel extends Model
             throw new InvalidArgumentException('No data provided.');
         }
 
+        if (is_int($projectId) && $projectId < 1) {
+            throw new InvalidArgumentException('Invalid project ID provided.');
+        }
+
         $projectId = ($projectId instanceof UUID)
             ? UUID::toBinary($projectId)
             : $projectId;
@@ -1059,16 +1068,20 @@ class ProjectWorkerModel extends Model
 
             // Determine identifier clause: prefer numeric/internal id when provided
             if (isset($data['id'])) {
+                if (!is_int($data['id']) || $data['id'] < 1) {
+                    throw new InvalidArgumentException('Invalid Project Worker ID provided.');
+                }
+
                 $where = 'id = :id';
                 $params[':id'] = $data['id'];
             } else {
                 // Require projectId and workerId when id is not provided
                 if (!isset($data['projectId'])) {
-                    throw new InvalidArgumentException('Project ID must be provided.');
+                    throw new InvalidArgumentException('Project ID is required.');
                 }
 
                 if (!isset($data['workerId'])) {
-                    throw new InvalidArgumentException('Worker ID must be provided.');
+                    throw new InvalidArgumentException('Worker ID is required.');
                 }
 
                 $whereParts = [];

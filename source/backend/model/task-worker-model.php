@@ -299,7 +299,7 @@ class TaskWorkerModel extends Model
     public static function findByTaskId(int|UUID $taskId): ?WorkerContainer
     {
         if (is_int($taskId) && $taskId < 1) {
-            throw new InvalidArgumentException('Invalid taskId provided.');
+            throw new InvalidArgumentException('Invalid task ID provided.');
         }
 
         try {
@@ -357,7 +357,7 @@ class TaskWorkerModel extends Model
             if ($status === WorkerStatus::UNASSIGNED) {
                 // For unassigned: start with project workers, then filter out those on tasks
                 if (!$projectId) {
-                    throw new InvalidArgumentException('Project ID is required when searching for unassigned task workers.');
+                    throw new InvalidArgumentException('Project ID is required.');
                 }
 
                 $query = "
@@ -634,6 +634,10 @@ class TaskWorkerModel extends Model
      */
     public static function createMultiple(int|UUID $taskId, array $data): void
     {
+        if (is_int($taskId) && $taskId < 1) {
+            throw new InvalidArgumentException('Invalid task ID provided.');
+        }
+
         if (empty($data)) {
             throw new InvalidArgumentException('No data provided.');
         }
@@ -694,12 +698,12 @@ class TaskWorkerModel extends Model
                 $params[':id'] = $data['id'];
             } else {
                 // Require taskId and workerId when id is not provided
-                if (!isset($data['taskId'])) {
-                    throw new InvalidArgumentException('Task ID must be provided.');
+                if (is_int($data['taskId']) && $data['taskId'] < 1) {
+                    throw new InvalidArgumentException('Invalid task ID provided.');
                 }
 
-                if (!isset($data['workerId'])) {
-                    throw new InvalidArgumentException('Worker ID must be provided.');
+                if (is_int($data['workerId']) && $data['workerId'] < 1) {
+                    throw new InvalidArgumentException('Invalid worker ID provided.');
                 }
 
                 $whereParts = [];
