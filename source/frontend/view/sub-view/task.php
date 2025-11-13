@@ -2,23 +2,30 @@
 
 use App\Core\Me;
 use App\Core\UUID;
+use App\Dependent\Phase;
 use App\Entity\Project;
 use App\Entity\Task;
 use App\Enumeration\Role;
 use App\Enumeration\WorkStatus;
 use App\Enumeration\TaskPriority;
 use App\Exception\NotFoundException;
+use App\Middleware\Csrf;
 
 if (!isset($project) || !$project instanceof Project) {
     throw new NotFoundException('Project is not defined.');
+}
+
+if (!isset($phase) || !$phase instanceof Phase) {
+    throw new NotFoundException('Phase is not defined.');
 }
 
 if (!isset($task) || !$task instanceof Task) {
     throw new NotFoundException('Task is not defined.');
 }
 
-$projectData = [
-    'id' => htmlspecialchars(UUID::toString($project->getPublicId()))
+$otherData = [
+    'projectId' => htmlspecialchars(UUID::toString($project->getPublicId())),
+    'phaseId'   => htmlspecialchars(UUID::toString($phase->getPublicId()))
 ];
 
 $taskData = [
@@ -42,6 +49,7 @@ $isTaskEditable = $task->getStatus() !== WorkStatus::COMPLETED && $task->getStat
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<?= Csrf::get() ?>">
 
     <title><?= $taskData['name'] ?? 'Task' ?></title>
 
@@ -63,7 +71,9 @@ $isTaskEditable = $task->getStatus() !== WorkStatus::COMPLETED && $task->getStat
     require_once COMPONENT_PATH . 'template/add-worker-modal.php';
     ?>
 
-    <main class="view-task-info main-page flex-col" data-projectid="<?= $projectData['id'] ?>"
+    <main class="view-task-info main-page flex-col" 
+        data-projectid="<?= $otherData['projectId'] ?>"
+        data-phaseid="<?= $otherData['phaseId'] ?>"
         data-taskid="<?= $taskData['id'] ?>">
 
         <!-- Task Info -->
@@ -71,6 +81,10 @@ $isTaskEditable = $task->getStatus() !== WorkStatus::COMPLETED && $task->getStat
 
             <!-- Task Name and Status -->
             <div class="main flex-row">
+                <button class="back-button unset_button">
+                    <img src="<?= ICON_PATH . 'back.svg' ?>" alt="Back" title="Back" height="24" width="20">
+                </button>
+
                 <div class="heading text-w-icon">
                     <img src="<?= ICON_PATH . 'task_w.svg' ?>" alt="<?= $taskData['name'] ?>"
                         title="<?= $taskData['name'] ?>" height="24">
@@ -80,7 +94,9 @@ $isTaskEditable = $task->getStatus() !== WorkStatus::COMPLETED && $task->getStat
                     </h3>
                 </div>
 
-                <?= WorkStatus::badge($taskData['status']) ?>
+                <div class="center-child">
+                    <?= WorkStatus::badge($taskData['status']) ?>
+                </div>
             </div>
 
             <p class="task-id"><em><?= $taskData['id'] ?></em></p>
@@ -114,15 +130,20 @@ $isTaskEditable = $task->getStatus() !== WorkStatus::COMPLETED && $task->getStat
                     </p>
                 </div>
 
-                <!-- Task Actual Completion Date -->
-                <div 
-                    class="task-actual-completion-datetime no-display" 
-                    data-actualCompletionDatetime="<?= 
-                        $taskData['actualCompletionDateTime'] ?
-                        htmlspecialchars(
-                            formatDateTime($taskData['actualCompletionDateTime']))
-                            : null ?>">
-                </div>
+                <span class="task-actual-completion-datetime" data-actualCompletionDateTime="<?= ($taskData['actualCompletionDateTime'] ? htmlspecialchars(formatDateTime($taskData['actualCompletionDateTime'])) : '') ?>"></span>
+                <?php if ($taskData['status'] === WorkStatus::COMPLETED): ?>
+                    <div class="text-w-icon">
+                        <img src="<?= ICON_PATH . 'complete_w.svg' ?>" alt="Completed At" title="Completed At"
+                            height="16">
+
+                        <p>Completed At: 
+                            <span>
+                                <?= htmlspecialchars(dateToWords($taskData['actualCompletionDateTime'])) ?>
+                            </span>
+                        </p>                    
+                    </div>
+                <?php endif; ?>
+
             </div>
 
             <!-- Task Priority -->
@@ -205,6 +226,7 @@ $isTaskEditable = $task->getStatus() !== WorkStatus::COMPLETED && $task->getStat
         </section>
     </main>
 
+    <script type="module" src="<?= EVENT_PATH . 'back-button.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'logout.js' ?>" defer></script>
 
     <script type="module" src="<?= EVENT_PATH . 'tasks' . DS . 'create-worker-card.js' ?>" defer></script>

@@ -18,8 +18,10 @@ use App\Exception\NotFoundException;
 use App\Middleware\Csrf;
 use App\Model\ProjectWorkerModel;
 use App\Model\WorkerModel;
+use App\Utility\ResponseExceptionHandler;
 use App\Utility\WorkerPerformanceCalculator;
 use Exception;
+use Throwable;
 
 // TODO: CHECK IF THE REQUEST HAS PROJECT ID;
 // IF NOT, RETURN UNASSIGNED WORKERS
@@ -52,11 +54,11 @@ class ProjectWorkerEndpoint
     {
         try {
             if (!HttpAuth::isGETRequest()) {
-                throw new ForbiddenException('Invalid request method. GET request required.');
+                throw new ForbiddenException('Invalid HTTP request method.');
             }
 
             if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException('User session is not authorized to perform this action.');
+                throw new ForbiddenException();
             }
 
             $workerId = isset($args['workerId'])
@@ -87,14 +89,8 @@ class ProjectWorkerEndpoint
             $performance = WorkerPerformanceCalculator::calculate($worker->getAdditionalInfo('projectHistory'));
             $worker->addAdditionalInfo('performance', $performance['overallScore']);
             Response::success([$worker], 'Worker fetched successfully.');
-        } catch (ValidationException $e) {
-            Response::error('Validation Failed.',$e->getErrors(),422);
-        } catch (NotFoundException $e) {
-            Response::error('Resource Not Found.', [$e->getMessage()], 404);
-        } catch (ForbiddenException $e) {
-            Response::error('Forbidden.', [], 403);
-        } catch (Exception $e) {
-            Response::error('Unexpected Error.', ['An unexpected error occurred. Please try again.'], 500);
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Worker Fetch Failed.', $e);
         }
     }
 
@@ -133,11 +129,11 @@ class ProjectWorkerEndpoint
     {
         try {
             if (!HttpAuth::isGETRequest()) {
-                throw new ForbiddenException('Invalid request method. GET request required.');
+                throw new ForbiddenException('Invalid HTTP request method.');
             }
 
             if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException('User session is not authorized to perform this action.');
+                throw new ForbiddenException();
             }
 
             $projectId = isset($args['projectId'])
@@ -175,7 +171,7 @@ class ProjectWorkerEndpoint
                 if (isset($_GET['excludeProjectTerminated']) && trim($_GET['excludeProjectTerminated']) !== '') {
                     $excludeProjectTerminated = (bool) $_GET['excludeProjectTerminated'];
                     if ($excludeProjectTerminated && !isset($projectId)) {
-                        throw new ForbiddenException('Project ID is required when excluding terminated project workers.');
+                        throw new ForbiddenException('Project ID is required to exclude terminated workers.');
                     }
                 }
 
@@ -199,12 +195,8 @@ class ProjectWorkerEndpoint
                 }
                 Response::success($return, 'Workers fetched successfully.');
             }
-        } catch (ValidationException $e) {
-            Response::error('Validation Failed.',$e->getErrors(),422);
-        } catch (ForbiddenException $e) {
-            Response::error('Forbidden.', [], 403);
-        } catch (Exception $e) {
-            Response::error('Unexpected Error.', ['An unexpected error occurred. Please try again.'], 500);
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Workers Fetch Failed.', $e);
         }
     }
 
@@ -237,7 +229,7 @@ class ProjectWorkerEndpoint
     {
         try {
             if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException('User session is not authorized to perform this action.');
+                throw new ForbiddenException();
             }
             Csrf::protect();
 
@@ -270,20 +262,43 @@ class ProjectWorkerEndpoint
             ProjectWorkerModel::createMultiple($project->getId(), $ids);
             
             Response::success([], 'Workers added successfully.');
-        } catch (ValidationException $e) {
-            Response::error('Validation Failed.',$e->getErrors(),422);
-        } catch (ForbiddenException $e) {
-            Response::error('Forbidden.', [], 403);
-        } catch (Exception $e) {
-            Response::error('Unexpected Error.', ['An unexpected error occurred. Please try again.'], 500);
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Add Workers Failed.', $e);
         }
     }
 
+    /**
+     * Edits the status of a worker assigned to a project.
+     *
+     * This method performs the following actions:
+     * - Checks if the user session is authorized.
+     * - Protects against CSRF attacks.
+     * - Validates and retrieves the project ID and worker ID from the input arguments.
+     * - Finds the corresponding project and worker records.
+     * - Decodes the input data from the request body.
+     * - Updates the worker's status for the specified project.
+     * - Returns a success response if the update is successful.
+     * - Handles validation, authorization, and unexpected errors with appropriate responses.
+     *
+     * @param array $args Associative array containing:
+     *      - projectId: string|UUID Project identifier
+     *      - workerId: string|UUID Worker identifier
+     * 
+     * Input Data (decoded from request body):
+     *      - status: string|WorkerStatus New status for the worker
+     *
+     * @throws ForbiddenException If the session is unauthorized or required IDs are missing.
+     * @throws NotFoundException If the project or worker is not found.
+     * @throws ValidationException If the input data cannot be decoded or is invalid.
+     * @throws Exception For any other unexpected errors.
+     *
+     * @return void
+     */
     public static function edit(array $args = []): void
     {
         try {
             if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException('User session is not authorized to perform this action.');
+                throw new ForbiddenException();
             }
             Csrf::protect();
 
@@ -299,7 +314,9 @@ class ProjectWorkerEndpoint
                 throw new NotFoundException('Project not found.');
             }
 
-            $workerId = $args['workerId'] ?? null;
+            $workerId = isset($args['workerId']) 
+                ? UUID::fromString($args['workerId']) 
+                : null;
             if (!isset($workerId)) {
                 throw new ForbiddenException('Worker ID is required.');
             }
@@ -321,12 +338,8 @@ class ProjectWorkerEndpoint
             ]);
 
             Response::success([], 'Worker status updated successfully.');
-        } catch (ValidationException $e) {
-            Response::error('Validation Failed.',$e->getErrors(),422);
-        } catch (ForbiddenException $e) {
-            Response::error('Forbidden.', [], 403);
-        } catch (Exception $e) {
-            Response::error('Unexpected Error.', ['An unexpected error occurred. Please try again.'], 500);
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Edit Worker Status Failed.', $e);
         }
     }
 }

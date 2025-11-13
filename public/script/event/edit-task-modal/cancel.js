@@ -10,7 +10,6 @@ let isLoading = false
 
 const viewTaskInfo = document.querySelector('.view-task-info')
 const cancelTaskButton = viewTaskInfo.querySelector('#cancel_task_button')
-
 if (!cancelTaskButton) {
     console.error('Cancel Task button not found.')
 }
@@ -18,24 +17,26 @@ if (!cancelTaskButton) {
 cancelTaskButton?.addEventListener('click', e => debounceAsync(submit(e), 3000))
 
 /**
- * Handles the submission event for cancelling a task.
+ * Handles the cancellation of a task via a modal form submission.
  *
  * This function performs the following steps:
  * - Prevents the default form submission behavior.
- * - Prompts the user with a confirmation dialog to ensure they want to cancel the task.
- * - Retrieves the project and task IDs from the `viewTaskInfo` dataset.
- * - Displays a loading indicator on the cancel button.
+ * - Displays a confirmation dialog to the user.
+ * - Validates the presence of required dataset attributes: projectId, phaseId, and taskId.
+ * - Shows a loading indicator while processing the cancellation.
  * - Sends a cancellation request to the backend.
- * - Reloads the page upon successful cancellation.
- * - Handles and logs any errors that occur during the process.
- * - Removes the loading indicator after the operation completes.
+ * - Reloads the page upon successful cancellation to reflect changes.
+ * - Handles errors and displays appropriate error dialogs.
+ * - Removes the loading indicator after completion.
  *
  * @async
- * @param {Event} e The event object from the form submission.
+ * @param {Event} e The form submission event.
  * @returns {Promise<void>} Resolves when the cancellation process is complete.
  */
 async function submit(e) {
     e.preventDefault()
+
+    Loader.patch(cancelTaskButton.querySelector('.text-w-icon'))
 
     // Show confirmation dialog
     if (!await confirmationDialog(
@@ -49,7 +50,14 @@ async function submit(e) {
         Dialog.somethingWentWrong()
         return
     }
-    
+
+    const phaseId = viewTaskInfo.dataset.phaseid
+    if (!phaseId) {
+        console.error('Phase ID not found.')
+        Dialog.somethingWentWrong()
+        return
+    }
+
     const taskId = viewTaskInfo.dataset.taskid
     if (!taskId) {
         console.error('Task ID not found.')
@@ -57,9 +65,8 @@ async function submit(e) {
         return
     }
 
-    Loader.patch(cancelTaskButton.querySelector('.text-w-icon'))
     try {
-        await sendToBackend(projectId, taskId)
+        await sendToBackend(projectId, phaseId, taskId)
         // Reload the page to reflect changes
         window.location.reload()
     } catch (error) {
@@ -70,20 +77,22 @@ async function submit(e) {
 }
 
 /**
- * Sends a request to the backend to cancel a specific task within a project.
+ * Sends a request to the backend to cancel a specific task within a project phase.
  *
  * This function performs the following actions:
- * - Checks if a request is already in progress and prevents duplicate requests.
- * - Validates that both projectId and taskId are provided.
+ * - Validates that projectId, phaseId, and taskId are provided.
+ * - Prevents concurrent requests using an isLoading flag.
  * - Sends an HTTP PUT request to update the task status to 'cancelled'.
- * - Handles errors and ensures the loading state is properly managed.
+ * - Handles errors and ensures the loading state is reset.
  *
- * @param {string} projectId The unique identifier of the project containing the task.
+ * @param {string} projectId The unique identifier of the project.
+ * @param {string} phaseId The unique identifier of the phase within the project.
  * @param {string} taskId The unique identifier of the task to be cancelled.
- * @throws {Error} Throws an error if projectId or taskId is missing, or if the HTTP request fails.
- * @returns {Promise<void>} Resolves when the request completes successfully; rejects if an error occurs.
+ * 
+ * @throws {Error} If any of the required parameters are missing or if the request fails.
+ * @returns {Promise<void>} Resolves when the backend request completes.
  */
-async function sendToBackend(projectId, taskId) {
+async function sendToBackend(projectId, phaseId, taskId) {
     try {
         if (isLoading) {
             console.warn('Request is already in progress. Please wait.')
@@ -95,11 +104,15 @@ async function sendToBackend(projectId, taskId) {
             throw new Error('Project ID is required.')
         }
 
+        if (!phaseId) {
+            throw new Error('Phase ID is required.')
+        }
+
         if (!taskId) {
             throw new Error('Task ID is required.')
         }
 
-        const response = await Http.PUT(`projects/${projectId}/tasks/${taskId}`, { status: 'cancelled' })
+        const response = await Http.PUT(`projects/${projectId}/phases/${phaseId}/tasks/${taskId}`, { status: 'cancelled' })
         if (!response) {
             throw error
         }

@@ -56,21 +56,20 @@ export const Http = (() => {
                 method
             }
 
-            if (body !== null && ['POST', 'PUT', 'PATCH'].includes(method)) {
-                if (serialize) {
-                    options.headers = {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-Token': document.querySelector('input[type="hidden"]#csrf_token').value
-                    }
-                    options.body = JSON.stringify(body)
-                } else {
-                    // Don't set Content-Type for FormData - browser will set it with boundary
-                    options.body = body
-                    options.headers = {
-                        'X-CSRF-Token': document.querySelector('input[type="hidden"]#csrf_token').value
+            if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+                options.headers = {
+                    'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+
+                if (body) {
+                    if (serialize) {
+                        options.headers['Content-Type'] = 'application/json'
+                        options.body = JSON.stringify(body)
+                    } else {
+                        // Don't set Content-Type for FormData - browser will set it with boundary
+                        options.body = body
                     }
                 }
-                
             }
 
             const request = await fetch(`${apiUrl}${endpoint}`, options)
@@ -88,17 +87,17 @@ export const Http = (() => {
                     }
 
                     switch (request.status) {
-                        case 401:
-                            errorData.message = 'Unauthorized'
+                        case 422:
+                            errorData.message = 'Validation Error'
                             break
                         case 403:
-                            errorData.message = 'Forbidden'
+                            errorData.message = errorData.errors[0] || 'Forbidden'
                             break
                         case 404:
-                            errorData.message = 'Resource not found'
+                            errorData.message = errorData.errors[0] || 'Resource Not Found'
                             break
                         default:
-                            errorData.message = 'HTTP Error'
+                            errorData.message = errorData.errors[0] || 'HTTP Error'
                     }
                 }
 

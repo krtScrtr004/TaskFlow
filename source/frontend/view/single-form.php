@@ -1,4 +1,7 @@
 <?php
+
+use App\Middleware\Csrf;
+
 if (!$component)
     throw new Error('Component is not defined');
 ?>
@@ -9,7 +12,7 @@ if (!$component)
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrfToken" content="<?= App\Middleware\Csrf::get() ?>">
+    <meta name="csrf-token" content="<?= Csrf::get() ?>">
 
     <title><?= $component['title'] ?></title>
 

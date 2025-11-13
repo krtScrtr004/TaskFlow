@@ -6,6 +6,7 @@ import { Notification } from '../../render/notification.js'
 import { validateInputs, userValidationRules } from '../../utility/validator.js'
 import { debounceAsync } from '../../utility/debounce.js'
 import { handleException } from '../../utility/handle-exception.js'
+import { normalizeDateFormat } from '../../utility/utility.js'
 
 let isLoading = false
 
@@ -43,6 +44,8 @@ registerButton?.addEventListener('click', e => debounceAsync(submit(e), 300))
 async function submit(e) {
     e.preventDefault()
 
+    Loader.patch(registerButton.querySelector('.text-w-icon'))
+
     // Retrieve input fields from the form
     const firstNameInput = registerForm.querySelector('#register_first_name')
     const middleNameInput = registerForm.querySelector('#register_middle_name')
@@ -59,13 +62,20 @@ async function submit(e) {
         throw new Error('One or more form inputs not found.')
     }
 
+    // Handle job titles trailing comma and spaces
+    let jobTitlesValue = jobTitlesInput.value.trim()
+    while (jobTitlesValue.endsWith(',') || jobTitlesValue.endsWith(' ')) {
+        jobTitlesValue = jobTitlesValue.slice(0, -1).trim()
+    }
+
+
     const inputs = {
         firstName: firstNameInput.value.trim(),
         middleName: middleNameInput.value.trim(),
         lastName: lastNameInput.value.trim(),
         gender: genderInput.value.trim(),
-        birthDate: birthDateInput.value.trim(),
-        jobTitles: jobTitlesInput.value.trim(),
+        birthDate: normalizeDateFormat(birthDateInput.value),
+        jobTitles: jobTitlesValue,
         contactNumber: contactInput.value.trim(),
         email: emailInput.value.trim(),
         password: passwordInput.value.trim(),
@@ -77,13 +87,11 @@ async function submit(e) {
         return
     }
 
-    Loader.patch(registerButton.querySelector('.text-w-icon'))
     try {
         await sendToBackend(...Object.values(inputs))
 
-        const delay = 1500
-        setTimeout(() => window.location.href = '/TaskFlow/home', delay)
-        Notification.success('Registration successful!', delay)
+        Dialog.operationSuccess('Registration Successful', 'A confirmation email has been sent to your email address. Please verify your email before logging in.')
+        setTimeout(() => window.location.href = '/TaskFlow/login', 2000)
     } catch (error) {
         handleException(error, `Error during register: ${error}`)
     } finally {

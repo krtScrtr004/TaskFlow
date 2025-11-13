@@ -4,6 +4,7 @@ use App\Core\Me;
 use App\Model\ProjectModel;
 use App\Enumeration\Role;
 use App\Enumeration\WorkStatus;
+use App\Middleware\Csrf;
 use App\Utility\ProjectManagerPerformanceCalculator;
 use App\Utility\WorkerPerformanceCalculator;
 
@@ -33,6 +34,7 @@ if (isset($projects)) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<?= Csrf::get() ?>">
 
     <title>Projects</title>
 

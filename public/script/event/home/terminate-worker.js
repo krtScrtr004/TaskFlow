@@ -19,7 +19,7 @@ import { handleException } from '../../utility/handle-exception.js'
         const endpoint = `projects/${projectId}`
         const workerContainer = projectContainer?.querySelector('.worker-list')
         // Initialize terminate worker functionality
-        terminateWorker(projectId, workerContainer, '.worker-list-card', endpoint)
+        terminateWorker(projectId, workerContainer, '.user-list-card', endpoint)
     } catch (error) {
         handleException(error, 'Error initializing terminate worker functionality:', error)
     }

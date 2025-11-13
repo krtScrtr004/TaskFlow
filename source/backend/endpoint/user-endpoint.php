@@ -22,9 +22,12 @@ use App\Enumeration\WorkerStatus;
 use App\Enumeration\WorkStatus;
 use App\Exception\NotFoundException;
 use App\Utility\PictureUpload;
+use App\Utility\ResponseExceptionHandler;
 use App\Utility\WorkerPerformanceCalculator;
 use App\Validator\UserValidator;
+use DateTime;
 use Exception;
+use Throwable;
 use ValueError;
 
 class UserEndpoint
@@ -51,18 +54,18 @@ class UserEndpoint
     {
         try {
             if (!HttpAuth::isGETRequest()) {
-                throw new ForbiddenException('Invalid request method. GET request required.');
+                throw new ForbiddenException('Invalid HTTP request method.');
             }
 
             if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException('User session is not authorized to perform this action.');
+                throw new ForbiddenException();
             }
 
             $userId = isset($args['userId'])
                 ? UUID::fromString($args['userId'])
                 : null;
             if (!$userId) {
-                throw new ValidationException('User ID is required.');
+                throw new ForbiddenException('User ID is required.');
             }
 
             $user = UserModel::findById($userId);
@@ -71,12 +74,8 @@ class UserEndpoint
             } else {
                 Response::success([$user], 'User fetched successfully.');
             }
-        } catch (ValidationException $e) {
-            Response::error('Validation Failed.', $e->getErrors(), 422);
-        } catch (ForbiddenException $e) {
-            Response::error('Forbidden.', [], 403);
-        } catch (Exception $e) {
-            Response::error('Unexpected Error.', ['An unexpected error occurred. Please try again.'], 500);
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Get User Failed.', $e);
         }
     }
 
@@ -108,15 +107,15 @@ class UserEndpoint
     {
         try {
             if (!HttpAuth::isGETRequest()) {
-                throw new ForbiddenException('Invalid request method. GET request required.');
+                throw new ForbiddenException('Invalid HTTP request method.');
             }
 
             if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException('User session is not authorized to perform this action.');
+                throw new ForbiddenException();
             }
 
             $filter = null;
-            if (isset($_GET['filter']) && trim($_GET['filter']) !== '') {
+            if (isset($_GET['filter']) && trim($_GET['filter']) !== '' && $_GET['filter'] !== 'all') {
                 try {
                     $filter = Role::from($_GET['filter']);
                 } catch (ValueError $e) {
@@ -143,12 +142,8 @@ class UserEndpoint
                 }
                 Response::success($return, 'Users fetched successfully.');
             }
-        } catch (ValidationException $e) {
-            Response::error('Validation Failed.', $e->getErrors(), 422);
-        } catch (ForbiddenException $e) {
-            Response::error('Forbidden.', [], 403);
-        } catch (Exception $e) {
-            Response::error('Unexpected Error.', ['An unexpected error occurred. Please try again.'], 500);
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Get Users Failed.', $e);
         }
     }
 
@@ -181,7 +176,7 @@ class UserEndpoint
     {
         try {
             if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException('User session is not allowed to edit projects.');
+                throw new ForbiddenException();
             }
             Csrf::protect();
 
@@ -220,6 +215,10 @@ class UserEndpoint
                 $profileData['bio'] = trim($data['bio']);
             }
 
+            if (isset($data['birthDate'])) {
+                $profileData['birthDate'] = new DateTime(trim($data['birthDate']));
+            }
+
             if (isset($data['jobTitles'])) {
                 $profileData['jobTitles']['toAdd'] = JobTitleContainer::fromArray($data['jobTitles']['toAdd'] ?? []);
                 $profileData['jobTitles']['toRemove'] = JobTitleContainer::fromArray($data['jobTitles']['toRemove'] ?? []);
@@ -229,10 +228,28 @@ class UserEndpoint
                 $profileData['password'] = $data['password'];
             }
 
+            if (isset($data['confirm'])) {
+                $profileData['confirm'] = (bool) $data['confirm'];
+            }
+
             if (count($_FILES) > 0 && isset($_FILES['profilePicture'])) {
                 // Handle profile picture upload
                 $profileLink = PictureUpload::upload($_FILES['profilePicture']);
                 $profileData['profileLink'] = $profileLink;
+            }
+
+            if (isset($profileData['contactNumber'])) {
+                // Check for duplicate email or contact number
+                $duplicates = UserModel::hasDuplicateInfo(
+                    null,
+                    $profileData['contactNumber'] ?? null,
+                    Me::getInstance()->getId()
+                );
+
+                $duplicateErrors = [];
+                if (isset($duplicates['contactNumber']) && $duplicates['contactNumber']) {
+                    throw new ValidationException('Profile Edit failed.', ['Contact number is already in use by another user.']);
+                }
             }
 
             // Validate and update profile data
@@ -241,19 +258,19 @@ class UserEndpoint
                 'firstName' => $profileData['firstName'] ?? null,
                 'middleName' => $profileData['middleName'] ?? null,
                 'lastName' => $profileData['lastName'] ?? null,
-                'email' => $profileData['email'] ?? null,
+                'birthDate' => $profileData['birthDate'] ?? null,
                 'contactNumber' => $profileData['contactNumber'] ?? null,
                 'bio' => $profileData['bio'] ?? null,
                 'password' => $profileData['password'] ?? null
             ]);
-            if (isset($profileData['jobTitles']['toAdd'])) {
+            if (isset($profileData['jobTitles']['toAdd']) && $profileData['jobTitles']['toAdd']->count() > 0) {
                 $validator->validateJobTitles($profileData['jobTitles']['toAdd']);
             }
-            if (isset($profileData['jobTitles']['toRemove'])) {
+            if (isset($profileData['jobTitles']['toRemove']) && $profileData['jobTitles']['toRemove']->count() > 0) {
                 $validator->validateJobTitles($profileData['jobTitles']['toRemove']);
             }
             if ($validator->hasErrors()) {
-                throw new ValidationException('Profile edit failed.', $validator->getErrors());
+                throw new ValidationException('Profile Edit failed.', $validator->getErrors());
             }
 
             if (count($profileData) > 0) {
@@ -278,23 +295,82 @@ class UserEndpoint
                         'role'              => $updatedUser->getRole()->value,
                         'jobTitles'         => implode(',', $updatedUser->getJobTitles()->toArray()),
                         'contactNumber'     => $updatedUser->getContactNumber(),
-                        'email'             => $updatedUser->getEmail(),
                         'bio'               => $updatedUser->getBio(),
                         'profileLink'       => $updatedUser->getProfileLink(),
                         'createdAt'         => $updatedUser->getCreatedAt()->format('Y-m-d H:i:s'),
+                        'confirmedAt'       => $updatedUser->getConfirmedAt()?->format('Y-m-d H:i:s'),
+                        'deletedAt'         => $updatedUser->getDeletedAt()?->format('Y-m-d H:i:s'),
                         'additionalInfo'    => $updatedUser->getAdditionalInfo()
                     ]);
                 }
             }
             Response::success([], 'User edited successfully.');
-        } catch (ValidationException $e) {
-            Response::error('Profile Edit Failed.', $e->getErrors(), 422);
-        } catch (NotFoundException $e) {
-            Response::error('Profile Edit Failed.', ['Profile not found.'], 404);
-        } catch (ForbiddenException $e) {
-            Response::error('Profile Edit Failed. ' . $e->getMessage(), [], 403);
-        } catch (Exception $e) {
-            Response::error('Profile Edit Failed.', ['An unexpected error occurred. Please try again later.'], 500);
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Profile Edit Failed.', $e);
+        }
+    }
+
+    /**
+     * Deletes a user profile based on provided arguments.
+     *
+     * This method performs the following actions:
+     * - Checks if the current session is authorized to delete profiles.
+     * - Protects against CSRF attacks.
+     * - Validates the presence and format of the user ID.
+     * - Finds the user by ID and ensures the user exists.
+     * - Checks if the user is assigned to any active projects (as manager or worker).
+     * - Deletes the user profile if all checks pass.
+     * - Destroys the session and user context upon successful deletion.
+     * - Handles and responds to various exceptions (validation, not found, forbidden, unexpected errors).
+     *
+     * @param array $args Associative array of arguments with the following key:
+     *      - userId: string UUID of the user to be deleted.
+     *
+     * @throws ValidationException If validation fails (e.g., missing user ID, user assigned to active projects).
+     * @throws NotFoundException If the user is not found.
+     * @throws ForbiddenException If the session is not authorized.
+     * @throws Exception For unexpected errors during deletion.
+     *
+     * @return void
+     */
+    public static function delete(array $args = []): void
+    {
+        try {
+            if (!SessionAuth::hasAuthorizedSession()) {
+                throw new ForbiddenException();
+            }
+            Csrf::protect();
+
+            $userId = isset($args['userId'])
+                ? UUID::fromString($args['userId'])
+                : null;
+            if (!$userId) {
+                throw new ForbiddenException('User ID is required.');
+            }
+
+            $user = UserModel::findById($userId);
+            if (!$user) {
+                throw new NotFoundException('User not found.');
+            }
+
+            // Check if user is assigned to any active projects
+            $hasActiveProject = Role::isProjectManager($user)
+                ? ProjectModel::findManagerActiveProjectByManagerId($user->getId())
+                : ProjectModel::findWorkerActiveProjectByWorkerId($user->getId());
+            if ($hasActiveProject) {
+                throw new ForbiddenException('Your account cannot be deleted while assigned to an active projects.');
+            }
+
+            if (UserModel::delete($user)) {
+                Response::success([], 'User deleted successfully.');
+
+                Session::destroy();
+                Me::destroy();
+            } else {
+                throw new Exception('User deletion failed.');
+            }
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('User Deletion Failed.', $e);
         }
     }
 }

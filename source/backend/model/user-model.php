@@ -22,21 +22,31 @@ use PDOException;
 
 class UserModel extends Model
 {
+
     /**
-     * Finds a user in the database based on specified conditions.
+     * Finds and retrieves user records from the database with aggregated project statistics.
      *
-     * This method retrieves a single user record from the database that matches
-     * the provided WHERE clause. It supports pagination through limit and offset options.
+     * This method executes a complex SQL query to fetch user data along with related job titles and project statistics:
+     * - Aggregates job titles using GROUP_CONCAT
+     * - Calculates total, completed, cancelled, and terminated project counts for each user
+     * - Supports filtering, ordering, grouping, limiting, and offsetting via parameters
+     * - Converts jobTitles string to array and attaches additionalInfo with project statistics
      *
-     * @param string $whereClause SQL WHERE clause to filter results (without the 'WHERE' keyword)
-     * @param array $params Parameters to be bound to the prepared statement
-     * @param array $options Additional query options:
-     *      - limit: int (optional) Maximum number of records to return
-     *      - offset: int (optional) Number of records to skip
-     *      - orderBy: string (optional) ORDER BY clause (without the 'ORDER BY' keywords)
-     * 
-     * @return array|null Array of User if found, null otherwise
-     * @throws DatabaseException If there is an error executing the query
+     * @param string $whereClause Optional SQL WHERE clause for filtering users
+     * @param array $params Parameters for prepared statement and status values:
+     *      - :completedStatus: int Status value for completed projects
+     *      - :cancelledStatus: int Status value for cancelled projects
+     *      - :terminatedStatus: int Status value for terminated project workers
+     *      - Additional parameters for filtering (if any)
+     * @param array $options Query options:
+     *      - limit: int Maximum number of records to return (default: 10)
+     *      - offset: int Number of records to skip (default: 0)
+     *      - orderBy: string SQL ORDER BY clause (default: 'u.firstName DESC')
+     *      - groupBy: string SQL GROUP BY clause (default: 'u.id')
+     *
+     * @return array|null Array of User instances with attached project statistics, or null if no data found
+     *
+     * @throws DatabaseException If a database error occurs during query execution
      */
     protected static function find(string $whereClause = '', array $params = [], array $options = []): ?array
     {
@@ -56,35 +66,42 @@ class UserModel extends Model
                     u.*,
                     GROUP_CONCAT(ujt.title) AS jobTitles,
                     (
-                        SELECT COUNT(*)
-                        FROM `project` p
-                        JOIN `projectWorker` pw ON p.id = pw.projectId
+                        SELECT COUNT(DISTINCT p.id)
+                        FROM `project` AS p
+                        LEFT JOIN `projectWorker` AS pw 
+                        ON p.id = pw.projectId
                         WHERE p.managerId = u.id
                         OR pw.workerId = u.id
                     ) AS totalProjects,
                     (
-                        SELECT COUNT(*)
-                        FROM `project` p
-                        JOIN `projectWorker` pw ON p.id = pw.projectId
+                        SELECT COUNT(DISTINCT p.id)
+                        FROM `project` AS p
+                        LEFT JOIN `projectWorker` AS pw 
+                        ON p.id = pw.projectId
                         WHERE (p.managerId = u.id
                         OR pw.workerId = u.id)
                         AND p.status = :completedStatus
                     ) AS completedProjects,
                     (
-                        SELECT COUNT(*)
-                        FROM `project` p
-                        JOIN `projectWorker` pw ON p.id = pw.projectId
+                        SELECT COUNT(DISTINCT p.id)
+                        FROM `project` AS p
+                        LEFT JOIN `projectWorker` AS pw 
+                        ON p.id = pw.projectId
                         WHERE pw.workerId = u.id 
                         AND p.status = :cancelledStatus
                     ) AS cancelledProjectCount,
                     (
                         SELECT COUNT(*)
-                        FROM `projectWorker` pw
+                        FROM `projectWorker` AS pw
                         WHERE pw.workerId = u.id
                         AND pw.status = :terminatedStatus
                     ) AS terminatedProjectCount
-                FROM `user` u
-                LEFT JOIN `userJobTitle` ujt ON u.id = ujt.userId";
+                FROM 
+                    `user` AS u
+                LEFT JOIN 
+                    `userJobTitle` AS ujt 
+                ON 
+                    u.id = ujt.userId";
             $query = $instance->appendOptionsToFindQuery(
                 $instance->appendWhereClause($queryString, $whereClause),
             $options);
@@ -142,11 +159,13 @@ class UserModel extends Model
             ? [':id' => $userId] 
             : [':publicId' => UUID::toBinary($userId)];
 
+        $whereClause .= ' AND u.deletedAt IS NULL';
+
         try {
             $result = self::find($whereClause, $params, ['limit' => 1]);
             return $result ? $result[0] : null;
-        } catch (PDOException $e) {
-            throw new DatabaseException($e->getMessage());
+        } catch (Exception $e) {
+            throw $e;
         }
     }
 
@@ -164,8 +183,102 @@ class UserModel extends Model
     public static function findByEmail(string $email): ?User
     {
         try {
-            $result = self::find('email = :email', [':email' => $email], ['limit' => 1]);
+            $result = self::find('email = :email AND deletedAt IS NULL', [':email' => $email], ['limit' => 1]);
             return $result ? $result[0] : null;
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+
+    /**
+     * Checks if email or contact number already exists in the database.
+     *
+     * This method verifies whether the provided email address or contact number
+     * is already registered by another user using a single query. It returns an array 
+     * indicating which fields (if any) are duplicates. This is useful for registration 
+     * and profile update validation.
+     *
+     * @param string|null $email Email address to check for duplicates
+     * @param string|null $contactNumber Contact number to check for duplicates
+     * @param int|UUID|null $excludeUserId User ID to exclude from duplicate check (for updates)
+     *
+     * @return array Associative array with duplicate status:
+     *      - email: bool True if email is duplicate, false otherwise
+     *      - contactNumber: bool True if contact number is duplicate, false otherwise
+     *      - hasDuplicates: bool True if any field is duplicate, false otherwise
+     *
+     * @throws DatabaseException If a database error occurs during the query
+     */
+    public static function hasDuplicateInfo(
+        ?string $email = null,
+        ?string $contactNumber = null,
+        int|UUID|null $excludeUserId = null
+    ): array {
+        $instance = new self();
+        $result = [
+            'email' => false,
+            'contactNumber' => false,
+            'hasDuplicates' => false
+        ];
+
+        try {
+            // Skip if both fields are empty
+            if (!$email && !$contactNumber) {
+                return $result;
+            }
+
+            // Build single query to check both fields
+            $whereConditions = [];
+            $params = [];
+
+            if ($email) {
+                $whereConditions[] = "email = :email";
+                $params[':email1'] = $email;
+                $params[':email2'] = $email;
+            }
+
+            if ($contactNumber) {
+                $whereConditions[] = "contactNumber = :contactNumber";
+                $params[':contactNumber1'] = $contactNumber;
+                $params[':contactNumber2'] = $contactNumber;
+            }
+
+            if ($excludeUserId) {
+                $whereConditions[] = is_int($excludeUserId) 
+                    ? "id != :excludeUserId" 
+                    : "publicId != :excludeUserId";
+                $params[':excludeUserId'] = is_int($excludeUserId) 
+                    ? $excludeUserId 
+                    : UUID::toBinary($excludeUserId);
+            }
+
+            $query = "
+                SELECT 
+                    (CASE WHEN " . ($email ? "email = :email1" : "0") . " THEN 1 ELSE 0 END) as email_duplicate,
+                    (CASE WHEN " . ($contactNumber ? "contactNumber = :contactNumber1" : "0") . " THEN 1 ELSE 0 END) as contact_duplicate
+                FROM `user`
+                WHERE " . implode(" OR ", array_filter([
+                    $email ? "email = :email2" : null,
+                    $contactNumber ? "contactNumber = :contactNumber2" : null
+                ]));
+
+            if ($excludeUserId) {
+                $query .= (is_int($excludeUserId) ? " AND id != :excludeUserId" : " AND publicId != :excludeUserId");
+            }
+
+            $query .= " LIMIT 1";
+
+            $statement = $instance->connection->prepare($query);
+            $statement->execute($params);
+            $row = $statement->fetch();
+
+            if ($row) {
+                $result['email'] = (bool) $row['email_duplicate'];
+                $result['contactNumber'] = (bool) $row['contact_duplicate'];
+                $result['hasDuplicates'] = $result['email'] || $result['contactNumber'];
+            }
+
+            return $result;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
@@ -179,12 +292,13 @@ class UserModel extends Model
      *
      * @param int $offset Number of records to skip (for pagination)
      * @param int $limit Maximum number of records to return (default 10)
+     * @param bool $includeDeleted Whether to include deleted users in the results (default false)
      * @return array Array of User objects or empty array if no users found
      * 
      * @throws InvalidArgumentException If offset is negative or limit is less than 1
      * @throws DatabaseException When database query fails
      */
-    public static function all(int $offset = 0, int $limit = 10): ?array
+    public static function all(int $offset = 0, int $limit = 10, bool $includeDeleted = false): ?array
     {
         if ($offset < 0) {
             throw new InvalidArgumentException('Invalid offset value.');
@@ -195,9 +309,10 @@ class UserModel extends Model
         }
 
         try {
-            return self::find('', [], ['offset' => $offset, 'limit' => $limit]) ?: null;
-        } catch (PDOException $e) {
-            throw new DatabaseException($e->getMessage());
+            $whereClause = $includeDeleted ? '' : 'deletedAt IS NULL';
+            return self::find($whereClause, [], ['offset' => $offset, 'limit' => $limit]) ?: null;
+        } catch (Exception $e) {
+            throw $e;
         }
     }
 
@@ -266,8 +381,8 @@ class UserModel extends Model
                         )
                         AND NOT EXISTS (
                             SELECT 1
-                            FROM `projectTaskWorker` AS ptw
-                            JOIN `projectTask` AS pt ON ptw.taskId = pt.id
+                            FROM `phaseTaskWorker` AS ptw
+                            JOIN `phaseTask` AS pt ON ptw.taskId = pt.id
                             WHERE ptw.workerId = u.id
                             AND pt.status NOT IN (:completedStatusUnassigned3, :cancelledStatusUnassigned3)
                         )
@@ -280,7 +395,7 @@ class UserModel extends Model
                     $params[':cancelledStatusUnassigned3'] = WorkStatus::CANCELLED->value;
                 } else {
                     $where[] = "
-                        (EXISTS (
+                        ((EXISTS (
                             SELECT 1
                             FROM `project` p
                             WHERE p.managerId = u.id
@@ -293,10 +408,10 @@ class UserModel extends Model
                             AND pw.status = :workerStatus1
                         ) OR EXISTS (
                             SELECT 1
-                            FROM `projectTaskWorker` ptw
+                            FROM `phaseTaskWorker` ptw
                             WHERE ptw.workerId = u.id
                             AND ptw.status = :workerStatus2
-                        ))
+                        )))
                     ";
                     $params[':completedStatusUnassigned'] = WorkStatus::COMPLETED->value;
                     $params[':cancelledStatusUnassigned'] = WorkStatus::CANCELLED->value;
@@ -304,6 +419,9 @@ class UserModel extends Model
                     $params[':workerStatus2'] = $status->value;
                 }
             }
+
+            // Exclude unconfirmed and deleted users
+            $where[] = "u.createdAt IS NOT NULL AND u.deletedAt IS NULL";
 
             $whereClause = !empty($where) ? implode(' AND ', $where) : '';
             return self::find($whereClause, $params, $options);
@@ -435,7 +553,6 @@ class UserModel extends Model
      * - firstName, middleName, lastName: Trims and updates name fields
      * - bio: Trims and updates user biography
      * - gender: Updates gender using the enum value
-     * - email: Trims and updates email address
      * - contactNumber: Trims and updates contact number
      * - profileLink: Trims and updates profile link
      * - password: Hashes and updates password using Argon2ID
@@ -451,14 +568,13 @@ class UserModel extends Model
      *      - lastName: string User's last name
      *      - bio: string User's biography
      *      - gender: Gender User's gender (enum)
-     *      - email: string User's email address
      *      - contactNumber: string User's contact number
      *      - profileLink: string User's profile link
      *      - password: string User's password (will be hashed)
      *      - jobTitles: array Contains 'toRemove' and 'toAdd' arrays for job titles
      *
      * @throws DatabaseException If a database error occurs
-     * @throws ValidationException If validation fails (e.g., missing ID or publicId)
+     * @throws InvalidArgumentException If validation fails (e.g., missing ID or publicId)
      * @return bool True on successful update, false otherwise
      */
     public static function save(array $data): bool
@@ -470,11 +586,15 @@ class UserModel extends Model
             $updateFields = [];
             $params = [];
             if (isset($data['id'])) {
+                if (!is_int($data['id']) || $data['id'] < 1) {
+                    throw new InvalidArgumentException('Invalid user ID provided.');
+                }
+
                 $params[':id'] = $data['id'];
             } elseif (isset($data['publicId'])) {
                 $params[':publicId'] = UUID::toBinary($data['publicId']);
             } else {
-                throw new InvalidArgumentException('User ID or Public ID is required for update.');
+                throw new InvalidArgumentException('User ID or Public ID is required.');
             }
 
             if (isset($data['firstName'])) {
@@ -502,9 +622,9 @@ class UserModel extends Model
                 $params[':gender'] = $data['gender']->value;
             }
 
-            if (isset($data['email'])) {
-                $updateFields[] = 'email = :email';
-                $params[':email'] = trimOrNull($data['email']);
+            if (isset($data['birthDate'])) {
+                $updateFields[] = 'birthDate = :birthDate';
+                $params[':birthDate'] = formatDateTime($data['birthDate']);
             }
             
             if (isset($data['contactNumber'])) {
@@ -522,13 +642,23 @@ class UserModel extends Model
                 $params[':password'] = password_hash(trimOrNull($data['password']), PASSWORD_ARGON2ID);
             }
 
+            if (isset($data['confirm']) && $data['confirm'] === true) {
+                $updateFields[] = 'confirmedAt = :confirmedAt';
+                $params[':confirmedAt'] = formatDateTime(new DateTime());
+            }
+
+            if (isset($data['delete']) && $data['delete'] === true) {
+                $updateFields[] = 'deletedAt = :deletedAt';
+                $params[':deletedAt'] = formatDateTime(new DateTime());
+            }
+
             if (!empty($updateFields)) {
                 $projectQuery = "UPDATE `user` SET " . implode(', ', $updateFields) . " WHERE id = " . (isset($params[':id']) ? ":id" : "(SELECT id FROM users WHERE publicId = :publicId)") . "";
                 $statement = $instance->connection->prepare($projectQuery);
                 $statement->execute($params);
             }
 
-            if (isset($data['jobTitles'])) {
+            if (!isset($data['delete']) && isset($data['jobTitles'])) {
                 self::updateJobTitles(
                     $params[':id'] ?? $data['publicId'],
                     $data['jobTitles']['toRemove'],
@@ -541,9 +671,6 @@ class UserModel extends Model
         } catch (PDOException $e) {
             $instance->connection->rollBack();
             throw new DatabaseException($e->getMessage());
-        } catch (InvalidArgumentException $e) {
-            $instance->connection->rollBack();
-            throw new ValidationException('Profile edit failed.', [$e->getMessage()]);
         }
     }
 
@@ -617,19 +744,68 @@ class UserModel extends Model
         }
     }
 
+
     /**
-     * Deletes a phase entity.
+     * Deletes a User instance from the data source.
      *
-     * This method is currently not implemented as there is no use case for deleting a phase.
-     * Always returns false.
+     * This method expects a User object and marks it as deleted by updating its record.
+     * Internally, it calls the save method with the user's ID and a delete flag.
+     * Throws an InvalidArgumentException if the provided data is not a User instance.
+     * Any exceptions during the deletion process are rethrown.
+     *
+     * @param mixed $data Instance of User to be deleted.
      * 
-     * @param mixed $data Data that would be used to delete a phase (unused)
-     *
-     * @return bool Always returns false to indicate deletion is not supported.
+     * @return bool Returns true if the deletion was successful.
+     * 
+     * @throws InvalidArgumentException If $data is not an instance of User.
+     * @throws Exception If an error occurs during the deletion process.
      */
     public static function delete(mixed $data): bool
     {
-        // Not implemented (No use case)
-        return false;
+        if (!$data instanceof User) {
+            throw new InvalidArgumentException('Expected instance of User');
+        }
+
+        try {
+            $instance = new self();
+            $instance->save([
+                'id' => $data->getId(),
+                'delete' => true
+            ]);
+            return true;
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+
+    /**
+     * Permanently deletes a user record from the database.
+     *
+     * This method removes the user entry identified by its ID from the `user` table.
+     * It expects a valid User instance and throws an exception if the argument is invalid.
+     * Any database errors encountered during deletion are wrapped in a DatabaseException.
+     *
+     * @param mixed $data Instance of User to be deleted.
+     * 
+     * @throws InvalidArgumentException If $data is not an instance of User.
+     * @throws DatabaseException If a database error occurs during deletion.
+     * 
+     * @return bool Returns true if the deletion was successful.
+     */
+    public static function hardDelete(mixed $data): bool
+    {
+        if (!$data instanceof User) {
+            throw new InvalidArgumentException('Expected instance of User');
+        }
+
+        $instance = new self();
+        try {
+            $deleteQuery = "DELETE FROM `user` WHERE id = :id";
+            $statement = $instance->connection->prepare($deleteQuery);
+            $statement->execute([':id' => $data->getId()]);
+            return true;
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
+        }
     }
 }

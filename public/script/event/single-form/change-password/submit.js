@@ -45,16 +45,20 @@ async function submit(e) {
         return
     }
 
+    Loader.patch(changePasswordButton.firstChild)
+
     // Show confirmation dialog
     if (!await confirmationDialog(
         'Confirm Password Change',
         'Are you sure you want to change your password?'
     )) return
 
-    Loader.patch(changePasswordButton.firstChild)
     try {
         const newPasswordInput = changePasswordForm?.querySelector('#password').value
-        await Http.POST('auth/change-password', { password: newPasswordInput })
+        await Http.POST('auth/change-password', { 
+            token: new URLSearchParams(window.location.search).get('token'),
+            password: newPasswordInput 
+        })
 
         Dialog.operationSuccess('Password Changed', 'Your password has been successfully changed.')
         setTimeout(() => window.location.href = '/TaskFlow/login', 1500)

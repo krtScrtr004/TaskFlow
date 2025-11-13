@@ -81,11 +81,20 @@
 .view-task-info .heading h3 {
 	font-size: 1.5rem;
 	margin-right: 0.8rem;
+	max-width: 70ch;
+	overflow: hidden;
+	white-space: normal;
 }
 
 .task-info,
 .task-info .action-buttons {
 	gap: 0.5rem;
+}
+
+.task-info .back-button {
+	width: fit-content;
+	background-color: transparent;
+	margin-right: 1rem;
 }
 
 .task-info .task-id,

@@ -66,6 +66,7 @@
 	max-width: 23ch;
 	font-size: 1.5rem;
 	font-weight: 600;
+	overflow: hidden;
 }
 
 .project-grid-card .project-schedule {

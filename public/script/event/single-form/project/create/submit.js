@@ -6,6 +6,7 @@ import { confirmationDialog } from '../../../../render/confirmation-dialog.js'
 import { debounceAsync } from '../../../../utility/debounce.js'
 import { validateInputs, workValidationRules } from '../../../../utility/validator.js'
 import { handleException } from '../../../../utility/handle-exception.js'
+import { normalizeDateFormat } from '../../../../utility/utility.js'
 
 let isLoading = false
 const phaseToAdd = []
@@ -50,6 +51,8 @@ submitProjectButton?.addEventListener('click', e => debounceAsync(submitForm(e),
 async function submitForm(e) {
     e.preventDefault()
 
+    Loader.patch(submitProjectButton.querySelector('.text-w-icon'))
+
     if (!await confirmationDialog(
         'Add Project',
         'Are you sure you want to add this project?',
@@ -79,15 +82,14 @@ async function submitForm(e) {
     const phaseContainers = createProjectForm.querySelectorAll('.phase')
     phaseContainers.forEach(phaseContainer => addPhaseForm(phaseContainer))
 
-    Loader.patch(submitProjectButton.querySelector('.text-w-icon'))
     try {
         const response = await sendToBackend({
             project: {
                 name: nameInput.value.trim(),
                 description: descriptionInput.value.trim(),
                 budget: parseFloat(budgetInput.value),
-                startDateTime: startDateInput.value.trim(),
-                completionDateTime: completionDateInput.value.trim(),
+                startDateTime: normalizeDateFormat(startDateInput.value),
+                completionDateTime: normalizeDateFormat(completionDateInput.value),
             },
             phases: phaseToAdd,
         })
@@ -95,7 +97,7 @@ async function submitForm(e) {
             throw new Error('No response from server.')
         }
 
-        setTimeout(() => window.location.href = `/TaskFlow/home/${response.projectId}`, 1500)
+        setTimeout(() => window.location.href = `/TaskFlow/home`, 1500)
         Dialog.operationSuccess('Project Created.', 'The project has been successfully created.')
     } catch (error) {
         handleException(error, 'Error submitting form:', error)

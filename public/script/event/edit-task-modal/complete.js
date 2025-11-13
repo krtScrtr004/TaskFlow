@@ -17,39 +17,45 @@ if (!completeTaskButton) {
 
 completeTaskButton?.addEventListener('click', e => debounceAsync(submit(e), 3000))
 
+// On page load, check if the task was completed late and show dialog if so
 document.addEventListener('DOMContentLoaded', () => {
+    const now = new Date()
     const taskCompletionDateTime = viewTaskInfo?.querySelector('.task-completion-datetime')?.dataset.completiondatetime
     const taskActualCompletionDateTime = viewTaskInfo?.querySelector('.task-actual-completion-datetime')?.dataset.actualcompletiondatetime
-
-    // Compare the dates and show dialog if delayed
-    if ((taskActualCompletionDateTime && taskActualCompletionDateTime !== '') && 
-        (compareDates(taskCompletionDateTime, taskActualCompletionDateTime) > 0)) {
-        // Show delayed task dialog
+    
+    // Check if task deadline has passed (now is AFTER the deadline)
+    if ((!taskActualCompletionDateTime || taskActualCompletionDateTime === '') &&
+        (taskCompletionDateTime && compareDates(now.toISOString(), taskCompletionDateTime) < 0)) {
+        // Show delayed task dialog - deadline has passed
         const taskName = viewTaskInfo?.querySelector('.task-name')?.textContent || 'This task'
         Dialog.taskDelayed(taskName)
     }
 })
 
+
 /**
- * Handles the submission process for completing a task.
+ * Handles the submission of the "Complete Task" action in the edit task modal.
  *
  * This function performs the following steps:
  * - Prevents the default form submission behavior.
  * - Displays a confirmation dialog to the user.
- * - Retrieves the project and task IDs from the viewTaskInfo element's dataset.
- * - Shows an error dialog if required IDs are missing.
+ * - Retrieves project, phase, and task IDs from the viewTaskInfo dataset.
+ * - Shows an error dialog if any required ID is missing.
  * - Shows a loading indicator on the complete task button.
  * - Sends a request to the backend to complete the task.
- * - Reloads the page upon successful completion to reflect changes.
- * - Handles any errors by displaying an appropriate error message.
- * - Removes the loading indicator after the process is complete.
+ * - Reloads the page upon successful completion.
+ * - Handles exceptions by displaying an error dialog.
+ * - Removes the loading indicator after the operation.
  *
  * @async
- * @param {Event} e The event object from the form submission.
- * @returns {Promise<void>} Resolves when the submission process is complete.
+ * @param {Event} e The submit event triggered by the form or button.
+ * 
+ * @returns {Promise<void>} Resolves when the task completion process is finished.
  */
 async function submit(e) {
     e.preventDefault()
+
+    Loader.patch(completeTaskButton.querySelector('.text-w-icon'))
 
     // Show confirmation dialog
     if (!await confirmationDialog(
@@ -64,6 +70,13 @@ async function submit(e) {
         return
     }
 
+    const phaseId = viewTaskInfo.dataset.phaseid
+    if (!phaseId) {
+        console.error('Phase ID not found.')
+        Dialog.somethingWentWrong()
+        return
+    }
+
     const taskId = viewTaskInfo.dataset.taskid
     if (!taskId) {
         console.error('Task ID not found.')
@@ -71,9 +84,8 @@ async function submit(e) {
         return
     }
 
-    Loader.patch(completeTaskButton.querySelector('.text-w-icon'))
     try {
-        await sendToBackend(projectId, taskId)
+        await sendToBackend(projectId, phaseId, taskId)
         // Reload the page to reflect changes
         window.location.reload()
     } catch (error) {
@@ -84,20 +96,22 @@ async function submit(e) {
 }
 
 /**
- * Sends a request to the backend to mark a specific task as completed within a project.
+ * Marks a task as completed by sending a PUT request to the backend.
  *
- * This function performs the following:
- * - Validates that both projectId and taskId are provided.
- * - Prevents concurrent requests by checking and setting a loading state.
- * - Sends an HTTP PUT request to update the task's status to 'completed'.
- * - Handles errors and ensures the loading state is reset after the request.
+ * This function performs the following actions:
+ * - Validates that projectId, phaseId, and taskId are provided.
+ * - Prevents concurrent requests using an isLoading flag.
+ * - Sends a PUT request to update the task status to 'completed'.
+ * - Handles errors and ensures isLoading is reset after completion.
  *
- * @param {string} projectId The unique identifier of the project containing the task.
- * @param {string} taskId The unique identifier of the task to be marked as completed.
- * @throws {Error} If projectId or taskId is not provided, or if the HTTP request fails.
- * @returns {Promise<void>} Resolves when the task status is successfully updated.
+ * @param {string} projectId - The unique identifier of the project.
+ * @param {string} phaseId - The unique identifier of the phase within the project.
+ * @param {string} taskId - The unique identifier of the task to be marked as completed.
+ * 
+ * @throws {Error} If any of the required parameters are missing or if the request fails.
+ * @returns {Promise<void>} Resolves when the request completes successfully.
  */
-async function sendToBackend(projectId, taskId) {
+async function sendToBackend(projectId, phaseId, taskId) {
     try {
         if (isLoading) {
             console.warn('Request is already in progress. Please wait.')
@@ -109,11 +123,15 @@ async function sendToBackend(projectId, taskId) {
             throw new Error('Project ID is required.')
         }
 
+        if (!phaseId) {
+            throw new Error('Phase ID is required.')
+        }
+
         if (!taskId) {
             throw new Error('Task ID is required.')
         }
 
-        const response = await Http.PUT(`projects/${projectId}/tasks/${taskId}`, { status: 'completed' })
+        const response = await Http.PUT(`projects/${projectId}/phases/${phaseId}/tasks/${taskId}`, { status: 'completed' })
         if (!response) {
             throw error
         }

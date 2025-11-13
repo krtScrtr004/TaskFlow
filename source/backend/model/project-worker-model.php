@@ -145,6 +145,7 @@ class ProjectWorkerModel extends Model
      *
      * @return WorkerContainer|null A WorkerContainer with matching Worker instances, or null if no results found.
      *
+     * @throws InvalidArgumentException If an invalid project ID is provided.
      * @throws DatabaseException If a database error occurs during the search.
      */
     public static function search(
@@ -156,6 +157,10 @@ class ProjectWorkerModel extends Model
             'offset' => 0,
         ]
     ): ?WorkerContainer {
+        if ($projectId && is_int($projectId) && $projectId < 1) {
+            throw new InvalidArgumentException('Invalid project ID provided.');
+        }
+
         try {
             $instance = new self();
 
@@ -265,6 +270,8 @@ class ProjectWorkerModel extends Model
             $where[] = "u.role = :role";
             $params[':role'] = Role::WORKER->value;
 
+            $where[] = "u.confirmedAt IS NOT NULL AND u.deletedAt IS NULL";
+
             if (!empty($where)) {
                 $query .= " WHERE " . implode(' AND ', $where);
             }
@@ -299,21 +306,27 @@ class ProjectWorkerModel extends Model
         }
     }
 
+
     /**
-     * Finds a Worker associated with a specific Project worker by project ID.
+     * Finds a Worker instance by its ID, optionally filtered by project ID and including project/task history.
      *
-     * This method retrieves a Worker instance that is linked to the given project,
-     * supporting both integer and UUID identifiers for project and worker. If projectId is null,
-     * it will search for the worker across all projects.
+     * This method retrieves a worker's details from the database, including:
+     * - Worker personal information and status
+     * - Associated job titles
+     * - Task and project statistics (total/completed)
+     * - Optionally, a history of projects and tasks the worker participated in
      *
-     * @param int|UUID|null $projectId The project identifier (integer, UUID, or null for any project).
-     * @param int|UUID $workerId The worker identifier (integer or UUID).
-     * @param bool $includeHistory Whether to include project/task history.
-     * 
-     * @throws InvalidArgumentException If an invalid project ID is provided.
-     * @throws Exception If an error occurs during the query.
-     * 
-     * @return Worker|null The Worker instance if found, or null if not found.
+     * If $includeHistory is true, the method fetches up to 10 recent projects for the worker,
+     * each with its associated tasks, and attaches them as a ProjectContainer to the worker's additional info.
+     *
+     * @param int|UUID $workerId Worker ID (integer or UUID)
+     * @param int|UUID|null $projectId (optional) Project ID to filter by (integer or UUID)
+     * @param bool $includeHistory (optional) Whether to include project/task history (default: false)
+     *
+     * @throws InvalidArgumentException If an invalid project ID is provided
+     * @throws DatabaseException If a database error occurs
+     *
+     * @return Worker|null Worker instance with partial data, or null if not found
      */
     public static function findById(int|UUID $workerId, int|UUID|null $projectId = null, bool $includeHistory = false): ?Worker
     {
@@ -338,20 +351,32 @@ class ProjectWorkerModel extends Model
                                     'tasks', (
                                         SELECT CONCAT('[', GROUP_CONCAT(
                                             JSON_OBJECT(
-                                                'id', t.id,
-                                                'publicId', HEX(t.publicId),
-                                                'name', t.name,
-                                                'status', t.status,
-                                                'startDateTime', t.startDateTime,
-                                                'completionDateTime', t.completionDateTime,
-                                                'actualCompletionDateTime', t.actualCompletionDateTime
-                                            ) ORDER BY t.createdAt DESC
+                                                'id', pt.id,
+                                                'publicId', HEX(pt.publicId),
+                                                'name', pt.name,
+                                                'status', pt.status,
+                                                'startDateTime', pt.startDateTime,
+                                                'completionDateTime', pt.completionDateTime,
+                                                'actualCompletionDateTime', pt.actualCompletionDateTime
+                                            ) ORDER BY pt.createdAt DESC
                                         ), ']')
-                                        FROM `projectTask` AS t
-                                        LEFT JOIN `projectTaskWorker` AS pwt
-                                        ON t.id = pwt.taskId
-                                        WHERE t.projectId = p2.id
-                                        AND pwt.workerId = u.id
+                                        FROM `phaseTask` AS pt
+                                        LEFT JOIN 
+                                            `phaseTaskWorker` AS pwt
+                                        ON 
+                                            pt.id = pwt.taskId
+                                        LEFT JOIN 
+                                            `projectPhase` as pp
+                                        ON 
+                                            pp.id = pt.phaseId
+                                        LEFT JOIN 
+                                            `project` AS p2
+                                        ON 
+                                            p2.id = pp.projectId
+                                        WHERE 
+                                            pwt.workerId = u.id
+                                        AND 
+                                            p2.id = p.id
                                     )
                                 ) ORDER BY p2.createdAt DESC
                             )
@@ -396,13 +421,13 @@ class ProjectWorkerModel extends Model
                     GROUP_CONCAT(ujt.title) AS jobTitles,
                     (
                         SELECT COUNT(*)
-                        FROM projectTaskWorker AS ptw
+                        FROM phaseTaskWorker AS ptw
                         WHERE ptw.workerId = u.id
                     ) AS totalTasks,
                     (
                         SELECT COUNT(*)
-                        FROM projectTaskWorker AS ptw
-                        INNER JOIN projectTask AS t ON ptw.taskId = t.id
+                        FROM phaseTaskWorker AS ptw
+                        INNER JOIN phaseTask AS t ON ptw.taskId = t.id
                         WHERE ptw.workerId = u.id AND t.status = '" . WorkStatus::COMPLETED->value . "'
                     ) AS completedTasks,
                     (
@@ -505,21 +530,27 @@ class ProjectWorkerModel extends Model
     }
 
     /**
-     * Finds multiple Workers associated with a specific Project by their worker IDs.
+     * Finds multiple Worker instances by their IDs, optionally filtered by project and including project/task history.
      *
-     * This method retrieves multiple Worker instances that are linked to the given project,
-     * supporting both integer and UUID identifiers for project and workers. If projectId is null,
-     * it will search for the workers across all projects.
+     * This method retrieves worker data from the database, supporting both integer and UUID worker IDs.
+     * It can also filter workers by a specific project and optionally include a history of projects and tasks
+     * associated with each worker.
      *
-     * @param array $workerIds Array of worker identifiers (integers or UUIDs).
-     * @param int|UUID|null $projectId The project identifier (integer, UUID, or null for any project).
-     * @param bool $includeHistory Whether to include project/task history.
-     * 
-     * @throws InvalidArgumentException If an invalid project ID or empty worker IDs array is provided.
-     * @throws DatabaseException If an error occurs during the query.
-     * 
-     * @return WorkerContainer|null A WorkerContainer with Worker instances if found, or null if not found.
+     * - Throws InvalidArgumentException if workerIds array is empty or projectId is invalid.
+     * - Supports both integer and UUID types for worker and project IDs.
+     * - If $includeHistory is true, includes up to 10 recent projects and their associated tasks for each worker.
+     * - Aggregates job titles, task counts, and project counts for each worker.
+     *
+     * @param array $workerIds Array of worker IDs (int or UUID) to search for.
+     * @param int|UUID|null $projectId Optional project ID (int or UUID) to filter workers by project.
+     * @param bool $includeHistory Whether to include project and task history for each worker.
+     *
+     * @throws InvalidArgumentException If workerIds is empty or projectId is invalid.
+     * @throws DatabaseException If a database error occurs during query execution.
+     *
+     * @return WorkerContainer|null Container of Worker instances matching the criteria, or null if none found.
      */
+
     public static function findMultipleById(
         array $workerIds, 
         int|UUID|null $projectId = null, 
@@ -555,20 +586,32 @@ class ProjectWorkerModel extends Model
                                     'tasks', (
                                         SELECT CONCAT('[', GROUP_CONCAT(
                                             JSON_OBJECT(
-                                                'id', t.id,
-                                                'publicId', HEX(t.publicId),
-                                                'name', t.name,
-                                                'status', t.status,
-                                                'startDateTime', t.startDateTime,
-                                                'completionDateTime', t.completionDateTime,
-                                                'actualCompletionDateTime', t.actualCompletionDateTime
-                                            ) ORDER BY t.createdAt DESC
+                                                'id', pt.id,
+                                                'publicId', HEX(pt.publicId),
+                                                'name', pt.name,
+                                                'status', pt.status,
+                                                'startDateTime', pt.startDateTime,
+                                                'completionDateTime', pt.completionDateTime,
+                                                'actualCompletionDateTime', pt.actualCompletionDateTime
+                                            ) ORDER BY pt.createdAt DESC
                                         ), ']')
-                                        FROM `projectTask` AS t
-                                        LEFT JOIN `projectTaskWorker` AS pwt
-                                        ON t.id = pwt.taskId
-                                        WHERE t.projectId = p2.id
-                                        AND pwt.workerId = u.id
+                                        FROM `phaseTask` AS pt
+                                        LEFT JOIN 
+                                            `phaseTaskWorker` AS pwt
+                                        ON 
+                                            pt.id = pwt.taskId
+                                        LEFT JOIN 
+                                            `projectPhase` as pp
+                                        ON 
+                                            pp.id = pt.phaseId
+                                        LEFT JOIN 
+                                            `project` AS p2
+                                        ON 
+                                            p2.id = pp.projectId
+                                        WHERE 
+                                            pwt.workerId = u.id
+                                        AND 
+                                            p2.id = p.id
                                     )
                                 ) ORDER BY p2.createdAt DESC
                             )
@@ -577,6 +620,7 @@ class ProjectWorkerModel extends Model
                             INNER JOIN `projectWorker` AS pw4
                             ON p2.id = pw4.projectId
                             WHERE pw4.workerId = u.id
+                            LIMIT 10
                         ),
                         '[]'
                     ) AS projectHistory"
@@ -620,13 +664,13 @@ class ProjectWorkerModel extends Model
                     GROUP_CONCAT(ujt.title) AS jobTitles,
                     (
                         SELECT COUNT(*)
-                        FROM projectTaskWorker AS ptw
+                        FROM phaseTaskWorker AS ptw
                         WHERE ptw.workerId = u.id
                     ) AS totalTasks,
                     (
                         SELECT COUNT(*)
-                        FROM projectTaskWorker AS ptw
-                        INNER JOIN projectTask AS t ON ptw.taskId = t.id
+                        FROM phaseTaskWorker AS ptw
+                        INNER JOIN phaseTask AS t ON ptw.taskId = t.id
                         WHERE ptw.workerId = u.id AND t.status = '" . WorkStatus::COMPLETED->value . "'
                     ) AS completedTasks,
                     (
@@ -856,6 +900,10 @@ class ProjectWorkerModel extends Model
             throw new InvalidArgumentException('No data provided.');
         }
 
+        if (is_int($projectId) && $projectId < 1) {
+            throw new InvalidArgumentException('Invalid project ID provided.');
+        }
+
         $projectId = ($projectId instanceof UUID)
             ? UUID::toBinary($projectId)
             : $projectId;
@@ -873,7 +921,7 @@ class ProjectWorkerModel extends Model
                     (
                         SELECT id 
                         FROM `project` 
-                        WHERE publicId = :projectId
+                        WHERE " . (is_int($projectId) ? 'id' : 'publicId') . " = :projectId
                     ),
                     (
                         SELECT id 
@@ -1020,16 +1068,20 @@ class ProjectWorkerModel extends Model
 
             // Determine identifier clause: prefer numeric/internal id when provided
             if (isset($data['id'])) {
+                if (!is_int($data['id']) || $data['id'] < 1) {
+                    throw new InvalidArgumentException('Invalid Project Worker ID provided.');
+                }
+
                 $where = 'id = :id';
                 $params[':id'] = $data['id'];
             } else {
                 // Require projectId and workerId when id is not provided
                 if (!isset($data['projectId'])) {
-                    throw new InvalidArgumentException('Project ID must be provided.');
+                    throw new InvalidArgumentException('Project ID is required.');
                 }
 
                 if (!isset($data['workerId'])) {
-                    throw new InvalidArgumentException('Worker ID must be provided.');
+                    throw new InvalidArgumentException('Worker ID is required.');
                 }
 
                 $whereParts = [];

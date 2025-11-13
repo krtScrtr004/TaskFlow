@@ -95,6 +95,8 @@ export async function addWorker(
  */
 async function addWorkerButtonEvent(e, projectId, confirmAddWorkerButton, asyncFunction, action, onSuccess) {
     e.preventDefault()
+    
+    Loader.patch(confirmAddWorkerButton.querySelector('.text-w-icon'))
 
     if (selectedUsers.size === 0) {
         Dialog.errorOccurred('No workers selected. Please select at least one worker to add.')
@@ -112,7 +114,6 @@ async function addWorkerButtonEvent(e, projectId, confirmAddWorkerButton, asyncF
         return
     }
 
-    Loader.patch(confirmAddWorkerButton.querySelector('.text-w-icon'))
     try {
         const result = await asyncFunction(projectId, Array.from(selectedUsers.values()))
         

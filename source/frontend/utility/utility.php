@@ -86,8 +86,8 @@ function simplifyDate(DateTime $date): string
 {
     $dateTime = new DateTime(); 
 
-    $paramDate = $date->format('o-m-d');
-    $currentDateTime = $dateTime->format('o-m-d');
+    $paramDate = $date->format('Y-m-d');
+    $currentDateTime = $dateTime->format('Y-m-d');
     if ($paramDate !== $currentDateTime) {
         return $paramDate;
     } else {

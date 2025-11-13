@@ -5,6 +5,14 @@ namespace App\Abstract;
 abstract class Validator {
     protected array $errors = [];
 
+    protected function hasConsecutiveSpecialChars(string $input): bool {
+        return preg_match('/[\'\-\s]{3,}/', $input) === 1;
+    }
+
+    protected function isValidYear(int $year): bool {
+        return $year >= 1900 && $year <= (int)date('Y') + 100;
+    }
+
     public function addError(string $key, string $message): void {
         $this->errors[$key] = $message;
     }
