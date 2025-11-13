@@ -1,6 +1,8 @@
 <?php
 use App\Core\Me;
 use App\Enumeration\Role;
+use App\Middleware\Csrf;
+
 ?>
 
 <!DOCTYPE html>
@@ -9,6 +11,7 @@ use App\Enumeration\Role;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<?= Csrf::get() ?>">
 
     <title>Home</title>
 

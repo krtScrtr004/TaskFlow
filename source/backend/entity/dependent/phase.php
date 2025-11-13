@@ -4,6 +4,7 @@ namespace App\Dependent;
 
 use App\Interface\Entity;
 use App\Enumeration\WorkStatus;
+use App\Container\TaskContainer;
 use App\Core\UUID;
 use App\Exception\ValidationException;
 use App\Model\PhaseModel;
@@ -22,6 +23,7 @@ class Phase implements Entity
     private DateTime $startDateTime;
     private DateTime $completionDateTime;
     private WorkStatus $status;
+    private ?TaskContainer $tasks;
 
     protected WorkValidator $workValidator;
 
@@ -38,6 +40,7 @@ class Phase implements Entity
      * @param DateTime $startDateTime Phase start date and time (cannot be in the past)
      * @param DateTime $completionDateTime Expected phase completion date and time (must be after start date)
      * @param WorkStatus $status Current status of the phase (enum)
+     * @param TaskContainer $tasks Container of tasks associated with the phase
      * 
      * @throws ValidationException If any of the provided data fails validation
      */
@@ -48,7 +51,8 @@ class Phase implements Entity
         ?string $description,
         DateTime $startDateTime,
         DateTime $completionDateTime,
-        WorkStatus $status
+        WorkStatus $status,
+        ?TaskContainer $tasks
     ) {
         try {
             $this->workValidator = new WorkValidator();
@@ -73,6 +77,7 @@ class Phase implements Entity
         $this->startDateTime = $startDateTime;
         $this->completionDateTime = $completionDateTime;
         $this->status = $status;
+        $this->tasks = $tasks;
     }
 
     // Getters
@@ -145,6 +150,16 @@ class Phase implements Entity
     public function getStatus(): WorkStatus
     {
         return $this->status;
+    }
+
+    /**
+     * Gets all tasks assigned to the phase.
+     *
+     * @return TaskContainer|null The container with the phase's tasks, or null if not loaded
+     */
+    public function getTasks(): ?TaskContainer
+    {
+        return $this->tasks;
     }
 
     // Setters
@@ -251,7 +266,30 @@ class Phase implements Entity
         $this->status = $status;
     }
 
-    // Other methods (Utility)
+    /**
+     * Sets the phase's tasks container.
+     *
+     * @param TaskContainer $tasks Container of tasks to assign to this phase
+     * @return void
+     */
+    public function setTasks(TaskContainer $tasks): void
+    {
+        $this->tasks = $tasks;
+    }
+
+    /**
+     * Adds a task to the phase's task collection.
+     *
+     * @param \App\Entity\Task $task The task instance to be added to this phase
+     * @return void
+     */
+    public function addTask($task): void
+    {
+        if (!$this->tasks) {
+            $this->tasks = new TaskContainer();
+        }
+        $this->tasks->add($task);
+    }
 
     /**
      * Creates a Phase instance from an array of data with partial information.
@@ -295,10 +333,9 @@ class Phase implements Entity
         if (isset($data['publicId']) && !($data['publicId'] instanceof UUID)) {
             try {
                 $defaults['publicId'] = UUID::fromString($data['publicId']);
-            } catch (ExceptionInvalidArgumentException $e) {
+            } catch (Exception $e) {
                 $defaults['publicId'] = UUID::fromBinary($data['publicId']);
             }
-
         }
 
         // Handle DateTime conversions
@@ -329,7 +366,8 @@ class Phase implements Entity
             description: $defaults['description'],
             startDateTime: $defaults['startDateTime'],
             completionDateTime: $defaults['completionDateTime'],
-            status: $defaults['status']
+            status: $defaults['status'],
+            tasks: $defaults['tasks'] ?? null
         );
 
         return $instance;
@@ -351,6 +389,7 @@ class Phase implements Entity
      *      - completionDateTime: string Formatted expected completion date/time
      *      - actualCompletionDateTime: string|null Formatted actual completion date/time
      *      - status: string String value of the phase status
+     *      - tasks: array Array representation of the phase's tasks
      */
     public function toArray(): array
     {
@@ -360,7 +399,8 @@ class Phase implements Entity
             'description' => $this->description,
             'startDateTime' => formatDateTime($this->startDateTime, DateTime::ATOM),
             'completionDateTime' => formatDateTime($this->completionDateTime, DateTime::ATOM),
-            'status' => $this->status->value
+            'status' => $this->status->value,
+            'tasks' => $this->tasks->toArray()
         ];
     }
 
@@ -383,6 +423,7 @@ class Phase implements Entity
      *      - completionDateTime: string|DateTime Expected completion date and time
      *      - actualCompletionDateTime: string|DateTime Actual completion date and time
      *      - status: string|WorkStatus Current work status of the phase
+     *      - tasks: array|TaskContainer Tasks associated with the phase
      * 
      * @return self New Phase instance created from provided data
      */
@@ -407,6 +448,11 @@ class Phase implements Entity
             ? WorkStatus::fromString(trimOrNull($data['status']))
             : $data['status'];
 
+        $tasks = (!($data['tasks'] instanceof TaskContainer))
+            ? TaskContainer::fromArray($data['tasks'])
+            : $data['tasks'];
+
+
         return new self(
             id: $data['id'],
             publicId: $publicId,
@@ -414,7 +460,8 @@ class Phase implements Entity
             description: trimOrNull($data['description']),
             startDateTime: $startDateTime,
             completionDateTime: $completionDateTime,
-            status: $status
+            status: $status,
+            tasks: $tasks
         );
     }
 

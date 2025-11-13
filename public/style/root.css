@@ -165,6 +165,12 @@ textarea:active {
 
 input:disabled,
 textarea:disabled,
+button:disabled {
+	cursor: not-allowed;
+}
+
+input:disabled,
+textarea:disabled,
 button:disabled,
 button:hover {
 	opacity: 0.7;
@@ -172,6 +178,7 @@ button:hover {
 
 input,
 textarea {
+	font-weight: 300;
 	background-color: transparent;
 	color: var(--white);
 	border: 1px solid var(--white);

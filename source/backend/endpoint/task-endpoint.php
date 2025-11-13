@@ -17,53 +17,71 @@ use App\Exception\NotFoundException;
 use App\Exception\ValidationException;
 use App\Middleware\Csrf;
 use App\Middleware\Response;
+use App\Model\PhaseModel;
 use App\Model\ProjectModel;
 use App\Model\TaskModel;
+use App\Utility\ResponseExceptionHandler;
 use App\Validator\WorkValidator;
 use DateTime;
 use Exception;
+use Throwable;
 use ValueError;
 
 class TaskEndpoint
 {
+
     /**
-     * Retrieves a task by its ID within a specific project context.
+     * Retrieves a task by its ID within a specific project and phase.
      *
      * This method performs the following actions:
      * - Validates that the request method is GET.
-     * - Ensures the user session is authorized.
-     * - Validates and converts the provided projectId and taskId to UUID objects.
-     * - Checks if the specified project exists (if projectId is provided).
-     * - Fetches the task by its ID and associated project ID.
-     * - Returns a success response with the task data if found.
-     * - Handles and responds to various exceptions (validation, forbidden, not found, unexpected errors).
+     * - Checks if the user session is authorized.
+     * - Validates and converts projectId, phaseId, and taskId to UUID objects.
+     * - Ensures the project, phase, and task exist in the database.
+     * - Returns a success response if the task is found, or appropriate error responses otherwise.
      *
-     * @param array $args Associative array of arguments with the following keys:
-     *      - projectId: string|UUID|null (optional) The ID of the project containing the task.
-     *      - taskId: string|UUID The ID of the task to retrieve.
+     * @param array $args Associative array containing identifiers:
+     *      - projectId: string|UUID Project identifier (required)
+     *      - phaseId: string|UUID Phase identifier (required)
+     *      - taskId: string|UUID Task identifier (required)
      *
-     * @return void Outputs a JSON response with the task data or an error message.
+     * @throws ForbiddenException If the request method is not GET, session is unauthorized, or required IDs are missing.
+     * @throws NotFoundException If the project, phase, or task does not exist.
+     * @throws ValidationException If validation fails.
+     * @throws Exception For unexpected errors.
+     *
+     * @return void
      */
     public static function getById(array $args = []): void
     {
         try {
             if (!HttpAuth::isGETRequest()) {
-                throw new ForbiddenException('Invalid request method. GET request required.');
+                throw new ForbiddenException('Invalid HTTP request method.');
             }
 
             if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException('User session is not authorized to perform this action.');
+                throw new ForbiddenException();
             }
 
             $projectId = isset($args['projectId'])
                 ? UUID::fromString($args['projectId'])
                 : null;
-            if (isset($args['projectId']) && !$projectId) {
+            if (!$projectId) {
                 throw new ForbiddenException('Project ID is required.');
+            } elseif (ProjectModel::findById($projectId) === null) {
+                throw new NotFoundException('Project not found.');
             }
 
-            if (isset($args['projectId']) && ProjectModel::findById($projectId) === null) {
-                throw new NotFoundException('Project not found.');
+            $phaseId = isset($args['phaseId'])
+                ? UUID::fromString($args['phaseId'])
+                : null;
+            if (isset($phaseId) && !$phaseId) {
+                throw new ForbiddenException('Phase ID is required.');
+            }
+
+            $phase = PhaseModel::findById($phaseId);
+            if (!$phase) {
+                throw new NotFoundException('Phase not found.');
             }
 
             $taskId = isset($args['taskId'])
@@ -73,20 +91,14 @@ class TaskEndpoint
                 throw new ForbiddenException('Task ID is required.');
             }
 
-            $task = TaskModel::findById($taskId, $projectId);
+            $task = TaskModel::findById($taskId, $phaseId, $projectId);
             if ($task === null) {
                 throw new NotFoundException('Task not found.');
             }
 
-            Response::success([$task], 'Task fetched successfully.');
-        } catch (ValidationException $e) {
-            Response::error('Validation Failed.', $e->getErrors(), 422);
-        } catch (ForbiddenException $e) {
-            Response::error('Forbidden.', [], 403);
-        } catch (NotFoundException $e) {
-            Response::error('Resource Not Found.', [$e->getMessage()], 404);
-        } catch (Exception $e) {
-            Response::error('Unexpected Error.', ['An unexpected error occurred. Please try again.'], 500);
+            Response::success([], 'Task fetched successfully.');
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Get Task Failed.', $e);
         }
     }
 
@@ -97,10 +109,18 @@ class TaskEndpoint
      * - If 'key' is present in the query string, performs a search for tasks matching the key within the specified project.
      * - If 'status' is present, retrieves tasks by their status within the specified project, supporting pagination.
      * - If neither 'key' nor 'status' is provided, fetches all tasks for the project or all tasks globally, supporting pagination.
+    /**
+     * Retrieves tasks based on provided query parameters within a phase context.
+     *
+     * This method handles GET requests to fetch tasks using various filters:
+     * - If 'key' is present in the query string, performs a search for tasks matching the key within the specified phase.
+     * - If 'status' is present, retrieves tasks by their status within the specified phase, supporting pagination.
+     * - If neither 'key' nor 'status' is provided, fetches all tasks for the phase, supporting pagination.
      * - Requires a valid session and GET request method.
      *
      * @param array $args Optional arguments for task retrieval:
-     *      - projectId: string|UUID|null Project identifier to filter tasks (optional)
+     *      - projectId: string|UUID Project identifier
+     *      - phaseId: string|UUID Phase identifier
      *
      * Query Parameters (via $_GET):
      *      - key: string (optional) Search keyword for tasks
@@ -108,7 +128,7 @@ class TaskEndpoint
      *      - limit: int (optional) Maximum number of tasks to return (default: 10)
      *      - offset: int (optional) Number of tasks to skip for pagination (default: 0)
      *
-     * @throws ForbiddenException If the request method is not GET, session is unauthorized, or projectId is invalid
+     * @throws ForbiddenException If the request method is not GET, session is unauthorized, or IDs are invalid
      * @throws ValidationException If validation of parameters fails
      * @throws Exception For any other unexpected errors
      *
@@ -122,7 +142,7 @@ class TaskEndpoint
     {
         try {
             if (!HttpAuth::isGETRequest()) {
-                throw new ForbiddenException('Invalid request method. GET request required.');
+                throw new ForbiddenException('Invalid HTTP request method.');
             }
 
             if (!SessionAuth::hasAuthorizedSession()) {
@@ -132,8 +152,17 @@ class TaskEndpoint
             $projectId = isset($args['projectId'])
                 ? UUID::fromString($args['projectId'])
                 : null;
-            if (isset($args['projectId']) && !$projectId) {
+            if (!$projectId) {
                 throw new ForbiddenException('Project ID is required.');
+            } elseif (ProjectModel::findById($projectId) === null) {
+                throw new NotFoundException('Project not found.');
+            }
+
+            $phaseId = isset($args['phaseId'])
+                ? UUID::fromString($args['phaseId'])
+                : null;
+            if (!$phaseId) {
+                throw new ForbiddenException('Phase ID is required.');
             }
 
             // Check if 'key' parameter is present in the query string
@@ -162,13 +191,14 @@ class TaskEndpoint
             $tasks = TaskModel::search(
                 $key, 
                 Me::getInstance()->getId(), 
-                $projectId, 
+                $phaseId, 
+                $projectId,
                 $filter, 
                 $options
             );
     
             if (!$tasks) {
-                Response::success([], 'No tasks found for the specified project.');
+                Response::success([], 'No tasks found for the specified phase.');
             } else {
                 $return = [];
                 foreach ($tasks as $task) {
@@ -176,55 +206,58 @@ class TaskEndpoint
                 }
                 Response::success($return, 'Tasks fetched successfully.');
             }
-        } catch (ValidationException $e) {
-            Response::error('Validation Failed.',$e->getErrors(),422);
-        } catch (ForbiddenException $e) {
-            Response::error('Forbidden.', [], 403);
-        } catch (Exception $e) {
-            Response::error('Unexpected Error.', ['An unexpected error occurred. Please try again.'], 500);
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Get Task Failed.', $e);
         }
     }
 
     /**
-     * Adds a new task to a project with associated workers.
+     * Adds a new task to a specified project phase.
      *
      * This method performs the following actions:
      * - Checks if the user session is authorized.
      * - Validates CSRF token.
      * - Decodes input data from the request body.
-     * - Validates the presence and existence of the project ID.
-     * - Validates task date bounds against the project's date range.
+     * - Validates the presence and existence of project and phase IDs.
+     * - Ensures the phase belongs to the specified project or finds the ongoing phase.
+     * - Validates task date bounds against project dates.
      * - Creates a partial Task instance with provided data.
-     * - Validates and associates worker IDs with the task.
-     * - Adds the project ID as additional info to the task.
-     * - Persists the new task using the TaskModel.
-     * - Returns a success response or handles validation/authorization errors.
+     * - Validates and adds worker(s) to the task.
+     * - Associates the task with the specified phase.
+     * - Persists the task in the database.
+     * - Returns the public ID of the created task on success.
+     * - Handles validation, authorization, and unexpected errors.
      *
-     * @param array $args Associative array of arguments with the following keys:
-     *      - projectId: string|UUID The public identifier of the project to which the task will be added.
-     *
+     * @param array $args Associative array containing:
+     *      - projectId: string|UUID Project identifier (required)
+     *      - phaseId: string|UUID Phase identifier (required)
+     * 
      * Input data (decoded from request body) must include:
      *      - name: string Task name
-     *      - description: string|null Task description
-     *      - startDateTime: string Task start date/time (ISO 8601 format)
-     *      - completionDateTime: string Task completion date/time (ISO 8601 format)
-     *      - priority: mixed Task priority
-     *      - workerIds: array List of worker public IDs (string or UUID)
-     *
-     * @throws ForbiddenException If the user is not authorized, project ID is missing, or worker IDs are invalid.
-     * @throws ValidationException If input data is invalid or task validation fails.
-     * @throws NotFoundException If the specified project does not exist.
-     * @throws Exception For any other unexpected errors.
-     *
+     *      - description: string Task description
+     *      - startDateTime: string Task start date/time (ISO 8601)
+     *      - completionDateTime: string Task completion date/time (ISO 8601)
+     *      - priority: int Task priority
+     *      - workerIds: array List of worker public IDs (at least one required)
+     * 
+     * @throws ForbiddenException If session is unauthorized, project/phase/worker IDs are missing or invalid.
+     * @throws ValidationException If input data is invalid or fails validation.
+     * @throws NotFoundException If project or phase is not found.
+     * @throws Exception For unexpected errors.
+     * 
      * @return void
      */
     public static function add(array $args = []): void
     {
         try {
             if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException('User session is not authorized to perform this action.');
+                throw new ForbiddenException();
             }
             Csrf::protect();
+
+            if (!Role::isProjectManager(Me::getInstance())) {
+                throw new ForbiddenException('Only Project Managers are allowed to add tasks.');
+            }
 
             $data = decodeData('php://input');
             if (!$data) {
@@ -234,7 +267,7 @@ class TaskEndpoint
             $projectId = isset($args['projectId'])
                 ? UUID::fromString($args['projectId'])
                 : null;
-            if (!isset($projectId)) {
+            if (!$projectId) {
                 throw new ForbiddenException('Project ID is required.');
             }
 
@@ -243,12 +276,32 @@ class TaskEndpoint
                 throw new NotFoundException('Project not found.');
             }
 
+            $phaseId = isset($args['phaseId'])
+                ? UUID::fromString($args['phaseId'])
+                : null;
+            if (!$phaseId) {
+                throw new ForbiddenException('Phase ID is required.');
+            }
+
+            // Search for phase by ID or by schedule boundary
+            $phase = isset($args['phaseId'])
+                ? PhaseModel::findById($phaseId)
+                : PhaseModel::findByScheduleBoundary(
+                    $project->getId(), 
+                    $data['startDateTime'] ?? null, 
+                    $data['completionDateTime'] ?? null
+                );
+            if (!$phase) {
+                throw new NotFoundException('Phase not found.');
+            }
+
             $validator = new WorkValidator();
             $validator->validateDateBounds(
                 new DateTime($data['startDateTime']),
                 new DateTime($data['completionDateTime']),
-                $project->getStartDateTime(),
-                $project->getCompletionDateTime()
+                $phase->getStartDateTime(),
+                $phase->getCompletionDateTime(),
+                'Phase'
             );
             if ($validator->hasErrors()) {
                 throw new ValidationException('Task Validation Failed.', $validator->getErrors());
@@ -272,49 +325,47 @@ class TaskEndpoint
                     'publicId' => UUID::fromString($workerId)
                 ]));
             }
-            $task->addAdditionalInfo('projectId', $project->getId());
+            $task->addAdditionalInfo('phaseId', $phaseId);
 
-            TaskModel::create($task);
-            
-            Response::success([], 'Workers added successfully.');
-        } catch (ValidationException $e) {
-            Response::error('Validation Failed.',$e->getErrors(),422);
-        } catch (ForbiddenException $e) {
-            Response::error('Forbidden.', [], 403);
-        } catch (Exception $e) {
-            Response::error('Unexpected Error.', ['An unexpected error occurred. Please try again.'], 500);
+            $createdTask = TaskModel::create($task);
+            $publicId = UUID::toString($createdTask->getPublicId());
+            Response::success(['id' => $publicId], 'Workers added successfully.');
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Add Task Failed.', $e);
         }
     }
 
     /**
-     * Edits an existing task within a project.
+     * Edits an existing task within a project phase.
      *
      * This method performs the following operations:
-     * - Checks if the user session is authorized to edit projects.
-     * - Validates CSRF token for request protection.
-     * - Validates and parses the provided projectId and taskId.
-     * - Retrieves the task and its associated project.
-     * - Decodes and validates input data for task editing.
-     * - Updates task fields such as description, start/completion dates, priority, and status.
-     * - Validates that the task's date bounds are within the project's date bounds.
-     * - Saves the updated task data if validation passes.
-     * - Returns a success response with the project public ID, or an error response on failure.
+     * - Validates user session authorization and CSRF protection.
+     * - Validates and retrieves project, phase, and task identifiers.
+     * - Loads the corresponding phase, task, and project models.
+     * - Decodes input data and prepares task update payload.
+     * - Converts and validates fields such as name, description, start/completion dates, priority, and status.
+     * - Automatically determines status from dates if not provided.
+     * - Validates date bounds against project limits.
+     * - Saves the updated task if validation passes.
+     * - Returns a success response with the project public ID, or error responses for validation, not found, forbidden, or unexpected errors.
      *
-     * @param array $args Associative array containing the following keys:
-     *      - projectId: string|UUID|null (optional) The public identifier of the project.
-     *      - taskId: string|UUID The public identifier of the task to edit.
-     *
+     * @param array $args Associative array containing identifiers:
+     *      - projectId: string|UUID Project identifier
+     *      - phaseId: string|UUID Phase identifier
+     *      - taskId: string|UUID Task identifier
+     * 
      * Input data (decoded from request body) may include:
-     *      - description: string (optional) The updated task description.
-     *      - startDateTime: string (optional) The new start date/time (ISO 8601 format).
-     *      - completionDateTime: string (optional) The new completion date/time (ISO 8601 format).
-     *      - priority: string|TaskPriority (optional) The updated task priority.
-     *      - status: string|WorkStatus (optional) The updated task status.
+     *      - name: string Task name
+     *      - description: string Task description
+     *      - startDateTime: string|DateTime Task start date/time
+     *      - completionDateTime: string|DateTime Task completion date/time
+     *      - priority: string|TaskPriority Task priority
+     *      - status: string|WorkStatus Task status
      *
-     * @throws ForbiddenException If the user session is not authorized.
-     * @throws ValidationException If input data is invalid or fails validation.
-     * @throws NotFoundException If the task or project is not found.
-     * @throws Exception For any other unexpected errors.
+     * @throws ValidationException If input validation fails
+     * @throws NotFoundException If project, phase, or task is not found
+     * @throws ForbiddenException If user session is unauthorized
+     * @throws Exception For unexpected errors
      *
      * @return void
      */
@@ -322,36 +373,55 @@ class TaskEndpoint
     {
         try {
             if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException('User session is not allowed to edit projects.');
+                throw new ForbiddenException();
             }
             Csrf::protect();
+
+            if (!Role::isProjectManager(Me::getInstance())) {
+                throw new ForbiddenException('Only Project Managers are allowed to edit tasks.');
+            }
 
             $projectId = isset($args['projectId'])
                 ? UUID::fromString($args['projectId'])
                 : null;
-            if (isset($projectId) && !$projectId) {
-                throw new ValidationException('Project ID is required to edit a task.');
+            if (!$projectId) {
+                throw new ForbiddenException('Project ID is required.');
+            } elseif (ProjectModel::findById($projectId) === null) {
+                throw new NotFoundException('Project not found.');
+            }
+
+            $phaseId = isset($args['phaseId'])
+                ? UUID::fromString($args['phaseId'])
+                : null;
+            if (!$phaseId) {
+                throw new ForbiddenException('Phase ID is required.');
+            }
+
+            $phase = isset($args['phaseId'])
+                ? PhaseModel::findById($phaseId)
+                : PhaseModel::findOnGoingByProjectId($projectId);
+            if (!$phase) {
+                throw new NotFoundException('Phase not found.');
             }
 
             $taskId = isset($args['taskId'])
                 ? UUID::fromString($args['taskId'])
                 : null;
             if (!$taskId) {
-                throw new ValidationException('Task ID is required to edit a task.');
+                throw new ForbiddenException('Task ID is required.');
             }
 
-            $task = TaskModel::findById($taskId, $projectId);
+            $task = TaskModel::findById($taskId, $phaseId);
             if (!$task) {
-                throw new NotFoundException('Task is not found.');
+                throw new NotFoundException('Task not found.');
             }
 
             $project = null;
-            if (isset($projectId)) {
+            if ($projectId) {
                 $project = ProjectModel::findById($projectId);
             } else {
                 $project = TaskModel::findOwningProject($task->getId());
             }
-
 
             $data = decodeData('php://input');
             if (!$data) {
@@ -361,6 +431,10 @@ class TaskEndpoint
             $validator = new WorkValidator();
 
             $taskData = ['id' => $task->getId()];
+
+            if (isset($data['name'])) {
+                $taskData['name'] = $data['name'];
+            }
 
             if (isset($data['description'])) {
                 $taskData['description'] = $data['description'];
@@ -403,14 +477,8 @@ class TaskEndpoint
             }
 
             Response::success(['projectId' => UUID::toString($project->getPublicId())], 'Project edited successfully.');
-        } catch (ValidationException $e) {
-            Response::error('Project Edit Failed.', $e->getErrors(), 422);
-        } catch (NotFoundException $e) {
-            Response::error('Project Edit Failed.', ['Project not found.'], 404);
-        } catch (ForbiddenException $e) {
-            Response::error('Project Edit Failed. ' . $e->getMessage(), [], 403);
-        } catch (Exception $e) {
-            Response::error('Project Edit Failed.', ['An unexpected error occurred. Please try again later.'], 500);
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Edit Task Failed.', $e);
         }
     }
 }

@@ -43,6 +43,9 @@ loginButton?.addEventListener('click', (e) => debounceAsync(submit(e), 300))
 async function submit(e) {
     e.preventDefault()
 
+    Loader.patch(loginButton.querySelector('.text-w-icon'))
+
+
     const emailInput = loginForm.querySelector('#login_email')
     if (!emailInput) { 
         console.error('Email input not found.')
@@ -64,7 +67,6 @@ async function submit(e) {
         password: password
     }, userValidationRules())) return
 
-    Loader.patch(loginButton.querySelector('.text-w-icon'))
     try {
         await sendToBackend(email, password)
 

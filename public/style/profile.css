@@ -72,12 +72,12 @@
     text-decoration: underline;
 }
 
-#editable_profile_details_form .name-inputs {
+#editable_profile_details_form .three-input-layout {
     width: 100%;
     gap: var(--space);
 }
 
-#editable_profile_details_form .name-inputs > * {
+#editable_profile_details_form .three-input-layout > * {
     flex: 1;
 }
 

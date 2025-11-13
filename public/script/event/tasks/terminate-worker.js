@@ -16,12 +16,17 @@ import { handleException } from '../../utility/handle-exception.js'
             throw new Error('Project ID not found.')
         }
 
+        const phaseId = viewTaskInfo?.dataset.phaseid
+        if (!phaseId) {
+            throw new Error('Phase ID not found.')
+        }
+
         const taskId = viewTaskInfo?.dataset.taskid
         if (!taskId) {
             throw new Error('Task ID not found.')
         }
 
-        const endpoint = `projects/${projectId}/tasks/${taskId}`
+        const endpoint = `projects/${projectId}/phases/${phaseId}/tasks/${taskId}`
         const workerContainer = viewTaskInfo?.querySelector('.worker-grid')
         // Initialize worker termination functionality
         terminateWorker(projectId, workerContainer, '.user-grid-card', endpoint)

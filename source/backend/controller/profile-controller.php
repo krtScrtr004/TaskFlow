@@ -12,7 +12,8 @@ class ProfileController implements Controller {
     {
         try {   
             if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException('User session is not authorized to perform this action.');
+                header('Location: ' . REDIRECT_PATH . 'login');
+                exit();
             }
 
             require_once VIEW_PATH . 'profile.php';

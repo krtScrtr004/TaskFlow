@@ -2,11 +2,11 @@ import { isValidDate } from './utility.js'
 import { errorListDialog } from '../render/error-list-dialog.js'
 
 const LENGTH_VALIDATION = {
-    'name':             { min: 1, max: 255 },
+    'name':             { min: 1, max: 50 },
     'uri':              { min: 3, max: 255 },
     'contactNumber':    { min: 11, max: 20 },
     'password':         { min: 8, max: 255 },
-    'longText':         { min: 10, max: 500 },
+    'longText':         { min: 10, max: 1000 },
     'budget':           { min: 0, max: 999999999999 }
 }
 
@@ -32,24 +32,52 @@ function isValidDateHelper(date) {
 }
 
 /**
- * Returns the validation rules for user input fields.
+ * Checks if a string contains three or more consecutive special characters.
  *
- * Each rule provides a `condition` function that takes an `inputs` object and returns an array of error messages
- * if the input is invalid. The rules cover the following fields:
- * - firstName: Validates presence, length, and allowed characters.
- * - middleName: Validates length and allowed characters if provided.
- * - lastName: Validates presence, length, and allowed characters.
- * - bio: Validates length if provided.
- * - gender: Validates presence and allowed values ('male', 'female', case-insensitive).
- * - birthDate: Validates presence, date format, and minimum age (18 years).
- * - jobTitles: Validates presence and length.
- * - contactNumber: Validates presence and length.
- * - email: Validates presence, length, and email format.
- * - password: Validates presence, length, required character types, and allowed special characters.
- * - role: Validates presence and allowed values ('projectManager', 'worker').
+ * The function iterates through the input string and counts consecutive occurrences
+ * of special characters from the following set: $ % # & _ ! @ ' . * ( ) [ ] { } + -.
+ * If three or more consecutive special characters are found, the function returns true.
+ *
+ * @param {string} str The string to be checked for consecutive special characters.
+ * @returns {boolean} Returns true if the string contains three or more consecutive special characters; otherwise, false.
+ */
+function hasConsecutiveSpecialChars(str) {
+    const MAX_COUNT = 3
+
+    const specialChars = "$%#&_!@'.*()[]{}+-"
+    for (let i = 0; i < str.length; i++) {
+        let count = 0
+        while (i < str.length && specialChars.includes(str[i])) {
+            count++
+            if (count >= MAX_COUNT) {
+                return true
+            }
+            i++
+        }
+    }
+    return false
+}
+
+
+/**
+ * Returns an object containing validation rules for user input fields.
+ *
+ * Each field has a `condition` function that takes an `inputs` object and returns an array of error messages
+ * if the input does not meet the validation criteria. The rules cover the following fields:
+ * - firstName: Required, length between LENGTH_VALIDATION.name.min and LENGTH_VALIDATION.name.max, valid characters, no three or more consecutive special characters.
+ * - middleName: Optional, length between LENGTH_VALIDATION.name.min and LENGTH_VALIDATION.name.max if present, valid characters, no three or more consecutive special characters.
+ * - lastName: Required, length between LENGTH_VALIDATION.name.min and LENGTH_VALIDATION.name.max, valid characters, no three or more consecutive special characters.
+ * - bio: Optional, length between LENGTH_VALIDATION.longText.min and LENGTH_VALIDATION.longText.max if present, no three or more consecutive special characters.
+ * - gender: Required, must be one of ['male', 'female', 'Male', 'Female'].
+ * - birthDate: Required, must be a valid date, user must be at least 18 years old.
+ * - jobTitles: Required, length between LENGTH_VALIDATION.longText.min and LENGTH_VALIDATION.longText.max, each title between 1 and 20 characters, valid characters.
+ * - contactNumber: Required, length between LENGTH_VALIDATION.contactNumber.min and LENGTH_VALIDATION.contactNumber.max, valid characters.
+ * - email: Required, length between LENGTH_VALIDATION.uri.min and LENGTH_VALIDATION.uri.max, must be a valid email format.
+ * - password: Required, length between LENGTH_VALIDATION.password.min and LENGTH_VALIDATION.password.max, must contain at least one lowercase and one uppercase letter, only allowed special characters (_ ! @ ' . -).
+ * - role: Required, must be one of ['projectManager', 'worker'].
  *
  * @function
- * @returns {Object.<string, {condition: function(Object): string[]}>} An object mapping field names to their validation rule.
+ * @returns {Object} Validation rules for user input fields, where each key is a field name and each value is an object with a `condition(inputs)` function returning an array of error messages.
  */
 export function userValidationRules() {
     return {
@@ -60,6 +88,8 @@ export function userValidationRules() {
                     errors.push(`First name must be between ${LENGTH_VALIDATION.name.min} and ${LENGTH_VALIDATION.name.max} characters long.`)
                 } else if (!/^[a-zA-Z\s'-]{1,255}$/.test(inputs.firstName)) {
                     errors.push('First name contains invalid characters.')
+                } else if (hasConsecutiveSpecialChars(inputs.firstName.trim())) {
+                    errors.push('First name contains three or more consecutive special characters.')
                 }
                 return errors
             }
@@ -73,6 +103,10 @@ export function userValidationRules() {
                 } else if (!/^[a-zA-Z\s'-]{0,255}$/.test(inputs.middleName)) {
                     errors.push('Middle name contains invalid characters.')
                 }
+                
+                if (inputs.middleName && hasConsecutiveSpecialChars(inputs.middleName.trim())) {
+                    errors.push('Middle name contains three or more consecutive special characters.')
+                }
                 return errors
             }
         },
@@ -84,6 +118,8 @@ export function userValidationRules() {
                     errors.push(`Last name must be between ${LENGTH_VALIDATION.name.min} and ${LENGTH_VALIDATION.name.max} characters long.`)
                 } else if (!/^[a-zA-Z\s'-]{1,255}$/.test(inputs.lastName)) {
                     errors.push('Last name contains invalid characters.')
+                } else if (hasConsecutiveSpecialChars(inputs.lastName.trim())) {
+                    errors.push('Last name contains three or more consecutive special characters.')
                 }
                 return errors
             }
@@ -94,6 +130,10 @@ export function userValidationRules() {
                 const errors = []
                 if (inputs.bio && (inputs.bio.trim().length < LENGTH_VALIDATION.longText.min || inputs.bio.trim().length > LENGTH_VALIDATION.longText.max)) {
                     errors.push(`Bio must be between ${LENGTH_VALIDATION.longText.min} and ${LENGTH_VALIDATION.longText.max} characters long.`)
+                }
+
+                if (inputs.bio && hasConsecutiveSpecialChars(inputs.bio.trim())) {
+                    errors.push('Bio contains three or more consecutive special characters.')
                 }
                 return errors
             }
@@ -139,6 +179,21 @@ export function userValidationRules() {
                 if (!inputs.jobTitles || inputs.jobTitles.trim() === '' || inputs.jobTitles.length < 1 || inputs.jobTitles.length > 500) {
                     errors.push(`Job titles must be between ${LENGTH_VALIDATION.longText.min} and ${LENGTH_VALIDATION.longText.max} characters long.`)
                 }
+
+                if (inputs.jobTitles) {
+                    const titles = inputs.jobTitles.split(',').map(title => title.trim())
+                    for (const title of titles) {
+                        if (title.length < 1 || title.length > 20) {
+                            errors.push('Each job title must be between 1 and 20 characters long.')
+                            break
+                        }
+                        
+                        if (/[^a-zA-Z0-9\s'\-]/.test(title)) {
+                            errors.push(`Job title "${title}" contains invalid characters.`)
+                            break
+                        }
+                    }
+                }
                 return errors
             }
         },
@@ -148,6 +203,8 @@ export function userValidationRules() {
                 const errors = []
                 if (!inputs.contactNumber || inputs.contactNumber.trim() === '' || inputs.contactNumber.length < LENGTH_VALIDATION.contactNumber.min || inputs.contactNumber.length > LENGTH_VALIDATION.contactNumber.max) {
                     errors.push(`Contact number must be between ${LENGTH_VALIDATION.contactNumber.min} and ${LENGTH_VALIDATION.contactNumber.max} characters long.`)
+                } else if (!/^[0-9+\-\s()]{11,20}$/.test(inputs.contactNumber)) {
+                    errors.push('Contact number contains invalid characters.')
                 }
                 return errors
             }
@@ -196,26 +253,48 @@ export function userValidationRules() {
     }
 }
 
+
+
 /**
- * Returns a set of validation rules for work/task-related input fields.
+ * Returns a set of validation rules for work-related form inputs.
  *
- * Each rule contains a `condition` function that validates a specific field in the input object.
- * The function returns an array of error messages if validation fails, or an empty array if valid.
- * 
- * The following fields are validated:
- * - name: Required. Must be a string between LENGTH_VALIDATION.name.min and LENGTH_VALIDATION.name.max characters.
- * - description: Optional. If provided, must be between LENGTH_VALIDATION.longText.min and LENGTH_VALIDATION.longText.max characters.
- * - budget: Required. Must be a number between LENGTH_VALIDATION.budget.min and LENGTH_VALIDATION.budget.max.
- * - startDateTime: Required. Must be a valid date string not in the past (compared to current date).
- * - completionDateTime: Required. Must be a valid date string after the startDateTime.
+ * Each rule contains a `condition` function that validates the corresponding input field and returns an array of error messages if validation fails.
+ * The validation covers the following fields:
+ * - name: Checks length constraints and consecutive special characters.
+ * - description: Checks length constraints and consecutive special characters.
+ * - budget: Ensures the value is a number within a specified range.
+ * - startDateTime: Validates date format and ensures the date is not in the past.
+ * - completionDateTime: Validates date format and ensures the date is after the start date.
  *
- * @param {Object} inputs The input object containing the fields to validate:
- *      - name: {string} The name of the work/task.
- *      - description: {string} (optional) The description of the work/task.
- *      - budget: {number|string} The budget value.
- *      - startDateTime: {string|Date} The start date and time.
- *      - completionDateTime: {string|Date} The completion date and time.
- * @returns {Object} An object mapping field names to their validation rule objects, each with a `condition(inputs)` function.
+ * @function
+ * @returns {Object} Validation rules object with the following keys:
+ *      - name: {
+ *            condition: function(inputs: Object): string[]
+ *              Validates the 'name' field. Returns error messages if:
+ *                  - Name is missing or not within allowed length.
+ *                  - Name contains three or more consecutive special characters.
+ *        }
+ *      - description: {
+ *            condition: function(inputs: Object): string[]
+ *              Validates the 'description' field. Returns error messages if:
+ *                  - Description is not within allowed length.
+ *                  - Description contains three or more consecutive special characters.
+ *        }
+ *      - budget: {
+ *            condition: function(inputs: Object): string[]
+ *              Validates the 'budget' field. Returns error messages if:
+ *                  - Budget is missing, not a number, or outside allowed range.
+ *        }
+ *      - startDateTime: {
+ *            condition: function(inputs: Object): string[]
+ *              Validates the 'startDateTime' field. Returns error messages if:
+ *                  - Date is missing, invalid, or in the past.
+ *        }
+ *      - completionDateTime: {
+ *            condition: function(inputs: Object): string[]
+ *              Validates the 'completionDateTime' field. Returns error messages if:
+ *                  - Date is missing, invalid, or not after the start date.
+ *        }
  */
 export function workValidationRules() {
     return {
@@ -224,6 +303,10 @@ export function workValidationRules() {
                 const errors = []
                 if (!inputs.name || inputs.name.trim().length < LENGTH_VALIDATION.name.min || inputs.name.trim().length > LENGTH_VALIDATION.name.max) {
                     errors.push(`Name must be between ${LENGTH_VALIDATION.name.min} and ${LENGTH_VALIDATION.name.max} characters long.`)
+                } 
+                
+                if (inputs.name && hasConsecutiveSpecialChars(inputs.name.trim())) {
+                    errors.push('Name contains three or more consecutive special characters.')
                 }
                 return errors
             }
@@ -234,6 +317,10 @@ export function workValidationRules() {
                 const errors = []
                 if (inputs.description && (inputs.description.trim().length < LENGTH_VALIDATION.longText.min || inputs.description.trim().length > LENGTH_VALIDATION.longText.max)) {
                     errors.push(`Description must be between ${LENGTH_VALIDATION.longText.min} and ${LENGTH_VALIDATION.longText.max} characters long.`)
+                }
+                
+                if (inputs.description && hasConsecutiveSpecialChars(inputs.description.trim())) {
+                    errors.push('Description contains three or more consecutive special characters.')
                 }
                 return errors
             }

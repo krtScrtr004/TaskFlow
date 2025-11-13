@@ -20,8 +20,11 @@ use App\Exception\NotFoundException;
 use App\Exception\ValidationException;
 use App\Model\TemporaryLinkModel;
 use App\Service\AuthService;
+use App\Utility\ResponseExceptionHandler;
+use Cloudinary\Transformation\ForegroundObject;
 use DateTime;
 use Exception;
+use Throwable;
 
 class AuthEndpoint implements Controller
 {
@@ -70,15 +73,19 @@ class AuthEndpoint implements Controller
             $validator->validateEmail($email);
             $validator->validatePassword($password);
             if ($validator->hasErrors()) {
-                Response::error('Login Failed.', $validator->getErrors());
+                throw new ValidationException('Login Failed.', $validator->getErrors());
             }
 
             // Verify credentials
             $user = UserModel::findByEmail($email);
-            if (!$user || !password_verify($password, $user->getPassword())) {
-                Response::error('Login Failed.', [
+            if (!$user || !password_verify($password, $user->getPassword()) || $user->getDeletedAt() !== null) {
+                throw new ValidationException('Login Failed.', [
                     'Invalid email or password.'
                 ]);
+            }
+
+            if ($user->getConfirmedAt() === null) {
+                throw new ForbiddenException('Please verify your email before logging in.');
             }
 
             // Regenerate session ID to prevent session fixation attacks
@@ -88,12 +95,8 @@ class AuthEndpoint implements Controller
             SessionAuth::setAuthorizedSession($user);
 
             Response::success([], 'Login successful.');
-        } catch (ValidationException $e) {
-            Response::error('Login Failed.', $e->getErrors(), 422);
-        } catch (Exception $e) {
-            Response::error('Login Failed.', [
-                'An unexpected error occurred. Please try again.'
-            ]);
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Login Failed.', $e);
         }
     }
 
@@ -128,6 +131,7 @@ class AuthEndpoint implements Controller
     {
         try {
             Csrf::protect();
+            $instance = new self();
 
             $data = decodeData('php://input');
             if (!$data) {
@@ -140,11 +144,19 @@ class AuthEndpoint implements Controller
             $lastName = trimOrNull($data['lastName']);
             $contactNumber = trimOrNull($data['contactNumber']);
             $birthDate = isset($data['birthDate']) ? new DateTime(trimOrNull($data['birthDate'])) : null;
-            $jobTitles = isset($data['jobTitles']) ? new JobTitleContainer(array_filter(explode(',', trimOrNull($data['jobTitles'])), fn($title) => trim($title) !== '')) : null;
             $email = trimOrNull($data['email']);
             $password = trimOrNull($data['password']);
             $gender = (trimOrNull($data['gender']) ? Gender::tryFrom(trimOrNull($data['gender'])) : null);
             $role = (trimOrNull($data['role']) ? Role::tryFrom(trimOrNull($data['role'])) : null);
+            $jobTitles = null;
+            if (isset($data['jobTitles'])) {
+                $jobTitles = new JobTitleContainer(
+                    array_filter(
+                        explode(',', trimOrNull($data['jobTitles'])),
+                        fn($title) => trim($title) !== ''
+                    )
+                );
+            }
 
             // Validate Data
             $userValidator = new UserValidator();
@@ -167,11 +179,19 @@ class AuthEndpoint implements Controller
                 );
             }
 
-            // Check if user already exists
-            if (UserModel::findByEmail($email)) {
-                throw new ValidationException('Registration Failed.', [
-                    'Email is already in use.'
-                ]);
+            // Check if email / contact number already exists
+            $hasDuplicate = UserModel::hasDuplicateInfo($email, $contactNumber);
+            if ($hasDuplicate['hasDuplicates']) {
+                $duplicateErrors = [];
+                if (isset($hasDuplicate['email']) && $hasDuplicate['email']) {
+                    $duplicateErrors[] = 'Email is already in use by another user.';
+                }
+                if (isset($hasDuplicate['contactNumber']) && $hasDuplicate['contactNumber']) {
+                    $duplicateErrors[] = 'Contact number is already in use by another user.';
+                }
+                if (count($duplicateErrors) > 0) {
+                    throw new ValidationException('Registration Failed.', $duplicateErrors);
+                }
             }
 
             // Create user
@@ -188,20 +208,18 @@ class AuthEndpoint implements Controller
                 'password' => $password,
                 'createdAt' => new DateTime()
             ]);
-            $newUser = UserModel::create($partialUser);
-
-            // Regenerate session ID to prevent session fixation attacks
-            Session::regenerate(true);
+            UserModel::create($partialUser); 
             
-            SessionAuth::setAuthorizedSession($newUser);
+            $token = bin2hex(random_bytes(16));
+            TemporaryLinkModel::create([
+                'email' => $email,
+                'token' => $token
+            ]);
+            $instance->service->sendLinkForEmailVerification($email, $token);
 
             Response::success([], 'Registration successful. Please verify your email before logging in.', 201);
-        } catch (ValidationException $e) {
-            // Catch validation errors
-            Response::error('Registration Failed.',$e->getErrors(),422);
-        } catch (Exception $e) {
-            // Catch all other errors
-            Response::error('Registration Failed.', ['An unexpected error occurred. Please try again.'], 500);
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Registration Failed.', $e);
         }
     }
 
@@ -224,10 +242,84 @@ class AuthEndpoint implements Controller
             Me::destroy();
 
             Response::success([], 'Logout successful.');
-        } catch (Exception $e) {
-            Response::error('Logout Failed.', [
-                'An unexpected error occurred. Please try again.'
-            ], 500);
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Logout Failed.', $e);
+        }
+    }
+
+    /**
+     * Confirms a user's email address using a confirmation token.
+     *
+     * This method validates the provided token, checks its expiration, and confirms the user's email.
+     * If the token is invalid, expired, or the user does not exist, appropriate exceptions are thrown.
+     * Expired tokens result in the deletion of the unconfirmed user and the token.
+     *
+     * Input data is expected as a JSON payload containing:
+     *      - token: string The email confirmation token
+     *
+     * Process:
+     * - Decodes input data and validates the token.
+     * - Searches for a temporary link associated with the token.
+     * - Retrieves the user's email from the temporary link.
+     * - Finds the user by email.
+     * - Checks if the confirmation link has expired (valid for 30 days).
+     * - If expired, deletes the unconfirmed user and the token.
+     * - If valid, confirms the user's email and deletes the token.
+     * - Returns a success response if confirmation is successful.
+     *
+     * Exceptions:
+     * - ValidationException: If input data or token is missing/invalid.
+     * - NotFoundException: If the token or user is not found.
+     * - ForbiddenException: If the confirmation link has expired.
+     * - Exception: For unexpected errors.
+     *
+     * @return void
+     */
+    public static function confirmEmail(): void
+    {
+        try {
+            $data = decodeData('php://input');
+            if (!$data) {
+                throw new ValidationException('Cannot decode data.');
+            }
+
+            $token = trimOrNull($data['token']);
+            if (!$token) {
+                throw new ForbiddenException('Token is required.');
+            }
+
+            $isValid = TemporaryLinkModel::search($token);
+            if (!$isValid) {
+                throw new NotFoundException('Invalid token provided.');
+            }
+
+            $email = $isValid['userEmail'];
+            if (!$email || !trimOrNull($email)) {
+                throw new NotFoundException('Email not found.');
+            }
+
+            $user = UserModel::findByEmail($email);
+            if (!$user) {
+                throw new NotFoundException('User not found.');
+            }
+
+            // Check if the link has expired (valid for 30 days)
+            if ((new DateTime())->getTimestamp() - (new DateTime($isValid['createdAt']))->getTimestamp() > (86400 * 30)) {
+                UserModel::hardDelete($user); // Delete unconfirmed user from the database
+                TemporaryLinkModel::delete($token);
+                throw new ForbiddenException('The email confirmation link has expired.');
+            }
+
+            // Confirm user's email
+            UserModel::save([
+                'id' => $user->getId(),
+                'confirm' => true
+            ]);
+            TemporaryLinkModel::delete($token);
+
+            Response::success([], 'Email confirmed successfully.');
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Email Confirmation Failed.', $e);
         }
     }
 
@@ -277,32 +369,25 @@ class AuthEndpoint implements Controller
             // Check if user exists
             $user = UserModel::findByEmail($email);
             if (!$user) {
-                throw new ValidationException('Reset Password Failed.', ['Email not found.']);
+                throw new NotFoundException('Email not found.');
             }
 
             $token = bin2hex(random_bytes(16));
             TemporaryLinkModel::create([
                 'email' => $email,
-                'token' => hash('sha256', $token)
+                'token' => $token
             ]);
 
             // Send reset password link to email 
-            if (!$instance->service->sendTemporaryLink($email, $token)) {
+            if (!$instance->service->sendLinkForPasswordReset($email, $token)) {
                 throw new Exception('Failed to send reset password email.');
             }
-            Session::set('temporaryResetEmail', $email);
 
             Response::success([], 'Reset password link has been sent to your email.');
-        } catch (ValidationException $e) {
+        } catch (Throwable $e) {
             // Clean up the temporary link if email sending fails
             TemporaryLinkModel::delete($email); 
-
-            Response::error('Reset Password Failed.',$e->getErrors(),422);
-        } catch (Exception $e) {
-            // Clean up the temporary link if email sending fails
-            TemporaryLinkModel::delete($email); 
-
-            Response::error('Reset Password Failed.', ['An unexpected error occurred. Please try again.'], 500);
+            ResponseExceptionHandler::handle('Reset Password Failed.', $e);
         }
     }
 
@@ -332,20 +417,37 @@ class AuthEndpoint implements Controller
         try {
             Csrf::protect();
 
-            // Extract email from session or Me instance
-            $email = Session::get('temporaryResetEmail') ?? Me::getInstance()?->getEmail() ?? null;
+            $data = decodeData('php://input');
+            if (!$data) {
+                throw new ValidationException('Cannot decode data.');
+            }
+
+            $token = trimOrNull($data['token']);
+            if (!$token) {
+                throw new ForbiddenException('Token is required.');
+            }
+
+            // Verify token validity
+            $isValid = TemporaryLinkModel::search($token);
+            if (!$isValid) {
+                throw new NotFoundException('Invalid token provided.');
+            }
+
+            $email = $isValid['userEmail'];
             if (!$email || !trimOrNull($email)) {
-                throw new ValidationException('Email not found for password reset.');
+                throw new NotFoundException('Email not found.');
+            }
+
+            // Check if the link has expired (valid for 5 minutes)
+            $createdAt = new DateTime($isValid['updatedAt'] ?? $isValid['createdAt']);
+            if ((new DateTime())->getTimestamp() - $createdAt->getTimestamp() > 300) {
+                TemporaryLinkModel::delete($token);
+                throw new ForbiddenException('The password reset link has expired. Please request a new one.');
             }
 
             $user = UserModel::findByEmail($email);
             if (!$user) {
                 throw new NotFoundException('User not found.');
-            }
-
-            $data = decodeData('php://input');
-            if (!$data) {
-                throw new ValidationException('Cannot decode data.');
             }
 
             $newPassword = trimOrNull($data['password']);
@@ -365,20 +467,11 @@ class AuthEndpoint implements Controller
             ]);
 
             // Delete temporary link token in the database
-            TemporaryLinkModel::delete($email);
-
-            // Remove temporary reset email from session
-            Session::remove('temporaryResetEmail');
+            TemporaryLinkModel::delete($token);
 
             Response::success([], 'Password changed successfully.');
-        } catch (ValidationException $e) {
-            Response::error('Change Password Failed.', $e->getErrors(), 422);
-        } catch (ForbiddenException $e) {
-            Response::error('Change Password Failed.', $e->getErrors(), 403);
-        } catch (NotFoundException $e) {
-            Response::error('Change Password Failed.', ['User not found.'], 404);
-        } catch (Exception $e) {
-            Response::error('Change Password Failed.', ['An unexpected error occurred. Please try again.'], 500);
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Change Password Failed.', $e);
         }
     }
 }

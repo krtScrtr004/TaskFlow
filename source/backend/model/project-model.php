@@ -123,29 +123,29 @@ class ProjectModel extends Model
         }
     }
 
+
     /**
-     * Finds and retrieves a project with conditionally included related data.
+     * Retrieves a Project instance with optional related data.
      *
-     * This method performs an optimized database query to fetch a project along with:
-     * - Project basic information and manager details with job titles (always included)
-     * - Project phases (optional, based on options array)
-     * - Project tasks (optional, based on options array)
-     * - Project workers with their job titles (optional, based on options array)
-     * 
-     * The method uses JSON aggregation in SQL to efficiently fetch related data in a single query.
-     * By default, only basic project and manager information is fetched. Additional related data
-     * (phases, tasks, workers) are only queried when explicitly requested through the options array,
-     * improving query performance when the full dataset is not needed.
+     * This method fetches a project by its UUID and can include associated phases, tasks, and workers
+     * based on the provided options. The returned Project object is fully populated with its manager,
+     * and optionally with its phases, tasks, and workers, each mapped to their respective domain objects.
      *
-     * @param UUID $projectId The public UUID of the project to find
-     * @param array $options Optional configuration array with following keys:
-     *      - phases: bool (default: false) Include project phases if true
-     *      - tasks: bool (default: false) Include project tasks if true
-     *      - workers: bool (default: false) Include project workers if true
-     * 
-     * @return Project|null Returns a Project object with requested associated data if found, null if project doesn't exist
-     * 
-     * @throws DatabaseException If a database error occurs during query execution
+     * Query details:
+     * - Always includes project manager as a JSON object.
+     * - Optionally includes phases, tasks, and workers as JSON arrays if specified in $options.
+     * - Uses dynamic SQL to build the query based on requested data.
+     * - Converts database results into domain objects (Project, Phase, Task, Worker).
+     *
+     * @param UUID $projectId The UUID of the project to retrieve.
+     * @param array $options Optional associative array to specify related data to include:
+     *      - phases: bool Whether to include project phases (default: false)
+     *      - tasks: bool Whether to include project tasks (default: false)
+     *      - workers: bool Whether to include project workers (default: false)
+     *
+     * @return mixed Returns a fully populated Project instance if found, or null if not found.
+     *
+     * @throws DatabaseException If a database error occurs during retrieval.
      */
     public static function findFull(
         UUID $projectId, 
@@ -210,6 +210,7 @@ class ProjectModel extends Model
                                 'phaseStartDateTime', pp.startDateTime,
                                 'phaseCompletionDateTime', pp.completionDateTime
                             )
+                            ORDER BY pp.startDateTime ASC
                         ), ']')
                         FROM projectPhase pp
                         WHERE pp.projectId = p.id
@@ -251,7 +252,7 @@ class ProjectModel extends Model
                 ) AS projectWorkers";
             }
 
-            // Conditionally add tasks subquery
+            // Select all tasks associated with the project
             if ($includeTasks) {
                 $selectFields[] = "COALESCE(
                     (
@@ -265,11 +266,14 @@ class ProjectModel extends Model
                                 'taskPriority', pt.priority,
                                 'taskStartDateTime', pt.startDateTime,
                                 'taskCompletionDateTime', pt.completionDateTime,
+                                'taskActualCompletionDateTime', pt.actualCompletionDateTime,
                                 'taskCreatedAt', pt.createdAt
                             ) ORDER BY pt.createdAt SEPARATOR ','
                         ), ']')
-                        FROM `projectTask` AS pt
-                        WHERE pt.projectId = p.id
+                        FROM phaseTask AS pt
+                        LEFT JOIN `projectPhase` AS pp ON pt.phaseId = pp.id
+                        LEFT JOIN `project` AS p2 ON pp.projectId = p2.id
+                        WHERE p2.id = p.id
                     ),
                     '[]'
                 ) AS projectTasks";
@@ -339,9 +343,10 @@ class ProjectModel extends Model
                         publicId: UUID::fromHex($phase['phasePublicId']),
                         name: $phase['phaseName'],
                         description: $phase['phaseDescription'],
-                        status: WorkStatus::from($phase['phaseStatus']),
                         startDateTime: new DateTime($phase['phaseStartDateTime']),
-                        completionDateTime: new DateTime($phase['phaseCompletionDateTime'])
+                        completionDateTime: new DateTime($phase['phaseCompletionDateTime']),
+                        status: WorkStatus::from($phase['phaseStatus']),
+                        tasks: new TaskContainer()
                     ));
                 }
             }
@@ -414,7 +419,7 @@ class ProjectModel extends Model
     public static function findById(int|UUID $projectId): ?Project
     {
         if (is_int($projectId) && $projectId < 1) {
-            throw new InvalidArgumentException('Invalid Project ID.');
+            throw new InvalidArgumentException('Invalid project ID provided.');
         }
 
         try {
@@ -428,8 +433,8 @@ class ProjectModel extends Model
 
             $projects = self::find($whereClause, $params);
             return $projects->first() ?? null;
-        } catch (PDOException $e) {
-            throw new DatabaseException($e->getMessage());
+        } catch (Exception $e) {
+            throw $e;
         }
     }
 
@@ -470,8 +475,8 @@ class ProjectModel extends Model
             }
 
             return self::find($whereClause, $params);
-        } catch (PDOException $e) {
-            throw new DatabaseException($e->getMessage());
+        } catch (Exception $e) {
+            throw $e;
         }
     }
 
@@ -524,8 +529,8 @@ class ProjectModel extends Model
             }
 
             return self::find($whereClause,$param);
-        } catch (PDOException $e) {
-            throw new DatabaseException($e->getMessage());
+        } catch (Exception $e) {
+            throw $e;
         }
     }
 
@@ -563,8 +568,8 @@ class ProjectModel extends Model
 
             $projects = self::find($whereClause, $param, $options);
             return $projects?->first() ?? null;
-        } catch (PDOException $e) {
-            throw new DatabaseException($e->getMessage());
+        } catch (Exception $e) {
+            throw $e;
         }
     }
 
@@ -729,8 +734,8 @@ class ProjectModel extends Model
             $whereClause = implode(' AND ', $whereClauses);
 
             return self::find($whereClause, $params, $options);
-        } catch (PDOException $e) {
-            throw new DatabaseException($e->getMessage());
+        } catch (Exception $e) {
+            throw $e;
         }
     }
 
@@ -772,8 +777,8 @@ class ProjectModel extends Model
                 'orderBy'   => 'createdAt DESC',
             ];
             return self::find('', [], $options);
-        } catch (PDOException $e) {
-            throw new DatabaseException($e->getMessage());
+        } catch (Exception $e) {
+            throw $e;
         }
     }
 
@@ -798,7 +803,7 @@ class ProjectModel extends Model
     public static function create(mixed $project): Project
     {
         if (!($project instanceof Project)) {
-            throw new InvalidArgumentException('Expected instance of Project');
+            throw new InvalidArgumentException('Expected instance of Project.');
         }
 
         $instance = new self();
@@ -890,9 +895,6 @@ class ProjectModel extends Model
         } catch (PDOException $e) {
             $instance->connection->rollBack();
             throw new DatabaseException($e->getMessage());
-        } catch (Exception $e) {
-            $instance->connection->rollBack();
-            throw $e;
         }
     }
 
@@ -921,6 +923,7 @@ class ProjectModel extends Model
      * 
      * @return bool Returns true if save operation was successful
      * 
+     * @throws InvalidArgumentException If required fields are missing or invalid
      * @throws DatabaseException If a database error occurs during the transaction
      */
     public static function save(array $data): bool
@@ -932,12 +935,15 @@ class ProjectModel extends Model
             $updateFields = [];
             $params = [];
 
-            if (isset($data['id']) && is_int($data['id'])) {
+            if (isset($data['id'])) {
+                if (!is_int($data['id']) || $data['id'] < 1) {
+                    throw new InvalidArgumentException('Invalid Project ID provided.');
+                }
                 $params[':id'] = $data['id'];
             } elseif (isset($data['publicId']) && $data['publicId'] instanceof UUID) {
                 $params[':id'] = UUID::toBinary($data['publicId']);
             } else {
-                throw new InvalidArgumentException('Project ID or Public ID must be provided for saving.');
+                throw new InvalidArgumentException('Project ID or Public ID is required.');
             }
 
             if (isset($data['name'])) {

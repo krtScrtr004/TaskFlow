@@ -1,8 +1,6 @@
 <form id="change_password_form" class="flex-col" action="" method="POST">
     <p class="center-text"><?= $component['description']; ?></p>
 
-    <?= hiddenCsrfInput() ?>
-
     <input class="validate-password" type="text" name="password" id="password" placeholder="Enter your password here"
         min="<?= PASSWORD_MIN ?>" max="<?= PASSWORD_MAX ?>" required>
 

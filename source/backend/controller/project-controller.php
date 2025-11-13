@@ -15,8 +15,10 @@ use App\Exception\ValidationException;
 use App\Interface\Controller;
 use App\Middleware\Csrf;
 use App\Middleware\Response;
+use App\Model\PhaseModel;
 use App\Model\ProjectModel;
 use App\Model\ProjectWorkerModel;
+use App\Utility\ProjectProgressCalculator;
 use App\Validator\UuidValidator;
 use InvalidArgumentException;
 use DateTime;
@@ -54,7 +56,8 @@ class ProjectController implements Controller
     {
         try {
             if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException();
+                header('Location: ' . REDIRECT_PATH . 'login');
+                exit();
             }
 
             $instance = new self();
@@ -63,7 +66,7 @@ class ProjectController implements Controller
             $activeProject = (Role::isProjectManager(Me::getInstance()))
                 ? ProjectModel::findManagerActiveProjectByManagerId(Me::getInstance()->getId())
                 : ProjectModel::findWorkerActiveProjectByWorkerId(Me::getInstance()->getId());
-        
+
             // If projectId is provided, verify that the project is not cancelled
             if ($activeProject && $activeProject->getStatus() !== WorkStatus::CANCELLED) {
                 $fullProjectInfo = $instance->getProjectInfo($activeProject->getPublicId());
@@ -71,6 +74,8 @@ class ProjectController implements Controller
                 if ($projectId && !Session::has('activeProjectId')) {
                     Session::set('activeProjectId', $projectId);
                 }
+
+                $instance->updatePhaseStatus($fullProjectInfo);
             }
 
             $instance->renderDashboard($fullProjectInfo);
@@ -79,6 +84,91 @@ class ProjectController implements Controller
         } catch (ForbiddenException $e) {
             ErrorController::forbidden();
         }
+    }
+
+    /**
+     * Updates the status of each phase in a project based on their dates and progress.
+     *
+     * This method performs the following actions:
+     * - Retrieves all phases associated with the given project.
+     * - Throws NotFoundException if no phases are found.
+     * - Calculates project progress and iterates through each phase's breakdown.
+     * - Adds phases and their tasks to the project object.
+     * - Updates phase status according to the following rules:
+     *      - PENDING → ON_GOING: If the phase's start date has passed.
+     *      - ON_GOING → COMPLETED: If the phase's completion date has passed and progress is 100%.
+     *      - ON_GOING → DELAYED: If the phase's completion date has passed and progress is less than 100%.
+     * - Collects phases that require status updates and persists changes to the database.
+     * - Adds calculated progress information as additional info to the project.
+     *
+     * @param Project $project Reference to the project object whose phases will be updated.
+     *      The method will add phases, tasks, and progress info to this object.
+     *
+     * @throws NotFoundException If no phases are found for the given project.
+     *
+     * @return void
+     */
+    private function updatePhaseStatus(Project &$project): void
+    {
+        $phases = PhaseModel::findAllByProjectId($project->getId(), true);
+        if (!$phases) {
+            throw new NotFoundException('Phases not found.');
+        }
+
+        // Container of phase IDs to update status
+        $phasesToUpdate = [];
+
+        $now = new DateTime();
+
+        $projectProgress = ProjectProgressCalculator::calculate($phases);
+        foreach ($projectProgress['phaseBreakdown'] as $key => $value) {
+            $reference = $phases->get((int) $key);
+
+            $tasks = $reference->getTasks();
+            $status = $reference->getStatus();
+            $startDateTime = $reference->getStartDateTime();
+            $completionDateTime = $reference->getCompletionDateTime();
+
+            // Add phase and tasks into the project object
+            $project->addPhase($reference);
+            foreach ($tasks as $task) {
+                $project->addTask($task);
+            }
+
+            // Update phase status based on dates and progress
+            // Transition: PENDING → ON_GOING (when start date has passed)
+            if ($status === WorkStatus::PENDING && $startDateTime <= $now) {
+                $reference->setStatus(WorkStatus::ON_GOING);
+                $phasesToUpdate[] = [
+                    'id' => (int) $key,
+                    'status' => WorkStatus::ON_GOING
+                ];
+            } 
+            // Transition: ON_GOING → COMPLETED or DELAYED (when completion date has passed)
+            elseif ($status === WorkStatus::ON_GOING && $completionDateTime < $now) {
+                if ($value['simpleProgress'] >= 100.0) {
+                    $reference->setStatus(WorkStatus::COMPLETED);
+                    $phasesToUpdate[] = [
+                        'id' => (int) $key,
+                        'status' => WorkStatus::COMPLETED
+                    ];
+                } else {
+                    $reference->setStatus(WorkStatus::DELAYED);
+                    $phasesToUpdate[] = [
+                        'id' => (int) $key,
+                        'status' => WorkStatus::DELAYED
+                    ];
+                }
+            }
+        }
+
+        // Update phase status in the database
+        if (!empty($phasesToUpdate)) {
+            PhaseModel::saveMultiple($phasesToUpdate);
+        }
+
+        // Set additional info on project
+        $project->addAdditionalInfo('progress', $projectProgress);
     }
 
     /**
@@ -100,7 +190,8 @@ class ProjectController implements Controller
     {
         try {
             if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException();
+                header('Location: ' . REDIRECT_PATH . 'login');
+                exit();
             }
 
             $instance = new self();
@@ -109,7 +200,13 @@ class ProjectController implements Controller
                 ? UUID::fromString($args['projectId'])
                 : null;
 
-            $fullProjectInfo = $instance->getProjectInfo($projectId);        
+            $fullProjectInfo = $instance->getProjectInfo(
+                $projectId,
+                [
+                    'tasks' => true,
+                    'workers' => true
+                ]
+            );
             if (!$fullProjectInfo) {
                 throw new NotFoundException('Project not found.');
             }
@@ -121,7 +218,7 @@ class ProjectController implements Controller
             ErrorController::forbidden();
         }
     }
-    
+
     /**
      * Displays the project grid view for the currently authenticated user.
      *
@@ -145,7 +242,8 @@ class ProjectController implements Controller
     {
         try {
             if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException();
+                header('Location: ' . REDIRECT_PATH . 'login');
+                exit();
             }
 
             $key = '';
@@ -155,17 +253,18 @@ class ProjectController implements Controller
 
             // Only status can be filtered here
             $status = isset($_GET['filter']) && strcasecmp($_GET['filter'], 'all') !== 0
-                ? WorkStatus::from($_GET['filter']) 
+                ? WorkStatus::from($_GET['filter'])
                 : null;
 
             $projects = ProjectModel::search(
-            $key, 
-            Me::getInstance()->getId(), 
-            $status,
-            [
-                'limit' => 50,
-                'offset' => 0
-            ]);
+                $key,
+                Me::getInstance()->getId(),
+                $status,
+                [
+                    'limit' => 50,
+                    'offset' => 0
+                ]
+            );
 
             require_once VIEW_PATH . 'projects.php';
         } catch (NotFoundException $e) {
@@ -185,16 +284,26 @@ class ProjectController implements Controller
      * 
      * @return Project|null The Project instance with full details (phases, tasks, workers), or null if no ID is provided.
      */
-    private function getProjectInfo(UUID|null $projectId): ?Project
-    {
+    private function getProjectInfo(
+        UUID|null $projectId,
+        array $options = [
+            'phases' => false,
+            'workers' => false,
+            'tasks' => false
+        ]
+    ): ?Project {
         if (!$projectId) {
             return null;
         }
-        
+
+        $includeTasks = $options['tasks'] ?? false;
+        $includePhases = $options['phases'] ?? false;
+        $includeWorkers = $options['workers'] ?? false;
+
         return ProjectModel::findFull($projectId, [
-            'phases' => true,
-            'tasks' => true,
-            'workers' => true
+            'phases' => $includePhases,
+            'tasks' => $includeTasks,
+            'workers' => $includeWorkers
         ]);
     }
 
@@ -217,11 +326,28 @@ class ProjectController implements Controller
      */
     private function renderDashboard(Project|null $project): void
     {
+        $projectProgress = null;
+
         if ($project) {
             $status = $project->getStatus();
             $startDateTime = $project->getStartDateTime();
             $completionDateTime = $project->getCompletionDateTime();
             $currentDateTime = new DateTime();
+
+            // Determine project progress
+            if ($project->additionalInfoContains('progress')) {
+                $projectProgress = $project->getAdditionalInfo('progress');
+            } else {
+                $phases = PhaseModel::findAllByProjectId($project->getId(), true);
+                $projectProgress = ($phases?->count() > 0)
+                    ? ProjectProgressCalculator::calculate($phases)
+                    : [
+                        'progressPercentage' => 0.0,
+                        'statusBreakdown' => [],
+                        'priorityBreakdown' => [],
+                        'phaseBreakdown' => []
+                    ];
+            }
 
             if ($startDateTime && $currentDateTime >= $startDateTime && $status === WorkStatus::PENDING) {
                 // Check if the project is already ongoing
@@ -230,17 +356,11 @@ class ProjectController implements Controller
                     'id' => $project->getId(),
                     'status' => WorkStatus::ON_GOING
                 ]);
-            } elseif ($completionDateTime && $currentDateTime > $completionDateTime && 
-                    ($status === WorkStatus::PENDING || $status === WorkStatus::ON_GOING)) {
-                // Check if the project is already completed or delayed based on current date and tasks status
-                $hasPendingTasks = false;
-                foreach ($project->getTasks() as $task) {
-                    if ($task->getStatus() !== WorkStatus::COMPLETED && $task->getStatus() !== WorkStatus::CANCELLED) {
-                        $hasPendingTasks = true;
-                        break;
-                    }
-                }
-                if ($hasPendingTasks) {
+            } elseif (
+                $completionDateTime && $currentDateTime > $completionDateTime &&
+                ($status === WorkStatus::PENDING || $status === WorkStatus::ON_GOING)
+            ) {
+                if ($projectProgress['progressPercentage'] < 100.0) {
                     $project->setStatus(WorkStatus::DELAYED);
                     ProjectModel::save([
                         'id' => $project->getId(),

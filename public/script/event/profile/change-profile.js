@@ -59,6 +59,8 @@ profilePicker?.addEventListener('change', async e => {
  * @returns {Promise<void>} Resolves when the operation is complete.
  */
 async function submit(file) {
+    Loader.patch(pickProfilePictureButton.querySelector('.text-w-icon'))
+
     // Show confirmation dialog
     if (!await confirmationDialog(
         'Confirm Profile Picture Change',
@@ -70,7 +72,6 @@ async function submit(file) {
     formData.append('profilePicture', file)
     formData.append('_method', 'PATCH')  // Method override for PATCH request
 
-    Loader.patch(pickProfilePictureButton.querySelector('.text-w-icon'))
     try {
         await sendToBackend(formData)
 

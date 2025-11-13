@@ -12,16 +12,23 @@ if (!projectId || projectId.trim() === '') {
  * @param {Object} task - The task data object
  * @param {string} projectId - The project ID
  * @returns {HTMLElement} The task grid card element
+ * @throws {Error} If invalid task data is provided
  */
 export function createTaskGridCard(task) {
+    if (!task) {
+        throw new Error('Invalid task data provided to createTaskGridCard.')
+    }
+
     // Create main card container
     const taskCard = document.createElement('div')
     taskCard.className = 'task-grid-card'
 
+    const phaseId = task.additionalInfo?.phaseId
+
     // Create link wrapper
     const link = document.createElement('a')
     link.className = 'flex-col full-body-content'
-    link.href = `/TaskFlow/project/${projectId}/task/${task.id}`
+    link.href = `/TaskFlow/project/${projectId}/phase/${phaseId}/task/${task.id}`
 
     // Create task header section
     const headerSection = document.createElement('section')
@@ -36,6 +43,7 @@ export function createTaskGridCard(task) {
     taskIcon.height = 24
 
     const taskName = document.createElement('h3')
+    taskName.title = task.name
     taskName.className = 'task-name single-line-ellipsis'
     taskName.textContent = task.name
 

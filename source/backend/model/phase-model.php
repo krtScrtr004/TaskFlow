@@ -4,11 +4,15 @@ namespace App\Model;
 
 use App\Abstract\Model;
 use App\Container\PhaseContainer;
+use App\Container\TaskContainer;
 use App\Core\UUID;
 use App\Enumeration\WorkStatus;
 use App\Dependent\Phase;
+use App\Entity\Task;
 use App\Exception\DatabaseException;
+use App\Exception\ValidationException;
 use DateTime;
+use Exception;
 use InvalidArgumentException;
 use PDOException;
 
@@ -50,7 +54,7 @@ class PhaseModel extends Model
 
             $phases = new PhaseContainer();
             foreach ($result as $item) {
-                $phases->add(Phase::fromArray($item));
+                $phases->add(Phase::createPartial($item));
             }
             return $phases;
         } catch (PDOException $th) {
@@ -59,31 +63,272 @@ class PhaseModel extends Model
     }
 
     /**
-     * Finds all phases associated with a specific project.
+     * Finds a Phase instance by its ID or public UUID.
+     *
+     * This method retrieves a Phase from the database using either its integer ID or its public UUID.
+     * - If an integer is provided, it searches by the 'id' column.
+     * - If a UUID is provided, it searches by the 'publicId' column after converting the UUID to binary.
+     * - Throws InvalidArgumentException if the provided ID is invalid.
+     * - Throws DatabaseException if a PDO error occurs during the query.
+     *
+     * @param int|UUID $phaseId The Phase identifier, either as an integer ID or a UUID object.
      * 
-     * This method retrieves all phases that belong to the specified project ID
-     * and returns them as a PhaseContainer object.
-     * 
-     * @param int $projectId The ID of the project for which to find phases
-     * @return PhaseContainer|null A container with all phases belonging to the project,
-     *                           or null if no phases were found
-     * @throws InvalidArgumentException If the provided project ID is invalid (less than 1)
-     * @throws DatabaseException If there is an error in the database operation
+     * @return Phase|null The found Phase instance, or null if not found.
+     *
+     * @throws InvalidArgumentException If the provided Phase ID is invalid.
+     * @throws DatabaseException If a database error occurs.
      */
-    public static function findAllByProjectId(int $projectId): ?PhaseContainer
+    public static function findById(int|UUID $phaseId): ?Phase
     {
-        if ($projectId < 1) {
-            throw new InvalidArgumentException('Invalid Project ID.');
+        if (!$phaseId) {
+            throw new InvalidArgumentException('Invalid phase ID provided.');
         }
 
         try {
-            $phases = self::find('projectId = :projectId', ['projectId' => $projectId]);
+            $whereClause = is_int($phaseId) 
+                ? 'id = :phaseId' 
+                : 'publicId = :phaseId';
+            $params = [
+                'phaseId' => is_int($phaseId) 
+                    ? $phaseId 
+                    : UUID::toBinary($phaseId)
+            ];
+
+            $options = [
+                'limit' => 1
+            ];
+
+            return self::find($whereClause, $params, $options)->first();
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+
+    /**
+     * Finds the ongoing Phase for a given Project ID.
+     *
+     * This method retrieves the first Phase instance with an "ON_GOING" status
+     * associated with the specified project. It supports both integer and UUID
+     * project identifiers:
+     * - If an integer is provided, it is used directly as the project ID.
+     * - If a UUID is provided, it is converted to binary and matched against the project's publicId.
+     *
+     * Throws an InvalidArgumentException if the project ID is invalid (less than 1).
+     * Throws a DatabaseException if a PDO error occurs during the query.
+     *
+     * @param int|UUID $projectId The project identifier, either as an integer or UUID.
+     * 
+     * @return Phase|null The ongoing Phase instance if found, or null if none exists.
+     *
+     * @throws InvalidArgumentException If the project ID is invalid.
+     * @throws DatabaseException If a database error occurs.
+     */
+    public static function findOnGoingByProjectId(int|UUID $projectId): ?Phase
+    {
+        if ($projectId < 1) {
+            throw new InvalidArgumentException('Invalid project ID provided.');
+        }
+
+        try {
+            $whereClause = is_int($projectId) 
+                ? 'projectId = :projectId AND status = :status' 
+                : 'projectId = (SELECT id FROM `project` WHERE publicId = :projectId) AND status = :status';
+
+            $params = [
+                'projectId' => is_int($projectId) 
+                    ? $projectId 
+                    : UUID::toBinary($projectId),
+                'status' => WorkStatus::ON_GOING->value
+            ];
+
+            $options = [
+                'limit' => 1
+            ];
+
+            return self::find($whereClause, $params, $options)->first();
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+
+    /**
+     * Finds phases by project ID and schedule boundaries.
+     *
+     * This method retrieves phase records that match the given project ID and fall within the specified start and/or completion date boundaries.
+     * - Validates that the project ID is a positive integer or a UUID.
+     * - Requires at least one of startDateTime or completionDateTime to be provided.
+     * - Converts projectId to binary if it is a UUID.
+     * - Formats startDateTime and completionDateTime for query parameters.
+     * - Constructs a WHERE clause based on provided parameters.
+     *
+     * @param int|UUID $projectId The project identifier (integer or UUID).
+     * @param DateTime|null $startDateTime The lower boundary for phase start date (inclusive).
+     * @param DateTime|null $completionDateTime The upper boundary for phase completion date (inclusive).
+     * 
+     * @throws InvalidArgumentException If projectId is invalid or both date boundaries are missing.
+     * 
+     * @return self[]|null Array of phase instances matching the criteria, or null if an error occurs.
+     */
+    public static function findByScheduleBoundary(
+        int|UUID $projectId,
+        ?DateTime $startDateTime,
+        ?DateTime $completionDateTime,
+    ) {
+        if (is_int($projectId) && $projectId < 1) {
+            throw new InvalidArgumentException('Invalid project ID provided.');
+        }
+
+        if (!$startDateTime && !$completionDateTime) {
+            throw new InvalidArgumentException('At least one of start date or completion date must be provided.');
+        }
+
+        $instance = new self();
+        try {
+            $where = [];
+            $params = [];
+
+            if ($startDateTime) {
+                $where[] = 'startDateTime >= :startDateTime';
+                $params[':startDateTime'] = formatDateTime($startDateTime);
+            }
+
+            if ($completionDateTime) {
+                $where[] = 'completionDateTime <= :completionDateTime';
+                $params[':completionDateTime'] = formatDateTime($completionDateTime);
+            }
+
+            $where[] = 'projectId = :projectId';
+            $params[':projectId'] = is_int($projectId) 
+                ? $projectId 
+                : UUID::toBinary($projectId);
+
+            $whereClause = implode(' AND ', $where);
+            return self::find($whereClause, $params);
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+
+    /**
+     * Retrieves all phases associated with a given project ID, optionally including related tasks.
+     *
+     * This method fetches project phases from the database by either internal integer ID or public UUID.
+     * If $includeTasks is true, each phase will include a list of its associated tasks as a JSON array.
+     * The method converts raw database results into Phase objects, and if tasks are included, into Task objects as well.
+     *
+     * @param int|UUID $projectId The internal integer ID or public UUID of the project.
+     * @param bool $includeTasks Whether to include associated tasks for each phase.
+     * 
+     * @throws InvalidArgumentException If the provided project ID is invalid.
+     * @throws DatabaseException If a database error occurs during retrieval.
+     *
+     * @return PhaseContainer|null A container of Phase objects for the project, or null if no phases are found.
+     */
+    public static function findAllByProjectId(int|UUID $projectId, bool $includeTasks = false): ?PhaseContainer
+    {
+        if (is_int($projectId) && $projectId < 1) {
+            throw new InvalidArgumentException('Invalid project ID provided.');
+        }
+
+        try {
+            $instance = new self();
+
+            $taskQuery = '';
+            if ($includeTasks) {
+                $taskQuery = ", COALESCE(
+                    (SELECT CONCAT('[', GROUP_CONCAT(
+                        JSON_OBJECT(
+                            'id', pt.id,
+                            'publicId', HEX(pt.publicId),
+                            'name', pt.name,
+                            'description', pt.description,
+                            'status', pt.status,
+                            'startDateTime', pt.startDateTime,
+                            'completionDateTime', pt.completionDateTime,
+                            'createdAt', pt.createdAt,
+                            'updatedAt', pt.updatedAt
+                        )
+                        ORDER BY pt.startDateTime ASC SEPARATOR ','
+                    ), ']')
+                    FROM `phaseTask` AS pt
+                    WHERE pt.phaseId = pp.id
+                    ),
+                    '[]'
+                ) AS tasks";
+            }
+
+            $query = "
+                SELECT pp.* {$taskQuery}
+                FROM 
+                    `projectPhase` AS pp
+                INNER JOIN
+                    `project` AS p
+                ON 
+                    pp.projectId = p.id
+                WHERE 
+                    " . (is_int($projectId) ? 'p.id = :projectId' : 'p.publicId = :projectId') . 
+            ";";
+
+            $statement = $instance->connection->prepare($query);
+            $statement->execute([
+                ':projectId' => is_int($projectId) 
+                    ? $projectId 
+                    : UUID::toBinary($projectId)
+            ]);
+            $result = $statement->fetchAll();
+
+            if (!$instance->hasData($result)) {
+                return null;
+            }
+
+            $phases = new PhaseContainer();
+            foreach ($result as $item) {
+                $phase = Phase::createPartial([
+                    'id'                        => $item['id'],
+                    'publicId'                  => UUID::fromBinary($item['publicId']),
+                    'name'                      => $item['name'],
+                    'description'               => $item['description'],
+                    'status'                    => WorkStatus::from($item['status']),
+                    'tasks'                     => new TaskContainer(),
+                    'startDateTime'             => new DateTime($item['startDateTime']),
+                    'completionDateTime'        => new DateTime($item['completionDateTime']),
+                    'actualCompletionDateTime'  => isset($item['actualCompletionDateTime']) ? new DateTime($item['actualCompletionDateTime']) : null,
+                    'createdAt'                 => new DateTime($item['createdAt']),
+                    'updatedAt'                 => new DateTime($item['updatedAt'])
+                ]);
+
+                // Populate tasks if requested
+                if ($includeTasks) {
+                    $tasks = json_decode($item['tasks'], true);
+                    if (!empty($tasks)) {
+                        foreach ($tasks as $taskData) {
+                            $task = Task::createPartial([
+                                'id'                        => $taskData['id'],
+                                'publicId'                  => UUID::fromHex($taskData['publicId']),
+                                'name'                      => $taskData['name'],
+                                'description'               => $taskData['description'],
+                                'status'                    => WorkStatus::from($taskData['status']),
+                                'startDateTime'             => new DateTime($taskData['startDateTime']),
+                                'completionDateTime'        => new DateTime($taskData['completionDateTime']),
+                                'actualCompletionDateTime'  => isset($taskData['actualCompletionDateTime']) ? new DateTime($taskData['actualCompletionDateTime']) : null,
+                                'createdAt'                 => new DateTime($taskData['createdAt']),
+                                'updatedAt'                 => new DateTime($taskData['updatedAt'])
+                            ]);
+
+                            $phase->addTask($task);
+                        }
+                    }
+                }
+
+                $phases->add($phase);
+            }
+
             return $phases;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
     }
-
+    
     /**
      * Retrieves all phases with pagination support.
      *
@@ -111,8 +356,8 @@ class PhaseModel extends Model
         try {
             $phases = self::find('', [], ['offset' => $offset, 'limit' => $limit]);
             return $phases;
-        } catch (PDOException $th) {
-            throw new DatabaseException($th->getMessage());
+        } catch (Exception $e) {
+            throw $e;
         }
     }
 
@@ -169,7 +414,7 @@ class PhaseModel extends Model
     public static function createMultiple(int $projectId, PhaseContainer $phases): void
     {
         if ($projectId < 1) {
-            throw new InvalidArgumentException('Invalid project ID.');
+            throw new InvalidArgumentException('Invalid project ID provided.');
         }
 
         if ($phases->count() === 0) {
@@ -292,6 +537,10 @@ class PhaseModel extends Model
                     throw new InvalidArgumentException('Phase ID / Public ID is required for each phase in the array.');
                 }
 
+                if (isset($data['id']) && is_int($data['id']) && $data['id'] < 1) {
+                    throw new InvalidArgumentException('Invalid phase ID provided.');
+                }
+
                 $updateFields = [];
                 $params = [];
                 if (isset($data['id'])) {
@@ -341,6 +590,83 @@ class PhaseModel extends Model
         }
     }
 
+
+
+    /**
+     * Retrieves all tasks associated with a specific phase.
+     *
+     * This method fetches tasks for the given phase ID by delegating to TaskModel.
+     *
+     * @param int|UUID $phaseId The phase identifier (integer ID or UUID)
+     * @param array $options Pagination options:
+     *      - offset: int (default 0) Number of records to skip
+     *      - limit: int (default 10) Maximum number of records to return
+     * 
+     * @return TaskContainer|null Container with tasks for the phase, or null if none found
+     * 
+     * @throws InvalidArgumentException If the provided phase ID is invalid
+     * @throws DatabaseException If a database error occurs
+     */
+    public static function getTasks(int|UUID $phaseId, array $options = []): ?TaskContainer
+    {
+        if (is_int($phaseId) && $phaseId < 1) {
+            throw new InvalidArgumentException('Invalid phase ID provided.');
+        }
+
+        try {
+            return TaskModel::findAllByPhaseId($phaseId, null, null, $options);
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+
+    /**
+     * Finds a phase with all its associated tasks.
+     *
+     * This method retrieves a specific phase and populates its tasks container
+     * with all associated tasks.
+     *
+     * @param int|UUID $phaseId The phase identifier (integer ID or UUID)
+     * 
+     * @return Phase|null The Phase object with tasks populated, or null if not found
+     * 
+     * @throws InvalidArgumentException If the provided phase ID is invalid
+     * @throws DatabaseException If a database error occurs
+     */
+    public static function findFull(int|UUID $phaseId): ?Phase
+    {
+        if (is_int($phaseId) && $phaseId < 1) {
+            throw new InvalidArgumentException('Invalid phase ID provided.');
+        }
+        try {
+            // Find the phase
+            $whereClause = is_int($phaseId) 
+                ? 'id = :phaseId'
+                : 'publicId = :phaseId';
+            $params = [
+                ':phaseId' => is_int($phaseId) 
+                    ? $phaseId
+                    : UUID::toBinary($phaseId)
+            ];
+            
+            $phases = self::find($whereClause, $params);
+            if (!$phases || $phases->count() === 0) {
+                return null;
+            }
+            
+            $phase = $phases->first();
+            
+            // Get all tasks for the phase
+            $tasks = TaskModel::findAllByPhaseId($phaseId);
+            if ($tasks) {
+                $phase->setTasks($tasks);
+            }
+            
+            return $phase;
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
+        }
+    }
 
     /**
      * Deletes a phase entity.

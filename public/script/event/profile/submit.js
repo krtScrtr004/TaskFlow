@@ -6,6 +6,7 @@ import { validateInputs, userValidationRules } from '../../utility/validator.js'
 import { errorListDialog } from '../../render/error-list-dialog.js'
 import { debounce, debounceAsync } from '../../utility/debounce.js'
 import { handleException } from '../../utility/handle-exception.js'
+import { normalizeDateFormat } from '../../utility/utility.js'
 
 let [isLoading, hasSomethingChanged] = [false, false]
 
@@ -70,6 +71,8 @@ if (!myId || myId.trim() === '') {
  */
 async function submit(e) {
     e.preventDefault()
+        
+    Loader.patch(saveChangesButton.querySelector('.text-w-icon'))
 
     // Show confirmation dialog
     if (!await confirmationDialog(
@@ -81,26 +84,32 @@ async function submit(e) {
     const firstNameInput = editableProfileDetailsForm.querySelector('#first_name')
     const middleNameInput = editableProfileDetailsForm.querySelector('#middle_name')
     const lastNameInput = editableProfileDetailsForm.querySelector('#last_name')
-    const emailInput = editableProfileDetailsForm.querySelector('#email')
     const contactNumberInput = editableProfileDetailsForm.querySelector('#contact_number')
     const genderInput = editableProfileDetailsForm.querySelector('input[name="gender"]:checked')
+    const birthDateInput = editableProfileDetailsForm.querySelector('#birth_date')
     const bioInput = editableProfileDetailsForm.querySelector('#bio')
     const jobTitlesInput = editableProfileDetailsForm.querySelector('#job_titles')
-    if (!firstNameInput || !middleNameInput || !lastNameInput || !emailInput || !contactNumberInput || !genderInput || !bioInput || !jobTitlesInput) {
+    if (!firstNameInput || !middleNameInput || !lastNameInput || !contactNumberInput || !genderInput || !birthDateInput || !bioInput || !jobTitlesInput) {
         console.error('One or more profile form inputs not found.')
         Dialog.somethingWentWrong()
         return
+    }
+
+    // Handle job titles trailing comma and spaces
+    let jobTitlesValue = jobTitlesInput.value.trim()
+    while (jobTitlesValue.endsWith(',') || jobTitlesValue.endsWith(' ')) {
+        jobTitlesValue = jobTitlesValue.slice(0, -1).trim()
     }
 
     const currentValues = {
         firstName: firstNameInput.value,
         middleName: middleNameInput.value,
         lastName: lastNameInput.value,
-        email: emailInput.value,
         contactNumber: contactNumberInput.value,
         gender: genderInput.value,
+        birthDate: normalizeDateFormat(birthDateInput.value),
         bio: bioInput.value,
-        jobTitles: jobTitlesInput.value
+        jobTitles: jobTitlesValue
     }
 
     // Get only the changed values
@@ -115,8 +124,8 @@ async function submit(e) {
         return
     }
 
-     // Validate only the changed inputs
-    if (!validateInputs(changedParams, userValidationRules())) { 
+    // Validate only the changed inputs
+    if (!validateInputs(changedParams, userValidationRules())) {
         return
     }
 
@@ -134,11 +143,10 @@ async function submit(e) {
         }
     }
 
-    Loader.patch(saveChangesButton.querySelector('.text-w-icon'))
     try {
         await sendToBackend(changedParams)
 
-        setTimeout(() => window.location.reload(), 3000)
+        setTimeout(() => window.location.reload(), 1500)
         Dialog.operationSuccess(
             'Profile Updated',
             `Your profile has been successfully updated`
@@ -157,9 +165,9 @@ async function submit(e) {
  * - first name
  * - middle name
  * - last name
- * - email
  * - contact number
  * - gender (radio input)
+ * - birth date
  * - bio
  * - job titles
  *
@@ -172,18 +180,18 @@ function storeOriginalValues() {
     const firstNameInput = editableProfileDetailsForm.querySelector('#first_name')
     const middleNameInput = editableProfileDetailsForm.querySelector('#middle_name')
     const lastNameInput = editableProfileDetailsForm.querySelector('#last_name')
-    const emailInput = editableProfileDetailsForm.querySelector('#email')
     const contactNumberInput = editableProfileDetailsForm.querySelector('#contact_number')
     const genderInput = editableProfileDetailsForm.querySelector('input[name="gender"]:checked')
+    const birthDateInput = editableProfileDetailsForm.querySelector('#birth_date')
     const bioInput = editableProfileDetailsForm.querySelector('#bio')
     const jobTitlesInput = editableProfileDetailsForm.querySelector('#job_titles')
 
     originalValues.firstName = firstNameInput?.value || ''
     originalValues.middleName = middleNameInput?.value || ''
     originalValues.lastName = lastNameInput?.value || ''
-    originalValues.email = emailInput?.value || ''
     originalValues.contactNumber = contactNumberInput?.value || ''
     originalValues.gender = genderInput?.value || ''
+    originalValues.birthDate = normalizeDateFormat(birthDateInput?.value) || ''
     originalValues.bio = bioInput?.value || ''
     originalValues.jobTitles = jobTitlesInput?.value || ''
 }
@@ -232,19 +240,19 @@ function getJobTitleChanges(originalJobTitles, currentJobTitles) {
         .split(',')
         .map(title => title.trim())
         .filter(title => title !== '')
-    
+
     const currentTitles = currentJobTitles
         .split(',')
         .map(title => title.trim())
         .filter(title => title !== '')
-    
+
     // Find added titles (in current but not in original)
     const addedTitles = currentTitles.filter(title => !originalTitles.includes(title))
-    
+
     // Find removed titles (in original but not in current)
     const removedTitles = originalTitles.filter(title => !currentTitles.includes(title))
-    
-     // Clear and populate the arrays
+
+    // Clear and populate the arrays
     jobTitleToAdd.length = 0
     jobTitleToRemove.length = 0
     jobTitleToAdd.push(...addedTitles)
@@ -261,9 +269,9 @@ function getJobTitleChanges(originalJobTitles, currentJobTitles) {
  * @param {Object} params Object containing the fields to update. Possible keys:
  *      - firstName: {string} (optional) User's first name
  *      - lastName: {string} (optional) User's last name
- *      - email: {string} (optional) User's email address
  *      - contactNumber: {string} (optional) User's contact number
  *      - gender: {string} (optional) User's gender
+ *      - birthDate: {string} (optional) User's birth date (YYYY-MM-DD)
  *      - jobTitles: {string} (optional) Comma-separated job titles
  *      - [other fields]: {any} (optional) Any additional fields to update
  *
@@ -291,17 +299,17 @@ async function sendToBackend(params) {
         if (params.hasOwnProperty('lastName') && (!params.lastName || params.lastName.trim() === '')) {
             throw new Error('Last name is required.')
         }
-        if (params.hasOwnProperty('email') && (!params.email || params.email.trim() === '')) {
-            throw new Error('Email is required.')
-        }
         if (params.hasOwnProperty('contactNumber') && (!params.contactNumber || params.contactNumber.trim() === '')) {
             throw new Error('Contact number is required.')
         }
         if (params.hasOwnProperty('gender') && (!params.gender || params.gender.trim() === '')) {
             throw new Error('Gender is required.')
         }
-        if (params.hasOwnProperty('jobTitles') && 
-            params['jobTitles']['toAdd'].length === 0 && 
+        if (params.hasOwnProperty('birthDate') && (!params.birthDate || params.birthDate.trim() === '')) {
+            throw new Error('Birth date is required.')
+        }
+        if (params.hasOwnProperty('jobTitles') &&
+            params['jobTitles']['toAdd'].length === 0 &&
             params['jobTitles']['toRemove'].length === 0) {
             throw new Error('Job titles are required.')
         }

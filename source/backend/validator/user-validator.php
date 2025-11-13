@@ -25,6 +25,10 @@ class UserValidator extends Validator
         if (!preg_match("/^[a-zA-Z\s'\-]{" . NAME_MIN . "," . NAME_MAX . "}$/", $firstName)) {
             $this->errors[] = 'First name contains invalid characters.';
         }
+
+        if ($this->hasConsecutiveSpecialChars($firstName)) {
+            $this->errors[] = 'First name contains three or more consecutive special characters.';
+        }
     }
 
     /**
@@ -38,6 +42,10 @@ class UserValidator extends Validator
 
         if (!preg_match("/^[a-zA-Z\s'\-]{" . NAME_MIN . "," . NAME_MAX . "}$/", $middleName)) {
             $this->errors[] = 'Middle name contains invalid characters.';
+        }
+
+        if ($this->hasConsecutiveSpecialChars($middleName)) {
+            $this->errors[] = 'Middle name contains three or more consecutive special characters.';
         }
     }
 
@@ -53,6 +61,10 @@ class UserValidator extends Validator
         if (!preg_match("/^[a-zA-Z\s'\-]{" . NAME_MIN . "," . NAME_MAX . "}$/", $lastName)) {
             $this->errors[] = 'Last name contains invalid characters.';
         }
+
+        if ($this->hasConsecutiveSpecialChars($lastName)) {
+            $this->errors[] = 'Last name contains three or more consecutive special characters.';
+        }
     }
 
     /**
@@ -62,6 +74,10 @@ class UserValidator extends Validator
     {
         if ($bio !== null && (strlen(trim($bio)) < LONG_TEXT_MIN || strlen(trim($bio)) > LONG_TEXT_MAX)) {
             $this->errors[] = 'Bio must be between ' . LONG_TEXT_MIN . ' and ' . LONG_TEXT_MAX . ' characters long.';
+        }
+
+        if ($bio !== null && $this->hasConsecutiveSpecialChars($bio)) {
+            $this->errors[] = 'Bio contains three or more consecutive special characters.';
         }
     }
 
@@ -88,6 +104,14 @@ class UserValidator extends Validator
         $now = new DateTime();
         if ($birthDate >= $now) {
             $this->errors[] = 'Date of birth must be in the past.';
+        }
+
+        if (checkdate((int) $birthDate->format('m'), (int) $birthDate->format('d'), (int) $birthDate->format('Y')) === false) {
+            $this->errors[] = 'Date of birth is not a valid date.';
+        }
+
+        if (!self::isValidYear((int) $birthDate->format('Y'))) {
+            $this->errors[] = 'Date of birth year is not valid.';
         }
 
         // Calculate age
@@ -120,6 +144,11 @@ class UserValidator extends Validator
         foreach ($jobTitles as $jobTitle) {
             if (strlen(trim($jobTitle)) < 1 || strlen(trim($jobTitle)) > 20) {
                 $this->errors[] = 'Each job title must be between 1 and 20 characters long.';
+                break;
+            }
+
+            if (preg_match("/[^a-zA-Z0-9\s'\-]/", $jobTitle)) {
+                $this->errors[] = 'Job title "' . $jobTitle . '" contains invalid characters.';
                 break;
             }
         }

@@ -68,7 +68,7 @@ export function formatDateToString(date) {
 }
 
 /**
- * Compares two date strings.
+ * Compares two date strings by date only (ignores time).
  * @param {string} date1 - First date string to compare
  * @param {string} date2 - Second date string to compare
  * @returns {number} -1 if date1 is later, 1 if date2 is later, 0 if equal
@@ -78,15 +78,58 @@ export function compareDates(date1, date2) {
     if (!date1 || !date2) {
         throw new Error('Both date strings are required.')
     }
-    
+
     const d1 = new Date(date1)
     const d2 = new Date(date2)
-    
+
     if (isNaN(d1.getTime()) || isNaN(d2.getTime())) {
         throw new Error('Invalid date string.')
     }
-        
-    if (d1.getTime() > d2.getTime()) return -1
-    if (d1.getTime() < d2.getTime()) return 1
+
+    // Compare only the date part (YYYY-MM-DD)
+    const ymd1 = `${d1.getFullYear()}-${String(d1.getMonth() + 1).padStart(2, '0')}-${String(d1.getDate()).padStart(2, '0')}`
+    const ymd2 = `${d2.getFullYear()}-${String(d2.getMonth() + 1).padStart(2, '0')}-${String(d2.getDate()).padStart(2, '0')}`
+
+    if (ymd1 > ymd2) return -1
+    if (ymd1 < ymd2) return 1
     return 0
+}
+
+/**
+ * Normalizes a date string to ISO 8601 format (YYYY-MM-DD).
+ * 
+ * Handles different browser date input formats and ensures consistent
+ * date formatting regardless of browser or locale settings. This is particularly
+ * useful for HTML5 date inputs which may display differently across browsers
+ * but should be sent to the backend in a standardized format.
+ * 
+ * @param {string} dateString - The date string from HTML5 date input or other source
+ * @returns {string} Normalized date in YYYY-MM-DD format, or empty string if input is falsy
+ * 
+ * @example
+ * // All of these return '2025-11-15'
+ * normalizeDateFormat('2025-11-15')
+ * normalizeDateFormat('11/15/2025')
+ * normalizeDateFormat(new Date('2025-11-15').toString())
+ */
+export function normalizeDateFormat(dateString) {
+    if (!dateString) {
+        return ''
+    }
+    
+    // Parse the date string into a Date object
+    const date = new Date(dateString)
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+        console.warn(`Invalid date: ${dateString}`)
+        return dateString
+    }
+    
+    // Return ISO format: YYYY-MM-DD
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    
+    return `${year}-${month}-${day}`
 }

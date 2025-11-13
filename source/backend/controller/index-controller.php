@@ -30,12 +30,27 @@ class IndexController implements Controller
 
     private function __construct() {}
 
+    /**
+     * Handles the logic for displaying the index page (login/signup) and session management.
+     *
+     * This method performs the following actions:
+     * - Redirects authenticated users to the homepage.
+     * - Ensures a session exists for unauthenticated users.
+     * - Generates and persists a CSRF token if not already set.
+     * - Dynamically determines which page component (login/signup) to display based on the URL.
+     * - Loads the appropriate scripts for the selected component.
+     * - Renders the main index view.
+     *
+     * No parameters are required.
+     *
+     * @return void
+     */
     public static function index(): void
     {
         // If user is already logged in, redirect to homepage instead of showing login page
         if (SessionAuth::hasAuthorizedSession()) {
             $projectId = Session::get('activeProjectId') ?? '';
-            header('Location: ' . REDIRECT_PATH . 'home' . DS . $projectId);
+            header('Location: ' . REDIRECT_PATH . 'home');
             exit();
         }
 
@@ -58,5 +73,34 @@ class IndexController implements Controller
         $scripts = $component['scripts'] ?? [];
 
         require_once VIEW_PATH . 'index.php';
+    }
+
+    /**
+     * Handles the email confirmation view for unauthenticated users.
+     *
+     * This method ensures that a session exists and a CSRF token is set for security purposes.
+     * If the session is not initialized, it creates one. If the CSRF token is missing, it generates
+     * a new token, forces the session to be written and closed, then restores the session for the
+     * remainder of the request. Finally, it loads the email confirmation sub-view.
+     *
+     * No parameters are required.
+     *
+     * @return void
+     */
+    public static function confirmEmail(): void
+    {
+        // For unauthenticated users, ensure session exists and CSRF token is set
+        if (!Session::isSet()) {
+            Session::create();
+        }
+
+        if (!Csrf::get()) {
+            Csrf::generate();
+            // Force session write to ensure CSRF token is persisted
+            session_write_close();
+            Session::restore();  // Reopen session for the rest of the request
+        }
+
+        require_once SUB_VIEW_PATH . 'confirm-email.php';
     }
 }

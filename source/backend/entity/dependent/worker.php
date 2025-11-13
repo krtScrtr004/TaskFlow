@@ -37,6 +37,8 @@ class Worker extends User
      * @param string|null $profileLink Link to worker's profile
      * @param WorkerStatus $status Current status of the worker (enum)
      * @param DateTime $createdAt Timestamp when the worker was created
+     * @param DateTime|null $confirmedAt Timestamp when the worker was confirmed, or null if not confirmed
+     * @param DateTime|null $deletedAt Timestamp when the worker was deleted, or null
      * @param array $additionalInfo Optional array of additional information
      */
     public function __construct(
@@ -54,6 +56,8 @@ class Worker extends User
         ?string $profileLink,
         WorkerStatus $status,
         DateTime $createdAt,
+        ?DateTime $confirmedAt = null,
+        ?DateTime $deletedAt = null,
         array $additionalInfo = []
     ) {
         parent::__construct(
@@ -71,6 +75,8 @@ class Worker extends User
             bio: $bio,
             profileLink: $profileLink,
             createdAt: $createdAt,
+            confirmedAt: $confirmedAt,
+            deletedAt: $deletedAt,
             password: null,
             additionalInfo: $additionalInfo
         );
@@ -145,7 +151,9 @@ class Worker extends User
      *      - email: string Worker's email
      *      - profileLink: string Worker's profile link
      *      - status: string|WorkerStatus Worker's status
-     *      - joinedDateTime: string|DateTime When the worker joined
+     *      - createdAt: string|DateTime When the worker joined
+     *      - confirmedAt: string|DateTime|null When the worker was confirmed (optional)
+     *      - deletedAt: string|DateTime|null When the worker was deleted (optional)
      *      - additionalInfo: array (optional) Additional worker information
      * 
      * @return self New Worker instance created from provided data
@@ -192,6 +200,8 @@ class Worker extends User
             bio: $worker->getBio(),
             profileLink: $worker->getProfileLink(),
             createdAt: $worker->getCreatedAt(),
+            confirmedAt: $worker->getConfirmedAt(),
+            deletedAt: $worker->getDeletedAt(),
             password: $worker->getPassword(),
             additionalInfo: $worker->getAdditionalInfo()
         );
@@ -230,6 +240,8 @@ class Worker extends User
             profileLink: $user->getProfileLink(),
             status: WorkerStatus::ASSIGNED,
             createdAt: $user->getCreatedAt(),
+            confirmedAt: $user->getConfirmedAt(),
+            deletedAt: $user->getDeletedAt(),
             additionalInfo: $user->getAdditionalInfo()
         );
     }
@@ -273,7 +285,9 @@ class Worker extends User
      *      - bio: string Worker's biography
      *      - profileLink: string Worker's profile link
      *      - status: string|WorkerStatus Worker's status
-     *      - joinedDateTime: string|DateTime When the worker joined
+     *      - createdAt: string|DateTime When the worker joined
+     *      - confirmedAt: string|DateTime|null When the worker was confirmed (optional)
+     *      - deletedAt: string|DateTime|null When the worker was deleted (optional)
      *      - additionalInfo: array (optional) Additional worker information
      * 
      * @return self New Worker instance created from provided data
@@ -301,6 +315,8 @@ class Worker extends User
             profileLink: $user->getProfileLink(),
             status: $status,
             createdAt: $user->getCreatedAt(),
+            confirmedAt: $user->getConfirmedAt(),
+            deletedAt: $user->getDeletedAt(),
             additionalInfo: $user->getAdditionalInfo()
         );
     }

@@ -3,6 +3,7 @@
 		"TaskFlow/": "IndexController",
 		"TaskFlow/login": "IndexController",
 		"TaskFlow/register": "IndexController",
+		"TaskFlow/confirm-email(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": ["IndexController", "confirmEmail"],
 
 		"TaskFlow/reset-password": "SingleFormController",
 		"TaskFlow/change-password(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": "SingleFormController",
@@ -20,7 +21,7 @@
 			"TaskController", 
 			"viewGrid"
 		],
-		"TaskFlow/project/{projectId:[\\w+_-]+}/task/{taskId:[\\w+_-]+}": [
+		"TaskFlow/project/{projectId:[\\w+_-]+}/phase/{phaseId:[\\w+_-]+}/task/{taskId:[\\w+_-]+}": [
 			"TaskController",
 			"viewInfo"
 		],

@@ -5,7 +5,7 @@ use App\Core\UUID;
 use App\Enumeration\TaskPriority;
 use App\Enumeration\WorkStatus;
 
-function taskGridCard(Task $task, $projectId): string
+function taskGridCard(Task $task, UUID $projectId): string
 {
     $id = htmlspecialchars(UUID::toString($task->getPublicId()));
     $name = htmlspecialchars($task->getName());
@@ -14,8 +14,9 @@ function taskGridCard(Task $task, $projectId): string
     $completionDateTime = htmlspecialchars(dateToWords($task->getCompletionDateTime()));
     $status = $task->getStatus();
     $priority = $task->getPriority();
+    $phaseId = htmlspecialchars(UUID::toString($task->getAdditionalInfo()['phaseId']) ?? '');
 
-    $redirect = REDIRECT_PATH . 'project' . DS . UUID::toString($projectId) . DS . 'task' . DS . $id;
+    $redirect = REDIRECT_PATH . 'project' . DS . UUID::toString($projectId) . DS . 'phase' . DS . $phaseId . DS . 'task' . DS . $id;
 
     ob_start();
     ?>
@@ -24,7 +25,7 @@ function taskGridCard(Task $task, $projectId): string
             <section>
                 <div class="text-w-icon">
                     <img src="<?= ICON_PATH . 'task_w.svg' ?>" alt="Task" title="Task" height="24">
-                    <h3 class="task-name single-line-ellipsis"><?= $name ?></h3>
+                    <h3 class="task-name single-line-ellipsis" title="<?= $name ?>"><?= $name ?></h3>
                 </div>
                 <p class="task-id"><em><?= $id ?></em></p>
             </section>

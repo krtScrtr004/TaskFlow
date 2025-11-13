@@ -7,6 +7,7 @@ import { workerIds } from '../../add-worker-modal/task/new/add.js'
 import { validateInputs, workValidationRules } from '../../../utility/validator.js'
 import { debounceAsync } from '../../../utility/debounce.js'
 import { handleException } from '../../../utility/handle-exception.js'
+import { normalizeDateFormat } from '../../../utility/utility.js'
 
 let isLoading = false
 
@@ -44,48 +45,56 @@ addTaskForm?.addEventListener('submit', e => add(e))
 async function submitForm(e) {
     e.preventDefault()
 
+    Loader.patch(addTaskButton.querySelector('.text-w-icon'))
+
     // Show confirmation dialog
     if (!await confirmationDialog(
         'Confirm Add Task',
         'Are you sure you want to add this task?'
     )) return
 
-    Loader.patch(addTaskButton.querySelector('.text-w-icon'))
+    // Retrieve input fields from the form
+    const nameInput = addTaskForm.querySelector('#task_name')
+    const startDateInput = addTaskForm.querySelector('#task_start_date')
+    const completionDateInput = addTaskForm.querySelector('#task_completion_date')
+    const descriptionInput = addTaskForm.querySelector('#task_description')
+    const prioritySelect = addTaskForm.querySelector('#task_priority')
+    if (!nameInput || !startDateInput || !completionDateInput || !descriptionInput || !prioritySelect) {
+        throw new Error('One or more form inputs not found.')
+    }
+
+    const params = {
+        name: nameInput ? nameInput.value : '',
+        startDateTime: normalizeDateFormat(startDateInput.value),
+        completionDateTime: normalizeDateFormat(completionDateInput.value),
+        description: descriptionInput ? descriptionInput.value : '',
+        priority: prioritySelect ? prioritySelect.value : '',
+        workerIds: workerIds ? workerIds : {}
+    }
+
+    // Validate inputs
+    if (!validateInputs(params, workValidationRules())) {
+        return
+    }
+
+    const projectId = addTaskForm.dataset.projectid
+    if (!projectId) {
+        throw new Error('Project ID not found in form dataset.')
+    }
+
+    const phaseId = addTaskForm.dataset.phaseid
+    if (!phaseId) {
+        throw new Error('Phase ID not found in form dataset.')
+    }
+
+
     try {
-        // Retrieve input fields from the form
-        const nameInput = addTaskForm.querySelector('#task_name')
-        const startDateInput = addTaskForm.querySelector('#task_start_date')
-        const completionDateInput = addTaskForm.querySelector('#task_completion_date')
-        const descriptionInput = addTaskForm.querySelector('#task_description')
-        const prioritySelect = addTaskForm.querySelector('#task_priority')
-        if (!nameInput || !startDateInput || !completionDateInput || !descriptionInput || !prioritySelect) {
-            throw new Error('One or more form inputs not found.')
-        }
-
-        const params = {
-            name: nameInput ? nameInput.value : '',
-            startDateTime: startDateInput ? startDateInput.value : '',
-            completionDateTime: completionDateInput ? completionDateInput.value : '',
-            description: descriptionInput ? descriptionInput.value : '',
-            priority: prioritySelect ? prioritySelect.value : '',
-            workerIds: workerIds ? workerIds : {}
-        }
-
-        // Validate inputs
-        if (!validateInputs(params, workValidationRules())) {
-            return
-        }
-
-        const projectId = addTaskForm.dataset.projectid
-        if (!projectId) {
-            throw new Error('Project ID not found in form dataset.')
-        }
-        const response = await sendToBackend(params, projectId)
+        const response = await sendToBackend(params, phaseId, projectId)
         if (!response) {
             throw new Error('No response from server.')
         }
 
-        setTimeout(() => window.location.href = `/TaskFlow/project/${projectId}/task/${response.id}`, 1500)
+        setTimeout(() => window.location.href = `/TaskFlow/project/${projectId}/phase/${phaseId}/task/${response.id}`, 1500)
         Dialog.operationSuccess('Task Added.', 'The task has been added to the project.')
     } catch (error) {
         handleException(error, 'Error submitting form:', error)
@@ -105,7 +114,7 @@ async function submitForm(e) {
  * @param {Object} inputs.workerIds - Object of assigned workers
  * @returns {Promise<void>} - Resolves when the task is successfully added
  */
-async function sendToBackend(inputs = {}, projectId) {
+async function sendToBackend(inputs = {}, phaseId, projectId) {
     try {
         if (isLoading) {
             console.warn('Request already in progress. Please wait.')
@@ -115,6 +124,10 @@ async function sendToBackend(inputs = {}, projectId) {
 
         if (!inputs) {
             throw new Error('No input data provided to send to backend.')
+        }
+
+        if (!phaseId || phaseId.trim() === '') {
+            throw new Error('Phase ID is required.')
         }
 
         if (!projectId || projectId.trim() === '') {
@@ -130,7 +143,7 @@ async function sendToBackend(inputs = {}, projectId) {
             workerIds
         } = inputs
 
-        const response = await Http.POST(`projects/${projectId}/tasks`, {
+        const response = await Http.POST(`projects/${projectId}/phases/${phaseId}/tasks`, {
             name: name.trim(),
             description: description.trim(),
             startDateTime,

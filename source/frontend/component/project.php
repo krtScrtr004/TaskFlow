@@ -23,6 +23,7 @@ $projectData = [
     'tasks'                 => $project->getTasks(),
     'phases'                => $project->getPhases(),
     'workers'               => $project->getWorkers()->getAssigned(),
+    'progress'              => $projectProgress ?? ProjectProgressCalculator::calculate($project->getTasks())
 ];
 
 require_once COMPONENT_PATH . 'template/user-info-card.php';
@@ -126,19 +127,7 @@ require_once COMPONENT_PATH . 'template/add-worker-modal.php';
 
                 <!-- Right Side -->
                 <div class="right">
-                    <?php
-                    $projectProgress = null;
-                    if ($projectData['tasks']?->count() > 0) {
-                        $projectProgress = ProjectProgressCalculator::calculate($projectData['tasks']);
-                    } else {
-                        $projectProgress = [
-                            'progressPercentage'    => 0.0,
-                            'statusBreakdown'       => [],
-                            'priorityBreakdown'     => []
-                        ];
-                    }
-                    $progressPercentage = htmlspecialchars(formatNumber($projectProgress['progressPercentage'] ?? 0.0));
-                    ?>
+                    <?php $progressPercentage = htmlspecialchars(formatNumber($projectData['progress']['progressPercentage'] ?? 0.0)); ?>
 
                     <div class="text-w-icon">
                         <img src="<?= ICON_PATH . 'progress_w.svg' ?>" alt="Project Progress" title="Project Progress"
@@ -177,7 +166,7 @@ require_once COMPONENT_PATH . 'template/add-worker-modal.php';
                     <!-- Task Status Chart -->
                     <div class="task-status-chart chart-container">
                         <?php
-                        $statusBreakdown = $projectProgress['statusBreakdown'];
+                        $statusBreakdown = $projectData['progress']['statusBreakdown'];
                         $statusPercentages = [
                             'pending'   => $statusBreakdown[WorkStatus::PENDING->value]['percentage'] ?? 0,
                             'ongoing'   => $statusBreakdown[WorkStatus::ON_GOING->value]['percentage'] ?? 0,
@@ -206,7 +195,7 @@ require_once COMPONENT_PATH . 'template/add-worker-modal.php';
                     <!-- Task Priority Chart -->
                     <div class="task-priority-chart chart-container">
                         <?php
-                        $priorityBreakdown = $projectProgress['priorityBreakdown'];
+                        $priorityBreakdown = $projectData['progress']['priorityBreakdown'];
                         $priorityPercentages = [
                             'low'       => $priorityBreakdown[TaskPriority::LOW->value]['percentage'] ?? 0,
                             'medium'    => $priorityBreakdown[TaskPriority::MEDIUM->value]['percentage'] ?? 0,
@@ -269,7 +258,7 @@ require_once COMPONENT_PATH . 'template/add-worker-modal.php';
             <?php endif; ?>
         </div>
 
-        <section>
+        <section class="team-members">
             <section class="project-manager content-section-block flex-col">
                 <div class="heading-title text-w-icon">
                     <img src="<?= ICON_PATH . 'manager_w.svg' ?>" alt="Project Manager" title="Project Manager"
