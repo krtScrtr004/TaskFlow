@@ -10,10 +10,10 @@ function phaseListCard(Phase $phase): string
     $name = htmlspecialchars($phase->getName());
     $description = htmlspecialchars($phase->getDescription());
     $startDateTime = htmlspecialchars(
-        simplifyDate($phase->getStartDateTime())
+        dateToWords($phase->getStartDateTime())
     );
     $completionDateTime = htmlspecialchars(
-        simplifyDate($phase->getCompletionDateTime())
+        dateToWords($phase->getCompletionDateTime())
     );
     $status = $phase->getStatus();
 

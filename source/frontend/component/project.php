@@ -148,16 +148,8 @@ require_once COMPONENT_PATH . 'template/add-worker-modal.php';
 
             <!-- Task Statistics -->
             <section class="task-statistics content-section-block flex-col">
-                <div class="heading flex-row flex-space-between">
-                    <div class=" heading-title text-w-icon">
-                        <img src="<?= ICON_PATH . 'task_w.svg' ?>" alt="Task Statistics" title="Task Statistics"
-                            height="20">
-
-                        <h3>Task Statistics</h3>
-                    </div>
-                    
-                    <a href="<?= REDIRECT_PATH . 'project' . DS . $projectData['id'] . DS . 'task' ?>"
-                        class="blue-text">See All</a>
+                <div class="see-all-tasks">
+                    <a class="blue-text float-right" href="<?= REDIRECT_PATH . 'project' . DS . $projectData['id'] . DS . 'task' ?>">See All</a>
                 </div>
 
                 <!-- Task Statistics Chart -->
@@ -165,22 +157,15 @@ require_once COMPONENT_PATH . 'template/add-worker-modal.php';
 
                     <!-- Task Status Chart -->
                     <div class="task-status-chart chart-container">
-                        <?php
-                        $statusBreakdown = $projectData['progress']['statusBreakdown'];
-                        $statusPercentages = [
-                            'pending'   => $statusBreakdown[WorkStatus::PENDING->value]['percentage'] ?? 0,
-                            'ongoing'   => $statusBreakdown[WorkStatus::ON_GOING->value]['percentage'] ?? 0,
-                            'completed' => $statusBreakdown[WorkStatus::COMPLETED->value]['percentage'] ?? 0,
-                            'delayed'   => $statusBreakdown[WorkStatus::DELAYED->value]['percentage'] ?? 0,
-                            'cancelled' => $statusBreakdown[WorkStatus::CANCELLED->value]['percentage'] ?? 0,
-                        ];
-                        ?>
-                        <div data-pending="<?= $statusPercentages['pending'] ?>"
-                            data-ongoing=" <?= $statusPercentages['ongoing'] ?>"
-                            data-completed="<?= $statusPercentages['completed'] ?>"
-                            data-delayed="<?= $statusPercentages['delayed'] ?>"
-                            data-cancelled="<?= $statusPercentages['cancelled'] ?>"
-                            class="status-percentage no-display">
+                        <?php $statusBreakdown = $projectData['progress']['statusBreakdown']; ?>
+                        <div class="status-statistics">
+                            <?php 
+                            foreach (WorkStatus::cases() as $status): 
+                                $percentage = $statusBreakdown[$status->value]['percentage'] ?? 0;
+                                $count = $statusBreakdown[$status->value]['count'] ?? 0;
+                            ?>
+                                <span data-percentage="<?= $percentage ?>" data-count="<?= $count ?>"></span>
+                            <?php endforeach; ?>
                         </div>
 
                         <div class="first-col text-w-icon">
@@ -194,18 +179,15 @@ require_once COMPONENT_PATH . 'template/add-worker-modal.php';
 
                     <!-- Task Priority Chart -->
                     <div class="task-priority-chart chart-container">
-                        <?php
-                        $priorityBreakdown = $projectData['progress']['priorityBreakdown'];
-                        $priorityPercentages = [
-                            'low'       => $priorityBreakdown[TaskPriority::LOW->value]['percentage'] ?? 0,
-                            'medium'    => $priorityBreakdown[TaskPriority::MEDIUM->value]['percentage'] ?? 0,
-                            'high'      => $priorityBreakdown[TaskPriority::HIGH->value]['percentage'] ?? 0,
-                        ];
-                        ?>
-                        <div data-low="<?= $priorityPercentages['low'] ?>"
-                            data-medium="<?= $priorityPercentages['medium'] ?>"
-                            data-high="<?= $priorityPercentages['high'] ?>" 
-                            class="priority-percentage no-display">
+                        <?php $priorityBreakdown = $projectData['progress']['priorityBreakdown']; ?>
+                        <div class="priority-statistics">
+                            <?php 
+                            foreach (TaskPriority::cases() as $status): 
+                                $percentage = $priorityBreakdown[$status->value]['percentage'] ?? 0;
+                                $count = $priorityBreakdown[$status->value]['count'] ?? 0;
+                            ?>
+                                <span data-percentage="<?= $percentage ?>" data-count="<?= $count ?>"></span>
+                            <?php endforeach; ?>
                         </div>
 
                         <div class="first-col text-w-icon">
@@ -214,6 +196,7 @@ require_once COMPONENT_PATH . 'template/add-worker-modal.php';
 
                             <h3>Task Priority Distribution</h3>
                         </div>
+
                         <canvas id="task_priority_chart" width="400" height="200"></canvas>
                     </div>
 
@@ -251,9 +234,15 @@ require_once COMPONENT_PATH . 'template/add-worker-modal.php';
 
                     <hr>
 
-                    <button id="cancel_project_button" type="button" class="unset-button" href="">
-                        Cancel This Project
-                    </button>
+                    <div class="action-buttons flex-col">
+                        <a class="green-text inline" href="<?= REDIRECT_PATH . 'project' . DS . $projectData['id'] . DS . 'report' ?>">
+                            View Reports And Statistics
+                        </a>
+
+                        <button id="cancel_project_button" type="button" class="unset-button" href="">
+                            Cancel This Project
+                        </button>
+                    </div>
                 </section>
             <?php endif; ?>
         </div>

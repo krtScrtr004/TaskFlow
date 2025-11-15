@@ -208,7 +208,8 @@ class ProjectModel extends Model
                                 'phaseDescription', pp.description,
                                 'phaseStatus', pp.status,
                                 'phaseStartDateTime', pp.startDateTime,
-                                'phaseCompletionDateTime', pp.completionDateTime
+                                'phaseCompletionDateTime', pp.completionDateTime,
+                                'phaseActualCompletionDateTime', pp.actualCompletionDateTime
                             )
                             ORDER BY pp.startDateTime ASC
                         ), ']')
@@ -345,6 +346,9 @@ class ProjectModel extends Model
                         description: $phase['phaseDescription'],
                         startDateTime: new DateTime($phase['phaseStartDateTime']),
                         completionDateTime: new DateTime($phase['phaseCompletionDateTime']),
+                        actualCompletionDateTime: $phase['phaseActualCompletionDateTime'] 
+                            ? new DateTime($phase['phaseActualCompletionDateTime']) 
+                            : null,
                         status: WorkStatus::from($phase['phaseStatus']),
                         tasks: new TaskContainer()
                     ));

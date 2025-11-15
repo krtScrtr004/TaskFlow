@@ -9,6 +9,7 @@ use App\Core\UUID;
 use App\Enumeration\WorkStatus;
 use App\Dependent\Phase;
 use App\Entity\Task;
+use App\Enumeration\TaskPriority;
 use App\Exception\DatabaseException;
 use App\Exception\ValidationException;
 use DateTime;
@@ -243,6 +244,7 @@ class PhaseModel extends Model
                             'name', pt.name,
                             'description', pt.description,
                             'status', pt.status,
+                            'priority', pt.priority,
                             'startDateTime', pt.startDateTime,
                             'completionDateTime', pt.completionDateTime,
                             'createdAt', pt.createdAt,
@@ -308,6 +310,7 @@ class PhaseModel extends Model
                                 'name'                      => $taskData['name'],
                                 'description'               => $taskData['description'],
                                 'status'                    => WorkStatus::from($taskData['status']),
+                                'priority'                  => TaskPriority::from($taskData['priority']),
                                 'startDateTime'             => new DateTime($taskData['startDateTime']),
                                 'completionDateTime'        => new DateTime($taskData['completionDateTime']),
                                 'actualCompletionDateTime'  => isset($taskData['actualCompletionDateTime']) ? new DateTime($taskData['actualCompletionDateTime']) : null,
