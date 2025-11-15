@@ -395,24 +395,7 @@ class ProjectController implements Controller
                 throw new NotFoundException('Project ID is required.');
             }
 
-            $project = $instance->getProjectInfo($projectId, [
-                'workers' => true
-            ]);
-            if (!$project) {
-                throw new NotFoundException('Project not found.');
-            }
-
-            $phases = PhaseModel::findAllByProjectId($project->getId(), true);
-            if (!$phases) {
-                throw new NotFoundException('Phases not found.');
-            }
-
-            foreach ($phases as $phase) {
-                foreach ($phase->getTasks() as $task) {
-                    $project->addTask($task);
-                }
-            }
-            $project->setPhases($phases);
+            $projectReport = ProjectModel::getReport($projectId);
 
             require_once SUB_VIEW_PATH . 'report.php';
         } catch (NotFoundException $e) {

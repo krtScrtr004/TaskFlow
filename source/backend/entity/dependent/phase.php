@@ -325,6 +325,7 @@ class Phase implements Entity
      *      - completionDateTime: string|DateTime|null Expected completion date and time
      *      - actualCompletionDateTime: string|DateTime|null Actual completion date and time
      *      - status: string|WorkStatus|null Current work status of the phase
+     *      - tasks: TaskContainer|null Container of tasks associated with the phase
      * 
      * @return self New Phase instance created from provided data with defaults for missing values
      */
@@ -339,7 +340,8 @@ class Phase implements Entity
             'startDateTime' => $data['startDateTime'] ?? new DateTime(),
             'completionDateTime' => $data['completionDateTime'] ?? new DateTime('+7 days'),
             'actualCompletionDateTime' => $data['actualCompletionDateTime'] ?? null,
-            'status' => $data['status'] ?? WorkStatus::PENDING
+            'status' => $data['status'] ?? WorkStatus::PENDING,
+            'tasks' => $data['tasks'] ?? null
         ];
 
         // Handle UUID conversion

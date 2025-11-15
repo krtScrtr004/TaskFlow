@@ -5,27 +5,25 @@ use App\Enumeration\TaskPriority;
 use App\Enumeration\WorkStatus;
 use App\Utility\ProjectProgressCalculator;
 
-if (!$project) {
-    throw new Error('Project data is not defined.');
+if (!$projectReport) {
+    throw new Error('Project Report data is not defined.');
 }
 
-$projectData = [
-    'id'                        => htmlspecialchars(UUID::toString($project->getPublicId())),
-    'name'                      => htmlspecialchars($project->getName()),
-    'budget'                    => htmlspecialchars(formatNumber($project->getBudget())),
-    'startDateTime'             => htmlspecialchars(formatDateTime($project->getStartDateTime())),
-    'completionDateTime'        => htmlspecialchars(formatDateTime($project->getCompletionDateTime())),
-    'actualCompletionDateTime'  => $project->getActualCompletionDateTime() ? 
-        htmlspecialchars(formatDateTime($project->getActualCompletionDateTime())) : 
+$reportData = [
+    'id'                        => htmlspecialchars(UUID::toString($projectReport->getPublicId())),
+    'name'                      => htmlspecialchars($projectReport->getName()),
+    'startDateTime'             => htmlspecialchars(formatDateTime($projectReport->getStartDateTime())),
+    'completionDateTime'        => htmlspecialchars(formatDateTime($projectReport->getCompletionDateTime())),
+    'actualCompletionDateTime'  => $projectReport->getActualCompletionDateTime() ? 
+        htmlspecialchars(formatDateTime($projectReport->getActualCompletionDateTime())) : 
         null,
-    'status'                    => $project->getStatus(),
-    'tasks'                     => $project->getTasks(),
-    'phases'                    => $project->getPhases(),
-    'workers'                   => $project->getWorkers()->getAssigned(),
+    'status'                    => $projectReport->getStatus(),
+    'phases'                    => $projectReport->getPhases(),
+    'workers'                   => $projectReport->getTopWorker(),
 ];
 
-$performance = ($projectData['phases']?->count() > 0)
-    ? ProjectProgressCalculator::calculate($projectData['phases'])
+$performance = ($reportData['phases']?->count() > 0)
+    ? ProjectProgressCalculator::calculate($reportData['phases'])
     : [
         'progressPercentage' => 0.0,
         'statusBreakdown' => [],
@@ -69,15 +67,15 @@ $performance = ($projectData['phases']?->count() > 0)
                 <!-- Heading -->
                 <div class="section-heading heading main flex-row">
                     <div class="text-w-icon"> <img src="<?= ICON_PATH . 'project_w.svg' ?>"
-                            alt="<?= $projectData['name'] ?>" title="<?= $projectData['name'] ?>" height="45">
+                            alt="<?= $reportData['name'] ?>" title="<?= $reportData['name'] ?>" height="45">
 
                         <div class="heading-text flex-col">
-                            <h2><?= $projectData['name'] ?>'s Report</h2>
+                            <h2><?= $reportData['name'] ?>'s Report</h2>
                             <p>Track the project's reports and statistics</p>
                         </div>
                     </div>
 
-                    <?= WorkStatus::badge($projectData['status']) ?>
+                    <?= WorkStatus::badge($reportData['status']) ?>
                 </div>
 
                 <!-- Progress Bar -->
@@ -122,13 +120,13 @@ $performance = ($projectData['phases']?->count() > 0)
                     <section class="timeline">
                         <span 
                             class="project-schedule no-display"
-                            data-projectStartDateTime="<?= $projectData['startDateTime'] ?>"
-                            data-projectCompletionDateTime="<?= $projectData['completionDateTime'] ?>"
-                            data-projectActualCompletionDateTime="<?= $projectData['actualCompletionDateTime'] ?>"></span>
+                            data-projectStartDateTime="<?= $reportData['startDateTime'] ?>"
+                            data-projectCompletionDateTime="<?= $reportData['completionDateTime'] ?>"
+                            data-projectActualCompletionDateTime="<?= $reportData['actualCompletionDateTime'] ?>"></span>
 
                         <div class="phase-timeline-data no-display">
                             <?php 
-                            foreach ($projectData['phases'] as $phase): 
+                            foreach ($reportData['phases'] as $phase): 
                                 $name = htmlspecialchars($phase->getName());
                                 $startDateTime = htmlspecialchars(formatDateTime($phase->getStartDateTime()));
                                 $completionDateTime = htmlspecialchars(formatDateTime($phase->getCompletionDateTime()));
@@ -168,7 +166,7 @@ $performance = ($projectData['phases']?->count() > 0)
                     <section class="phases-list flex-col">
                         <?php 
                             foreach ($performance['phaseBreakdown'] as $phaseId => $phaseData): 
-                                $reference = $projectData['phases']->get($phaseId);
+                                $reference = $reportData['phases']->get($phaseId);
                                 $name = htmlspecialchars($reference->getName());
                                 $startDateTime = htmlspecialchars(dateToWords($reference->getStartDateTime()));
                                 $completionDateTime = htmlspecialchars(dateToWords($reference->getCompletionDateTime()));
@@ -302,7 +300,7 @@ $performance = ($projectData['phases']?->count() > 0)
                         <p>Analyze the distribution of tasks across different phases of the project</p>
                     </div>
 
-                    <?php if ($projectData['phases']?->count() > 0): ?>
+                    <?php if ($reportData['phases']?->count() > 0): ?>
                         <div class="phases-table-container black-bg">
                             <table class="phases-table black-bg">
                             
@@ -326,7 +324,7 @@ $performance = ($projectData['phases']?->count() > 0)
                                 </thead>
 
                                 <tbody>
-                                    <?php foreach ($projectData['phases'] as $phase): 
+                                    <?php foreach ($reportData['phases'] as $phase): 
                                         $name = htmlspecialchars($phase->getName());
                                         $total = $performance['phaseBreakdown'][$phase->getId()]['totalTasks'] ?? 0;
                                         $phaseId = $phase->getId();
