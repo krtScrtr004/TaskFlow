@@ -15,7 +15,7 @@ use DateTime;
  * Class ProjectReport
  *
  * Lightweight dependent entity used for assembling a project report containing
- * summary information about a project, its phases and participating workers.
+ * summary information about a project, its phases and participating topWorker.
  */
 class ProjectReport {
     private int $id;
@@ -25,8 +25,9 @@ class ProjectReport {
     private DateTime $completionDateTime;
     private ?DateTime $actualCompletionDateTime;
     private WorkStatus $status;
+    private ?array $periodicTaskCount;
     private PhaseContainer $phases;
-    private WorkerContainer $workers;
+    private WorkerContainer $topWorker;
 
     private WorkValidator $validator;
 
@@ -43,8 +44,9 @@ class ProjectReport {
      * @param DateTime $completionDateTime Project planned completion
      * @param ?DateTime $actualCompletionDateTime Actual completion timestamp or null
      * @param WorkStatus $status Current project status
+     * @param array $periodicTaskCount Periodic task count data
      * @param PhaseContainer $phases Container of project phases
-     * @param WorkerContainer $workers Container of project workers
+     * @param WorkerContainer $topWorker Container of project topWorker
      *
      * @throws ValidationException when validation fails
      */
@@ -56,8 +58,9 @@ class ProjectReport {
         DateTime $completionDateTime,
         ?DateTime $actualCompletionDateTime,
         WorkStatus $status,
+        array $periodicTaskCount,
         PhaseContainer $phases,
-        WorkerContainer $workers
+        WorkerContainer $topWorker
     ) {
         $this->validator = new WorkValidator();
         $this->validator->validateMultiple([
@@ -76,8 +79,9 @@ class ProjectReport {
         $this->completionDateTime = $completionDateTime;
         $this->actualCompletionDateTime = $actualCompletionDateTime;
         $this->status = $status;
+        $this->periodicTaskCount = $periodicTaskCount;
         $this->phases = $phases;
-        $this->workers = $workers;
+        $this->topWorker = $topWorker;
     }
 
     // Getters 
@@ -152,6 +156,16 @@ class ProjectReport {
     }
 
     /**
+     * Get periodic task count data.
+     *
+     * @return array
+     */
+    public function getPeriodicTaskCount(): array
+    {
+        return $this->periodicTaskCount;
+    }
+
+    /**
      * Get container of project phases.
      *
      * @return PhaseContainer
@@ -162,13 +176,13 @@ class ProjectReport {
     }
 
     /**
-     * Get container of project workers.
+     * Get container of project top workers.
      *
      * @return WorkerContainer
      */
-    public function getWorkers(): WorkerContainer
+    public function getTopWorker(): WorkerContainer
     {
-        return $this->workers;
+        return $this->topWorker;
     }
 
 
@@ -278,6 +292,21 @@ class ProjectReport {
     }
 
     /**
+     * Set periodic task count data.
+     *
+     * @param array $periodicTaskCount
+     * @throws ValidationException when periodicTaskCount is not associative array
+     * @return void
+     */
+    public function setPeriodicTaskCount(array $periodicTaskCount): void
+    {
+        if (!isAssociativeArray($periodicTaskCount)) {
+            throw new ValidationException("Periodic task count must be a associative array");
+        }
+        $this->periodicTaskCount = $periodicTaskCount;
+    }
+
+    /**
      * Set the PhaseContainer for this report.
      *
      * @param PhaseContainer $phases
@@ -291,11 +320,11 @@ class ProjectReport {
     /**
      * Set the WorkerContainer for this report.
      *
-     * @param WorkerContainer $workers
+     * @param WorkerContainer $topWorker
      * @return void
      */
-    public function setWorkers(WorkerContainer $workers): void
+    public function setTopWorker(WorkerContainer $topWorker): void
     {
-        $this->workers = $workers;
+        $this->topWorker = $topWorker;
     }
 }
