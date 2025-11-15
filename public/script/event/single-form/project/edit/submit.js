@@ -107,14 +107,6 @@ async function submitForm(e) {
         return
     }
 
-    // Validate inputs
-    if (!validateInputs({
-        description: descriptionInput.value.trim() ?? null,
-        budget: parseFloat(budgetInput.value) ?? null,
-        startDateTime: startDateInput.value ?? null,
-        completionDateTime: completionDateInput.value ?? null
-    }, workValidationRules())) return
-
     // Clear before re-collecting to prevent duplication
     phaseToAdd.length = 0
     phaseToEdit.length = 0
@@ -156,6 +148,14 @@ async function submitForm(e) {
             changedProject[key] = curVal
         }
     })
+
+    // Validate all changed fields
+    for (const key of Object.keys(changedProject)) {
+        if (!validateInputs({ [key]: changedProject[key] }, workValidationRules())) {
+            Loader.delete()
+            return
+        }
+    }
 
     const phasePayload = {
         toAdd: phaseToAdd,
