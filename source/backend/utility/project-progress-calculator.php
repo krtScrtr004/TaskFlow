@@ -172,8 +172,9 @@ class ProjectProgressCalculator
                 : 0.0;
             
             $completedTasks = $data['statusCounts'][WorkStatus::COMPLETED->value] ?? 0;
-            $simpleProgress = $data['totalTasks'] > 0 
-                ? ($completedTasks / $data['totalTasks']) * 100 
+            $denominator = $data['totalTasks'] - $data['statusCounts'][WorkStatus::CANCELLED->value];
+            $simpleProgress = $denominator > 0 
+                ? ($completedTasks / $denominator) * 100 
                 : 0.0;
             
             $phaseBreakdown[$phaseId] = [
