@@ -320,8 +320,10 @@ class TaskEndpoint
                 throw new ForbiddenException('Worker IDs are required.');
             }
             
+            $temporaryId = 0;
             foreach ($workerIds as $workerId) {
                 $task->addWorker(Worker::createPartial([
+                    'id' => $temporaryId++,
                     'publicId' => UUID::fromString($workerId)
                 ]));
             }
