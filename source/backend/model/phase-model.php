@@ -132,8 +132,10 @@ class PhaseModel extends Model
 
         try {
             $whereClause = is_int($projectId) 
-                ? 'projectId = :projectId AND status = :status' 
-                : 'projectId = (SELECT id FROM `project` WHERE publicId = :projectId) AND status = :status';
+                ? 'projectId = :projectId' 
+                : 'projectId = (SELECT id FROM `project` WHERE publicId = :projectId)';
+
+            $whereClause .= " AND status = :status AND startDateTime <= NOW()";
 
             $params = [
                 'projectId' => is_int($projectId) 
