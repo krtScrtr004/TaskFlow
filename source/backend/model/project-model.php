@@ -21,6 +21,7 @@ use App\Dependent\Worker;
 use App\Enumeration\Role;
 use App\Core\Me;
 use App\Core\Connection;
+use App\Dependent\ProjectReport;
 use App\Enumeration\WorkerStatus;
 use App\Exception\ValidationException;
 use App\Exception\DatabaseException;
@@ -208,7 +209,8 @@ class ProjectModel extends Model
                                 'phaseDescription', pp.description,
                                 'phaseStatus', pp.status,
                                 'phaseStartDateTime', pp.startDateTime,
-                                'phaseCompletionDateTime', pp.completionDateTime
+                                'phaseCompletionDateTime', pp.completionDateTime,
+                                'phaseActualCompletionDateTime', pp.actualCompletionDateTime
                             )
                             ORDER BY pp.startDateTime ASC
                         ), ']')
@@ -345,6 +347,9 @@ class ProjectModel extends Model
                         description: $phase['phaseDescription'],
                         startDateTime: new DateTime($phase['phaseStartDateTime']),
                         completionDateTime: new DateTime($phase['phaseCompletionDateTime']),
+                        actualCompletionDateTime: $phase['phaseActualCompletionDateTime'] 
+                            ? new DateTime($phase['phaseActualCompletionDateTime']) 
+                            : null,
                         status: WorkStatus::from($phase['phaseStatus']),
                         tasks: new TaskContainer()
                     ));
@@ -1023,5 +1028,654 @@ class ProjectModel extends Model
     {
         // Not implemented (No use case)
         return false;
+    }
+
+    /**
+     * Generates a ProjectReport for the given project identifier.
+     *
+     * This method retrieves and aggregates multiple data sources to assemble a complete
+     * report object describing a project's overall status, phases, tasks, worker statistics,
+     * periodic task counts and top-performing workers.
+     *
+     * Main behaviors and conversions:
+     * - Validates integer project IDs (must be >= 1).
+     * - Fetches:
+     *     - project statistics (associative row containing project metadata and a JSON-encoded phases collection)
+     *     - worker counts by status (associative counts including a 'total' key)
+     *     - periodic task counts (rows with year, month, taskCount)
+     *     - top workers (rows with worker metadata and aggregated metrics)
+     * - Decodes JSON-encoded phase and task payloads via json_decode and iterates them to build containers:
+     *     - PhaseContainer populated with Phase objects created via Phase::createPartial()
+     *     - TaskContainer populated with Task objects created via Task::createPartial()
+     * - Converts identifiers and typed values:
+     *     - Task and Phase public IDs are converted from hex strings using UUID::fromHex()
+     *     - Project public ID is converted from binary using UUID::fromBinary()
+     *     - Priority and status values are converted to enums via TaskPriority::from() and WorkStatus::from()
+     *     - Datetime strings are converted to DateTime instances; nullable actual completion timestamps are handled
+     * - Computes worker status breakdown:
+     *     - Builds per-status count and percentage (percentage computed as (count / total) * 100, or 0 when total is 0)
+     * - Aggregates periodic task counts into a nested array keyed by year and month
+     * - Builds a WorkerContainer of top workers; each Worker is created via Worker::createPartial() and given an
+     *   additionalInfo array with totalTasks, completedTasks and overallScore
+     * - Returns a ProjectReport constructed with the assembled data (id, publicId, name, datetimes, status,
+     *   workerCount breakdown, periodicTaskCount aggregation, phases container and topWorker container)
+     *
+     * Expected structure of fetched rows / JSON payloads:
+     * - projectStatistics (associative array):
+     *     - projectId: int
+     *     - projectPublicId: binary (converted via UUID::fromBinary)
+     *     - projectName: string
+     *     - projectStartDateTime: string (ISO datetime)
+     *     - projectCompletionDateTime: string (ISO datetime)
+     *     - projectActualCompletionDateTime: string|null
+     *     - projectStatus: string (value for WorkStatus::from)
+     *     - projectPhases: string (JSON array of phases)
+     * - projectPhases JSON array element (phase):
+     *     - phaseId: int
+     *     - phasePublicId: string (hex; converted via UUID::fromHex)
+     *     - phaseName: string
+     *     - phaseStartDateTime: string
+     *     - phaseCompletionDateTime: string
+     *     - phaseActualCompletionDateTime: string|null
+     *     - phaseStatus: string (value for WorkStatus::from)
+     *     - phaseTasks: string (JSON array of tasks)
+     * - phaseTasks JSON array element (task):
+     *     - taskId: int
+     *     - taskPublicId: string (hex; converted via UUID::fromHex)
+     *     - taskName: string
+     *     - taskPriority: string (value for TaskPriority::from)
+     *     - taskStatus: string (value for WorkStatus::from)
+     *     - taskStartDateTime: string
+     *     - taskCompletionDateTime: string
+     *     - taskActualCompletionDateTime: string|null
+     * - workerCount (associative array):
+     *     - total: int
+     *     - <statusKey>: int (one or more status keys corresponding to WorkerStatus enum values)
+     * - periodicTaskCount (array of rows):
+     *     - year: int
+     *     - month: int
+     *     - taskCount: int
+     * - topWorkers (array of rows):
+     *     - id: int
+     *     - firstName: string
+     *     - lastName: string
+     *     - email: string
+     *     - totalTasks: int
+     *     - completedTasks: int
+     *     - overallScore: float|int
+     *
+     * Special cases:
+     * - If both project statistics and top workers are absent (no data), the method returns null.
+     *
+     * @param int|UUID $projectId Project identifier (integer ID or UUID instance). Integer IDs must be >= 1.
+     *
+     * @return ProjectReport|null The assembled ProjectReport instance, or null if no report data is available.
+     *
+     * @throws InvalidArgumentException When an integer projectId less than 1 is provided.
+     * @throws DatabaseException        When a PDOException occurs while querying the database (wrapped).
+     */
+    public static function getReport(int|UUID $projectId): ?ProjectReport
+    {
+        if (is_int($projectId) && $projectId < 1) {
+            throw new InvalidArgumentException('Invalid project ID provided.');
+        }
+
+        $instance = new self();
+        try {
+            $projectStatistics = self::projectStatistics($projectId);
+            $workerCount = self::workerCount($projectId);
+            $periodicTaskCount = self::periodicTaskCount($projectId);
+            $topWorkers = self::topWorkersQuery($projectId);
+            
+            if (!$projectStatistics && !$topWorkers) {
+                return null;
+            }
+
+            // Build phases and tasks
+            $phases = new PhaseContainer();
+            $rawPhases = json_decode($projectStatistics['projectPhases'], true);
+            foreach ($rawPhases as $phase) {
+                $tasks = new TaskContainer();
+
+                $rawTasks = json_decode($phase['phaseTasks'], true);
+                foreach ($rawTasks as $task) {
+                    $tasks->add(Task::createPartial([
+                        'id'                        => $task['taskId'],
+                        'publicId'                  => UUID::fromHex($task['taskPublicId']),
+                        'name'                      => $task['taskName'],
+                        'priority'                  => TaskPriority::from($task['taskPriority']),
+                        'status'                    => WorkStatus::from($task['taskStatus']),
+                        'startDateTime'             => new DateTime($task['taskStartDateTime']),
+                        'completionDateTime'        => new DateTime($task['taskCompletionDateTime']),
+                        'actualCompletionDateTime'  => $task['taskActualCompletionDateTime'] 
+                            ? new DateTime($task['taskActualCompletionDateTime']) 
+                            : null,
+                    ]));
+                }
+
+                $phases->add(Phase::createPartial([
+                    'id'                        => $phase['phaseId'],
+                    'publicId'                  => UUID::fromHex($phase['phasePublicId']),
+                    'name'                      => $phase['phaseName'],
+                    'startDateTime'             => new DateTime($phase['phaseStartDateTime']),
+                    'completionDateTime'        => new DateTime($phase['phaseCompletionDateTime']),
+                    'actualCompletionDateTime'  => $phase['phaseActualCompletionDateTime'] 
+                        ? new DateTime($phase['phaseActualCompletionDateTime']) 
+                        : null,
+                    'status'                    => WorkStatus::from($phase['phaseStatus']),
+                    'tasks'                     => $tasks
+                ]));
+            }
+
+            // Build Worker Count
+            $workerCounts = [];
+            $total = $workerCount['total'];
+            foreach ($workerCount as $status => $count) {
+                if ($status === 'total') {
+                    continue;
+                }
+
+                $key = WorkerStatus::from($status);
+                $workerCounts[$key->value]['count'] = $count;
+                $workerCounts[$key->value]['percentage'] = $total > 0 ? ($count / $total) * 100 : 0;
+            }
+
+            $taskCounts = [];
+            foreach($periodicTaskCount as $row) {
+                $year = (int) $row['year'];
+                $month = (int) $row['month'];
+                $count = (int) $row['taskCount'];
+
+                $taskCounts[$year][$month] = ($taskCounts[$year][$month] ?? 0) + $count;
+            }
+
+            // Build top workers
+            $workers = new WorkerContainer();
+            foreach ($topWorkers as $worker) {
+                $workers->add(Worker::createPartial([
+                    'id'                => $worker['id'],
+                    'firstName'         => $worker['firstName'],
+                    'lastName'          => $worker['lastName'],
+                    'email'             => $worker['email'],
+                    'additionalInfo'    => [
+                        'totalTasks'        => $worker['totalTasks'],
+                        'completedTasks'    => $worker['completedTasks'],
+                        'overallScore'      => $worker['overallScore'],
+                    ],
+                ]));
+            }
+
+            $report = new ProjectReport(
+                id: $projectStatistics['projectId'],
+                publicId: UUID::fromBinary($projectStatistics['projectPublicId']),
+                name: $projectStatistics['projectName'],
+                startDateTime: new DateTime($projectStatistics['projectStartDateTime']),
+                completionDateTime: new DateTime($projectStatistics['projectCompletionDateTime']),
+                actualCompletionDateTime: $projectStatistics['projectActualCompletionDateTime'] 
+                    ? new DateTime($projectStatistics['projectActualCompletionDateTime']) 
+                    : null,
+                status: WorkStatus::from($projectStatistics['projectStatus']),
+                workerCount: $workerCounts,
+                periodicTaskCount: $taskCounts,
+                phases: $phases,
+                topWorker: $workers
+            );
+
+            return $report;
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
+        }
+    }
+
+    /**
+     * Retrieves aggregated statistics for a project, including its phases and tasks.
+     *
+     * This private static method executes a single SQL query that returns project-level
+     * fields and a nested JSON representation of phases and their tasks. The query:
+     * - Matches the project by numeric ID (p.id) when an int is provided, or by its
+     *   binary publicId when a UUID-like value is provided (the UUID is converted to
+     *   binary via UUID::toBinary for binding).
+     * - Aggregates phases into a JSON array (ordered by phase.startDateTime ASC).
+     * - For each phase, aggregates its tasks into a JSON array (ordered by task.startDateTime ASC).
+     *
+     * Note on returned formats:
+     * - Top-level project fields (projectId, projectName, projectStartDateTime, etc.) are
+     *   returned as selected from the database.
+     * - projectPublicId is returned as stored (binary UUID in the database) unless converted by the caller.
+     * - Inside the aggregated JSON:
+     *     - phasePublicId and taskPublicId are returned as hexadecimal strings (HEX(...)).
+     *     - All date/time fields are returned as stored by the database (typically string timestamps).
+     * - projectPhases is returned as a JSON string representing an array of phases. Each phase object contains:
+     *     - phaseId: int
+     *     - phasePublicId: string (hex representation)
+     *     - phaseName: string
+     *     - phaseStartDateTime: string|null
+     *     - phaseCompletionDateTime: string|null
+     *     - phaseActualCompletionDateTime: string|null
+     *     - phaseStatus: string
+     *     - phaseTasks: JSON string representing an array of tasks, where each task object contains:
+     *         - taskId: int
+     *         - taskPublicId: string (hex representation)
+     *         - taskName: string
+     *         - taskPriority: mixed (as stored)
+     *         - taskStatus: string
+     *         - taskStartDateTime: string|null
+     *         - taskCompletionDateTime: string|null
+     *         - taskActualCompletionDateTime: string|null
+     *
+     * Usage notes:
+     * - The method prepares and executes a PDO statement and returns the first fetched row.
+     * - If no project is found, the method returns null.
+     *
+     * @param int|UUID $projectId Project identifier; pass an int for internal ID or a UUID-like value for publicId.
+     *
+     * @return array|null Associative array of project fields with the following keys:
+     *      - projectId: int
+     *      - projectPublicId: string|binary (as stored in DB)
+     *      - projectName: string
+     *      - projectStartDateTime: string|null
+     *      - projectCompletionDateTime: string|null
+     *      - projectActualCompletionDateTime: string|null
+     *      - projectStatus: string
+     *      - projectPhases: string JSON array of phases (see structure described above)
+     *
+     */ 
+    private static function projectStatistics(int|UUID $projectId)
+    {
+        $query = "
+            SELECT 
+                p.id AS projectId,
+                p.publicId AS projectPublicId,
+                p.name AS projectName,
+                p.startDateTime AS projectStartDateTime,
+                p.completionDateTime AS projectCompletionDateTime,
+                p.actualCompletionDateTime AS projectActualCompletionDateTime,
+                p.status AS projectStatus,
+                (
+                    SELECT CONCAT(
+                        '[', 
+                        GROUP_CONCAT(
+                            JSON_OBJECT(
+                                'phaseId', pp.id,
+                                'phasePublicId', HEX(pp.publicId),
+                                'phaseName', pp.name,
+                                'phaseStartDateTime', pp.startDateTime,
+                                'phaseCompletionDateTime', pp.completionDateTime,
+                                'phaseActualCompletionDateTime', pp.actualCompletionDateTime,
+                                'phaseStatus', pp.status,
+                                'phaseTasks', (
+                                    SELECT CONCAT(
+                                        '[', 
+                                        GROUP_CONCAT(
+                                            JSON_OBJECT(
+                                                'taskId', pt.id,
+                                                'taskPublicId', HEX(pt.publicId),
+                                                'taskName', pt.name,
+                                                'taskPriority', pt.priority,
+                                                'taskStatus', pt.status,
+                                                'taskStartDateTime', pt.startDateTime,
+                                                'taskCompletionDateTime', pt.completionDateTime,
+                                                'taskActualCompletionDateTime', pt.actualCompletionDateTime
+                                            )
+                                            ORDER BY pt.startDateTime ASC
+                                            SEPARATOR ','
+                                        ),
+                                        ']'
+                                    )
+                                    FROM phaseTask AS pt
+                                    WHERE pt.phaseId = pp.id
+                                )
+                            )
+                            ORDER BY pp.startDateTime ASC
+                            SEPARATOR ','
+                        ),
+                        ']'
+                    )
+                    FROM `projectPhase` AS pp
+                    WHERE pp.projectId = p.id
+                ) AS projectPhases
+            FROM
+                `project` AS p
+            WHERE
+                " . (is_int($projectId) ? 'p.id = :projectId' : 'p.publicId = :projectId') . "
+        ";
+
+        $instance = new self();
+        $statement = $instance->connection->prepare($query);
+        $statement->execute([
+            ':projectId'    => is_int($projectId) 
+                ? $projectId 
+                : UUID::toBinary($projectId),
+        ]);
+        $result = $statement->fetch();
+
+        if (!$instance->hasData($result)) {
+            return null;
+        }
+        return $result;
+    }
+
+    /**
+     * Returns worker counts for a given project.
+     *
+     * Executes a single SQL query that produces three counts for the specified project:
+     *  - assigned:   Number of distinct phaseTaskWorker entries where the worker is assigned
+     *                to a task whose phase belongs to the project, the task status is not
+     *                'completed' or 'cancelled', and the projectWorker relation has status 'assigned'.
+     *  - terminated: Number of projectWorker records for the project with status 'terminated'.
+     *  - unassigned: Number of users with role 'worker' (confirmed and not deleted) who are
+     *                not currently assigned to any active task (status 'assigned' on phaseTaskWorker
+     *                and task not in ('completed','cancelled')) and who do not have a terminated
+     *                projectWorker record for this project.
+     *
+     * The method accepts either an integer project id or a UUID public id. When a UUID is provided,
+     * it is converted to the binary representation before being bound to the query.
+     *
+     * @param int|UUID $projectId Project identifier. Provide the numeric primary key (int) to query by p.id,
+     *                            or a UUID (string|UUID object) to query by p.publicId.
+     *
+     * @return array|null Associative array with keys:
+     *      - assigned: int Number of currently assigned workers on active tasks
+     *      - terminated: int Number of terminated project workers
+     *      - unassigned: int Number of available (not assigned, not terminated) workers
+     *      - total: int Total number of workers associated with the project
+     *      Returns null if the project was not found or no row was returned.
+     */
+    private static function workerCount(int|UUID $projectId) {
+        $query = "
+            SELECT 
+                (
+                    SELECT 
+                        COUNT(*)
+                    FROM
+                        `phaseTaskWorker` AS ptw
+                    INNER JOIN 
+                        `phaseTask` AS pt 
+                    ON 
+                        pt.id = ptw.taskId
+                    INNER JOIN 
+                        `projectPhase` AS pp 
+                    ON 
+                        pp.id = pt.phaseId
+                    INNER JOIN 
+                        `projectWorker` AS pw 
+                    ON 
+                        pw.workerId = ptw.workerId AND pw.projectId = pp.projectId
+                    WHERE
+                        pp.projectId = p.id
+                    AND
+                        ptw.status = 'assigned'
+                    AND
+                        pt.status NOT IN ('completed', 'cancelled')
+                    AND
+                        pw.status = 'assigned'
+                ) AS assigned,
+                (
+                    SELECT
+                        COUNT(*)
+                    FROM
+                        `projectWorker` AS pw
+                    INNER JOIN
+                        `project` AS p2
+                    ON
+                        p2.id = pw.projectId
+                    WHERE
+                        pw.status = 'terminated'
+                    AND 
+                        p2.id = p.id
+                ) AS 'terminated',
+                (
+                    SELECT
+                        COUNT(*)
+                    FROM
+                        `user` AS u
+                    WHERE
+                        u.role = 'worker' AND u.confirmedAt IS NOT NULL AND u.deletedAt IS NULL AND NOT EXISTS(
+                        SELECT
+                            1
+                        FROM
+                            `phaseTaskWorker` AS ptw
+                        INNER JOIN `phaseTask` AS pt
+                        ON
+                            ptw.taskId = pt.id
+                        WHERE
+                            ptw.workerId = u.id AND ptw.status = 'assigned' AND pt.status NOT IN('completed', 'cancelled')
+                    ) AND NOT EXISTS(
+                        SELECT
+                            1
+                        FROM
+                            `projectWorker` AS pw3
+                        WHERE
+                            pw3.workerId = u.id AND pw3.projectId = p.id AND pw3.status = 'terminated'
+                    )
+                ) AS unassigned,
+                (
+                    SELECT 
+                        COUNT(*)
+                    FROM
+                        `projectWorker` AS pw
+                    WHERE
+                        pw.projectId = p.id
+                ) AS total
+            FROM
+                `project` AS p
+            WHERE 
+            " . (is_int($projectId) ? 'p.id = :projectId' : 'p.publicId = :projectId') . "
+        ";
+
+        $instance = new self();
+        $statement = $instance->connection->prepare($query);
+        $statement->execute([
+            ':projectId'    => is_int($projectId) 
+                ? $projectId 
+                : UUID::toBinary($projectId),
+        ]);
+        $result = $statement->fetch();
+
+        if (!$instance->hasData($result)) {
+            return null;
+        }
+        return $result;
+    }
+
+    /**
+     * Retrieves counts of phase tasks for a project grouped by status and month.
+     *
+     * This method builds and executes an aggregate query that:
+     * - Joins phaseTask -> projectPhase -> project
+     * - Groups results by task status and by the YEAR/MONTH of pt.createdAt
+     * - Orders results by year ASC, month ASC, and status ASC
+     *
+     * Parameter handling:
+     * - If $projectId is an int, the query filters on p.id
+     * - If $projectId is a UUID, the query filters on p.publicId and the UUID is converted to binary (UUID::toBinary)
+     *
+     * Returned data shape (each row is an associative array):
+     * - status: string Task status
+     * - year: int YEAR(pt.createdAt)
+     * - month: int MONTH(pt.createdAt)
+     * - taskCount: int Number of tasks for that status in the given month/year
+     *
+     * @param int|UUID $projectId Project identifier (database id when int, public UUID otherwise)
+     * 
+     * @return array|null Array of associative rows described above, or null when no matching data is found
+     *
+     * @throws \PDOException If the database query fails
+     */
+    private static function periodicTaskCount(int|UUID $projectId) 
+    {
+        $query = "
+            SELECT 
+                YEAR(pt.createdAt) AS year,
+                MONTH(pt.createdAt) AS month,
+                COUNT(*) AS taskCount
+            FROM 
+                `phaseTask` AS pt
+            INNER JOIN
+                `projectPhase` AS pp
+            ON
+                pp.id = pt.phaseId
+            INNER JOIN
+                `project` AS p
+            ON 
+                p.id = pp.projectId
+            WHERE 
+                " . (is_int($projectId) ? 'p.id' : 'p.publicId') . " = :projectId
+            GROUP BY 
+                YEAR(pt.createdAt),
+                MONTH(pt.createdAt)
+            ORDER BY 
+                YEAR(pt.createdAt) ASC,
+                MONTH(pt.createdAt) ASC
+        ";
+
+        $instance = new self();
+        $statement = $instance->connection->prepare($query);
+        $statement->execute([
+            ':projectId'    => is_int($projectId) 
+                ? $projectId 
+                : UUID::toBinary($projectId),
+        ]);
+        $result = $statement->fetchAll();
+
+        if (!$instance->hasData($result)) {
+            return null;
+        }
+        return $result;
+    }
+
+    /**
+     * Retrieves the top workers for a given project based on a weighted scoring algorithm.
+     *
+     * This method builds and executes a SQL query that:
+     * - Joins users to projects, project phases, tasks and task assignments to compute per-worker metrics.
+     * - Filters out soft-deleted users (u.deletedAt IS NULL).
+     * - Accepts either an integer project ID or a public UUID (converted to binary) to identify the project.
+     * - Aggregates:
+     *     - totalTasks: distinct tasks assigned to the worker within the project
+     *     - totalProjects: distinct projects the worker is associated with (for the given project filter typically 1)
+     * - Computes overallScore as a percentage (rounded to 2 decimals) by:
+     *     - Assigning base weights to task priorities (high=5.0, medium=3.0, low=1.0).
+     *     - Adjusting completed tasks by timeliness (early: 1.2, on-time: 1.0, late: 0.8).
+     *     - Scaling on-going tasks by 0.5 and delayed tasks by 0.3.
+     *     - Normalizing by the maximum possible weighted sum (priority weight * 1.2) and multiplying by 100.
+     * - Only includes workers with totalTasks > 0.
+     * - Orders results by overallScore descending and limits to the top 10 workers.
+     *
+     * Notes:
+     * - If $projectId is not an integer, it is treated as a public UUID and converted to binary before binding.
+     * - The query returns null when no matching rows are found.
+     *
+     * @param int|UUID $projectId Project identifier: either numeric primary key (int) or public UUID instance/string
+     *
+     * @return array|null Returns an indexed array of up to 10 associative arrays with the following keys on success:
+     *      - id: int|binary Worker identifier (DB type)
+     *      - firstName: string Worker's first name
+     *      - lastName: string Worker's last name
+     *      - email: string Worker's email address
+     *      - totalTasks: int Number of distinct tasks the worker is assigned in the project
+     *      - totalProjects: int Number of distinct projects counted for the worker (filtered by project)
+     *      - overallScore: float Percentage score (0.00 - 100.00) rounded to 2 decimal places
+     *    Returns null if no workers are found for the project.
+     *
+     * @access private
+     * @static
+     */
+    private static function topWorkersQuery(int|UUID $projectId): ?array
+    {
+        $query = "
+            SELECT 
+                ws.id,
+                ws.firstName,
+                ws.lastName,
+                ws.email,
+                ws.totalTasks,
+                ws.completedTasks,
+                ws.overallScore
+            FROM (
+                SELECT 
+                    u.id,
+                    u.firstName,
+                    u.lastName,
+                    u.email,
+                    COUNT(DISTINCT ptw.taskId) as totalTasks,
+                    (
+                        SELECT COUNT(DISTINCT pt2.id)
+                        FROM `phaseTask` AS pt2
+                        INNER JOIN `phaseTaskWorker` AS ptw2 
+                        ON pt2.id = ptw2.taskId
+                        WHERE pt2.status = 'completed'
+                        AND ptw2.workerId = u.id
+                    ) as completedTasks,
+                    ROUND(
+                        (SUM(
+                            CASE 
+                                WHEN pt.status = 'completed' THEN
+                                    CASE 
+                                        WHEN pt.priority = 'high' THEN 5.0
+                                        WHEN pt.priority = 'medium' THEN 3.0
+                                        WHEN pt.priority = 'low' THEN 1.0
+                                        ELSE 1.0
+                                    END *
+                                    CASE 
+                                        WHEN pt.actualCompletionDateTime < pt.completionDateTime THEN 1.2
+                                        WHEN pt.actualCompletionDateTime <= DATE_ADD(pt.completionDateTime, INTERVAL 1 DAY) THEN 1.0
+                                        ELSE 0.8
+                                    END
+                                WHEN pt.status = 'onGoing' THEN
+                                    CASE 
+                                        WHEN pt.priority = 'high' THEN 5.0 * 0.5
+                                        WHEN pt.priority = 'medium' THEN 3.0 * 0.5
+                                        WHEN pt.priority = 'low' THEN 1.0 * 0.5
+                                        ELSE 0.5
+                                    END
+                                WHEN pt.status = 'delayed' THEN
+                                    CASE 
+                                        WHEN pt.priority = 'high' THEN 5.0 * 0.3
+                                        WHEN pt.priority = 'medium' THEN 3.0 * 0.3
+                                        WHEN pt.priority = 'low' THEN 1.0 * 0.3
+                                        ELSE 0.3
+                                    END
+                                ELSE 0
+                            END
+                        ) / SUM(
+                            CASE 
+                                WHEN pt.priority = 'high' THEN 5.0 * 1.2
+                                WHEN pt.priority = 'medium' THEN 3.0 * 1.2
+                                WHEN pt.priority = 'low' THEN 1.0 * 1.2
+                                ELSE 1.2
+                            END
+                        )
+                    ) * 100, 2
+                    ) as overallScore
+                FROM user AS u
+                INNER JOIN projectWorker AS pw ON u.id = pw.workerId
+                INNER JOIN project AS p ON pw.projectId = p.id
+                INNER JOIN projectPhase AS pp ON p.id = pp.projectId
+                INNER JOIN phaseTask AS pt ON pp.id = pt.phaseId
+                INNER JOIN phaseTaskWorker AS ptw ON pt.id = ptw.taskId AND u.id = ptw.workerId
+                WHERE u.deletedAt IS NULL
+                AND " . (is_int($projectId) ? 'p.id' : 'p.publicId') . " = :projectId
+                GROUP BY u.id, u.firstName, u.lastName, u.email
+                HAVING totalTasks > 0
+            ) AS ws
+            ORDER BY ws.overallScore DESC
+            LIMIT 10
+        ";
+
+        $instance = new self();
+        $statement = $instance->connection->prepare($query);
+        $statement->execute([
+            ':projectId'    => is_int($projectId) 
+                ? $projectId 
+                : UUID::toBinary($projectId),
+        ]);
+        $result = $statement->fetchAll();
+
+        if (!$instance->hasData($result)) {
+            return null;
+        }
+
+        return $result;
     }
 }

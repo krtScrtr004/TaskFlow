@@ -88,104 +88,98 @@ phaseContainers.forEach(pc => {
 async function submitForm(e) {
     e.preventDefault()
 
-    Loader.patch(saveProjectInfoButton.querySelector('.text-w-icon'))
+    try {
+        Loader.patch(saveProjectInfoButton.querySelector('.text-w-icon'))
 
-    // Show confirmation dialog
-    if (!await confirmationDialog(
-        'Save Changes',
-        'Are you sure you want to save these changes to the project?'
-    )) return
+        // Show confirmation dialog
+        if (!await confirmationDialog(
+            'Save Changes',
+            'Are you sure you want to save these changes to the project?'
+        )) return
 
-    // Retrieve input fields from the form
-    const descriptionInput = document.querySelector('#project_description')
-    const budgetInput = document.querySelector('#project_budget')
-    const startDateInput = document.querySelector('#project_start_date')
-    const completionDateInput = document.querySelector('#project_completion_date')
-    if (!descriptionInput || !budgetInput || !startDateInput || !completionDateInput) {
-        console.error('One or more input fields not found in the Editable Project Details form.')
-        Dialog.somethingWentWrong()
-        return
-    }
+        // Retrieve input fields from the form
+        const descriptionInput = document.querySelector('#project_description')
+        const budgetInput = document.querySelector('#project_budget')
+        const startDateInput = document.querySelector('#project_start_date')
+        const completionDateInput = document.querySelector('#project_completion_date')
+        if (!descriptionInput || !budgetInput || !startDateInput || !completionDateInput) {
+            throw new Error('One or more project form inputs not found.')
+        }
 
-    // Validate inputs
-    if (!validateInputs({
-        description: descriptionInput.value.trim() ?? null,
-        budget: parseFloat(budgetInput.value) ?? null,
-        startDateTime: startDateInput.value ?? null,
-        completionDateTime: completionDateInput.value ?? null
-    }, workValidationRules())) return
+        // Clear before re-collecting to prevent duplication
+        phaseToAdd.length = 0
+        phaseToEdit.length = 0
 
-    // Clear before re-collecting to prevent duplication
-    phaseToAdd.length = 0
-    phaseToEdit.length = 0
+        const phaseContainers = editableProjectDetailsForm.querySelectorAll('.phase')
+        phaseContainers.forEach(phaseContainer => addPhaseForm(phaseContainer)) // Collect phase data
 
-    const phaseContainers = editableProjectDetailsForm.querySelectorAll('.phase')
-    phaseContainers.forEach(phaseContainer => addPhaseForm(phaseContainer)) // Collect phase data
+        const projectId = editableProjectDetailsForm.dataset.projectid
+        if (!projectId || projectId === 'null') {
+            throw new Error('Project ID not found.')
+        }
 
-    const projectId = editableProjectDetailsForm.dataset.projectid
-    if (!projectId || projectId === 'null') {
-        console.error('Project ID not found in the Editable Project Details form.')
-        Dialog.somethingWentWrong()
-        return
-    }
+        // Normalize current project
+        const currentProject = {
+            description: descriptionInput.value?.trim() || null,
+            budget: budgetInput.value ? parseFloat(budgetInput.value) : null,
+            startDateTime: normalizeDateFormat(startDateInput.value) || null,
+            completionDateTime: normalizeDateFormat(completionDateInput.value) || null
+        }
 
-    // Normalize current project
-    const currentProject = {
-        description: descriptionInput.value?.trim() || null,
-        budget: budgetInput.value ? parseFloat(budgetInput.value) : null,
-        startDateTime: normalizeDateFormat(startDateInput.value) || null,
-        completionDateTime: normalizeDateFormat(completionDateInput.value) || null
-    }
+        // Build changedProject by comparing to originalProject captured on load
+        const changedProject = {}
+        const orig = originalProject || {}
+        Object.keys(currentProject).forEach(key => {
+            // Special handling for budget (number comparison)
+            if (key === 'budget') {
+                const origNum = orig[key] === null || orig[key] === undefined ? null : Number(orig[key])
+                const curNum = currentProject[key] === null || currentProject[key] === undefined ? null : Number(currentProject[key])
+                if (origNum !== curNum) changedProject[key] = curNum
+                return
+            }
 
-    // Build changedProject by comparing to originalProject captured on load
-    const changedProject = {}
-    const orig = originalProject || {}
-    Object.keys(currentProject).forEach(key => {
-        // Special handling for budget (number comparison)
-        if (key === 'budget') {
-            const origNum = orig[key] === null || orig[key] === undefined ? null : Number(orig[key])
-            const curNum = currentProject[key] === null || currentProject[key] === undefined ? null : Number(currentProject[key])
-            if (origNum !== curNum) changedProject[key] = curNum
+            const origVal = orig[key] ?? null
+            const curVal = currentProject[key] ?? null
+            // Normalize values for comparison
+            if (origVal !== curVal) {
+                changedProject[key] = curVal
+            }
+        })
+
+        // Validate all changed fields
+        for (const key of Object.keys(changedProject)) {
+            if (!validateInputs({ [key]: changedProject[key] }, workValidationRules())) {
+                return
+            }
+        }
+
+        const phasePayload = {
+            toAdd: phaseToAdd,
+            toEdit: phaseToEdit,
+            toCancel: phaseToCancel.size > 0
+                ? Array.from(phaseToCancel.values()).map(phase => ({ id: phase }))
+                : null
+        }
+
+        const payload = {}
+        if (Object.keys(changedProject).length > 0) {
+            payload.project = changedProject
+        }
+        // Check if there are any phase changes to include
+        const hasPhaseChanges =
+            (phasePayload.toAdd && phasePayload.toAdd.length > 0) ||
+            (phasePayload.toEdit && phasePayload.toEdit.length > 0) ||
+            (phasePayload.toCancel && phasePayload.toCancel.length > 0)
+        if (hasPhaseChanges) {
+            payload.phase = phasePayload
+        }
+
+        if (Object.keys(payload).length === 0) {
+            // Nothing changed — no backend call required
+            Dialog.operationSuccess('No changes', 'No changes detected to save.')
             return
         }
 
-        const origVal = orig[key] ?? null
-        const curVal = currentProject[key] ?? null
-        // Normalize values for comparison
-        if (origVal !== curVal) {
-            changedProject[key] = curVal
-        }
-    })
-
-    const phasePayload = {
-        toAdd: phaseToAdd,
-        toEdit: phaseToEdit,
-        toCancel: phaseToCancel.size > 0
-            ? Array.from(phaseToCancel.values()).map(phase => ({ id: phase }))
-            : null
-    }
-
-    const payload = {}
-    if (Object.keys(changedProject).length > 0) {
-        payload.project = changedProject
-    }
-    // Check if there are any phase changes to include
-    const hasPhaseChanges =
-        (phasePayload.toAdd && phasePayload.toAdd.length > 0) ||
-        (phasePayload.toEdit && phasePayload.toEdit.length > 0) ||
-        (phasePayload.toCancel && phasePayload.toCancel.length > 0)
-    if (hasPhaseChanges) {
-        payload.phase = phasePayload
-    }
-
-    if (Object.keys(payload).length === 0) {
-        // Nothing changed — no backend call required
-        Dialog.operationSuccess('No changes', 'No changes detected to save.')
-        Loader.delete()
-        return
-    }
-
-    try {
         const response = await sendToBackend(projectId, payload)
         if (!response) {
             throw new Error('No response from server.')

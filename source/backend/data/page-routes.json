@@ -16,11 +16,15 @@
 			"ProjectController",
 			"viewOther"
 		],
+		"TaskFlow/project/{projectId:[\\w+_-]+}/report": [
+			"ProjectController", 
+			"viewReport"
+		],
 
 		"TaskFlow/project/{projectId:[\\w+_-]+}/task(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": [
 			"TaskController", 
 			"viewGrid"
-		],
+		],		
 		"TaskFlow/project/{projectId:[\\w+_-]+}/phase/{phaseId:[\\w+_-]+}/task/{taskId:[\\w+_-]+}": [
 			"TaskController",
 			"viewInfo"

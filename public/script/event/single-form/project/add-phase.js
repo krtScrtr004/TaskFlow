@@ -59,38 +59,38 @@ export function addPhase(params = {}) {
 function submitForm(e, params) {
     e.preventDefault()
 
-    Loader.patch(addNewPhaseButton.querySelector('.text-w-icon'))
-    
-    if (!addPhaseForm) {
-        throw new Error('Add Phase Form not found.')
-    }
-
-    const nameInput = addPhaseForm.querySelector('#phase_name')
-    const descriptionInput = addPhaseForm.querySelector('#phase_description')
-    const startDateTimeInput = addPhaseForm.querySelector('#phase_start_datetime')
-    const completionDateTimeInput = addPhaseForm.querySelector('#phase_completion_datetime')
-
-    const name = nameInput.value.trim()
-    const description = descriptionInput.value.trim()
-    const startDateTime = normalizeDateFormat(startDateTimeInput.value)
-    const completionDateTime = normalizeDateFormat(completionDateTimeInput.value)
-
-    // Check required fields
-    if (!validateInputs({
-        name,
-        description,
-        startDateTime,
-        completionDateTime
-    }, workValidationRules())) return
-
-    // Validate against project schedule and phase overlaps
-    const phaseValidationErrors = validatePhaseSchedule(startDateTime, completionDateTime)
-    if (phaseValidationErrors.length > 0) {
-        errorListDialog('Phase Validation Failed', phaseValidationErrors)
-        return
-    }
-
     try {
+        Loader.patch(addNewPhaseButton.querySelector('.text-w-icon'))
+        
+        if (!addPhaseForm) {
+            throw new Error('Add Phase Form not found.')
+        }
+
+        const nameInput = addPhaseForm.querySelector('#phase_name')
+        const descriptionInput = addPhaseForm.querySelector('#phase_description')
+        const startDateTimeInput = addPhaseForm.querySelector('#phase_start_datetime')
+        const completionDateTimeInput = addPhaseForm.querySelector('#phase_completion_datetime')
+
+        const name = nameInput.value.trim()
+        const description = descriptionInput.value.trim()
+        const startDateTime = normalizeDateFormat(startDateTimeInput.value)
+        const completionDateTime = normalizeDateFormat(completionDateTimeInput.value)
+
+        // Check required fields
+        if (!validateInputs({
+            name,
+            description,
+            startDateTime,
+            completionDateTime
+        }, workValidationRules())) return
+
+        // Validate against project schedule and phase overlaps
+        const phaseValidationErrors = validatePhaseSchedule(startDateTime, completionDateTime)
+        if (phaseValidationErrors.length > 0) {
+            errorListDialog('Phase Validation Failed', phaseValidationErrors)
+            return
+        }
+
         let body = {
             'name': name,
             'description': description,
@@ -105,8 +105,6 @@ function submitForm(e, params) {
         const closeButton = addPhaseModal.querySelector('#add_phase_close_button')
         closeButton?.click()
 
-        Loader.delete()
-
         Dialog.operationSuccess('Phase Added', 'New phase added successfully.')
 
         const allowDisable = params.allowDisable ?? true
@@ -116,6 +114,8 @@ function submitForm(e, params) {
         addPhaseForm.reset()
     } catch (error) {
         throw error
+    } finally {
+        Loader.delete()
     }
 }
 

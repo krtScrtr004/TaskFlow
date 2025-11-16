@@ -22,6 +22,7 @@ class Phase implements Entity
     private ?string $description;
     private DateTime $startDateTime;
     private DateTime $completionDateTime;
+    private ?DateTime $actualCompletionDateTime;
     private WorkStatus $status;
     private ?TaskContainer $tasks;
 
@@ -39,6 +40,7 @@ class Phase implements Entity
      * @param string|null $description Phase description (5-500 characters) (optional)
      * @param DateTime $startDateTime Phase start date and time (cannot be in the past)
      * @param DateTime $completionDateTime Expected phase completion date and time (must be after start date)
+     * @param DateTime|null $actualCompletionDateTime Actual phase completion date and time (optional)
      * @param WorkStatus $status Current status of the phase (enum)
      * @param TaskContainer $tasks Container of tasks associated with the phase
      * 
@@ -51,6 +53,7 @@ class Phase implements Entity
         ?string $description,
         DateTime $startDateTime,
         DateTime $completionDateTime,
+        ?DateTime $actualCompletionDateTime,
         WorkStatus $status,
         ?TaskContainer $tasks
     ) {
@@ -76,6 +79,7 @@ class Phase implements Entity
         $this->description = trimOrNull($description);
         $this->startDateTime = $startDateTime;
         $this->completionDateTime = $completionDateTime;
+        $this->actualCompletionDateTime = $actualCompletionDateTime;
         $this->status = $status;
         $this->tasks = $tasks;
     }
@@ -140,6 +144,11 @@ class Phase implements Entity
     public function getCompletionDateTime(): DateTime
     {
         return $this->completionDateTime;
+    }
+
+    public function getActualCompletionDateTime(): ?DateTime
+    {
+        return $this->actualCompletionDateTime;
     }
 
     /**
@@ -254,6 +263,10 @@ class Phase implements Entity
         $this->completionDateTime = $completionDateTime;
     }
 
+    public function setActualCompletionDateTime(?DateTime $actualCompletionDateTime): void
+    {
+        $this->actualCompletionDateTime = $actualCompletionDateTime;
+    }
 
     /**
      * Sets the phase status.
@@ -312,6 +325,7 @@ class Phase implements Entity
      *      - completionDateTime: string|DateTime|null Expected completion date and time
      *      - actualCompletionDateTime: string|DateTime|null Actual completion date and time
      *      - status: string|WorkStatus|null Current work status of the phase
+     *      - tasks: TaskContainer|null Container of tasks associated with the phase
      * 
      * @return self New Phase instance created from provided data with defaults for missing values
      */
@@ -326,7 +340,8 @@ class Phase implements Entity
             'startDateTime' => $data['startDateTime'] ?? new DateTime(),
             'completionDateTime' => $data['completionDateTime'] ?? new DateTime('+7 days'),
             'actualCompletionDateTime' => $data['actualCompletionDateTime'] ?? null,
-            'status' => $data['status'] ?? WorkStatus::PENDING
+            'status' => $data['status'] ?? WorkStatus::PENDING,
+            'tasks' => $data['tasks'] ?? null
         ];
 
         // Handle UUID conversion
@@ -366,6 +381,7 @@ class Phase implements Entity
             description: $defaults['description'],
             startDateTime: $defaults['startDateTime'],
             completionDateTime: $defaults['completionDateTime'],
+            actualCompletionDateTime: $defaults['actualCompletionDateTime'],
             status: $defaults['status'],
             tasks: $defaults['tasks'] ?? null
         );
@@ -444,6 +460,10 @@ class Phase implements Entity
             ? new DateTime(trimOrNull($data['completionDateTime']))
             : $data['completionDateTime'];
 
+        $actualCompletionDateTime = (is_string($data['actualCompletionDateTime']))
+            ? new DateTime(trimOrNull($data['actualCompletionDateTime']))
+            : $data['actualCompletionDateTime'];
+
         $status = (is_string($data['status']))
             ? WorkStatus::fromString(trimOrNull($data['status']))
             : $data['status'];
@@ -460,6 +480,7 @@ class Phase implements Entity
             description: trimOrNull($data['description']),
             startDateTime: $startDateTime,
             completionDateTime: $completionDateTime,
+            actualCompletionDateTime: $actualCompletionDateTime,
             status: $status,
             tasks: $tasks
         );

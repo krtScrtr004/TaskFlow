@@ -69,12 +69,13 @@
 	transition: width 0.8s ease;
 }
 
-.task-statistics > .heading {
+.task-statistics > .see-all-tasks {
+	width: 100%;
 	margin-bottom: var(--space);
 	gap: 0.8rem;
 }
 
-.task-statistics > .heading > a:hover {
+.task-statistics > .see-all-tasks > a:hover {
 	text-decoration: underline;
 }
 
@@ -148,14 +149,21 @@
 	margin-right: 0.3rem;
 }
 
-#cancel_project_button {
-	width: fit-content;
-	color: var(--red);
-	padding: 0.5rem 0;
-	font-weight: 500;
+.project-actions > .action-buttons {
+	padding-top: 0.5rem;
+	gap: 0.5rem;
 }
 
-#cancel_project_button:hover {
+.project-actions > .action-buttons > *:hover {
 	opacity: 1;
 	text-decoration: underline;
+}
+
+.project-actions > .action-buttons > * {
+	width: fit-content;
+}
+
+#cancel_project_button {
+	color: var(--red);
+	font-weight: 500;
 }

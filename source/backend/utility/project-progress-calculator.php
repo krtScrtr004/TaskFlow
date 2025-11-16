@@ -81,6 +81,7 @@ class ProjectProgressCalculator
                 'phaseName' => $phaseName,
                 'totalTasks' => 0,
                 'statusCounts' => [],
+                'priorityCounts' => [],
                 'totalWeightedProgress' => 0.0,
                 'totalWeight' => 0.0
             ];
@@ -102,6 +103,7 @@ class ProjectProgressCalculator
                     // Track phase-specific data
                     $phaseData[$phaseId]['totalTasks']++;
                     $phaseData[$phaseId]['statusCounts'][$status] = ($phaseData[$phaseId]['statusCounts'][$status] ?? 0) + 1;
+                    $phaseData[$phaseId]['priorityCounts'][$priority] = ($phaseData[$phaseId]['priorityCounts'][$priority] ?? 0) + 1;
 
                     // Calculate weighted progress
                     $weight = self::PRIORITY_WEIGHTS[$priority] ?? 1.0;
@@ -138,12 +140,16 @@ class ProjectProgressCalculator
         $progressPercentage = self::calculatePhaseWeightedProgress($phaseBreakdown);
         $simpleProgress = self::calculateSimpleProgress($statusCounts, $totalTasks);
 
+        // Calculate status×priority combinations
+        $combinationBreakdown = self::calculateStatusPriorityCombinations($phases);
+
         return [
             'progressPercentage' => round($progressPercentage, 2),
             'simpleProgressPercentage' => round($simpleProgress, 2),
             'totalTasks' => $totalTasks,
             'statusBreakdown' => self::formatStatusBreakdown($statusCounts, $totalTasks),
             'priorityBreakdown' => self::formatPriorityBreakdown($priorityCounts, $totalTasks),
+            'combinationBreakdown' => $combinationBreakdown,
             'phaseBreakdown' => $phaseBreakdown,
             'weightedProgress' => round($progressPercentage, 2),
             'insights' => self::generateInsights($statusCounts, $priorityCounts, $totalTasks, $progressPercentage)
@@ -166,8 +172,9 @@ class ProjectProgressCalculator
                 : 0.0;
             
             $completedTasks = $data['statusCounts'][WorkStatus::COMPLETED->value] ?? 0;
-            $simpleProgress = $data['totalTasks'] > 0 
-                ? ($completedTasks / $data['totalTasks']) * 100 
+            $denominator = $data['totalTasks'] - $data['statusCounts'][WorkStatus::CANCELLED->value];
+            $simpleProgress = $denominator > 0 
+                ? ($completedTasks / $denominator) * 100 
                 : 0.0;
             
             $phaseBreakdown[$phaseId] = [
@@ -176,7 +183,8 @@ class ProjectProgressCalculator
                 'completedTasks' => $completedTasks,
                 'weightedProgress' => round($phaseProgress, 2),
                 'simpleProgress' => round($simpleProgress, 2),
-                'statusBreakdown' => self::formatPhaseStatusBreakdown($data['statusCounts'], $data['totalTasks'])
+                'statusBreakdown' => self::formatPhaseStatusBreakdown($data['statusCounts'], $data['totalTasks']),
+                'priorityBreakdown' => self::formatPriorityBreakdown($data['priorityCounts'], $data['totalTasks'])  
             ];
         }
         
@@ -284,6 +292,57 @@ class ProjectProgressCalculator
         }
 
         return $breakdown;
+    }
+
+    /**
+     * Calculate status×priority combinations
+     * Returns a matrix of counts for each status-priority pair
+     * 
+     * @param array $phases All phases with their tasks
+     * @return array 2D array of combinations
+     */
+    private static function calculateStatusPriorityCombinations(array $phases): array
+    {
+        $combinations = [];
+        $totalTasks = 0;
+        
+        // Initialize combination matrix
+        foreach (WorkStatus::cases() as $status) {
+            foreach (TaskPriority::cases() as $priority) {
+                $combinations[$status->value][$priority->value] = [
+                    'count' => 0,
+                    'percentage' => 0
+                ];
+            }
+        }
+        
+        // Count tasks for each combination
+        foreach ($phases as $phase) {
+            $taskContainer = $phase->getTasks();
+            if ($taskContainer && $taskContainer->count() > 0) {
+                $tasks = $taskContainer->getItems();
+                
+                foreach ($tasks as $task) {
+                    $status = $task->getStatus()->value;
+                    $priority = $task->getPriority()->value;
+                    $combinations[$status][$priority]['count']++;
+                    $totalTasks++;
+                }
+            }
+        }
+        
+        // Calculate percentages
+        if ($totalTasks > 0) {
+            foreach (WorkStatus::cases() as $status) {
+                foreach (TaskPriority::cases() as $priority) {
+                    $count = $combinations[$status->value][$priority->value]['count'];
+                    $percentage = ($count / $totalTasks) * 100;
+                    $combinations[$status->value][$priority->value]['percentage'] = round($percentage, 2);
+                }
+            }
+        }
+        
+        return $combinations;
     }
 
     /**

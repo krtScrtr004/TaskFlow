@@ -191,18 +191,26 @@ class TaskController implements Controller
             }
 
             $status = $task->getStatus();
-            $startDateTime = $task->getStartDateTime();
-            $completionDateTime = $task->getCompletionDateTime();
-            $currentDateTime = new DateTime();  
+            $startDateTime = formatDateTime($task->getStartDateTime(), 'Y-m-d');
+            $completionDateTime = formatDateTime($task->getCompletionDateTime(), 'Y-m-d');
+            $currentDateTime = formatDateTime(new DateTime(), 'Y-m-d');  
 
             // Check if the task is already ongoing
-            if ($startDateTime && $currentDateTime >= $startDateTime && $status === WorkStatus::PENDING) {
+            if ($startDateTime && compareDates($startDateTime, $currentDateTime) <= 0 && $status === WorkStatus::PENDING) {
                 $task->setStatus(WorkStatus::ON_GOING);
                 TaskModel::save([
                     'id' => $task->getId(),
                     'status' => WorkStatus::ON_GOING
                 ]);
-            } 
+            } elseif (
+                $completionDateTime && compareDates($completionDateTime, $currentDateTime) < 0 &&
+                ($status === WorkStatus::PENDING || $status === WorkStatus::ON_GOING)
+            ) {
+                TaskModel::save([
+                    'id' => $task->getId(),
+                    'status' => WorkStatus::DELAYED
+                ]);
+            }
             require_once SUB_VIEW_PATH . 'task.php';
         } catch (NotFoundException $e) {
             ErrorController::notFound();

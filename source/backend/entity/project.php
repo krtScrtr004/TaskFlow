@@ -11,6 +11,7 @@ use App\Container\WorkerContainer;
 use App\Container\PhaseContainer;
 use App\Entity\User;
 use App\Core\UUID;
+use App\Enumeration\Role;
 use App\Exception\ValidationException;
 use App\Model\ProjectModel;
 use App\Validator\UuidValidator;
@@ -362,6 +363,9 @@ class Project implements Entity
      */
     public function setManager(User $manager): void
     {
+        if (!Role::isProjectManager($manager)) {
+            throw new ValidationException("User does not have Project Manager role");
+        }
         $this->manager = $manager;
     }
 

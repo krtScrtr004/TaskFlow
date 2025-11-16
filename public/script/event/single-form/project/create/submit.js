@@ -51,38 +51,36 @@ submitProjectButton?.addEventListener('click', e => debounceAsync(submitForm(e),
 async function submitForm(e) {
     e.preventDefault()
 
-    Loader.patch(submitProjectButton.querySelector('.text-w-icon'))
-
-    if (!await confirmationDialog(
-        'Add Project',
-        'Are you sure you want to add this project?',
-    )) return
-
-    // Retrieve input fields from the form
-    const nameInput = createProjectForm.querySelector('#project_name')
-    const descriptionInput = createProjectForm.querySelector('#project_description')
-    const budgetInput = createProjectForm.querySelector('#project_budget')
-    const startDateInput = createProjectForm.querySelector('#project_start_date')
-    const completionDateInput = createProjectForm.querySelector('#project_completion_date')
-    if (!nameInput || !descriptionInput || !budgetInput || !startDateInput || !completionDateInput) {
-        console.error('One or more input fields not found in the Editable Project Details form.')
-        Dialog.somethingWentWrong()
-        return
-    }
-
-    // Validate inputs
-    if (!validateInputs({
-        name: nameInput.value.trim() ?? null,
-        description: descriptionInput.value.trim() ?? null,
-        budget: parseFloat(budgetInput.value) ?? null,
-        startDateTime: startDateInput.value ?? null,
-        completionDateTime: completionDateInput.value ?? null
-    }, workValidationRules())) return
-
-    const phaseContainers = createProjectForm.querySelectorAll('.phase')
-    phaseContainers.forEach(phaseContainer => addPhaseForm(phaseContainer))
-
     try {
+        Loader.patch(submitProjectButton.querySelector('.text-w-icon'))
+
+        if (!await confirmationDialog(
+            'Add Project',
+            'Are you sure you want to add this project?',
+        )) return
+
+        // Retrieve input fields from the form
+        const nameInput = createProjectForm.querySelector('#project_name')
+        const descriptionInput = createProjectForm.querySelector('#project_description')
+        const budgetInput = createProjectForm.querySelector('#project_budget')
+        const startDateInput = createProjectForm.querySelector('#project_start_date')
+        const completionDateInput = createProjectForm.querySelector('#project_completion_date')
+        if (!nameInput || !descriptionInput || !budgetInput || !startDateInput || !completionDateInput) {
+            throw new Error('One or more project form inputs not found.')
+        }
+
+        // Validate inputs
+        if (!validateInputs({
+            name: nameInput.value.trim() ?? null,
+            description: descriptionInput.value.trim() ?? null,
+            budget: parseFloat(budgetInput.value) ?? null,
+            startDateTime: startDateInput.value ?? null,
+            completionDateTime: completionDateInput.value ?? null
+        }, workValidationRules())) return
+
+        const phaseContainers = createProjectForm.querySelectorAll('.phase')
+        phaseContainers.forEach(phaseContainer => addPhaseForm(phaseContainer))
+
         const response = await sendToBackend({
             project: {
                 name: nameInput.value.trim(),

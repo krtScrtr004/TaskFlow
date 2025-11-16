@@ -1,0 +1,338 @@
+.report {
+	flex-direction: row !important;
+	gap: var(--space);
+}
+
+.report > .first-block {
+	flex: 1;
+	height: fit-content;
+	gap: var(--space);
+}
+
+.report .heading-text > * {
+	width: 100%;
+}
+
+.overview-report,
+.overview-report .heading {
+	gap: 1rem;
+}
+
+.section-heading {
+	margin-bottom: 0.5rem;
+	line-height: 1.6rem;
+}
+
+.report .progress-container {
+	width: 65%;
+	background: var(--white);
+	margin-top: 0.8rem;
+	border-radius: 5rem;
+	overflow: hidden;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.report .progress-container > .progress-bar {
+	height: 30px;
+	width: 0%;
+	background: linear-gradient(90deg, #4caf50, #81c784);
+	text-align: center;
+	line-height: 30px;
+	color: var(--white);
+	font-weight: bold;
+	transition: width 0.8s ease;
+}
+
+.report > .second-block {
+	width: 30%;
+	gap: var(--space);
+}
+
+.phase-progress > .phases-list {
+	gap: 1rem;
+}
+
+.phase-progress .phase-card {
+	gap: 10rem;
+	padding-left: 0.8rem;
+	border-left: 4px solid var(--blue);
+}
+
+.phase-progress .phase-header {
+	width: 24ch;
+}
+
+.phase-progress .phase-progress-bar {
+	flex: 1;
+}
+
+.phase-progress .progress-container {
+	width: 100%;
+}
+
+.phase-schedule {
+	gap: 0.3rem;
+	padding: 0.3rem 0;
+}
+
+.phase-schedule * {
+	font-weight: 300;
+}
+
+.phase-progress-bar .progress-container {
+	height: 1.5rem;
+}
+
+.phase-progress-bar p {
+	margin-top: 0.8rem;
+	margin-right: 0.5rem;
+}
+
+.phase-statistics,
+.task-statistics,
+.insights-recommendations {
+	gap: var(--space);
+}
+
+.task-statistics .x {
+	font-weight: 300;
+}
+
+.task-statistics .timeline {
+	max-width: 100%;
+}
+
+.chart-container {
+	width: 300px !important;
+	height: 300px !important;
+}
+
+.phase-timeline-container {
+	width: 100% !important;
+	height: 550px !important;
+	overflow-x: auto;
+	overflow-y: hidden;
+	border-radius: var(--border-radius);
+}
+
+.phase-timeline-container canvas {
+	display: block;
+	min-width: 100%;
+}
+
+.per-phase-breakdown {
+	gap: 1rem !important;
+}
+
+.phases-table-container {
+	min-height: 20rem;
+	max-height: 30rem;
+	border-radius: var(--border-radius);
+	overflow: auto;
+}
+
+.phases-table {
+	width: 100%;
+	border-collapse: collapse;
+	border-radius: var(--border-radius);
+}
+
+.phases-table th:first-child,
+.phases-table td:first-child {
+	width: 50ch;
+	max-width: 50ch;
+	text-align: left;
+}
+
+.phases-table thead tr:first-child th {
+	padding: 1rem 0.8rem;
+	text-align: center;
+	font-weight: 600;
+	font-size: 0.9rem;
+}
+
+.phases-table thead tr:last-child th {
+	padding: 0.8rem;
+	text-align: center;
+	font-weight: 500;
+	font-size: 0.85rem;
+	border-bottom: 1px solid var(--white);
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.phases-table tbody {
+	min-height: 15rem;
+}
+
+.phases-table tbody tr {
+	transition: background-color 0.2s ease;
+}
+
+.phases-table tbody tr:not(:last-child) {
+	border-bottom: 1px solid var(--light-black);
+}
+
+.phases-table tbody tr:hover {
+	background-color: var(--light-black);
+}	
+
+.phases-table td {
+	padding: 0.9rem 0.8rem;
+	text-align: center;
+}
+
+.phase-name-cell {
+	text-align: left;
+	font-weight: 300;
+}
+
+.total-badge {
+	display: inline-block;
+	margin-left: 0.5rem;
+	padding: 0.2rem 0.6rem;
+	border-radius: 1rem;
+	font-size: 0.8rem;
+	font-weight: 600;
+}
+
+.cell-data {
+	font-weight: 600;
+	font-size: 1rem;
+}
+
+.cell-data.completed {
+	color: var(--blue);
+}
+
+.cell-data.ongoing {
+	color: var(--green);
+}
+
+.cell-data.pending {
+	color: var(--yellow);
+}
+
+.cell-data.delayed {
+	color: var(--orange);
+}
+
+.cell-data.cancelled {
+	color: var(--red);
+}
+
+.cell-data.high {
+	color: var(--red);
+}
+
+.cell-data.medium {
+	color: var(--yellow);
+}
+
+.cell-data.low {
+	color: var(--green);
+}
+
+
+.top-performing-workers {
+	gap: var(--space);
+}
+
+.workers-table-container {
+	min-height: 15rem;
+	max-height: 25rem;
+	border-radius: var(--border-radius);
+	overflow: auto;
+}
+
+.workers-table {
+	width: 100%;
+	border-collapse: collapse;
+	border-radius: var(--border-radius);
+}
+
+.workers-table th:first-child,
+.workers-table td:first-child {
+	width: 50%;
+	text-align: left;
+}
+
+.workers-table thead tr th {
+	padding: 1rem 0.8rem;
+	text-align: center;
+	font-weight: 600;
+	font-size: 0.9rem;
+}
+
+.workers-table tbody tr {
+	transition: background-color 0.2s ease;
+}
+
+.workers-table tbody tr:not(:last-child) {
+	border-bottom: 1px solid var(--light-black);
+}
+
+.workers-table tbody tr:hover {
+	background-color: var(--light-black);
+}
+
+.workers-table td {
+	padding: 1rem 0.8rem;
+	text-align: center;
+	font-weight: 500;
+}
+
+.worker-name-cell {
+	text-align: left;
+	font-weight: 400;
+	color: var(--white);
+}
+
+.performance-high {
+	color: #4caf50;
+	font-weight: 700;
+}
+
+.performance-medium {
+	color: #ffa726;
+	font-weight: 700;
+}
+
+
+.worker-statistics {
+	height: fit-content;
+	gap: 0.8rem;
+}
+
+#worker_statistics_chart {
+	height: 100%;
+}
+
+.insights,
+.recommendations {
+	padding: var(--space);
+	border-radius: var(--border-radius);
+}
+
+.insights > hr,
+.recommendations > hr {
+	margin: 0.5rem 0;
+}
+
+.insights {
+	background-color: #81c784;
+}
+
+.insights > hr {
+	border-color: var(--black);
+}
+
+.recommendations {
+	background-color: #6498e6;
+}
+
+.insight-list,
+.recommendation-list {
+	line-height: 1.6rem;
+	font-size: 0.9rem;
+}

@@ -12,7 +12,7 @@ import { handleException } from '../../utility/handle-exception.js'
     try {
         const projectContainer = document.querySelector('.project-container')
         const projectId = projectContainer?.dataset.projectid
-        if (!projectId) {
+        if (!projectId) {   
             throw new Error('Project ID not found.')
         }
 

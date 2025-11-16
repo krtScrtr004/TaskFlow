@@ -154,16 +154,23 @@ class TaskEndpoint
                 : null;
             if (!$projectId) {
                 throw new ForbiddenException('Project ID is required.');
-            } elseif (ProjectModel::findById($projectId) === null) {
+            } 
+            
+            $project = ProjectModel::findById($projectId);
+            if (!$project) {
                 throw new NotFoundException('Project not found.');
             }
 
             $phaseId = isset($args['phaseId'])
                 ? UUID::fromString($args['phaseId'])
                 : null;
-            if (!$phaseId) {
+            if (isset($args['phaseId']) && !$phaseId) {
                 throw new ForbiddenException('Phase ID is required.');
             }
+
+            $phase = $phaseId
+                ? PhaseModel::findById($phaseId)
+                : null;
 
             // Check if 'key' parameter is present in the query string
             $key = '';
@@ -191,8 +198,8 @@ class TaskEndpoint
             $tasks = TaskModel::search(
                 $key, 
                 Me::getInstance()->getId(), 
-                $phaseId, 
-                $projectId,
+                $phase?->getId() ?? null, 
+                $project->getId(),
                 $filter, 
                 $options
             );
@@ -320,8 +327,10 @@ class TaskEndpoint
                 throw new ForbiddenException('Worker IDs are required.');
             }
             
+            $temporaryId = 0;
             foreach ($workerIds as $workerId) {
                 $task->addWorker(Worker::createPartial([
+                    'id' => $temporaryId++,
                     'publicId' => UUID::fromString($workerId)
                 ]));
             }
