@@ -19,6 +19,11 @@ completeTaskButton?.addEventListener('click', e => debounceAsync(submit(e), 3000
 
 // On page load, check if the task was completed late and show dialog if so
 document.addEventListener('DOMContentLoaded', () => {
+    const status = viewTaskInfo?.dataset.status.toLowerCase() || ''
+    if (status === 'completed' || status === 'cancelled') {
+        return 
+    }
+
     const now = new Date()
     const taskCompletionDateTime = viewTaskInfo?.querySelector('.task-completion-datetime')?.dataset.completiondatetime
     const taskActualCompletionDateTime = viewTaskInfo?.querySelector('.task-actual-completion-datetime')?.dataset.actualcompletiondatetime

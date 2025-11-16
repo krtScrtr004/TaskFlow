@@ -72,6 +72,7 @@ $isTaskEditable = $task->getStatus() !== WorkStatus::COMPLETED && $task->getStat
     ?>
 
     <main class="view-task-info main-page flex-col" 
+        data-status="<?= $taskData['status']->value ?>"
         data-projectid="<?= $otherData['projectId'] ?>"
         data-phaseid="<?= $otherData['phaseId'] ?>"
         data-taskid="<?= $taskData['id'] ?>">
