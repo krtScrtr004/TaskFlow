@@ -42,32 +42,30 @@ loginButton?.addEventListener('click', (e) => debounceAsync(submit(e), 300))
  */
 async function submit(e) {
     e.preventDefault()
-
-    Loader.patch(loginButton.querySelector('.text-w-icon'))
-
-
-    const emailInput = loginForm.querySelector('#login_email')
-    if (!emailInput) { 
-        console.error('Email input not found.')
-        Dialog.somethingWentWrong()
-    }
-
-    const passwordInput = loginForm.querySelector('#login_password')
-    if (!passwordInput) {
-        console.error('Password input not found.')
-        Dialog.somethingWentWrong()
-    }
-
-    const email = emailInput.value.trim()
-    const password = passwordInput.value.trim()
-
-    // Validate inputs
-    if (!validateInputs({
-        email: email,
-        password: password
-    }, userValidationRules())) return
-
+    
     try {
+        Loader.patch(loginButton.querySelector('.text-w-icon'))
+
+
+        const emailInput = loginForm.querySelector('#login_email')
+        if (!emailInput) { 
+            throw new Error('Email input not found.')
+        }
+
+        const passwordInput = loginForm.querySelector('#login_password')
+        if (!passwordInput) {
+            throw new Error('Password input not found.')
+        }
+
+        const email = emailInput.value.trim()
+        const password = passwordInput.value.trim()
+
+        // Validate inputs
+        if (!validateInputs({
+            email: email,
+            password: password
+        }, userValidationRules())) return
+
         await sendToBackend(email, password)
 
         // Redirect to home page after successful login

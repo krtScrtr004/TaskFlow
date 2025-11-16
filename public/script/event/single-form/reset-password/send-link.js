@@ -26,20 +26,20 @@ async function sendLink(e) {
     }
     isLoading = true
 
-    Loader.patch(sendLinkButton.firstChild)
-
-    const email = resetPasswordForm.querySelector('#email')
-    if (email.value.trim() === '') {
-        Notification.error(
-            'Please enter your email address.',
-            3000,
-            document.querySelector('body')
-        )
-        isLoading = false
-        return
-    }
-
     try {
+        Loader.patch(sendLinkButton.firstChild)
+
+        const email = resetPasswordForm.querySelector('#email')
+        if (email.value.trim() === '') {
+            Notification.error(
+                'Please enter your email address.',
+                3000,
+                document.querySelector('body')
+            )
+            isLoading = false
+            return
+        }
+
         const response = await Http.POST('auth/reset-password', { email: email.value.trim() })
         if (!response) {
             throw new Error('No response from server.')

@@ -59,20 +59,20 @@ profilePicker?.addEventListener('change', async e => {
  * @returns {Promise<void>} Resolves when the operation is complete.
  */
 async function submit(file) {
-    Loader.patch(pickProfilePictureButton.querySelector('.text-w-icon'))
-
-    // Show confirmation dialog
-    if (!await confirmationDialog(
-        'Confirm Profile Picture Change',
-        'Are you sure you want to change your profile picture?'
-    )) return
-
-    // Prepare form data
-    const formData = new FormData()
-    formData.append('profilePicture', file)
-    formData.append('_method', 'PATCH')  // Method override for PATCH request
-
     try {
+        Loader.patch(pickProfilePictureButton.querySelector('.text-w-icon'))
+
+        // Show confirmation dialog
+        if (!await confirmationDialog(
+            'Confirm Profile Picture Change',
+            'Are you sure you want to change your profile picture?'
+        )) return
+
+        // Prepare form data
+        const formData = new FormData()
+        formData.append('profilePicture', file)
+        formData.append('_method', 'PATCH')  // Method override for PATCH request
+
         await sendToBackend(formData)
 
         // Reload the page after a short delay

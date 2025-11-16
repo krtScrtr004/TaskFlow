@@ -77,83 +77,73 @@ function storeOriginalValues() {
 async function submitForm(e) {
     e.preventDefault()
 
-    Loader.patch(editTaskButton.querySelector('.text-w-icon'))
-
-    // Show confirmation dialog
-    if (!await confirmationDialog(
-        'Confirm Edit Task',
-        'Are you sure you want to save these changes to the task?'
-    )) return
-
-    // Retrieve input fields from the form
-    const nameInput = editTaskForm.querySelector('#task_name')
-    const descriptionInput = editTaskForm.querySelector('#task_description')
-    const startDateInput = editTaskForm.querySelector('#task_start_datetime')
-    const completionDateInput = editTaskForm.querySelector('#task_completion_datetime')
-    const prioritySelect = editTaskForm.querySelector('#task_priority')
-    if (!nameInput || !descriptionInput || !startDateInput || !completionDateInput || !prioritySelect) {
-        console.error('One or more input fields not found in the Edit Task form.')
-        Dialog.somethingWentWrong()
-        return
-    }
-
-    const currentValues = {
-        name: nameInput ? nameInput.value : '',
-        description: descriptionInput ? descriptionInput.value : '',
-        startDateTime: normalizeDateFormat(startDateInput?.value) || '',
-        completionDateTime: normalizeDateFormat(completionDateInput?.value) || '',
-        priority: prioritySelect ? prioritySelect.value : '',
-    }
-
-    // Build params object with only changed values
-    const params = {}
-    let hasChanges = false
-
-    for (const [key, value] of Object.entries(currentValues)) {
-        if (value !== originalValues[key]) {
-            params[key] = value
-            hasChanges = true
-        }
-    }
-
-    // Check if there are any changes
-    if (!hasChanges) {
-        Dialog.operationSuccess('No Changes', 'No changes were made to the task.')
-        return
-    }
-
-    // Validate only the changed inputs
-    if (!validateInputs(params, workValidationRules())) return
-
-    const viewTaskInfo = document.querySelector('.view-task-info.main-page')
-    if (!viewTaskInfo) {
-        console.error('View Task Info main page not found.')
-        Dialog.somethingWentWrong()
-        return
-    }
-
-    const projectId = viewTaskInfo.dataset.projectid
-    if (!projectId || projectId === '') {
-        console.error('Project ID not found.')
-        Dialog.somethingWentWrong()
-        return
-    }
-
-    const phaseId = viewTaskInfo.dataset.phaseid
-    if (!phaseId || phaseId === '') {
-        console.error('Phase ID not found.')
-        Dialog.somethingWentWrong()
-        return
-    }
-
-    const taskId = viewTaskInfo.dataset.taskid
-    if (!taskId || taskId === '') {
-        console.error('Task ID not found.')
-        Dialog.somethingWentWrong()
-        return
-    }
-
     try {
+        Loader.patch(editTaskButton.querySelector('.text-w-icon'))
+
+        // Show confirmation dialog
+        if (!await confirmationDialog(
+            'Confirm Edit Task',
+            'Are you sure you want to save these changes to the task?'
+        )) return
+
+        // Retrieve input fields from the form
+        const nameInput = editTaskForm.querySelector('#task_name')
+        const descriptionInput = editTaskForm.querySelector('#task_description')
+        const startDateInput = editTaskForm.querySelector('#task_start_datetime')
+        const completionDateInput = editTaskForm.querySelector('#task_completion_datetime')
+        const prioritySelect = editTaskForm.querySelector('#task_priority')
+        if (!nameInput || !descriptionInput || !startDateInput || !completionDateInput || !prioritySelect) {
+            throw new Error('One or more form inputs not found.')
+        }
+
+        const currentValues = {
+            name: nameInput ? nameInput.value : '',
+            description: descriptionInput ? descriptionInput.value : '',
+            startDateTime: normalizeDateFormat(startDateInput?.value) || '',
+            completionDateTime: normalizeDateFormat(completionDateInput?.value) || '',
+            priority: prioritySelect ? prioritySelect.value : '',
+        }
+
+        // Build params object with only changed values
+        const params = {}
+        let hasChanges = false
+
+        for (const [key, value] of Object.entries(currentValues)) {
+            if (value !== originalValues[key]) {
+                params[key] = value
+                hasChanges = true
+            }
+        }
+
+        // Check if there are any changes
+        if (!hasChanges) {
+            Dialog.operationSuccess('No Changes', 'No changes were made to the task.')
+            return
+        }
+
+        // Validate only the changed inputs
+        if (!validateInputs(params, workValidationRules())) return
+
+        const viewTaskInfo = document.querySelector('.view-task-info.main-page')
+        if (!viewTaskInfo) {
+            throw new Error('View Task Info main page not found.')
+        }
+
+        const projectId = viewTaskInfo.dataset.projectid
+        if (!projectId || projectId === '') {
+            throw new Error('Project ID not found.')
+        }
+
+        const phaseId = viewTaskInfo.dataset.phaseid
+        if (!phaseId || phaseId === '') {
+            throw new Error('Phase ID not found.')
+        }
+
+        const taskId = viewTaskInfo.dataset.taskid
+        if (!taskId || taskId === '') {
+            throw new Error('Task ID not found.')
+        }
+
         await sendToBackend(projectId, phaseId, taskId, params)
 
         setTimeout(() => window.location.reload(), 1500)
