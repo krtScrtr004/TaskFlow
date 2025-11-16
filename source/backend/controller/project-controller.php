@@ -137,7 +137,7 @@ class ProjectController implements Controller
 
             // Update phase status based on dates and progress
             // Transition: PENDING → ON_GOING (when start date has passed)
-            if ($status === WorkStatus::PENDING && compareDates($startDateTime, $now) < 0) {
+            if ($status === WorkStatus::PENDING && compareDates($startDateTime, $now) <= 0) {
                 $reference->setStatus(WorkStatus::ON_GOING);
                 $phasesToUpdate[] = [
                     'id' => (int) $key,

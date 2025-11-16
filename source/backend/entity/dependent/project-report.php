@@ -25,7 +25,8 @@ class ProjectReport {
     private DateTime $completionDateTime;
     private ?DateTime $actualCompletionDateTime;
     private WorkStatus $status;
-    private ?array $periodicTaskCount;
+    private array $workerCount;
+    private array $periodicTaskCount;
     private PhaseContainer $phases;
     private WorkerContainer $topWorker;
 
@@ -44,6 +45,7 @@ class ProjectReport {
      * @param DateTime $completionDateTime Project planned completion
      * @param ?DateTime $actualCompletionDateTime Actual completion timestamp or null
      * @param WorkStatus $status Current project status
+     * @param array $workerCount Worker count data
      * @param array $periodicTaskCount Periodic task count data
      * @param PhaseContainer $phases Container of project phases
      * @param WorkerContainer $topWorker Container of project topWorker
@@ -58,6 +60,7 @@ class ProjectReport {
         DateTime $completionDateTime,
         ?DateTime $actualCompletionDateTime,
         WorkStatus $status,
+        array $workerCount,
         array $periodicTaskCount,
         PhaseContainer $phases,
         WorkerContainer $topWorker
@@ -79,6 +82,7 @@ class ProjectReport {
         $this->completionDateTime = $completionDateTime;
         $this->actualCompletionDateTime = $actualCompletionDateTime;
         $this->status = $status;
+        $this->workerCount = $workerCount;
         $this->periodicTaskCount = $periodicTaskCount;
         $this->phases = $phases;
         $this->topWorker = $topWorker;
@@ -153,6 +157,16 @@ class ProjectReport {
     public function getStatus(): WorkStatus
     {
         return $this->status;
+    }
+
+    /**
+     * Get worker count data.
+     *
+     * @return array
+     */
+    public function getWorkerCount(): array
+    {
+        return $this->workerCount;
     }
 
     /**
@@ -289,6 +303,21 @@ class ProjectReport {
     public function setStatus(WorkStatus $status): void
     {
         $this->status = $status;
+    }
+
+    /**
+     * Set worker count data.
+     *
+     * @param array $workerCount
+     * @throws ValidationException when workerCount is not associative array
+     * @return void
+     */
+    public function setWorkerCount(array $workerCount): void
+    {
+        if (!isAssociativeArray($workerCount)) {
+            throw new ValidationException("Worker count must be an associative array");
+        }
+        $this->workerCount = $workerCount;
     }
 
     /**

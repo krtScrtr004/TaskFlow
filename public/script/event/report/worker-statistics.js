@@ -5,51 +5,61 @@ document.addEventListener('DOMContentLoaded', () => {
     const canvas = workerStatistics?.querySelector('#worker_statistics_chart')
     if (!canvas) {
         console.error('Worker statistics chart canvas not found.')
+        return
     }
 
-    const workersCount = workerStatistics?.querySelector('.workers-count')
-    if (!workersCount) {
-        console.error('Workers count element not found in worker statistics section.')
+    const workerCountContainer = workerStatistics?.querySelector('.worker-count')
+    if (!workerCountContainer) {
+        console.error('Worker count container not found in worker statistics section.')
+        return
     }
 
-    const assignedCount = parseInt(workersCount?.dataset.assignedcount.trim()) || 0
-    const unassignedCount = parseInt(workersCount?.dataset.unassignedcount.trim()) || 0
-    const taskTerminatedCount = parseInt(workersCount?.dataset.taskterminatedcount.trim()) || 0
-    const projectTerminatedCount = parseInt(workersCount?.dataset.projectterminatedcount.trim()) || 0
+    // Parse worker data from hidden spans
+    const workerSpans = workerCountContainer.querySelectorAll('span[data-status]')
+    const workerData = {}
+    
+    workerSpans.forEach(span => {
+        const status = span.dataset.status
+        const count = parseInt(span.dataset.count) || 0
+        const percentage = parseFloat(span.dataset.percentage) || 0
+        
+        workerData[status.toLowerCase()] = { count, percentage }
+    })
 
-    const workersPercentage = workerStatistics?.querySelector('.workers-percentage')
-    if (!workersPercentage) {
-        console.error('Workers count element not found in worker statistics section.')
-    }
+    // Extract individual status data
+    const assignedCount = workerData['assigned']?.count || 0
+    const unassignedCount = workerData['unassigned']?.count || 0
+    const terminatedCount = workerData['terminated']?.count || 0
 
-    const assignedPercentage = parseFloat(workersPercentage?.dataset.assignedpercentage.trim()) || 0
-    const unassignedPercentage = parseFloat(workersPercentage?.dataset.unassignedpercentage.trim()) || 0
-    const taskTerminatedPercentage = parseFloat(workersPercentage?.dataset.taskterminatedpercentage.trim()) || 0
-    const projectTerminatedPercentage = parseFloat(workersPercentage?.dataset.projectterminatedpercentage.trim()) || 0
+    const assignedPercentage = workerData['assigned']?.percentage || 0
+    const unassignedPercentage = workerData['unassigned']?.percentage || 0
+    const terminatedPercentage = workerData['terminated']?.percentage || 0
 
-    let [labels, cdata, backgroundColor] = []
+    let labels = []
+    let cdata = []
+    let backgroundColor = []
     let countData = []
 
-    const max = assignedCount + unassignedCount + taskTerminatedCount + projectTerminatedCount
+    const totalCount = assignedCount + unassignedCount + terminatedCount
+    
     // Handle case where all counts are zero
-    if (max === 0) {
+    if (totalCount === 0) {
         labels = ['No Data']
         cdata = [1]
         backgroundColor = ['#d3d3d3']
         countData = [0]
     } else {
         labels = [
-            `Assigned (${assignedPercentage}%)`,
-            `Unassigned (${unassignedPercentage}%)`,
-            `Task Terminated (${taskTerminatedPercentage}%)`,
-            `Project Terminated (${projectTerminatedPercentage}%)`
+            `Assigned (${assignedPercentage.toFixed(1)}%)`,
+            `Unassigned (${unassignedPercentage.toFixed(1)}%)`,
+            `Terminated (${terminatedPercentage.toFixed(1)}%)`
         ]
-        cdata = [assignedPercentage, unassignedPercentage, taskTerminatedPercentage, projectTerminatedPercentage]
-        countData = [assignedCount, unassignedCount, taskTerminatedCount, projectTerminatedCount]
-        backgroundColor = ['#38ff5d', '#007bff', '#ffb61e', '#ff5733']
+        cdata = [assignedPercentage, unassignedPercentage, terminatedPercentage]
+        countData = [assignedCount, unassignedCount, terminatedCount]
+        backgroundColor = ['#38ff5d', '#007bff', '#ff5733']
     }
 
-    const DATA_COUNT = (max === 0) ? 1 : 4;
+    const DATA_COUNT = (totalCount === 0) ? 1 : 3;
 
     const data = {
         labels: labels,

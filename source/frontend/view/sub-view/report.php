@@ -18,8 +18,10 @@ $reportData = [
         htmlspecialchars(formatDateTime($projectReport->getActualCompletionDateTime())) : 
         null,
     'status'                    => $projectReport->getStatus(),
+    'workerCount'               => $projectReport->getWorkerCount(),  
+    'periodicTaskCount'         => $projectReport->getPeriodicTaskCount(),
     'phases'                    => $projectReport->getPhases(),
-    'workers'                   => $projectReport->getTopWorker(),
+    'topWorkers'                => $projectReport->getTopWorker(),
 ];
 
 $performance = ($reportData['phases']?->count() > 0)
@@ -372,10 +374,14 @@ $performance = ($reportData['phases']?->count() > 0)
                 <hr>
 
                 <!-- Monthly Counts -->
-                <section class="monthly-count flex-col">
-                    <!-- TODO -->
-                    <div data-january="12" data-february="15" data-march="10" data-april="8" data-may="20"
-                        class="monthly-task-count no-display"></div>
+                <section class="periodic-count flex-col">
+                    <?php foreach($reportData['periodicTaskCount'] as $year => $months): ?>
+                        <div class="no-display" data-year="<?= $year ?>">
+                            <?php foreach($months as $month => $count): ?>
+                                <span data-month="<?= $month ?>" data-count="<?= $count ?>"></span>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endforeach; ?>
 
                     <div class="section-heading flex-col">
                         <div class="heading text-w-icon">
@@ -385,10 +391,10 @@ $performance = ($reportData['phases']?->count() > 0)
                             <h3>Tasks Created</h3>
                         </div>
 
-                        <p>Number of tasks created each month</p>
+                        <p>Number of tasks created each period</p>
                     </div>
 
-                    <canvas id="task_monthly_count_chart" width="500" height="200"></canvas>
+                    <canvas id="task_periodic_count_chart" width="500" height="200"></canvas>
                 </section>
 
             </section>
@@ -418,46 +424,30 @@ $performance = ($reportData['phases']?->count() > 0)
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td class="worker-name-cell">
-                                    <strong>John Marcus Smith</strong>
-                                </td>
-                                <td class="cell-data">24</td>
-                                <td class="cell-data">22</td>
-                                <td class="cell-data performance-high">91.67%</td>
-                            </tr>
-                            <tr>
-                                <td class="worker-name-cell">
-                                    <strong>Sarah Johnson Williams</strong>
-                                </td>
-                                <td class="cell-data">19</td>
-                                <td class="cell-data">18</td>
-                                <td class="cell-data performance-high">94.74%</td>
-                            </tr>
-                            <tr>
-                                <td class="worker-name-cell">
-                                    <strong>Michael Chen Rodriguez</strong>
-                                </td>
-                                <td class="cell-data">31</td>
-                                <td class="cell-data">29</td>
-                                <td class="cell-data performance-high">93.55%</td>
-                            </tr>
-                            <tr>
-                                <td class="worker-name-cell">
-                                    <strong>Emily Brown Thompson</strong>
-                                </td>
-                                <td class="cell-data">16</td>
-                                <td class="cell-data">15</td>
-                                <td class="cell-data performance-medium">93.75%</td>
-                            </tr>
-                            <tr>
-                                <td class="worker-name-cell">
-                                    <strong>David Lee Anderson</strong>
-                                </td>
-                                <td class="cell-data">22</td>
-                                <td class="cell-data">20</td>
-                                <td class="cell-data performance-medium">90.91%</td>
-                            </tr>
+                            <?php
+                            $idx = 0;
+                            foreach ($reportData['topWorkers'] as $worker): 
+                                $fullName = htmlspecialchars($worker->getFirstName() . ' ' . $worker->getLastName());
+                                $totalTasks = $worker->getAdditionalInfo('totalTasks') ?? 0;
+                                $completedTasks = $worker->getAdditionalInfo('completedTasks') ?? 0;
+                                $overallScore = $worker->getAdditionalInfo('overallScore') ?? 0.0;
+                                $classColor = match ($idx) {
+                                    0 => 'blue-text',
+                                    1 => 'green-text',
+                                    2 => 'yellow-text',
+                                    default => 'white-text',
+                                };
+                                $idx++;
+                            ?>
+                                <tr>
+                                    <td class="worker-name-cell">
+                                        <strong><?= $fullName ?></strong>
+                                    </td>
+                                    <td class="cell-data"><?= $totalTasks ?></td>
+                                    <td class="cell-data"><?= $completedTasks ?></td>
+                                    <td class="cell-data <?= $classColor ?>"><?= formatNumber($overallScore) ?>%</td>
+                                </tr>
+                            <?php endforeach; ?>
                         </tbody>
                     </table>
                 </div>
@@ -470,20 +460,14 @@ $performance = ($reportData['phases']?->count() > 0)
 
             <!-- Worker Statistics -->
             <section class="worker-statistics content-section-block flex-col center-child">
-                <!-- TODO -->
-                <div 
-                    data-assignedPercentage="33.65" 
-                    data-unassignedPercentage="19.35" 
-                    data-taskTerminatedPercentage="90.23" 
-                    data-projectTerminatedPercentage="16.43"
-                    class="workers-percentage no-display"></div>
-
-                <div
-                    data-assignedCount="1"
-                    data-unassignedCount="2"
-                    data-taskTerminatedCount="3"
-                    data-projectTerminatedCount="4"
-                    class="workers-count no-display"></div>
+                <div class="worker-count no-display">
+                    <?php foreach ($reportData['workerCount'] as $status => $stats): ?>
+                        <span
+                            data-status="<?= $status ?>"
+                            data-count="<?= $stats['count'] ?>"
+                            data-percentage="<?= $stats['percentage'] ?>"></span>
+                    <?php endforeach; ?>
+                </div>
 
                 <div class="section-heading center-child flex-col">
                     <div class="heading-title text-w-icon">
@@ -546,9 +530,8 @@ $performance = ($reportData['phases']?->count() > 0)
 
     <script type="module" src="<?= EVENT_PATH . 'report' . DS . 'phase-timeline.js' ?>"></script>
     <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'progress-bar.js' ?>"></script>
-    <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'task-chart.js' ?>"></script>
     <script type="module" src="<?= EVENT_PATH . 'report' . DS . 'phase-progress-bar.js' ?>"></script>
-    <script type="module" src="<?= EVENT_PATH . 'report' . DS . 'task-monthly-count.js' ?>"></script>
+    <script type="module" src="<?= EVENT_PATH . 'report' . DS . 'task-periodic-count.js' ?>"></script>
     <script type="module" src="<?= EVENT_PATH . 'report' . DS . 'worker-statistics.js' ?>"></script>
     <script type="module" src="<?= EVENT_PATH . 'report' . DS . 'status_priority_distribution_count.js' ?>"></script>
 </body>
