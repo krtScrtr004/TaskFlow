@@ -52,6 +52,8 @@ class TaskModel extends Model
      */
     protected static function find(string $whereClause = '', array $params = [], array $options = []): ?TaskContainer
     {
+        $options['groupBy'] = $options['groupBy'] ?? 'pt.id';
+
         $instance = new self();
         try {
             $query = "

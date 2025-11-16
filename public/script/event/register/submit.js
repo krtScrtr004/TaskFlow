@@ -44,50 +44,50 @@ registerButton?.addEventListener('click', e => debounceAsync(submit(e), 300))
 async function submit(e) {
     e.preventDefault()
 
-    Loader.patch(registerButton.querySelector('.text-w-icon'))
-
-    // Retrieve input fields from the form
-    const firstNameInput = registerForm.querySelector('#register_first_name')
-    const middleNameInput = registerForm.querySelector('#register_middle_name')
-    const lastNameInput = registerForm.querySelector('#register_last_name')
-    const genderInput = registerForm.querySelector('input[name="gender"]:checked')
-    const birthDateInput = registerForm.querySelector('#register_birth_date')
-    const jobTitlesInput = registerForm.querySelector('#register_job_titles')
-    const contactInput = registerForm.querySelector('#register_contact')
-    const emailInput = registerForm.querySelector('#register_email')
-    const passwordInput = registerForm.querySelector('#register_password')
-    const roleInput = registerForm.querySelector('input[name="role"]:checked')
-    if (!firstNameInput || !middleNameInput || !lastNameInput || !genderInput ||
-        !birthDateInput || !jobTitlesInput || !emailInput || !passwordInput || !roleInput) {
-        throw new Error('One or more form inputs not found.')
-    }
-
-    // Handle job titles trailing comma and spaces
-    let jobTitlesValue = jobTitlesInput.value.trim()
-    while (jobTitlesValue.endsWith(',') || jobTitlesValue.endsWith(' ')) {
-        jobTitlesValue = jobTitlesValue.slice(0, -1).trim()
-    }
-
-
-    const inputs = {
-        firstName: firstNameInput.value.trim(),
-        middleName: middleNameInput.value.trim(),
-        lastName: lastNameInput.value.trim(),
-        gender: genderInput.value.trim(),
-        birthDate: normalizeDateFormat(birthDateInput.value),
-        jobTitles: jobTitlesValue,
-        contactNumber: contactInput.value.trim(),
-        email: emailInput.value.trim(),
-        password: passwordInput.value.trim(),
-        role: roleInput.value.trim()
-    }
-
-    // Validate inputs
-    if (!validateInputs(inputs, userValidationRules())) {
-        return
-    }
-
     try {
+        Loader.patch(registerButton.querySelector('.text-w-icon'))
+
+        // Retrieve input fields from the form
+        const firstNameInput = registerForm.querySelector('#register_first_name')
+        const middleNameInput = registerForm.querySelector('#register_middle_name')
+        const lastNameInput = registerForm.querySelector('#register_last_name')
+        const genderInput = registerForm.querySelector('input[name="gender"]:checked')
+        const birthDateInput = registerForm.querySelector('#register_birth_date')
+        const jobTitlesInput = registerForm.querySelector('#register_job_titles')
+        const contactInput = registerForm.querySelector('#register_contact')
+        const emailInput = registerForm.querySelector('#register_email')
+        const passwordInput = registerForm.querySelector('#register_password')
+        const roleInput = registerForm.querySelector('input[name="role"]:checked')
+        if (!firstNameInput || !middleNameInput || !lastNameInput || !genderInput ||
+            !birthDateInput || !jobTitlesInput || !emailInput || !passwordInput || !roleInput) {
+            throw new Error('One or more form inputs not found.')
+        }
+
+        // Handle job titles trailing comma and spaces
+        let jobTitlesValue = jobTitlesInput.value.trim()
+        while (jobTitlesValue.endsWith(',') || jobTitlesValue.endsWith(' ')) {
+            jobTitlesValue = jobTitlesValue.slice(0, -1).trim()
+        }
+
+
+        const inputs = {
+            firstName: firstNameInput.value.trim(),
+            middleName: middleNameInput.value.trim(),
+            lastName: lastNameInput.value.trim(),
+            gender: genderInput.value.trim(),
+            birthDate: normalizeDateFormat(birthDateInput.value),
+            jobTitles: jobTitlesValue,
+            contactNumber: contactInput.value.trim(),
+            email: emailInput.value.trim(),
+            password: passwordInput.value.trim(),
+            role: roleInput.value.trim()
+        }
+
+        // Validate inputs
+        if (!validateInputs(inputs, userValidationRules())) {
+            return
+        }
+
         await sendToBackend(...Object.values(inputs))
 
         Dialog.operationSuccess('Registration Successful', 'A confirmation email has been sent to your email address. Please verify your email before logging in.')

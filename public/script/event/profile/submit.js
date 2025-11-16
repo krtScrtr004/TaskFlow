@@ -71,79 +71,74 @@ if (!myId || myId.trim() === '') {
  */
 async function submit(e) {
     e.preventDefault()
-        
-    Loader.patch(saveChangesButton.querySelector('.text-w-icon'))
-
-    // Show confirmation dialog
-    if (!await confirmationDialog(
-        'Confirm Save Changes',
-        'Are you sure you want to save the changes to your profile?'
-    )) return
-
-    // Retrieve input fields from the form
-    const firstNameInput = editableProfileDetailsForm.querySelector('#first_name')
-    const middleNameInput = editableProfileDetailsForm.querySelector('#middle_name')
-    const lastNameInput = editableProfileDetailsForm.querySelector('#last_name')
-    const contactNumberInput = editableProfileDetailsForm.querySelector('#contact_number')
-    const genderInput = editableProfileDetailsForm.querySelector('input[name="gender"]:checked')
-    const birthDateInput = editableProfileDetailsForm.querySelector('#birth_date')
-    const bioInput = editableProfileDetailsForm.querySelector('#bio')
-    const jobTitlesInput = editableProfileDetailsForm.querySelector('#job_titles')
-    if (!firstNameInput || !middleNameInput || !lastNameInput || !contactNumberInput || !genderInput || !birthDateInput || !bioInput || !jobTitlesInput) {
-        console.error('One or more profile form inputs not found.')
-        Dialog.somethingWentWrong()
-        return
-    }
-
-    // Handle job titles trailing comma and spaces
-    let jobTitlesValue = jobTitlesInput.value.trim()
-    while (jobTitlesValue.endsWith(',') || jobTitlesValue.endsWith(' ')) {
-        jobTitlesValue = jobTitlesValue.slice(0, -1).trim()
-    }
-
-    const currentValues = {
-        firstName: firstNameInput.value,
-        middleName: middleNameInput.value,
-        lastName: lastNameInput.value,
-        contactNumber: contactNumberInput.value,
-        gender: genderInput.value,
-        birthDate: normalizeDateFormat(birthDateInput.value),
-        bio: bioInput.value,
-        jobTitles: jobTitlesValue
-    }
-
-    // Get only the changed values
-    const changedParams = getChangedValues(currentValues)
-
-    // If nothing changed, don't send request
-    if (Object.keys(changedParams).length === 0) {
-        Dialog.operationSuccess(
-            'No Changes',
-            'No changes were detected in your profile.'
-        )
-        return
-    }
-
-    // Validate only the changed inputs
-    if (!validateInputs(changedParams, userValidationRules())) {
-        return
-    }
-
-    // If job titles changed, populate the add/remove arrays
-    if (changedParams.hasOwnProperty('jobTitles')) {
-        getJobTitleChanges(
-            originalValues.jobTitles,
-            currentValues.jobTitles
-        )
-
-        // Set jobTitles to an object with toAdd and toRemove arrays
-        changedParams.jobTitles = {
-            toAdd: jobTitleToAdd,
-            toRemove: jobTitleToRemove
-        }
-    }
-
+    
     try {
+        Loader.patch(saveChangesButton.querySelector('.text-w-icon'))
+
+        // Show confirmation dialog
+        if (!await confirmationDialog(
+            'Confirm Save Changes',
+            'Are you sure you want to save the changes to your profile?'
+        )) return
+
+        // Retrieve input fields from the form
+        const firstNameInput = editableProfileDetailsForm.querySelector('#first_name')
+        const middleNameInput = editableProfileDetailsForm.querySelector('#middle_name')
+        const lastNameInput = editableProfileDetailsForm.querySelector('#last_name')
+        const contactNumberInput = editableProfileDetailsForm.querySelector('#contact_number')
+        const genderInput = editableProfileDetailsForm.querySelector('input[name="gender"]:checked')
+        const birthDateInput = editableProfileDetailsForm.querySelector('#birth_date')
+        const bioInput = editableProfileDetailsForm.querySelector('#bio')
+        const jobTitlesInput = editableProfileDetailsForm.querySelector('#job_titles')
+        if (!firstNameInput || !middleNameInput || !lastNameInput || !contactNumberInput || !genderInput || !birthDateInput || !bioInput || !jobTitlesInput) {
+            throw new Error('One or more profile form inputs not found.')
+        }
+
+        // Handle job titles trailing comma and spaces
+        let jobTitlesValue = jobTitlesInput.value.trim()
+        while (jobTitlesValue.endsWith(',') || jobTitlesValue.endsWith(' ')) {
+            jobTitlesValue = jobTitlesValue.slice(0, -1).trim()
+        }
+
+        const currentValues = {
+            firstName: firstNameInput.value,
+            middleName: middleNameInput.value,
+            lastName: lastNameInput.value,
+            contactNumber: contactNumberInput.value,
+            gender: genderInput.value,
+            birthDate: normalizeDateFormat(birthDateInput.value),
+            bio: bioInput.value,
+            jobTitles: jobTitlesValue
+        }
+
+        // Get only the changed values
+        const changedParams = getChangedValues(currentValues)
+
+        // If nothing changed, don't send request
+        if (Object.keys(changedParams).length === 0) {
+            Dialog.operationSuccess('No Changes', 'No changes were detected in your profile.')
+            return
+        }
+
+        // Validate only the changed inputs
+        if (!validateInputs(changedParams, userValidationRules())) {
+            return
+        }
+
+        // If job titles changed, populate the add/remove arrays
+        if (changedParams.hasOwnProperty('jobTitles')) {
+            getJobTitleChanges(
+                originalValues.jobTitles,
+                currentValues.jobTitles
+            )
+
+            // Set jobTitles to an object with toAdd and toRemove arrays
+            changedParams.jobTitles = {
+                toAdd: jobTitleToAdd,
+                toRemove: jobTitleToRemove
+            }
+        }
+
         await sendToBackend(changedParams)
 
         setTimeout(() => window.location.reload(), 1500)

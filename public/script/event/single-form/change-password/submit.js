@@ -44,16 +44,17 @@ async function submit(e) {
         console.warn('Request already in progress. Please wait.')
         return
     }
-
-    Loader.patch(changePasswordButton.firstChild)
-
-    // Show confirmation dialog
-    if (!await confirmationDialog(
-        'Confirm Password Change',
-        'Are you sure you want to change your password?'
-    )) return
+    isLoading = true
 
     try {
+        Loader.patch(changePasswordButton.firstChild)
+
+        // Show confirmation dialog
+        if (!await confirmationDialog(
+            'Confirm Password Change',
+            'Are you sure you want to change your password?'
+        )) return
+
         const newPasswordInput = changePasswordForm?.querySelector('#password').value
         await Http.POST('auth/change-password', { 
             token: new URLSearchParams(window.location.search).get('token'),

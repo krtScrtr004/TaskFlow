@@ -61,7 +61,7 @@ export function createTaskGridCard(task) {
 
     // Create task description
     const description = document.createElement('p')
-    description.className = 'task-description multi-line-ellipsis'
+    description.className = 'task-description multi-line-ellipsis-5'
     description.title = task.description
     description.textContent = task.description
 

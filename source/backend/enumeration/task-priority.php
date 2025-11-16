@@ -23,8 +23,8 @@ enum TaskPriority: string {
             self::HIGH => 'red-bg',
         };
         $textColor = match ($priority) {
-            self::MEDIUM => 'black-text',
-            self::LOW, self::HIGH => 'white-text'
+            self::LOW, self::MEDIUM => 'black-text',
+            self::HIGH => 'white-text'
         };
 
         return <<<HTML

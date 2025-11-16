@@ -50,8 +50,8 @@ enum WorkStatus: string
             self::CANCELLED => 'red-bg'
         };
         $textColor = match ($status) {
-            self::PENDING => 'black-text',
-            self::ON_GOING, self::COMPLETED, self::DELAYED, self::CANCELLED => 'white-text'
+            self::ON_GOING, self::PENDING => 'black-text',
+            self::COMPLETED, self::DELAYED, self::CANCELLED => 'white-text'
         };
 
         return <<<HTML

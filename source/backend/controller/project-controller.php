@@ -118,7 +118,7 @@ class ProjectController implements Controller
         // Container of phase IDs to update status
         $phasesToUpdate = [];
 
-        $now = new DateTime();
+        $now = formatDateTime(new DateTime(), 'Y-m-d');
 
         $projectProgress = ProjectProgressCalculator::calculate($phases);
         foreach ($projectProgress['phaseBreakdown'] as $key => $value) {
@@ -126,8 +126,8 @@ class ProjectController implements Controller
 
             $tasks = $reference->getTasks();
             $status = $reference->getStatus();
-            $startDateTime = $reference->getStartDateTime();
-            $completionDateTime = $reference->getCompletionDateTime();
+            $startDateTime = formatDateTime($reference->getStartDateTime(), 'Y-m-d');
+            $completionDateTime = formatDateTime($reference->getCompletionDateTime(), 'Y-m-d');
 
             // Add phase and tasks into the project object
             $project->addPhase($reference);
@@ -137,7 +137,7 @@ class ProjectController implements Controller
 
             // Update phase status based on dates and progress
             // Transition: PENDING → ON_GOING (when start date has passed)
-            if ($status === WorkStatus::PENDING && $startDateTime <= $now) {
+            if ($status === WorkStatus::PENDING && compareDates($startDateTime, $now) <= 0) {
                 $reference->setStatus(WorkStatus::ON_GOING);
                 $phasesToUpdate[] = [
                     'id' => (int) $key,
@@ -145,7 +145,7 @@ class ProjectController implements Controller
                 ];
             } 
             // Transition: ON_GOING → COMPLETED or DELAYED (when completion date has passed)
-            elseif ($status === WorkStatus::ON_GOING && $completionDateTime < $now) {
+            elseif ($status === WorkStatus::ON_GOING && compareDates($completionDateTime, $now) < 0) {
                 if ($value['simpleProgress'] >= 100.0) {
                     $reference->setStatus(WorkStatus::COMPLETED);
                     $phasesToUpdate[] = [
@@ -199,6 +199,9 @@ class ProjectController implements Controller
             $projectId = isset($args['projectId'])
                 ? UUID::fromString($args['projectId'])
                 : null;
+            if (!$projectId) {
+                throw new ForbiddenException('Project ID is required.');
+            }
 
             $fullProjectInfo = $instance->getProjectInfo(
                 $projectId,
@@ -330,9 +333,9 @@ class ProjectController implements Controller
 
         if ($project) {
             $status = $project->getStatus();
-            $startDateTime = $project->getStartDateTime();
-            $completionDateTime = $project->getCompletionDateTime();
-            $currentDateTime = new DateTime();
+            $startDateTime = formatDateTime($project->getStartDateTime(), 'Y-m-d');
+            $completionDateTime = formatDateTime($project->getCompletionDateTime(), 'Y-m-d');
+            $currentDateTime = formatDateTime(new DateTime(), 'Y-m-d');
 
             // Determine project progress
             if ($project->additionalInfoContains('progress')) {
@@ -349,7 +352,7 @@ class ProjectController implements Controller
                     ];
             }
 
-            if ($startDateTime && $currentDateTime >= $startDateTime && $status === WorkStatus::PENDING) {
+            if ($startDateTime && compareDates($currentDateTime, $startDateTime) >= 0 && $status === WorkStatus::PENDING) {
                 // Check if the project is already ongoing
                 $project->setStatus(WorkStatus::ON_GOING);
                 ProjectModel::save([
@@ -357,7 +360,7 @@ class ProjectController implements Controller
                     'status' => WorkStatus::ON_GOING
                 ]);
             } elseif (
-                $completionDateTime && $currentDateTime > $completionDateTime &&
+                $completionDateTime && compareDates($completionDateTime, $currentDateTime) < 0 &&
                 ($status === WorkStatus::PENDING || $status === WorkStatus::ON_GOING)
             ) {
                 if ($projectProgress['progressPercentage'] < 100.0) {
@@ -373,5 +376,32 @@ class ProjectController implements Controller
         }
 
         require_once VIEW_PATH . 'home.php';
+    }
+
+    public static function viewReport(array $args = []): void 
+    {
+        try {
+            if (!SessionAuth::hasAuthorizedSession()) {
+                header('Location: ' . REDIRECT_PATH . 'login');
+                exit();
+            }
+
+            $instance = new self();
+
+            $projectId = isset($args['projectId'])
+                ? UUID::fromString($args['projectId'])
+                : null;
+            if (!$projectId) {
+                throw new NotFoundException('Project ID is required.');
+            }
+
+            $projectReport = ProjectModel::getReport($projectId);
+
+            require_once SUB_VIEW_PATH . 'report.php';
+        } catch (NotFoundException $e) {
+            ErrorController::notFound();
+        } catch (ForbiddenException $e) {
+            ErrorController::forbidden();
+        }
     }
 }
