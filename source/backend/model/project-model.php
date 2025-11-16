@@ -1568,7 +1568,7 @@ class ProjectModel extends Model
      *
      * @param int|UUID $projectId Project identifier: either numeric primary key (int) or public UUID instance/string
      *
-     * @return array|null|null Returns an indexed array of up to 10 associative arrays with the following keys on success:
+     * @return array|null Returns an indexed array of up to 10 associative arrays with the following keys on success:
      *      - id: int|binary Worker identifier (DB type)
      *      - firstName: string Worker's first name
      *      - lastName: string Worker's last name
@@ -1581,7 +1581,7 @@ class ProjectModel extends Model
      * @access private
      * @static
      */
-    private static function topWorkersQuery(int|UUID $projectId)
+    private static function topWorkersQuery(int|UUID $projectId): ?array
     {
         $query = "
             SELECT 

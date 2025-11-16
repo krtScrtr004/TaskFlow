@@ -28,7 +28,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         prioritySpans.forEach((span, priorityIndex) => {
             const percentage = parseFloat(span.dataset.percentage) || 0
-            const count = parseInt(span.dataset.count) || 0
             
             if (priorityIndex === 0) {
                 lowPriorityData.push(percentage)
@@ -47,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize Chart.js with clustered bars
     const ctx = chartCanvas.getContext('2d')
 
-    const chart = new Chart(ctx, {
+    new Chart(ctx, {
         type: 'bar',
         data: {
             labels: statusLabels,

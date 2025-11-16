@@ -153,5 +153,5 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const ctx = canvas.getContext('2d')
-    const taskMonthlyCountsChart = new Chart(ctx, config)
+    new Chart(ctx, config)
 })

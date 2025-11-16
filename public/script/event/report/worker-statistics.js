@@ -59,8 +59,6 @@ document.addEventListener('DOMContentLoaded', () => {
         backgroundColor = ['#38ff5d', '#007bff', '#ff5733']
     }
 
-    const DATA_COUNT = (totalCount === 0) ? 1 : 3;
-
     const data = {
         labels: labels,
         datasets: [
@@ -115,5 +113,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize and render the chart
     const ctx = canvas.getContext('2d')
-    const workerChart = new Chart(ctx, config)
+    new Chart(ctx, config)
 })

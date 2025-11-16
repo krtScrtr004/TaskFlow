@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize Chart.js
     const ctx = chartCanvas.getContext('2d')
 
-    const chart = new Chart(ctx, {
+    new Chart(ctx, {
         type: 'bar',
         data: {
             labels: labels,

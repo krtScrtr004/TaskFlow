@@ -214,7 +214,7 @@
 }
 
 .cell-data.delayed {
-	color: var(--orang);
+	color: var(--orange);
 }
 
 .cell-data.cancelled {
