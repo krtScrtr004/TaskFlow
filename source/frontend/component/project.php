@@ -222,7 +222,7 @@ require_once COMPONENT_PATH . 'template/add-worker-modal.php';
                 </div>
             </section>
 
-            <?php if (Role::isProjectManager(Me::getInstance()) && $projectData['status'] !== WorkStatus::CANCELLED): ?>
+            <?php if (Role::isProjectManager(Me::getInstance())): ?>
                 <!-- Project Actions -->
                 <section class="project-actions content-section-block">
                     <div class="heading-title text-w-icon">
@@ -239,9 +239,11 @@ require_once COMPONENT_PATH . 'template/add-worker-modal.php';
                             View Reports And Statistics
                         </a>
 
-                        <button id="cancel_project_button" type="button" class="unset-button" href="">
-                            Cancel This Project
-                        </button>
+                        <?php if ($projectData['status'] !== WorkStatus::COMPLETED && $projectData['status'] !== WorkStatus::CANCELLED): ?>
+                            <button id="cancel_project_button" type="button" class="unset-button" href="">
+                                Cancel This Project
+                            </button>
+                        <?php endif; ?>
                     </div>
                 </section>
             <?php endif; ?>
