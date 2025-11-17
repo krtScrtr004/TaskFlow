@@ -22,7 +22,7 @@ class UserValidator extends Validator
             $this->errors[] = 'First name must be between ' . NAME_MIN . ' and ' . NAME_MAX . ' characters long.';
         }
 
-        if (!preg_match("/^[a-zA-Z\s'\-]{" . NAME_MIN . "," . NAME_MAX . "}$/", $firstName)) {
+        if (!preg_match("/^[a-zA-Z\s'\-.]{" . NAME_MIN . "," . NAME_MAX . "}$/", $firstName)) {
             $this->errors[] = 'First name contains invalid characters.';
         }
 
@@ -40,7 +40,7 @@ class UserValidator extends Validator
             $this->errors[] = 'Middle name must be between ' . NAME_MIN . ' and ' . NAME_MAX . ' characters long.';
         }
 
-        if (!preg_match("/^[a-zA-Z\s'\-]{" . NAME_MIN . "," . NAME_MAX . "}$/", $middleName)) {
+        if (!preg_match("/^[a-zA-Z\s'\-.]{" . NAME_MIN . "," . NAME_MAX . "}$/", $middleName)) {
             $this->errors[] = 'Middle name contains invalid characters.';
         }
 
@@ -58,7 +58,7 @@ class UserValidator extends Validator
             $this->errors[] = 'Last name must be between ' . NAME_MIN . ' and ' . NAME_MAX . ' characters long.';
         }
 
-        if (!preg_match("/^[a-zA-Z\s'\-]{" . NAME_MIN . "," . NAME_MAX . "}$/", $lastName)) {
+        if (!preg_match("/^[a-zA-Z\s'\-.]{" . NAME_MIN . "," . NAME_MAX . "}$/", $lastName)) {
             $this->errors[] = 'Last name contains invalid characters.';
         }
 
@@ -142,8 +142,8 @@ class UserValidator extends Validator
         }
 
         foreach ($jobTitles as $jobTitle) {
-            if (strlen(trim($jobTitle)) < 1 || strlen(trim($jobTitle)) > 20) {
-                $this->errors[] = 'Each job title must be between 1 and 20 characters long.';
+            if (strlen(trim($jobTitle)) < 1 || strlen(trim($jobTitle)) > 100) {
+                $this->errors[] = 'Each job title must be between 1 and 100 characters long.';
                 break;
             }
 

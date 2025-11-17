@@ -86,7 +86,7 @@ export function userValidationRules() {
                 const errors = []
                 if (!inputs.firstName || inputs.firstName.trim() === '' || inputs.firstName.length < LENGTH_VALIDATION.name.min || inputs.firstName.length > LENGTH_VALIDATION.name.max) {
                     errors.push(`First name must be between ${LENGTH_VALIDATION.name.min} and ${LENGTH_VALIDATION.name.max} characters long.`)
-                } else if (!/^[a-zA-Z\s'-]{1,255}$/.test(inputs.firstName)) {
+                } else if (!/^[a-zA-Z\s'-.]{1,255}$/.test(inputs.firstName)) {
                     errors.push('First name contains invalid characters.')
                 } else if (hasConsecutiveSpecialChars(inputs.firstName.trim())) {
                     errors.push('First name contains three or more consecutive special characters.')
@@ -100,7 +100,7 @@ export function userValidationRules() {
                 const errors = []
                 if (inputs.middleName && inputs.middleName.trim() !== '' && (inputs.middleName.length < LENGTH_VALIDATION.name.min || inputs.middleName.length > LENGTH_VALIDATION.name.max)) {
                     errors.push(`Middle name must be between ${LENGTH_VALIDATION.name.min} and ${LENGTH_VALIDATION.name.max} characters long.`)
-                } else if (!/^[a-zA-Z\s'-]{0,255}$/.test(inputs.middleName)) {
+                } else if (!/^[a-zA-Z\s'-.]{0,255}$/.test(inputs.middleName)) {
                     errors.push('Middle name contains invalid characters.')
                 }
                 
@@ -116,7 +116,7 @@ export function userValidationRules() {
                 const errors = []
                 if (!inputs.lastName || inputs.lastName.trim() === '' || inputs.lastName.length < LENGTH_VALIDATION.name.min || inputs.lastName.length > LENGTH_VALIDATION.name.max) {
                     errors.push(`Last name must be between ${LENGTH_VALIDATION.name.min} and ${LENGTH_VALIDATION.name.max} characters long.`)
-                } else if (!/^[a-zA-Z\s'-]{1,255}$/.test(inputs.lastName)) {
+                } else if (!/^[a-zA-Z\s'-.]{1,255}$/.test(inputs.lastName)) {
                     errors.push('Last name contains invalid characters.')
                 } else if (hasConsecutiveSpecialChars(inputs.lastName.trim())) {
                     errors.push('Last name contains three or more consecutive special characters.')
@@ -183,8 +183,8 @@ export function userValidationRules() {
                 if (inputs.jobTitles) {
                     const titles = inputs.jobTitles.split(',').map(title => title.trim())
                     for (const title of titles) {
-                        if (title.length < 1 || title.length > 20) {
-                            errors.push('Each job title must be between 1 and 20 characters long.')
+                        if (title.length < 1 || title.length > 100) {
+                            errors.push('Each job title must be between 1 and 100 characters long.')
                             break
                         }
                         
