@@ -102,6 +102,10 @@
 	font-weight: 300;
 }
 
+.task-info .task-description {
+	white-space: pre-wrap !important;
+}
+
 .task-info .task-schedule {
 	gap: 0.3rem;
 }

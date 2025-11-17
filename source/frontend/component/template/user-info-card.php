@@ -37,7 +37,7 @@ use App\Enumeration\WorkStatus;
         </section>
 
         <!-- User Bio -->
-        <p class="user-bio">!</p>
+        <p class="user-bio"></p>
 
         <hr>
 

@@ -39,10 +39,6 @@ document.addEventListener('DOMContentLoaded', () => {
         })
     })
 
-    console.log('High Priority Data:', highPriorityData)
-    console.log('Medium Priority Data:', mediumPriorityData)
-    console.log('Low Priority Data:', lowPriorityData)
-
     // Initialize Chart.js with clustered bars
     const ctx = chartCanvas.getContext('2d')
 

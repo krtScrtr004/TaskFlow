@@ -202,7 +202,7 @@ $performance = ($reportData['phases']?->count() > 0)
                                         </span>
                                         <?php if ($actualCompletionDateTime): ?>
                                             <span class="text-w-icon">
-                                                <img src="<?= ICON_PATH . 'actual_complete_w.svg' ?>" alt="Task Actual Completion Date" title="Task Actual Completion Date"
+                                                <img src="<?= ICON_PATH . 'complete_w.svg' ?>" alt="Task Actual Completion Date" title="Task Actual Completion Date"
                                                     height="16">
 
                                                 <p>Actual Completion Date: 
@@ -413,7 +413,7 @@ $performance = ($reportData['phases']?->count() > 0)
                     <p>View the workers with the highest task completion rates</p>
                 </div>
 
-                <div class="workers-table-container">
+                <div class="workers-table-container black-bg">
                     <table class="workers-table black-bg">
                         <thead class="black-bg">
                             <tr class="blue-bg white-text">

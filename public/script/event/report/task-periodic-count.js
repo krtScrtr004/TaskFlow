@@ -9,11 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Get all year data containers
     const yearContainers = periodicCount?.querySelectorAll('[data-year]')
-    if (!yearContainers || yearContainers.length === 0) {
-        console.error('Periodic task count data not found.')
-        return
-    }
-
+    
     // Month names mapping
     const monthNames = [
         'January', 'February', 'March', 'April', 'May', 'June',
@@ -24,38 +20,56 @@ document.addEventListener('DOMContentLoaded', () => {
     const monthData = {}
     let allMonthYears = new Set()
 
-    yearContainers.forEach(yearContainer => {
-        const year = yearContainer.dataset.year.trim()
-        const monthSpans = yearContainer.querySelectorAll('[data-month]')
-        
-        monthSpans.forEach(monthSpan => {
-            const month = parseInt(monthSpan.dataset.month)
-            const count = parseInt(monthSpan.dataset.count) || 0
+    if (yearContainers && yearContainers.length > 0) {
+        yearContainers.forEach(yearContainer => {
+            const year = yearContainer.dataset.year.trim()
+            const monthSpans = yearContainer.querySelectorAll('[data-month]')
             
-            // Create label as "Month Year" (e.g., "Jan 2024")
-            const monthYear = `${monthNames[month - 1].substring(0, 3)} ${year}`
-            allMonthYears.add(monthYear)
-            
-            // Sum up counts if month/year already exists
-            monthData[monthYear] = (monthData[monthYear] || 0) + count
+            monthSpans.forEach(monthSpan => {
+                const month = parseInt(monthSpan.dataset.month)
+                const count = parseInt(monthSpan.dataset.count) || 0
+                
+                // Create label as "Month Year" (e.g., "Jan 2024")
+                const monthYear = `${monthNames[month - 1].substring(0, 3)} ${year}`
+                allMonthYears.add(monthYear)
+                
+                // Sum up counts if month/year already exists
+                monthData[monthYear] = (monthData[monthYear] || 0) + count
+            })
         })
-    })
+    }
 
-    // Sort labels chronologically
-    const sortedLabels = Array.from(allMonthYears).sort((a, b) => {
-        const [monthA, yearA] = a.split(' ')
-        const [monthB, yearB] = b.split(' ')
-        
-        if (yearA !== yearB) {
-            return parseInt(yearA) - parseInt(yearB)
-        }
-        
-        return monthNames.findIndex(m => m.startsWith(monthA)) - 
-                monthNames.findIndex(m => m.startsWith(monthB))
-    })
+    // Handle empty data with placeholder
+    let sortedLabels
+    let sortedData
 
-    // Map sorted labels to their counts
-    const sortedData = sortedLabels.map(label => monthData[label] || 0)
+    if (allMonthYears.size === 0) {
+        console.warn('No periodic task count data found, showing placeholder')
+        
+        // Create placeholder data for current month
+        const now = new Date()
+        const currentMonth = monthNames[now.getMonth()].substring(0, 3)
+        const currentYear = now.getFullYear()
+        
+        sortedLabels = [`${currentMonth} ${currentYear}`]
+        sortedData = [0]
+    } else {
+        // Sort labels chronologically
+        sortedLabels = Array.from(allMonthYears).sort((a, b) => {
+            const [monthA, yearA] = a.split(' ')
+            const [monthB, yearB] = b.split(' ')
+            
+            if (yearA !== yearB) {
+                return parseInt(yearA) - parseInt(yearB)
+            }
+            
+            return monthNames.findIndex(m => m.startsWith(monthA)) - 
+                    monthNames.findIndex(m => m.startsWith(monthB))
+        })
+
+        // Map sorted labels to their counts
+        sortedData = sortedLabels.map(label => monthData[label] || 0)
+    }
 
     // Calculate max value for y-axis
     const maxValue = Math.max(...sortedData, 10)

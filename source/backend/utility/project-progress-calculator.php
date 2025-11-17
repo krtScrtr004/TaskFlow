@@ -128,7 +128,7 @@ class ProjectProgressCalculator
                 'statusBreakdown' => [],
                 'priorityBreakdown' => [],
                 'weightedProgress' => 0.0,
-                'phaseBreakdown' => [],
+                'phaseBreakdown' => $phaseData,
                 'insights' => ['message' => 'No tasks found in any phase']
             ];
         }

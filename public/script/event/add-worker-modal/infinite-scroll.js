@@ -58,19 +58,27 @@ export function infiniteScrollWorkers(projectId, localEndpoint, searchKey = '') 
  * @param {string|number} projectId The identifier of the current project (used for fetching workers).
  * @param {string} searchKey The current search/filter key for fetching workers.
  *
- * @returns {IntersectionObserver} The IntersectionObserver instance managing infinite scroll.
+ * @returns {Object} Object containing the observer and cleanup function.
  */
 function createInfiniteScrollObserver(workerList, sentinel, projectId, searchKey) {
     let offset = getExistingItemsCount()
+    let isObserverActive = true // Track if this observer should still be active
 
     const observer = new IntersectionObserver(async (entries) => {
         for (const entry of entries) {
-            if (entry.isIntersecting && !isLoading) {
+            // Check if observer is still active and not loading
+            if (entry.isIntersecting && !isLoading && isObserverActive) {
                 isLoading = true
                 Loader.trail(workerList)
 
                 try {
                     const workers = await fetchWorkers(endpoint, searchKey, offset)
+                    
+                    // Check again after async operation
+                    if (!isObserverActive) {
+                        return // Observer was disconnected during fetch
+                    }
+
                     if (workers === false) {
                         // Fetch was already in progress; skip this cycle
                         continue
@@ -79,6 +87,7 @@ function createInfiniteScrollObserver(workerList, sentinel, projectId, searchKey
                     // No more workers to load; stop observing
                     if (!workers || workers.length === 0) {
                         observer.unobserve(sentinel)
+                        isObserverActive = false
                         return
                     }
 
@@ -96,7 +105,15 @@ function createInfiniteScrollObserver(workerList, sentinel, projectId, searchKey
     })
 
     observer.observe(sentinel)
-    return observer
+    
+    // Return both observer and a cleanup function
+    return {
+        observer,
+        cleanup: () => {
+            isObserverActive = false
+            observer.disconnect()
+        }
+    }
 
     function getExistingItemsCount() {
         return workerList.querySelectorAll('.worker-checkbox').length || 0
@@ -107,12 +124,12 @@ function createInfiniteScrollObserver(workerList, sentinel, projectId, searchKey
  * Disconnects the current infinite scroll observer if it exists.
  *
  * - Checks if there is an active infinite scroll observer.
- * - If present, disconnects the observer to stop observing DOM changes.
+ * - If present, calls cleanup function to mark observer as inactive and disconnect it.
  * - Sets the observer reference to null to clean up and prevent memory leaks.
  */
 export function disconnectInfiniteScroll() {
     if (currentInfiniteScrollObserver) {
-        currentInfiniteScrollObserver.observer.disconnect()
+        currentInfiniteScrollObserver.observer.cleanup()
         currentInfiniteScrollObserver = null
     }
 }

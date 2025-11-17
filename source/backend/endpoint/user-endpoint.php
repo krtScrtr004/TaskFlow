@@ -295,6 +295,7 @@ class UserEndpoint
                         'role'              => $updatedUser->getRole()->value,
                         'jobTitles'         => implode(',', $updatedUser->getJobTitles()->toArray()),
                         'contactNumber'     => $updatedUser->getContactNumber(),
+                        'email'             => $updatedUser->getEmail(),
                         'bio'               => $updatedUser->getBio(),
                         'profileLink'       => $updatedUser->getProfileLink(),
                         'createdAt'         => $updatedUser->getCreatedAt()->format('Y-m-d H:i:s'),

@@ -82,11 +82,15 @@ function submitForm(e, params) {
             description,
             startDateTime,
             completionDateTime
-        }, workValidationRules())) return
+        }, workValidationRules())) {
+            Loader.delete()
+            return
+        }
 
         // Validate against project schedule and phase overlaps
         const phaseValidationErrors = validatePhaseSchedule(startDateTime, completionDateTime)
         if (phaseValidationErrors.length > 0) {
+            Loader.delete()
             errorListDialog('Phase Validation Failed', phaseValidationErrors)
             return
         }
@@ -100,6 +104,7 @@ function submitForm(e, params) {
         if (params.action && typeof params.action === 'function') {
             params.action(body)
         }
+        Loader.delete()
 
         // Simulate a click on the close button to close the modal
         const closeButton = addPhaseModal.querySelector('#add_phase_close_button')
@@ -113,10 +118,9 @@ function submitForm(e, params) {
         // Reset form fields
         addPhaseForm.reset()
     } catch (error) {
-        throw error
-    } finally {
         Loader.delete()
-    }
+        throw error
+    } 
 }
 
 /**

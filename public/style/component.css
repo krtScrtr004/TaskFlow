@@ -423,6 +423,7 @@ button > .text-w-icon {
 .user-info-card > .user-bio {
 	width: 100%;
 	font-size: 1rem;
+	white-space: pre-wrap;
 }
 
 .user-info-card > .user-statistics-container {

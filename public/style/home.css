@@ -26,7 +26,9 @@
 }
 
 .project-description {
-	margin-top: 1rem;
+	margin: 1rem 0;
+	font-weight: 300;
+	white-space: pre-wrap !important;
 }
 
 .main-sub-content {
@@ -132,7 +134,9 @@
 	font-weight: 300;
 	max-width: 90ch;
 	margin-top: 0.3rem;
+	margin-bottom: 0.5rem;
 	line-height: 1.6rem;
+	white-space: pre-wrap !important;
 }
 
 .phase-list-card .phase-dates {

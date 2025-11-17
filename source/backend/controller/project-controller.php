@@ -132,7 +132,7 @@ class ProjectController implements Controller
             // Add phase and tasks into the project object
             $project->addPhase($reference);
             foreach ($tasks as $task) {
-                $project->addTask($task);
+                $reference->addTask($task);
             }
 
             // Update phase status based on dates and progress
@@ -350,6 +350,7 @@ class ProjectController implements Controller
                         'priorityBreakdown' => [],
                         'phaseBreakdown' => []
                     ];
+                $project->setPhases($phases);
             }
 
             if ($startDateTime && compareDates($currentDateTime, $startDateTime) >= 0 && $status === WorkStatus::PENDING) {
