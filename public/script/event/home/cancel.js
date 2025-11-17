@@ -8,8 +8,7 @@ let isLoading = false
 
 const cancelProjectButton = document.querySelector('#cancel_project_button')
 if (!cancelProjectButton) {
-    console.error('Cancel Project button not found.')
-    Dialog.somethingWentWrong()
+    console.warn('Cancel Project button not found.')
 }
 
 cancelProjectButton?.addEventListener('click', async (e) => {

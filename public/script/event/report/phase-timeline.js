@@ -58,9 +58,18 @@ document.addEventListener('DOMContentLoaded', () => {
         phases.push(phase)
     })
 
+    // Handle empty phases with placeholder data
     if (phases.length === 0) {
-        console.warn('No phases found for timeline')
-        return
+        console.warn('No phases found for timeline, showing placeholder')
+        
+        // Create placeholder phase spanning the entire project timeline
+        const placeholderPhase = {
+            name: 'No phases available',
+            startDateTime: projectStartDateTime,
+            completionDateTime: projectCompletionDateTime,
+            actualCompletionDateTime: null
+        }
+        phases.push(placeholderPhase)
     }
 
     // Prepare chart data
