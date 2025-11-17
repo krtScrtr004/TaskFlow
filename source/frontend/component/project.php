@@ -66,9 +66,7 @@ require_once COMPONENT_PATH . 'template/add-worker-modal.php';
                 </em></p>
         </div>
 
-        <p class="project-description start-text">
-            <?= $projectData['description'] ?>
-        </p>
+        <p class="project-description start-text"><?= $projectData['description'] ?></p>
     </section>
 
     <!-- Secondary Info -->

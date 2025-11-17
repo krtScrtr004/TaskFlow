@@ -413,7 +413,7 @@ $performance = ($reportData['phases']?->count() > 0)
                     <p>View the workers with the highest task completion rates</p>
                 </div>
 
-                <div class="workers-table-container">
+                <div class="workers-table-container black-bg">
                     <table class="workers-table black-bg">
                         <thead class="black-bg">
                             <tr class="blue-bg white-text">

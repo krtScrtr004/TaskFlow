@@ -60,36 +60,36 @@ document.addEventListener('DOMContentLoaded', () => {
 async function submit(e) {
     e.preventDefault()
 
-    Loader.patch(completeTaskButton.querySelector('.text-w-icon'))
-
-    // Show confirmation dialog
-    if (!await confirmationDialog(
-        'Complete Task',
-        'Are you sure you want to complete this task?'
-    )) return
-
-    const projectId = viewTaskInfo.dataset.projectid
-    if (!projectId) {
-        console.error('Project ID not found.')
-        Dialog.somethingWentWrong()
-        return
-    }
-
-    const phaseId = viewTaskInfo.dataset.phaseid
-    if (!phaseId) {
-        console.error('Phase ID not found.')
-        Dialog.somethingWentWrong()
-        return
-    }
-
-    const taskId = viewTaskInfo.dataset.taskid
-    if (!taskId) {
-        console.error('Task ID not found.')
-        Dialog.somethingWentWrong()
-        return
-    }
-
     try {
+        Loader.patch(completeTaskButton.querySelector('.text-w-icon'))
+
+        // Show confirmation dialog
+        if (!await confirmationDialog(
+            'Complete Task',
+            'Are you sure you want to complete this task?'
+        )) return
+
+        const projectId = viewTaskInfo.dataset.projectid
+        if (!projectId) {
+            console.error('Project ID not found.')
+            Dialog.somethingWentWrong()
+            return
+        }
+
+        const phaseId = viewTaskInfo.dataset.phaseid
+        if (!phaseId) {
+            console.error('Phase ID not found.')
+            Dialog.somethingWentWrong()
+            return
+        }
+
+        const taskId = viewTaskInfo.dataset.taskid
+        if (!taskId) {
+            console.error('Task ID not found.')
+            Dialog.somethingWentWrong()
+            return
+        }
+
         await sendToBackend(projectId, phaseId, taskId)
         // Reload the page to reflect changes
         window.location.reload()

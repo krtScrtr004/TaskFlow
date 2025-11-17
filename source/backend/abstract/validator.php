@@ -6,7 +6,7 @@ abstract class Validator {
     protected array $errors = [];
 
     protected function hasConsecutiveSpecialChars(string $input): bool {
-        return preg_match('/[\'\-\s]{3,}/', $input) === 1;
+        return preg_match('/[$%#&_!@\'\.\*\(\)\[\]\{\}\+\-]{3,}/', $input) === 1;
     }
 
     protected function isValidYear(int $year): bool {
