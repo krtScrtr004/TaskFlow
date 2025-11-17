@@ -77,6 +77,9 @@ async function searchForWorker(e, projectId) {
         return
     }
 
+    // Disconnect infinite scroll FIRST to prevent race condition
+    disconnectInfiniteScroll()
+
     // Clear the worker list
     workerList.textContent = ''
 
@@ -93,23 +96,24 @@ async function searchForWorker(e, projectId) {
 
     try {
         const searchTerm = document.querySelector('.search-bar input[type="text"]').value.trim()
+        
+        // Await fetch completion before setting up infinite scroll
         const workers = await fetchWorkers(endpoint, searchTerm, 0)
 
         if (workers && workers.length > 0) {
             workers.forEach(worker => createWorkerListCard(worker))
 
-            // Reset and reinitialize infinite scroll with the search term
+            // Only NOW setup infinite scroll with fresh state
             infiniteScrollWorkers(projectId, endpoint, searchTerm)
         } else {
             // Show no workers message if no results
             toggleNoWorkerWall(true)
-
-            // Disconnect infinite scroll observer when no results
-            disconnectInfiniteScroll()
+            // Already disconnected above, no need to disconnect again
         }
     } catch (error) {
         console.error(error.message)
         Dialog.errorOccurred('Failed to load workers. Please try again.')
+        disconnectInfiniteScroll() // Ensure cleanup on error
     } finally {
         Loader.delete()
     }
