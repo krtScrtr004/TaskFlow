@@ -350,6 +350,7 @@ class ProjectController implements Controller
                         'priorityBreakdown' => [],
                         'phaseBreakdown' => []
                     ];
+                $project->setPhases($phases);
             }
 
             if ($startDateTime && compareDates($currentDateTime, $startDateTime) >= 0 && $status === WorkStatus::PENDING) {
