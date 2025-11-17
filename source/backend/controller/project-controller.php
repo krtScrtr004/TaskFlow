@@ -114,7 +114,6 @@ class ProjectController implements Controller
         if (!$phases) {
             throw new NotFoundException('Phases not found.');
         }
-        $project->setPhases($phases);
 
         // Container of phase IDs to update status
         $phasesToUpdate = [];
@@ -130,9 +129,10 @@ class ProjectController implements Controller
             $startDateTime = formatDateTime($reference->getStartDateTime(), 'Y-m-d');
             $completionDateTime = formatDateTime($reference->getCompletionDateTime(), 'Y-m-d');
 
-            // Add tasks into the project object
+            // Add phase and tasks into the project object
+            $project->addPhase($reference);
             foreach ($tasks as $task) {
-                $project->addTask($task);
+                $reference->addTask($task);
             }
 
             // Update phase status based on dates and progress
