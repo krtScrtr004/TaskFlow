@@ -147,7 +147,7 @@ class UserValidator extends Validator
                 break;
             }
 
-            if (preg_match("/[^a-zA-Z0-9\s'\-]/", $jobTitle)) {
+            if (preg_match("/[^a-zA-Z0-9\s'\-\\\/]/", $jobTitle)) {
                 $this->errors[] = 'Job title "' . $jobTitle . '" contains invalid characters.';
                 break;
             }
