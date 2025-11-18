@@ -58,6 +58,9 @@ class TaskWorkerModel extends Model
                     u.contactNumber,
                     u.profileLink,
                     ptw.status,
+                    u.createdAt,
+                    u.confirmedAt,
+                    u.deletedAt,
                     GROUP_CONCAT(ujt.title) AS jobTitles,
                     (
                         SELECT COUNT(*)
@@ -454,6 +457,9 @@ class TaskWorkerModel extends Model
                         u.email,
                         u.contactNumber,
                         ptw.status,
+                        u.createdAt,
+                        u.confirmedAt,
+                        u.deletedAt,
                         GROUP_CONCAT(DISTINCT ujt.title) AS jobTitles
                     FROM
                         `user` AS u

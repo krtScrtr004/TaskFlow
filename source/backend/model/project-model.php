@@ -236,6 +236,9 @@ class ProjectModel extends Model
                                 'workerProfileLink', w.profileLink,
                                 'workerGender', w.gender,
                                 'workerStatus', pw.status,
+                                'workerCreatedAt', w.createdAt,
+                                'workerConfirmedAt', w.confirmedAt,
+                                'workerDeletedAt', w.deletedAt,
                                 'workerJobTitles', COALESCE(
                                     (
                                         SELECT CONCAT('[', GROUP_CONCAT(CONCAT('\"', wjt.title, '\"')), ']')
@@ -391,7 +394,10 @@ class ProjectModel extends Model
                         'email'         => $worker['workerEmail'] ?? null,
                         'profileLink'   => $worker['workerProfileLink'] ?? null,
                         'status'        => WorkerStatus::from($worker['workerStatus']),
-                        'jobTitles'     => new JobTitleContainer(json_decode($worker['workerJobTitles'], true))
+                        'jobTitles'     => new JobTitleContainer(json_decode($worker['workerJobTitles'], true)),
+                        'createdAt'     => new DateTime($worker['workerCreatedAt']),
+                        'confirmedAt'   => $worker['workerConfirmedAt'] ? new DateTime($worker['workerConfirmedAt']) : null,
+                        'deletedAt'     => $worker['workerDeletedAt'] ? new DateTime($worker['workerDeletedAt']) : null,
                     ]));
                 }
             }

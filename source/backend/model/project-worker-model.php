@@ -179,6 +179,9 @@ class ProjectWorkerModel extends Model
                     u.email,
                     u.contactNumber,
                     pw.status,
+                    u.createdAt,
+                    u.confirmedAt,
+                    u.deletedAt
                     GROUP_CONCAT(ujt.title) AS jobTitles
                 FROM
                     `user` AS u
@@ -418,6 +421,9 @@ class ProjectWorkerModel extends Model
                     u.contactNumber,
                     u.profileLink,
                     pw.status,
+                    u.createdAt,
+                    u.confirmedAt,
+                    u.deletedAt,
                     GROUP_CONCAT(ujt.title) AS jobTitles,
                     (
                         SELECT COUNT(*)
@@ -489,6 +495,9 @@ class ProjectWorkerModel extends Model
                     'totalProjects'     => (int)$result['totalProjects'],
                     'completedProjects' => (int)$result['completedProjects'],
                 ],
+                'createdAt'             => $result['createdAt'],
+                'confirmedAt'           => $result['confirmedAt'],
+                'deletedAt'             => $result['deletedAt']
             ]);
             if ($includeHistory) {
                 $projects = new ProjectContainer();
@@ -661,6 +670,9 @@ class ProjectWorkerModel extends Model
                     u.contactNumber,
                     u.profileLink,
                     pw.status,
+                    u.createdAt,
+                    u.confirmedAt,
+                    u.deletedAt,
                     GROUP_CONCAT(ujt.title) AS jobTitles,
                     (
                         SELECT COUNT(*)
@@ -733,6 +745,9 @@ class ProjectWorkerModel extends Model
                         'totalProjects'     => (int)$result['totalProjects'],
                         'completedProjects' => (int)$result['completedProjects'],
                     ],
+                    'createdAt'             => $result['createdAt'],
+                    'confirmedAt'           => $result['confirmedAt'],
+                    'deletedAt'             => $result['deletedAt']
                 ]);
 
                 if ($includeHistory) {
