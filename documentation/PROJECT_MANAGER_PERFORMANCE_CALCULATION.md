@@ -24,26 +24,27 @@ This dual-metric approach ensures that project managers are evaluated not only o
 
 ## Core Concepts
 
-### 1. Dual-Metric Evaluation Model
+### 1. Triple-Metric Evaluation Model
 
-The performance calculation is based on two primary dimensions:
+The performance calculation is based on three primary dimensions:
 
 ```
-PM Performance = f(Project Completion, Time Management)
+PM Performance = f(Project Completion, Time Management, Project Progress)
 ```
 
 - **Project Completion Dimension**: Measures the manager's ability to deliver projects successfully
 - **Time Management Dimension**: Evaluates the manager's efficiency in meeting deadlines
+- **Project Progress Dimension**: Assesses actual task completion progress across all projects
 
 ### 2. Weighted Aggregation
 
-The two metrics are combined using predefined weights to produce a comprehensive score:
+The three metrics are combined using predefined weights to produce a comprehensive score:
 
 ```
-Overall Score = (Completion Score × 0.45) + (Time Score × 0.35)
+Overall Score = (Completion Score × 0.35) + (Time Score × 0.30) + (Progress Score × 0.35)
 ```
 
-**Note:** The weights sum to 0.80 (80%), leaving room for future expansion to include additional metrics such as budget management (20%).
+**Note:** The weights sum to 1.00 (100%), providing a complete assessment of project manager performance across all critical dimensions.
 
 ### 3. Status-Based Evaluation
 
@@ -58,22 +59,24 @@ Projects are evaluated based on their current status, with different credit leve
 The overall performance score is calculated using the following formula:
 
 ```
-Overall Score = (C_score × W_c) + (T_score × W_t)
+Overall Score = (C_score × W_c) + (T_score × W_t) + (P_score × W_p)
 ```
 
 Where:
 - `C_score` = Project Completion Score (0-100)
 - `T_score` = Time Management Score (0-100)
-- `W_c` = Weight for Project Completion (0.45)
-- `W_t` = Weight for Time Management (0.35)
+- `P_score` = Project Progress Score (0-100)
+- `W_c` = Weight for Project Completion (0.35)
+- `W_t` = Weight for Time Management (0.30)
+- `W_p` = Weight for Project Progress (0.35)
 
 ### Metric Weight Distribution
 
 | Metric | Weight | Contribution | Description |
 |--------|--------|--------------|-------------|
-| **Project Completion** | 0.45 | 45% | Success rate in delivering projects |
-| **Time Management** | 0.35 | 35% | On-time delivery track record |
-| **Future Expansion** | 0.20 | 20% | Reserved for budget/quality metrics |
+| **Project Completion** | 0.35 | 35% | Success rate in delivering projects |
+| **Time Management** | 0.30 | 30% | On-time delivery track record |
+| **Project Progress** | 0.35 | 35% | Actual task completion across all projects |
 
 ---
 
@@ -267,16 +270,87 @@ Total Time Score = (100 × 1.3) + (100 × 1.0) + (100 × 0.7)
 T_score = 300 / 3 = 100.0%
 ```
 
+### Metric 3: Project Progress Score (P_score)
+
+Measures the actual task completion progress across all managed projects, regardless of status.
+
+#### Formula
+
+```
+P_score = (Σ Progress_i / n_evaluated)
+```
+
+Where:
+- `Progress_i` = Progress percentage for project `i` (calculated by `ProjectProgressCalculor`)
+- `n_evaluated` = Number of projects with phases/tasks
+- Score range: **0 to 100**
+
+#### Progress Calculation
+
+For each project, the system:
+
+1. **Retrieves project phases:**
+   ```
+   $phases = $project->getPhases();
+   ```
+
+2. **Calculates weighted progress:**
+   Uses `ProjectProgressCalculator::calculate()` which considers:
+   - Task statuses (pending, ongoing, completed, delayed, cancelled)
+   - Task priorities (high, medium, low)
+   - Phase-level aggregation
+   - Task count weighting
+
+3. **Returns progress percentage:**
+   ```
+   $progressPercentage = $progressData['progressPercentage'];
+   ```
+
+4. **Categorizes progress level:**
+   - **High Progress** (≥75%): Project nearing completion
+   - **Moderate Progress** (50-74%): Project on track
+   - **Low Progress** (25-49%): Project needs attention
+   - **Minimal Progress** (<25%): Project at risk
+
+#### Example Calculation
+
+**Scenario:**
+- Project A: 90% progress (8/10 tasks completed, high priority)
+- Project B: 65% progress (ongoing, mixed task statuses)
+- Project C: 30% progress (mostly pending tasks)
+- Project D: No phases (excluded from calculation)
+
+```
+Total Progress = 90 + 65 + 30 = 185
+Evaluated Projects = 3
+
+P_score = 185 / 3 = 61.67%
+```
+
+**Progress Distribution:**
+- High Progress: 1 project (Project A)
+- Moderate Progress: 1 project (Project B)
+- Low Progress: 1 project (Project C)
+- Minimal Progress: 0 projects
+
+#### Key Benefits
+
+1. **Real-time Assessment**: Evaluates current state, not just completed projects
+2. **Granular Insight**: Considers individual task completion, not just project status
+3. **Priority-Weighted**: High-priority tasks have greater impact on score
+4. **Early Warning**: Identifies struggling projects before they're officially "delayed"
+5. **Fair Evaluation**: Accounts for projects with partial progress
+
 ---
 
 ## Implementation Details
 
 ### Overall Score Calculation
 
-Combining both metrics with their respective weights:
+Combining all three metrics with their respective weights:
 
 ```
-Overall Score = (C_score × 0.45) + (T_score × 0.35)
+Overall Score = (C_score × 0.35) + (T_score × 0.30) + (P_score × 0.35)
 ```
 
 ### Full Calculation Flow
@@ -300,12 +374,22 @@ Overall Score = (C_score × 0.45) + (T_score × 0.35)
 └─────────────────────────────────────────────────┘
                         ↓
 ┌─────────────────────────────────────────────────┐
-│ Step 3: Compute Weighted Overall Score         │
-│  Overall = (C_score × 0.45) + (T_score × 0.35) │
+│ Step 3: Calculate Project Progress Score       │
+│  - Iterate through all projects with tasks      │
+│  - Use ProjectProgressCalculator for each       │
+│  - Average progress percentages                 │
+│  - Categorize by progress level                 │
+│  Result: P_score                                │
 └─────────────────────────────────────────────────┘
                         ↓
 ┌─────────────────────────────────────────────────┐
-│ Step 4: Assign Performance Grade                │
+│ Step 4: Compute Weighted Overall Score         │
+│  Overall = (C_score × 0.35) + (T_score × 0.30) │
+│            + (P_score × 0.35)                   │
+└─────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────┐
+│ Step 5: Assign Performance Grade                │
 │  A+: 95-100, A: 90-94, B+: 85-89, etc.         │
 └─────────────────────────────────────────────────┘
 ```
@@ -330,8 +414,9 @@ private const PROJECT_STATUS_WEIGHTS = [
 
 // Metric weights
 private const METRIC_WEIGHTS = [
-    'projectCompletion' => 0.45,
-    'timeManagement' => 0.35
+    'projectCompletion' => 0.35,
+    'timeManagement' => 0.30,
+    'projectProgress' => 0.35
 ];
 
 // Time performance multipliers
@@ -361,11 +446,13 @@ public static function calculate(ProjectContainer $projects): array
     // Calculate individual metrics
     $completionScore = self::calculateProjectCompletionScore($projects);
     $timeScore = self::calculateTimeManagementScore($projects);
+    $progressScore = self::calculateProjectProgressScore($projects);
 
     // Calculate weighted overall score
     $overallScore = (
         $completionScore['score'] * self::METRIC_WEIGHTS['projectCompletion'] +
-        $timeScore['score'] * self::METRIC_WEIGHTS['timeManagement']
+        $timeScore['score'] * self::METRIC_WEIGHTS['timeManagement'] +
+        $progressScore['score'] * self::METRIC_WEIGHTS['projectProgress']
     );
 
     // Gather statistics
@@ -378,6 +465,7 @@ public static function calculate(ProjectContainer $projects): array
         'metrics' => [
             'projectCompletion' => $completionScore,
             'timeManagement' => $timeScore,
+            'projectProgress' => $progressScore,
         ],
         'statistics' => $statistics,
         'insights' => self::generateInsights(...),
@@ -417,6 +505,63 @@ private static function calculateProjectCompletionScore(
         'score' => round($score, 2),
         'statusBreakdown' => $statusCounts,
         'description' => 'Project delivery and completion effectiveness'
+    ];
+}
+```
+
+### Project Progress Score Method
+
+```php
+private static function calculateProjectProgressScore(
+    ProjectContainer $projects
+): array {
+    $totalProgressScore = 0.0;
+    $evaluatedProjects = 0;
+    $progressStats = [
+        'highProgress' => 0,      // >= 75%
+        'moderateProgress' => 0,  // 50-74%
+        'lowProgress' => 0,       // 25-49%
+        'minimalProgress' => 0    // < 25%
+    ];
+    
+    foreach ($projects as $project) {
+        $phases = $project->getPhases();
+        
+        // Skip projects with no phases or tasks
+        if (!$phases || $phases->count() === 0) {
+            continue;
+        }
+        
+        // Calculate actual project progress using ProjectProgressCalculator
+        $progressData = ProjectProgressCalculator::calculate($phases);
+        $progressPercentage = $progressData['progressPercentage'];
+        
+        // Add to total score
+        $totalProgressScore += $progressPercentage;
+        $evaluatedProjects++;
+        
+        // Categorize progress
+        if ($progressPercentage >= 75) {
+            $progressStats['highProgress']++;
+        } elseif ($progressPercentage >= 50) {
+            $progressStats['moderateProgress']++;
+        } elseif ($progressPercentage >= 25) {
+            $progressStats['lowProgress']++;
+        } else {
+            $progressStats['minimalProgress']++;
+        }
+    }
+    
+    // Calculate average progress score
+    $score = $evaluatedProjects > 0 
+        ? ($totalProgressScore / $evaluatedProjects) 
+        : 0.0;
+    
+    return [
+        'score' => round($score, 2),
+        'evaluatedProjects' => $evaluatedProjects,
+        'progressDistribution' => $progressStats,
+        'description' => 'Actual task completion progress across all managed projects'
     ];
 }
 ```
@@ -528,14 +673,25 @@ Total Time Score = 8 × (100 × 1.3) = 8 × 130 = 1040
 T_score = 1040 / 8 = 130.0% → capped at 100.0%
 ```
 
+**Project Progress Score:**
+
+Assuming the 2 ongoing projects have high progress:
+- Project 1: 85% progress
+- Project 2: 78% progress
+
+```
+Total Progress = 85 + 78 = 163
+P_score = 163 / 2 = 81.5%
+```
+
 **Overall Score:**
 
 ```
-Overall = (92.0 × 0.45) + (100.0 × 0.35)
-        = 41.4 + 35.0
-        = 76.4%
+Overall = (92.0 × 0.35) + (100.0 × 0.30) + (81.5 × 0.35)
+        = 32.2 + 30.0 + 28.525
+        = 90.73%
 
-Grade: B (Good)
+Grade: A (Excellent)
 ```
 
 ### Example 2: Average Performance
@@ -574,14 +730,25 @@ Total Time Score = 200 + 140 = 340
 T_score = 340 / 4 = 85.0%
 ```
 
+**Project Progress Score:**
+
+Progress for projects with tasks:
+- 2 ongoing: 60% and 55% → avg 57.5%
+- 1 delayed: 35%
+
+```
+Total Progress = 60 + 55 + 35 = 150
+P_score = 150 / 3 = 50.0%
+```
+
 **Overall Score:**
 
 ```
-Overall = (62.5 × 0.45) + (85.0 × 0.35)
-        = 28.125 + 29.75
-        = 57.88%
+Overall = (62.5 × 0.35) + (85.0 × 0.30) + (50.0 × 0.35)
+        = 21.875 + 25.5 + 17.5
+        = 64.88%
 
-Grade: D (Poor)
+Grade: D+ (Below Average)
 ```
 
 ### Example 3: Poor Performance
@@ -618,12 +785,23 @@ Total Time Score = 1 × (100 × 0.4) = 40
 T_score = 40 / 1 = 40.0%
 ```
 
+**Project Progress Score:**
+
+Progress for projects with tasks:
+- 1 ongoing: 25% (minimal progress)
+- 2 delayed: 15% and 10% → very low
+
+```
+Total Progress = 25 + 15 + 10 = 50
+P_score = 50 / 3 = 16.67%
+```
+
 **Overall Score:**
 
 ```
-Overall = (20.0 × 0.45) + (40.0 × 0.35)
-        = 9.0 + 14.0
-        = 23.0%
+Overall = (20.0 × 0.35) + (40.0 × 0.30) + (16.67 × 0.35)
+        = 7.0 + 12.0 + 5.83
+        = 24.83%
 
 Grade: F (Needs Improvement)
 ```
@@ -792,6 +970,7 @@ private static function generateInsights(
     float $overallScore,
     array $completionScore,
     array $timeScore,
+    array $progressScore,
     array $statistics
 ): array {
     $insights = [];
@@ -828,6 +1007,30 @@ private static function generateInsights(
         
         if ($timeScore['timePerformance']['severelyLate'] > 0) {
             $insights[] = "Concern: Some projects severely delayed.";
+        }
+    }
+
+    // Project progress analysis
+    if ($progressScore['evaluatedProjects'] > 0) {
+        $avgProgress = $progressScore['score'];
+        
+        if ($avgProgress >= 80) {
+            $insights[] = "Excellent progress tracking - projects advancing steadily.";
+        } elseif ($avgProgress >= 60) {
+            $insights[] = "Good progress on active projects - maintain momentum.";
+        } elseif ($avgProgress < 40) {
+            $insights[] = "Warning: Low average progress. Consider resource reallocation.";
+        }
+        
+        $minimalCount = $progressScore['progressDistribution']['minimalProgress'];
+        $highCount = $progressScore['progressDistribution']['highProgress'];
+        
+        if ($minimalCount > 0) {
+            $insights[] = "{$minimalCount} project(s) with minimal progress - urgent attention needed.";
+        }
+        
+        if ($highCount >= $progressScore['evaluatedProjects'] * 0.6) {
+            $insights[] = "Strong execution - majority showing high progress (≥75%).";
         }
     }
 
@@ -878,20 +1081,38 @@ private static function generateRecommendations(
 
 ## Summary
 
-The Project Manager Performance Calculation System provides a **comprehensive, fair, and transparent** method for evaluating project manager effectiveness. By combining project completion success with time management efficiency through weighted aggregation, the system:
+The Project Manager Performance Calculation System provides a **comprehensive, fair, and transparent** method for evaluating project manager effectiveness. By combining project completion success, time management efficiency, and actual project progress through weighted aggregation, the system:
 
 - ✅ Rewards successful project delivery and on-time completion
-- ✅ Accounts for project status and progress
-- ✅ Provides partial credit for work-in-progress
+- ✅ Evaluates actual task completion progress across all projects
+- ✅ Accounts for both project status and granular task-level progress
+- ✅ Provides partial credit for work-in-progress based on real advancement
+- ✅ Identifies at-risk projects through progress tracking (<25% completion)
+- ✅ Considers task priorities in progress calculations (high-priority tasks weighted more)
 - ✅ Penalizes cancellations and severe delays
 - ✅ Normalizes scores for fair comparison across different portfolios
 - ✅ Generates actionable insights and recommendations
 - ✅ Supports data-driven performance reviews and career development
 
-The dual-metric approach (completion + time management) ensures balanced evaluation, while the weighted formula allows for future expansion to include additional dimensions such as budget management and quality metrics.
+The triple-metric approach (completion + time management + progress) ensures balanced evaluation by assessing not just what's finished, but how much work is actually being done. This provides a more accurate and real-time view of project manager effectiveness.
 
 ---
 
-**Document Version:** 1.0  
-**Last Updated:** November 16, 2025  
+**Document Version:** 2.0  
+**Last Updated:** November 18, 2025  
 **Maintained By:** TaskFlow Development Team
+
+---
+
+## Changelog
+
+### Version 2.0 (November 18, 2025)
+- **Added:** Project Progress Score as third metric (35% weight)
+- **Changed:** Rebalanced metric weights (Completion: 45%→35%, Time: 35%→30%, Progress: new 35%)
+- **Enhanced:** Now evaluates actual task completion across all projects using `ProjectProgressCalculator`
+- **Improved:** Progress categorization (high/moderate/low/minimal) for better insights
+- **Added:** Progress-based recommendations for struggling projects
+- **Updated:** All examples and calculations to reflect three-metric system
+
+### Version 1.0 (November 16, 2025)
+- Initial documentation with dual-metric system (Completion + Time Management)
