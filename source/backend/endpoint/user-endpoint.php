@@ -21,7 +21,9 @@ use App\Enumeration\Gender;
 use App\Enumeration\WorkerStatus;
 use App\Enumeration\WorkStatus;
 use App\Exception\NotFoundException;
+use App\Model\ProjectManagerModel;
 use App\Utility\PictureUpload;
+use App\Utility\ProjectManagerPerformanceCalculator;
 use App\Utility\ResponseExceptionHandler;
 use App\Utility\WorkerPerformanceCalculator;
 use App\Validator\UserValidator;
@@ -72,6 +74,10 @@ class UserEndpoint
             if (!$user) {
                 Response::error('User not found.', [], 404);
             } else {
+                $performance =  (Role::isProjectManager($user)) 
+                    ? ProjectManagerPerformanceCalculator::calculate($user->getAdditionalInfo('projectHistory'))
+                    : WorkerPerformanceCalculator::calculate($user->getAdditionalInfo('projectHistory'));
+                $user->addAdditionalInfo('performance', $performance['overallScore']);
                 Response::success([$user], 'User fetched successfully.');
             }
         } catch (Throwable $e) {
