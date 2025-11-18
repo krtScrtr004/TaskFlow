@@ -54,6 +54,15 @@
 			"getByKey"
 		],
 
+		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}/manager/{managerId:[\\w_-]+}": [
+			"ProjectManagerEndpoint",
+			"getById"
+		],
+		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}/manager": [
+			"ProjectManagerEndpoint",
+			"getById"
+		],
+
 		"TaskFlow/endpoint/projects/{projectId:[\\w_-]+}": [
 			"ProjectEndpoint",
 			"getById"
