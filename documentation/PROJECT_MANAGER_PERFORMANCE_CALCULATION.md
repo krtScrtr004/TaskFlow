@@ -437,7 +437,10 @@ public static function calculate(ProjectContainer $projects): array
             'performanceGrade' => 'N/A',
             'totalProjects' => 0,
             'metrics' => [],
-            'insights' => self::generateNoDataInsights()
+            'messages' => [
+                'insights' => self::generateNoDataInsights(),
+                'recommendations' => []
+            ]
         ];
     }
 
@@ -468,8 +471,10 @@ public static function calculate(ProjectContainer $projects): array
             'projectProgress' => $progressScore,
         ],
         'statistics' => $statistics,
-        'insights' => self::generateInsights(...),
-        'recommendations' => self::generateRecommendations(...)
+        'messages' => [
+            'insights' => self::generateInsights($overallScore, $completionScore, $timeScore, $progressScore, $statistics),
+            'recommendations' => self::generateRecommendations($completionScore, $timeScore, $progressScore, $statistics)
+        ]
     ];
 }
 ```

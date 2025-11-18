@@ -50,7 +50,10 @@ class ProjectManagerPerformanceCalculator
                 'performanceGrade' => 'N/A',
                 'totalProjects' => 0,
                 'metrics' => [],
-                'insights' => self::generateNoDataInsights()
+                'messages' => [
+                    'insights' => self::generateNoDataInsights(),
+                    'recommendations' => []
+                ]
             ];
         }
 
@@ -81,8 +84,10 @@ class ProjectManagerPerformanceCalculator
                 'projectProgress' => $progressScore,
             ],
             'statistics' => $statistics,
-            'insights' => self::generateInsights($overallScore, $completionScore, $timeScore, $progressScore, $statistics),
-            'recommendations' => self::generateRecommendations($completionScore, $timeScore, $progressScore, $statistics)
+            'messages' => [
+                'insights' => self::generateInsights($overallScore, $completionScore, $timeScore, $progressScore, $statistics),
+                'recommendations' => self::generateRecommendations($completionScore, $timeScore, $progressScore, $statistics)
+            ]
         ];
     }
 
