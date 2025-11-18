@@ -143,7 +143,10 @@ class ProjectManagerModel extends Model
                 ':completedStatus' => WorkStatus::COMPLETED->value
             ];
 
-            $whereClause[] = 'u.id = :managerId';
+            $whereClause[] = is_int($managerId)
+                ? 'u.id = :managerId'
+                : 'u.publicId = :managerId';
+
             $params[':managerId'] = is_int($managerId)
                 ? $managerId
                 : UUID::toBinary($managerId);
@@ -205,6 +208,8 @@ class ProjectManagerModel extends Model
                     ujt.userId = u.id
                 WHERE 
                     $where
+                GROUP BY 
+                    u.id
             ";
             
             $statement = $instance->connection->prepare($query);
