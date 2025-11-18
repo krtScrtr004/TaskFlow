@@ -136,15 +136,34 @@ class UserModel extends Model
         }
     }
 
+    
     /**
-     * Finds a user by their public ID.
-     * 
-     * This method searches for a user in the database using the provided UUID.
-     * The UUID is converted to binary format for database search.
-     * 
-     * @param int|UUID $userId The user ID (integer) or public UUID to search for
-     * @return User|null The User object if found, null otherwise
-     * @throws DatabaseException If a database error occurs during the search
+     * Locate and return a User by numeric ID or public UUID.
+     *
+     * This static factory method resolves a user record by either its numeric primary key
+     * (id) or its public identifier (UUID). It performs a lightweight lookup to determine
+     * the user's role and then delegates to the appropriate subtype loader:
+     * - If the role matches Role::PROJECT_MANAGER, it delegates to ProjectManagerModel::findById(...)
+     * - Otherwise it delegates to ProjectWorkerModel::findById(...)
+     *
+     * Behavior and important details:
+     * - Accepts either an integer ID or a UUID object/string as $userId.
+     * - If an integer is given, it must be >= 1; otherwise an InvalidArgumentException is thrown.
+     * - If a UUID is given, it is converted to binary form (UUID::toBinary) before the database query.
+     * - The initial query only selects the id and role from the `user` table to decide which model to delegate to.
+     * - If no matching record is found, the method returns null.
+     * - Any exceptions thrown during database interaction are propagated.
+     *
+     * @param int|UUID $userId Numeric user ID or public UUID identifying the user.
+     *
+     * @return User|null Returns an instance of User (concrete type will be ProjectManagerModel
+     *                   or ProjectWorkerModel) when a matching user is found, or null if not found.
+     *
+     * @throws InvalidArgumentException If an integer $userId is less than 1.
+     * @throws Exception For database-related errors or any exceptions thrown by delegated loaders.
+     *
+     * @see ProjectManagerModel::findById()
+     * @see ProjectWorkerModel::findById()
      */
     public static function findById(int|UUID $userId): ?User
     {
@@ -152,18 +171,20 @@ class UserModel extends Model
             throw new InvalidArgumentException('Invalid user ID provided.');
         }
 
-        $whereClause = is_int($userId) 
-            ? 'u.id = :id' 
-            : 'u.publicId = :publicId';
-        $params = is_int($userId) 
-            ? [':id' => $userId] 
-            : [':publicId' => UUID::toBinary($userId)];
-
-        $whereClause .= ' AND u.deletedAt IS NULL';
-
+        $instance = new self();
         try {
-            $result = self::find($whereClause, $params, ['limit' => 1]);
-            return $result ? $result[0] : null;
+            $searchRole = "SELECT id, role FROM `user` WHERE " . (is_int($userId) ? "id" : "publicId") . " = :userId LIMIT 1";
+            $statement = $instance->connection->prepare($searchRole);
+            $statement->execute([':userId' => is_int($userId) ? $userId : UUID::toBinary($userId)]);
+            $result = $statement->fetch();
+
+            if (!$instance->hasData($result)) {
+                return null;
+            }
+
+            return ($result['role'] === Role::PROJECT_MANAGER->value)
+                ? ProjectManagerModel::findById($userId, null, true)
+                : ProjectWorkerModel::findById($userId, null, true);
         } catch (Exception $e) {
             throw $e;
         }
