@@ -5,6 +5,7 @@ use App\Model\ProjectModel;
 use App\Enumeration\Role;
 use App\Enumeration\WorkStatus;
 use App\Middleware\Csrf;
+use App\Model\UserModel;
 use App\Utility\ProjectManagerPerformanceCalculator;
 use App\Utility\WorkerPerformanceCalculator;
 
@@ -16,14 +17,20 @@ $statisticsData = [
     'performance'   => 0,
     'total'         => htmlspecialchars(formatNumber($projects?->count() ?? 0)),
     'completed'     => htmlspecialchars(formatNumber($projects?->getCountByStatus(WorkStatus::COMPLETED) ?? 0)),
-    'cancelled'     => htmlspecialchars(formatNumber($projects?->getCountByStatus(WorkStatus::CANCELLED) ?? 0))
+    'cancelled'     => htmlspecialchars(formatNumber($projects?->getCountByStatus(WorkStatus::CANCELLED) ?? 0)),
+    'messages'      => [
+        'insights'          => [],
+        'recommendations'   => []
+    ]
 ];
 
 if (isset($projects)) {
+    $userInfo = UserModel::findById(Me::getInstance()->getId());
     $calculateStatistics = Role::isProjectManager(Me::getInstance())
-        ? ProjectManagerPerformanceCalculator::calculate($projects)
-        : WorkerPerformanceCalculator::calculate($projects);
+        ? ProjectManagerPerformanceCalculator::calculate($userInfo->getAdditionalInfo('projectHistory'))
+        : WorkerPerformanceCalculator::calculate($userInfo->getAdditionalInfo('projectHistory'));
     $statisticsData['performance'] = htmlspecialchars(formatNumber($calculateStatistics['overallScore']));
+    $statisticsData['messages'] = $calculateStatistics['messages'];
 }
 
 ?>
@@ -53,14 +60,8 @@ if (isset($projects)) {
 
     <main class="projects main-page">
 
-        <!-- Heading -->
-        <section class="heading content-section-block">
-            <h3>Project History</h3>
-            <p>Track all projects you've handled</p>
-        </section>
-
+        <!-- Statistics -->
         <section class="statistics content-section-block flex-row">
-
             <!-- Performance -->
             <div class="performance flex-col flex-child-center-v">
                 <div>
@@ -138,7 +139,45 @@ if (isset($projects)) {
                     </div>
                 </div>
             <?php endif; ?>
+        </section>
 
+        <!-- Insights and Recommendations -->
+        <section class="insights-recommendations content-section-block flex-row">
+            <!-- Insights -->
+            <section class="insights flex-col">
+                <h3>Insights</h3>
+                <div class="insights-list flex-col">
+                    <?php
+                    echo '<ul>';
+                    if (count($statisticsData['messages']['insights']) > 0) {
+                        foreach ($statisticsData['messages']['insights'] as $insight) {
+                            echo '<li>' . $insight . '</li>';
+                        }
+                    } else {
+                        echo '<li>No insights available at the moment.</li>';
+                    }
+                    echo '</ul>';
+                    ?>
+                </div>
+            </section>
+
+            <!-- Recommendations -->
+            <section class="recommendations flex-col">
+                <h3>Recommendations</h3>
+                <div class="recommendations-list flex-col">
+                    <?php
+                    echo '<ul>';
+                    if (count($statisticsData['messages']['recommendations']) > 0) {
+                        foreach ($statisticsData['messages']['recommendations'] as $recommendation) {
+                            echo '<li>' . htmlspecialchars($recommendation) . '</li>';
+                        }
+                    } else {
+                        echo '<li>No recommendations available at the moment.</li>';
+                    }
+                    echo '</ul>';
+                    ?>
+                </div>
+            </section>
 
         </section>
 
