@@ -366,23 +366,20 @@ class ProjectWorkerModel extends Model
                                                 'actualCompletionDateTime', pt.actualCompletionDateTime
                                             ) ORDER BY pt.createdAt DESC
                                         ), ']')
-                                        FROM `phaseTask` AS pt
-                                        LEFT JOIN 
-                                            `phaseTaskWorker` AS pwt
+                                        FROM 
+                                            `phaseTask` AS pt
+                                        INNER JOIN 
+                                            `phaseTaskWorker` AS ptw
                                         ON 
-                                            pt.id = pwt.taskId
-                                        LEFT JOIN 
+                                            pt.id = ptw.taskId
+                                        INNER JOIN 
                                             `projectPhase` as pp
                                         ON 
                                             pp.id = pt.phaseId
-                                        LEFT JOIN 
-                                            `project` AS p2
-                                        ON 
-                                            p2.id = pp.projectId
                                         WHERE 
-                                            pwt.workerId = u.id
+                                            pp.projectId = p2.id
                                         AND 
-                                            p2.id = p.id
+                                            ptw.workerId = u.id
                                     )
                                 ) ORDER BY p2.createdAt DESC
                             )
@@ -608,30 +605,30 @@ class ProjectWorkerModel extends Model
                                             ) ORDER BY pt.createdAt DESC
                                         ), ']')
                                         FROM `phaseTask` AS pt
-                                        LEFT JOIN 
-                                            `phaseTaskWorker` AS pwt
+                                        INNER JOIN 
+                                            `phaseTaskWorker` AS ptw
                                         ON 
-                                            pt.id = pwt.taskId
-                                        LEFT JOIN 
+                                            pt.id = ptw.taskId
+                                        INNER JOIN 
                                             `projectPhase` as pp
                                         ON 
                                             pp.id = pt.phaseId
-                                        LEFT JOIN 
-                                            `project` AS p2
-                                        ON 
-                                            p2.id = pp.projectId
                                         WHERE 
-                                            pwt.workerId = u.id
+                                            pp.projectId = p2.id
                                         AND 
-                                            p2.id = p.id
+                                            ptw.workerId = u.id
                                     )
                                 ) ORDER BY p2.createdAt DESC
                             )
                             , ']')
-                            FROM `project` AS p2
-                            INNER JOIN `projectWorker` AS pw4
-                            ON p2.id = pw4.projectId
-                            WHERE pw4.workerId = u.id
+                            FROM 
+                                `project` AS p2
+                            INNER JOIN 
+                                `projectWorker` AS pw4
+                            ON 
+                                p2.id = pw4.projectId
+                            WHERE 
+                                pw4.workerId = u.id
                             LIMIT 10
                         ),
                         '[]'
