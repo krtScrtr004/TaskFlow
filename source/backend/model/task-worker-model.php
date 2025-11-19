@@ -63,15 +63,24 @@ class TaskWorkerModel extends Model
                     u.deletedAt,
                     GROUP_CONCAT(ujt.title) AS jobTitles,
                     (
-                        SELECT COUNT(*)
-                        FROM phaseTaskWorker AS ptw
-                        WHERE ptw.workerId = u.id
+                        SELECT 
+                            COUNT(*)
+                        FROM 
+                            `phaseTaskWorker` AS ptw
+                        WHERE 
+                            ptw.workerId = u.id
                     ) AS totalTasks,
                     (
-                        SELECT COUNT(*)
-                        FROM phaseTaskWorker AS ptw
-                        INNER JOIN phaseTask AS pt ON ptw.taskId = pt.id
-                        WHERE ptw.workerId = u.id AND pt.status = '" . WorkStatus::COMPLETED->value . "'
+                        SELECT 
+                            COUNT(*)
+                        FROM 
+                            `phaseTaskWorker` AS ptw
+                        INNER JOIN 
+                            `phaseTask` AS pt 
+                        ON 
+                            ptw.taskId = pt.id
+                        WHERE 
+                            ptw.workerId = u.id AND pt.status = '" . WorkStatus::COMPLETED->value . "'
                     ) AS completedTasks
                 FROM
                     `user` AS u
@@ -656,8 +665,8 @@ class TaskWorkerModel extends Model
             $isWorkerInt = is_int($data[0]);
             
             $insertQuery = "
-                INSERT INTO `phaseTaskWorker`
-                    (taskId, workerId, status)
+                INSERT INTO 
+                    `phaseTaskWorker` (taskId, workerId, status)
                 VALUES (
                     " . ($isTaskInt 
                         ? ":taskId" 

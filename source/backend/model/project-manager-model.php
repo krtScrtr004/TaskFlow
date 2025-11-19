@@ -193,7 +193,9 @@ class ProjectManagerModel extends Model
                         FROM 
                             `project` AS p3
                         WHERE 
-                            p3.managerId = u.id AND p3.status = :completedStatus
+                            p3.managerId = u.id 
+                        AND 
+                            p3.status = :completedStatus
                     ) AS completedProjects
                     $projectHistory
                 FROM 
@@ -208,7 +210,7 @@ class ProjectManagerModel extends Model
                     ujt.userId = u.id
                 WHERE 
                     $where
-                GROUP BY 
+                GROUP BY
                     u.id
             ";
             
@@ -261,38 +263,38 @@ class ProjectManagerModel extends Model
                         $tasks = json_decode($phase['phaseTasks'], true);
                         foreach ($tasks as $task) {
                             $taskContainer->add(Task::createPartial([
-                                'id' => (int)$task['taskId'],
-                                'publicId' => UUID::fromHex($task['taskPublicId']),
-                                'name' => $task['taskName'],
-                                'status' => WorkStatus::from($task['taskStatus']),
-                                'priority' => TaskPriority::from($task['taskPriority']),
-                                'startDateTime' => new DateTime($task['taskStartDate']),
-                                'completionDateTime' => new DateTime($task['taskCompletionDate']),
-                                'actualCompletionDateTime' => new DateTime($task['taskActualCompletionDate']),
+                                'id'                        => (int)$task['taskId'],
+                                'publicId'                  => UUID::fromHex($task['taskPublicId']),
+                                'name'                      => $task['taskName'],
+                                'status'                    => WorkStatus::from($task['taskStatus']),
+                                'priority'                  => TaskPriority::from($task['taskPriority']),
+                                'startDateTime'             => new DateTime($task['taskStartDate']),
+                                'completionDateTime'        => new DateTime($task['taskCompletionDate']),
+                                'actualCompletionDateTime'  => new DateTime($task['taskActualCompletionDate']),
                             ]));
                         }
 
                         $phaseContainer->add(Phase::createPartial([
-                            'id' => (int)$phase['phaseId'],
-                            'publicId' => UUID::fromHex($phase['phasePublicId']),
-                            'name' => $phase['phaseName'],
-                            'status' => WorkStatus::from($phase['phaseStatus']),
-                            'tasks' => $taskContainer,
-                            'startDateTime' => new DateTime($phase['phaseStartDate']),
-                            'completionDateTime' => new DateTime($phase['phaseCompletionDate']),
-                            'actualCompletionDateTime' => new DateTime($phase['phaseActualCompletionDate']),
+                            'id'                        => (int)$phase['phaseId'],
+                            'publicId'                  => UUID::fromHex($phase['phasePublicId']),
+                            'name'                      => $phase['phaseName'],
+                            'status'                    => WorkStatus::from($phase['phaseStatus']),
+                            'tasks'                     => $taskContainer,
+                            'startDateTime'             => new DateTime($phase['phaseStartDate']),
+                            'completionDateTime'        => new DateTime($phase['phaseCompletionDate']),
+                            'actualCompletionDateTime'  => new DateTime($phase['phaseActualCompletionDate']),
                         ]));
                     }
 
                     $projectContainer->add(Project::createPartial([
-                        'id' => (int)$project['projectId'],
-                        'publicId' => UUID::fromHex($project['projectPublicId']),
-                        'name' => $project['projectName'],
-                        'status' => WorkStatus::from($project['projectStatus']),
-                        'phases' => $phaseContainer,
-                        'startDateTime' => new DateTime($project['projectStartDate']),
-                        'completionDateTime' => new DateTime($project['projectCompletionDate']),
-                        'actualCompletionDateTime' => new DateTime($project['projectActualCompletionDate']),
+                        'id'                        => (int)$project['projectId'],
+                        'publicId'                  => UUID::fromHex($project['projectPublicId']),
+                        'name'                      => $project['projectName'],
+                        'status'                    => WorkStatus::from($project['projectStatus']),
+                        'phases'                    => $phaseContainer,
+                        'startDateTime'             => new DateTime($project['projectStartDate']),
+                        'completionDateTime'        => new DateTime($project['projectCompletionDate']),
+                        'actualCompletionDateTime'  => new DateTime($project['projectActualCompletionDate']),
                     ]));
                 }
                 

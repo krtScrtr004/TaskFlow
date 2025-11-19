@@ -66,35 +66,58 @@ class UserModel extends Model
                     u.*,
                     GROUP_CONCAT(ujt.title) AS jobTitles,
                     (
-                        SELECT COUNT(DISTINCT p.id)
-                        FROM `project` AS p
-                        LEFT JOIN `projectWorker` AS pw 
-                        ON p.id = pw.projectId
-                        WHERE p.managerId = u.id
-                        OR pw.workerId = u.id
+                        SELECT 
+                            COUNT(DISTINCT p.id)
+                        FROM 
+                            `project` AS p
+                        LEFT JOIN 
+                            `projectWorker` AS pw 
+                        ON 
+                            p.id = pw.projectId
+                        WHERE 
+                            p.managerId = u.id
+                        OR 
+                            pw.workerId = u.id
                     ) AS totalProjects,
                     (
-                        SELECT COUNT(DISTINCT p.id)
-                        FROM `project` AS p
-                        LEFT JOIN `projectWorker` AS pw 
-                        ON p.id = pw.projectId
-                        WHERE (p.managerId = u.id
-                        OR pw.workerId = u.id)
-                        AND p.status = :completedStatus
+                        SELECT 
+                            COUNT(DISTINCT p.id)
+                        FROM 
+                            `project` AS p
+                        LEFT JOIN 
+                            `projectWorker` AS pw 
+                        ON 
+                            p.id = pw.projectId
+                        WHERE 
+                            (p.managerId = u.id
+                        OR 
+                            pw.workerId = u.id)
+                        AND 
+                            p.status = :completedStatus
                     ) AS completedProjects,
                     (
-                        SELECT COUNT(DISTINCT p.id)
-                        FROM `project` AS p
-                        LEFT JOIN `projectWorker` AS pw 
-                        ON p.id = pw.projectId
-                        WHERE pw.workerId = u.id 
-                        AND p.status = :cancelledStatus
+                        SELECT 
+                            COUNT(DISTINCT p.id)
+                        FROM 
+                            `project` AS p
+                        LEFT JOIN 
+                            `projectWorker` AS pw 
+                        ON 
+                            p.id = pw.projectId
+                        WHERE 
+                            pw.workerId = u.id 
+                        AND 
+                            p.status = :cancelledStatus
                     ) AS cancelledProjectCount,
                     (
-                        SELECT COUNT(*)
-                        FROM `projectWorker` AS pw
-                        WHERE pw.workerId = u.id
-                        AND pw.status = :terminatedStatus
+                        SELECT 
+                            COUNT(*)
+                        FROM 
+                            `projectWorker` AS pw
+                        WHERE 
+                            pw.workerId = u.id
+                        AND 
+                            pw.status = :terminatedStatus
                     ) AS terminatedProjectCount
                 FROM 
                     `user` AS u
@@ -389,23 +412,40 @@ class UserModel extends Model
                     $where[] = "
                         NOT EXISTS (
                             SELECT 1
-                            FROM `project` AS p
-                            WHERE p.managerId = u.id
-                            AND p.status NOT IN (:completedStatusUnassigned1, :cancelledStatusUnassigned1)
+                            FROM 
+                                `project` AS p
+                            WHERE 
+                                p.managerId = u.id
+                            AND 
+                                p.status NOT IN (
+                                    :completedStatusUnassigned1, :cancelledStatusUnassigned1
+                                )
                         )
                         AND NOT EXISTS (
                             SELECT 1
-                            FROM `projectWorker` AS pw
-                            JOIN `project` AS p ON pw.projectId = p.id
-                            WHERE pw.workerId = u.id
-                            AND p.status NOT IN (:completedStatusUnassigned2, :cancelledStatusUnassigned2)
+                            FROM 
+                                `projectWorker` AS pw
+                            JOIN 
+                                `project` AS p ON pw.projectId = p.id
+                            WHERE 
+                                pw.workerId = u.id
+                            AND 
+                                p.status NOT IN (
+                                    :completedStatusUnassigned2, :cancelledStatusUnassigned2
+                                )
                         )
                         AND NOT EXISTS (
                             SELECT 1
-                            FROM `phaseTaskWorker` AS ptw
-                            JOIN `phaseTask` AS pt ON ptw.taskId = pt.id
-                            WHERE ptw.workerId = u.id
-                            AND pt.status NOT IN (:completedStatusUnassigned3, :cancelledStatusUnassigned3)
+                            FROM 
+                                `phaseTaskWorker` AS ptw
+                            JOIN 
+                                `phaseTask` AS pt ON ptw.taskId = pt.id
+                            WHERE 
+                                ptw.workerId = u.id
+                            AND 
+                                pt.status NOT IN (
+                                    :completedStatusUnassigned3, :cancelledStatusUnassigned3
+                                )
                         )
                     ";
                     $params[':completedStatusUnassigned1'] = WorkStatus::COMPLETED->value;
@@ -418,20 +458,31 @@ class UserModel extends Model
                     $where[] = "
                         ((EXISTS (
                             SELECT 1
-                            FROM `project` p
-                            WHERE p.managerId = u.id
-                            AND p.status NOT IN (:completedStatusUnassigned, :cancelledStatusUnassigned)
+                            FROM 
+                                `project` p
+                            WHERE 
+                                p.managerId = u.id
+                            AND 
+                                p.status NOT IN (
+                                    :completedStatusUnassigned, :cancelledStatusUnassigned
+                                )
                         )) OR
                         (EXISTS (
                             SELECT 1
-                            FROM `projectWorker` pw
-                            WHERE pw.workerId = u.id
-                            AND pw.status = :workerStatus1
+                            FROM 
+                                `projectWorker` pw
+                            WHERE 
+                                pw.workerId = u.id
+                            AND 
+                                pw.status = :workerStatus1
                         ) OR EXISTS (
                             SELECT 1
-                            FROM `phaseTaskWorker` ptw
-                            WHERE ptw.workerId = u.id
-                            AND ptw.status = :workerStatus2
+                            FROM 
+                                `phaseTaskWorker` ptw
+                            WHERE 
+                                ptw.workerId = u.id
+                            AND 
+                                ptw.status = :workerStatus2
                         )))
                     ";
                     $params[':completedStatusUnassigned'] = WorkStatus::COMPLETED->value;
@@ -744,7 +795,8 @@ class UserModel extends Model
 
             if (count($jobTitlesToAdd) > 0) {
                 $insertQuery = "
-                    INSERT INTO `userJobTitle` (userId, title)
+                    INSERT INTO
+                        `userJobTitle` (userId, title)
                     VALUES (
                         " . (is_int($userId) ? ":userId" : "(SELECT id FROM users WHERE publicId = :userId)") . "   
                         , :title

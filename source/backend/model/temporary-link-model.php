@@ -42,8 +42,10 @@ class TemporaryLinkModel extends Model
 
             $hashedToken = hash('sha256', $data['token']);
             $query = "
-                INSERT INTO `temporaryLink` (userEmail, token) 
-                VALUES (:email, :token1) 
+                INSERT INTO 
+                    `temporaryLink` (userEmail, token) 
+                VALUES 
+                    (:email, :token1) 
                 ON DUPLICATE KEY UPDATE token = :token2
             ";
             $statement = $instance->connection->prepare($query);
