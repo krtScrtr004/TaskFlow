@@ -37,7 +37,7 @@ class TaskModel extends Model
      * - Task details (ID, public ID, name, description, dates, priority, status, creation timestamp)
      * - Associated phase public ID
      * - Workers assigned to the task, including:
-     *      - Worker ID, public ID, name, email, contact number, profile link, gender, status
+     *      - Worker ID, public ID, name, email, contact number, profile link, gender, status, creation timestamp, confirmation timestamp, deletion timestamp
      *      - Job titles (as an array)
      *      - Total tasks assigned to the worker
      *      - Completed tasks by the worker
@@ -83,6 +83,9 @@ class TaskModel extends Model
                                     'workerProfileLink', u.profileLink,
                                     'workerGender', u.gender,
                                     'workerStatus', ptw.status,
+                                    'workerCreatedAt', u.createdAt,
+                                    'workerConfirmedAt', u.confirmedAt,
+                                    'workerDeletedAt', u.deletedAt,
                                     'workerJobTitles', COALESCE(
                                         (
                                             SELECT CONCAT('[', GROUP_CONCAT(CONCAT('\"', wjt.title, '\"')), ']')
@@ -175,6 +178,9 @@ class TaskModel extends Model
                         'jobTitles' => isset($worker['workerJobTitles'])
                             ? new JobTitleContainer(json_decode($worker['workerJobTitles'], true))
                             : new JobTitleContainer(),
+                        'createdAt' => $worker['workerCreatedAt'],
+                        'confirmedAt' => $worker['workerConfirmedAt'],
+                        'deletedAt' => $worker['workerDeletedAt'],
                         'additionalInfo' => [
                             'totalTasks' => (int)$worker['workerTotalTasks'],
                             'completedTasks' => (int)$worker['workerCompletedTasks']

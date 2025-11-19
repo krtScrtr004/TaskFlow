@@ -29,7 +29,7 @@ class ProjectWorkerModel extends Model
      * and additional query options.
      *
      * The returned data includes:
-     * - Worker personal details (publicId, firstName, middleName, lastName, bio, gender, email, contactNumber, profileLink)
+     * - Worker personal details (publicId, firstName, middleName, lastName, bio, gender, email, contactNumber, profileLink, createdAt, confirmedAt, deletedAt)
      * - Worker status in the project
      * - Aggregated job titles (as an array)
      * - Total and completed tasks assigned to the worker
@@ -59,6 +59,9 @@ class ProjectWorkerModel extends Model
                     u.contactNumber,
                     u.profileLink,
                     pw.status,
+                    u.createdAt,
+                    u.confirmedAt,
+                    u.deletedAt,
                     GROUP_CONCAT(ujt.title) AS jobTitles,
                     (
                         SELECT COUNT(*)
@@ -181,7 +184,7 @@ class ProjectWorkerModel extends Model
                     pw.status,
                     u.createdAt,
                     u.confirmedAt,
-                    u.deletedAt
+                    u.deletedAt,
                     GROUP_CONCAT(ujt.title) AS jobTitles
                 FROM
                     `user` AS u

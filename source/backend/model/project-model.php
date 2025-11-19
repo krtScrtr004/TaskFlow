@@ -617,7 +617,10 @@ class ProjectModel extends Model
                     u.lastName AS managerLastName,
                     u.gender AS managerGender,
                     u.email AS managerEmail,
-                    u.profileLink AS managerProfileLink
+                    u.profileLink AS managerProfileLink,
+                    u.createdAt AS managerCreatedAt,
+                    u.confirmedAt AS managerConfirmedAt,
+                    u.deletedAt AS managerDeletedAt
                 FROM
                     `project` AS p
                 INNER JOIN 
@@ -660,6 +663,9 @@ class ProjectModel extends Model
                 'gender'        => $result['managerGender'],
                 'email'         => $result['managerEmail'],
                 'profileLink'   => $result['managerProfileLink'],
+                'createdAt'     => $result['managerCreatedAt'],
+                'confirmedAt'   => $result['managerConfirmedAt'],
+                'deletedAt'     => $result['managerDeletedAt'],
             ]);
             return Project::createPartial($result);;
         } catch (PDOException $e) {
