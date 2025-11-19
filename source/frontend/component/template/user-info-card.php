@@ -1,5 +1,6 @@
 <?php
 use App\Core\Me;
+use App\Core\UUID;
 use App\Enumeration\Role;
 use App\Enumeration\WorkStatus;
 ?>
@@ -114,6 +115,7 @@ use App\Enumeration\WorkStatus;
         </section>
 
         <?php
+        $isUsersPage = (strpos($_SERVER['REQUEST_URI'], 'user') !== false);
         $workStatus = $projectData['status'] ?? $taskData['status'] ?? null;    
         if (!$isUsersPage && 
             Role::isProjectManager(Me::getInstance()) &&
@@ -128,6 +130,13 @@ use App\Enumeration\WorkStatus;
                     <h3 class="white-text">Terminate</h3>
                 </div>
             </button>
+        <?php endif; ?>
+
+        <?php if (!$isUsersPage): ?>
+            <div class="see-worker-task-redirect no-display" 
+                data-rooturl="<?= REDIRECT_PATH . 'project' . DS . $projectData['id'] . DS . 'task' . DS . 'worker' . DS ?>">
+                <a class="blue-text" href="#">See Worker's Tasks</a>
+            </div>
         <?php endif; ?>
 
     </div>

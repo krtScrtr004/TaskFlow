@@ -691,6 +691,7 @@ class User implements Entity
             'bio' => $data['bio'] ?? null,
             'profileLink' => $data['profileLink'] ?? null,
             'createdAt' => $data['createdAt'] ?? new DateTime(),
+            'confirmedAt' => $data['confirmedAt'] ?? null,
             'deletedAt' => $data['deletedAt'] ?? null,
             'password' => $data['password'] ?? null,
             'additionalInfo' => $data['additionalInfo'] ?? []

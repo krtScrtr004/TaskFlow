@@ -188,9 +188,12 @@ class ProjectModel extends Model
                     'managerGender', m.gender,
                     'managerJobTitles', COALESCE(
                         (
-                            SELECT CONCAT('[', GROUP_CONCAT(CONCAT('\"', mjt.title, '\"')), ']')
-                            FROM userJobTitle AS mjt
-                            WHERE mjt.userId = m.id
+                            SELECT 
+                                CONCAT('[', GROUP_CONCAT(CONCAT('\"', mjt.title, '\"')), ']')
+                            FROM 
+                                `userJobTitle` AS mjt
+                            WHERE 
+                                mjt.userId = m.id
                         ),
                         '[]'
                     )
@@ -214,8 +217,10 @@ class ProjectModel extends Model
                             )
                             ORDER BY pp.startDateTime ASC
                         ), ']')
-                        FROM projectPhase pp
-                        WHERE pp.projectId = p.id
+                        FROM 
+                            `projectPhase` pp
+                        WHERE 
+                            pp.projectId = p.id
                     ),
                     '[]'
                 ) AS projectPhases";
@@ -236,19 +241,30 @@ class ProjectModel extends Model
                                 'workerProfileLink', w.profileLink,
                                 'workerGender', w.gender,
                                 'workerStatus', pw.status,
+                                'workerCreatedAt', w.createdAt,
+                                'workerConfirmedAt', w.confirmedAt,
+                                'workerDeletedAt', w.deletedAt,
                                 'workerJobTitles', COALESCE(
                                     (
-                                        SELECT CONCAT('[', GROUP_CONCAT(CONCAT('\"', wjt.title, '\"')), ']')
-                                        FROM userJobTitle wjt
-                                        WHERE wjt.userId = w.id
+                                        SELECT 
+                                            CONCAT('[', GROUP_CONCAT(CONCAT('\"', wjt.title, '\"')), ']')
+                                        FROM 
+                                            `userJobTitle` AS wjt
+                                        WHERE 
+                                            wjt.userId = w.id
                                     ),
                                     '[]'
                                 )
                             ) ORDER BY w.lastName SEPARATOR ','
                         ), ']')
-                        FROM projectWorker pw
-                        INNER JOIN user w ON pw.workerId = w.id
-                        WHERE pw.projectId = p.id
+                        FROM 
+                            `projectWorker` AS pw
+                        INNER JOIN 
+                            `user` AS w 
+                        ON 
+                            pw.workerId = w.id
+                        WHERE 
+                            pw.projectId = p.id
                     ),
                     '[]'
                 ) AS projectWorkers";
@@ -272,10 +288,18 @@ class ProjectModel extends Model
                                 'taskCreatedAt', pt.createdAt
                             ) ORDER BY pt.createdAt SEPARATOR ','
                         ), ']')
-                        FROM phaseTask AS pt
-                        LEFT JOIN `projectPhase` AS pp ON pt.phaseId = pp.id
-                        LEFT JOIN `project` AS p2 ON pp.projectId = p2.id
-                        WHERE p2.id = p.id
+                        FROM 
+                            `phaseTask` AS pt
+                        LEFT JOIN 
+                            `projectPhase` AS pp 
+                        ON 
+                            pt.phaseId = pp.id
+                        LEFT JOIN 
+                            `project` AS p2 
+                        ON 
+                            pp.projectId = p2.id
+                        WHERE 
+                            p2.id = p.id
                     ),
                     '[]'
                 ) AS projectTasks";
@@ -288,9 +312,11 @@ class ProjectModel extends Model
                     SELECT 
                         " . implode(",\n                        ", $selectFields) . "
                     FROM 
-                        project p
+                        `project` AS p
                     INNER JOIN
-                        user m ON p.managerId = m.id
+                        `user` AS m 
+                    ON 
+                        p.managerId = m.id
                     WHERE 
                         p.publicId = :projectId
                 ) AS projectData
@@ -391,7 +417,10 @@ class ProjectModel extends Model
                         'email'         => $worker['workerEmail'] ?? null,
                         'profileLink'   => $worker['workerProfileLink'] ?? null,
                         'status'        => WorkerStatus::from($worker['workerStatus']),
-                        'jobTitles'     => new JobTitleContainer(json_decode($worker['workerJobTitles'], true))
+                        'jobTitles'     => new JobTitleContainer(json_decode($worker['workerJobTitles'], true)),
+                        'createdAt'     => new DateTime($worker['workerCreatedAt']),
+                        'confirmedAt'   => $worker['workerConfirmedAt'] ? new DateTime($worker['workerConfirmedAt']) : null,
+                        'deletedAt'     => $worker['workerDeletedAt'] ? new DateTime($worker['workerDeletedAt']) : null,
                     ]));
                 }
             }
@@ -513,15 +542,24 @@ class ProjectModel extends Model
         try {
             $whereClause = is_int($workerId) 
                 ? 'p.id IN (
-                    SELECT projectId 
-                    FROM projectWorker 
-                    WHERE workerId = :workerId
+                    SELECT 
+                        projectId 
+                    FROM 
+                        `projectWorker`
+                    WHERE   
+                        workerId = :workerId
                 )' 
                 : 'p.id IN (
-                    SELECT projectId 
-                    FROM projectWorker pw
-                    INNER JOIN user u ON pw.workerId = u.id
-                    WHERE u.publicId = :workerId
+                    SELECT 
+                        projectId 
+                    FROM 
+                        `projectWorker` AS pw
+                    INNER JOIN 
+                        user AS u 
+                    ON 
+                        pw.workerId = u.id
+                    WHERE 
+                        u.publicId = :workerId
                 )';
 
             $param['workerId'] = is_int($workerId) 
@@ -611,7 +649,10 @@ class ProjectModel extends Model
                     u.lastName AS managerLastName,
                     u.gender AS managerGender,
                     u.email AS managerEmail,
-                    u.profileLink AS managerProfileLink
+                    u.profileLink AS managerProfileLink,
+                    u.createdAt AS managerCreatedAt,
+                    u.confirmedAt AS managerConfirmedAt,
+                    u.deletedAt AS managerDeletedAt
                 FROM
                     `project` AS p
                 INNER JOIN 
@@ -654,6 +695,9 @@ class ProjectModel extends Model
                 'gender'        => $result['managerGender'],
                 'email'         => $result['managerEmail'],
                 'profileLink'   => $result['managerProfileLink'],
+                'createdAt'     => $result['managerCreatedAt'],
+                'confirmedAt'   => $result['managerConfirmedAt'],
+                'deletedAt'     => $result['managerDeletedAt'],
             ]);
             return Project::createPartial($result);;
         } catch (PDOException $e) {
@@ -713,18 +757,24 @@ class ProjectModel extends Model
                 if (is_int($userId)) {
                     $whereClauses[] = '(p.managerId = :userId1 
                     OR p.id IN (
-                        SELECT projectId 
-                        FROM projectWorker 
-                        WHERE workerId = :userId2
+                        SELECT 
+                            projectId 
+                        FROM 
+                            `projectWorker` 
+                        WHERE 
+                            workerId = :userId2
                     ))';
                     $params[':userId1'] = $userId;
                     $params[':userId2'] = $userId;
                 } else {
                     $whereClauses[] = '(p.managerId = (SELECT id FROM user WHERE publicId = :userId1) 
                     OR p.id IN (
-                        SELECT projectId 
-                        FROM projectWorker 
-                        WHERE workerId = (SELECT id FROM user WHERE publicId = :userId2)
+                        SELECT 
+                            projectId 
+                        FROM 
+                            `projectWorker` 
+                        WHERE 
+                            workerId = (SELECT id FROM `user` WHERE publicId = :userId2)
                     ))';
                     $params[':userId1'] = UUID::toBinary($userId);
                     $params[':userId2'] = UUID::toBinary( $userId);
@@ -1322,8 +1372,10 @@ class ProjectModel extends Model
                                         ),
                                         ']'
                                     )
-                                    FROM phaseTask AS pt
-                                    WHERE pt.phaseId = pp.id
+                                    FROM 
+                                        `phaseTask` AS pt
+                                    WHERE 
+                                        pt.phaseId = pp.id
                                 )
                             )
                             ORDER BY pp.startDateTime ASC
@@ -1331,8 +1383,10 @@ class ProjectModel extends Model
                         ),
                         ']'
                     )
-                    FROM `projectPhase` AS pp
-                    WHERE pp.projectId = p.id
+                    FROM 
+                        `projectPhase` AS pp
+                    WHERE 
+                        pp.projectId = p.id
                 ) AS projectPhases
             FROM
                 `project` AS p

@@ -6,6 +6,7 @@ use App\Auth\SessionAuth;
 use App\Container\TaskContainer;
 use App\Core\Me;
 use App\Core\UUID;
+use App\Endpoint\ProjectWorkerEndpoint;
 use App\Enumeration\Role;
 use App\Enumeration\TaskPriority;
 use App\Enumeration\WorkStatus;
@@ -15,6 +16,7 @@ use App\Interface\Controller;
 use App\Middleware\Response;
 use App\Model\PhaseModel;
 use App\Model\ProjectModel;
+use App\Model\ProjectWorkerModel;
 use App\Model\TaskModel;
 use DateTime;
 use Error;
@@ -78,6 +80,34 @@ class TaskController implements Controller
                 throw new NotFoundException('Project not found.');
             }
 
+            $phaseId = isset($args['phaseId'])
+                ? UUID::fromString($args['phaseId'])
+                : null;
+            if (isset($args['phaseId']) && !$phaseId) {
+                throw new ForbiddenException('Phase ID is required.');
+            }
+
+            $phase = $phaseId
+                ? PhaseModel::findById($phaseId)
+                : null;
+            if (isset($args['phaseId']) && !$phase) {
+                throw new NotFoundException('Phase not found.');
+            }
+
+            $workerId = isset($args['workerId'])
+                ? UUID::fromString($args['workerId'])
+                : null;
+            if (isset($args['workerId']) && !$workerId) {
+                throw new ForbiddenException('Worker ID is required.');
+            }
+
+            $worker = $workerId
+                ? ProjectWorkerModel::findById($workerId)
+                : null;
+            if (isset($args['workerId']) && !$worker) {
+                throw new NotFoundException('Worker not found.');
+            }
+
             // NOTE: No need for active phase check when viewing tasks in grid view
 
             $key = '';
@@ -105,8 +135,8 @@ class TaskController implements Controller
             // Get all tasks from the project
             $tasks = TaskModel::search(
                 $key,
-                Me::getInstance()->getId(),
-                null,
+                $worker?->getId() ?? Me::getInstance()->getId(),
+                $phase?->getId() ?? null,
                 $projectId,
                 $filter,
                 $options

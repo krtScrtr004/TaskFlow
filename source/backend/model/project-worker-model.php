@@ -29,7 +29,7 @@ class ProjectWorkerModel extends Model
      * and additional query options.
      *
      * The returned data includes:
-     * - Worker personal details (publicId, firstName, middleName, lastName, bio, gender, email, contactNumber, profileLink)
+     * - Worker personal details (publicId, firstName, middleName, lastName, bio, gender, email, contactNumber, profileLink, createdAt, confirmedAt, deletedAt)
      * - Worker status in the project
      * - Aggregated job titles (as an array)
      * - Total and completed tasks assigned to the worker
@@ -59,28 +59,52 @@ class ProjectWorkerModel extends Model
                     u.contactNumber,
                     u.profileLink,
                     pw.status,
+                    u.createdAt,
+                    u.confirmedAt,
+                    u.deletedAt,
                     GROUP_CONCAT(ujt.title) AS jobTitles,
                     (
-                        SELECT COUNT(*)
-                        FROM projectTaskWorker AS ptw
-                        WHERE ptw.workerId = u.id
+                        SELECT 
+                            COUNT(*)
+                        FROM 
+                            `projectTaskWorker` AS ptw
+                        WHERE 
+                            ptw.workerId = u.id
                     ) AS totalTasks,
                     (
                         SELECT COUNT(*)
-                        FROM projectTaskWorker AS ptw
-                        INNER JOIN projectTask AS t ON ptw.taskId = t.id
-                        WHERE ptw.workerId = u.id AND t.status = '" . WorkStatus::COMPLETED->value . "'
+                        FROM 
+                            `projectTaskWorker` AS ptw
+                        INNER JOIN 
+                            projectTask AS t 
+                        ON 
+                            ptw.taskId = t.id
+                        WHERE 
+                            ptw.workerId = u.id
+                        AND 
+                            t.status = '" . WorkStatus::COMPLETED->value . "'
                     ) AS completedTasks,
                     (
-                        SELECT COUNT(*) 
-                        FROM projectWorker AS pw2 
-                        WHERE pw2.workerId = u.id
+                        SELECT 
+                            COUNT(*) 
+                        FROM 
+                            `projectWorker` AS pw2 
+                        WHERE 
+                            pw2.workerId = u.id
                     ) AS totalProjects,
                     (
-                        SELECT COUNT(*) 
-                        FROM projectWorker AS pw3
-                        INNER JOIN project AS p2 ON pw3.projectId = p2.id
-                        WHERE pw3.workerId = u.id AND p2.status = '" . WorkStatus::COMPLETED->value . "'
+                        SELECT 
+                            COUNT(*) 
+                        FROM 
+                            `projectWorker` AS pw3
+                        INNER JOIN 
+                            `project` AS p2 
+                        ON 
+                            pw3.projectId = p2.id
+                        WHERE 
+                            pw3.workerId = u.id 
+                        AND 
+                            p2.status = '" . WorkStatus::COMPLETED->value . "'
                     ) AS completedProjects
                 FROM
                     `user` AS u
@@ -179,6 +203,9 @@ class ProjectWorkerModel extends Model
                     u.email,
                     u.contactNumber,
                     pw.status,
+                    u.createdAt,
+                    u.confirmedAt,
+                    u.deletedAt,
                     GROUP_CONCAT(ujt.title) AS jobTitles
                 FROM
                     `user` AS u
@@ -360,32 +387,32 @@ class ProjectWorkerModel extends Model
                                                 'actualCompletionDateTime', pt.actualCompletionDateTime
                                             ) ORDER BY pt.createdAt DESC
                                         ), ']')
-                                        FROM `phaseTask` AS pt
-                                        LEFT JOIN 
-                                            `phaseTaskWorker` AS pwt
+                                        FROM 
+                                            `phaseTask` AS pt
+                                        INNER JOIN 
+                                            `phaseTaskWorker` AS ptw
                                         ON 
-                                            pt.id = pwt.taskId
-                                        LEFT JOIN 
+                                            pt.id = ptw.taskId
+                                        INNER JOIN 
                                             `projectPhase` as pp
                                         ON 
                                             pp.id = pt.phaseId
-                                        LEFT JOIN 
-                                            `project` AS p2
-                                        ON 
-                                            p2.id = pp.projectId
                                         WHERE 
-                                            pwt.workerId = u.id
+                                            pp.projectId = p2.id
                                         AND 
-                                            p2.id = p.id
+                                            ptw.workerId = u.id
                                     )
                                 ) ORDER BY p2.createdAt DESC
                             )
                             , ']')
-                            FROM `project` AS p2
-                            INNER JOIN `projectWorker` AS pw4
-                            ON p2.id = pw4.projectId
-                            WHERE pw4.workerId = u.id
-                            LIMIT 10
+                            FROM 
+                                `project` AS p2
+                            INNER JOIN 
+                                `projectWorker` AS pw4
+                            ON
+                                p2.id = pw4.projectId
+                            WHERE 
+                                pw4.workerId = u.id
                         ),
                         '[]'
                     ) AS projectHistory"
@@ -418,28 +445,53 @@ class ProjectWorkerModel extends Model
                     u.contactNumber,
                     u.profileLink,
                     pw.status,
+                    u.createdAt,
+                    u.confirmedAt,
+                    u.deletedAt,
                     GROUP_CONCAT(ujt.title) AS jobTitles,
                     (
-                        SELECT COUNT(*)
-                        FROM phaseTaskWorker AS ptw
-                        WHERE ptw.workerId = u.id
+                        SELECT 
+                            COUNT(*)
+                        FROM 
+                            `phaseTaskWorker` AS ptw
+                        WHERE 
+                            ptw.workerId = u.id
                     ) AS totalTasks,
                     (
-                        SELECT COUNT(*)
-                        FROM phaseTaskWorker AS ptw
-                        INNER JOIN phaseTask AS t ON ptw.taskId = t.id
-                        WHERE ptw.workerId = u.id AND t.status = '" . WorkStatus::COMPLETED->value . "'
+                        SELECT 
+                            COUNT(*)
+                        FROM 
+                            `phaseTaskWorker` AS ptw
+                        INNER JOIN 
+                            `phaseTask` AS t 
+                        ON 
+                            ptw.taskId = t.id
+                        WHERE 
+                            ptw.workerId = u.id 
+                        AND 
+                            t.status = '" . WorkStatus::COMPLETED->value . "'
                     ) AS completedTasks,
                     (
-                        SELECT COUNT(*) 
-                        FROM projectWorker AS pw2 
-                        WHERE pw2.workerId = u.id
+                        SELECT 
+                            COUNT(*) 
+                        FROM 
+                            `projectWorker` AS pw2 
+                        WHERE 
+                            pw2.workerId = u.id
                     ) AS totalProjects,
                     (
-                        SELECT COUNT(*) 
-                        FROM projectWorker AS pw3
-                        INNER JOIN project AS p2 ON pw3.projectId = p2.id
-                        WHERE pw3.workerId = u.id AND p2.status = '" . WorkStatus::COMPLETED->value . "'
+                        SELECT 
+                            COUNT(*) 
+                        FROM 
+                            `projectWorker` AS pw3
+                        INNER JOIN 
+                            `project` AS p2 
+                        ON 
+                            pw3.projectId = p2.id
+                        WHERE 
+                            pw3.workerId = u.id 
+                        AND 
+                            p2.status = '" . WorkStatus::COMPLETED->value . "'
                     ) AS completedProjects
                     $projectHistory
                 FROM
@@ -489,6 +541,9 @@ class ProjectWorkerModel extends Model
                     'totalProjects'     => (int)$result['totalProjects'],
                     'completedProjects' => (int)$result['completedProjects'],
                 ],
+                'createdAt'             => $result['createdAt'],
+                'confirmedAt'           => $result['confirmedAt'],
+                'deletedAt'             => $result['deletedAt']
             ]);
             if ($includeHistory) {
                 $projects = new ProjectContainer();
@@ -596,30 +651,30 @@ class ProjectWorkerModel extends Model
                                             ) ORDER BY pt.createdAt DESC
                                         ), ']')
                                         FROM `phaseTask` AS pt
-                                        LEFT JOIN 
-                                            `phaseTaskWorker` AS pwt
+                                        INNER JOIN 
+                                            `phaseTaskWorker` AS ptw
                                         ON 
-                                            pt.id = pwt.taskId
-                                        LEFT JOIN 
+                                            pt.id = ptw.taskId
+                                        INNER JOIN 
                                             `projectPhase` as pp
                                         ON 
                                             pp.id = pt.phaseId
-                                        LEFT JOIN 
-                                            `project` AS p2
-                                        ON 
-                                            p2.id = pp.projectId
                                         WHERE 
-                                            pwt.workerId = u.id
+                                            pp.projectId = p2.id
                                         AND 
-                                            p2.id = p.id
+                                            ptw.workerId = u.id
                                     )
                                 ) ORDER BY p2.createdAt DESC
                             )
                             , ']')
-                            FROM `project` AS p2
-                            INNER JOIN `projectWorker` AS pw4
-                            ON p2.id = pw4.projectId
-                            WHERE pw4.workerId = u.id
+                            FROM 
+                                `project` AS p2
+                            INNER JOIN 
+                                `projectWorker` AS pw4
+                            ON 
+                                p2.id = pw4.projectId
+                            WHERE 
+                                pw4.workerId = u.id
                             LIMIT 10
                         ),
                         '[]'
@@ -661,28 +716,53 @@ class ProjectWorkerModel extends Model
                     u.contactNumber,
                     u.profileLink,
                     pw.status,
+                    u.createdAt,
+                    u.confirmedAt,
+                    u.deletedAt,
                     GROUP_CONCAT(ujt.title) AS jobTitles,
                     (
-                        SELECT COUNT(*)
-                        FROM phaseTaskWorker AS ptw
-                        WHERE ptw.workerId = u.id
+                        SELECT 
+                            COUNT(*)
+                        FROM 
+                            `phaseTaskWorker` AS ptw
+                        WHERE
+                            ptw.workerId = u.id
                     ) AS totalTasks,
                     (
-                        SELECT COUNT(*)
-                        FROM phaseTaskWorker AS ptw
-                        INNER JOIN phaseTask AS t ON ptw.taskId = t.id
-                        WHERE ptw.workerId = u.id AND t.status = '" . WorkStatus::COMPLETED->value . "'
+                        SELECT 
+                            COUNT(*)
+                        FROM 
+                            `phaseTaskWorker` AS ptw
+                        INNER JOIN 
+                            `phaseTask` AS t 
+                        ON 
+                            ptw.taskId = t.id
+                        WHERE 
+                            ptw.workerId = u.id 
+                        AND 
+                            t.status = '" . WorkStatus::COMPLETED->value . "'
                     ) AS completedTasks,
                     (
-                        SELECT COUNT(*) 
-                        FROM projectWorker AS pw2 
-                        WHERE pw2.workerId = u.id
+                        SELECT 
+                            COUNT(*) 
+                        FROM 
+                            `projectWorker` AS pw2 
+                        WHERE 
+                            pw2.workerId = u.id
                     ) AS totalProjects,
                     (
-                        SELECT COUNT(*) 
-                        FROM projectWorker AS pw3
-                        INNER JOIN project AS p2 ON pw3.projectId = p2.id
-                        WHERE pw3.workerId = u.id AND p2.status = '" . WorkStatus::COMPLETED->value . "'
+                        SELECT 
+                            COUNT(*) 
+                        FROM 
+                            `projectWorker` AS pw3
+                        INNER JOIN 
+                            `project` AS p2 
+                        ON 
+                            pw3.projectId = p2.id
+                        WHERE 
+                            pw3.workerId = u.id 
+                        AND 
+                            p2.status = '" . WorkStatus::COMPLETED->value . "'
                     ) AS completedProjects
                     $projectHistory
                 FROM
@@ -733,6 +813,9 @@ class ProjectWorkerModel extends Model
                         'totalProjects'     => (int)$result['totalProjects'],
                         'completedProjects' => (int)$result['completedProjects'],
                     ],
+                    'createdAt'             => $result['createdAt'],
+                    'confirmedAt'           => $result['confirmedAt'],
+                    'deletedAt'             => $result['deletedAt']
                 ]);
 
                 if ($includeHistory) {

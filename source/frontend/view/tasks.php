@@ -6,13 +6,18 @@ use App\Enumeration\Role;
 use App\Enumeration\WorkStatus;
 use App\Middleware\Csrf;
 
-if (!isset($projectId)) {
-    throw new Error('Project ID is required.');
+if (!isset($project)) {
+    throw new Exception('Project ID is required.');
 }
-$projectIdString = UUID::toString($projectId);
+
+$projectData = [
+    'name'      => htmlspecialchars($project->getName()),
+    'publicId'  => UUID::toString($project->getPublicId()),
+    'status'    => $project->getStatus()
+];
 
 if (!isset($tasks)) {
-    throw new Error('Tasks data is required.');
+    throw new Exception('Tasks data is required.');
 }
 ?>
 
@@ -60,8 +65,8 @@ if (!isset($tasks)) {
         </section>
 
         <!-- Task Grid -->
-        <section class="task-grid-container" data-projectid="<?= $projectIdString ?>">
-            <?php if (Role::isWorker(Me::getInstance())): ?>
+        <section class="task-grid-container" data-projectid="<?= $projectData['publicId'] ?>">
+            <?php if ($tasks->count() === 0): ?>
                 <div
                     class="no-tasks-wall no-content-wall <?= $tasks->count() > 0 ? 'no-display' : 'flex-col' ?>">
                     <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No tasks available" title="No tasks available"
@@ -71,17 +76,21 @@ if (!isset($tasks)) {
             <?php endif; ?>
 
             <section class="task-grid grid">
-                <?php if (Role::isProjectManager(Me::getInstance())): ?>
-                    <a href="<?= REDIRECT_PATH . "add-task/$projectIdString" ?>"
+                <?php if (Role::isProjectManager(Me::getInstance()) && 
+                        $projectData['status'] !== WorkStatus::COMPLETED && 
+                        $projectData['status'] !== WorkStatus::CANCELLED): ?>
+                    <a href="<?= REDIRECT_PATH . "add-task/" . $projectData['publicId'] ?>"
                         class="add-task-button task-grid-card flex-col flex-child-center-h flex-child-center-v">
                         <img src="<?= ICON_PATH . 'add_w.svg' ?>" alt="Add New Task" title="Add New Task" height="90">
                         <h3>Add New Task</h3>
                     </a>
                 <?php endif; ?>
 
-                <?php foreach ($tasks as $task) {
-                    echo taskGridCard($task, $projectId);
-                } ?>
+                <?php 
+                    foreach ($tasks as $task) {
+                        echo taskGridCard($task, $projectId);
+                    } 
+                ?>
             </section>
 
             <!-- Sentinel -->

@@ -37,7 +37,7 @@ class TaskModel extends Model
      * - Task details (ID, public ID, name, description, dates, priority, status, creation timestamp)
      * - Associated phase public ID
      * - Workers assigned to the task, including:
-     *      - Worker ID, public ID, name, email, contact number, profile link, gender, status
+     *      - Worker ID, public ID, name, email, contact number, profile link, gender, status, creation timestamp, confirmation timestamp, deletion timestamp
      *      - Job titles (as an array)
      *      - Total tasks assigned to the worker
      *      - Completed tasks by the worker
@@ -83,32 +83,52 @@ class TaskModel extends Model
                                     'workerProfileLink', u.profileLink,
                                     'workerGender', u.gender,
                                     'workerStatus', ptw.status,
+                                    'workerCreatedAt', u.createdAt,
+                                    'workerConfirmedAt', u.confirmedAt,
+                                    'workerDeletedAt', u.deletedAt,
                                     'workerJobTitles', COALESCE(
                                         (
-                                            SELECT CONCAT('[', GROUP_CONCAT(CONCAT('\"', wjt.title, '\"')), ']')
-                                            FROM userJobTitle wjt
-                                            WHERE wjt.userId = u.id
+                                            SELECT 
+                                                CONCAT('[', GROUP_CONCAT(CONCAT('\"', wjt.title, '\"')), ']')
+                                            FROM 
+                                                `userJobTitle` AS wjt
+                                            WHERE 
+                                                wjt.userId = u.id
                                         ),
                                         '[]'
                                     ),
                                     'workerTotalTasks', (
-                                        SELECT COUNT(*)
-                                        FROM phaseTaskWorker ptw2
-                                        WHERE ptw2.workerId = u.id
+                                        SELECT 
+                                            COUNT(*)
+                                        FROM 
+                                            `phaseTaskWorker` AS ptw2
+                                        WHERE 
+                                            ptw2.workerId = u.id
                                     ),
                                     'workerCompletedTasks', (
-                                        SELECT COUNT(*)
-                                        FROM phaseTaskWorker ptw3
-                                        INNER JOIN phaseTask pt3 ON ptw3.taskId = pt3.id
-                                        WHERE ptw3.workerId = u.id
-                                        AND pt3.status = 'completed'
+                                        SELECT 
+                                            COUNT(*)
+                                        FROM 
+                                            `phaseTaskWorker` AS ptw3
+                                        INNER JOIN 
+                                            `phaseTask` AS pt3 
+                                        ON
+                                            ptw3.taskId = pt3.id
+                                        WHERE 
+                                            ptw3.workerId = u.id
+                                        AND 
+                                            pt3.status = 'completed'
                                     )
                                 ) ORDER BY u.lastName SEPARATOR ','
                             ), ']')
-                            FROM `phaseTaskWorker` AS ptw
-                            INNER JOIN `user` AS u
-                            ON ptw.workerId = u.id
-                            WHERE ptw.taskId = pt.id
+                            FROM 
+                                `phaseTaskWorker` AS ptw
+                            INNER JOIN 
+                                `user` AS u
+                            ON 
+                                ptw.workerId = u.id
+                            WHERE 
+                                ptw.taskId = pt.id
                         ), '[]'
                     ) AS taskWorkers
                 FROM 
@@ -175,6 +195,9 @@ class TaskModel extends Model
                         'jobTitles' => isset($worker['workerJobTitles'])
                             ? new JobTitleContainer(json_decode($worker['workerJobTitles'], true))
                             : new JobTitleContainer(),
+                        'createdAt' => $worker['workerCreatedAt'],
+                        'confirmedAt' => $worker['workerConfirmedAt'],
+                        'deletedAt' => $worker['workerDeletedAt'],
                         'additionalInfo' => [
                             'totalTasks' => (int)$worker['workerTotalTasks'],
                             'completedTasks' => (int)$worker['workerCompletedTasks']
@@ -252,14 +275,20 @@ class TaskModel extends Model
                 $where[] = is_int($userId) 
                     ? ' (p.managerId = :userId1 OR ptw.workerId = :userId2)'
                     : ' (ptw.workerId IN (
-                            SELECT id
-                            FROM `user` 
-                            WHERE publicId = :userId1)
+                            SELECT 
+                                id
+                            FROM 
+                                `user` 
+                            WHERE 
+                                publicId = :userId1)
                         OR 
                             p.managerId IN (
-                                SELECT id
-                                FROM `user`
-                                WHERE publicId = :userId2)
+                                SELECT 
+                                    id
+                                FROM 
+                                    `user`
+                                WHERE 
+                                    publicId = :userId2)
                         )';
                 $params[':userId1'] = is_int($userId) 
                     ? $userId 
@@ -274,9 +303,12 @@ class TaskModel extends Model
                 $where[] = is_int($phaseId) 
                     ? ' pt.phaseId = :phaseId'
                     : ' pt.phaseId IN (
-                        SELECT id 
-                        FROM `projectPhase` 
-                        WHERE publicId = :phaseId)';
+                        SELECT 
+                            id 
+                        FROM 
+                            `projectPhase` 
+                        WHERE 
+                            publicId = :phaseId)';
                 $params[':phaseId'] = is_int($phaseId) 
                     ? $phaseId 
                     : UUID::toBinary($phaseId);
@@ -405,9 +437,12 @@ class TaskModel extends Model
             $whereClause = is_int($phaseId) 
                 ? 'pt.phaseId = :phaseId'
                 : 'pt.phaseId IN (
-                    SELECT id 
-                    FROM `projectPhase` 
-                    WHERE publicId = :phaseId)';
+                    SELECT 
+                        id 
+                    FROM 
+                        `projectPhase` 
+                    WHERE 
+                        publicId = :phaseId)';
             $params = [
                 ':phaseId' => is_int($phaseId) 
                     ? $phaseId 

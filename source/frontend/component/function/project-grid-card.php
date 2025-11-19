@@ -28,7 +28,6 @@ function projectGridCard(Project $project): string
                 <div class="text-w-icon">
                     <img src="<?= ICON_PATH . 'project_w.svg' ?>" alt="Project Name" title="Project Name" height="24">
                     <h3 class="project-name single-line-ellipsis" title="<?= $name ?>"><?= $name ?></h3>
-
                 </div>
 
                 <!-- Schedule -->
@@ -38,9 +37,7 @@ function projectGridCard(Project $project): string
             </section>
 
             <!-- Description -->
-            <p class="project-description multi-line-ellipsis-7" title="<?= $description ?>">
-                <?= $description ?>
-            </p>
+            <p class="project-description multi-line-ellipsis-7" title="<?= $description ?>"><?= $description ?></p>
 
             <!-- Status -->
             <div class="project-status flex-col flex-child-end-v">

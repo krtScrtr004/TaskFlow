@@ -69,7 +69,9 @@ class ProjectController implements Controller
 
             // If projectId is provided, verify that the project is not cancelled
             if ($activeProject && $activeProject->getStatus() !== WorkStatus::CANCELLED) {
-                $fullProjectInfo = $instance->getProjectInfo($activeProject->getPublicId());
+                $fullProjectInfo = $instance->getProjectInfo($activeProject->getPublicId(), [
+                    'workers' => true,
+                ]);
                 $projectId = $fullProjectInfo ? UUID::toString($fullProjectInfo->getPublicId()) : null;
                 if ($projectId && !Session::has('activeProjectId')) {
                     Session::set('activeProjectId', $projectId);
