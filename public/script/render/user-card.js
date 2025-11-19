@@ -129,6 +129,25 @@ function addInfoToCard(card, user) {
         terminateWorkerButton?.classList.remove('no-display')
     }
     
+    const seeWorkerTaskRedirect = card.querySelector('.see-worker-task-redirect');
+    const rootUrl = seeWorkerTaskRedirect?.dataset.rooturl
+    const redirectLink = seeWorkerTaskRedirect?.querySelector('a')
+    if (user.role === 'worker') {
+        seeWorkerTaskRedirect?.classList.remove('no-display');
+        seeWorkerTaskRedirect?.classList.add('center-child');
+
+        redirectLink?.href 
+            ? redirectLink.href = rootUrl + user.id
+            : null
+    } else {
+        seeWorkerTaskRedirect?.classList.remove('center-child');
+        seeWorkerTaskRedirect?.classList.add('no-display');
+
+        redirectLink?.href
+            ? redirectLink.href = '#'
+            : null
+    }
+
     if (shouldShowProjects) {        
         // Show project statistics
         projectElements.total.classList.remove('no-display')

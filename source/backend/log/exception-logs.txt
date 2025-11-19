@@ -1,0 +1,60 @@
+[2025-11-19 : 10:22:12 PM] -> Error: Call to a member function getId() on null in C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\backend\controller\task-controller.php:139
+Stack trace:
+#0 [internal function]: App\Controller\TaskController::viewGrid(Array)
+#1 C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\backend\core\router.php(62): call_user_func(Array, Array)
+#2 C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\backend\core\router.php(116): App\Core\Router->resolveAction(Array, Array)
+#3 C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\public\index.php(8): App\Core\Router->dispatch()
+#4 {main}
+
+[2025-11-19 : 10:24:33 PM] -> TypeError: App\Core\UUID::toString(): Argument #1 ($id) must be of type App\Core\UUID, string given, called in C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\frontend\component\template\user-info-card.php on line 135 and defined in C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\backend\core\uuid.php:33
+Stack trace:
+#0 C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\frontend\component\template\user-info-card.php(135): App\Core\UUID::toString('e41bbe02-e36d-4...')
+#1 C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\frontend\component\project.php(29): require_once('C:\\Users\\secre\\...')
+#2 C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\frontend\view\home.php(49): require_once('C:\\Users\\secre\\...')
+#3 C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\backend\controller\project-controller.php(381): require_once('C:\\Users\\secre\\...')
+#4 C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\backend\controller\project-controller.php(83): App\Controller\ProjectController->renderDashboard(Object(App\Entity\Project))
+#5 [internal function]: App\Controller\ProjectController::viewHome(Array)
+#6 C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\backend\core\router.php(62): call_user_func(Array, Array)
+#7 C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\backend\core\router.php(116): App\Core\Router->resolveAction(Array, Array)
+#8 C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\public\index.php(8): App\Core\Router->dispatch()
+#9 {main}
+
+[2025-11-19 : 10:24:46 PM] -> TypeError: App\Core\UUID::toString(): Argument #1 ($id) must be of type App\Core\UUID, string given, called in C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\frontend\component\template\user-info-card.php on line 135 and defined in C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\backend\core\uuid.php:33
+Stack trace:
+#0 C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\frontend\component\template\user-info-card.php(135): App\Core\UUID::toString('e41bbe02-e36d-4...')
+#1 C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\frontend\component\project.php(29): require_once('C:\\Users\\secre\\...')
+#2 C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\frontend\view\home.php(49): require_once('C:\\Users\\secre\\...')
+#3 C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\backend\controller\project-controller.php(381): require_once('C:\\Users\\secre\\...')
+#4 C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\backend\controller\project-controller.php(83): App\Controller\ProjectController->renderDashboard(Object(App\Entity\Project))
+#5 [internal function]: App\Controller\ProjectController::viewHome(Array)
+#6 C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\backend\core\router.php(62): call_user_func(Array, Array)
+#7 C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\backend\core\router.php(116): App\Core\Router->resolveAction(Array, Array)
+#8 C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\public\index.php(8): App\Core\Router->dispatch()
+#9 {main}
+
+[2025-11-19 : 10:25:02 PM] -> TypeError: App\Core\UUID::toString(): Argument #1 ($id) must be of type App\Core\UUID, string given, called in C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\frontend\component\template\user-info-card.php on line 135 and defined in C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\backend\core\uuid.php:33
+Stack trace:
+#0 C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\frontend\component\template\user-info-card.php(135): App\Core\UUID::toString('e41bbe02-e36d-4...')
+#1 C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\frontend\component\project.php(29): require_once('C:\\Users\\secre\\...')
+#2 C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\frontend\view\home.php(49): require_once('C:\\Users\\secre\\...')
+#3 C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\backend\controller\project-controller.php(381): require_once('C:\\Users\\secre\\...')
+#4 C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\backend\controller\project-controller.php(83): App\Controller\ProjectController->renderDashboard(Object(App\Entity\Project))
+#5 [internal function]: App\Controller\ProjectController::viewHome(Array)
+#6 C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\backend\core\router.php(62): call_user_func(Array, Array)
+#7 C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\backend\core\router.php(116): App\Core\Router->resolveAction(Array, Array)
+#8 C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\public\index.php(8): App\Core\Router->dispatch()
+#9 {main}
+
+[2025-11-19 : 10:26:24 PM] -> TypeError: App\Core\UUID::toString(): Argument #1 ($id) must be of type App\Core\UUID, string given, called in C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\frontend\component\template\user-info-card.php on line 136 and defined in C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\backend\core\uuid.php:33
+Stack trace:
+#0 C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\frontend\component\template\user-info-card.php(136): App\Core\UUID::toString('e41bbe02-e36d-4...')
+#1 C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\frontend\component\project.php(29): require_once('C:\\Users\\secre\\...')
+#2 C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\frontend\view\home.php(49): require_once('C:\\Users\\secre\\...')
+#3 C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\backend\controller\project-controller.php(381): require_once('C:\\Users\\secre\\...')
+#4 C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\backend\controller\project-controller.php(83): App\Controller\ProjectController->renderDashboard(Object(App\Entity\Project))
+#5 [internal function]: App\Controller\ProjectController::viewHome(Array)
+#6 C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\backend\core\router.php(62): call_user_func(Array, Array)
+#7 C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\source\backend\core\router.php(116): App\Core\Router->resolveAction(Array, Array)
+#8 C:\Users\secre\OneDrive\Documents\Programming\Projects\TaskFlow\public\index.php(8): App\Core\Router->dispatch()
+#9 {main}
+

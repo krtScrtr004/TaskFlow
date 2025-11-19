@@ -19,6 +19,7 @@ use App\Middleware\Csrf;
 use App\Middleware\Response;
 use App\Model\PhaseModel;
 use App\Model\ProjectModel;
+use App\Model\ProjectWorkerModel;
 use App\Model\TaskModel;
 use App\Utility\ResponseExceptionHandler;
 use App\Validator\WorkValidator;
@@ -171,6 +172,23 @@ class TaskEndpoint
             $phase = $phaseId
                 ? PhaseModel::findById($phaseId)
                 : null;
+            if (isset($args['phaseId']) && !$phase) {
+                throw new NotFoundException('Phase not found.');
+            }
+
+            $workerId = isset($args['workerId'])
+                ? UUID::fromString($args['workerId'])
+                : null;
+            if (isset($args['workerId']) && !$workerId) {
+                throw new ForbiddenException('Worker ID is required.');
+            }
+
+            $worker = $workerId
+                ? ProjectWorkerModel::findById($workerId)
+                : null;
+            if (isset($args['workerId']) && !$worker) {
+                throw new NotFoundException('Worker not found.');
+            }
 
             // Check if 'key' parameter is present in the query string
             $key = '';
@@ -197,7 +215,7 @@ class TaskEndpoint
 
             $tasks = TaskModel::search(
                 $key, 
-                Me::getInstance()->getId(), 
+                $worker?->getId() ?? Me::getInstance()->getId(), 
                 $phase?->getId() ?? null, 
                 $project->getId(),
                 $filter, 

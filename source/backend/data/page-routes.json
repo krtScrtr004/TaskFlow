@@ -21,6 +21,14 @@
 			"viewReport"
 		],
 
+		"TaskFlow/project/{projectId:[\\w+_-]+}/task/worker/{workerId:[\\w+_-]+}(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": [
+			"TaskController", 
+			"viewGrid"
+		],
+		"TaskFlow/project/{projectId:[\\w+_-]+}/task/worker/{workerId:[\\w+_-]+}": [
+			"TaskController", 
+			"viewGrid"
+		],
 		"TaskFlow/project/{projectId:[\\w+_-]+}/task(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": [
 			"TaskController", 
 			"viewGrid"

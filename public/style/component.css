@@ -456,6 +456,10 @@ button > .text-w-icon {
 	padding: 0.5rem 1rem;
 }
 
+.user-info-card .see-worker-task-redirect > a:hover {
+	text-decoration: underline;
+}
+
 /* ---------------- WORKER LIST ---------------- */
 
 .worker-list > *:not(:last-child),

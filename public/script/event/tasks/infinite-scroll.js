@@ -81,10 +81,24 @@ async function asyncFunction(offset) {
             throw new Error('Project ID not found.')
         }
 
+        const currentUrl = window.location.href
+        const subpath = currentUrl.split('TaskFlow/')[1]
+
+        // Build endpoint path from page URL 
+        let endpointPath = ''
+        endpointPath = subpath.replace('project', 'projects')
+        endpointPath = endpointPath.replace('task', 'tasks')
+        if (subpath.includes('phase')) {
+            endpointPath = endpointPath.replace('phase', 'phases')
+        }
+        if (subpath.includes('worker')) {
+            endpointPath = endpointPath.replace('worker', 'workers')
+        }
+
         const queryParams = new URLSearchParams(window.location.search)
         queryParams.set('offset', offset)
 
-        const response = await Http.GET(`projects/${projectId}/tasks?${queryParams.toString()}`)
+        const response = await Http.GET(`${endpointPath}?${queryParams.toString()}`)
         if (!response) {
             throw new Error('No response from server.')
         }
