@@ -7,6 +7,16 @@
 	gap: var(--space);
 }
 
+.projects .statistics .performance {
+	margin-right: 2rem;
+}
+
+.projects .statistics > div:not(.performance) {
+	padding: 0.3rem 1rem;
+	border: 1px solid var(--white);
+	border-radius: var(--border-radius);
+}
+
 .projects .statistics .total > h3, 
 .projects .statistics .completed > h3, 
 .projects .statistics .cancelled > h3, 
@@ -32,6 +42,10 @@
 	font-weight: 700;
 }
 
+.projects .insights-recommendations {
+	background-color: #f9ef888f;
+}
+
 .projects .insights-recommendations > * {
 	flex: 1;
 	line-height: 1.6rem;
@@ -46,6 +60,7 @@
 	list-style: disc;
 	margin-left: 1.3rem;
 	font-size: 0.9rem;
+	color: var(--black);
 }
 
 .project-grid {

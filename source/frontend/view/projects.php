@@ -87,10 +87,8 @@ if (isset($projects)) {
                 </div>
             </div>
 
-            <hr>
-
             <!-- Total -->
-            <div class="total flex-col flex-child-center-v">
+            <div class="total blue-bg flex-col flex-child-center-v">
                 <h3 class="start-text">Total</h3>
 
                 <div class="text-w-icon">
@@ -99,23 +97,19 @@ if (isset($projects)) {
                 </div>
             </div>
 
-            <hr>
-
             <!-- Completed -->
-            <div class="completed flex-col flex-child-center-v">
-                <h3 class="start-text">Completed</h3>
+            <div class="completed green-bg flex-col flex-child-center-v">
+                <h3 class="start-text black-text">Completed</h3>
 
                 <div class="text-w-icon">
-                    <img src="<?= ICON_PATH . 'complete_w.svg' ?>" alt="Completed Projects" title="Completed Projects"
+                    <img src="<?= ICON_PATH . 'complete_b.svg' ?>" alt="Completed Projects" title="Completed Projects"
                         height="30">
-                    <h3><?= $statisticsData['completed'] ?></h3>
+                    <h3 class="black-text"><?= $statisticsData['completed'] ?></h3>
                 </div>
             </div>
 
-            <hr>
-
             <!-- Canceled -->
-            <div class="cancel cancelled flex-col flex-child-center-v">
+            <div class="cancel cancelled red-bg flex-col flex-child-center-v">
                 <h3 class="start-text">Canceled</h3>
 
                 <div class="text-w-icon">
@@ -125,11 +119,9 @@ if (isset($projects)) {
                 </div>
             </div>
 
-            <hr>
-
             <?php if (Role::isWorker(Me::getInstance())): ?>
                 <!-- Terminated -->
-                <div class="cancel-terminate flex-col flex-child-center-v">
+                <div class="cancel-terminate orange-bg flex-col flex-child-center-v">
                     <h3 class="start-text">Terminated</h3>
 
                     <div class="text-w-icon">
@@ -145,7 +137,7 @@ if (isset($projects)) {
         <section class="insights-recommendations content-section-block flex-row">
             <!-- Insights -->
             <section class="insights flex-col">
-                <h3>Insights</h3>
+                <h3 class="black-text">Insights</h3>
                 <div class="insights-list flex-col">
                     <?php
                     echo '<ul>';
@@ -163,7 +155,7 @@ if (isset($projects)) {
 
             <!-- Recommendations -->
             <section class="recommendations flex-col">
-                <h3>Recommendations</h3>
+                <h3 class="black-text">Recommendations</h3>
                 <div class="recommendations-list flex-col">
                     <?php
                     echo '<ul>';
