@@ -77,8 +77,8 @@ if (!isset($tasks)) {
 
             <section class="task-grid grid">
                 <?php if (Role::isProjectManager(Me::getInstance()) && 
-                        !($projectData['status'] !== WorkStatus::COMPLETED || 
-                        $projectData['status'] !== WorkStatus::CANCELLED)): ?>
+                        $projectData['status'] !== WorkStatus::COMPLETED && 
+                        $projectData['status'] !== WorkStatus::CANCELLED): ?>
                     <a href="<?= REDIRECT_PATH . "add-task/" . $projectData['publicId'] ?>"
                         class="add-task-button task-grid-card flex-col flex-child-center-h flex-child-center-v">
                         <img src="<?= ICON_PATH . 'add_w.svg' ?>" alt="Add New Task" title="Add New Task" height="90">

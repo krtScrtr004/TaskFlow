@@ -121,15 +121,15 @@ class WorkValidator extends Validator
         }
 
         if ($startDateTime < $boundStartDateTime) {
-            $this->errors[] = 'Start date cannot be before ' . $context . ' start date.';
+            $this->errors[] = 'Start date cannot be before ' . $context . ' start date (' . formatDateTime($boundStartDateTime, 'Y-m-d') . ').';
         }
 
         if ($startDateTime > $boundCompletionDateTime) {
-            $this->errors[] = 'Start date cannot be after ' . $context . ' completion date.';
+            $this->errors[] = 'Start date cannot be after ' . $context . ' completion date (' . formatDateTime($boundCompletionDateTime, 'Y-m-d') . ').';
         }
 
         if ($completionDateTime > $boundCompletionDateTime) {
-            $this->errors[] = 'Completion date cannot be after ' . $context . ' completion date.';
+            $this->errors[] = 'Completion date cannot be after ' . $context . ' completion date (' . formatDateTime($boundCompletionDateTime, 'Y-m-d') . ').';
         }
     }
 
