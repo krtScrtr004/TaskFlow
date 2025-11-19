@@ -127,8 +127,10 @@ class WorkerPerformanceCalculator
                 'totalTasks' => $totalTaskCount
             ],
             'projectMetrics' => $projectMetrics,
-            'insights' => $combinedInsights,
-            'recommendations' => self::generateProjectRecommendations($projectMetrics, $taskPerformance)
+            'messages' => [
+                'insights' => $combinedInsights,
+                'recommendations' => self::generateProjectRecommendations($projectMetrics, $taskPerformance)
+            ]
         ];
     }
 
