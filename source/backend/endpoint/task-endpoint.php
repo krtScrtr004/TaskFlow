@@ -169,7 +169,7 @@ class TaskEndpoint
                 throw new ForbiddenException('Phase ID is required.');
             }
 
-            $phase = $phaseId
+            $phase = isset($args['phaseId'])
                 ? PhaseModel::findById($phaseId)
                 : null;
             if (isset($args['phaseId']) && !$phase) {
@@ -183,7 +183,7 @@ class TaskEndpoint
                 throw new ForbiddenException('Worker ID is required.');
             }
 
-            $worker = $workerId
+            $worker = isset($args['workerId'])
                 ? ProjectWorkerModel::findById($workerId)
                 : null;
             if (isset($args['workerId']) && !$worker) {

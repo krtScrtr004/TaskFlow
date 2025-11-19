@@ -63,7 +63,7 @@ class ProjectManagerEndpoint
             $project = $projectId
                 ? ProjectModel::findById($projectId)
                 : null;
-            if (!isset($projectId) && !$project) {
+            if (!isset($args['projectId']) && !$project) {
                 throw new NotFoundException('Project not found.');
             }
 

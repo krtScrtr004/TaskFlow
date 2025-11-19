@@ -123,31 +123,30 @@ function addInfoToCard(card, user) {
     const shouldShowProjects = isUsersPage || (isProjectPage && user.role === 'projectManager')
 
     const terminateWorkerButton = card.querySelector('#terminate_worker_button')
-    if (user.role === 'projectManager') {
-        terminateWorkerButton?.classList.add('no-display')
-    } else {
-        terminateWorkerButton?.classList.remove('no-display')
-    }
-    
     const seeWorkerTaskRedirect = card.querySelector('.see-worker-task-redirect');
     const rootUrl = seeWorkerTaskRedirect?.dataset.rooturl
     const redirectLink = seeWorkerTaskRedirect?.querySelector('a')
-    if (user.role === 'worker') {
-        seeWorkerTaskRedirect?.classList.remove('no-display');
-        seeWorkerTaskRedirect?.classList.add('center-child');
 
-        redirectLink?.href 
-            ? redirectLink.href = rootUrl + user.id
-            : null
-    } else {
+    if (user.role === 'projectManager') {
+        terminateWorkerButton?.classList.add('no-display')
+
         seeWorkerTaskRedirect?.classList.remove('center-child');
         seeWorkerTaskRedirect?.classList.add('no-display');
 
-        redirectLink?.href
+        redirectLink
             ? redirectLink.href = '#'
             : null
-    }
+    } else {
+        terminateWorkerButton?.classList.remove('no-display')
 
+        seeWorkerTaskRedirect?.classList.remove('no-display');
+        seeWorkerTaskRedirect?.classList.add('center-child');
+
+        redirectLink
+            ? redirectLink.href = rootUrl + user.id
+            : null
+    }
+    
     if (shouldShowProjects) {        
         // Show project statistics
         projectElements.total.classList.remove('no-display')
