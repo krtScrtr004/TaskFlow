@@ -62,12 +62,14 @@ async function fetchWorkerInfo(projectId, userId) {
         }
         isLoading = true
 
-        if (!userId || userId === '')
+        if (!userId || userId === '') {
             throw new Error('User ID is required.')
+        }
 
         const response = await Http.GET(`projects/${projectId}/workers/${userId}`)
-        if (!response)
+        if (!response) {
             throw new Error('No response from server.')
+        }
 
         return response.data
     } catch (error) {
@@ -88,12 +90,14 @@ async function fetchManagerInfo(userId) {
         }
         isLoading = true
 
-        if (!userId || userId === '')
+        if (!userId || userId === '') {
             throw new Error('User ID is required.')
+        }
 
-        const response = await Http.GET(`users/${userId}`)
-        if (!response)
+        const response = await Http.GET(`projects/${projectId}/manager`)
+        if (!response) {
             throw new Error('No response from server.')
+        }
 
         return response.data
     } catch (error) {

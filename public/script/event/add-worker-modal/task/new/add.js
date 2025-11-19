@@ -59,7 +59,7 @@ try {
  * @param {string} workerData.id - Worker ID
  * @param {string} workerData.name - Worker name
  * @param {Array} workerData.jobTitles - Array of job title strings
- * @param {number} workerData.performance - Worker performance percentage (0-100)
+ * @param {number} workerData.totalTasks - Worker total task percentage (0-100)
  * @param {number} workerData.completedTasks - Number of completed tasks
  * @param {string} [workerData.profileImage] - Optional profile image URL
  * @returns {HTMLElement} The rendered task worker card element
@@ -69,7 +69,7 @@ function createTaskWorkerCard(workerData) {
         id,
         name,
         jobTitles = [],
-        performance = 0,
+        totalTasks = 0,
         completedTasks = 0,
         profileImage
     } = workerData
@@ -86,7 +86,7 @@ function createTaskWorkerCard(workerData) {
     const jobTitlesSection = createJobTitlesSection(jobTitles)
 
     // Create statistics section
-    const statisticsSection = createWorkerStatistics(performance, completedTasks)
+    const statisticsSection = createWorkerStatistics(totalTasks, completedTasks)
 
     // Assemble the card
     workerCard.appendChild(primaryInfo)
@@ -186,19 +186,19 @@ function createJobTitlesSection(jobTitles) {
 
 /**
  * Creates the worker statistics section
- * @param {number} performance - Performance percentage
+ * @param {number} totalTasks - Total number of tasks
  * @param {number} completedTasks - Number of completed tasks
  * @returns {HTMLElement} Statistics section element
  */
-function createWorkerStatistics(performance, completedTasks) {
+function createWorkerStatistics(totalTasks, completedTasks) {
     const section = document.createElement('section')
     section.className = 'worker-statistics flex-col'
 
     // Create performance statistic
     const performanceDiv = createStatisticItem(
         '/TaskFlow/public/asset/image/icon/progress_w.svg',
-        'Worker Performance',
-        `Performance: ${performance}%`
+        'Total Tasks',
+        `Total Tasks: ${totalTasks}`
     )
 
     // Create completed tasks statistic
@@ -300,7 +300,7 @@ function action(workersData) {
             name: `${workerData.firstName} ${workerData.lastName}`,
             id: workerData.id,
             jobTitles: workerData.jobTitles,
-            performance: workerData.additionalInfo.performance,
+            totalTasks: workerData.additionalInfo.totalTasks,
             completedTasks: workerData.additionalInfo.completedTasks,
             profileImage: workerData.profilePicture
         })
