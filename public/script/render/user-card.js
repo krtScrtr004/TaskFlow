@@ -122,12 +122,14 @@ function addInfoToCard(card, user) {
     // Display statistics based on page context and user role
     const shouldShowProjects = isUsersPage || (isProjectPage && user.role === 'projectManager')
 
+    const removeWorkerButton = card.querySelector('#remove_worker_button')
     const terminateWorkerButton = card.querySelector('#terminate_worker_button')
     const seeWorkerTaskRedirect = card.querySelector('.see-worker-task-redirect');
     const rootUrl = seeWorkerTaskRedirect?.dataset.rooturl
     const redirectLink = seeWorkerTaskRedirect?.querySelector('a')
 
     if (user.role === 'projectManager') {
+        removeWorkerButton?.classList.add('no-display')
         terminateWorkerButton?.classList.add('no-display')
 
         seeWorkerTaskRedirect?.classList.remove('center-child');
@@ -137,6 +139,7 @@ function addInfoToCard(card, user) {
             ? redirectLink.href = '#'
             : null
     } else {
+        removeWorkerButton?.classList.remove('no-display')
         terminateWorkerButton?.classList.remove('no-display')
 
         seeWorkerTaskRedirect?.classList.remove('no-display');

@@ -360,9 +360,7 @@ class ProjectWorkerEndpoint
      * @return void
      *
      * @throws ForbiddenException If the user is not authorized or if required IDs are missing/invalid.
-     * @throws CsrfException If CSRF protection fails.
      * @throws NotFoundException If the referenced project or worker does not exist.
-     * @throws \InvalidArgumentException If UUID parsing fails for provided IDs.
      * @throws Throwable For any other unexpected errors which will be handled by the ResponseExceptionHandler.
      */
     public static function delete(array $args = []): void
