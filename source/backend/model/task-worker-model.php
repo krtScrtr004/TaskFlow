@@ -383,6 +383,11 @@ class TaskWorkerModel extends Model
                         u.gender,
                         u.email,
                         u.contactNumber,
+                        u.profileLink,
+
+                        u.createdAt,
+                        u.confirmedAt,
+                        u.deletedAt,
                         GROUP_CONCAT(DISTINCT ujt.title) AS jobTitles
                     FROM
                         `user` AS u
@@ -443,6 +448,7 @@ class TaskWorkerModel extends Model
                         u.createdAt,
                         u.confirmedAt,
                         u.deletedAt,
+                        u.profileLink,
                         GROUP_CONCAT(DISTINCT ujt.title) AS jobTitles
                     FROM
                         `user` AS u
@@ -744,18 +750,91 @@ class TaskWorkerModel extends Model
 	}
 
     /**
-     * Deletes a phase entity.
+     * Deletes a task-worker association from the phaseTaskWorker table.
      *
-     * This method is currently not implemented as there is no use case for deleting a phase.
-     * Always returns false.
-     * 
-     * @param mixed $data Data that would be used to delete a phase (unused)
+     * This method accepts a data array describing which association to delete and
+     * supports multiple identifier formats for both task and worker:
+     * - Accepts internal integer IDs for direct deletion.
+     * - Accepts public identifiers (string or binary) or UUID objects; UUID objects
+     *   are converted to binary via UUID::toBinary().
+     * - When non-integer identifiers are provided, the query resolves them to
+     *   internal IDs using subqueries against `phaseTask.publicId` and `user.publicId`.
      *
-     * @return bool Always returns false to indicate deletion is not supported.
+     * Validation performed:
+     * - Ensures 'taskId' and 'workerId' are present.
+     * - If provided as integers, ensures they are greater than zero.
+     *
+     * The deletion is performed using a prepared statement and bound parameters.
+     *
+     * @param array $data Associative array containing identifiers with following keys:
+     *      - taskId: int|string|UUID|binary Task identifier to remove association for.
+     *          - int: internal task id (must be > 0)
+     *          - string|binary: publicId of the task (resolved to internal id via subquery)
+     *          - UUID: UUID object which will be converted to binary
+     *      - workerId: int|string|UUID|binary Worker identifier to remove association for.
+     *          - int: internal worker id (must be > 0)
+     *          - string|binary: publicId of the user (resolved to internal id via subquery)
+     *          - UUID: UUID object which will be converted to binary
+     *
+     * @return bool True on successful deletion.
+     *
+     * @throws InvalidArgumentException If required keys are missing or integer IDs are invalid.
+     * @throws DatabaseException If a database error occurs during the operation (wraps PDOException).
      */
     public static function delete(mixed $data): bool
     {
-        // Not implemented (No use case)
-        return false;
+        if (!isset($data['taskId'])) {
+            throw new InvalidArgumentException('Task ID is required.');
+        }
+
+        if (is_int($data['taskId']) && $data['taskId'] < 1) {
+            throw new InvalidArgumentException('Invalid task ID provided.');
+        }
+
+        if (!isset($data['workerId'])) {
+            throw new InvalidArgumentException('Worker ID is required.');
+        }
+
+        if (is_int($data['workerId']) && $data['workerId'] < 1) {
+            throw new InvalidArgumentException('Invalid worker ID provided.');
+        }
+
+        try {
+            $query = "
+                DELETE FROM
+                    `phaseTaskWorker`
+                WHERE 
+                    taskId = " . (is_int($data['taskId']) ? ':taskId' : '(
+                        SELECT 
+                            id 
+                        FROM 
+                            `phaseTask` 
+                        WHERE 
+                            publicId = :taskId) ') . "
+                AND 
+                    workerId = " . (is_int($data['workerId']) ? ':workerId' : '(
+                        SELECT 
+                            id 
+                        FROM 
+                            `user` 
+                        WHERE
+                            publicId = :workerId)') . "
+            ";
+
+            $instance = new self();
+            $statement = $instance->connection->prepare($query);
+            $statement->execute([
+                ':taskId'    => ($data['taskId'] instanceof UUID)
+                    ? UUID::toBinary($data['taskId'])
+                    : $data['taskId'],
+                ':workerId'     => ($data['workerId'] instanceof UUID)
+                    ? UUID::toBinary($data['workerId'])
+                    : $data['workerId'],
+            ]);
+
+            return true;
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
+        }
     }
 }

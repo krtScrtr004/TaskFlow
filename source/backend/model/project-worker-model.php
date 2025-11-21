@@ -1216,18 +1216,86 @@ class ProjectWorkerModel extends Model
 	}
 
     /**
-     * Deletes a phase entity.
+     * Deletes a worker association from phaseTaskWorker for a given project.
      *
-     * This method is currently not implemented as there is no use case for deleting a phase.
-     * Always returns false.
-     * 
-     * @param mixed $data Data that would be used to delete a phase (unused)
+     * This method accepts either internal numeric IDs or public identifiers (UUIDs/binary/string)
+     * for both project and worker. It builds a DELETE query that either uses the provided numeric
+     * IDs directly or resolves public identifiers to internal IDs via subqueries against the
+     * `project` and `user` tables. UUID instances are converted to binary before binding.
      *
-     * @return bool Always returns false to indicate deletion is not supported.
+     * Validations performed:
+     * - Ensures projectId and workerId are present.
+     * - Ensures numeric IDs are positive integers when provided as ints.
+     *
+     * @param array $data Associative array containing identifiers with the following keys:
+     *      - projectId: int|string|UUID|binary
+     *          Either the internal numeric project ID (int) or a public identifier (UUID instance,
+     *          binary representation, or publicId string). If an int is provided it is used directly;
+     *          otherwise the project internal ID is resolved via a subquery on `project.publicId`.
+     *      - workerId: int|string|UUID|binary
+     *          Either the internal numeric worker (user) ID (int) or a public identifier (UUID instance,
+     *          binary representation, or publicId string). If an int is provided it is used directly;
+     *          otherwise the worker internal ID is resolved via a subquery on `user.publicId`.
+     *
+     * @return bool True when the deletion query executed successfully.
+     *
+     * @throws InvalidArgumentException If projectId or workerId is missing or an invalid integer is provided.
+     * @throws DatabaseException If a PDO error occurs while preparing or executing the statement.
      */
     public static function delete(mixed $data): bool
     {
-        // Not implemented (No use case)
-        return false;
+        if (!isset($data['projectId'])) {
+            throw new InvalidArgumentException('Project ID is required.');
+        }
+
+        if (is_int($data['projectId']) && $data['projectId'] < 1) {
+            throw new InvalidArgumentException('Invalid project ID provided.');
+        }
+
+        if (!isset($data['workerId'])) {
+            throw new InvalidArgumentException('Worker ID is required.');
+        }
+
+        if (is_int($data['workerId']) && $data['workerId'] < 1) {
+            throw new InvalidArgumentException('Invalid worker ID provided.');
+        }
+
+        try {
+            $query = "
+                DELETE FROM
+                    `phaseTaskWorker`
+                WHERE 
+                    projectId = " . (is_int($data['projectId']) ? ':projectId' : '(
+                        SELECT 
+                            id 
+                        FROM 
+                            `project` 
+                        WHERE 
+                            publicId = :projectId) ') . "
+                AND 
+                    workerId = " . (is_int($data['workerId']) ? ':workerId' : '(
+                        SELECT 
+                            id 
+                        FROM 
+                            `user` 
+                        WHERE
+                            publicId = :workerId)') . "
+            ";
+
+            $instance = new self();
+            $statement = $instance->connection->prepare($query);
+            $statement->execute([
+                ':projectId'    => ($data['projectId'] instanceof UUID)
+                    ? UUID::toBinary($data['projectId'])
+                    : $data['projectId'],
+                ':workerId'     => ($data['workerId'] instanceof UUID)
+                    ? UUID::toBinary($data['workerId'])
+                    : $data['workerId'],
+            ]);
+
+            return true;
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
+        }
     }
 }
