@@ -405,32 +405,6 @@ class TaskWorkerModel extends Model
                     ? $projectId
                     : UUID::toBinary($projectId);
                 $params[':assignedProjectStatus'] = WorkerStatus::ASSIGNED->value;
-                $params[':assignedStatus'] = WorkerStatus::ASSIGNED->value;
-                $params[':completedStatus'] = WorkStatus::COMPLETED->value;
-                $params[':cancelledStatus'] = WorkStatus::CANCELLED->value;
-
-                // Exclude workers assigned to ongoing tasks in this project
-                $where[] = "NOT EXISTS (
-                    SELECT 1
-                    FROM 
-                        `phaseTaskWorker` AS ptw2
-                    INNER JOIN 
-                        `phaseTask` AS pt2 
-                    ON 
-                        ptw2.taskId = pt2.id
-                    INNER JOIN 
-                        `projectPhase` AS pp2
-                    ON
-                        pp2.id = pt2.phaseId
-                    WHERE 
-                        ptw2.workerId = u.id
-                    AND 
-                        ptw2.status = :assignedStatus
-                    AND 
-                        pt2.status NOT IN (:completedStatus, :cancelledStatus)
-                    AND 
-                        pp2.projectId = pw.projectId
-                )";
 
                 if ($taskId && ($options['excludeTaskTerminated'])) {
                     // Exclude workers terminated from this specific task
