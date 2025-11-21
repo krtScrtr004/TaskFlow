@@ -460,6 +460,14 @@ button > .text-w-icon {
 	text-decoration: underline;
 }
 
+.user-info-card .action-buttons {
+	gap: 1rem;
+}
+
+.user-info-card .action-buttons > * {
+	flex: 1;
+}
+
 /* ---------------- WORKER LIST ---------------- */
 
 .worker-list > *:not(:last-child),

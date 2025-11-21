@@ -122,14 +122,26 @@ use App\Enumeration\WorkStatus;
             $workStatus !== WorkStatus::COMPLETED && 
             $workStatus !== WorkStatus::CANCELLED): 
             ?>
-            <!-- Terminate user Button -->
-            <button id="terminate_worker_button" type="button" class="red-bg">
-                <div class="text-w-icon">
-                    <img src="<?= ICON_PATH . 'close_w.svg' ?>" alt="Terminate" title="Terminate" height="20">
 
-                    <h3 class="white-text">Terminate</h3>
-                </div>
-            </button>
+            <section class="action-buttons flex-row">
+                <!-- Remove worker Button -->
+                <button id="remove_worker_button" type="button" class="orange-bg">
+                    <div class="text-w-icon">
+                        <img src="<?= ICON_PATH . 'remove_w.svg' ?>" alt="Remove Worker" title="Remove Worker" height="20">
+
+                        <h3 class="white-text">Remove</h3>
+                    </div>
+                </button>
+
+                <!-- Terminate worker Button -->
+                <button id="terminate_worker_button" type="button" class="red-bg">
+                    <div class="text-w-icon">
+                        <img src="<?= ICON_PATH . 'close_w.svg' ?>" alt="Terminate Worker" title="Terminate Worker" height="20">
+
+                        <h3 class="white-text">Terminate</h3>
+                    </div>
+                </button>
+            </section>
         <?php endif; ?>
 
         <?php if (!$isUsersPage): ?>
