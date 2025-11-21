@@ -60,7 +60,7 @@ use App\Middleware\Csrf;
         <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'infinite-scroll-workers.js' ?>"></script>
 
         <?php if (Role::isProjectManager(Me::getInstance())): ?>
-            <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'terminate-worker.js' ?>"></script>
+            <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'remove-terminate-worker.js' ?>"></script>
             <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'cancel.js' ?>"></script>
             <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'project' . DS . 'open.js' ?>"></script>
             <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'project' . DS . 'add.js' ?>"></script>

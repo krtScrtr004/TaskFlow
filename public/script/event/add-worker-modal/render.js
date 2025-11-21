@@ -3,7 +3,7 @@ const ICON_PATH = 'asset/image/icon/'
 /**
  * Creates and appends a worker card to the worker list.
  * 
- * @param {Object} worker - The worker object containing id, firstName, lastName, profilePicture, jobTitles
+ * @param {Object} worker - The worker object containing id, firstName, lastName, profileLink, jobTitles
  */
 export function createWorkerListCard(worker) {
     const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
@@ -36,7 +36,8 @@ export function createWorkerListCard(worker) {
     imgContainer.className = 'flex-col flex-child-center-v'
 
     const img = document.createElement('img')
-    img.src = worker.profilePicture || ICON_PATH + 'profile_w.svg'
+    img.src = worker.profileLink || ICON_PATH + 'profile_w.svg'
+    img.className = 'circle fit-cover'
     img.alt = `${worker.firstName} ${worker.lastName}`
     img.title = `${worker.firstName} ${worker.lastName}`
     img.height = 40

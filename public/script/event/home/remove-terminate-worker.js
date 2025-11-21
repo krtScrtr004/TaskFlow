@@ -1,9 +1,14 @@
-import { terminateWorker } from '../../utility/terminate-worker.js'
+import { removeTerminateWorker } from '../../utility/remove-terminate-worker.js'
 import { errorListDialog } from '../../render/error-list-dialog.js'
 import { Dialog } from '../../render/dialog.js'
 import { handleException } from '../../utility/handle-exception.js'
 
 (() => {
+    const removeWorkerButton = document.querySelector('#remove_worker_button')
+    if (!removeWorkerButton) {
+        return
+    }
+
     const terminateWorkerButton = document.querySelector('#terminate_worker_button')
     if (!terminateWorkerButton) {
         return
@@ -19,7 +24,7 @@ import { handleException } from '../../utility/handle-exception.js'
         const endpoint = `projects/${projectId}`
         const workerContainer = projectContainer?.querySelector('.worker-list')
         // Initialize terminate worker functionality
-        terminateWorker(projectId, workerContainer, '.user-list-card', endpoint)
+        removeTerminateWorker(projectId, workerContainer, '.user-list-card', endpoint)
     } catch (error) {
         handleException(error, 'Error initializing terminate worker functionality:', error)
     }
