@@ -429,6 +429,8 @@ class ProjectWorkerModel extends Model
                                 p2.id = pw4.projectId
                             WHERE 
                                 pw4.workerId = u.id
+                            AND 
+                                p2.id = p.id
                         ),
                         '[]'
                     ) AS projectHistory"
@@ -446,6 +448,8 @@ class ProjectWorkerModel extends Model
                 $params[':projectId'] = ($projectId instanceof UUID) 
                     ? UUID::toBinary($projectId)
                     : $projectId;
+                $params[':projectId1'] = $params[':projectId'];
+                $params[':projectId2'] = $params[':projectId'];
             }
 
             $query = "
@@ -470,8 +474,16 @@ class ProjectWorkerModel extends Model
                             COUNT(*)
                         FROM 
                             `phaseTaskWorker` AS ptw
-                        WHERE 
-                            ptw.workerId = u.id
+                        " . ($projectId ? 
+                            "INNER JOIN 
+                                `phaseTask` AS pt ON ptw.taskId = pt.id
+                            INNER JOIN 
+                                `projectPhase` AS pp ON pt.phaseId = pp.id
+                            WHERE 
+                                ptw.workerId = u.id 
+                            AND 
+                                pp.projectId = :projectId1" 
+                            : "WHERE ptw.workerId = u.id") . "
                     ) AS totalTasks,
                     (
                         SELECT 
@@ -482,10 +494,15 @@ class ProjectWorkerModel extends Model
                             `phaseTask` AS t 
                         ON 
                             ptw.taskId = t.id
+                        " . ($projectId ? 
+                            "INNER JOIN 
+                                `projectPhase` AS pp ON t.phaseId = pp.id" 
+                            : "") . "
                         WHERE 
                             ptw.workerId = u.id 
                         AND 
-                            t.status = '" . WorkStatus::COMPLETED->value . "'
+                            t.status = '" . WorkStatus::COMPLETED->value . "'" 
+                        . ($projectId ? " AND pp.projectId = :projectId2" : "") . "
                     ) AS completedTasks,
                     (
                         SELECT 
@@ -666,7 +683,8 @@ class ProjectWorkerModel extends Model
                                             'actualCompletionDateTime', pt.actualCompletionDateTime
                                         ) ORDER BY pt.startDateTime DESC
                                     ), ']')
-                                    FROM `phaseTask` AS pt
+                                    FROM 
+                                        `phaseTask` AS pt
                                     INNER JOIN 
                                         `phaseTaskWorker` AS ptw
                                     ON 
@@ -687,11 +705,12 @@ class ProjectWorkerModel extends Model
                             `project` AS p2
                         INNER JOIN 
                             `projectWorker` AS pw4
-                        ON 
+                        ON
                             p2.id = pw4.projectId
                         WHERE 
                             pw4.workerId = u.id
-                        LIMIT 10
+                        AND 
+                            p2.id = p.id
                     ),
                     '[]'
                 ) AS projectHistory"
@@ -717,6 +736,8 @@ class ProjectWorkerModel extends Model
                 $params[':projectId'] = ($projectId instanceof UUID) 
                     ? UUID::toBinary($projectId)
                     : $projectId;
+                $params[':projectId1'] = $params[':projectId'];
+                $params[':projectId2'] = $params[':projectId'];
             }
 
             $query = "
@@ -741,8 +762,16 @@ class ProjectWorkerModel extends Model
                             COUNT(*)
                         FROM 
                             `phaseTaskWorker` AS ptw
-                        WHERE
-                            ptw.workerId = u.id
+                        " . ($projectId ? 
+                            "INNER JOIN 
+                                `phaseTask` AS pt ON ptw.taskId = pt.id
+                            INNER JOIN 
+                                `projectPhase` AS pp ON pt.phaseId = pp.id
+                            WHERE 
+                                ptw.workerId = u.id 
+                            AND 
+                                pp.projectId = :projectId1" 
+                            : "WHERE ptw.workerId = u.id") . "
                     ) AS totalTasks,
                     (
                         SELECT 
@@ -753,10 +782,15 @@ class ProjectWorkerModel extends Model
                             `phaseTask` AS t 
                         ON 
                             ptw.taskId = t.id
+                        " . ($projectId ? 
+                            "INNER JOIN 
+                                `projectPhase` AS pp ON t.phaseId = pp.id" 
+                            : "") . "
                         WHERE 
                             ptw.workerId = u.id 
                         AND 
-                            t.status = '" . WorkStatus::COMPLETED->value . "'
+                            t.status = '" . WorkStatus::COMPLETED->value . "'" 
+                        . ($projectId ? " AND pp.projectId = :projectId2" : "") . "
                     ) AS completedTasks,
                     (
                         SELECT 
