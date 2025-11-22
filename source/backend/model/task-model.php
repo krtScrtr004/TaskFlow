@@ -52,7 +52,12 @@ class TaskModel extends Model
      */
     protected static function find(string $whereClause = '', array $params = [], array $options = []): ?TaskContainer
     {
-        $options['groupBy'] = $options['groupBy'] ?? 'pt.id';
+        $paramOptions = [
+            'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
+            'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
+            'groupBy'   => $options[':groupBy'] ?? $options['groupBy'] ?? 'pt.id',
+            'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 'pt.startDateTime DESC',
+        ];
 
         $instance = new self();
         try {
@@ -119,7 +124,7 @@ class TaskModel extends Model
                                         AND 
                                             pt3.status = 'completed'
                                     )
-                                ) ORDER BY u.lastName SEPARATOR ','
+                                ) ORDER BY u.lastName ASC SEPARATOR ','
                             ), ']')
                             FROM 
                                 `phaseTaskWorker` AS ptw
@@ -150,7 +155,7 @@ class TaskModel extends Model
             ";
             $projectTaskQuery = $instance->appendOptionsToFindQuery(
                 $instance->appendWhereClause($query, $whereClause),
-                $options);
+                $paramOptions);
 
             $statement = $instance->connection->prepare($projectTaskQuery);
             $statement->execute($params);
@@ -256,6 +261,11 @@ class TaskModel extends Model
             throw new InvalidArgumentException('Invalid project ID.');
         }
 
+        $paramOptions = [
+            'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
+            'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
+        ];
+
         try {
             $where = [];
             $params = [];
@@ -264,11 +274,6 @@ class TaskModel extends Model
                 $where[] = "MATCH(pt.name, pt.description) AGAINST (:key IN NATURAL LANGUAGE MODE)";
                 $params[':key'] = $key;
             }
-
-            $options = [
-                ':limit'    => $options['limit'] ?? 10,
-                ':offset'   => $options['offset'] ?? 0
-            ];
 
             // Filter by user role if provided
             if ($userId) {
@@ -333,7 +338,7 @@ class TaskModel extends Model
             }
 
             $whereClause = implode(' AND ', $where);
-            return self::find($whereClause, $params, $options);
+            return self::find($whereClause, $params, $paramOptions);
         } catch (Exception $e) {
             throw $e;
         }
@@ -355,7 +360,11 @@ class TaskModel extends Model
      *
      * @return Task|null The found Task instance, or null if no matching task exists.
      */
-    public static function findById(int|UUID $taskId, int|UUID|null $phaseId = null, int|UUID|null $projectId = null): ?Task {
+    public static function findById(
+        int|UUID $taskId, 
+        int|UUID|null $phaseId = null, 
+        int|UUID|null $projectId = null
+    ): ?Task {
         if (is_int($taskId) && $taskId < 1) {
             throw new InvalidArgumentException('Invalid task ID.');
         }
@@ -508,6 +517,11 @@ class TaskModel extends Model
             throw new InvalidArgumentException('Invalid project ID.');
         }
 
+        $paramOptions = [
+            'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
+            'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
+        ];
+
         try {
             $whereClause = is_int($workerId) 
                 ? 'u.id = :workerId'
@@ -535,7 +549,7 @@ class TaskModel extends Model
                 $params[':priority'] = $filter->value;
             }
 
-            return self::find($whereClause,$params, $options);
+            return self::find($whereClause,$params, $paramOptions);
         } catch (Exception $e) {
             throw $e;
         }
@@ -578,7 +592,9 @@ class TaskModel extends Model
                 ON 
                     u.id = tw.workerId
                 WHERE 
-                    tw.taskId = :taskId";
+                    tw.taskId = :taskId
+                ORDER BY 
+                    u.lastName ASC";
             $statement = $instance->connection->prepare($taskWorkerQuery);
             $statement->execute([':taskId' => $taskId]);
             $result = $statement->fetchAll();
@@ -628,6 +644,11 @@ class TaskModel extends Model
             throw new InvalidArgumentException('Invalid phase ID provided.');
         }
 
+        $paramOptions = [
+            'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
+            'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
+        ];
+
         try {
             $whereClause = 'pt.status = :status';
             $params = [':status' => $status->value];
@@ -641,7 +662,7 @@ class TaskModel extends Model
                     : UUID::toBinary($phaseId);
             }
 
-            return self::find($whereClause, $params, $options);
+            return self::find($whereClause, $params, $paramOptions);
         } catch (Exception $e) {
             throw $e;
         }
@@ -682,6 +703,11 @@ class TaskModel extends Model
             throw new InvalidArgumentException('Invalid phase ID provided.');
         }
 
+        $paramOptions = [
+            'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
+            'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
+        ];
+
         try {
             $whereClause = 'pt.priority = :priority';
             $params = [':priority' => $priority->value];
@@ -695,7 +721,7 @@ class TaskModel extends Model
                     : UUID::toBinary($phaseId);
             }
 
-            return self::find($whereClause, $params, $options);
+            return self::find($whereClause, $params, $paramOptions);
         } catch (Exception $e) {
             throw $e;
         }
@@ -859,7 +885,8 @@ class TaskModel extends Model
                 WHERE 
                     " . (is_int($taskId) 
                         ? 'pt.id = :taskId' 
-                        : 'pt.publicId = :taskId');
+                        : 'pt.publicId = :taskId') . "
+                LIMIT 1";
             $statement = $instance->connection->prepare($query);
             $statement->execute([
                 ':taskId' => is_int($taskId) 
@@ -928,11 +955,11 @@ class TaskModel extends Model
         }
 
         try {
-            $options = [
+            $paramOptions = [
                 'offset'    => $offset,
                 'limit'     => $limit,
             ];
-            return self::find('', [], $options);
+            return self::find('', [], $paramOptions);
         } catch (Exception $e) {
             throw $e;
         }

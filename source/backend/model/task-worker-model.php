@@ -43,6 +43,13 @@ class TaskWorkerModel extends Model
      */
     protected static function find(string $whereClause = '', array $params = [], array $options = []): ?WorkerContainer
     {
+        $paramOptions = [
+            'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
+            'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
+            'groupBy'   => $options[':groupBy'] ?? $options['groupBy'] ?? 'u.id',
+            'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 'u.lastName ASC',
+        ];
+
         $instance = new self();
         try {
             $queryString = "
@@ -107,7 +114,7 @@ class TaskWorkerModel extends Model
             ";
             $query = $instance->appendOptionsToFindQuery(
                 $instance->appendWhereClause($queryString, $whereClause),
-                $options
+                $paramOptions
             );
 
             $statement = $instance->connection->prepare($query);
@@ -152,8 +159,12 @@ class TaskWorkerModel extends Model
      *
      * @return Worker|null The found Worker instance, or null if no matching worker is found.
      */
-    public static function findById(int|UUID $workerId, int|UUID|null $taskId = null,  int|UUID|null $phaseId = null, int|UUID|null $projectId = null): ?Worker
-    {
+    public static function findById(
+        int|UUID $workerId, 
+        int|UUID|null $taskId = null,  
+        int|UUID|null $phaseId = null, 
+        int|UUID|null $projectId = null
+    ): ?Worker {
         if (is_int($workerId) && $workerId < 1) {
             throw new InvalidArgumentException('Invalid workerId provided.');
         }
@@ -197,9 +208,9 @@ class TaskWorkerModel extends Model
                 $params[':projectId'] = is_int($projectId) ? $projectId : UUID::toBinary($projectId);
             }
 
-            $options = ['limit' => 1];
+            $paramOptions = ['limit' => 1];
 
-            $worker = self::find($whereClause, $params, $options);
+            $worker = self::find($whereClause, $params, $paramOptions);
             return $worker->first() ?? null;
         } catch (Exception $e) {
             throw $e;
@@ -229,8 +240,7 @@ class TaskWorkerModel extends Model
         int|UUID|null $taskId = null,
         int|UUID|null $phaseId = null,
         int|UUID|null $projectId = null
-    ): ?WorkerContainer
-    {
+    ): ?WorkerContainer {
         if (empty($workerIds)) {
             throw new InvalidArgumentException('Worker IDs array cannot be empty.');
         }
@@ -353,12 +363,18 @@ class TaskWorkerModel extends Model
         int|UUID|null $phaseId = null,
         int|UUID|null $projectId = null,
         WorkerStatus|null $status = null,
-        $options = [
+        array $options = [
             'excludeTaskTerminated' => false,
             'limit' => 10,
             'offset' => 0,
         ]
     ): ?WorkerContainer {
+        $paramOptions = [
+            'excludeTaskTerminated' => $options['excludeTaskTerminated'] ?? false,
+            'limit'                 => $options[':limit'] ?? $options['limit'] ?? 50,
+            'offset'                => $options[':offset'] ?? $options['offset'] ?? 0,
+        ];
+
         try {
             $instance = new self();
 
@@ -384,7 +400,6 @@ class TaskWorkerModel extends Model
                         u.email,
                         u.contactNumber,
                         u.profileLink,
-
                         u.createdAt,
                         u.confirmedAt,
                         u.deletedAt,
@@ -395,9 +410,10 @@ class TaskWorkerModel extends Model
                         `projectWorker` AS pw
                     ON
                         u.id = pw.workerId
-                    AND pw.projectId = " . (is_int($projectId) 
-                        ? ":projectIdJoin" 
-                        : "(SELECT id FROM `project` WHERE publicId = :projectIdJoin)") . "
+                    AND 
+                        pw.projectId = " . (is_int($projectId) 
+                            ? ":projectIdJoin" 
+                            : "(SELECT id FROM `project` WHERE publicId = :projectIdJoin)") . "
                     AND 
                         pw.status = :assignedProjectStatus
                     LEFT JOIN
@@ -523,15 +539,16 @@ class TaskWorkerModel extends Model
             if (!empty($where)) {
                 $query .= " WHERE " . implode(' AND ', $where);
             }
-            $query .= " GROUP BY u.id";
 
-            // Pagination
-            if (isset($options['limit'])) {
-                $query .= " LIMIT " . intval($options['limit']);
-            }
-            if (isset($options['offset'])) {
-                $query .= " OFFSET " . intval($options['offset']);
-            }
+            $query .= " 
+                GROUP BY 
+                    u.id 
+                ORDER BY 
+                    u.lastName ASC
+                LIMIT " 
+                    . intval($paramOptions['limit']) . 
+                " OFFSET " 
+                    . intval($paramOptions['offset']);
 
             $statement = $instance->connection->prepare($query);
             $statement->execute($params);
@@ -579,13 +596,12 @@ class TaskWorkerModel extends Model
         }
 
         try {
-            $options = [
+            $paramOptions = [
                 'offset'    => $offset,
                 'limit'     => $limit,
-                'orderBy'   => 'u.createdAt DESC',
             ];  
 
-            return self::find('', [], $options);
+            return self::find('', [], $paramOptions);
         } catch (Exception $e) {
             throw $e;
         }

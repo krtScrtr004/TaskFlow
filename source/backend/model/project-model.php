@@ -72,6 +72,13 @@ class ProjectModel extends Model
      */
     protected static function find(string $whereClause = '', array $params = [], array $options = []): ?ProjectContainer
     {
+        $paramOptions = [
+            'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
+            'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
+            'groupBy'   => $options[':groupBy'] ?? $options['groupBy'] ?? 'p.id',
+            'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 'p.startDateTime DESC',
+        ];
+
         $instance = new self();
         try {
             $queryString = "
@@ -94,7 +101,7 @@ class ProjectModel extends Model
             ";
             $query = $instance->appendOptionsToFindQuery(
                 $instance->appendWhereClause($queryString, $whereClause), 
-                $options);
+                $paramOptions);
 
             $statement = $instance->connection->prepare($query);
             $statement->execute($params);
@@ -214,8 +221,7 @@ class ProjectModel extends Model
                                 'phaseStartDateTime', pp.startDateTime,
                                 'phaseCompletionDateTime', pp.completionDateTime,
                                 'phaseActualCompletionDateTime', pp.actualCompletionDateTime
-                            )
-                            ORDER BY pp.startDateTime ASC
+                            ) ORDER BY pp.startDateTime ASC SEPARATOR ','
                         ), ']')
                         FROM 
                             `projectPhase` pp
@@ -286,7 +292,7 @@ class ProjectModel extends Model
                                 'taskCompletionDateTime', pt.completionDateTime,
                                 'taskActualCompletionDateTime', pt.actualCompletionDateTime,
                                 'taskCreatedAt', pt.createdAt
-                            ) ORDER BY pt.createdAt SEPARATOR ','
+                            ) ORDER BY pt.startDateTime DESC SEPARATOR ','
                         ), ']')
                         FROM 
                             `phaseTask` AS pt
@@ -319,6 +325,8 @@ class ProjectModel extends Model
                         p.managerId = m.id
                     WHERE 
                         p.publicId = :projectId
+                    ORDER BY
+                        p.startDateTime ASC
                 ) AS projectData
             ";
 
@@ -737,12 +745,18 @@ class ProjectModel extends Model
         array $options = [
             'offset'    => 0,
             'limit'     => 10,
-            'orderBy'   => 'createdAt DESC',
+            'orderBy'   => 'p.startDateTime DESC',
         ]
     ): ?ProjectContainer {
         if (isset($userId) && is_int($userId) && $userId < 1) {
             throw new InvalidArgumentException('Invalid user ID provided.');
         }
+
+        $paramOptions = [
+            'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
+            'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
+            'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 'p.startDateTime DESC',
+        ];
 
         try {
             $whereClauses = [];
@@ -788,7 +802,7 @@ class ProjectModel extends Model
 
             $whereClause = implode(' AND ', $whereClauses);
 
-            return self::find($whereClause, $params, $options);
+            return self::find($whereClause, $params, $paramOptions);
         } catch (Exception $e) {
             throw $e;
         }
@@ -829,7 +843,6 @@ class ProjectModel extends Model
             $options = [
                 'offset'    => $offset,
                 'limit'     => $limit,
-                'orderBy'   => 'createdAt DESC',
             ];
             return self::find('', [], $options);
         } catch (Exception $e) {
@@ -1392,7 +1405,7 @@ class ProjectModel extends Model
                 `project` AS p
             WHERE
                 " . (is_int($projectId) ? 'p.id = :projectId' : 'p.publicId = :projectId') . "
-        ";
+            LIMIT 1";
 
         $instance = new self();
         $statement = $instance->connection->prepare($query);
@@ -1702,18 +1715,39 @@ class ProjectModel extends Model
                         )
                     ) * 100, 2
                     ) as overallScore
-                FROM user AS u
-                INNER JOIN projectWorker AS pw ON u.id = pw.workerId
-                INNER JOIN project AS p ON pw.projectId = p.id
-                INNER JOIN projectPhase AS pp ON p.id = pp.projectId
-                INNER JOIN phaseTask AS pt ON pp.id = pt.phaseId
-                INNER JOIN phaseTaskWorker AS ptw ON pt.id = ptw.taskId AND u.id = ptw.workerId
-                WHERE u.deletedAt IS NULL
-                AND " . (is_int($projectId) ? 'p.id' : 'p.publicId') . " = :projectId
-                GROUP BY u.id, u.firstName, u.lastName, u.email
-                HAVING totalTasks > 0
+                FROM 
+                    `user` AS u
+                INNER JOIN 
+                    `projectWorker` AS pw
+                ON 
+                    u.id = pw.workerId
+                INNER JOIN 
+                    `project` AS p 
+                ON
+                    pw.projectId = p.id
+                INNER JOIN 
+                    `projectPhase` AS pp 
+                ON 
+                    p.id = pp.projectId
+                INNER JOIN 
+                    `phaseTask` AS pt 
+                ON 
+                    pp.id = pt.phaseId
+                INNER JOIN 
+                    `phaseTaskWorker` AS ptw 
+                ON 
+                    pt.id = ptw.taskId AND u.id = ptw.workerId
+                WHERE 
+                    u.deletedAt IS NULL
+                AND 
+                    " . (is_int($projectId) ? 'p.id' : 'p.publicId') . " = :projectId
+                GROUP BY 
+                    u.id, u.firstName, u.lastName, u.email
+                HAVING 
+                    totalTasks > 0
             ) AS ws
-            ORDER BY ws.overallScore DESC
+            ORDER BY 
+                ws.overallScore DESC
             LIMIT 10
         ";
 

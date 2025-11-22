@@ -45,6 +45,13 @@ class ProjectWorkerModel extends Model
      */
     protected static function find(string $whereClause = '', array $params = [], array $options = []): ?WorkerContainer
 	{
+        $paramOptions = [
+            'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
+            'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
+            'groupBy'   => $options[':groupBy'] ?? $options['groupBy'] ?? 'p.id',
+            'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 'u.lastName ASC',
+        ];
+
 		$instance = new self();
         try {
             $queryString = "
@@ -123,7 +130,7 @@ class ProjectWorkerModel extends Model
             ";
             $query = $instance->appendOptionsToFindQuery(
                 $instance->appendWhereClause($queryString, $whereClause), 
-                $options);
+                $paramOptions);
 
             $statement = $instance->connection->prepare($query);
             $statement->execute($params);
@@ -176,7 +183,7 @@ class ProjectWorkerModel extends Model
         string|null $key = '',
         int|UUID|null $projectId = null,
         WorkerStatus|null $status = null,
-        $options = [
+        array $options = [
             'limit' => 10,
             'offset' => 0,
         ]
@@ -184,6 +191,11 @@ class ProjectWorkerModel extends Model
         if ($projectId && is_int($projectId) && $projectId < 1) {
             throw new InvalidArgumentException('Invalid project ID provided.');
         }
+
+        $paramOptions = [
+            'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
+            'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
+        ];
 
         try {
             $instance = new self();
@@ -303,15 +315,15 @@ class ProjectWorkerModel extends Model
             if (!empty($where)) {
                 $query .= " WHERE " . implode(' AND ', $where);
             }
-            $query .= " GROUP BY u.id";
-
-            // Pagination
-            if (isset($options['limit'])) {
-                $query .= " LIMIT " . intval($options['limit']);
-            }
-            if (isset($options['offset'])) {
-                $query .= " OFFSET " . intval($options['offset']);
-            }
+            $query .= " 
+                GROUP BY 
+                    u.id 
+                ORDER BY 
+                    u.lastName ASC  
+                LIMIT " 
+                    . intval($paramOptions['limit']) . "
+                OFFSET " 
+                    . intval($paramOptions['offset']);
 
             $statement = $instance->connection->prepare($query);
             $statement->execute($params);
@@ -356,7 +368,10 @@ class ProjectWorkerModel extends Model
      *
      * @return Worker|null Worker instance with partial data, or null if not found
      */
-    public static function findById(int|UUID $workerId, int|UUID|null $projectId = null, bool $includeHistory = false): ?Worker
+    public static function findById(
+        int|UUID $workerId, 
+        int|UUID|null $projectId = null, 
+        bool $includeHistory = false): ?Worker
     {
         if ($projectId && is_int($projectId) && $projectId < 1) {
             throw new InvalidArgumentException('Invalid project ID provided.');
@@ -386,7 +401,7 @@ class ProjectWorkerModel extends Model
                                                 'startDateTime', pt.startDateTime,
                                                 'completionDateTime', pt.completionDateTime,
                                                 'actualCompletionDateTime', pt.actualCompletionDateTime
-                                            ) ORDER BY pt.createdAt DESC
+                                            ) ORDER BY pt.startDateTime DESC
                                         ), ']')
                                         FROM 
                                             `phaseTask` AS pt
@@ -403,7 +418,7 @@ class ProjectWorkerModel extends Model
                                         AND 
                                             ptw.workerId = u.id
                                     )
-                                ) ORDER BY p2.createdAt DESC
+                                ) ORDER BY p2.startDateTime ASC
                             )
                             , ']')
                             FROM 
@@ -629,58 +644,58 @@ class ProjectWorkerModel extends Model
 
             $projectHistory = $includeHistory ?
                 ", COALESCE(
-                        (
-                            SELECT CONCAT('[', GROUP_CONCAT(
-                                JSON_OBJECT(
-                                    'id', p2.id,
-                                    'publicId', HEX(p2.publicId),
-                                    'name', p2.name,
-                                    'status', p2.status,
-                                    'startDateTime', p2.startDateTime,
-                                    'completionDateTime', p2.completionDateTime,
-                                    'actualCompletionDateTime', p2.actualCompletionDateTime,
-                                    'tasks', (
-                                        SELECT CONCAT('[', GROUP_CONCAT(
-                                            JSON_OBJECT(
-                                                'id', pt.id,
-                                                'publicId', HEX(pt.publicId),
-                                                'name', pt.name,
-                                                'status', pt.status,
-                                                'startDateTime', pt.startDateTime,
-                                                'completionDateTime', pt.completionDateTime,
-                                                'actualCompletionDateTime', pt.actualCompletionDateTime
-                                            ) ORDER BY pt.createdAt DESC
-                                        ), ']')
-                                        FROM `phaseTask` AS pt
-                                        INNER JOIN 
-                                            `phaseTaskWorker` AS ptw
-                                        ON 
-                                            pt.id = ptw.taskId
-                                        INNER JOIN 
-                                            `projectPhase` as pp
-                                        ON 
-                                            pp.id = pt.phaseId
-                                        WHERE 
-                                            pp.projectId = p2.id
-                                        AND 
-                                            ptw.workerId = u.id
-                                    )
-                                ) ORDER BY p2.createdAt DESC
-                            )
-                            , ']')
-                            FROM 
-                                `project` AS p2
-                            INNER JOIN 
-                                `projectWorker` AS pw4
-                            ON 
-                                p2.id = pw4.projectId
-                            WHERE 
-                                pw4.workerId = u.id
-                            LIMIT 10
-                        ),
-                        '[]'
-                    ) AS projectHistory"
-                    : '';
+                    (
+                        SELECT CONCAT('[', GROUP_CONCAT(
+                            JSON_OBJECT(
+                                'id', p2.id,
+                                'publicId', HEX(p2.publicId),
+                                'name', p2.name,
+                                'status', p2.status,
+                                'startDateTime', p2.startDateTime,
+                                'completionDateTime', p2.completionDateTime,
+                                'actualCompletionDateTime', p2.actualCompletionDateTime,
+                                'tasks', (
+                                    SELECT CONCAT('[', GROUP_CONCAT(
+                                        JSON_OBJECT(
+                                            'id', pt.id,
+                                            'publicId', HEX(pt.publicId),
+                                            'name', pt.name,
+                                            'status', pt.status,
+                                            'startDateTime', pt.startDateTime,
+                                            'completionDateTime', pt.completionDateTime,
+                                            'actualCompletionDateTime', pt.actualCompletionDateTime
+                                        ) ORDER BY pt.startDateTime DESC
+                                    ), ']')
+                                    FROM `phaseTask` AS pt
+                                    INNER JOIN 
+                                        `phaseTaskWorker` AS ptw
+                                    ON 
+                                        pt.id = ptw.taskId
+                                    INNER JOIN 
+                                        `projectPhase` as pp
+                                    ON 
+                                        pp.id = pt.phaseId
+                                    WHERE 
+                                        pp.projectId = p2.id
+                                    AND 
+                                        ptw.workerId = u.id
+                                )
+                            ) ORDER BY p2.startDateTime ASC
+                        )
+                        , ']')
+                        FROM 
+                            `project` AS p2
+                        INNER JOIN 
+                            `projectWorker` AS pw4
+                        ON 
+                            p2.id = pw4.projectId
+                        WHERE 
+                            pw4.workerId = u.id
+                        LIMIT 10
+                    ),
+                    '[]'
+                ) AS projectHistory"
+                : '';
 
             // Build WHERE clause for multiple worker IDs
             $workerIdPlaceholders = [];
@@ -784,6 +799,8 @@ class ProjectWorkerModel extends Model
                     $where
                 GROUP BY
                     u.id
+                ORDER BY
+                    u.lastName ASC
             ";
             $statement = $instance->connection->prepare($query);
             $statement->execute($params);
@@ -912,13 +929,13 @@ class ProjectWorkerModel extends Model
                 ':terminatedStatus' => WorkerStatus::TERMINATED->value,
             ];
 
-            $options = [
+            $paramOptions = [
                 'limit'     => $options['limit'] ?? 10,
                 'offset'    => $options['offset'] ?? 0,
-                'groupBy'   => 'u.id'
+                'groupBy'   => 'u.lastName ASC'
             ];
 
-            return self::find($whereClause, $params, $options);
+            return self::find($whereClause, $params, $paramOptions);
         } catch (Exception $e) {
             throw $e;
         }
@@ -950,13 +967,13 @@ class ProjectWorkerModel extends Model
         }
 
         try {
-            $options = [
+            $paramOptions = [
                 'offset'    => $offset,
                 'limit'     => $limit,
-                'orderBy'   => 'u.createdAt DESC',
+                'orderBy'   => 'u.lastName ASC',
             ];  
 
-            return self::find('', [], $options);
+            return self::find('', [], $paramOptions);
         } catch (Exception $e) {
             throw $e;
         }

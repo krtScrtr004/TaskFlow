@@ -212,6 +212,7 @@ class ProjectManagerModel extends Model
                     $where
                 GROUP BY
                     u.id
+                LIMIT 1
             ";
             
             $statement = $instance->connection->prepare($query);
