@@ -106,7 +106,7 @@ async function removeButtonEvent(e, projectId, userCardSelector) {
 
         // Show confirmation dialog
         if (!await confirmationDialog(
-            'Terminate user',
+            'Remove User',
             `Are you sure you want to remove this user?`,
         )) return
 
@@ -192,7 +192,7 @@ async function sendToBackendRemove(projectId, userId) {
  * - Closes the user info card modal.
  *
  * @async
- * @param {Event}
+ * @param {Event} e The event object from the button click.
  * @param {string} projectId The ID of the project from which the user is being terminated.
  * @param {string} userCardSelector CSS selector string for locating user card elements in the DOM.
  * 
@@ -213,7 +213,7 @@ async function terminateButtonEvent(e, projectId, userCardSelector) {
 
         // Show confirmation dialog
         if (!await confirmationDialog(
-            'Terminate user',
+            'Terminate User',
             `Are you sure you want to terminate this user?`,
         )) return
 

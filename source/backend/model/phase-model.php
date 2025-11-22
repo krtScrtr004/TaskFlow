@@ -281,7 +281,7 @@ class PhaseModel extends Model
                 WHERE 
                     " . (is_int($projectId) ? 'p.id = :projectId' : 'p.publicId = :projectId') . 
                 " ORDER BY
-                    p.startDateTime ASC";
+                    pp.startDateTime ASC";
 
             $statement = $instance->connection->prepare($query);
             $statement->execute([

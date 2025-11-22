@@ -966,7 +966,6 @@ class ProjectWorkerModel extends Model
             $paramOptions = [
                 'limit'     => $options['limit'] ?? 10,
                 'offset'    => $options['offset'] ?? 0,
-                'groupBy'   => 'u.lastName ASC'
             ];
 
             return self::find($whereClause, $params, $paramOptions);
@@ -1268,7 +1267,7 @@ class ProjectWorkerModel extends Model
 	}
 
     /**
-     * Deletes a worker association from phaseTaskWorker for a given project.
+     * Deletes a worker associated from a given project.
      *
      * This method accepts either internal numeric IDs or public identifiers (UUIDs/binary/string)
      * for both project and worker. It builds a DELETE query that either uses the provided numeric
@@ -1315,7 +1314,7 @@ class ProjectWorkerModel extends Model
         try {
             $query = "
                 DELETE FROM
-                    `phaseTaskWorker`
+                    `projectWorker`
                 WHERE 
                     projectId = " . (is_int($data['projectId']) ? ':projectId' : '(
                         SELECT 

@@ -151,7 +151,7 @@ export function normalizeDateFormat(dateString) {
 export function createFullName(firstName, middleName, lastName) {
     let fullName = firstName || ''
     if (middleName) {
-        fullName += ` ${middleName.split('')[0]}` + '.'
+        fullName += ` ${middleName.charAt(0)}.`
     }
     if (lastName) {
         fullName += ` ${lastName}`
