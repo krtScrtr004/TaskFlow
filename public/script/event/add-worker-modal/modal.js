@@ -14,10 +14,11 @@ const addWorkerModalTemplate = document.querySelector('#add_worker_modal_templat
  * 
  * @param {string} projectId - The project ID context
  * @param {string} endpoint - The API endpoint to fetch workers from
+ * @param {HTMLElement|null} workerListContainer - Optional container for the worker list
  */
-export function initializeAddWorkerModal(projectId, endpoint) {
-    searchWorkerEvent(projectId, endpoint)
-    infiniteScrollWorkers(projectId, endpoint)
+export function initializeAddWorkerModal(projectId, endpoint, workerListContainer = null) {
+    searchWorkerEvent(projectId, endpoint, { workerListContainer: workerListContainer })
+    infiniteScrollWorkers(projectId, endpoint, '', { workerListContainer: workerListContainer })
     cancelAddWorkerModal()
 }
 
@@ -149,30 +150,21 @@ async function addWorkerButtonEvent(e, projectId, confirmAddWorkerButton, asyncF
  *
  * @throws Will log an error to the console if the "No Workers Wall" or worker list container elements are not found.
  */
-export function toggleNoWorkerWall(show) {
-    const noWorkersWall = addWorkerModalTemplate?.querySelector('.no-workers-wall')
-    if (!noWorkersWall) {
-        console.error('No Worker Wall element not found.')
-        return
-    }
-
-    const listContainer = addWorkerModalTemplate.querySelector('.worker-list > .list')
-    if (!listContainer) {
-        console.error('Worker list container not found.')
-        return
-    }
+export function toggleNoWorkerWall(show, container) {
+    const noWorkersWall = container.querySelector('.no-workers-wall')
+    const listContainer = container.querySelector('.worker-list > .list')
 
     if (show) {
-        noWorkersWall.classList.add('flex-col')
-        noWorkersWall.classList.remove('no-display')
+        noWorkersWall?.classList.add('flex-col')
+        noWorkersWall?.classList.remove('no-display')
 
-        listContainer.classList.remove('flex-col')
-        listContainer.classList.add('no-display')
+        listContainer?.classList.remove('flex-col')
+        listContainer?.classList.add('no-display')
     } else {
-        noWorkersWall.classList.add('no-display')
-        noWorkersWall.classList.remove('flex-col')
+        noWorkersWall?.classList.add('no-display')
+        noWorkersWall?.classList.remove('flex-col')
 
-        listContainer.classList.add('flex-col')
-        listContainer.classList.remove('no-display')
+        listContainer?.classList.add('flex-col')
+        listContainer?.classList.remove('no-display')
     }
 }

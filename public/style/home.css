@@ -106,8 +106,17 @@
 	gap: 0.5rem;
 }
 
+.project-workers .search-bar {
+	width: 100%;
+	margin-bottom: 0.5rem;
+}
+
 .no-workers-wall {
 	min-height: 13rem;
+}
+
+.project-workers .worker-list > .list {
+	min-height: 5rem;
 }
 
 .project-workers .worker-list-card h4,

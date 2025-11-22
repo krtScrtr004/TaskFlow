@@ -4,11 +4,10 @@ const ICON_PATH = 'asset/image/icon/'
  * Creates and appends a worker card to the worker list.
  * 
  * @param {Object} worker - The worker object containing id, firstName, lastName, profileLink, jobTitles
+ * @param {HTMLElement|null} workerListContainer - Optional container for the worker list
  */
-export function createWorkerListCard(worker) {
-    const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
-    const workerList = addWorkerModalTemplate.querySelector('.worker-list > .list')
-
+export function createWorkerListCard(worker, workerListContainer = null) {
+    const workerList = workerListContainer || document.querySelector('#add_worker_modal_template .worker-list > .list')
     if (!workerList) {
         console.error('Worker list container not found.')
         return

@@ -6,9 +6,6 @@ import { createWorkerListCard } from './render.js'
 import { toggleNoWorkerWall } from './modal.js'
 import { infiniteScrollWorkers, disconnectInfiniteScroll } from './infinite-scroll.js'
 
-let endpoint = ''
-const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
-
 /**
  * Attaches search event listeners to the worker search form and button within the add worker modal.
  *
@@ -18,32 +15,38 @@ const addWorkerModalTemplate = document.querySelector('#add_worker_modal_templat
  *
  * @param {string|number} projectId - The unique identifier of the project to search workers for.
  * @param {string} localEndpoint - The API endpoint to use for searching workers. Must be a non-empty string.
+ * @param {Object} options - Optional parameters such as workerListContainer and renderer.
  *
  * @throws {Error} If the provided endpoint is invalid (empty or not provided).
  *
  * @example
  * searchWorkerEvent(123, '/api/workers/search');
  */
-export function searchWorkerEvent(projectId, localEndpoint) {
+export function searchWorkerEvent(projectId, localEndpoint, options = {}) {
     if (!localEndpoint || localEndpoint.trim() === '') {
         throw new Error('Invalid endpoint provided to searchWorkerEvent.')
     }
-    endpoint = localEndpoint
+    
+    const container = options.workerListContainer || document.querySelector('#add_worker_modal_template')
 
-    const searchBarForm = addWorkerModalTemplate?.querySelector('form.search-bar')
-    const button = searchBarForm?.querySelector('button')
+    const searchBarForm = container?.querySelector('form.search-bar')
     if (!searchBarForm) {
         console.error('Search bar form not found.')
         return
     }
 
+    const button = searchBarForm.querySelector('#search_assigned_worker_button') || searchBarForm.querySelector('#search_worker_button')
     if (!button) {
         console.error('Search button not found.')
         return
     }
 
-    searchBarForm.addEventListener('submit', e => debounceAsync(searchForWorker(e, projectId), 300))
-    button.addEventListener('click', e => debounceAsync(searchForWorker(e, projectId), 300))
+    // Create a closure to capture the current context
+    const searchHandler = (e) => debounceAsync(searchForWorker(e, projectId, localEndpoint, container, options), 300)
+    
+    searchBarForm.addEventListener('submit', searchHandler)
+    button.addEventListener('click', searchHandler)
+
 }
 
 /**
@@ -63,14 +66,21 @@ export function searchWorkerEvent(projectId, localEndpoint) {
  *
  * @async
  * @function
+ * 
  * @param {Event} e The event object from the search form submission.
  * @param {string} projectId The unique identifier of the project to search workers for.
+ * @param {string} endpoint The API endpoint to use for searching workers.
+ * @param {HTMLElement} container The container element for the worker list.
+ * @param {Object} options Optional parameters.
+ * 
  * @returns {Promise<void>} Resolves when the search and UI update process is complete.
+ * 
+ * @throws {Error} If the project ID is missing or invalid.
  */
-async function searchForWorker(e, projectId) {
+async function searchForWorker(e, projectId, endpoint, container, options = {}) {
     e.preventDefault()
 
-    const workerList = addWorkerModalTemplate.querySelector('.worker-list > .list')
+    const workerList = container.querySelector('.worker-list > .list')
     if (!workerList) {
         console.error('Worker list container not found.')
         Dialog.somethingWentWrong()
@@ -78,13 +88,13 @@ async function searchForWorker(e, projectId) {
     }
 
     // Disconnect infinite scroll FIRST to prevent race condition
-    disconnectInfiniteScroll()
+    disconnectInfiniteScroll(container)
 
     // Clear the worker list
     workerList.textContent = ''
 
     // Hide no workers message and show worker list
-    toggleNoWorkerWall(false)
+    toggleNoWorkerWall(false, container)
 
     Loader.full(workerList)
 
@@ -95,25 +105,27 @@ async function searchForWorker(e, projectId) {
     }
 
     try {
-        const searchTerm = document.querySelector('.search-bar input[type="text"]').value.trim()
+        const searchTerm = container.parentElement.querySelector('input[type="text"]#search_worker')
+            ? container.parentElement.querySelector('input[type="text"]#search_worker').value.trim()
+            : container.parentElement.querySelector('input[type="text"]#search_assigned_worker').value.trim()
         
         // Await fetch completion before setting up infinite scroll
         const workers = await fetchWorkers(endpoint, searchTerm, 0)
 
         if (workers && workers.length > 0) {
-            workers.forEach(worker => createWorkerListCard(worker))
+            workers.forEach(worker => options.renderer ? options.renderer(worker) : createWorkerListCard(worker))
 
             // Only NOW setup infinite scroll with fresh state
-            infiniteScrollWorkers(projectId, endpoint, searchTerm)
+            infiniteScrollWorkers(projectId, endpoint, searchTerm, options)
         } else {
             // Show no workers message if no results
-            toggleNoWorkerWall(true)
+            toggleNoWorkerWall(true, container)
             // Already disconnected above, no need to disconnect again
         }
     } catch (error) {
         console.error(error.message)
         Dialog.errorOccurred('Failed to load workers. Please try again.')
-        disconnectInfiniteScroll() // Ensure cleanup on error
+        disconnectInfiniteScroll(container) // Ensure cleanup on error
     } finally {
         Loader.delete()
     }

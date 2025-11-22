@@ -269,6 +269,18 @@ require_once COMPONENT_PATH . 'template/add-worker-modal.php';
                     <h3>Assigned Workers</h3>
                 </div>
 
+                <!-- Search Bar -->
+                <form class="search-bar" action="" method="POST">
+                    <div>
+                        <input type="text" name="search_assigned_worker" id="search_assigned_worker" placeholder="Search by Name or ID"
+                            min="<?= NAME_MIN ?>" max="<?= NAME_MAX ?>" autocomplete="on" required>
+                        <button id="search_assigned_worker_button" type="button" class="transparent-bg">
+                            <img src="<?= ICON_PATH . 'search_w.svg' ?>" alt="Search Worker" title="Search Worker"
+                                height="20">
+                        </button>
+                    </div>
+                </form>
+
                 <!-- Worker List -->
                 <div class="worker-list">
                     <section class="list">
@@ -285,7 +297,7 @@ require_once COMPONENT_PATH . 'template/add-worker-modal.php';
                         class="no-workers-wall no-content-wall <?= count($projectData['workers']) > 0 ? 'no-display' : 'flex-col' ?>">
                         <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No workers assigned" title="No workers assigned"
                             height="70">
-                        <h3 class="center-text">No workers assigned to this project.</h3>
+                        <h3 class="center-text">No worker(s) found.</h3>
                     </div>
                 </div>
 

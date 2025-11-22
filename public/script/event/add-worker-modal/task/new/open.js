@@ -44,7 +44,7 @@ if (addWorkerModalTemplate) {
             const workers = await fetchWorkers(endpoint)
             // If no workers are found, show a "no workers" message and exit
             if (workers.length === 0) {
-                toggleNoWorkerWall(true)
+                toggleNoWorkerWall(true, addWorkerModalTemplate)
                 return
             }
             

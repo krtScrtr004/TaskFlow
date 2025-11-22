@@ -32,6 +32,7 @@ export function createWorkerListCard(worker) {
 
     // Create profile image
     const img = document.createElement('img')
+    img.className = 'circle fit-cover'
     img.src = profileLink
     img.alt = name
     img.title = name

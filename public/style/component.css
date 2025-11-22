@@ -461,7 +461,7 @@ button > .text-w-icon {
 }
 
 .user-info-card .action-buttons {
-	gap: 1rem;
+	gap: 0.5rem;
 }
 
 .user-info-card .action-buttons > * {

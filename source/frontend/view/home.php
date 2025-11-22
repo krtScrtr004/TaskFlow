@@ -57,6 +57,7 @@ use App\Middleware\Csrf;
         <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'progress-bar.js' ?>"></script>
         <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'task-chart.js' ?>"></script>
         <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'create-worker-card.js' ?>"></script>
+        <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'search-worker.js' ?>"></script>
         <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'infinite-scroll-workers.js' ?>"></script>
 
         <?php if (Role::isProjectManager(Me::getInstance())): ?>

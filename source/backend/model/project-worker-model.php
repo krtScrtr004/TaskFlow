@@ -202,6 +202,7 @@ class ProjectWorkerModel extends Model
                     u.gender,
                     u.email,
                     u.contactNumber,
+                    u.profileLink,
                     pw.status,
                     u.createdAt,
                     u.confirmedAt,
