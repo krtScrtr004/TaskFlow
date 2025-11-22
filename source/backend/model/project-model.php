@@ -1391,8 +1391,7 @@ class ProjectModel extends Model
                                         pt.phaseId = pp.id
                                 )
                             )
-                            ORDER BY pp.startDateTime ASC
-                            SEPARATOR ','
+                            ORDER BY pp.startDateTime ASC SEPARATOR ','
                         ),
                         ']'
                     )
@@ -1453,7 +1452,7 @@ class ProjectModel extends Model
             SELECT 
                 (
                     SELECT 
-                        COUNT(*)
+                        COUNT(DISTINCT ptw.workerId)
                     FROM
                         `phaseTaskWorker` AS ptw
                     INNER JOIN 
@@ -1467,7 +1466,9 @@ class ProjectModel extends Model
                     INNER JOIN 
                         `projectWorker` AS pw 
                     ON 
-                        pw.workerId = ptw.workerId AND pw.projectId = pp.projectId
+                        pw.workerId = ptw.workerId
+                    AND 
+                        pw.projectId = pp.projectId
                     WHERE
                         pp.projectId = p.id
                     AND
@@ -1479,7 +1480,7 @@ class ProjectModel extends Model
                 ) AS assigned,
                 (
                     SELECT
-                        COUNT(*)
+                        COUNT(DISTINCT pw.workerId)
                     FROM
                         `projectWorker` AS pw
                     INNER JOIN
@@ -1493,32 +1494,47 @@ class ProjectModel extends Model
                 ) AS 'terminated',
                 (
                     SELECT
-                        COUNT(*)
+                        COUNT(DISTINCT u.id)
                     FROM
                         `user` AS u
                     WHERE
-                        u.role = 'worker' AND u.confirmedAt IS NOT NULL AND u.deletedAt IS NULL AND NOT EXISTS(
-                        SELECT
-                            1
-                        FROM
-                            `phaseTaskWorker` AS ptw
-                        INNER JOIN `phaseTask` AS pt
-                        ON
-                            ptw.taskId = pt.id
-                        WHERE
-                            ptw.workerId = u.id AND ptw.status = 'assigned' AND pt.status NOT IN('completed', 'cancelled')
+                        u.role = 'worker' 
+                    AND 
+                        u.confirmedAt IS NOT NULL
+                    AND 
+                        u.deletedAt IS NULL 
+                    AND 
+                        NOT EXISTS(
+                            SELECT
+                                1
+                            FROM
+                                `phaseTaskWorker` AS ptw
+                            INNER JOIN 
+                                `phaseTask` AS pt
+                            ON
+                                ptw.taskId = pt.id
+                            WHERE
+                                ptw.workerId = u.id 
+                            AND
+                                ptw.status = 'assigned' 
+                            AND 
+                                pt.status NOT IN('completed', 'cancelled')
                     ) AND NOT EXISTS(
                         SELECT
                             1
                         FROM
                             `projectWorker` AS pw3
                         WHERE
-                            pw3.workerId = u.id AND pw3.projectId = p.id AND pw3.status = 'terminated'
+                            pw3.workerId = u.id 
+                        AND 
+                            pw3.projectId = p.id 
+                        AND 
+                            pw3.status = 'terminated'
                     )
                 ) AS unassigned,
                 (
                     SELECT 
-                        COUNT(*)
+                        COUNT(DISTINCT pw.workerId)
                     FROM
                         `projectWorker` AS pw
                     WHERE
