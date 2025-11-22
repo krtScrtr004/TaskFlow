@@ -3,6 +3,7 @@ import { Dialog } from '../../../../render/dialog.js'
 import { Http } from '../../../../utility/http.js'
 import { handleException } from '../../../../utility/handle-exception.js'
 import { fetchWorkers } from '../../fetch.js'
+import { createFullName } from '../../../../utility/utility.js'
 
 let isLoading = false
 
@@ -297,7 +298,7 @@ function action(workersData) {
         }
 
         const taskWorkerCard = createTaskWorkerCard({
-            name: `${workerData.firstName} ${workerData.lastName}`,
+            name: createFullName(workerData.firstName, workerData.middleName, workerData.lastName),
             id: workerData.id,
             jobTitles: workerData.jobTitles,
             totalTasks: workerData.additionalInfo.totalTasks,

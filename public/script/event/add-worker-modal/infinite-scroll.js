@@ -4,42 +4,41 @@ import { fetchWorkers } from './fetch.js'
 import { createWorkerListCard } from './render.js'
 import { selectedUsers } from './select.js'
 
-let endpoint = ''
-let isLoading = false
-let currentInfiniteScrollObserver = null // Store the current observer to allow resetting
+// Map to store observers per container to support multiple simultaneous instances
+const observerMap = new WeakMap()
 
-export function infiniteScrollWorkers(projectId, localEndpoint, searchKey = '') {
+export function infiniteScrollWorkers(projectId, localEndpoint, searchKey = '', options = {}) {
     if (!localEndpoint || localEndpoint.trim() === '') {
         throw new Error('Invalid endpoint provided to infiniteScrollWorkers.')
     }
-    endpoint = localEndpoint
-
-    // Disconnect any existing observer before creating a new one
-    disconnectInfiniteScroll()
-
-    const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
-    const workerList = addWorkerModalTemplate?.querySelector('.worker-list > .list ')
-    const sentinel = addWorkerModalTemplate?.parentElement.querySelector('.sentinel')
-
-    if (!workerList) {
+    
+    const container = options.workerListContainer || document.querySelector('#add_worker_modal_template')
+    if (!container) {
         throw new Error('Worker List element not found.')
     }
+
+    // Disconnect any existing observer for this specific container
+    disconnectInfiniteScroll(container)
+
+    const sentinel = container.querySelector('.sentinel') || container.parentElement?.querySelector('.sentinel')
 
     if (!sentinel) {
         throw new Error('Sentinel element not found.')
     }
 
     try {
-        // Create a new observer with a closure that captures the search key
-        const observer = createInfiniteScrollObserver(
-            workerList,
+        // Create a new observer with a closure that captures all context
+        const observerContext = createInfiniteScrollObserver(
+            container,
             sentinel,
             projectId,
-            searchKey
+            localEndpoint,
+            searchKey,
+            options
         )
 
-        // Store the observer so we can disconnect it later
-        currentInfiniteScrollObserver = { observer, sentinel }
+        // Store the observer for this specific container
+        observerMap.set(container, observerContext)
     } catch (error) {
         console.error('Error initializing infinite scroll:', error)
         Dialog.somethingWentWrong()
@@ -53,16 +52,20 @@ export function infiniteScrollWorkers(projectId, localEndpoint, searchKey = '') 
  * from the server when the sentinel becomes visible (i.e., when the user scrolls near the bottom).
  * It handles loading state, error reporting, and appends new worker cards to the list.
  *
- * @param {HTMLElement} workerList The container element holding the list of worker items.
+ * @param {HTMLElement} container The container element holding the worker list.
  * @param {HTMLElement} sentinel The DOM element used as the scroll sentinel for triggering loading.
  * @param {string|number} projectId The identifier of the current project (used for fetching workers).
+ * @param {string} endpoint The API endpoint to fetch workers from.
  * @param {string} searchKey The current search/filter key for fetching workers.
+ * @param {Object} options Optional parameters such as renderer.
  *
  * @returns {Object} Object containing the observer and cleanup function.
  */
-function createInfiniteScrollObserver(workerList, sentinel, projectId, searchKey) {
-    let offset = getExistingItemsCount()
+function createInfiniteScrollObserver(container, sentinel, projectId, endpoint, searchKey, options = {}) {
+    const workerList = container.querySelector('.worker-list > .list') || container
+    let offset = getExistingItemsCount(workerList)
     let isObserverActive = true // Track if this observer should still be active
+    let isLoading = false // Instance-specific loading state
 
     const observer = new IntersectionObserver(async (entries) => {
         for (const entry of entries) {
@@ -91,7 +94,7 @@ function createInfiniteScrollObserver(workerList, sentinel, projectId, searchKey
                         return
                     }
 
-                    workers.forEach(worker => createWorkerListCard(worker))
+                    workers.forEach(worker => options.renderer ? options.renderer(worker) : createWorkerListCard(worker))
                     offset += workers.length
                 } catch (error) {
                     console.error('Error during infinite scroll fetch:', error)
@@ -115,39 +118,27 @@ function createInfiniteScrollObserver(workerList, sentinel, projectId, searchKey
         }
     }
 
-    function getExistingItemsCount() {
-        return workerList.querySelectorAll('.worker-checkbox').length || 0
+    function getExistingItemsCount(list) {
+        return list.querySelectorAll('.worker-checkbox, .user-list-card').length || 0
     }
 }
 
 /**
- * Disconnects the current infinite scroll observer if it exists.
+ * Disconnects the infinite scroll observer for a specific container.
  *
- * - Checks if there is an active infinite scroll observer.
- * - If present, calls cleanup function to mark observer as inactive and disconnect it.
- * - Sets the observer reference to null to clean up and prevent memory leaks.
+ * - If container is provided, disconnects only that container's observer.
+ * - If no container is provided, does nothing (each container manages its own observer).
+ * - Calls cleanup function to mark observer as inactive and disconnect it.
+ * - Removes the observer from the WeakMap to prevent memory leaks.
+ *
+ * @param {HTMLElement} container The container whose observer should be disconnected.
  */
-export function disconnectInfiniteScroll() {
-    if (currentInfiniteScrollObserver) {
-        currentInfiniteScrollObserver.observer.cleanup()
-        currentInfiniteScrollObserver = null
+export function disconnectInfiniteScroll(container) {
+    if (!container) return
+    
+    const observerContext = observerMap.get(container)
+    if (observerContext) {
+        observerContext.cleanup()
+        observerMap.delete(container)
     }
-}
-
-// Cancel Button -------------------------
-
-function cancelAddWorkerModal(workerContainer = addWorkerModalTemplate.querySelector('.worker-list > .list')) {
-    const cancelButton = addWorkerModalTemplate?.querySelector('#cancel_add_worker_button')
-    if (!cancelButton) {
-        console.error('Cancel button not found.')
-        return
-    }
-
-    cancelButton.addEventListener('click', () => {
-        addWorkerModalTemplate.classList.remove('flex-col')
-        addWorkerModalTemplate.classList.add('no-display')
-
-        if (workerContainer) workerContainer.textContent = ''
-        selectedUsers.clear()
-    })
 }

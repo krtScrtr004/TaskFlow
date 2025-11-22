@@ -40,11 +40,17 @@ class PhaseModel extends Model
      */
     protected static function find(string $whereClause = '', array $params = [], array $options = []): ?PhaseContainer
     {
+        $paramOptions = [
+            'limit'     => $options[':limit'] ?? $options['limit'] ?? null,
+            'offset'    => $options[':offset'] ?? $options['offset'] ?? null,
+            'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 'startDateTime ASC',
+        ];
+
         $instance = new self();
         try {
             $query = $instance->appendOptionsToFindQuery(
-                $instance->appendWhereClause("SELECT * FROM `projectPhase`", $whereClause), 
-                $options);
+                $instance->appendWhereClause("SELECT * FROM `projectPhase` ", $whereClause), 
+                $paramOptions);
             $statement = $instance->connection->prepare($query);
             $statement->execute($params);
             $result = $statement->fetchAll();
@@ -239,23 +245,26 @@ class PhaseModel extends Model
             $taskQuery = '';
             if ($includeTasks) {
                 $taskQuery = ", COALESCE(
-                    (SELECT CONCAT('[', GROUP_CONCAT(
-                        JSON_OBJECT(
-                            'id', pt.id,
-                            'publicId', HEX(pt.publicId),
-                            'name', pt.name,
-                            'description', pt.description,
-                            'status', pt.status,
-                            'priority', pt.priority,
-                            'startDateTime', pt.startDateTime,
-                            'completionDateTime', pt.completionDateTime,
-                            'createdAt', pt.createdAt,
-                            'updatedAt', pt.updatedAt
-                        )
-                        ORDER BY pt.startDateTime ASC SEPARATOR ','
-                    ), ']')
-                    FROM `phaseTask` AS pt
-                    WHERE pt.phaseId = pp.id
+                    (
+                        SELECT CONCAT('[', GROUP_CONCAT(
+                            JSON_OBJECT(
+                                'id', pt.id,
+                                'publicId', HEX(pt.publicId),
+                                'name', pt.name,
+                                'description', pt.description,
+                                'status', pt.status,
+                                'priority', pt.priority,
+                                'startDateTime', pt.startDateTime,
+                                'completionDateTime', pt.completionDateTime,
+                                'createdAt', pt.createdAt,
+                                'updatedAt', pt.updatedAt
+                            )
+                            ORDER BY pt.startDateTime ASC SEPARATOR ','
+                        ), ']')
+                        FROM 
+                            `phaseTask` AS pt
+                        WHERE 
+                            pt.phaseId = pp.id
                     ),
                     '[]'
                 ) AS tasks";
@@ -271,7 +280,8 @@ class PhaseModel extends Model
                     pp.projectId = p.id
                 WHERE 
                     " . (is_int($projectId) ? 'p.id = :projectId' : 'p.publicId = :projectId') . 
-            ";";
+                " ORDER BY
+                    pp.startDateTime ASC";
 
             $statement = $instance->connection->prepare($query);
             $statement->execute([

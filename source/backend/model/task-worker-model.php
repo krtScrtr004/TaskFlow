@@ -43,6 +43,13 @@ class TaskWorkerModel extends Model
      */
     protected static function find(string $whereClause = '', array $params = [], array $options = []): ?WorkerContainer
     {
+        $paramOptions = [
+            'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
+            'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
+            'groupBy'   => $options[':groupBy'] ?? $options['groupBy'] ?? 'u.id',
+            'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 'u.lastName ASC',
+        ];
+
         $instance = new self();
         try {
             $queryString = "
@@ -107,7 +114,7 @@ class TaskWorkerModel extends Model
             ";
             $query = $instance->appendOptionsToFindQuery(
                 $instance->appendWhereClause($queryString, $whereClause),
-                $options
+                $paramOptions
             );
 
             $statement = $instance->connection->prepare($query);
@@ -152,8 +159,12 @@ class TaskWorkerModel extends Model
      *
      * @return Worker|null The found Worker instance, or null if no matching worker is found.
      */
-    public static function findById(int|UUID $workerId, int|UUID|null $taskId = null,  int|UUID|null $phaseId = null, int|UUID|null $projectId = null): ?Worker
-    {
+    public static function findById(
+        int|UUID $workerId, 
+        int|UUID|null $taskId = null,  
+        int|UUID|null $phaseId = null, 
+        int|UUID|null $projectId = null
+    ): ?Worker {
         if (is_int($workerId) && $workerId < 1) {
             throw new InvalidArgumentException('Invalid workerId provided.');
         }
@@ -197,9 +208,9 @@ class TaskWorkerModel extends Model
                 $params[':projectId'] = is_int($projectId) ? $projectId : UUID::toBinary($projectId);
             }
 
-            $options = ['limit' => 1];
+            $paramOptions = ['limit' => 1];
 
-            $worker = self::find($whereClause, $params, $options);
+            $worker = self::find($whereClause, $params, $paramOptions);
             return $worker->first() ?? null;
         } catch (Exception $e) {
             throw $e;
@@ -229,8 +240,7 @@ class TaskWorkerModel extends Model
         int|UUID|null $taskId = null,
         int|UUID|null $phaseId = null,
         int|UUID|null $projectId = null
-    ): ?WorkerContainer
-    {
+    ): ?WorkerContainer {
         if (empty($workerIds)) {
             throw new InvalidArgumentException('Worker IDs array cannot be empty.');
         }
@@ -353,12 +363,18 @@ class TaskWorkerModel extends Model
         int|UUID|null $phaseId = null,
         int|UUID|null $projectId = null,
         WorkerStatus|null $status = null,
-        $options = [
+        array $options = [
             'excludeTaskTerminated' => false,
             'limit' => 10,
             'offset' => 0,
         ]
     ): ?WorkerContainer {
+        $paramOptions = [
+            'excludeTaskTerminated' => $options['excludeTaskTerminated'] ?? false,
+            'limit'                 => $options[':limit'] ?? $options['limit'] ?? 50,
+            'offset'                => $options[':offset'] ?? $options['offset'] ?? 0,
+        ];
+
         try {
             $instance = new self();
 
@@ -383,6 +399,10 @@ class TaskWorkerModel extends Model
                         u.gender,
                         u.email,
                         u.contactNumber,
+                        u.profileLink,
+                        u.createdAt,
+                        u.confirmedAt,
+                        u.deletedAt,
                         GROUP_CONCAT(DISTINCT ujt.title) AS jobTitles
                     FROM
                         `user` AS u
@@ -390,9 +410,10 @@ class TaskWorkerModel extends Model
                         `projectWorker` AS pw
                     ON
                         u.id = pw.workerId
-                    AND pw.projectId = " . (is_int($projectId) 
-                        ? ":projectIdJoin" 
-                        : "(SELECT id FROM `project` WHERE publicId = :projectIdJoin)") . "
+                    AND 
+                        pw.projectId = " . (is_int($projectId) 
+                            ? ":projectIdJoin" 
+                            : "(SELECT id FROM `project` WHERE publicId = :projectIdJoin)") . "
                     AND 
                         pw.status = :assignedProjectStatus
                     LEFT JOIN
@@ -405,32 +426,6 @@ class TaskWorkerModel extends Model
                     ? $projectId
                     : UUID::toBinary($projectId);
                 $params[':assignedProjectStatus'] = WorkerStatus::ASSIGNED->value;
-                $params[':assignedStatus'] = WorkerStatus::ASSIGNED->value;
-                $params[':completedStatus'] = WorkStatus::COMPLETED->value;
-                $params[':cancelledStatus'] = WorkStatus::CANCELLED->value;
-
-                // Exclude workers assigned to ongoing tasks in this project
-                $where[] = "NOT EXISTS (
-                    SELECT 1
-                    FROM 
-                        `phaseTaskWorker` AS ptw2
-                    INNER JOIN 
-                        `phaseTask` AS pt2 
-                    ON 
-                        ptw2.taskId = pt2.id
-                    INNER JOIN 
-                        `projectPhase` AS pp2
-                    ON
-                        pp2.id = pt2.phaseId
-                    WHERE 
-                        ptw2.workerId = u.id
-                    AND 
-                        ptw2.status = :assignedStatus
-                    AND 
-                        pt2.status NOT IN (:completedStatus, :cancelledStatus)
-                    AND 
-                        pp2.projectId = pw.projectId
-                )";
 
                 if ($taskId && ($options['excludeTaskTerminated'])) {
                     // Exclude workers terminated from this specific task
@@ -469,6 +464,7 @@ class TaskWorkerModel extends Model
                         u.createdAt,
                         u.confirmedAt,
                         u.deletedAt,
+                        u.profileLink,
                         GROUP_CONCAT(DISTINCT ujt.title) AS jobTitles
                     FROM
                         `user` AS u
@@ -543,15 +539,16 @@ class TaskWorkerModel extends Model
             if (!empty($where)) {
                 $query .= " WHERE " . implode(' AND ', $where);
             }
-            $query .= " GROUP BY u.id";
 
-            // Pagination
-            if (isset($options['limit'])) {
-                $query .= " LIMIT " . intval($options['limit']);
-            }
-            if (isset($options['offset'])) {
-                $query .= " OFFSET " . intval($options['offset']);
-            }
+            $query .= " 
+                GROUP BY 
+                    u.id 
+                ORDER BY 
+                    u.lastName ASC
+                LIMIT " 
+                    . intval($paramOptions['limit']) . 
+                " OFFSET " 
+                    . intval($paramOptions['offset']);
 
             $statement = $instance->connection->prepare($query);
             $statement->execute($params);
@@ -599,13 +596,12 @@ class TaskWorkerModel extends Model
         }
 
         try {
-            $options = [
+            $paramOptions = [
                 'offset'    => $offset,
                 'limit'     => $limit,
-                'orderBy'   => 'u.createdAt DESC',
             ];  
 
-            return self::find('', [], $options);
+            return self::find('', [], $paramOptions);
         } catch (Exception $e) {
             throw $e;
         }
@@ -770,18 +766,91 @@ class TaskWorkerModel extends Model
 	}
 
     /**
-     * Deletes a phase entity.
+     * Deletes a task-worker association from the phaseTaskWorker table.
      *
-     * This method is currently not implemented as there is no use case for deleting a phase.
-     * Always returns false.
-     * 
-     * @param mixed $data Data that would be used to delete a phase (unused)
+     * This method accepts a data array describing which association to delete and
+     * supports multiple identifier formats for both task and worker:
+     * - Accepts internal integer IDs for direct deletion.
+     * - Accepts public identifiers (string or binary) or UUID objects; UUID objects
+     *   are converted to binary via UUID::toBinary().
+     * - When non-integer identifiers are provided, the query resolves them to
+     *   internal IDs using subqueries against `phaseTask.publicId` and `user.publicId`.
      *
-     * @return bool Always returns false to indicate deletion is not supported.
+     * Validation performed:
+     * - Ensures 'taskId' and 'workerId' are present.
+     * - If provided as integers, ensures they are greater than zero.
+     *
+     * The deletion is performed using a prepared statement and bound parameters.
+     *
+     * @param array $data Associative array containing identifiers with following keys:
+     *      - taskId: int|string|UUID|binary Task identifier to remove association for.
+     *          - int: internal task id (must be > 0)
+     *          - string|binary: publicId of the task (resolved to internal id via subquery)
+     *          - UUID: UUID object which will be converted to binary
+     *      - workerId: int|string|UUID|binary Worker identifier to remove association for.
+     *          - int: internal worker id (must be > 0)
+     *          - string|binary: publicId of the user (resolved to internal id via subquery)
+     *          - UUID: UUID object which will be converted to binary
+     *
+     * @return bool True on successful deletion.
+     *
+     * @throws InvalidArgumentException If required keys are missing or integer IDs are invalid.
+     * @throws DatabaseException If a database error occurs during the operation (wraps PDOException).
      */
     public static function delete(mixed $data): bool
     {
-        // Not implemented (No use case)
-        return false;
+        if (!isset($data['taskId'])) {
+            throw new InvalidArgumentException('Task ID is required.');
+        }
+
+        if (is_int($data['taskId']) && $data['taskId'] < 1) {
+            throw new InvalidArgumentException('Invalid task ID provided.');
+        }
+
+        if (!isset($data['workerId'])) {
+            throw new InvalidArgumentException('Worker ID is required.');
+        }
+
+        if (is_int($data['workerId']) && $data['workerId'] < 1) {
+            throw new InvalidArgumentException('Invalid worker ID provided.');
+        }
+
+        try {
+            $query = "
+                DELETE FROM
+                    `phaseTaskWorker`
+                WHERE 
+                    taskId = " . (is_int($data['taskId']) ? ':taskId' : '(
+                        SELECT 
+                            id 
+                        FROM 
+                            `phaseTask` 
+                        WHERE 
+                            publicId = :taskId) ') . "
+                AND 
+                    workerId = " . (is_int($data['workerId']) ? ':workerId' : '(
+                        SELECT 
+                            id 
+                        FROM 
+                            `user` 
+                        WHERE
+                            publicId = :workerId)') . "
+            ";
+
+            $instance = new self();
+            $statement = $instance->connection->prepare($query);
+            $statement->execute([
+                ':taskId'    => ($data['taskId'] instanceof UUID)
+                    ? UUID::toBinary($data['taskId'])
+                    : $data['taskId'],
+                ':workerId'     => ($data['workerId'] instanceof UUID)
+                    ? UUID::toBinary($data['workerId'])
+                    : $data['workerId'],
+            ]);
+
+            return true;
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
+        }
     }
 }

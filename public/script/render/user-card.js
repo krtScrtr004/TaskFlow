@@ -1,4 +1,5 @@
 import { Loader } from './loader.js'
+import { createFullName } from '../utility/utility.js'
 
 /**
  * Renders and populates the User Info Card for a given user.
@@ -66,6 +67,7 @@ export async function userInfoCard(userId, asyncFunction) {
  * @param {Object} user The user data object containing the following properties:
  *      - id: string|number User's unique identifier
  *      - firstName: string User's first name
+ *      - middleName: string (optional) User's middle name
  *      - lastName: string User's last name
  *      - jobTitles: string[] Array of user's job titles
  *      - bio: string User's biography
@@ -98,7 +100,7 @@ function addInfoToCard(card, user) {
 
     // Add user info to card
     userProfilePicture.src = user.profileLink ?? `${ICON_PATH}profile_w.svg`
-    userName.textContent = `${user.firstName} ${user.lastName}` ?? 'Unknown'
+    userName.textContent = createFullName(user.firstName, user.middleName, user.lastName) ?? 'Unknown'
     userId.textContent = user.id ?? 'N/A'
     userJobTitles.innerHTML = user.jobTitles.map(title =>
         `<span class="job-title-chip">${title}</span>`
@@ -122,12 +124,14 @@ function addInfoToCard(card, user) {
     // Display statistics based on page context and user role
     const shouldShowProjects = isUsersPage || (isProjectPage && user.role === 'projectManager')
 
+    const removeWorkerButton = card.querySelector('#remove_worker_button')
     const terminateWorkerButton = card.querySelector('#terminate_worker_button')
     const seeWorkerTaskRedirect = card.querySelector('.see-worker-task-redirect');
     const rootUrl = seeWorkerTaskRedirect?.dataset.rooturl
     const redirectLink = seeWorkerTaskRedirect?.querySelector('a')
 
     if (user.role === 'projectManager') {
+        removeWorkerButton?.classList.add('no-display')
         terminateWorkerButton?.classList.add('no-display')
 
         seeWorkerTaskRedirect?.classList.remove('center-child');
@@ -137,6 +141,7 @@ function addInfoToCard(card, user) {
             ? redirectLink.href = '#'
             : null
     } else {
+        removeWorkerButton?.classList.remove('no-display')
         terminateWorkerButton?.classList.remove('no-display')
 
         seeWorkerTaskRedirect?.classList.remove('no-display');

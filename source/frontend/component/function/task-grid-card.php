@@ -31,9 +31,7 @@ function taskGridCard(Task $task, UUID $projectId): string
             </section>
 
             <!-- Task Description -->
-            <p class="task-description multi-line-ellipsis-5" title="<?= $description ?>">
-                <?= $description ?>
-            </p>
+            <p class="task-description multi-line-ellipsis-5" title="<?= $description ?>"><?= $description ?></p>
 
             <!-- Task Schedule -->
             <section class="task-schedule flex-col">

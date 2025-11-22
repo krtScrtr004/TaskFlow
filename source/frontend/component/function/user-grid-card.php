@@ -9,12 +9,12 @@ use App\Utility\WorkerPerformanceCalculator;
 
 function userGridCard(User|Worker $user): string
 {
-    $name = htmlspecialchars($user->getFirstName() . ' ' . $user->getLastName());
-    $id = htmlspecialchars(UUID::toString($user->getPublicId()));
-    $email = htmlspecialchars($user->getEmail());
-    $contact = htmlspecialchars($user->getContactNumber());
-    $role = htmlspecialchars($user->getRole()->getDisplayName());
-    $profileLink =
+    $name           = htmlspecialchars(createFullName($user->getFirstName(), $user->getMiddleName(), $user->getLastName()));
+    $id             = htmlspecialchars(UUID::toString($user->getPublicId()));
+    $email          = htmlspecialchars($user->getEmail());
+    $contact        = htmlspecialchars($user->getContactNumber());
+    $role           = htmlspecialchars($user->getRole()->getDisplayName());
+    $profileLink    =
         htmlspecialchars($user->getProfileLink()) ?:
         ICON_PATH . 'profile_w.svg';
 

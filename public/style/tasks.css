@@ -38,7 +38,13 @@
 }
 
 .task-grid-card .task-id {
-	font-size: 0.9rem;
+	margin-top: 0.3rem;
+	font-size: 0.8rem;
+	font-weight: 100;
+}
+
+.task-grid-card .task-description {
+	white-space: pre-wrap !important;
 	font-weight: 300;
 }
 

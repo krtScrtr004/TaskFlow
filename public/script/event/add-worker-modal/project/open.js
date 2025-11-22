@@ -24,7 +24,7 @@ if (addWorkerModalTemplate) {
 
         const endpoint = `projects/${thisProjectId}/workers?${params.toString()}`
 
-        initializeAddWorkerModal(thisProjectId, endpoint)
+        initializeAddWorkerModal(thisProjectId, endpoint, addWorkerModalTemplate)
 
         addWorkerModalTemplate.classList.add('flex-col')
         addWorkerModalTemplate.classList.remove('no-display')
@@ -35,7 +35,7 @@ if (addWorkerModalTemplate) {
 
             const workers = await fetchWorkers(endpoint)
             if (workers.length === 0) {
-                toggleNoWorkerWall(true)
+                toggleNoWorkerWall(true, addWorkerModalTemplate)
                 return
             }
 

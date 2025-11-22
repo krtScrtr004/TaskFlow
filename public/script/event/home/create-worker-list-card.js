@@ -1,8 +1,10 @@
+import { createFullName } from '../../utility/utility.js'
+
 /**
  * Creates a worker list card DOM element
  * @param {Object} worker - The worker data object
  * @param {string} worker.id - Worker's public ID
- * @param {string} worker.name - Worker's full name (or firstName + lastName)
+ * @param {string} worker.name - Worker's full name (or firstName + middleName + lastName)
  * @param {string} [worker.firstName] - Worker's first name (if name not provided)
  * @param {string} [worker.lastName] - Worker's last name (if name not provided)
  * @param {string} [worker.profileLink] - URL to worker's profile picture
@@ -20,7 +22,7 @@ export function createWorkerListCard(worker) {
 
     // Determine worker name
     const name = worker.name ||
-        `${worker.firstName || ''} ${worker.lastName || ''}`.trim()
+        createFullName(worker.firstName, worker.middleName, worker.lastName) || 'Unnamed Worker'
 
     const id = worker.id
     const jobTitles = worker.jobTitles || []
@@ -32,6 +34,7 @@ export function createWorkerListCard(worker) {
 
     // Create profile image
     const img = document.createElement('img')
+    img.className = 'circle fit-cover'
     img.src = profileLink
     img.alt = name
     img.title = name

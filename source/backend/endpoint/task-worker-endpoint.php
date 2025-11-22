@@ -432,4 +432,99 @@ class TaskWorkerEndpoint
             ResponseExceptionHandler::handle('Edit Worker Status Failed.', $e);
         }
     }
+
+    /**
+     * Removes a worker assignment from a task within a project phase.
+     *
+     * This endpoint handler performs authorization and input validation, converts ID strings
+     * to UUID objects, verifies existence and relationships of the target resources, and
+     * removes the worker from the specified task:
+     * - Ensures an authorized session is present
+     * - Enforces CSRF protection
+     * - Converts projectId, phaseId, taskId, and workerId to UUID objects
+     * - Verifies the project exists
+     * - Verifies the phase exists
+     * - Verifies the task exists and belongs to the given phase
+     * - Verifies the worker exists within the given project
+     * - Deletes the task-worker relation and returns a success response
+     *
+     * @param array $args Associative array containing request parameters with following keys:
+     *      - projectId: string|UUID Project public identifier (required)
+     *      - phaseId: string|UUID Phase public identifier (required)
+     *      - taskId: string|UUID Task public identifier (required)
+     *      - workerId: string|UUID Worker public identifier (required)
+     *
+     * Behavior on error:
+     * - Missing or invalid IDs and unauthorized access will trigger ForbiddenException internally.
+     * - Non-existent resources (project, phase, task, worker) will trigger NotFoundException internally.
+     * - Any Throwable is caught and forwarded to ResponseExceptionHandler to produce an appropriate error response.
+     *
+     * @return void Sends a JSON success response on completion or delegates error handling to the response exception handler.
+     */
+    public static function delete(array $args = []): void
+    {
+        try {
+            if (!SessionAuth::hasAuthorizedSession()) {
+                throw new ForbiddenException();
+            }
+            Csrf::protect();
+
+            $projectId = isset($args['projectId'])
+                ? UUID::fromString($args['projectId'])
+                : null;
+            if (!isset($projectId)) {
+                throw new ForbiddenException('Project ID is required.');
+            }
+
+            $project = ProjectModel::findById($projectId);
+            if (!$project) {
+                throw new NotFoundException('Project not found.');
+            }
+
+            $phase = isset($args['phaseId'])
+                ? UUID::fromString($args['phaseId'])
+                : null;
+            if (!isset($phase)) {
+                throw new ForbiddenException('Phase ID is required.');
+            }
+
+            $phase = PhaseModel::findById($phase);
+            if (!$phase) {
+                throw new NotFoundException('Phase not found.');
+            }
+
+            $task = isset($args['taskId'])
+                ? UUID::fromString($args['taskId'])
+                : null;
+            if (!isset($task)) {
+                throw new ForbiddenException('Task ID is required.');
+            }
+
+            $task = TaskModel::findById($task, $phase->getId());
+            if (!$task) {
+                throw new NotFoundException('Task not found.');
+            }
+
+            $workerId = isset($args['workerId']) 
+                ? UUID::fromString($args['workerId']) 
+                : null;
+            if (!isset($workerId)) {
+                throw new ForbiddenException('Worker ID is required.');
+            }
+
+            $worker = ProjectWorkerModel::findById($workerId, $project->getId(), true);
+            if (!$worker) {
+                throw new NotFoundException('Worker not found.');
+            }
+
+            TaskWorkerModel::delete([
+                'taskId'        => $task->getId(),
+                'workerId'      => $worker->getId(),
+            ]);
+
+            Response::success([], 'Worker removed from task successfully.');
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Remove Worker Failed.', $e);
+        }
+    }
 }

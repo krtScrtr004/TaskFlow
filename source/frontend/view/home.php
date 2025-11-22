@@ -54,16 +54,16 @@ use App\Middleware\Csrf;
     <?php if (isset($project)): ?>
         <script src="<?= PUBLIC_PATH . 'chart.umd.min.js' ?>"></script>
 
-        <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'progress-bar.js' ?>"></script>
-        <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'task-chart.js' ?>"></script>
-        <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'create-worker-card.js' ?>"></script>
-        <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'infinite-scroll-workers.js' ?>"></script>
-
+        <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'progress-bar.js' ?>" defer></script>
+        <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'task-chart.js' ?>" defer></script>
+        <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'create-worker-card.js' ?>" defer></script>
+        <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'search-worker.js' ?>" defer></script>
+        <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'infinite-scroll-workers.js' ?>" defer></script>
         <?php if (Role::isProjectManager(Me::getInstance())): ?>
-            <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'terminate-worker.js' ?>"></script>
-            <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'cancel.js' ?>"></script>
-            <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'project' . DS . 'open.js' ?>"></script>
-            <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'project' . DS . 'add.js' ?>"></script>
+            <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'remove-terminate-worker.js' ?>" defer></script>
+            <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'cancel.js' ?>" defer></script>
+            <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'project' . DS . 'open.js' ?>" defer></script>
+            <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'project' . DS . 'add.js' ?>" defer></script>
         <?php endif; ?>
     <?php endif; ?>
 </body>

@@ -2,6 +2,7 @@ import { addWorker } from '../../modal.js'
 import { Http } from '../../../../utility/http.js'
 import { Dialog } from '../../../../render/dialog.js'
 import { Notification } from '../../../../render/notification.js'
+import { createFullName } from '../../../../utility/utility.js'
 
 let isLoading = false
 
@@ -98,6 +99,7 @@ async function sendToBackend(projectId, workerIds) {
  * @param {Object} workerData Object containing worker data with the following properties:
  *      - id {string|number} Unique worker identifier
  *      - firstName {string} Worker's first name
+ *      - middleName {string} (optional) Worker's middle name
  *      - lastName {string} Worker's last name
  *      - email {string} Worker's email address
  *      - contactNumber {string} Worker's contact number
@@ -112,6 +114,7 @@ function createWorkerGridCard(workerData) {
     const {
         id,
         firstName,
+        middleName,
         lastName,
         email,
         contactNumber,
@@ -121,7 +124,7 @@ function createWorkerGridCard(workerData) {
         performance = 0
     } = workerData
 
-    const fullName = `${firstName} ${lastName}`
+    const fullName = createFullName(firstName, middleName, lastName)
     const profileSrc = profileLink || 'asset/image/icon/profile_w.svg'
 
     // Create main button container

@@ -23,8 +23,6 @@ use App\Utility\WorkerPerformanceCalculator;
 use Exception;
 use Throwable;
 
-// TODO: CHECK IF THE REQUEST HAS PROJECT ID;
-// IF NOT, RETURN UNASSIGNED WORKERS
 class ProjectWorkerEndpoint
 {
 
@@ -340,6 +338,71 @@ class ProjectWorkerEndpoint
             Response::success([], 'Worker status updated successfully.');
         } catch (Throwable $e) {
             ResponseExceptionHandler::handle('Edit Worker Status Failed.', $e);
+        }
+    }
+
+    /**
+     * Removes a worker from a project.
+     *
+     * This endpoint handler performs the following steps:
+     * - Verifies an authorized session is present.
+     * - Validates the CSRF token.
+     * - Converts provided projectId and workerId values to UUID objects.
+     * - Loads and validates the existence of the specified project.
+     * - Loads and validates the existence of the specified project worker (scoped to the project).
+     * - Deletes the worker assignment from the given project.
+     * - Sends a success response on successful removal; any exceptions are forwarded to the response exception handler.
+     *
+     * @param array $args Associative array containing request parameters:
+     *      - projectId: string|UUID Project identifier (required)
+     *      - workerId: string|UUID Worker identifier (required)
+     *
+     * @return void
+     *
+     * @throws ForbiddenException If the user is not authorized or if required IDs are missing/invalid.
+     * @throws NotFoundException If the referenced project or worker does not exist.
+     * @throws Throwable For any other unexpected errors which will be handled by the ResponseExceptionHandler.
+     */
+    public static function delete(array $args = []): void
+    {
+        try {
+            if (!SessionAuth::hasAuthorizedSession()) {
+                throw new ForbiddenException();
+            }
+            Csrf::protect();
+
+            $projectId = isset($args['projectId'])
+                ? UUID::fromString($args['projectId'])
+                : null;
+            if (!isset($projectId)) {
+                throw new ForbiddenException('Project ID is required.');
+            }
+
+            $project = ProjectModel::findById($projectId);
+            if (!$project) {
+                throw new NotFoundException('Project not found.');
+            }
+
+            $workerId = isset($args['workerId']) 
+                ? UUID::fromString($args['workerId']) 
+                : null;
+            if (!isset($workerId)) {
+                throw new ForbiddenException('Worker ID is required.');
+            }
+
+            $worker = ProjectWorkerModel::findById($workerId, $project->getId(), true);
+            if (!$worker) {
+                throw new NotFoundException('Worker not found.');
+            }
+
+            ProjectWorkerModel::delete([
+                'projectId'     => $project->getId(),
+                'workerId'      => $worker->getId(),
+            ]);
+
+            Response::success([], 'Worker removed from project successfully.');
+        } catch (Throwable $e) {
+            ResponseExceptionHandler::handle('Remove Worker Failed.', $e);
         }
     }
 }

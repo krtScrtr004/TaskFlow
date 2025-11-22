@@ -1,14 +1,15 @@
+import { createFullName } from '../../utility/utility.js'
+
 const ICON_PATH = 'asset/image/icon/'
 
 /**
  * Creates and appends a worker card to the worker list.
  * 
- * @param {Object} worker - The worker object containing id, firstName, lastName, profilePicture, jobTitles
+ * @param {Object} worker - The worker object containing id, firstName, lastName, profileLink, jobTitles
+ * @param {HTMLElement|null} workerListContainer - Optional container for the worker list
  */
-export function createWorkerListCard(worker) {
-    const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
-    const workerList = addWorkerModalTemplate.querySelector('.worker-list > .list')
-
+export function createWorkerListCard(worker, workerListContainer = null) {
+    const workerList = workerListContainer || document.querySelector('#add_worker_modal_template .worker-list > .list')
     if (!workerList) {
         console.error('Worker list container not found.')
         return
@@ -36,9 +37,10 @@ export function createWorkerListCard(worker) {
     imgContainer.className = 'flex-col flex-child-center-v'
 
     const img = document.createElement('img')
-    img.src = worker.profilePicture || ICON_PATH + 'profile_w.svg'
-    img.alt = `${worker.firstName} ${worker.lastName}`
-    img.title = `${worker.firstName} ${worker.lastName}`
+    img.src = worker.profileLink || ICON_PATH + 'profile_w.svg'
+    img.className = 'circle fit-cover'
+    img.alt = createFullName(worker.firstName, worker.middleName, worker.lastName) || 'Profile Picture'
+    img.title = createFullName(worker.firstName, worker.middleName, worker.lastName) || 'Profile Picture'
     img.height = 40
     imgContainer.appendChild(img)
 
@@ -51,7 +53,7 @@ export function createWorkerListCard(worker) {
 
     const nameHeader = document.createElement('h4')
     nameHeader.className = 'wrap-text'
-    nameHeader.textContent = `${worker.firstName} ${worker.lastName}`
+    nameHeader.textContent = createFullName(worker.firstName, worker.middleName, worker.lastName) || ''
     nameSection.appendChild(nameHeader)
 
     const idPara = document.createElement('p')

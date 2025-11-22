@@ -50,11 +50,11 @@ class UserModel extends Model
      */
     protected static function find(string $whereClause = '', array $params = [], array $options = []): ?array
     {
-        $options = [
-            'limit'     => $options['limit'] ?? 10,
-            'offset'    => $options['offset'] ?? 0,
-            'orderBy'   => $options['orderBy'] ?? 'u.firstName DESC',
-            'groupBy'   => $options['groupBy'] ?? 'u.id'
+        $paramOptions = [
+            'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
+            'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
+            'groupBy'   => $options[':groupBy'] ?? $options['groupBy'] ?? 'u.id',
+            'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 'u.lastName ASC',
         ];
 
         $instance = new self();
@@ -127,7 +127,7 @@ class UserModel extends Model
                     u.id = ujt.userId";
             $query = $instance->appendOptionsToFindQuery(
                 $instance->appendWhereClause($queryString, $whereClause),
-            $options);
+            $paramOptions);
 
             $params[':completedStatus'] = WorkStatus::COMPLETED->value;
             $params[':cancelledStatus'] = WorkStatus::CANCELLED->value;
@@ -354,7 +354,12 @@ class UserModel extends Model
 
         try {
             $whereClause = $includeDeleted ? '' : 'deletedAt IS NULL';
-            return self::find($whereClause, [], ['offset' => $offset, 'limit' => $limit]) ?: null;
+            $paramOptions = [
+                'limit'     => $limit,
+                'offset'    => $offset
+            ];
+
+            return self::find($whereClause, [], $paramOptions) ?: null;
         } catch (Exception $e) {
             throw $e;
         }
@@ -389,6 +394,11 @@ class UserModel extends Model
             'offset' => 0,
         ]): ?array
     {
+        $paramOptions = [
+            'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
+            'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
+        ];
+
         try {
             $where = [];
             $params = [];
@@ -496,7 +506,7 @@ class UserModel extends Model
             $where[] = "u.createdAt IS NOT NULL AND u.deletedAt IS NULL";
 
             $whereClause = !empty($where) ? implode(' AND ', $where) : '';
-            return self::find($whereClause, $params, $options);
+            return self::find($whereClause, $params, $paramOptions);
         } catch (Exception $e) {
             throw $e;
         }

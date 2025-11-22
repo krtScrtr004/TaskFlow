@@ -133,3 +133,28 @@ export function normalizeDateFormat(dateString) {
     
     return `${year}-${month}-${day}`
 }
+
+/**
+ * Constructs a full name string from provided name parts.
+ *
+ * This function:
+ * - Uses firstName as the base (falls back to an empty string if falsy)
+ * - Appends middleName and lastName if they are provided, each preceded by a single space
+ * - Trims leading/trailing whitespace to avoid extra spaces when parts are missing
+ *
+ * @param {string|null|undefined} firstName The user's first name.
+ * @param {string|null|undefined} middleName Optional middle name; appended if truthy.
+ * @param {string|null|undefined} lastName Optional last name; appended if truthy.
+ * 
+ * @returns {string} The combined full name, trimmed. Returns an empty string when no parts are provided.
+ */
+export function createFullName(firstName, middleName, lastName) {
+    let fullName = firstName || ''
+    if (middleName) {
+        fullName += ` ${middleName.charAt(0)}.`
+    }
+    if (lastName) {
+        fullName += ` ${lastName}`
+    }
+    return fullName.trim()
+}
