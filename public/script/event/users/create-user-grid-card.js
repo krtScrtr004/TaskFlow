@@ -1,10 +1,12 @@
+import { createFullName } from '../../utility/utility.js'
+
 /**
  * Creates a user grid card element
  * @param {Object} user - User/Worker object with properties
  * @returns {HTMLElement} - User grid card button element
  */
 export function createUserGridCard(user) {
-    const name = `${user.firstName} ${user.lastName}`
+    const name = createFullName(user.firstName, user.middleName, user.lastName) || 'Unnamed User'
     const id = user.publicId || user.id
     const email = user.email
     const contact = user.contactNumber

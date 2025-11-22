@@ -5,12 +5,12 @@ use App\Entity\User;
 
 function userListCard(User $user): string
 {
-    $profileLink =
+    $name           = htmlspecialchars(createFullName($user->getFirstName(), $user->getMiddleName(), $user->getLastName()));
+    $id             = htmlspecialchars(UUID::toString($user->getPublicId()));
+    $jobTitles      = $user->getJobTitles();
+    $profileLink    =
         htmlspecialchars($user->getProfileLink()) ?:
         ICON_PATH . 'profile_w.svg';
-    $name = htmlspecialchars($user->getFirstName() . ' ' . $user->getLastName());
-    $id = htmlspecialchars(UUID::toString($user->getPublicId()));
-    $jobTitles = $user->getJobTitles();
 
     ob_start();
     ?>

@@ -1,3 +1,5 @@
+import { createFullName } from '../../utility/utility.js'
+
 const ICON_PATH = 'asset/image/icon/'
 
 /**
@@ -37,8 +39,8 @@ export function createWorkerListCard(worker, workerListContainer = null) {
     const img = document.createElement('img')
     img.src = worker.profileLink || ICON_PATH + 'profile_w.svg'
     img.className = 'circle fit-cover'
-    img.alt = `${worker.firstName} ${worker.lastName}`
-    img.title = `${worker.firstName} ${worker.lastName}`
+    img.alt = createFullName(worker.firstName, worker.middleName, worker.lastName) || 'Profile Picture'
+    img.title = createFullName(worker.firstName, worker.middleName, worker.lastName) || 'Profile Picture'
     img.height = 40
     imgContainer.appendChild(img)
 
@@ -51,7 +53,7 @@ export function createWorkerListCard(worker, workerListContainer = null) {
 
     const nameHeader = document.createElement('h4')
     nameHeader.className = 'wrap-text'
-    nameHeader.textContent = `${worker.firstName} ${worker.lastName}`
+    nameHeader.textContent = createFullName(worker.firstName, worker.middleName, worker.lastName) || ''
     nameSection.appendChild(nameHeader)
 
     const idPara = document.createElement('p')

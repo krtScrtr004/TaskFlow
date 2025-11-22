@@ -1,4 +1,5 @@
 import { Loader } from './loader.js'
+import { createFullName } from '../utility/utility.js'
 
 /**
  * Renders and populates the User Info Card for a given user.
@@ -66,6 +67,7 @@ export async function userInfoCard(userId, asyncFunction) {
  * @param {Object} user The user data object containing the following properties:
  *      - id: string|number User's unique identifier
  *      - firstName: string User's first name
+ *      - middleName: string (optional) User's middle name
  *      - lastName: string User's last name
  *      - jobTitles: string[] Array of user's job titles
  *      - bio: string User's biography
@@ -98,7 +100,7 @@ function addInfoToCard(card, user) {
 
     // Add user info to card
     userProfilePicture.src = user.profileLink ?? `${ICON_PATH}profile_w.svg`
-    userName.textContent = `${user.firstName} ${user.lastName}` ?? 'Unknown'
+    userName.textContent = createFullName(user.firstName, user.middleName, user.lastName) ?? 'Unknown'
     userId.textContent = user.id ?? 'N/A'
     userJobTitles.innerHTML = user.jobTitles.map(title =>
         `<span class="job-title-chip">${title}</span>`

@@ -138,3 +138,15 @@ function formatNumber(int|float $number): string
     }
     return $formatted;
 }
+
+function createFullName(string $firstName, ?string $middleName, string $lastName): string
+{
+    $fullName = $firstName . ' ';
+
+    if ($middleName && strlen($middleName) > 0) {
+        $fullName .= $middleName[0] . '. ';
+    }
+
+    $fullName .= $lastName;
+    return $fullName;
+}
