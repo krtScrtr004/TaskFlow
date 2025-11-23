@@ -450,7 +450,10 @@ class ProjectWorkerModel extends Model
                         ON
                             pw4.projectId = p2.id
                         WHERE 
-                            pw4.workerId = u.id
+                            pw4.workerId = u.id " . ($projectId ? 
+                                " AND p2.id = p.id" 
+                                : ""
+                            ) . "
                     ), 
                     '[]'
                 ) AS projectHistory"
@@ -770,7 +773,10 @@ class ProjectWorkerModel extends Model
                         ON
                             pw4.projectId = p2.id
                         WHERE 
-                            pw4.workerId = u.id
+                            pw4.workerId = u.id " . ($projectId ? 
+                                " AND p2.id = p.id" 
+                                : ""
+                            ) . "
                     ), 
                     '[]'
                 ) AS projectHistory"
