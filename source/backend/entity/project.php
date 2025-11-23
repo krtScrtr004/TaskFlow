@@ -620,20 +620,21 @@ class Project implements Entity
     {
         // Provide default values for required fields
         $defaults = [
-            'id' => $data['id'] ?? 0,
-            'publicId' => $data['publicId'] ?? UUID::get(),
-            'name' => $data['name'] ?? 'Untitled Project',
-            'description' => $data['description'] ?? 'No description provided',
-            'manager' => $data['manager'] ?? User::createPartial([]),
-            'budget' => $data['budget'] ?? 0,
-            'tasks' => $data['tasks'] ?? null,
-            'workers' => $data['workers'] ?? new WorkerContainer(),
-            'phases' => $data['phases'] ?? null,
-            'startDateTime' => $data['startDateTime'] ?? new DateTime(),
-            'completionDateTime' => $data['completionDateTime'] ?? new DateTime('+30 days'),
-            'actualCompletionDateTime' => $data['actualCompletionDateTime'] ?? null,
-            'status' => $data['status'] ?? WorkStatus::PENDING,
-            'createdAt' => $data['createdAt'] ?? new DateTime()
+            'id'                        => $data['id'] ?? 0,
+            'publicId'                  => $data['publicId'] ?? UUID::get(),
+            'name'                      => $data['name'] ?? 'Untitled Project',
+            'description'               => $data['description'] ?? 'No description provided',
+            'manager'                   => $data['manager'] ?? User::createPartial([]),
+            'budget'                    => $data['budget'] ?? 0,
+            'tasks'                     => $data['tasks'] ?? null,
+            'workers'                   => $data['workers'] ?? new WorkerContainer(),
+            'phases'                    => $data['phases'] ?? null,
+            'startDateTime'             => $data['startDateTime'] ?? new DateTime(),
+            'completionDateTime'        => $data['completionDateTime'] ?? new DateTime('+30 days'),
+            'actualCompletionDateTime'  => $data['actualCompletionDateTime'] ?? null,
+            'status'                    => $data['status'] ?? WorkStatus::PENDING,
+            'additionalInfo'            => $data['additionalInfo'] ?? [],
+            'createdAt'                 => $data['createdAt'] ?? new DateTime()
         ];
 
         // Handle UUID conversion
@@ -712,6 +713,7 @@ class Project implements Entity
             completionDateTime: $defaults['completionDateTime'],
             actualCompletionDateTime: $defaults['actualCompletionDateTime'],
             status: $defaults['status'],
+            additionalInfo: $defaults['additionalInfo'],
             createdAt: $defaults['createdAt']
         );
 

@@ -436,18 +436,18 @@ class Task implements Entity
     public static function createPartial(array $data): self
     {
         $defaults = [
-            'id' => $data['id'] ?? 0,
-            'publicId' => $data['publicId'] ?? UUID::get(),
-            'name' => $data['name'] ?? 'Untitled Task',
-            'description' => $data['description'] ?? null,
-            'workers' => $data['workers'] ?? new WorkerContainer(),
-            'startDateTime' => $data['startDateTime'] ?? new DateTime(),
-            'completionDateTime' => $data['completionDateTime'] ?? new DateTime('+7 days'),
-            'actualCompletionDateTime' => $data['actualCompletionDateTime'] ?? null,
-            'priority' => $data['priority'] ?? TaskPriority::MEDIUM,
-            'status' => $data['status'] ?? WorkStatus::PENDING,
-            'createdAt' => $data['createdAt'] ?? new DateTime(),
-            'additionalInfo' => $data['additionalInfo'] ?? []
+            'id'                        => $data['id'] ?? 0,
+            'publicId'                  => $data['publicId'] ?? UUID::get(),
+            'name'                      => $data['name'] ?? 'Untitled Task',
+            'description'               => $data['description'] ?? null,
+            'workers'                   => $data['workers'] ?? new WorkerContainer(),
+            'startDateTime'             => $data['startDateTime'] ?? new DateTime(),
+            'completionDateTime'        => $data['completionDateTime'] ?? new DateTime('+7 days'),
+            'actualCompletionDateTime'  => $data['actualCompletionDateTime'] ?? null,
+            'priority'                  => $data['priority'] ?? TaskPriority::MEDIUM,
+            'status'                    => $data['status'] ?? WorkStatus::PENDING,
+            'createdAt'                 => $data['createdAt'] ?? new DateTime(),
+            'additionalInfo'            => $data['additionalInfo'] ?? []
         ];
 
         // Handle publicId conversion (accept UUID or string)

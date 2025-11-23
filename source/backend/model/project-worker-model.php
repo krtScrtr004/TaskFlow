@@ -7,6 +7,7 @@ use App\Container\JobTitleContainer;
 use App\Container\ProjectContainer;
 use App\Container\WorkerContainer;
 use App\Core\UUID;
+use App\Dependent\Phase;
 use App\Dependent\Worker;
 use App\Entity\Project;
 use App\Entity\Task;
@@ -361,7 +362,7 @@ class ProjectWorkerModel extends Model
      *
      * @param int|UUID $workerId Worker ID (integer or UUID)
      * @param int|UUID|null $projectId (optional) Project ID to filter by (integer or UUID)
-     * @param bool $includeHistory (optional) Whether to include project/task history (default: false)
+     * @param bool $includeHistory (optional) Whether to include project, phase, and task history (default: false)
      *
      * @throws InvalidArgumentException If an invalid project ID is provided
      * @throws DatabaseException If a database error occurs
@@ -381,60 +382,79 @@ class ProjectWorkerModel extends Model
         try {
             $projectHistory = $includeHistory ?
                 ", COALESCE(
-                        (
-                            SELECT CONCAT('[', GROUP_CONCAT(
-                                JSON_OBJECT(
-                                    'id', p2.id,
-                                    'publicId', HEX(p2.publicId),
-                                    'name', p2.name,
-                                    'status', p2.status,
-                                    'startDateTime', p2.startDateTime,
-                                    'completionDateTime', p2.completionDateTime,
-                                    'actualCompletionDateTime', p2.actualCompletionDateTime,
-                                    'tasks', (
+                    (
+                        SELECT CONCAT('[', GROUP_CONCAT(
+                            JSON_OBJECT(
+                                'id', p2.id,
+                                'publicId', HEX(p2.publicId),
+                                'name', p2.name,
+                                'status', p2.status,
+                                'startDateTime', p2.startDateTime,
+                                'completionDateTime', p2.completionDateTime,
+                                'actualCompletionDateTime', p2.actualCompletionDateTime,
+                                'workerStatus', pw4.status,
+                                'projectPhases', COALESCE(
+                                    (
                                         SELECT CONCAT('[', GROUP_CONCAT(
                                             JSON_OBJECT(
-                                                'id', pt.id,
-                                                'publicId', HEX(pt.publicId),
-                                                'name', pt.name,
-                                                'status', pt.status,
-                                                'startDateTime', pt.startDateTime,
-                                                'completionDateTime', pt.completionDateTime,
-                                                'actualCompletionDateTime', pt.actualCompletionDateTime
-                                            ) ORDER BY pt.startDateTime DESC
+                                                'id', pp2.id,
+                                                'publicId', HEX(pp2.publicId),
+                                                'name', pp2.name,
+                                                'status', pp2.status,
+                                                'startDateTime', pp2.startDateTime,
+                                                'completionDateTime', pp2.completionDateTime,
+                                                'actualCompletionDate', pp2.actualCompletionDateTime,
+                                                'tasks', COALESCE(
+                                                    (
+                                                        SELECT CONCAT('[', GROUP_CONCAT(
+                                                            JSON_OBJECT(
+                                                                'id', pt2.id,
+                                                                'publicId', HEX(pt2.publicId),
+                                                                'name', pt2.name,
+                                                                'status', pt2.status,
+                                                                'priority', pt2.priority,
+                                                                'startDateTime', pt2.startDateTime,
+                                                                'completionDateTime', pt2.completionDateTime,
+                                                                'actualCompletionDateTime', pt2.actualCompletionDateTime,
+                                                                'workerStatus', ptw.status
+                                                            ) ORDER BY pt2.startDateTime ASC SEPARATOR ','
+                                                        ), ']')
+                                                        FROM 
+                                                            `phaseTask` AS pt2
+                                                        INNER JOIN
+                                                            `phaseTaskWorker` AS ptw
+                                                        ON
+                                                            ptw.taskId = pt2.id
+                                                        WHERE 
+                                                            pt2.phaseId = pp2.id
+                                                        AND
+                                                            ptw.workerId = u.id
+                                                    ), 
+                                                    '[]'
+                                                )
+                                            ) ORDER BY pp2.startDateTime ASC SEPARATOR ','
                                         ), ']')
                                         FROM 
-                                            `phaseTask` AS pt
-                                        INNER JOIN 
-                                            `phaseTaskWorker` AS ptw
-                                        ON 
-                                            pt.id = ptw.taskId
-                                        INNER JOIN 
-                                            `projectPhase` as pp
-                                        ON 
-                                            pp.id = pt.phaseId
+                                            `projectPhase` AS pp2
                                         WHERE 
-                                            pp.projectId = p2.id
-                                        AND 
-                                            ptw.workerId = u.id
-                                    )
-                                ) ORDER BY p2.startDateTime ASC
-                            )
-                            , ']')
-                            FROM 
-                                `project` AS p2
-                            INNER JOIN 
-                                `projectWorker` AS pw4
-                            ON
-                                p2.id = pw4.projectId
-                            WHERE 
-                                pw4.workerId = u.id
-                            AND 
-                                p2.id = p.id
-                        ),
-                        '[]'
-                    ) AS projectHistory"
-                    : '';
+                                            pp2.projectId = p2.id
+                                    ), 
+                                    '[]'
+                                )
+                            ) ORDER BY p2.startDateTime ASC SEPARATOR ','
+                        ), ']' )
+                        FROM 
+                            `project` AS p2
+                        INNER JOIN
+                            `projectWorker` AS pw4
+                        ON
+                            pw4.projectId = p2.id
+                        WHERE 
+                            pw4.workerId = u.id
+                    ), 
+                    '[]'
+                ) AS projectHistory"
+                : '';
 
             $where = (is_int($workerId) ? "u.id" : "u.publicId") . " = :workerId";
             $params = [
@@ -590,22 +610,43 @@ class ProjectWorkerModel extends Model
                         'status'                    => WorkStatus::from($project['status']),
                         'startDateTime'             => $project['startDateTime'],
                         'completionDateTime'        => $project['completionDateTime'],
-                        'actualCompletionDateTime'  => $project['actualCompletionDateTime']
+                        'actualCompletionDateTime'  => $project['actualCompletionDateTime'],
+                        'additionalInfo'            => [
+                            'workerStatus'          => WorkerStatus::from($project['workerStatus']),
+                        ]
                     ]);
 
-                    $tasks = json_decode($project['tasks'], true);
-                    foreach ($tasks as &$task) {
-                        $entry->addTask(
-                            Task::createPartial([
-                                'id'                        => $task['id'],
-                                'publicId'                  => UUID::fromHex($task['publicId']),
-                                'name'                      => $task['name'],
-                                'status'                    => WorkStatus::from($task['status']),
-                                'startDateTime'             => $task['startDateTime'],
-                                'completionDateTime'        => $task['completionDateTime'],
-                                'actualCompletionDateTime'  => $task['actualCompletionDateTime']
-                            ])
-                        );
+                    $phaseLists = json_decode($project['projectPhases'], true);
+                    foreach ($phaseLists as $phase) {
+                        $phaseEntry = Phase::createPartial([
+                            'id'                        => $phase['id'],
+                            'publicId'                  => UUID::fromHex($phase['publicId']),
+                            'name'                      => $phase['name'],
+                            'status'                    => WorkStatus::from($phase['status']),
+                            'startDateTime'             => $phase['startDateTime'],
+                            'completionDateTime'        => $phase['completionDateTime'],
+                            'actualCompletionDateTime'  => $phase['actualCompletionDate'],
+                        ]);
+
+                        $taskLists = json_decode($phase['tasks'], true);
+                        foreach ($taskLists as $task) {
+                            $phaseEntry->addTask(
+                                Task::createPartial([
+                                    'id'                        => $task['id'],
+                                    'publicId'                  => UUID::fromHex($task['publicId']),
+                                    'name'                      => $task['name'],
+                                    'status'                    => WorkStatus::from($task['status']),
+                                    'priority'                  => (int)$task['priority'],
+                                    'startDateTime'             => $task['startDateTime'],
+                                    'completionDateTime'        => $task['completionDateTime'],
+                                    'actualCompletionDateTime'  => $task['actualCompletionDateTime'],
+                                    'additionalInfo'            => [
+                                        'workerStatus'          => WorkerStatus::from($task['workerStatus']),
+                                    ]
+                                ])
+                            );
+                        }
+                        $entry->addPhase($phaseEntry);
                     }
                     $projects->add($entry);
                 }
@@ -631,7 +672,7 @@ class ProjectWorkerModel extends Model
      *
      * @param array $workerIds Array of worker IDs (int or UUID) to search for.
      * @param int|UUID|null $projectId Optional project ID (int or UUID) to filter workers by project.
-     * @param bool $includeHistory Whether to include project and task history for each worker.
+     * @param bool $includeHistory Whether to include project, phase, and task history for each worker.
      *
      * @throws InvalidArgumentException If workerIds is empty or projectId is invalid.
      * @throws DatabaseException If a database error occurs during query execution.
@@ -671,47 +712,66 @@ class ProjectWorkerModel extends Model
                                 'startDateTime', p2.startDateTime,
                                 'completionDateTime', p2.completionDateTime,
                                 'actualCompletionDateTime', p2.actualCompletionDateTime,
-                                'tasks', (
-                                    SELECT CONCAT('[', GROUP_CONCAT(
-                                        JSON_OBJECT(
-                                            'id', pt.id,
-                                            'publicId', HEX(pt.publicId),
-                                            'name', pt.name,
-                                            'status', pt.status,
-                                            'startDateTime', pt.startDateTime,
-                                            'completionDateTime', pt.completionDateTime,
-                                            'actualCompletionDateTime', pt.actualCompletionDateTime
-                                        ) ORDER BY pt.startDateTime DESC
-                                    ), ']')
-                                    FROM 
-                                        `phaseTask` AS pt
-                                    INNER JOIN 
-                                        `phaseTaskWorker` AS ptw
-                                    ON 
-                                        pt.id = ptw.taskId
-                                    INNER JOIN 
-                                        `projectPhase` as pp
-                                    ON 
-                                        pp.id = pt.phaseId
-                                    WHERE 
-                                        pp.projectId = p2.id
-                                    AND 
-                                        ptw.workerId = u.id
+                                'workerStatus', pw4.status,
+                                'projectPhases', COALESCE(
+                                    (
+                                        SELECT CONCAT('[', GROUP_CONCAT(
+                                            JSON_OBJECT(
+                                                'id', pp2.id,
+                                                'publicId', HEX(pp2.publicId),
+                                                'name', pp2.name,
+                                                'status', pp2.status,
+                                                'startDateTime', pp2.startDateTime,
+                                                'completionDateTime', pp2.completionDateTime,
+                                                'actualCompletionDate', pp2.actualCompletionDateTime,
+                                                'tasks', COALESCE(
+                                                    (
+                                                        SELECT CONCAT('[', GROUP_CONCAT(
+                                                            JSON_OBJECT(
+                                                                'id', pt2.id,
+                                                                'publicId', HEX(pt2.publicId),
+                                                                'name', pt2.name,
+                                                                'status', pt2.status,
+                                                                'priority', pt2.priority,
+                                                                'startDateTime', pt2.startDateTime,
+                                                                'completionDateTime', pt2.completionDateTime,
+                                                                'actualCompletionDateTime', pt2.actualCompletionDateTime,
+                                                                'workerStatus', ptw.status
+                                                            ) ORDER BY pt2.startDateTime ASC SEPARATOR ','
+                                                        ), ']')
+                                                        FROM 
+                                                            `phaseTask` AS pt2
+                                                        INNER JOIN
+                                                            `phaseTaskWorker` AS ptw
+                                                        ON
+                                                            ptw.taskId = pt2.id
+                                                        WHERE 
+                                                            pt2.phaseId = pp2.id
+                                                        AND
+                                                            ptw.workerId = u.id
+                                                    ), 
+                                                    '[]'
+                                                )
+                                            ) ORDER BY pp2.startDateTime ASC SEPARATOR ','
+                                        ), ']')
+                                        FROM 
+                                            `projectPhase` AS pp2
+                                        WHERE 
+                                            pp2.projectId = p2.id
+                                    ), 
+                                    '[]'
                                 )
-                            ) ORDER BY p2.startDateTime ASC
-                        )
-                        , ']')
+                            ) ORDER BY p2.startDateTime ASC SEPARATOR ','
+                        ), ']' )
                         FROM 
                             `project` AS p2
-                        INNER JOIN 
+                        INNER JOIN
                             `projectWorker` AS pw4
                         ON
-                            p2.id = pw4.projectId
+                            pw4.projectId = p2.id
                         WHERE 
                             pw4.workerId = u.id
-                        AND 
-                            p2.id = p.id
-                    ),
+                    ), 
                     '[]'
                 ) AS projectHistory"
                 : '';
@@ -882,21 +942,43 @@ class ProjectWorkerModel extends Model
                             'status'                    => WorkStatus::from($project['status']),
                             'startDateTime'             => $project['startDateTime'],
                             'completionDateTime'        => $project['completionDateTime'],
-                            'actualCompletionDateTime'  => $project['actualCompletionDateTime']
+                            'actualCompletionDateTime'  => $project['actualCompletionDateTime'],
+                            'additionalInfo'            => [
+                                'workerStatus'          => WorkerStatus::from($project['workerStatus']),
+                            ]
                         ]);
 
-                        foreach ($project['tasks'] as &$task) {
-                            $entry->addTask(
-                                Task::createPartial([
-                                    'id'                        => $task['id'],
-                                    'publicId'                  => UUID::fromHex($task['publicId']),
-                                    'name'                      => $task['name'],
-                                    'status'                    => WorkStatus::from($task['status']),
-                                    'startDateTime'             => $task['startDateTime'],
-                                    'completionDateTime'        => $task['completionDateTime'],
-                                    'actualCompletionDateTime'  => $task['actualCompletionDateTime']
-                                ])
-                            );
+                        $phaseLists = json_decode($project['projectPhases'], true);
+                        foreach ($phaseLists as $phase) {
+                            $phaseEntry = Phase::createPartial([
+                                'id'                        => $phase['id'],
+                                'publicId'                  => UUID::fromHex($phase['publicId']),
+                                'name'                      => $phase['name'],
+                                'status'                    => WorkStatus::from($phase['status']),
+                                'startDateTime'             => $phase['startDateTime'],
+                                'completionDateTime'        => $phase['completionDateTime'],
+                                'actualCompletionDateTime'  => $phase['actualCompletionDate'],
+                            ]);
+
+                            $taskLists = json_decode($phase['tasks'], true);
+                            foreach ($taskLists as $task) {
+                                $phaseEntry->addTask(
+                                    Task::createPartial([
+                                        'id'                        => $task['id'],
+                                        'publicId'                  => UUID::fromHex($task['publicId']),
+                                        'name'                      => $task['name'],
+                                        'status'                    => WorkStatus::from($task['status']),
+                                        'priority'                  => (int)$task['priority'],
+                                        'startDateTime'             => $task['startDateTime'],
+                                        'completionDateTime'        => $task['completionDateTime'],
+                                        'actualCompletionDateTime'  => $task['actualCompletionDateTime'],
+                                        'additionalInfo'            => [
+                                            'workerStatus'          => WorkerStatus::from($task['workerStatus']),
+                                        ]
+                                    ])
+                                );
+                            }
+                            $entry->addPhase($phaseEntry);
                         }
                         $projects->add($entry);
                     }

@@ -416,7 +416,7 @@ class Phase implements Entity
             'startDateTime' => formatDateTime($this->startDateTime, DateTime::ATOM),
             'completionDateTime' => formatDateTime($this->completionDateTime, DateTime::ATOM),
             'status' => $this->status->value,
-            'tasks' => $this->tasks->toArray()
+            'tasks' => $this->tasks?->toArray() ?? []
         ];
     }
 
