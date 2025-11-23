@@ -2,7 +2,7 @@
 
 ## Overview
 
-The TaskFlow Worker Performance Calculation System is a comprehensive, multi-dimensional scoring mechanism that evaluates worker productivity and efficiency across projects and tasks. The system uses a weighted scoring algorithm that considers **task priority**, **completion status**, **deadline adherence**, and **project involvement** to generate a holistic performance score ranging from 0 to 100.
+The TaskFlow Worker Performance Calculation System is a comprehensive, multi-dimensional scoring mechanism that evaluates worker productivity and efficiency across projects, phases, and tasks. The system operates within TaskFlow's hierarchical structure (**Project → Phase → Task**) and uses a weighted scoring algorithm that considers **task priority**, **completion status**, **deadline adherence**, and **project involvement** to generate a holistic performance score ranging from 0 to 100.
 
 ---
 
@@ -272,8 +272,9 @@ SELECT
 FROM user AS u
 INNER JOIN projectWorker AS pw ON u.id = pw.workerId
 INNER JOIN project AS p ON pw.projectId = p.id
-INNER JOIN projectPhase AS pp ON p.id = pp.projectId
-INNER JOIN phaseTask AS pt ON pp.id = pt.phaseId
+INNER JOIN projectPhase AS pp ON p.id = pp.projectId  -- Join phases
+INNER JOIN phase AS ph ON pp.phaseId = ph.id          -- Get phase details
+INNER JOIN phaseTask AS pt ON ph.id = pt.phaseId      -- Join tasks from phases
 INNER JOIN phaseTaskWorker AS ptw ON pt.id = ptw.taskId AND u.id = ptw.workerId
 WHERE u.deletedAt IS NULL
   AND p.id = :projectId
@@ -281,6 +282,8 @@ GROUP BY u.id, u.firstName, u.lastName, u.email
 HAVING totalTasks > 0
 ORDER BY overallScore DESC
 ```
+
+**Note:** The hierarchical structure requires joining through phases (`projectPhase` → `phase`) before accessing tasks (`phaseTask`). This ensures all tasks within project phases are properly included in the performance calculation.
 
 ---
 
@@ -350,6 +353,38 @@ private static function calculateTaskScore(Task $task): array
     ];
 }
 ```
+
+### Hierarchical Task Aggregation
+
+The calculator handles the **Project → Phase → Task** hierarchy by iterating through phases:
+
+```php
+foreach ($projects as $project) {
+    // Get phases from project
+    $phases = $project->getPhases();
+    
+    if ($phases && $phases->count() > 0) {
+        // Iterate through phases to get tasks
+        foreach ($phases as $phase) {
+            $tasks = $phase->getTasks();
+            
+            if ($tasks && $tasks->count() > 0) {
+                foreach ($tasks as $task) {
+                    // Calculate performance for each task
+                    $taskScore = self::calculateTaskScore($task);
+                    $allTasks->add($task);
+                }
+            }
+        }
+    }
+}
+```
+
+**Key Points:**
+- Tasks are no longer accessed directly from projects
+- The system must iterate through phases first: `$project->getPhases()` → `$phase->getTasks()`
+- This ensures all tasks across all phases are included in performance calculations
+- Phase names are tracked in penalty breakdowns for better context
 
 ---
 
@@ -460,6 +495,8 @@ The system assigns letter grades based on the calculated score:
 2. **Realistic Deadlines**: Set achievable completion dates
 3. **Status Updates**: Ensure workers update task status promptly
 4. **Balanced Workload**: Distribute priority mix fairly across workers
+5. **Phase Organization**: Structure phases logically to track progress effectively
+6. **Cross-Phase Visibility**: Monitor worker performance across all project phases
 
 ### For Workers
 
@@ -532,6 +569,9 @@ The dual implementation (SQL for efficiency, PHP for flexibility) ensures the sy
 
 ---
 
-**Document Version:** 1.0  
-**Last Updated:** November 15, 2025  
-**Maintained By:** TaskFlow Development Team
+**Document Version:** 1.1  
+**Last Updated:** November 23, 2025  
+**Maintained By:** TaskFlow Development Team  
+**Changelog:**
+- v1.1 (Nov 23, 2025): Updated for hierarchical Project → Phase → Task structure
+- v1.0 (Nov 15, 2025): Initial documentation
