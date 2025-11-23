@@ -1674,7 +1674,11 @@ class ProjectModel extends Model
                 ws.email,
                 ws.totalTasks,
                 ws.completedTasks,
-                ws.overallScore
+                ws.baseScore,
+                ws.taskTerminations,
+                ws.projectTerminations,
+                ws.totalPenalty,
+                GREATEST(0, ws.baseScore - ws.totalPenalty) as overallScore
             FROM (
                 SELECT 
                     u.id,
@@ -1690,6 +1694,7 @@ class ProjectModel extends Model
                         WHERE pt2.status = 'completed'
                         AND ptw2.workerId = u.id
                     ) as completedTasks,
+                    -- Base performance score (before penalties)
                     ROUND(
                         (SUM(
                             CASE 
@@ -1730,7 +1735,45 @@ class ProjectModel extends Model
                             END
                         )
                     ) * 100, 2
-                    ) as overallScore
+                    ) as baseScore,
+                    -- Count task-level terminations
+                    (
+                        SELECT COUNT(*)
+                        FROM `phaseTaskWorker` AS ptw3
+                        INNER JOIN `phaseTask` AS pt3 ON ptw3.taskId = pt3.id
+                        INNER JOIN `projectPhase` AS pp3 ON pt3.phaseId = pp3.id
+                        WHERE ptw3.workerId = u.id
+                        AND pp3.projectId = p.id
+                        AND ptw3.status = 'terminated'
+                    ) as taskTerminations,
+                    -- Count project-level terminations
+                    (
+                        SELECT COUNT(*)
+                        FROM `projectWorker` AS pw2
+                        WHERE pw2.workerId = u.id
+                        AND pw2.projectId = p.id
+                        AND pw2.status = 'terminated'
+                    ) as projectTerminations,
+                    -- Calculate total penalty (15% per task termination + 25% per project termination)
+                    (
+                        (
+                            SELECT COUNT(*)
+                            FROM `phaseTaskWorker` AS ptw3
+                            INNER JOIN `phaseTask` AS pt3 ON ptw3.taskId = pt3.id
+                            INNER JOIN `projectPhase` AS pp3 ON pt3.phaseId = pp3.id
+                            WHERE ptw3.workerId = u.id
+                            AND pp3.projectId = p.id
+                            AND ptw3.status = 'terminated'
+                        ) * 15.0
+                    ) + (
+                        (
+                            SELECT COUNT(*)
+                            FROM `projectWorker` AS pw2
+                            WHERE pw2.workerId = u.id
+                            AND pw2.projectId = p.id
+                            AND pw2.status = 'terminated'
+                        ) * 25.0
+                    ) as totalPenalty
                 FROM 
                     `user` AS u
                 INNER JOIN 
@@ -1758,12 +1801,12 @@ class ProjectModel extends Model
                 AND 
                     " . (is_int($projectId) ? 'p.id' : 'p.publicId') . " = :projectId
                 GROUP BY 
-                    u.id, u.firstName, u.lastName, u.email
+                    u.id, u.firstName, u.lastName, u.email, p.id
                 HAVING 
                     totalTasks > 0
             ) AS ws
             ORDER BY 
-                ws.overallScore DESC
+                overallScore DESC
             LIMIT 10
         ";
 
