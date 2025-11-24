@@ -2,7 +2,9 @@
 
 ## Overview
 
-The TaskFlow Worker Performance Calculation System is a comprehensive, multi-dimensional scoring mechanism that evaluates worker productivity and efficiency across projects and tasks. The system uses a weighted scoring algorithm that considers **task priority**, **completion status**, **deadline adherence**, and **project involvement** to generate a holistic performance score ranging from 0 to 100.
+The TaskFlow Worker Performance Calculation System is a comprehensive, multi-dimensional scoring mechanism that evaluates worker productivity and efficiency across projects, phases, and tasks. The system operates within TaskFlow's hierarchical structure (**Project → Phase → Task**) and uses a weighted scoring algorithm that considers **task priority**, **completion status**, **deadline adherence**, **worker reliability**, and **project involvement** to generate a holistic performance score ranging from 0 to 100.
+
+The system includes a **termination penalty mechanism** that deducts points for workers terminated from tasks or projects, ensuring accountability and reliability are factored into performance evaluations.
 
 ---
 
@@ -22,17 +24,18 @@ The TaskFlow Worker Performance Calculation System is a comprehensive, multi-dim
 
 ## Core Concepts
 
-### 1. Three-Dimensional Scoring Model
+### 1. Four-Dimensional Scoring Model
 
-The performance calculation is based on three key dimensions:
+The performance calculation is based on four key dimensions:
 
 ```
-Worker Performance = f(Priority, Status, Timing)
+Worker Performance = f(Priority, Status, Timing, Reliability)
 ```
 
 - **Priority Dimension**: Weight assigned based on task importance
 - **Status Dimension**: Credit multiplier based on task completion state
 - **Timing Dimension**: Bonus/penalty based on deadline adherence
+- **Reliability Dimension**: Penalty deductions for terminations from tasks/projects
 
 ### 2. Weighted Aggregation
 
@@ -47,10 +50,15 @@ Individual task scores are aggregated across all tasks, normalized against the m
 The overall performance score is calculated using the following formula:
 
 ```
-Overall Score = (Σ Task Scores / Σ Max Possible Scores) × 100
+Base Score = (Σ Task Scores / Σ Max Possible Scores) × 100
+Overall Score = max(0, Base Score - Total Penalties)
 ```
 
-Where each **Task Score** is calculated as:
+Where **Total Penalties** include:
+- Task-level terminations: 15% per terminated task assignment
+- Project-level terminations: 25% per terminated project assignment
+
+And each **Task Score** is calculated as:
 
 ```
 Task Score = Priority Weight × Status Multiplier × Time Multiplier
@@ -149,6 +157,34 @@ Where:
 - Penalizes late completions to encourage timely delivery
 - Only applies to completed tasks
 
+### Component 4: Termination Penalties (P_r)
+
+Termination penalties are applied to workers removed from tasks or projects:
+
+| Termination Level | Penalty | Description |
+|------------------|---------|-------------|
+| **Task Termination** | -15% | Worker removed from individual task assignment |
+| **Project Termination** | -25% | Worker removed from entire project |
+
+**Mathematical Representation:**
+
+```
+Total Penalty = (Task Terminations × 15%) + (Project Terminations × 25%)
+Overall Score = max(0, Base Score - Total Penalty)
+```
+
+**Rationale:**
+- **Task Termination (-15%)**: Indicates issues at the task level (missed deliverables, poor quality, conflicts)
+- **Project Termination (-25%)**: More severe penalty for complete project removal (systematic issues, trust breakdown)
+- **Cumulative**: Multiple terminations compound penalties, reflecting pattern of unreliability
+- **Floor at Zero**: Score cannot go below 0% regardless of penalty magnitude
+
+**Examples:**
+- Base Score: 85%, 1 task termination → 85% - 15% = **70%**
+- Base Score: 90%, 1 project termination → 90% - 25% = **65%**
+- Base Score: 80%, 2 task + 1 project terminations → 80% - (30% + 25%) = **25%**
+- Base Score: 30%, 3 project terminations → max(0, 30% - 75%) = **0%**
+
 ---
 
 ## Implementation Details
@@ -171,33 +207,51 @@ S_max(i) = W_p(i) × 1.0 × 1.2
 
 ### Overall Performance Score
 
-The final performance score across all `n` tasks:
+The final performance score across all `n` tasks, with reliability penalties:
 
 ```
-Performance Score = (Σ(i=1 to n) S_i / Σ(i=1 to n) S_max(i)) × 100
+Base Score = (Σ(i=1 to n) S_i / Σ(i=1 to n) S_max(i)) × 100
+Total Penalty = (N_task_term × 15) + (N_proj_term × 25)
+Overall Score = max(0, Base Score - Total Penalty)
 ```
+
+Where:
+- `N_task_term` = Number of task-level terminations
+- `N_proj_term` = Number of project-level terminations
 
 This normalization ensures:
 - Scores are always between 0 and 100
 - Workers with different task loads can be compared fairly
 - Priority distribution is accounted for in the denominator
+- Reliability issues (terminations) reduce final scores appropriately
 
 ---
 
 ## Database Query Implementation
 
-The SQL implementation in `project-model.php` calculates performance directly in the database for efficiency.
+The SQL implementation in `project-model.php` (method `topWorkersQuery`) calculates performance directly in the database for efficiency, including termination penalty tracking.
 
 ### SQL Formula Structure
 
 ```sql
+-- Inner query calculates base score
 ROUND(
     (
         SUM(/* Numerator: Actual Scores */) / 
         SUM(/* Denominator: Max Possible Scores */)
     ) * 100, 
     2
-) as overallScore
+) as baseScore,
+
+-- Count terminations
+(/* Subquery for task terminations */) as taskTerminations,
+(/* Subquery for project terminations */) as projectTerminations,
+
+-- Calculate penalty
+(taskTerminations * 15.0) + (projectTerminations * 25.0) as totalPenalty,
+
+-- Outer query applies penalty
+GREATEST(0, baseScore - totalPenalty) as overallScore
 ```
 
 ### Numerator: Actual Task Scores
@@ -261,26 +315,94 @@ SUM(
 
 ```sql
 SELECT 
-    u.id,
-    u.firstName,
-    u.lastName,
-    COUNT(DISTINCT ptw.taskId) as totalTasks,
-    ROUND(
-        (SUM(/* Numerator */) / SUM(/* Denominator */)) * 100, 
-        2
-    ) as overallScore
-FROM user AS u
-INNER JOIN projectWorker AS pw ON u.id = pw.workerId
-INNER JOIN project AS p ON pw.projectId = p.id
-INNER JOIN projectPhase AS pp ON p.id = pp.projectId
-INNER JOIN phaseTask AS pt ON pp.id = pt.phaseId
-INNER JOIN phaseTaskWorker AS ptw ON pt.id = ptw.taskId AND u.id = ptw.workerId
-WHERE u.deletedAt IS NULL
-  AND p.id = :projectId
-GROUP BY u.id, u.firstName, u.lastName, u.email
-HAVING totalTasks > 0
+    ws.id,
+    ws.firstName,
+    ws.lastName,
+    ws.email,
+    ws.totalTasks,
+    ws.completedTasks,
+    ws.baseScore,
+    ws.taskTerminations,
+    ws.projectTerminations,
+    ws.totalPenalty,
+    GREATEST(0, ws.baseScore - ws.totalPenalty) as overallScore
+FROM (
+    SELECT 
+        u.id,
+        u.firstName,
+        u.lastName,
+        u.email,
+        COUNT(DISTINCT ptw.taskId) as totalTasks,
+        (
+            SELECT COUNT(DISTINCT pt2.id)
+            FROM phaseTask AS pt2
+            INNER JOIN phaseTaskWorker AS ptw2 ON pt2.id = ptw2.taskId
+            WHERE pt2.status = 'completed'
+            AND ptw2.workerId = u.id
+        ) as completedTasks,
+        -- Base performance score (before penalties)
+        ROUND(
+            (SUM(/* Task score calculation */) / SUM(/* Max score calculation */)) * 100,
+            2
+        ) as baseScore,
+        -- Count task-level terminations
+        (
+            SELECT COUNT(*)
+            FROM phaseTaskWorker AS ptw3
+            INNER JOIN phaseTask AS pt3 ON ptw3.taskId = pt3.id
+            INNER JOIN projectPhase AS pp3 ON pt3.phaseId = pp3.id
+            WHERE ptw3.workerId = u.id
+            AND pp3.projectId = p.id
+            AND ptw3.status = 'terminated'
+        ) as taskTerminations,
+        -- Count project-level terminations
+        (
+            SELECT COUNT(*)
+            FROM projectWorker AS pw2
+            WHERE pw2.workerId = u.id
+            AND pw2.projectId = p.id
+            AND pw2.status = 'terminated'
+        ) as projectTerminations,
+        -- Calculate total penalty
+        (
+            (/* task termination count */) * 15.0
+        ) + (
+            (/* project termination count */) * 25.0
+        ) as totalPenalty
+    FROM user AS u
+    INNER JOIN projectWorker AS pw ON u.id = pw.workerId
+    INNER JOIN project AS p ON pw.projectId = p.id
+    INNER JOIN projectPhase AS pp ON p.id = pp.projectId
+    INNER JOIN phaseTask AS pt ON pp.id = pt.phaseId
+    INNER JOIN phaseTaskWorker AS ptw ON pt.id = ptw.taskId AND u.id = ptw.workerId
+    WHERE u.deletedAt IS NULL
+      AND p.id = :projectId
+    GROUP BY u.id, u.firstName, u.lastName, u.email, p.id
+    HAVING totalTasks > 0
+) AS ws
 ORDER BY overallScore DESC
+LIMIT 10
 ```
+
+**Key Implementation Details:**
+
+1. **Two-Tier Query Structure**: 
+   - Inner query calculates `baseScore` once and counts terminations
+   - Outer query applies penalty: `GREATEST(0, baseScore - totalPenalty)`
+   - This prevents rounding discrepancies from recalculating baseScore
+
+2. **Hierarchical Joins**: 
+   - The structure requires joining through `projectPhase` before accessing `phaseTask`
+   - Ensures all tasks within project phases are included
+
+3. **Termination Tracking**:
+   - Separate subqueries count task and project terminations
+   - Penalties calculated as: `(taskTerminations × 15.0) + (projectTerminations × 25.0)`
+   - Worker status checked via `phaseTaskWorker.status` and `projectWorker.status`
+
+4. **GROUP BY Clause**:
+   - Must include `p.id` to prevent aggregation conflicts across multiple projects
+   - Groups by: `u.id, u.firstName, u.lastName, u.email, p.id`
 
 ---
 
@@ -311,6 +433,15 @@ private const STATUS_MULTIPLIERS = [
 private const EARLY_COMPLETION_BONUS = 1.2;
 private const ON_TIME_MULTIPLIER = 1.0;
 private const LATE_PENALTY = 0.8;
+
+// Worker status penalties (deducted from overall score)
+private const WORKER_STATUS_PENALTIES = [
+    WorkerStatus::ASSIGNED->value => 0.0,      // No penalty
+    WorkerStatus::TERMINATED->value => 15.0    // -15% penalty for task termination
+];
+
+// Project-level termination penalty (greater than task termination)
+private const PROJECT_TERMINATION_PENALTY = 25.0;  // -25% penalty for project termination
 ```
 
 ### Core Calculation Method
@@ -349,6 +480,127 @@ private static function calculateTaskScore(Task $task): array
         'maxPossibleScore' => $maxScore
     ];
 }
+```
+
+### Hierarchical Task Aggregation
+
+The calculator handles the **Project → Phase → Task** hierarchy by iterating through phases:
+
+```php
+foreach ($projects as $project) {
+    // Get phases from project
+    $phases = $project->getPhases();
+    
+    if ($phases && $phases->count() > 0) {
+        // Iterate through phases to get tasks
+        foreach ($phases as $phase) {
+            $tasks = $phase->getTasks();
+            
+            if ($tasks && $tasks->count() > 0) {
+                foreach ($tasks as $task) {
+                    // Calculate performance for each task
+                    $taskScore = self::calculateTaskScore($task);
+                    $allTasks->add($task);
+                }
+            }
+        }
+    }
+}
+```
+
+**Key Points:**
+- Tasks are no longer accessed directly from projects
+- The system must iterate through phases first: `$project->getPhases()` → `$phase->getTasks()`
+- This ensures all tasks across all phases are included in performance calculations
+- Phase names are tracked in penalty breakdowns for better context
+
+### Termination Penalty Calculation
+
+The calculator tracks terminations at both project and task levels:
+
+```php
+public static function calculate(ProjectContainer $projects): array
+{
+    $statusPenalties = [
+        'taskTerminations' => 0,
+        'projectTerminations' => 0,
+        'totalPenalty' => 0.0,
+        'penaltyBreakdown' => []
+    ];
+    
+    foreach ($projects as $project) {
+        $workerStatus = $project->getAdditionalInfo('workerStatus');
+        
+        // Track project-level terminations
+        if ($workerStatus === WorkerStatus::TERMINATED) {
+            $statusPenalties['projectTerminations']++;
+            $statusPenalties['totalPenalty'] += self::PROJECT_TERMINATION_PENALTY;
+            $statusPenalties['penaltyBreakdown'][] = [
+                'projectName' => $project->getName(),
+                'type' => 'project',
+                'penalty' => self::PROJECT_TERMINATION_PENALTY,
+                'reason' => 'Terminated from project'
+            ];
+        }
+        
+        // Track task-level terminations
+        foreach ($phases as $phase) {
+            foreach ($tasks as $task) {
+                $taskWorkerStatus = $task->getAdditionalInfo('workerStatus');
+                
+                if ($taskWorkerStatus === WorkerStatus::TERMINATED) {
+                    $statusPenalties['taskTerminations']++;
+                    $penalty = self::WORKER_STATUS_PENALTIES[WorkerStatus::TERMINATED->value];
+                    $statusPenalties['totalPenalty'] += $penalty;
+                    $statusPenalties['penaltyBreakdown'][] = [
+                        'taskName' => $task->getName(),
+                        'projectName' => $project->getName(),
+                        'phaseName' => $phase->getName(),
+                        'type' => 'task',
+                        'penalty' => $penalty,
+                        'reason' => 'Terminated from task'
+                    ];
+                }
+            }
+        }
+    }
+    
+    // Apply penalties to base score
+    $baseScore = $taskPerformance['overallScore'];
+    $penalizedScore = max(0, $baseScore - $statusPenalties['totalPenalty']);
+    
+    return [
+        'overallScore' => round($penalizedScore, 2),
+        'baseScore' => round($baseScore, 2),
+        'statusPenalties' => $statusPenalties,
+        // ... other metrics
+    ];
+}
+```
+
+**Return Structure:**
+```php
+[
+    'overallScore' => 68.5,        // Final score after penalties
+    'baseScore' => 83.5,           // Score before penalties
+    'totalTasks' => 12,
+    'totalProjects' => 2,
+    'statusPenalties' => [
+        'taskTerminations' => 1,          // Number of task terminations
+        'projectTerminations' => 0,        // Number of project terminations
+        'totalPenalty' => 15.0,           // Total percentage deducted
+        'penaltyBreakdown' => [           // Detailed breakdown
+            [
+                'taskName' => 'API Integration',
+                'projectName' => 'Mobile App',
+                'phaseName' => 'Development',
+                'type' => 'task',
+                'penalty' => 15.0,
+                'reason' => 'Terminated from task'
+            ]
+        ]
+    ]
+]
 ```
 
 ---
@@ -460,6 +712,8 @@ The system assigns letter grades based on the calculated score:
 2. **Realistic Deadlines**: Set achievable completion dates
 3. **Status Updates**: Ensure workers update task status promptly
 4. **Balanced Workload**: Distribute priority mix fairly across workers
+5. **Phase Organization**: Structure phases logically to track progress effectively
+6. **Cross-Phase Visibility**: Monitor worker performance across all project phases
 
 ### For Workers
 
@@ -532,6 +786,10 @@ The dual implementation (SQL for efficiency, PHP for flexibility) ensures the sy
 
 ---
 
-**Document Version:** 1.0  
-**Last Updated:** November 15, 2025  
-**Maintained By:** TaskFlow Development Team
+**Document Version:** 1.2  
+**Last Updated:** November 24, 2025  
+**Maintained By:** TaskFlow Development Team  
+**Changelog:**
+- v1.2 (Nov 24, 2025): Added termination penalty system (-15% task, -25% project); updated SQL implementation with two-tier query structure and penalty tracking
+- v1.1 (Nov 23, 2025): Updated for hierarchical Project → Phase → Task structure
+- v1.0 (Nov 15, 2025): Initial documentation

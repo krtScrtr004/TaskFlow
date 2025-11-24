@@ -6,6 +6,7 @@ use App\Container\ProjectContainer;
 use App\Container\TaskContainer;
 use App\Entity\Task;
 use App\Enumeration\TaskPriority;
+use App\Enumeration\WorkerStatus;
 use App\Enumeration\WorkStatus;
 
 require_once ENUM_PATH . 'task-priority.php';
@@ -32,6 +33,15 @@ class WorkerPerformanceCalculator
         WorkStatus::CANCELLED->value => 0.0   // No credit
     ];
 
+    // Worker status penalties (deducted from overall score)
+    private const WORKER_STATUS_PENALTIES = [
+        WorkerStatus::ASSIGNED->value => 0.0,      // No penalty
+        WorkerStatus::TERMINATED->value => 15.0    // -15% penalty for task termination
+    ];
+
+    // Project-level termination penalty (greater than task termination)
+    private const PROJECT_TERMINATION_PENALTY = 25.0;  // -25% penalty for project termination
+
     // Time-based bonuses
     private const EARLY_COMPLETION_BONUS = 1.2;  // 20% bonus for early completion
     private const ON_TIME_MULTIPLIER = 1.0;      // Standard multiplier
@@ -40,6 +50,8 @@ class WorkerPerformanceCalculator
     /**
      * Calculate worker's overall performance based on projects they worked on
      * Aggregates tasks from all projects and provides project-context metrics
+     * Accounts for worker status (terminated workers receive penalties)
+     * Tracks project progress and applies greater penalties for project-level termination
      * 
      * @param ProjectContainer $projects Container of projects the worker participated in
      * @return array Comprehensive performance data with project context
@@ -54,12 +66,15 @@ class WorkerPerformanceCalculator
                 'performanceGrade' => 'N/A',
                 'taskMetrics' => [],
                 'projectMetrics' => [],
-                'insights' => ['No projects found for evaluation period'],
-                'recommendations' => []
+                'statusPenalties' => [],
+                'messages' => [
+                    'insights' => ['No projects found for evaluation period'],
+                    'recommendations' => []
+                ]
             ];
         }
 
-        // Aggregate all tasks from all projects
+        // Aggregate all tasks from all projects (now nested in phases)
         $allTasks = new TaskContainer();
         $projectMetrics = [
             'totalProjects' => $projects->count(),
@@ -69,33 +84,79 @@ class WorkerPerformanceCalculator
             'projectDiversity' => []
         ];
 
+        $statusPenalties = [
+            'taskTerminations' => 0,
+            'projectTerminations' => 0,
+            'totalPenalty' => 0.0,
+            'penaltyBreakdown' => []
+        ];
+
         $totalTaskCount = 0;
 
         foreach ($projects as $project) {
-            $tasks = $project->getTasks();
+            $workerStatus = $project->getAdditionalInfo('workerStatus');
 
-            if ($tasks && $tasks->count() > 0) {
-                foreach ($tasks as $task) {
-                    $allTasks->add($task);
-                    $totalTaskCount++;
+            // Track termination penalties at project level
+            if ($workerStatus === WorkerStatus::TERMINATED) {
+                $statusPenalties['projectTerminations']++;
+                $statusPenalties['totalPenalty'] += self::PROJECT_TERMINATION_PENALTY;
+                $statusPenalties['penaltyBreakdown'][] = [
+                    'projectName' => $project->getName(),
+                    'type' => 'project',
+                    'penalty' => self::PROJECT_TERMINATION_PENALTY,
+                    'reason' => 'Terminated from project'
+                ];
+            }
+
+            // Get phases from project (new hierarchical structure)
+            $phases = $project->getPhases();
+            
+            if ($phases && $phases->count() > 0) {
+                $completedTasks = 0;
+                
+                // Iterate through phases to get tasks
+                foreach ($phases as $phase) {
+                    $tasks = $phase->getTasks();
+                    
+                    if ($tasks && $tasks->count() > 0) {
+                        foreach ($tasks as $task) {
+                            $allTasks->add($task);
+                            $totalTaskCount++;
+
+                            // Track completed tasks for completion rate
+                            if ($task->getStatus()->value === WorkStatus::COMPLETED->value) {
+                                $completedTasks++;
+                            }
+
+                            // Track task-level termination penalties
+                            $taskWorkerStatus = $task->getAdditionalInfo('workerStatus');
+                            if ($taskWorkerStatus === WorkerStatus::TERMINATED) {
+                                $statusPenalties['taskTerminations']++;
+                                $penalty = self::WORKER_STATUS_PENALTIES[WorkerStatus::TERMINATED->value];
+                                $statusPenalties['totalPenalty'] += $penalty;
+                                $statusPenalties['penaltyBreakdown'][] = [
+                                    'taskName' => $task->getName(),
+                                    'projectName' => $project->getName(),
+                                    'phaseName' => $phase->getName(),
+                                    'type' => 'task',
+                                    'penalty' => $penalty,
+                                    'reason' => 'Terminated from task'
+                                ];
+                            }
+                        }
+                    }
                 }
 
                 // Calculate task completion rate for this project
-                $completedTasks = 0;
-                foreach ($tasks as $task) {
-                    if ($task->getStatus()->value === WorkStatus::COMPLETED->value) {
-                        $completedTasks++;
-                    }
-                }
-                $completionRate = $tasks->count() > 0 ? ($completedTasks / $tasks->count()) * 100 : 0;
+                $completionRate = $totalTaskCount > 0 ? ($completedTasks / $totalTaskCount) * 100 : 0;
                 $projectMetrics['projectCompletionRates'][] = $completionRate;
             }
-        }
 
-         // Track project-level metrics
-        $projectStatus = $project->getStatus()->value;
-        $projectMetrics['projectsByStatus'][$projectStatus] =
-            ($projectMetrics['projectsByStatus'][$projectStatus] ?? 0) + 1;
+            // Track project-level metrics
+            $projectStatus = $project->getStatus()->value;
+            $projectMetrics['projectsByStatus'][$projectStatus] =
+                ($projectMetrics['projectsByStatus'][$projectStatus] ?? 0) + 1;
+        }
 
         // Calculate average tasks per project
         $projectMetrics['averageTasksPerProject'] = $projects->count() > 0
@@ -110,26 +171,39 @@ class WorkerPerformanceCalculator
         // Calculate task-based performance using existing method
         $taskPerformance = self::calculatePerformancePerTasks($allTasks);
 
+        // Apply status penalties to overall score
+        $baseScore = $taskPerformance['overallScore'];
+        $penalizedScore = max(0, $baseScore - $statusPenalties['totalPenalty']);
+
         // Generate project-specific insights
         $projectInsights = self::generateProjectInsights($projectMetrics, $taskPerformance);
+        
+        // Generate status penalty insights
+        $statusInsights = self::generateStatusPenaltyInsights($statusPenalties);
 
         // Combine insights
-        $combinedInsights = array_merge($taskPerformance['insights'], $projectInsights);
+        $combinedInsights = array_merge(
+            $taskPerformance['insights'], 
+            $projectInsights,
+            $statusInsights
+        );
 
         return [
-            'overallScore' => $taskPerformance['overallScore'],
+            'overallScore' => round($penalizedScore, 2),
+            'baseScore' => round($baseScore, 2),
             'totalTasks' => $totalTaskCount,
             'totalProjects' => $projects->count(),
-            'performanceGrade' => $taskPerformance['performanceGrade'],
+            'performanceGrade' => self::getTaskPerformanceGrade($penalizedScore),
             'taskMetrics' => [
                 'rawScore' => $taskPerformance['rawScore'],
                 'maxPossibleScore' => $taskPerformance['maxPossibleScore'],
                 'totalTasks' => $totalTaskCount
             ],
             'projectMetrics' => $projectMetrics,
+            'statusPenalties' => $statusPenalties,
             'messages' => [
                 'insights' => $combinedInsights,
-                'recommendations' => self::generateProjectRecommendations($projectMetrics, $taskPerformance)
+                'recommendations' => self::generateProjectRecommendations($projectMetrics, $taskPerformance, $statusPenalties)
             ]
         ];
     }
@@ -187,11 +261,53 @@ class WorkerPerformanceCalculator
     }
 
     /**
+     * Generate insights based on status penalties
+     */
+    private static function generateStatusPenaltyInsights(array $statusPenalties): array
+    {
+        $insights = [];
+
+        if ($statusPenalties['totalPenalty'] > 0) {
+            $insights[] = "Performance adjusted with {$statusPenalties['totalPenalty']}% penalty for terminations.";
+
+            if ($statusPenalties['projectTerminations'] > 0) {
+                $insights[] = "Terminated from {$statusPenalties['projectTerminations']} project(s) - significant performance impact.";
+            }
+
+            if ($statusPenalties['taskTerminations'] > 0) {
+                $insights[] = "Terminated from {$statusPenalties['taskTerminations']} task(s) - indicates reliability concerns.";
+            }
+
+            if ($statusPenalties['projectTerminations'] > 2) {
+                $insights[] = "Multiple project terminations detected - urgent review required.";
+            }
+        }
+
+        return $insights;
+    }
+
+    /**
      * Generate recommendations based on project-level performance
      */
-    private static function generateProjectRecommendations(array $projectMetrics, array $taskPerformance): array
+    private static function generateProjectRecommendations(array $projectMetrics, array $taskPerformance, array $statusPenalties = []): array
     {
         $recommendations = $taskPerformance['recommendations'] ?? [];
+
+        // Termination-based recommendations
+        if (!empty($statusPenalties) && $statusPenalties['totalPenalty'] > 0) {
+            if ($statusPenalties['projectTerminations'] > 0) {
+                $recommendations[] = "Address reasons for project termination(s) to improve future performance.";
+                $recommendations[] = "Meet with project manager to discuss expectations and performance improvement.";
+            }
+
+            if ($statusPenalties['taskTerminations'] >= 3) {
+                $recommendations[] = "Multiple task terminations - consider additional training or mentorship.";
+            }
+
+            if ($statusPenalties['totalPenalty'] >= 50) {
+                $recommendations[] = "High penalty score - formal performance improvement plan recommended.";
+            }
+        }
 
         // Project diversity recommendations
         $totalProjects = $projectMetrics['totalProjects'];

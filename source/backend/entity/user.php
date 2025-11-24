@@ -677,24 +677,24 @@ class User implements Entity
     {
         // Provide default values for required fields
         $defaults = [
-            'id' => $data['id'] ?? 0,
-            'publicId' => $data['publicId'] ?? UUID::get(),
-            'firstName' => $data['firstName'] ?? 'Unknown',
-            'middleName' => $data['middleName'] ?? null,
-            'lastName' => $data['lastName'] ?? 'User',
-            'gender' => $data['gender'] ?? Gender::MALE,
-            'birthDate' => $data['birthDate'] ?? new DateTime('2000-01-01'),
-            'role' => $data['role'] ?? Role::WORKER,
-            'jobTitles' => $data['jobTitles'] ?? new JobTitleContainer(),
-            'contactNumber' => $data['contactNumber'] ?? '00000000000',
-            'email' => $data['email'] ?? 'unknown@user.com',
-            'bio' => $data['bio'] ?? null,
-            'profileLink' => $data['profileLink'] ?? null,
-            'createdAt' => $data['createdAt'] ?? new DateTime(),
-            'confirmedAt' => $data['confirmedAt'] ?? null,
-            'deletedAt' => $data['deletedAt'] ?? null,
-            'password' => $data['password'] ?? null,
-            'additionalInfo' => $data['additionalInfo'] ?? []
+            'id'                        => $data['id'] ?? 0,
+            'publicId'                  => $data['publicId'] ?? UUID::get(),
+            'firstName'                 => $data['firstName'] ?? 'Unknown',
+            'middleName'                => $data['middleName'] ?? null,
+            'lastName'                  => $data['lastName'] ?? 'User',
+            'gender'                    => $data['gender'] ?? Gender::MALE,
+            'birthDate'                 => $data['birthDate'] ?? new DateTime('2000-01-01'),
+            'role'                      => $data['role'] ?? Role::WORKER,
+            'jobTitles'                 => $data['jobTitles'] ?? new JobTitleContainer(),
+            'contactNumber'             => $data['contactNumber'] ?? '00000000000',
+            'email'                     => $data['email'] ?? 'unknown@user.com',
+            'bio'                       => $data['bio'] ?? null,
+            'profileLink'               => $data['profileLink'] ?? null,
+            'createdAt'                 => $data['createdAt'] ?? new DateTime(),
+            'confirmedAt'               => $data['confirmedAt'] ?? null,
+            'deletedAt'                 => $data['deletedAt'] ?? null,
+            'password'                  => $data['password'] ?? null,
+            'additionalInfo'            => $data['additionalInfo'] ?? []
         ];
 
         // Handle UUID conversion
