@@ -13,6 +13,7 @@ use App\Entity\Project;
 use App\Entity\Task;
 use App\Enumeration\Gender;
 use App\Enumeration\Role;
+use App\Enumeration\TaskPriority;
 use App\Enumeration\WorkerStatus;
 use App\Enumeration\WorkStatus;
 use App\Exception\DatabaseException;
@@ -645,7 +646,7 @@ class ProjectWorkerModel extends Model
                                     'publicId'                  => UUID::fromHex($task['publicId']),
                                     'name'                      => $task['name'],
                                     'status'                    => WorkStatus::from($task['status']),
-                                    'priority'                  => (int)$task['priority'],
+                                    'priority'                  => TaskPriority::from($task['priority']),
                                     'startDateTime'             => $task['startDateTime'],
                                     'completionDateTime'        => $task['completionDateTime'],
                                     'actualCompletionDateTime'  => $task['actualCompletionDateTime'],
@@ -984,7 +985,7 @@ class ProjectWorkerModel extends Model
                                         'publicId'                  => UUID::fromHex($task['publicId']),
                                         'name'                      => $task['name'],
                                         'status'                    => WorkStatus::from($task['status']),
-                                        'priority'                  => (int)$task['priority'],
+                                        'priority'                  => TaskPriority::from($task['priority']),
                                         'startDateTime'             => $task['startDateTime'],
                                         'completionDateTime'        => $task['completionDateTime'],
                                         'actualCompletionDateTime'  => $task['actualCompletionDateTime'],

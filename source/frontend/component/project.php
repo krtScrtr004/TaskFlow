@@ -220,31 +220,29 @@ require_once COMPONENT_PATH . 'template/add-worker-modal.php';
                 </div>
             </section>
 
-            <?php if (Role::isProjectManager(Me::getInstance())): ?>
-                <!-- Project Actions -->
-                <section class="project-actions content-section-block">
-                    <div class="heading-title text-w-icon">
-                        <img src="<?= ICON_PATH . 'action_w.svg' ?>" alt="Project Actions" title="Project Actions"
-                            height="20">
+            <!-- Project Actions -->
+            <section class="project-actions content-section-block">
+                <div class="heading-title text-w-icon">
+                    <img src="<?= ICON_PATH . 'action_w.svg' ?>" alt="Project Actions" title="Project Actions"
+                        height="20">
 
-                        <h3>Actions</h3>
-                    </div>
+                    <h3>Actions</h3>
+                </div>
 
-                    <hr>
+                <hr>
 
-                    <div class="action-buttons flex-col">
-                        <a class="green-text inline" href="<?= REDIRECT_PATH . 'project' . DS . $projectData['id'] . DS . 'report' ?>">
-                            View Reports And Statistics
-                        </a>
+                <div class="action-buttons flex-col">
+                    <a class="green-text inline" href="<?= REDIRECT_PATH . 'project' . DS . $projectData['id'] . DS . 'report' ?>">
+                        View Reports And Statistics
+                    </a>
 
-                        <?php if ($projectData['status'] !== WorkStatus::COMPLETED && $projectData['status'] !== WorkStatus::CANCELLED): ?>
-                            <button id="cancel_project_button" type="button" class="unset-button" href="">
-                                Cancel This Project
-                            </button>
-                        <?php endif; ?>
-                    </div>
-                </section>
-            <?php endif; ?>
+                    <?php if (Role::isProjectManager(Me::getInstance()) && $projectData['status'] !== WorkStatus::COMPLETED && $projectData['status'] !== WorkStatus::CANCELLED): ?>
+                        <button id="cancel_project_button" type="button" class="unset-button" href="">
+                            Cancel This Project
+                        </button>
+                    <?php endif; ?>
+                </div>
+            </section>
         </div>
 
         <section class="team-members">

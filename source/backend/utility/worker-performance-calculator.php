@@ -416,10 +416,11 @@ class WorkerPerformanceCalculator
         $timePerformance = '';
 
         if ($actualCompletionDate && $completionDate && $status === WorkStatus::COMPLETED->value) {
-            if ($actualCompletionDate < $completionDate) {
+            $completedThreshold = (clone $completionDate)->modify('+1 day');
+            if (compareDates(formatDateTime($actualCompletionDate, 'Y-m-d'), formatDateTime($completionDate, 'Y-m-d')) < 0) {
                 $timeMultiplier = self::EARLY_COMPLETION_BONUS;
                 $timePerformance = 'early';
-            } elseif ($actualCompletionDate <= $completionDate->modify('+1 day')) {
+            } elseif (compareDates(formatDateTime($actualCompletionDate, 'Y-m-d'), formatDateTime($completedThreshold, 'Y-m-d')) <= 0) {
                 $timeMultiplier = self::ON_TIME_MULTIPLIER;
                 $timePerformance = 'onTime';
             } else {
