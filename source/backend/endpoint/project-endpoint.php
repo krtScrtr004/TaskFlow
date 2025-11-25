@@ -348,7 +348,7 @@ class ProjectEndpoint
 
             if (isset($data['project']['status'])) {
                 $projectData['status'] = WorkStatus::from($data['project']['status']);
-            } else {
+            } elseif ($project->getStatus() !== WorkStatus::DELAYED) {
                 $projectData['status'] = WorkStatus::getStatusFromDates(
                     $projectData['startDateTime'] ?? $project->getStartDateTime(),
                     $projectData['completionDateTime'] ?? $project->getCompletionDateTime()

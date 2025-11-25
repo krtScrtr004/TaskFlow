@@ -483,7 +483,7 @@ class TaskEndpoint
 
             if (isset($data['status'])) {
                 $taskData['status'] = WorkStatus::from($data['status']);
-            } else {
+            } elseif ($task->getStatus() !== WorkStatus::DELAYED) {
                 $taskData['status'] = WorkStatus::getStatusFromDates(
                     $taskData['startDateTime'] ?? $task->getStartDateTime(),
                     $taskData['completionDateTime'] ?? $task->getCompletionDateTime()

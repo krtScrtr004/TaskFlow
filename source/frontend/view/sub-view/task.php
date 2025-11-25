@@ -43,8 +43,8 @@ $taskData = [
 ];
 
 $isTaskEditable = $task->getStatus() !== WorkStatus::COMPLETED 
-    && $task->getStatus() !== WorkStatus::CANCELLED 
-    && TaskWorkerModel::worksOn($task->getId(), Me::getInstance()->getId(), $project->getId());
+    && $task->getStatus() !== WorkStatus::CANCELLED;
+$worksOn = TaskWorkerModel::worksOn($task->getId(), Me::getInstance()->getId(), $project->getId());
 ?>
 
 <!DOCTYPE html>
@@ -160,13 +160,15 @@ $isTaskEditable = $task->getStatus() !== WorkStatus::COMPLETED
             <!-- Buttons -->
             <section class="action-buttons flex-row flex-child-end-v">
                 <?php if ($isTaskEditable): ?>
-                    <!-- Complete Task Button -->
-                    <button id="complete_task_button" type="button" class="green-bg">
-                        <div class="text-w-icon">
-                            <img src="<?= ICON_PATH . 'complete_w.svg' ?>" alt="Complete Task" title="Complete Task" height="20">
-                            <h3>Complete</h3>
-                        </div>
-                    </button>
+                    <?php if ($worksOn): ?>
+                        <!-- Complete Task Button -->
+                        <button id="complete_task_button" type="button" class="green-bg">
+                            <div class="text-w-icon">
+                                <img src="<?= ICON_PATH . 'complete_w.svg' ?>" alt="Complete Task" title="Complete Task" height="20">
+                                <h3>Complete</h3>
+                            </div>
+                        </button>
+                    <?php endif; ?>
 
                     <?php if (Role::isProjectManager(Me::getInstance())): ?>
                         <!-- Edit Task Button -->
