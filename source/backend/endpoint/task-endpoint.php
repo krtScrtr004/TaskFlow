@@ -404,8 +404,11 @@ class TaskEndpoint
             }
             Csrf::protect();
 
-            if (!Role::isProjectManager(Me::getInstance())) {
-                throw new ForbiddenException('Only Project Managers are allowed to edit tasks.');
+            $projectManagerOnly = ['name', 'description', 'priority', 'startDateTime', 'completionDateTime'];
+            foreach ($projectManagerOnly as $field) {
+                if (isset($data[$field]) && !Role::isProjectManager(Me::getInstance())) {
+                    throw new ForbiddenException("Only Project Managers are allowed to edit {$field} field.");
+                }
             }
 
             $projectId = isset($args['projectId'])
