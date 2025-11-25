@@ -4,7 +4,6 @@ namespace App\Model;
 
 use App\Abstract\Model;
 use App\Exception\DatabaseException;
-use App\Exception\ValidationException;
 use InvalidArgumentException;
 use PDOException;
 

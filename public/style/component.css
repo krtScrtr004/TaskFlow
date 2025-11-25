@@ -500,6 +500,10 @@ button > .text-w-icon {
 	font-weight: 300;
 }
 
+.user-list-card .name {
+	max-width: 20ch;
+}
+
 .user-list-card .id {
 	max-width: fit-content;
 }
@@ -621,12 +625,13 @@ button > .text-w-icon {
 }
 
 .user-grid-card .user-name {
+	max-width: 18ch;
 	font-size: 1.2rem;
 	font-weight: 500;
 }
 
 .user-grid-card .user-id {
-	font-size: 0.9rem;
+	font-size: 0.7rem;
 	font-weight: 300;
 }
 

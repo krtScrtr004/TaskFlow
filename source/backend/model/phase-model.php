@@ -11,7 +11,6 @@ use App\Dependent\Phase;
 use App\Entity\Task;
 use App\Enumeration\TaskPriority;
 use App\Exception\DatabaseException;
-use App\Exception\ValidationException;
 use DateTime;
 use Exception;
 use InvalidArgumentException;

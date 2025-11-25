@@ -4,17 +4,11 @@ namespace App\Controller;
 
 use App\Auth\SessionAuth;
 use App\Interface\Controller;
-use App\Middleware\Response;
-use App\Model\ProjectModel;
 use App\Model\UserModel;
 use App\Enumeration\Role;
-use App\Dependent\Worker;
-use App\Endpoint\UserEndpoint;
 use App\Enumeration\WorkerStatus;
-use App\Enumeration\WorkStatus;
 use App\Exception\ForbiddenException;
 use App\Exception\NotFoundException;
-use App\Utility\WorkerPerformanceCalculator;
 use ValueError;
 
 class UserController implements Controller
@@ -75,6 +69,5 @@ class UserController implements Controller
         } catch (ForbiddenException $e) {
             ErrorController::forbidden();
         }
-
     }
 }

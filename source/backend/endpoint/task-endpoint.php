@@ -4,7 +4,6 @@ namespace App\Endpoint;
 
 use App\Auth\HttpAuth;
 use App\Auth\SessionAuth;
-use App\Container\TaskContainer;
 use App\Core\Me;
 use App\Core\UUID;
 use App\Dependent\Worker;

@@ -1,9 +1,42 @@
 <?php
+
 /**
+ * Renders a searchable HTML form (search bar) and returns it as a string.
  *
- * @param array|null $filterOptions Filter options in format [ optionName => [optionGroup], optionName => [optionGroup], ...] or null to disable filter
- * @param string $placeholder Placeholder text for search input
- * @return void Outputs the search bar HTML
+ * The generated form contains:
+ * - A text input for the search query (required) with placeholder and value populated
+ *   from the current request (escaped via htmlspecialchars).
+ * - A submit button containing a search icon (ICON_PATH constant is used).
+ * - An optional <select> filter grouped by provided filter options. Each group is
+ *   rendered as an <optgroup> and each option value is converted to a camel-case
+ *   value attribute using sentenceToCamelCase while the visible label remains the
+ *   original value. The current selected filter is taken from $_GET['filter'].
+ *
+ * Notes and behavior:
+ * - Validates that $filterOptions is an associative array using isAssociativeArray();
+ *   otherwise an InvalidArgumentException is thrown.
+ * - Reads initial values from the GET superglobal:
+ *     - 'key' populates the search input value (escaped).
+ *     - 'filter' populates the selected filter (escaped).
+ * - Escapes user-supplied values with htmlspecialchars before output.
+ * - Uses output buffering to capture and return the generated HTML as a string.
+ * - The form posts via POST to the current URL.
+ * - Relies on the constants NAME_MIN, NAME_MAX (used for input min/max attributes)
+ *   and ICON_PATH (used to locate the search icon).
+ * - Relies on helper functions: isAssociativeArray(), camelToSentenceCase(),
+ *   sentenceToCamelCase().
+ *
+ * @param array|null $filterOptions Associative array of filter groups to option lists, e.g.:
+ *      [
+ *          'groupName' => ['Option One', 'Option Two'],
+ *          'anotherGroup' => ['One', 'Two']
+ *      ]
+ *      If null or an empty array is provided, no filter <select> is rendered.
+ * @param string $placeholder Placeholder text for the search input (default: 'Search...')
+ *
+ * @throws InvalidArgumentException If $filterOptions is not an associative array.
+ *
+ * @return string HTML markup of the search form
  */
 function searchBar(
     ?array $filterOptions = null,

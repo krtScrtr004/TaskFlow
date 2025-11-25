@@ -5,8 +5,47 @@ use App\Core\UUID;
 use App\Dependent\Worker;
 use App\Enumeration\WorkerStatus;
 use App\Model\ProjectModel;
-use App\Utility\WorkerPerformanceCalculator;
 
+/**
+ * Renders a user/worker "grid card" as an HTML string.
+ *
+ * This function builds a compact card (button element) representing a User or Worker.
+ * It performs necessary escaping and fallbacks, and conditionally renders different
+ * pieces of information depending on the current request context and the concrete
+ * type of the provided object.
+ *
+ * Behavior and transformations:
+ * - Escapes user-supplied values using htmlspecialchars for safety (name, id, email, contact, role, numeric stats).
+ * - Converts the public id to a string via UUID::toString($user->getPublicId()) before escaping.
+ * - Builds a full display name using createFullName(...) before escaping.
+ * - Uses the user's profile link if present; otherwise falls back to ICON_PATH . 'profile_w.svg'.
+ * - Detects "users" page context by checking strpos($_SERVER['REQUEST_URI'], 'users') !== false.
+ *   - When on the users page: renders a role badge and "Total Projects" / "Completed Projects".
+ *   - Otherwise: renders "Total Tasks" / "Completed Tasks".
+ * - Retrieves numeric statistics via $user->getAdditionalInfo(...) and defaults missing values to 0.
+ * - Includes contact/email lines with appropriate icons pulled from ICON_PATH constants.
+ * - If $user is an instance of Worker, appends a status badge using WorkerStatus::badge($user->getStatus()).
+ * - Loads the profile image with loading="lazy" and renders the card inside an output buffer (ob_start/ob_get_clean).
+ *
+ * Notes / side effects:
+ * - Relies on global/server state: $_SERVER['REQUEST_URI'].
+ * - Uses external helpers/constants/classes: createFullName(), UUID, ICON_PATH, WorkerStatus.
+ * - The returned string is a complete HTML fragment (<button>...</button>) ready for output.
+ *
+ * @param User|Worker $user The User or Worker object to render. Expected methods used:
+ *      - getFirstName(): string
+ *      - getMiddleName(): string
+ *      - getLastName(): string
+ *      - getPublicId(): mixed (consumable by UUID::toString)
+ *      - getEmail(): string
+ *      - getContactNumber(): string
+ *      - getRole(): object with getDisplayName(): string
+ *      - getProfileLink(): string|null
+ *      - getAdditionalInfo(string $key): mixed
+ *      - (if Worker) getStatus(): mixed
+ *
+ * @return string Rendered HTML for the user grid card (escaped and safe for direct output).
+ */
 function userGridCard(User|Worker $user): string
 {
     $name           = htmlspecialchars(createFullName($user->getFirstName(), $user->getMiddleName(), $user->getLastName()));
@@ -31,7 +70,7 @@ function userGridCard(User|Worker $user): string
 
             <div class="flex-col">
                 <!-- Worker Name -->
-                <h3 class="user-name start-text"><?= $name ?></h3>
+                <h3 class="user-name start-text single-line-ellipsis" title="<?= $name ?>"><?= $name ?></h3>
 
                 <!-- Worker ID -->
                 <p class="user-id start-text"><em><?= $id ?></em></p>
@@ -108,6 +147,29 @@ function userGridCard(User|Worker $user): string
     return ob_get_clean();
 }
 
+/**
+ * Renders a grid card for a Worker by delegating to userGridCard().
+ *
+ * This is a thin, type-safe wrapper that accepts a Worker domain/entity object
+ * and returns the rendered markup/string representation suitable for display
+ * in a user/worker grid. Internally this function forwards the Worker instance
+ * to userGridCard() to produce the output.
+ *
+ * @param Worker $worker Worker instance containing display data with common accessible properties:
+ *      - id: int|null Worker ID
+ *      - publicId: string|UUID|null Public identifier
+ *      - firstName: string Worker's first name
+ *      - middleName: string|null Worker's middle name
+ *      - lastName: string Worker's last name
+ *      - jobTitle: string|null Worker's primary job title
+ *      - avatarUrl: string|null URL of worker's avatar or profile image
+ *      - contactNumber: string|null Contact phone number
+ *      - email: string|null Email address
+ *      - profileLink: string|null URL to worker's profile or detail page
+ *      - metadata: array|null Additional display metadata or attributes
+ *
+ * @return string Rendered HTML or markup for the worker grid card
+ */
 function workerGridCard(Worker $worker): string
 {
     return userGridCard($worker);

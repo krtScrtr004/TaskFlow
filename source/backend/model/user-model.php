@@ -3,17 +3,13 @@
 namespace App\Model;
 
 use App\Abstract\Model;
-use App\Core\Connection;
 use App\Container\JobTitleContainer;
-use App\Core\Me;
 use App\Core\UUID;
 use App\Entity\User;
-use App\Enumeration\Gender;
 use App\Enumeration\Role;
 use App\Enumeration\WorkerStatus;
 use App\Enumeration\WorkStatus;
 use App\Exception\DatabaseException;
-use App\Exception\ValidationException;
 use App\Middleware\Csrf;
 use DateTime;
 use Exception;

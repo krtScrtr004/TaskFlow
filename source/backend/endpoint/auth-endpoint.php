@@ -21,7 +21,6 @@ use App\Exception\ValidationException;
 use App\Model\TemporaryLinkModel;
 use App\Service\AuthService;
 use App\Utility\ResponseExceptionHandler;
-use Cloudinary\Transformation\ForegroundObject;
 use DateTime;
 use Exception;
 use Throwable;

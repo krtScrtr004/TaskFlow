@@ -3,10 +3,7 @@
 use App\Auth\HttpAuth;
 use App\Auth\SessionAuth;
 use App\Core\UUID;
-use App\Dependent\Worker;
-use App\Enumeration\Role;
 use App\Enumeration\WorkerStatus;
-use App\Enumeration\WorkStatus;
 use App\Exception\ForbiddenException;
 use App\Exception\NotFoundException;
 use App\Exception\ValidationException;
@@ -17,9 +14,7 @@ use App\Model\ProjectModel;
 use App\Model\ProjectWorkerModel;
 use App\Model\TaskModel;
 use App\Model\TaskWorkerModel;
-use App\Model\UserModel;
 use App\Utility\ResponseExceptionHandler;
-use App\Utility\WorkerPerformanceCalculator;
 
 class TaskWorkerEndpoint
 {

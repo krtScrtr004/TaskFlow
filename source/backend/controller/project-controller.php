@@ -11,23 +11,29 @@ use App\Enumeration\Role;
 use App\Enumeration\WorkStatus;
 use App\Exception\ForbiddenException;
 use App\Exception\NotFoundException;
-use App\Exception\ValidationException;
 use App\Interface\Controller;
-use App\Middleware\Csrf;
-use App\Middleware\Response;
 use App\Model\PhaseModel;
 use App\Model\ProjectModel;
-use App\Model\ProjectWorkerModel;
 use App\Utility\ProjectProgressCalculator;
 use App\Validator\UuidValidator;
-use InvalidArgumentException;
 use DateTime;
-use Exception;
 
 class ProjectController implements Controller
 {
     private UuidValidator $uuidValidator;
 
+    /**
+     * Initializes the controller's internal dependencies.
+     *
+     * This private constructor:
+     * - Prevents direct external instantiation of the controller (private visibility).
+     * - Instantiates and assigns a UuidValidator to $this->uuidValidator for UUID validation tasks.
+     *
+     * Instances of this class should be created via the class factory or designated creation methods.
+     *
+     * @internal Used for internal initialization only.
+     * @return void
+     */
     private function __construct()
     {
         $this->uuidValidator = new UuidValidator();

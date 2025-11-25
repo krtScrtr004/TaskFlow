@@ -39,9 +39,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Extract project schedule
     const projectStartDateTime = new Date(projectScheduleEl.dataset.projectstartdatetime)
-    const projectCompletionDateTime = addOneDay(projectScheduleEl.dataset.projectcompletiondatetime)
+    const projectCompletionDateTime = new Date(projectScheduleEl.dataset.projectcompletiondatetime)
     const projectActualCompletionDateTime = projectScheduleEl.dataset.projectactualcompletiondatetime
-        ? addOneDay(projectScheduleEl.dataset.projectactualcompletiondatetime)
+        ? new Date(projectScheduleEl.dataset.projectactualcompletiondatetime)
         : null
 
     // Extract phase data
@@ -50,9 +50,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const phase = {
             name: span.dataset.name,
             startDateTime: new Date(span.dataset.startdatetime),
-            completionDateTime: addOneDay(span.dataset.completiondatetime),
+            completionDateTime: new Date(span.dataset.completiondatetime),
             actualCompletionDateTime: span.dataset.actualcompletiondatetime
-                ? addOneDay(span.dataset.actualcompletiondatetime)
+                ? new Date(span.dataset.actualcompletiondatetime)
                 : null
         }
         phases.push(phase)
