@@ -10,6 +10,8 @@ use App\Enumeration\WorkStatus;
 use App\Enumeration\TaskPriority;
 use App\Exception\NotFoundException;
 use App\Middleware\Csrf;
+use App\Model\TaskModel;
+use App\Model\TaskWorkerModel;
 
 if (!isset($project) || !$project instanceof Project) {
     throw new NotFoundException('Project is not defined.');
@@ -40,7 +42,9 @@ $taskData = [
     'priority'                  => $task->getPriority(),
 ];
 
-$isTaskEditable = $task->getStatus() !== WorkStatus::COMPLETED && $task->getStatus() !== WorkStatus::CANCELLED;
+$isTaskEditable = $task->getStatus() !== WorkStatus::COMPLETED 
+    && $task->getStatus() !== WorkStatus::CANCELLED 
+    && TaskWorkerModel::worksOn($task->getId(), Me::getInstance()->getId(), $project->getId());
 ?>
 
 <!DOCTYPE html>
