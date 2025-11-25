@@ -86,6 +86,8 @@ class TaskWorkerModel extends Model
                             ptw.taskId = pt.id
                         WHERE 
                             ptw.workerId = u.id AND pt.status = '" . WorkStatus::COMPLETED->value . "'
+                        AND 
+                            ptw.status != '" . WorkerStatus::TERMINATED->value . "'
                     ) AS completedTasks
                 FROM
                     `user` AS u

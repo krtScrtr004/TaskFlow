@@ -113,6 +113,8 @@ class ProjectWorkerModel extends Model
                             pw3.workerId = u.id 
                         AND 
                             p2.status = '" . WorkStatus::COMPLETED->value . "'
+                        AND 
+                            pw3.status != '" . WorkerStatus::TERMINATED->value . "'
                     ) AS completedProjects
                 FROM
                     `user` AS u
@@ -524,7 +526,9 @@ class ProjectWorkerModel extends Model
                         WHERE 
                             ptw.workerId = u.id 
                         AND 
-                            t.status = '" . WorkStatus::COMPLETED->value . "'" 
+                            t.status = '" . WorkStatus::COMPLETED->value . "'
+                        AND 
+                            ptw.status != '" . WorkerStatus::TERMINATED->value . "'"
                         . ($projectId ? " AND pp.projectId = :projectId2" : "") . "
                     ) AS completedTasks,
                     (
@@ -548,6 +552,8 @@ class ProjectWorkerModel extends Model
                             pw3.workerId = u.id 
                         AND 
                             p2.status = '" . WorkStatus::COMPLETED->value . "'
+                        AND 
+                            pw3.status != '" . WorkerStatus::TERMINATED->value . "'
                     ) AS completedProjects
                     $projectHistory
                 FROM
@@ -855,7 +861,9 @@ class ProjectWorkerModel extends Model
                         WHERE 
                             ptw.workerId = u.id 
                         AND 
-                            t.status = '" . WorkStatus::COMPLETED->value . "'" 
+                            t.status = '" . WorkStatus::COMPLETED->value . "'
+                        AND 
+                            ptw.status != '" . WorkerStatus::TERMINATED->value . "'"
                         . ($projectId ? " AND pp.projectId = :projectId2" : "") . "
                     ) AS completedTasks,
                     (
@@ -879,6 +887,8 @@ class ProjectWorkerModel extends Model
                             pw3.workerId = u.id 
                         AND 
                             p2.status = '" . WorkStatus::COMPLETED->value . "'
+                        AND 
+                            pw3.status != '" . WorkerStatus::TERMINATED->value . "'
                     ) AS completedProjects
                     $projectHistory
                 FROM
