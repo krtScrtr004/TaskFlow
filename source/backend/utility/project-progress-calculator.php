@@ -352,7 +352,9 @@ class ProjectProgressCalculator
         $insights = [];
         
         // Progress status
-        if ($progress >= 90) {
+        if ($progress === 100) {
+            $insights[] = "Project is completed successfully!";
+        } elseif ($progress >= 90) {
             $insights[] = "Project is near completion - excellent progress!";
         } elseif ($progress >= 70) {
             $insights[] = "Project is on track with good progress.";

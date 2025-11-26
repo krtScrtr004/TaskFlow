@@ -208,7 +208,7 @@ function getChangedValues(currentParams) {
 
     for (const [key, value] of Object.entries(currentParams)) {
         // Compare current value with original value
-        if (originalValues[key] !== value) {
+        if (originalValues[key].trim() !== value) {
             changedValues[key] = value
         }
     }

@@ -178,7 +178,7 @@ class ProjectManagerModel extends Model
                     u.createdAt,
                     u.confirmedAt,
                     u.deletedAt,
-                    GROUP_CONCAT(ujt.title) AS jobTitles,
+                    GROUP_CONCAT(DISTINCT ujt.title) AS jobTitles,
                     (
                         SELECT 
                             COUNT(*)

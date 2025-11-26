@@ -12,19 +12,19 @@ if (!$me) {
 }
 
 $myData = [
-    'id' => htmlspecialchars(UUID::toString($me->getPublicId())),
-    'firstName' => htmlspecialchars($me->getFirstName()),
-    'middleName' => htmlspecialchars($me->getMiddleName()),
-    'lastName' => htmlspecialchars($me->getLastName()),
-    'fullName' => htmlspecialchars($me->getFirstName()) . ($me->getMiddleName() ? ' ' . htmlspecialchars($me->getMiddleName()) . ' ' : ' ') . htmlspecialchars($me->getLastName()),
-    'gender' => $me->getGender(),
-    'birthDate' => $me->getBirthDate() ? htmlspecialchars(formatDateTime($me->getBirthDate(), 'Y-m-d')) : null,
-    'bio' => $me->getBio() ? htmlspecialchars($me->getBio()) : null,
-    'role' => $me->getRole(),
-    'email' => htmlspecialchars($me->getEmail()),
-    'contactNumber' => htmlspecialchars($me->getContactNumber()),
-    'profileLink' => $me->getProfileLink() ? htmlspecialchars($me->getProfileLink()) : ICON_PATH . 'profile_w.svg',
-    'jobTitles' => array_map('htmlspecialchars', $me->getJobTitles()->getItems()),
+    'id'                => htmlspecialchars(UUID::toString($me->getPublicId())),
+    'firstName'         => htmlspecialchars($me->getFirstName()),
+    'middleName'        => htmlspecialchars($me->getMiddleName()),
+    'lastName'          => htmlspecialchars($me->getLastName()),
+    'fullName'          => htmlspecialchars($me->getFirstName()) . ($me->getMiddleName() ? ' ' . htmlspecialchars($me->getMiddleName()) . ' ' : ' ') . htmlspecialchars($me->getLastName()),
+    'gender'            => $me->getGender(),
+    'birthDate'         => $me->getBirthDate() ? htmlspecialchars(formatDateTime($me->getBirthDate(), 'Y-m-d')) : null,
+    'bio'               => $me->getBio() ? htmlspecialchars($me->getBio()) : null,
+    'role'              => $me->getRole(),
+    'email'             => htmlspecialchars($me->getEmail()),
+    'contactNumber'     => htmlspecialchars($me->getContactNumber()),
+    'profileLink'       => $me->getProfileLink() ? htmlspecialchars($me->getProfileLink()) : ICON_PATH . 'profile_w.svg',
+    'jobTitles'         => array_map('htmlspecialchars', $me->getJobTitles()->getItems()),
 ];
 ?>
 
@@ -99,7 +99,7 @@ $myData = [
                 <h1 class="full-name wrap-text"><?= $myData['fullName'] ?></h1>
 
                 <!-- Job Titles -->
-                <div class="job-titles flex-wrap">
+                <div class="job-titles flex-row flex-wrap">
                     <?php foreach ($myData['jobTitles'] as $jobTitle): ?>
                         <span class="job-title-chip"><?= htmlspecialchars($jobTitle) ?></span>
                     <?php endforeach; ?>
@@ -263,8 +263,8 @@ $myData = [
                         <p>Bio</p>
                     </div>
                 </label>
-                <textarea name="bio" id="bio" rows="4" cols="10" placeholder="Type your bio here..." minlength="1"
-                    maxlength="300"><?= $myData['bio'] ?></textarea>
+                <textarea name="bio" id="bio" rows="4" cols="10" placeholder="Type your bio here..." minlength="<?= LONG_TEXT_MIN ?>"
+                    maxlength="<?= LONG_TEXT_MAX ?>"><?= $myData['bio'] ?></textarea>
             </div>
 
             <!-- Save Changes Button -->
