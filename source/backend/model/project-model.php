@@ -1688,6 +1688,11 @@ class ProjectModel extends Model
                         WHERE pt2.status = '" . WorkStatus::COMPLETED->value . "'
                         AND ptw2.workerId = u.id
                         AND ptw2.status != '". WorkerStatus::TERMINATED->value ."'
+                        AND pt2.phaseId IN (
+                            SELECT pp2.id
+                            FROM `projectPhase` AS pp2
+                            WHERE pp2.projectId = p.id
+                        )
                     ) as completedTasks,
                     -- Base performance score (before penalties)
                     ROUND(

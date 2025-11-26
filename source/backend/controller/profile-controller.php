@@ -3,9 +3,11 @@
 namespace App\Controller;
 
 use App\Auth\SessionAuth;
+use App\Core\Me;
 use App\Exception\ForbiddenException;
 use App\Exception\NotFoundException;
 use App\Interface\Controller;
+use App\Model\UserModel;
 
 class ProfileController implements Controller {
     /**
@@ -31,6 +33,11 @@ class ProfileController implements Controller {
                 header('Location: ' . REDIRECT_PATH . 'login');
                 exit();
             }
+
+            $profile = UserModel::findById(Me::getInstance()->getId());
+
+            // Re-instantiate Me with fresh data
+            SessionAuth::setAuthorizedSession($profile);
 
             require_once VIEW_PATH . 'profile.php';
         } catch (NotFoundException $e) {
