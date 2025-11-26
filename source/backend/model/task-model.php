@@ -9,9 +9,7 @@ use App\Container\TaskContainer;
 use App\Core\UUID;
 use App\Dependent\Worker;
 use App\Entity\Project;
-use App\Exception\ValidationException;
 use App\Exception\DatabaseException;
-use App\Model\UserModel;
 use App\Enumeration\WorkStatus;
 use App\Enumeration\TaskPriority;
 use App\Entity\User;
@@ -20,7 +18,6 @@ use App\Enumeration\Gender;
 use App\Enumeration\WorkerStatus;
 use DateTime;
 use Exception;
-use GuzzleHttp\Promise\Is;
 use InvalidArgumentException;
 use PDOException;
 

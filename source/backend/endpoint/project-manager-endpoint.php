@@ -10,7 +10,6 @@ use App\Exception\NotFoundException;
 use App\Middleware\Response;
 use App\Model\ProjectManagerModel;
 use App\Model\ProjectModel;
-use App\Model\ProjectWorkerModel;
 use App\Utility\ProjectManagerPerformanceCalculator;
 use App\Utility\ResponseExceptionHandler;
 use Throwable;

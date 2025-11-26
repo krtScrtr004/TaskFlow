@@ -3,20 +3,14 @@
 namespace App\Controller;
 
 use App\Auth\SessionAuth;
-use App\Core\Me;
 use App\Core\Session;
 use App\Core\UUID;
-use App\Dependent\Phase;
 use App\Exception\ForbiddenException;
 use App\Exception\NotFoundException;
 use App\Interface\Controller;
 use App\Middleware\Csrf;
 use App\Model\PhaseModel;
 use App\Model\ProjectModel;
-use App\Model\TemporaryLinkModel;
-use Cloudinary\Api\Exception\NotFound;
-use DateTime;
-use Exception;
 
 class SingleFormController implements Controller
 {
@@ -74,6 +68,39 @@ class SingleFormController implements Controller
     {
     }
 
+    /**
+     * Handles requests for single-form pages and renders the corresponding view.
+     *
+     * This static controller action performs request routing, session/CSRF initialization,
+     * authorization checks, and special-case handling for certain pages before including
+     * the single-form view. Key responsibilities:
+     * - Ensures a session exists for unauthenticated users and generates a CSRF token if missing.
+     *   Forces session write/close then restores the session to persist the token.
+     * - Parses the request URI ($_SERVER['REQUEST_URI']) to determine the requested page:
+     *   converts the third URI segment from kebab-case to camelCase and falls back to 'forgetPassword'.
+     * - Resolves the page's component configuration to determine scripts and the form file path.
+     * - Enforces authorization for protected pages (createPassword, editProject, addTask):
+     *   redirects unauthenticated users to REDIRECT_PATH . 'login' and exits.
+     * - Special handling:
+     *   - addTask: accepts an optional projectId via $args, calls instance->addTask($projectId),
+     *     obtains $project and $activePhase, includes VIEW_PATH . 'single-form.php' and returns.
+     *   - changePassword: validates a token passed via $_GET['token'] and throws a ForbiddenException
+     *     if the token is missing or invalid.
+     * - Loads the view (VIEW_PATH . 'single-form.php') for normal flow.
+     * - Catches ForbiddenException and NotFoundException and delegates to ErrorController::forbidden()
+     *   and ErrorController::notFound(), respectively.
+     *
+     * Notes / side effects:
+     * - May send HTTP redirects and call exit().
+     * - Requires and includes view files; may output content.
+     * - Reads superglobals: $_SERVER['REQUEST_URI'], $_GET['token'].
+     * - Depends on Session, Csrf, SessionAuth, and various application constants (VIEW_PATH, REDIRECT_PATH, DS).
+     *
+     * @param array $args Associative array of optional arguments. Supported keys:
+     *      - projectId: int|string (optional) Project identifier used when handling the 'addTask' page.
+     *
+     * @return void
+     */
     public static function index(array $args = []): void
     {
         // For unauthenticated users, ensure session exists and CSRF token is set

@@ -3,17 +3,13 @@
 namespace App\Model;
 
 use App\Abstract\Model;
-use App\Core\Connection;
 use App\Container\JobTitleContainer;
-use App\Core\Me;
 use App\Core\UUID;
 use App\Entity\User;
-use App\Enumeration\Gender;
 use App\Enumeration\Role;
 use App\Enumeration\WorkerStatus;
 use App\Enumeration\WorkStatus;
 use App\Exception\DatabaseException;
-use App\Exception\ValidationException;
 use App\Middleware\Csrf;
 use DateTime;
 use Exception;
@@ -94,6 +90,8 @@ class UserModel extends Model
                             pw.workerId = u.id)
                         AND 
                             p.status = :completedStatus
+                        AND 
+                            pw.status != :terminatedStatus1
                     ) AS completedProjects,
                     (
                         SELECT 
@@ -117,7 +115,7 @@ class UserModel extends Model
                         WHERE 
                             pw.workerId = u.id
                         AND 
-                            pw.status = :terminatedStatus
+                            pw.status = :terminatedStatus2
                     ) AS terminatedProjectCount
                 FROM 
                     `user` AS u
@@ -131,7 +129,8 @@ class UserModel extends Model
 
             $params[':completedStatus'] = WorkStatus::COMPLETED->value;
             $params[':cancelledStatus'] = WorkStatus::CANCELLED->value;
-            $params[':terminatedStatus'] = WorkerStatus::TERMINATED->value;
+            $params[':terminatedStatus1'] = WorkerStatus::TERMINATED->value;
+            $params[':terminatedStatus2'] = WorkerStatus::TERMINATED->value;
 
             $statement = $instance->connection->prepare($query);
             $statement->execute($params);

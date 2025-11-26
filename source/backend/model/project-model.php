@@ -8,8 +8,6 @@ use App\Container\PhaseContainer;
 use App\Container\TaskContainer;
 use App\Dependent\Phase;
 use App\Enumeration\TaskPriority;
-use App\Model\UserModel;
-use App\Model\TaskModel;
 use App\Core\UUID;
 use App\Enumeration\WorkStatus;
 use App\Container\ProjectContainer;
@@ -18,14 +16,10 @@ use App\Entity\Project;
 use App\Entity\User;
 use App\Entity\Task;
 use App\Dependent\Worker;
-use App\Enumeration\Role;
 use App\Core\Me;
-use App\Core\Connection;
 use App\Dependent\ProjectReport;
 use App\Enumeration\WorkerStatus;
-use App\Exception\ValidationException;
 use App\Exception\DatabaseException;
-use App\Validator\UuidValidator;
 use InvalidArgumentException;
 use DateTime;
 use Exception;
@@ -1691,8 +1685,9 @@ class ProjectModel extends Model
                         FROM `phaseTask` AS pt2
                         INNER JOIN `phaseTaskWorker` AS ptw2 
                         ON pt2.id = ptw2.taskId
-                        WHERE pt2.status = 'completed'
+                        WHERE pt2.status = '" . WorkStatus::COMPLETED->value . "'
                         AND ptw2.workerId = u.id
+                        AND ptw2.status != '". WorkerStatus::TERMINATED->value ."'
                     ) as completedTasks,
                     -- Base performance score (before penalties)
                     ROUND(
@@ -1700,37 +1695,37 @@ class ProjectModel extends Model
                             CASE 
                                 WHEN pt.status = 'completed' THEN
                                     CASE 
-                                        WHEN pt.priority = 'high' THEN 5.0
-                                        WHEN pt.priority = 'medium' THEN 3.0
-                                        WHEN pt.priority = 'low' THEN 1.0
+                                        WHEN pt.priority = '" . TaskPriority::HIGH->value . "' THEN 5.0
+                                        WHEN pt.priority = '" . TaskPriority::MEDIUM->value . "' THEN 3.0
+                                        WHEN pt.priority = '" . TaskPriority::LOW->value . "' THEN 1.0
                                         ELSE 1.0
                                     END *
                                     CASE 
-                                        WHEN pt.actualCompletionDateTime < pt.completionDateTime THEN 1.2
-                                        WHEN pt.actualCompletionDateTime <= DATE_ADD(pt.completionDateTime, INTERVAL 1 DAY) THEN 1.0
+                                        WHEN CAST(pt.actualCompletionDateTime AS DATE) < CAST(pt.completionDateTime AS DATE) THEN 1.2
+                                        WHEN CAST(pt.actualCompletionDateTime AS DATE) <= CAST(DATE_ADD(pt.completionDateTime, INTERVAL 1 DAY) AS DATE) THEN 1.0
                                         ELSE 0.8
                                     END
                                 WHEN pt.status = 'onGoing' THEN
                                     CASE 
-                                        WHEN pt.priority = 'high' THEN 5.0 * 0.5
-                                        WHEN pt.priority = 'medium' THEN 3.0 * 0.5
-                                        WHEN pt.priority = 'low' THEN 1.0 * 0.5
+                                        WHEN pt.priority = '" . TaskPriority::HIGH->value . "' THEN 5.0 * 0.5
+                                        WHEN pt.priority = '" . TaskPriority::MEDIUM->value . "' THEN 3.0 * 0.5
+                                        WHEN pt.priority = '" . TaskPriority::LOW->value . "' THEN 1.0 * 0.5
                                         ELSE 0.5
                                     END
                                 WHEN pt.status = 'delayed' THEN
                                     CASE 
-                                        WHEN pt.priority = 'high' THEN 5.0 * 0.3
-                                        WHEN pt.priority = 'medium' THEN 3.0 * 0.3
-                                        WHEN pt.priority = 'low' THEN 1.0 * 0.3
+                                        WHEN pt.priority = '" . TaskPriority::HIGH->value . "' THEN 5.0 * 0.3
+                                        WHEN pt.priority = '" . TaskPriority::MEDIUM->value . "' THEN 3.0 * 0.3
+                                        WHEN pt.priority = '" . TaskPriority::LOW->value . "' THEN 1.0 * 0.3
                                         ELSE 0.3
                                     END
                                 ELSE 0
                             END
                         ) / SUM(
                             CASE 
-                                WHEN pt.priority = 'high' THEN 5.0 * 1.2
-                                WHEN pt.priority = 'medium' THEN 3.0 * 1.2
-                                WHEN pt.priority = 'low' THEN 1.0 * 1.2
+                                WHEN pt.priority = '" . TaskPriority::HIGH->value . "' THEN 5.0 * 1.2
+                                WHEN pt.priority = '" . TaskPriority::MEDIUM->value . "' THEN 3.0 * 1.2
+                                WHEN pt.priority = '" . TaskPriority::LOW->value . "' THEN 1.0 * 1.2
                                 ELSE 1.2
                             END
                         )
@@ -1744,7 +1739,7 @@ class ProjectModel extends Model
                         INNER JOIN `projectPhase` AS pp3 ON pt3.phaseId = pp3.id
                         WHERE ptw3.workerId = u.id
                         AND pp3.projectId = p.id
-                        AND ptw3.status = 'terminated'
+                        AND ptw3.status = '" . WorkerStatus::TERMINATED->value . "'
                     ) as taskTerminations,
                     -- Count project-level terminations
                     (
@@ -1752,7 +1747,7 @@ class ProjectModel extends Model
                         FROM `projectWorker` AS pw2
                         WHERE pw2.workerId = u.id
                         AND pw2.projectId = p.id
-                        AND pw2.status = 'terminated'
+                        AND pw2.status = '" . WorkerStatus::TERMINATED->value . "'
                     ) as projectTerminations,
                     -- Calculate total penalty (15% per task termination + 25% per project termination)
                     (
@@ -1763,7 +1758,7 @@ class ProjectModel extends Model
                             INNER JOIN `projectPhase` AS pp3 ON pt3.phaseId = pp3.id
                             WHERE ptw3.workerId = u.id
                             AND pp3.projectId = p.id
-                            AND ptw3.status = 'terminated'
+                            AND ptw3.status = '" . WorkerStatus::TERMINATED->value . "'
                         ) * 15.0
                     ) + (
                         (
@@ -1771,7 +1766,7 @@ class ProjectModel extends Model
                             FROM `projectWorker` AS pw2
                             WHERE pw2.workerId = u.id
                             AND pw2.projectId = p.id
-                            AND pw2.status = 'terminated'
+                            AND pw2.status = '" . WorkerStatus::TERMINATED->value . "'
                         ) * 25.0
                     ) as totalPenalty
                 FROM 

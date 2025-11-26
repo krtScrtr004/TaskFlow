@@ -2,8 +2,6 @@
 
 namespace App\Utility;
 
-use App\Auth\SessionAuth;
-use App\Exception\ForbiddenException;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 

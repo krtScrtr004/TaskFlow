@@ -11,22 +11,17 @@ use App\Dependent\Phase;
 use App\Entity\Project;
 use App\Enumeration\Role;
 use App\Enumeration\WorkStatus;
-use App\Exception\DatabaseException;
 use App\Exception\ForbiddenException;
 use App\Exception\NotFoundException;
 use App\Exception\ValidationException;
-use App\Interface\Controller;
 use App\Middleware\Response;
 use App\Model\PhaseModel;
 use App\Model\ProjectModel;
-use App\Validator\UuidValidator;
 use App\Middleware\Csrf;
-use App\Model\TaskModel;
 use App\Utility\ResponseExceptionHandler;
 use App\Validator\WorkValidator;
 use DateTime;
 use Exception;
-use InvalidArgumentException;
 use Throwable;
 use ValueError;
 
@@ -353,7 +348,7 @@ class ProjectEndpoint
 
             if (isset($data['project']['status'])) {
                 $projectData['status'] = WorkStatus::from($data['project']['status']);
-            } else {
+            } elseif ($project->getStatus() !== WorkStatus::DELAYED) {
                 $projectData['status'] = WorkStatus::getStatusFromDates(
                     $projectData['startDateTime'] ?? $project->getStartDateTime(),
                     $projectData['completionDateTime'] ?? $project->getCompletionDateTime()

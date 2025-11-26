@@ -11,23 +11,29 @@ use App\Enumeration\Role;
 use App\Enumeration\WorkStatus;
 use App\Exception\ForbiddenException;
 use App\Exception\NotFoundException;
-use App\Exception\ValidationException;
 use App\Interface\Controller;
-use App\Middleware\Csrf;
-use App\Middleware\Response;
 use App\Model\PhaseModel;
 use App\Model\ProjectModel;
-use App\Model\ProjectWorkerModel;
 use App\Utility\ProjectProgressCalculator;
 use App\Validator\UuidValidator;
-use InvalidArgumentException;
 use DateTime;
-use Exception;
 
 class ProjectController implements Controller
 {
     private UuidValidator $uuidValidator;
 
+    /**
+     * Initializes the controller's internal dependencies.
+     *
+     * This private constructor:
+     * - Prevents direct external instantiation of the controller (private visibility).
+     * - Instantiates and assigns a UuidValidator to $this->uuidValidator for UUID validation tasks.
+     *
+     * Instances of this class should be created via the class factory or designated creation methods.
+     *
+     * @internal Used for internal initialization only.
+     * @return void
+     */
     private function __construct()
     {
         $this->uuidValidator = new UuidValidator();
@@ -80,6 +86,7 @@ class ProjectController implements Controller
                 $instance->updatePhaseStatus($fullProjectInfo);
             }
 
+
             $instance->renderDashboard($fullProjectInfo);
         } catch (NotFoundException $e) {
             ErrorController::notFound();
@@ -89,24 +96,40 @@ class ProjectController implements Controller
     }
 
     /**
-     * Updates the status of each phase in a project based on their dates and progress.
+     * Updates the statuses of all phases for the given project based on dates and progress.
      *
-     * This method performs the following actions:
-     * - Retrieves all phases associated with the given project.
-     * - Throws NotFoundException if no phases are found.
-     * - Calculates project progress and iterates through each phase's breakdown.
-     * - Adds phases and their tasks to the project object.
-     * - Updates phase status according to the following rules:
-     *      - PENDING → ON_GOING: If the phase's start date has passed.
-     *      - ON_GOING → COMPLETED: If the phase's completion date has passed and progress is 100%.
-     *      - ON_GOING → DELAYED: If the phase's completion date has passed and progress is less than 100%.
-     * - Collects phases that require status updates and persists changes to the database.
-     * - Adds calculated progress information as additional info to the project.
+     * This method performs the following steps:
+     * - Loads all phases for the provided project (via PhaseModel::findAllByProjectId)
+     *   and throws NotFoundException if no phases are found.
+     * - Calculates project progress using ProjectProgressCalculator::calculate and
+     *   iterates the returned 'phaseBreakdown' to determine per-phase progress.
+     * - For each phase it:
+     *   - Normalizes dates using formatDateTime(..., 'Y-m-d') and compares them to the current date.
+     *   - Adds the phase and its tasks into the provided Project object.
+     *   - Applies status transitions using WorkStatus constants:
+     *     - PENDING → ON_GOING when the phase start date is on or before today.
+     *     - ON_GOING or DELAYED → COMPLETED when the phase completion date has passed and
+     *       the phase simpleProgress is >= 100.0.
+     *     - ON_GOING or DELAYED → DELAYED when the phase completion date has passed and
+     *       the phase simpleProgress is < 100.0.
+     *   - Collects phases that require a persistent status update in a container suitable
+     *     for PhaseModel::saveMultiple.
+     * - Persists status updates to the database by calling PhaseModel::saveMultiple when needed.
+     * - Adds the full project progress information to the Project as additional info under key 'progress'.
      *
-     * @param Project $project Reference to the project object whose phases will be updated.
-     *      The method will add phases, tasks, and progress info to this object.
+     * Notes on data shapes and side effects:
+     * - The ProjectProgressCalculator::calculate result is expected to contain a 'phaseBreakdown'
+     *   array keyed by the same keys/IDs used to index the $phases collection, with each value
+     *   containing at least 'simpleProgress' (float).
+     * - The $phases collection items are expected to provide getStartDateTime(), getCompletionDateTime(),
+     *   getStatus(), getTasks(), setStatus(), and be addable to the Project via Project::addPhase.
+     * - The container of updates passed to PhaseModel::saveMultiple is an array of associative arrays:
+     *     - id: int (phase identifier)
+     *     - status: string (WorkStatus constant)
      *
-     * @throws NotFoundException If no phases are found for the given project.
+     * @param Project &$project Project instance to update (phases, tasks and additional info will be modified).
+     *
+     * @throws NotFoundException If no phases are found for the project.
      *
      * @return void
      */
@@ -147,7 +170,9 @@ class ProjectController implements Controller
                 ];
             } 
             // Transition: ON_GOING → COMPLETED or DELAYED (when completion date has passed)
-            elseif ($status === WorkStatus::ON_GOING && compareDates($completionDateTime, $now) < 0) {
+            elseif (($status === WorkStatus::ON_GOING
+                    || $status === WorkStatus::DELAYED) 
+                    && compareDates($completionDateTime, $now) < 0) {
                 if ($value['simpleProgress'] >= 100.0) {
                     $reference->setStatus(WorkStatus::COMPLETED);
                     $phasesToUpdate[] = [
@@ -161,7 +186,7 @@ class ProjectController implements Controller
                         'status' => WorkStatus::DELAYED
                     ];
                 }
-            }
+            } 
         }
 
         // Update phase status in the database
@@ -364,7 +389,7 @@ class ProjectController implements Controller
                 ]);
             } elseif (
                 $completionDateTime && compareDates($completionDateTime, $currentDateTime) < 0 &&
-                ($status === WorkStatus::PENDING || $status === WorkStatus::ON_GOING)
+                ($status === WorkStatus::PENDING || $status === WorkStatus::ON_GOING || $status === WorkStatus::DELAYED)
             ) {
                 if ($projectProgress['progressPercentage'] < 100.0) {
                     $project->setStatus(WorkStatus::DELAYED);
@@ -374,6 +399,10 @@ class ProjectController implements Controller
                     ]);
                 } else {
                     $project->setStatus(WorkStatus::COMPLETED);
+                    ProjectModel::save([
+                        'id' => $project->getId(),
+                        'status' => WorkStatus::COMPLETED
+                    ]);
                 }
             }
         }

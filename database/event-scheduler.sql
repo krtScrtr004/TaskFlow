@@ -41,27 +41,27 @@ BEGIN
     UPDATE `phaseTask`
     SET `status` = 'onGoing'
     WHERE `status` = 'pending'
-      AND `startDateTime` <= NOW()
-      AND `completionDateTime` > NOW();
+      AND DATE(`startDateTime`) <= CURRENT_DATE
+      AND DATE(`completionDateTime`) > CURRENT_DATE;
     
     -- Step 2: Update onGoing tasks to delayed when completion date has passed
     UPDATE `phaseTask`
     SET `status` = 'delayed'
     WHERE `status` = 'onGoing'
-      AND `completionDateTime` < NOW()
-      AND `actualCompletionDateTime` IS NULL;
+      AND DATE(`completionDateTime`) < CURRENT_DATE
+      AND (DATE(`actualCompletionDateTime`)) IS NULL;
     
     -- Step 3: Update pending tasks directly to delayed if both dates have passed
     -- (for cases where tasks were never started and are already late)
     UPDATE `phaseTask`
     SET `status` = 'delayed'
     WHERE `status` = 'pending'
-      AND `startDateTime` <= NOW()
-      AND `completionDateTime` < NOW()
-      AND `actualCompletionDateTime` IS NULL;
+      AND DATE(`startDateTime`) <= CURRENT_DATE
+      AND DATE(`completionDateTime`) < CURRENT_DATE
+      AND (DATE(`actualCompletionDateTime`)) IS NULL;
       
     -- Log the number of updated records (optional, for debugging)
-    -- SELECT CONCAT('Task status updated at ', NOW()) AS log_message;
+    -- SELECT CONCAT('Task status updated at ', CURRENT_DATE) AS log_message;
 END$$
 DELIMITER ;
 
@@ -87,23 +87,43 @@ BEGIN
     UPDATE `projectPhase`
     SET `status` = 'onGoing'
     WHERE `status` = 'pending'
-      AND `startDateTime` <= NOW()
-      AND `completionDateTime` > NOW();
+      AND DATE(`startDateTime`) <= CURRENT_DATE
+      AND DATE(`completionDateTime`) > CURRENT_DATE;
     
     -- Step 2: Update onGoing phases to delayed when completion date has passed
     UPDATE `projectPhase`
     SET `status` = 'delayed'
     WHERE `status` = 'onGoing'
-      AND `completionDateTime` < NOW()
-      AND `actualCompletionDateTime` IS NULL;
+      AND DATE(`completionDateTime`) < CURRENT_DATE
+      AND (DATE(`actualCompletionDateTime`)) IS NULL;
     
     -- Step 3: Update pending phases directly to delayed if both dates have passed
     UPDATE `projectPhase`
     SET `status` = 'delayed'
     WHERE `status` = 'pending'
-      AND `startDateTime` <= NOW()
-      AND `completionDateTime` < NOW()
-      AND `actualCompletionDateTime` IS NULL;
+      AND DATE(`startDateTime`) <= CURRENT_DATE
+      AND DATE(`completionDateTime`) < CURRENT_DATE
+      AND (DATE(`actualCompletionDateTime`)) IS NULL;
+    
+    -- Step 4: Auto-complete phases when all tasks are completed
+    UPDATE `projectPhase` AS pp
+    SET `status` = 'completed',
+        `actualCompletionDateTime` = CURRENT_TIMESTAMP
+    WHERE `status` IN ('onGoing', 'delayed')
+      AND (DATE(`actualCompletionDateTime`)) IS NULL
+      AND NOT EXISTS (
+          SELECT 1
+          FROM `phaseTask` AS pt
+          WHERE pt.phaseId = pp.id
+            AND pt.status != 'completed'
+            AND pt.status != 'cancelled'
+      )
+      AND EXISTS (
+          SELECT 1
+          FROM `phaseTask` AS pt2
+          WHERE pt2.phaseId = pp.id
+            AND pt2.status = 'completed'
+      );
 END$$
 DELIMITER ;
 
@@ -129,23 +149,43 @@ BEGIN
     UPDATE `project`
     SET `status` = 'onGoing'
     WHERE `status` = 'pending'
-      AND `startDateTime` <= NOW()
-      AND `completionDateTime` > NOW();
+      AND DATE(`startDateTime`) <= CURRENT_DATE
+      AND DATE(`completionDateTime`) > CURRENT_DATE;
     
     -- Step 2: Update onGoing projects to delayed when completion date has passed
     UPDATE `project`
     SET `status` = 'delayed'
     WHERE `status` = 'onGoing'
-      AND `completionDateTime` < NOW()
-      AND `actualCompletionDateTime` IS NULL;
+      AND DATE(`completionDateTime`) < CURRENT_DATE
+      AND (DATE(`actualCompletionDateTime`)) IS NULL;
     
     -- Step 3: Update pending projects directly to delayed if both dates have passed
     UPDATE `project`
     SET `status` = 'delayed'
     WHERE `status` = 'pending'
-      AND `startDateTime` <= NOW()
-      AND `completionDateTime` < NOW()
-      AND `actualCompletionDateTime` IS NULL;
+      AND DATE(`startDateTime`) <= CURRENT_DATE
+      AND DATE(`completionDateTime`) < CURRENT_DATE
+      AND (DATE(`actualCompletionDateTime`)) IS NULL;
+    
+    -- Step 4: Auto-complete projects when all phases are completed
+    UPDATE `project` AS p
+    SET `status` = 'completed',
+        `actualCompletionDateTime` = CURRENT_TIMESTAMP
+    WHERE `status` IN ('onGoing', 'delayed')
+      AND (DATE(`actualCompletionDateTime`)) IS NULL
+      AND NOT EXISTS (
+          SELECT 1
+          FROM `projectPhase` AS pp
+          WHERE pp.projectId = p.id
+            AND pp.status != 'completed'
+            AND pp.status != 'cancelled'
+      )
+      AND EXISTS (
+          SELECT 1
+          FROM `projectPhase` AS pp2
+          WHERE pp2.projectId = p.id
+            AND pp2.status = 'completed'
+      );
 END$$
 DELIMITER ;
 
@@ -169,27 +209,27 @@ COMMENT 'Hourly task status updates during business hours for more immediate fee
 DO
 BEGIN
     -- Only run between 6 AM and 10 PM
-    IF HOUR(NOW()) BETWEEN 6 AND 22 THEN
+    IF HOUR(CURRENT_DATE) BETWEEN 6 AND 22 THEN
         -- Update pending tasks to onGoing
         UPDATE `phaseTask`
         SET `status` = 'onGoing'
         WHERE `status` = 'pending'
-          AND `startDateTime` <= NOW()
-          AND `completionDateTime` > NOW();
+          AND `startDateTime` <= CURRENT_DATE
+          AND `completionDateTime` > CURRENT_DATE;
         
         -- Update onGoing tasks to delayed
         UPDATE `phaseTask`
         SET `status` = 'delayed'
         WHERE `status` = 'onGoing'
-          AND `completionDateTime` < NOW()
+          AND `completionDateTime` < CURRENT_DATE
           AND `actualCompletionDateTime` IS NULL;
         
         -- Update pending tasks to delayed (overdue before start)
         UPDATE `phaseTask`
         SET `status` = 'delayed'
         WHERE `status` = 'pending'
-          AND `startDateTime` <= NOW()
-          AND `completionDateTime` < NOW()
+          AND `startDateTime` <= CURRENT_DATE
+          AND `completionDateTime` < CURRENT_DATE
           AND `actualCompletionDateTime` IS NULL;
     END IF;
 END$$
@@ -217,7 +257,7 @@ DELIMITER ;
 -- CALL <event_logic>;
 -- 
 -- Or update dates on test records and wait for the event to run:
--- UPDATE phaseTask SET startDateTime = NOW() - INTERVAL 1 DAY WHERE id = <test_id>;
+-- UPDATE phaseTask SET startDateTime = CURRENT_DATE - INTERVAL 1 DAY WHERE id = <test_id>;
 
 -- ============================================================================
 -- Disable/Enable Events

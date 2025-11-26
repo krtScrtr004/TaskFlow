@@ -4,7 +4,6 @@ namespace App\Endpoint;
 
 use App\Auth\HttpAuth;
 use App\Auth\SessionAuth;
-use App\Container\TaskContainer;
 use App\Core\Me;
 use App\Core\UUID;
 use App\Dependent\Worker;
@@ -404,8 +403,11 @@ class TaskEndpoint
             }
             Csrf::protect();
 
-            if (!Role::isProjectManager(Me::getInstance())) {
-                throw new ForbiddenException('Only Project Managers are allowed to edit tasks.');
+            $projectManagerOnly = ['name', 'description', 'priority', 'startDateTime', 'completionDateTime'];
+            foreach ($projectManagerOnly as $field) {
+                if (isset($data[$field]) && !Role::isProjectManager(Me::getInstance())) {
+                    throw new ForbiddenException("Only Project Managers are allowed to edit {$field} field.");
+                }
             }
 
             $projectId = isset($args['projectId'])
@@ -481,7 +483,7 @@ class TaskEndpoint
 
             if (isset($data['status'])) {
                 $taskData['status'] = WorkStatus::from($data['status']);
-            } else {
+            } elseif ($task->getStatus() !== WorkStatus::DELAYED) {
                 $taskData['status'] = WorkStatus::getStatusFromDates(
                     $taskData['startDateTime'] ?? $task->getStartDateTime(),
                     $taskData['completionDateTime'] ?? $task->getCompletionDateTime()

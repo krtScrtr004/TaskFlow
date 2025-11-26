@@ -9,13 +9,10 @@ use App\Container\WorkerContainer;
 use App\Dependent\Worker;
 use App\Core\UUID;
 use App\Exception\ValidationException;
-use App\Model\TaskModel;
 use App\Validator\UuidValidator;
 use App\Validator\WorkValidator;
 use DateTime;
 use Exception;
-use Ramsey\Collection\Exception\InvalidArgumentException;
-use Ramsey\Uuid\Exception\InvalidArgumentException as ExceptionInvalidArgumentException;
 
 class Task implements Entity
 {

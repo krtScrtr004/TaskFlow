@@ -3,7 +3,6 @@
 namespace App\Entity;
 
 use App\Core\UUID;
-use App\Model\UserModel;
 use App\Interface\Entity;
 use App\Enumeration\Gender;
 use App\Enumeration\WorkerStatus;
@@ -16,8 +15,6 @@ use App\Validator\UuidValidator;
 use App\Validator\UrlValidator;
 use DateTime;
 use Exception;
-use InvalidArgumentException;
-use Ramsey\Uuid\Exception\InvalidArgumentException as ExceptionInvalidArgumentException;
 
 require_once ENUM_PATH . 'role.php';
 

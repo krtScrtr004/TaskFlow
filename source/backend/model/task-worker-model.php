@@ -6,7 +6,6 @@ use App\Abstract\Model;
 use App\Container\WorkerContainer;
 use App\Core\UUID;
 use App\Dependent\Worker;
-use App\Entity\User;
 use App\Enumeration\Role;
 use App\Enumeration\WorkerStatus;
 use App\Enumeration\WorkStatus;
@@ -17,7 +16,6 @@ use PDOException;
 
 class TaskWorkerModel extends Model
 {
-
 
     /**
      * Finds and retrieves worker data based on specified conditions.
@@ -88,6 +86,8 @@ class TaskWorkerModel extends Model
                             ptw.taskId = pt.id
                         WHERE 
                             ptw.workerId = u.id AND pt.status = '" . WorkStatus::COMPLETED->value . "'
+                        AND 
+                            ptw.status != '" . WorkerStatus::TERMINATED->value . "'
                     ) AS completedTasks
                 FROM
                     `user` AS u
@@ -604,6 +604,104 @@ class TaskWorkerModel extends Model
             return self::find('', [], $paramOptions);
         } catch (Exception $e) {
             throw $e;
+        }
+    }
+
+    /**
+     * Determines whether a given user currently works on a specific task (optionally within a project).
+     *
+     * This method accepts either integer IDs or UUID objects for task, user and project identifiers.
+     * It validates numeric IDs (must be >= 1) and converts UUID objects to their binary representation
+     * for use in the prepared SQL query. If a projectId is provided, additional JOINs are added to
+     * restrict the check to the specified project. The query checks the phaseTaskWorker record and
+     * ensures the worker's assignment status is not WorkerStatus::TERMINATED.
+     *
+     * Behavior details:
+     * - Validates that integer IDs are >= 1; if not, throws InvalidArgumentException.
+     * - Converts UUID instances to binary via UUID::toBinary() before binding to the statement.
+     * - Builds a query joining phaseTaskWorker -> phaseTask -> user and optionally projectPhase -> project.
+     * - Uses prepared statements and parameter binding to avoid SQL injection.
+     * - Treats "terminated" assignments (ptw.status == WorkerStatus::TERMINATED) as non-working.
+     *
+     * @param int|UUID $taskId    Task identifier (numeric primary ID) or public UUID.
+     * @param int|UUID $userId    User identifier (numeric primary ID) or public UUID.
+     * @param int|UUID|null $projectId Optional project identifier (numeric primary ID) or public UUID; pass null to ignore project constraint.
+     *
+     * @return bool True if the user has a non-terminated assignment on the task (and within the project if provided); false otherwise.
+     *
+     * @throws InvalidArgumentException If any provided integer ID is less than 1.
+     * @throws DatabaseException If a database error occurs while executing the query (wraps PDOException).
+     */
+    public static function worksOn(int|UUID $taskId, int|UUID $userId, int|UUID|null $projectId = null): bool
+    {
+        if (is_int($taskId) && $taskId < 1) {
+            throw new InvalidArgumentException('Invalid task ID provided.');
+        }
+
+        if (is_int($userId) && $userId < 1) {
+            throw new InvalidArgumentException('Invalid user ID provided.');
+        }
+
+        if (is_int($projectId) && $projectId < 1) {
+            throw new InvalidArgumentException('Invalid project ID provided.');
+        }
+
+        try {
+            $instance = new self();
+
+            $params = [
+                ':taskId'        => ($taskId instanceof UUID)
+                    ? UUID::toBinary($taskId)
+                    : $taskId,
+                ':userId'           => ($userId instanceof UUID)
+                    ? UUID::toBinary($userId)
+                    : $userId,
+                ':terminatedStatus' => WorkerStatus::TERMINATED->value
+            ];
+
+            $projectJoin = '';
+            if ($projectId) {
+                $projectJoin = "
+                    INNER JOIN
+                        `projectPhase` AS pp
+                    ON
+                        pp.id = pt.phaseId
+                    INNER JOIN
+                        `project` AS p
+                    ON
+                        p.id = pp.projectId
+                ";
+                $params[':projectId'] = ($projectId instanceof UUID)
+                    ? UUID::toBinary($projectId)
+                    : $projectId;
+            }
+
+            $query = "
+                SELECT *
+                FROM 
+                    `phaseTaskWorker` AS ptw
+                INNER JOIN
+                    `phaseTask` AS pt
+                ON
+                    pt.id = ptw.taskId
+                INNER JOIN
+                    `user` AS u
+                ON
+                    u.id = ptw.workerId
+                " . $projectJoin . "
+                WHERE 
+                    " . (is_int($taskId) ? 'pt.id' : 'pt.publicId') . " = :taskId
+                AND 
+                    " . (is_int($userId) ? 'u.id' : 'u.publicId') . " = :userId
+                    " . ($projectId ? "AND " . (is_int($projectId) ? 'p.id' : 'p.publicId') . " = :projectId" : '') . "
+                AND 
+                    ptw.status != :terminatedStatus
+            ";
+            $statement = $instance->connection->prepare($query);
+            $statement->execute($params);
+            return $instance->hasData($statement->fetchAll());
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
         }
     }
 
