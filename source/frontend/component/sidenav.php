@@ -48,6 +48,19 @@
                 <h3 class="white-text">PROFILE</h3>
             </div>
         </a>
+        <!-- About Us -->
+        <a class="" href="<?= REDIRECT_PATH . 'about' ?>">
+            <div class="text-w-icon">
+                <img
+                    src="<?= ICON_PATH . 'about_w.svg' ?>"
+                    alt="About Us"
+                    title="About Us"
+                    height="32"
+                    width="32">
+
+                <h3 class="white-text">ABOUT US</h3>
+            </div>
+        </a>
         <!-- Logout -->
         <a id="logout" class="" href="#">
             <div class="text-w-icon">
