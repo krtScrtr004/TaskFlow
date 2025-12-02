@@ -47,6 +47,8 @@
 
 		"TaskFlow/profile": "ProfileController", 
 
+		"TaskFlow/about-us": "AboutUsController",
+
 		"TaskFlow/not-found": ["ErrorController", "notFound"],
 		"TaskFlow/forbidden": ["ErrorController", "forbidden"]
 	}
