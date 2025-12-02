@@ -77,7 +77,13 @@ class ProjectWorkerEndpoint
             $worker = ProjectWorkerModel::findById($workerId,  $project->getId() ?? null, true);
             if (!$worker) {
                 throw new NotFoundException('Worker not found.');
-            } 
+            }
+            
+            $projectHistory = $worker->getAdditionalInfo('projectHistory');
+            if ($projectHistory !== null || $projectHistory !== []) {
+                $performance = WorkerPerformanceCalculator::calculate($worker->getAdditionalInfo('projectHistory'));
+                $worker->addAdditionalInfo('performance', $performance['overallScore']);
+            }
 
             $performance = WorkerPerformanceCalculator::calculate($worker->getAdditionalInfo('projectHistory'));
             $worker->addAdditionalInfo('performance', $performance['overallScore']);

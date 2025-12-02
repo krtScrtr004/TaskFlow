@@ -70,10 +70,13 @@ class UserEndpoint
             if (!$user) {
                 Response::error('User not found.', [], 404);
             } else {
-                $performance =  (Role::isProjectManager($user)) 
-                    ? ProjectManagerPerformanceCalculator::calculate($user->getAdditionalInfo('projectHistory'))
-                    : WorkerPerformanceCalculator::calculate($user->getAdditionalInfo('projectHistory'));
-                $user->addAdditionalInfo('performance', $performance['overallScore']);
+                $projectHistory = $user->getAdditionalInfo('projectHistory');
+                if ($projectHistory !== null || $projectHistory !== []) {
+                    $performance =  (Role::isProjectManager($user)) 
+                        ? ProjectManagerPerformanceCalculator::calculate($projectHistory)
+                        : WorkerPerformanceCalculator::calculate($projectHistory);
+                    $user->addAdditionalInfo('performance', $performance['overallScore']);
+                }
                 Response::success([$user], 'User fetched successfully.');
             }
         } catch (Throwable $e) {

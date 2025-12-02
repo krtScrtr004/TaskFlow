@@ -79,9 +79,13 @@ class ProjectManagerEndpoint
             if (!$manager) {
                 throw new NotFoundException('Manager not found.');
             } 
+            
+            $projectHistory = $manager->getAdditionalInfo('projectHistory');
+            if ($projectHistory !== null || $projectHistory !== []) {
+                $performance = ProjectManagerPerformanceCalculator::calculate($manager->getAdditionalInfo('projectHistory') ?? []);
+                $manager->addAdditionalInfo('performance', $performance['overallScore'] ?? 0.0);
+            }
 
-            $performance = ProjectManagerPerformanceCalculator::calculate($manager->getAdditionalInfo('projectHistory') ?? []);
-            $manager->addAdditionalInfo('performance', $performance['overallScore'] ?? 0.0);
             Response::success([$manager], 'Manager fetched successfully.');
         } catch (Throwable $e) {
             ResponseExceptionHandler::handle('Manager Fetch Failed.', $e);
