@@ -9,8 +9,12 @@
 	gap: 1rem;
 }
 
+.user-grid-container {
+	height: 100%;
+}
+
 .no-users-wall {
-	height: 60vh;
+	height: 100%;
 }
 
 .no-users-wall > img {

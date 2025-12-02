@@ -48,7 +48,7 @@ function getExistingItemsCount() {
     const fromQueryParams = queryParams.get('offset')
     const fromDOM = taskGrid.querySelectorAll('.task-grid-card:not(.add-task-button)').length
 
-    return Math.max(fromQueryParams ? parseInt(fromQueryParams, 10) : 0, fromDOM)
+    return Math.max(fromQueryParams ? parseInt(fromQueryParams, 10) : 0, fromDOM) ?? 0
 }
 
 /**
@@ -73,7 +73,7 @@ async function asyncFunction(offset) {
         }
         isLoading = true
 
-        if (!offset || isNaN(offset) || offset < 0) {
+        if (isNaN(offset) || offset < 0) {
             throw new Error('Invalid offset value.')
         }
 

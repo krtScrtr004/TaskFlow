@@ -66,7 +66,7 @@ if (!isset($tasks)) {
 
         <!-- Task Grid -->
         <section class="task-grid-container" data-projectid="<?= $projectData['publicId'] ?>">
-            <?php if ($tasks->count() === 0 && $projectData['status'] === WorkStatus::COMPLETED && $projectData['status'] === WorkStatus::CANCELLED): ?>
+            <?php if ($tasks->count() === 0): ?>
                 <div
                     class="no-tasks-wall no-content-wall <?= $tasks->count() > 0 ? 'no-display' : 'flex-col' ?>">
                     <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No tasks available" title="No tasks available"

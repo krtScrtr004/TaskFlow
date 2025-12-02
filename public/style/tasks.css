@@ -76,6 +76,10 @@
 	height: 100%;
 }
 
+.no-tasks-wall > img {
+	height: 10rem;
+}
+
 /* View Task Page */
 
 .view-task-info {
