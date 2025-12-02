@@ -3,6 +3,7 @@
 use App\Core\UUID;
 use App\Enumeration\TaskPriority;
 use App\Enumeration\WorkStatus;
+use App\Middleware\Csrf;
 use App\Utility\ProjectProgressCalculator;
 
 if (!$projectReport) {
@@ -44,6 +45,7 @@ $performance = ($reportData['phases']?->count() > 0)
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<?= Csrf::get() ?>">
 
     <title>Report</title>
 

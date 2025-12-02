@@ -49,7 +49,7 @@
             </div>
         </a>
         <!-- About Us -->
-        <a class="" href="<?= REDIRECT_PATH . 'about' ?>">
+        <a class="" href="<?= REDIRECT_PATH . 'about-us' ?>">
             <div class="text-w-icon">
                 <img
                     src="<?= ICON_PATH . 'about_w.svg' ?>"

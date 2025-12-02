@@ -1,0 +1,107 @@
+.about-us {
+    padding: 5rem 10rem !important;
+    gap: 3.5rem;
+}
+
+.about-us .heading {
+    width: 100%;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--white);
+    margin: 0 auto;
+    margin-bottom: 0.5rem;
+    top: -5rem;
+    background-color: var(--light-black);
+    z-index: 1;
+}
+
+.about-us .about {
+    gap: 2rem;
+}
+
+.about-us .about h1 {
+    font-size: 4rem;
+}
+
+.about-us .about p {
+    font-size: 1.1rem;
+}
+
+.team-member-carousel {
+    padding-top: calc(var(--space) * 3);
+    overflow-x: auto;
+    gap: 1rem;
+}
+
+.team-member-card {
+    min-width: 320px;
+}
+
+.team-member-card img {
+    background-color: var(--light-black);
+    top: -3rem;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.team-member-card .info {
+    height: 510px;
+    padding: var(--space);
+    padding-top: 4rem;
+    border: 1px solid var(--white);
+    border-radius: 0.2rem;
+}
+
+.team-member-card .info > .name {
+    font-size: 1.5rem;
+}
+
+.team-member-card .info > .roles {
+    margin: 0.7rem 0;
+    gap: 0.5rem;
+}
+
+.team-member-card .info .role {
+    width: fit-content !important;
+    font-size: 0.8rem;
+}
+
+.team-member-card .info > .bio {
+    font-size: 0.9rem;
+    line-height: 1.4rem;
+    text-align: center  ;
+}
+
+.about-us .contact,
+.about-us .contact > section {
+    gap: var(--space);
+}
+
+.about-us .contact > section > * {
+    flex: 1;
+}
+
+#contact_form {
+    gap: 1rem;
+}
+
+#contact_form > div {
+    gap: 0.5rem;
+}
+
+#contact_form #send_button {
+    width: 100%;
+}
+
+.contact-reference-section > section {
+    padding: 1rem 0;
+    gap: 1rem;
+}
+
+.contact-reference-section h3 {
+    font-weight: 400;
+}
+
+.contact-reference-section .contact-link {
+    font-size: 1.2rem;
+
+}
