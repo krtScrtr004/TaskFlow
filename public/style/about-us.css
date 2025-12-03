@@ -26,10 +26,17 @@
     font-size: 1.1rem;
 }
 
-.team-member-carousel {
+.team-member-carousel > section {
     padding-top: calc(var(--space) * 3);
-    overflow-x: auto;
     gap: 1rem;
+    overflow-x: auto;
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+.team-member-carousel > section::-webkit-scrollbar {
+    height: 0;
+    width: 0;
 }
 
 .team-member-card {
@@ -69,6 +76,31 @@
     font-size: 0.9rem;
     line-height: 1.4rem;
     text-align: center  ;
+}
+
+.left-button,
+.right-button {
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: var(--light-black);
+    padding: 0.5rem;
+    border: 1px solid var(--white);
+    cursor: pointer;
+    transition: background-color 200ms ease;
+}
+
+.left-button:hover,
+.right-button:hover {
+    background-color: var(--dark-white);
+}
+
+.left-button {
+    left: -2.5rem;
+}
+
+.right-button {
+    right: -2.5rem;
+    transform: translate(0, -50%) scaleX(-1);
 }
 
 .about-us .contact,

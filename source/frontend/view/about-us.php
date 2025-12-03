@@ -43,27 +43,37 @@ use App\Middleware\Csrf;
         <section class="our-team flex-col">
             <h1 class="heading center-text sticky">Our Team</h1>
 
-            <section class="team-member-carousel flex-row">
-                <?php foreach ($memberData as $member): ?>
-                    <div class="team-member-card relative">
-                        <img class="fit-cover circle absolute" src="<?= IMAGE_PATH . 'team/' . $member['image'] ?>"
-                            alt="<?= $member['name'] ?>" title="<?= $member['name'] ?>" height="100">
+            <section class="team-member-carousel carousel-wrapper relative">
+                <section class="carousel flex-row">
+                    <?php foreach ($memberData as $member): ?>
+                        <div class="team-member-card relative">
+                            <img class="fit-cover circle absolute" src="<?= IMAGE_PATH . 'team/' . $member['image'] ?>"
+                                alt="<?= $member['name'] ?>" title="<?= $member['name'] ?>" height="100">
 
-                        <!-- Info -->
-                        <section class="info">
-                            <h2 class="name center-text"><?= $member['name'] ?></h2>
+                            <!-- Info -->
+                            <section class="info">
+                                <h2 class="name center-text"><?= $member['name'] ?></h2>
 
-                            <div class="roles center-child flex-wrap">
-                                <?php foreach ($member['roles'] as $role): ?>
-                                    <span class="role badge white-bg black-text"><?= $role ?></span>
-                                <?php endforeach; ?>
-                            </div>
+                                <div class="roles center-child flex-wrap">
+                                    <?php foreach ($member['roles'] as $role): ?>
+                                        <span class="role badge white-bg black-text"><?= $role ?></span>
+                                    <?php endforeach; ?>
+                                </div>
 
-                            <p class="bio center-child"><?= $member['bio'] ?></p>
-                        </section>
-                    </div>
+                                <p class="bio center-child"><?= $member['bio'] ?></p>
+                            </section>
+                        </div>
 
-                <?php endforeach; ?>
+                    <?php endforeach; ?>
+                </section>
+                
+                <div class="left-button tracker absolute">
+                    <img src="<?= ICON_PATH . 'back.svg' ?>" alt="Left Button" height="32">
+                </div>
+                                        
+                <div class="right-button tracker absolute">
+                    <img src="<?= ICON_PATH . 'back.svg' ?>" alt="Right Button" height="32">
+                </div>
             </section>
         </section>
 
@@ -132,6 +142,9 @@ use App\Middleware\Csrf;
         </section>
 
     </main>
+
+    <script type="module" src="<?= EVENT_PATH . 'logout.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'about-us' . DS . 'carousel-tracker.js' ?>" defer></script>
 </body>
 
 </html>

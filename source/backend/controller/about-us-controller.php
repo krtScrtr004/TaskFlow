@@ -2,24 +2,31 @@
 
 namespace App\Controller;
 
+use App\Auth\SessionAuth;
+use App\Exception\ForbiddenException;
 use App\Interface\Controller;
 
 class AboutUsController implements Controller
 {
     public static function index(): void
     {
+        if (!SessionAuth::hasAuthorizedSession()) {
+            header('Location: ' . REDIRECT_PATH . 'login');
+            exit();        
+        }
+
         $memberData = [
             [
                 'name' => 'Marl Aguiluz M. Aquino',
                 'image' => 'aquino.png',
                 'roles' => ['Database Designer', 'Database Analyst'],
                 'bio' => 'I am Marl Aguiluz, a 21 year old man born on December 3, 2004. 
-                        I am a third-year BSIT student at Rizal Technological University, Boni Campus. 
-                        I enjoy spending my free time gaming, listening to music, and learning about history. 
-                        My goal is to become an analyst and work in a well known tech company, either local or international, 
-                        in where I can grow and apply my skills. My biggest motivation comes from my family, my supportive 
-                        girlfriend, and my beloved cats, who inspire me to work harder every day. I am determined to build 
-                        a successful future and become an upcoming reliable professional in the tech industry.'
+                    I am a third-year BSIT student at Rizal Technological University, Boni Campus. 
+                    I enjoy spending my free time gaming, listening to music, and learning about history. 
+                    My goal is to become an analyst and work in a well known tech company, either local or international, 
+                    in where I can grow and apply my skills. My biggest motivation comes from my family, my supportive 
+                    girlfriend, and my beloved cats, who inspire me to work harder every day. I am determined to build 
+                    a successful future and become an upcoming reliable professional in the tech industry.'
             ],
             [
                 'name' => 'Peter Marcus S. Dela Cruz',
