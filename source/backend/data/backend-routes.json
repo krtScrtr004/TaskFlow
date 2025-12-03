@@ -119,8 +119,12 @@
 		"TaskFlow/endpoint/projects/{projectId:[\\w+_-]+}/phases/{phaseId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}/workers": [
 			"TaskWorkerEndpoint",
 			"add"
-		]
+		],
 
+		"TaskFlow/endpoint/about-us/concern": [
+			"AboutUsEndpoint",
+			"sendConcern"
+		]
 	},
 
 	"PUT": {
