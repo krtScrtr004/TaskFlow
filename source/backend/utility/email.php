@@ -42,6 +42,60 @@ class Email
     }
 
     /**
+     * Sends a plain-text email.
+     *
+     * This method ensures the 'userFrom' display name is set (defaults to 'TaskFlow.com')
+     * when not provided in the $data array and delegates the actual sending to self::send()
+     * with HTML mode disabled.
+     *
+     * @param string $to Recipient email address
+     * @param string $from Sender email address
+     * @param string $subject Subject of the email
+     * @param string $body Plain-text body of the email
+     * @param array $data Optional associative array of additional email options:
+     *      - userFrom: string Display name for the sender (defaults to 'TaskFlow.com')
+     *      - userTo: string Display name for the recipient (defaults to 'Valued User')
+     *
+     * @return bool True if the email was sent successfully, false otherwise
+     */
+    public static function sendPlain(
+        string $to, 
+        string $from, 
+        string $subject, 
+        string $body, 
+        array $data = []
+    ): bool {
+        return self::send($to, $from, $subject, $body, $data, false);
+    }
+    
+    /**
+     * Sends an HTML formatted email.
+     *
+     * This method prepares and dispatches an email using HTML body format.
+     * - Ensures a default sender display name ('userFrom') is present in $data
+     * - Delegates the actual sending to self::send(..., true) which performs the low-level send
+     *
+     * @param string $to Recipient email address
+     * @param string $from Sender email address
+     * @param string $subject Email subject line
+     * @param string $body HTML content of the email
+     * @param array $data Optional associative array of additional mail options with following keys:
+     *      - userFrom: string (optional) Display name for the sender; defaults to 'TaskFlow.com'
+     *      - userTo: string (optional) Display name for the recipient; defaults to 'Valued User'
+     *
+     * @return bool True if the email was accepted/sent successfully, false on failure
+     */
+    public static function sendHtml(
+        string $to, 
+        string $from, 
+        string $subject, 
+        string $body, 
+        array $data = []
+    ): bool {
+        return self::send($to, $from, $subject, $body, $data, true);
+    }
+
+    /**
      * Sends an email to the specified recipient.
      *
      * This method performs the following actions:
@@ -56,22 +110,35 @@ class Email
      * @param string $subject Subject of the email.
      * @param string $body HTML content of the email body.
      * @param array $data Associative array containing additional data:
-     *      - username: string Recipient's username (used for display name).
+     *      - userFrom: string Sender's username (used for display name).
+     *      - userTo: string Recipient's username (used for display name).
+     * @param bool $isHtml Indicates whether the email body is in HTML format.
      *
      * @return bool True if the email was sent successfully, false otherwise.
      */
-    public static function send(string $to, string $subject, string $body, array $data = []): bool
-    {
+    private static function send(
+        string $to, 
+        string $from, 
+        string $subject, 
+        string $body, 
+        array $data = [], 
+        bool $isHtml
+    ): bool {
+        $data['userFrom'] = $data['userFrom'] ?? 'TaskFlow.com';
+        $data['userTo'] = $data['userTo'] ?? 'Valued User';
+
         try {
             // Create a new instance to ensure fresh state
             new self();
 
             // Recipients
-            self::$mail->setFrom($_ENV['MAIL_USERNAME'], 'TaskFlow.com');
-            self::$mail->addAddress($to, $data['username']); // Name is optional
+            self::$mail->setFrom($from, $data['userFrom']);
+            self::$mail->addAddress($to, $data['userTo']); 
 
             // Content
-            self::$mail->isHTML(true);  // Set email format to HTML
+            if ($isHtml) {
+                self::$mail->isHTML(true);  // Set email format to HTML
+            }
             self::$mail->Subject = $subject;
             self::$mail->Body = $body;
 
