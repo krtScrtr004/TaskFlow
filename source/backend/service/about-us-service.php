@@ -26,10 +26,12 @@ class AboutUsService
      */
     public function sendConcernEmail(string $name, string $email, string $message): bool
     {
-        // Implementation for sending concern email
-        return Email::sendPlain($_ENV['MAIL_USERNAME'], $email,  "Concern from $name", $message, [
-            'userFrom' => $name,
-            'userTo' => 'TaskFlow Support'
+        // Send FROM your authenticated Gmail account, set Reply-To to user's email
+        return Email::sendPlain($_ENV['MAIL_USERNAME'], "Concern from $name", $message, [
+            'userFrom' => 'TaskFlow Support',
+            'userTo' => 'TaskFlow Support',
+            'replyTo' => $email,
+            'replyToName' => $name
         ]);
     }
 }

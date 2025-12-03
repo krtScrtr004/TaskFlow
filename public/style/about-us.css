@@ -112,15 +112,15 @@
     flex: 1;
 }
 
-#contact_form {
+#concern_form {
     gap: 1rem;
 }
 
-#contact_form > div {
+#concern_form > div {
     gap: 0.5rem;
 }
 
-#contact_form #send_button {
+#concern_form #send_button {
     width: 100%;
 }
 

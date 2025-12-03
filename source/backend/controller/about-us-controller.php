@@ -8,6 +8,34 @@ use App\Interface\Controller;
 
 class AboutUsController implements Controller
 {
+    /**
+     * Renders the "About Us" page for authenticated users.
+     *
+     * This method handles page access and prepares team member data for the view:
+     * - Verifies an authorized session using SessionAuth::hasAuthorizedSession().
+     * - Redirects to the login route (REDIRECT_PATH . 'login') and exits when the session is not authorized.
+     * - Builds an array ($memberData) of team member metadata where each member contains:
+     *     - name: string Full name of the member
+     *     - image: string Filename of the member's profile image
+     *     - roles: string[] List of roles/responsibilities for the member
+     *     - bio: string Member biography/description
+     * - Includes the about-us view (VIEW_PATH . 'about-us.php') to render the page.
+     *
+     * Notes:
+     * - The method sets headers and terminates execution on unauthorized access; it performs no return.
+     * - The $memberData structure is intended to be consumed by the included view.
+     *
+     * @var array $memberData Associative array of team members with following keys per entry:
+     *      - name: string Member's full name
+     *      - image: string Image filename or relative path
+     *      - roles: string[] Roles assigned to the member
+     *      - bio: string Biographical text for the member
+     *
+     * @return void
+     * @uses SessionAuth::hasAuthorizedSession() Check for authenticated session
+     * @uses REDIRECT_PATH Constant prefix used when redirecting to login
+     * @uses VIEW_PATH Path used to include the about-us view file
+     */
     public static function index(): void
     {
         if (!SessionAuth::hasAuthorizedSession()) {

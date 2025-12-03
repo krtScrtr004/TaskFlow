@@ -49,7 +49,6 @@ class Email
      * with HTML mode disabled.
      *
      * @param string $to Recipient email address
-     * @param string $from Sender email address
      * @param string $subject Subject of the email
      * @param string $body Plain-text body of the email
      * @param array $data Optional associative array of additional email options:
@@ -60,12 +59,11 @@ class Email
      */
     public static function sendPlain(
         string $to, 
-        string $from, 
         string $subject, 
         string $body, 
         array $data = []
     ): bool {
-        return self::send($to, $from, $subject, $body, $data, false);
+        return self::send($to, $subject, $body, $data, false);
     }
     
     /**
@@ -76,7 +74,6 @@ class Email
      * - Delegates the actual sending to self::send(..., true) which performs the low-level send
      *
      * @param string $to Recipient email address
-     * @param string $from Sender email address
      * @param string $subject Email subject line
      * @param string $body HTML content of the email
      * @param array $data Optional associative array of additional mail options with following keys:
@@ -87,12 +84,11 @@ class Email
      */
     public static function sendHtml(
         string $to, 
-        string $from, 
         string $subject, 
         string $body, 
         array $data = []
     ): bool {
-        return self::send($to, $from, $subject, $body, $data, true);
+        return self::send($to,  $subject, $body, $data, true);
     }
 
     /**
@@ -110,15 +106,15 @@ class Email
      * @param string $subject Subject of the email.
      * @param string $body HTML content of the email body.
      * @param array $data Associative array containing additional data:
-     *      - userFrom: string Sender's username (used for display name).
-     *      - userTo: string Recipient's username (used for display name).
+     *      - userFrom: string (optional) Sender's username (used for display name).
+     *      - userTo: string (optional) Recipient's username (used for display name).
+     *      - replyTo: string (optional) Reply-To email address (for user submissions).
      * @param bool $isHtml Indicates whether the email body is in HTML format.
      *
      * @return bool True if the email was sent successfully, false otherwise.
      */
     private static function send(
         string $to, 
-        string $from, 
         string $subject, 
         string $body, 
         array $data = [], 
@@ -132,8 +128,13 @@ class Email
             new self();
 
             // Recipients
-            self::$mail->setFrom($from, $data['userFrom']);
+            self::$mail->setFrom($_ENV['MAIL_USERNAME'], $data['userFrom']);
             self::$mail->addAddress($to, $data['userTo']); 
+
+            // Set Reply-To if provided (for user-submitted emails)
+            if (!empty($data['replyTo'])) {
+                self::$mail->addReplyTo($data['replyTo'], $data['replyToName'] ?? '');
+            }
 
             // Content
             if ($isHtml) {

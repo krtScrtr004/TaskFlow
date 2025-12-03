@@ -82,7 +82,7 @@ use App\Middleware\Csrf;
             <h1 class="heading center-text sticky">Contact Us</h1>
 
             <section class="flex-row">
-                <form id="contact_form" class="contact-form flex-col" action="" method="POST">
+                <form id="concern_form" class="contact-form flex-col" action="" method="POST">
                     <div class="flex-row">
                         <input type="text" name="user_name" id="user_name" placeholder="Full Name" min="<?= NAME_MIN ?>"
                             max="<?= NAME_MAX ?>" required>
@@ -93,10 +93,10 @@ use App\Middleware\Csrf;
                     <textarea name="message" id="message" placeholder="Type your concern here..." cols="40" rows="10"
                         minlength="<?= LONG_TEXT_MIN ?>" maxlength="<?= LONG_TEXT_MAX ?>" required></textarea>
 
-                    <button id="send_button" type="button" class="white-bg black-text center-child">
+                    <button id="send_button" type="button" class="transparent-bg black-text center-child">
                         <div class="text-w-icon">
-                            <img src="<?= ICON_PATH . 'send_b.svg' ?>" alt="" height="20">
-                            <h3 class="black-text">Send Message</h3>
+                            <img src="<?= ICON_PATH . 'send_w.svg' ?>" alt="" height="20">
+                            <h3 class="white-text">Send Message</h3>
                         </div>
                     </button>
                 </form>
@@ -145,6 +145,7 @@ use App\Middleware\Csrf;
 
     <script type="module" src="<?= EVENT_PATH . 'logout.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'about-us' . DS . 'carousel-tracker.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'about-us' . DS . 'send-concern.js' ?>" defer></script>
 </body>
 
 </html>
