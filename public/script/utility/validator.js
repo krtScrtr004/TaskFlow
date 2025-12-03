@@ -68,7 +68,7 @@ function hasConsecutiveSpecialChars(str) {
  * - firstName: Required, length between LENGTH_VALIDATION.name.min and LENGTH_VALIDATION.name.max, valid characters, no three or more consecutive special characters.
  * - middleName: Optional, length between LENGTH_VALIDATION.name.min and LENGTH_VALIDATION.name.max if present, valid characters, no three or more consecutive special characters.
  * - lastName: Required, length between LENGTH_VALIDATION.name.min and LENGTH_VALIDATION.name.max, valid characters, no three or more consecutive special characters.
- * - fullName: Optional, length between LENGTH_VALIDATION.fullName.min and LENGTH_VALIDATION.fullName.max, valid characters, no three or more consecutive special characters.
+ * - fullName: Required, length between LENGTH_VALIDATION.fullName.min and LENGTH_VALIDATION.fullName.max, valid characters, no three or more consecutive special characters.
  * - bio: Optional, length between LENGTH_VALIDATION.longText.min and LENGTH_VALIDATION.longText.max if present, no three or more consecutive special characters.
  * - message: Optional, length between LENGTH_VALIDATION.longText.min and LENGTH_VALIDATION.longText.max if present, no three or more consecutive special characters.
  * - gender: Required, must be one of ['male', 'female', 'Male', 'Female'].
@@ -131,11 +131,11 @@ export function userValidationRules() {
         'fullName': {
             condition: (inputs) => {
                 const errors = []
-                if (inputs.fullName && (inputs.fullName.trim() === '' || inputs.fullName.length < LENGTH_VALIDATION.fullName.min || inputs.fullName.length > LENGTH_VALIDATION.fullName.max)) {
+                if (!inputs.fullName || inputs.fullName.trim() === '' || inputs.fullName.length < LENGTH_VALIDATION.fullName.min || inputs.fullName.length > LENGTH_VALIDATION.fullName.max) {
                     errors.push(`Full name must be between ${LENGTH_VALIDATION.fullName.min} and ${LENGTH_VALIDATION.fullName.max} characters long.`)
-                } else if (inputs.fullName && !/^[a-zA-Z\s'-.]{1,255}$/.test(inputs.fullName)) {
+                } else if (!/^[a-zA-Z\s'-.]{1,255}$/.test(inputs.fullName)) {
                     errors.push('Full name contains invalid characters.')
-                } else if (inputs.fullName && hasConsecutiveSpecialChars(inputs.fullName.trim())) {
+                } else if (hasConsecutiveSpecialChars(inputs.fullName.trim())) {
                     errors.push('Full name contains three or more consecutive special characters.')
                 }
                 return errors

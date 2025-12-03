@@ -9,7 +9,6 @@
     border-bottom: 1px solid var(--white);
     margin: 0 auto;
     margin-bottom: 0.5rem;
-    top: -5rem;
     background-color: var(--light-black);
     z-index: 1;
 }
@@ -40,7 +39,7 @@
 }
 
 .team-member-card {
-    min-width: 320px;
+    min-width: 400px;
 }
 
 .team-member-card img {
@@ -51,7 +50,7 @@
 }
 
 .team-member-card .info {
-    height: 510px;
+    height: 450px;
     padding: var(--space);
     padding-top: 4rem;
     border: 1px solid var(--white);
@@ -85,6 +84,7 @@
     background-color: var(--light-black);
     padding: 0.5rem;
     border: 1px solid var(--white);
+    border-radius: var(--border-radius);
     cursor: pointer;
     transition: background-color 200ms ease;
 }
@@ -122,6 +122,7 @@
 
 #concern_form #send_button {
     width: 100%;
+    border: 1px solid var(--white);
 }
 
 .contact-reference-section > section {
@@ -130,10 +131,14 @@
 }
 
 .contact-reference-section h3 {
+    width: 100%;
     font-weight: 400;
 }
 
 .contact-reference-section .contact-link {
     font-size: 1.2rem;
+}
 
+.contact-reference img {
+    padding: 5px;
 }
