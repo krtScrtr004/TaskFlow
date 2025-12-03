@@ -72,9 +72,17 @@ async function submit(e) {
         const emailInput = registerForm.querySelector('#register_email')
         const passwordInput = registerForm.querySelector('#register_password')
         const roleInput = registerForm.querySelector('input[name="role"]:checked')
-        if (!firstNameInput || !middleNameInput || !lastNameInput || !genderInput ||
-            !birthDateInput || !jobTitlesInput || !emailInput || !passwordInput || !roleInput) {
+        if (!firstNameInput || !middleNameInput || !lastNameInput || !birthDateInput || 
+            !jobTitlesInput || !emailInput || !passwordInput) {
             throw new Error('One or more form inputs not found.')
+        }
+
+        if (!genderInput) {
+            Notification.error('Please select a valid gender.', 3000)
+            return
+        } else if (!roleInput) {
+            Notification.error('Please select a valid role.', 3000)
+            return
         }
 
         // Handle job titles trailing comma and spaces
