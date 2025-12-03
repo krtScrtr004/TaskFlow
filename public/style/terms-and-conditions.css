@@ -5,7 +5,7 @@ body:has(.terms-and-conditions) * {
 }
 
 .terms-and-conditions {
-    padding: 5rem 20rem;
+    padding: 3rem 20rem;
 }
 
 .terms-and-conditions > .heading {

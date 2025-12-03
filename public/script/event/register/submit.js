@@ -26,6 +26,16 @@ if (!registerButton) {
 
 registerButton?.addEventListener('click', e => debounceAsync(submit(e), 300))
 
+const termsCheckbox = registerForm.querySelector('#register_terms')
+if (!termsCheckbox) {
+    console.error('Terms checkbox not found.')
+    Dialog.somethingWentWrong()
+}
+
+termsCheckbox?.addEventListener('change', () => {
+    registerButton.disabled = !termsCheckbox.checked
+})
+
 /**
  * Handles the registration form submission event.
  *
@@ -43,6 +53,10 @@ registerButton?.addEventListener('click', e => debounceAsync(submit(e), 300))
  */
 async function submit(e) {
     e.preventDefault()
+
+    if (!checkTermsAgreement()) {
+        return
+    }
 
     try {
         Loader.patch(registerButton.querySelector('.text-w-icon'))
@@ -100,6 +114,34 @@ async function submit(e) {
 }
 
 /**
+ * Checks whether the user has agreed to the terms and conditions and updates the registration UI.
+ *
+ * This function:
+ * - Looks up the terms checkbox inside the global `registerForm` using `registerForm.querySelector('#register_terms')`.
+ * - If the checkbox is missing or not checked, displays an error dialog via `Dialog.errorOccurred(...)` and returns `false`.
+ * - If the checkbox exists and is checked, enables the global `registerButton` by setting `registerButton.disabled = false` and returns `true`.
+ *
+ * Side effects:
+ * - May call `Dialog.errorOccurred` to display an error message.
+ * - May modify `registerButton.disabled`.
+ *
+ * @function checkTermsAgreement
+ * @global {HTMLFormElement} registerForm The form element in which the terms checkbox is expected to exist.
+ * @global {HTMLButtonElement} registerButton The registration button that will be enabled when terms are accepted.
+ * @returns {boolean} True if the terms checkbox exists and is checked (and the register button is enabled); false otherwise.
+ *
+ * @throws {ReferenceError} If `registerForm` or `registerButton` is not defined in the surrounding scope.
+ * @see Notification.error
+ */
+function checkTermsAgreement() {
+    if (!termsCheckbox || !termsCheckbox.checked) {
+        Notification.error('You must agree to the terms and conditions to register.', 3000)
+        return false
+    }
+    return true
+}
+
+/**
  * Sends user registration data to the backend for account creation.
  *
  * This function performs client-side validation on the provided user details before sending them
@@ -139,6 +181,10 @@ async function sendToBackend(
         }
         isLoading = true
 
+        if (!termsCheckbox.checked) {
+            throw new Error('You must agree to the terms and conditions to register.')
+        }
+
         if (!firstName || firstName.trim() === '') {
             throw new Error('First name is required.')
         }
@@ -172,6 +218,7 @@ async function sendToBackend(
         }
 
         await Http.POST('auth/register', {
+            agreedToTerms: termsCheckbox.checked,
             firstName: firstName.trim(),
             middleName: middleName?.trim(),
             lastName: lastName.trim(),

@@ -52,10 +52,22 @@ if (!$component) {
                     <p class="center-text">Don't have an account?
                         <a class="blue-text" href="<?= REDIRECT_PATH . 'register' ?>">Sign up</a>
                     </p>
+
+                    <hr class="login-redirect-divider">
+
+                    <p class="terms-and-conditions index-redirect center-child">
+                        <a class="center-text" href="<?= REDIRECT_PATH . 'terms-and-conditions' ?>" target="_blank">
+                            Terms and Conditions
+                        </a>
+                    </p>
                 <?php elseif (strcasecmp($page, 'register') === 0): ?>
                     <p class="center-text">Already have an account?
                         <a class="blue-text" href="<?= REDIRECT_PATH . 'login' ?>">Log in</a>
-                    <?php endif ?>
+                    </p>
+                <?php endif ?>  
+                <p class="report-something center-text">
+                    <a href="<?= REDIRECT_PATH . 'about-us#contact' ?>">Report Something?</a>
+                </p>
             </div>
         </section>
     </main>

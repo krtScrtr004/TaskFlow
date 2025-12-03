@@ -109,6 +109,7 @@ class AuthEndpoint implements Controller
      * 4. Creating a new user record in the database
      * 
      * The method expects JSON data with user details including:
+     * - agreedToTerms: Boolean indicating if the user agreed to terms and conditions
      * - firstName: User's first name
      * - middleName: User's middle name (optional)
      * - lastName: User's last name
@@ -138,6 +139,7 @@ class AuthEndpoint implements Controller
             }
 
             // Extract Data
+            $agreedToTerms = isset($data['agreedToTerms']) ? filter_var($data['agreedToTerms'], FILTER_VALIDATE_BOOLEAN) : false;
             $firstName = trimOrNull($data['firstName']);
             $middleName = trimOrNull($data['middleName']);
             $lastName = trimOrNull($data['lastName']);
@@ -155,6 +157,13 @@ class AuthEndpoint implements Controller
                         fn($title) => trim($title) !== ''
                     )
                 );
+            }
+
+            // Check Terms Agreement
+            if (!$agreedToTerms) {
+                throw new ValidationException('Registration Failed.', [
+                    'You must agree to the terms and conditions to register.'
+                ]);
             }
 
             // Validate Data
