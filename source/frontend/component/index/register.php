@@ -90,7 +90,17 @@ use App\Enumeration\Role;
 
     </div>
 
-    <button id="register_button" type="submit" class="blue-bg white-text">
+    <div class="agree-terms center-child">
+        <input type="checkbox" id="register_terms" name="register_terms" required>
+        <label class="index-redirect " for="register_terms">
+            I agree to the 
+            <a class="blue-text" href="<?= REDIRECT_PATH . 'terms-and-conditions' ?>" target="_blank">Terms
+                and Conditions
+            </a>
+        </label>
+    </div>
+
+    <button id="register_button" type="submit" class="blue-bg white-text" disabled>
         <div class="text-w-icon">
             <img src="<?= ICON_PATH . 'login_w.svg' ?>" alt="Register An Account" title="Register An Account"
                 height="20">

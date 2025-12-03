@@ -5,9 +5,14 @@ namespace App\Controller;
 use App\Auth\SessionAuth;
 use App\Exception\ForbiddenException;
 use App\Interface\Controller;
+use App\Middleware\Csrf;
 
 class AboutUsController implements Controller
 {
+    public static function index(): void
+    {
+    }
+
     /**
      * Renders the "About Us" page for authenticated users.
      *
@@ -36,11 +41,11 @@ class AboutUsController implements Controller
      * @uses REDIRECT_PATH Constant prefix used when redirecting to login
      * @uses VIEW_PATH Path used to include the about-us view file
      */
-    public static function index(): void
+    public static function viewAboutUs(): void
     {
         if (!SessionAuth::hasAuthorizedSession()) {
             header('Location: ' . REDIRECT_PATH . 'login');
-            exit();        
+            exit();
         }
 
         $memberData = [
@@ -104,5 +109,29 @@ class AboutUsController implements Controller
         ];
 
         require_once VIEW_PATH . 'about-us.php';
+    }
+
+    /**
+     * Renders the Terms and Conditions view.
+     *
+     * This static method includes the 'terms-and-conditions.html' view from the configured VIEW_PATH.
+     * It executes the included file in the current scope and is intended to output the terms and
+     * conditions HTML directly to the response.
+     *
+     * Behavior:
+     * - Resolves the view file path using the VIEW_PATH constant and the filename 'terms-and-conditions.html'.
+     * - Uses require_once to include the file, preventing multiple inclusions.
+     * - Produces no return value; side effects may include direct output and variable scope exposure.
+     *
+     * Security & errors:
+     * - VIEW_PATH must be defined and point to a trusted directory to avoid including unintended files.
+     * - If the view file is missing or not readable, inclusion will trigger a fatal error (Error).
+     *
+     * @return void
+     * @throws \Error If the view file cannot be included (e.g., missing or unreadable)
+     */
+    public static function viewTermsAndConditions(): void
+    {
+        require_once VIEW_PATH . 'terms-and-conditions.php';
     }
 }
