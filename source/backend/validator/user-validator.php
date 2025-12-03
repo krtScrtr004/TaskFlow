@@ -113,6 +113,45 @@ class UserValidator extends Validator
     }
 
     /**
+     * Validate a full name and append any validation errors to $this->errors.
+     *
+     * This method performs several checks on the provided full name:
+     *  - Presence: rejects null or strings that are empty or contain only whitespace.
+     *  - Length: ensures the length is between FULL_NAME_MIN and FULL_NAME_MAX characters.
+     *  - Character set: allows only letters (A‑Z, a‑z), whitespace, apostrophe ('), hyphen (-) and period (.).
+     *    The character check is enforced via a regex anchored to the full string.
+     *  - Consecutive special characters: delegates to hasConsecutiveSpecialChars() to detect
+     *    runs of three or more consecutive special characters.
+     *
+     * For each failed check, a human-readable error message is appended to $this->errors:
+     *  - "Full name must be between {FULL_NAME_MIN} and {FULL_NAME_MAX} characters long."
+     *  - "Full name contains invalid characters."
+     *  - "Full name contains three or more consecutive special characters."
+     *
+     * Note: The length and regex checks reference the constants FULL_NAME_MIN and FULL_NAME_MAX.
+     *
+     * @param string|null $fullName The full name to validate.
+     * @return void
+     * @uses FULL_NAME_MIN
+     * @uses FULL_NAME_MAX
+     * @see hasConsecutiveSpecialChars()
+     */
+    public function validateFullName(?string $fullName): void
+    {
+        if ($fullName === null || trim($fullName) === '' || strlen($fullName) < FULL_NAME_MIN || strlen($fullName) > FULL_NAME_MAX) {
+            $this->errors[] = 'Full name must be between ' . FULL_NAME_MIN . ' and ' . FULL_NAME_MAX . ' characters long.';
+        }
+
+        if (!preg_match("/^[a-zA-Z\s'\-.]{" . FULL_NAME_MIN . "," . FULL_NAME_MAX . "}$/", $fullName)) {
+            $this->errors[] = 'Full name contains invalid characters.';
+        }
+
+        if ($this->hasConsecutiveSpecialChars($fullName)) {
+            $this->errors[] = 'Full name contains three or more consecutive special characters.';
+        }
+    }
+
+    /**
      * Validates a bio string and records validation errors.
      *
      * This method performs validation only when a non-null bio is provided:
@@ -142,6 +181,38 @@ class UserValidator extends Validator
 
         if ($bio !== null && $this->hasConsecutiveSpecialChars($bio)) {
             $this->errors[] = 'Bio contains three or more consecutive special characters.';
+        }
+    }
+
+    /**
+     * Validate a user-provided message and record any validation errors.
+     *
+     * This method performs the following validations when a non-null message is supplied:
+     * - Trims surrounding whitespace and ensures the resulting string length is between
+     *   LONG_TEXT_MIN and LONG_TEXT_MAX characters (inclusive). If not, an error is
+     *   appended to $this->errors describing the required length range.
+     * - Checks for three or more consecutive special characters using hasConsecutiveSpecialChars().
+     *   If such a sequence is found, an error is appended to $this->errors indicating the issue.
+     *
+     * Notes:
+     * - If $message is null, no validations are performed and no errors are added.
+     * - The method does not throw exceptions; it reports problems by appending messages to
+     *   $this->errors.
+     * - Length checks operate on the trimmed message.
+     *
+     * @param string|null $message The message to validate; may be null to indicate absence.
+     * @return void
+     *
+     * @see self::hasConsecutiveSpecialChars()
+     */
+    public function validateMessage(?string $message): void
+    {
+        if ($message !== null && (strlen(trim($message)) < LONG_TEXT_MIN || strlen(trim($message)) > LONG_TEXT_MAX)) {
+            $this->errors[] = 'Message must be between ' . LONG_TEXT_MIN . ' and ' . LONG_TEXT_MAX . ' characters long.';
+        }
+
+        if ($message !== null && $this->hasConsecutiveSpecialChars($message)) {
+            $this->errors[] = 'Message contains three or more consecutive special characters.';
         }
     }
 
@@ -395,6 +466,7 @@ class UserValidator extends Validator
      * - firstName: Validates using validateFirstName().
      * - middleName: Validates using validateMiddleName().
      * - lastName: Validates using validateLastName().
+     * - fullName: Validates using validateFullName().
      * - gender: Validates using validateGender().
      * - birthDate: Validates using validateBirthDate().
      * - role: Validates using validateRole() (checked twice in original implementation).
@@ -403,6 +475,7 @@ class UserValidator extends Validator
      * - contactNumber: Validates using validateContactNumber().
      * - email: Validates using validateEmail().
      * - bio: Validates using validateBio().
+     * - message: Validates using validateMessage().
      * - profileLink: Validates using UrlValidator's validateUrl().
      * - createdAt: Ensures the DateTime value is not in the future.
      *
@@ -429,6 +502,10 @@ class UserValidator extends Validator
 
         if ($data['lastName'] !== null) {
             $this->validateLastName(trim($data['lastName']) ?? null);
+        }
+
+        if ($data['fullName'] !== null) {
+            $this->validateFullName(trim($data['fullName']) ?? null);
         }
 
         if ($data['gender'] !== null) {
@@ -461,6 +538,10 @@ class UserValidator extends Validator
 
         if ($data['bio'] !== null) {
             $this->validateBio(trim($data['bio']));
+        }
+
+        if ($data['message'] !== null) {
+            $this->validateMessage(trim($data['message']));
         }
 
         if ($data['profileLink'] !== null) {
