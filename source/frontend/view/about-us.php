@@ -1,5 +1,6 @@
 <?php
 
+use App\Auth\SessionAuth;
 use App\Middleware\Csrf;
 ?>
 <!DOCTYPE html>
@@ -22,7 +23,9 @@ use App\Middleware\Csrf;
 </head>
 
 <body>
-    <?php require_once COMPONENT_PATH . 'sidenav.php' ?>
+    <?php if (SessionAuth::hasAuthorizedSession()) {
+        require_once COMPONENT_PATH . 'sidenav.php';
+    } ?>
 
     <main class="about-us flex-col main-page">
 
@@ -79,7 +82,7 @@ use App\Middleware\Csrf;
         </section>
 
         <!-- Contact -->
-        <section class="contact flex-col">
+        <section id="contact" class="contact flex-col">
             <h1 class="heading center-text">Contact Us</h1>
 
             <section class="flex-row">

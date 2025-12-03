@@ -2,10 +2,7 @@
 
 namespace App\Controller;
 
-use App\Auth\SessionAuth;
-use App\Exception\ForbiddenException;
 use App\Interface\Controller;
-use App\Middleware\Csrf;
 
 class AboutUsController implements Controller
 {
@@ -17,7 +14,6 @@ class AboutUsController implements Controller
      * Renders the "About Us" page for authenticated users.
      *
      * This method handles page access and prepares team member data for the view:
-     * - Verifies an authorized session using SessionAuth::hasAuthorizedSession().
      * - Redirects to the login route (REDIRECT_PATH . 'login') and exits when the session is not authorized.
      * - Builds an array ($memberData) of team member metadata where each member contains:
      *     - name: string Full name of the member
@@ -37,17 +33,11 @@ class AboutUsController implements Controller
      *      - bio: string Biographical text for the member
      *
      * @return void
-     * @uses SessionAuth::hasAuthorizedSession() Check for authenticated session
      * @uses REDIRECT_PATH Constant prefix used when redirecting to login
      * @uses VIEW_PATH Path used to include the about-us view file
      */
     public static function viewAboutUs(): void
     {
-        if (!SessionAuth::hasAuthorizedSession()) {
-            header('Location: ' . REDIRECT_PATH . 'login');
-            exit();
-        }
-
         $memberData = [
             [
                 'name' => 'Marl Aguiluz M. Aquino',
