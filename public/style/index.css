@@ -143,3 +143,76 @@ body.index > main {
     flex: 1;
     cursor: pointer;
 }
+
+@media (max-width: 1200px) {
+    body.index > main {
+        width: 100%;
+        flex-direction: column !important;
+        justify-content: center;
+        gap: 0;
+    }
+
+    .banner,
+    .form {
+        flex: unset;
+        height: fit-content;
+        width: 100%;
+    }
+
+    .banner {
+        background-color: var(--light-black);
+        justify-content: end;
+        padding-bottom: 4rem;
+    }
+
+    .form {
+        justify-content: start;
+    }
+}
+
+@media (max-width: 992px) {
+}
+
+@media (max-width: 768px) {
+    body.index > main {
+        gap: 0;
+        justify-content: center;
+    }
+
+    .banner,
+    .form {
+        padding: 2rem;
+    }
+
+    body:has(#register_form) .banner {
+        display: none;
+    }
+
+    .banner {
+        padding-bottom: 0;
+    }
+
+    .banner > img {
+        height: 8rem;
+    }
+
+    .banner > h1,
+    .form > h1 {
+        font-size: 1.3rem;
+        text-align: center;
+    }
+
+    .form > .line-divider {
+        height: 1px;
+    }
+
+    .form > h1 {
+        font-weight: 400;
+    }
+}
+
+/* @media (max-width: 480px) {
+    body:has(#register_form) > main {
+        height: 100%;
+    }
+} */

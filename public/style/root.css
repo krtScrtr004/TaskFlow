@@ -240,3 +240,16 @@ textarea {
 	font-family: inherit;
 	font-size: 1rem;
 }
+
+@media (max-width: 992px) {
+	:root {
+		--min-width: unset;
+		--min-height: unset;
+	}
+}
+
+@media (max-width: 768px) {
+	:root {
+		--content-side-padding: 2rem;
+	}
+}
