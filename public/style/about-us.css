@@ -142,3 +142,51 @@
 .contact-reference img {
     padding: 5px;
 }
+
+@media (max-width: 992px) {
+    .about-us {
+        padding: 5rem !important;
+    }
+
+    .about {
+        flex-direction: column !important;
+    }
+
+    .about p {
+        text-align: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .about-us {
+        padding: 3rem !important;
+    }
+
+    .team-member-card {
+        min-width: 300px;
+    }
+
+    .team-member-card > .info {
+        height: 550px;
+    }
+
+
+    .contact > section {
+        flex-direction: column-reverse !important; 
+    }
+}
+
+@media (max-width: 480px) {
+    .team-member-card {
+        min-width: 280px;
+    }
+
+    .team-member-card .role,
+    .team-member-card > .bio {
+        font-size: 0.7rem;
+    }
+
+    .team-member-card > .info {
+        height: 620px;
+    }
+}

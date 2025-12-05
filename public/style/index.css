@@ -144,11 +144,12 @@ body.index > main {
     cursor: pointer;
 }
 
+/* Medium Screens */
 @media (max-width: 1200px) {
     body.index > main {
         width: 100%;
         flex-direction: column !important;
-        justify-content: center;
+        align-items: center;
         gap: 0;
     }
 
@@ -162,30 +163,47 @@ body.index > main {
     .banner {
         background-color: var(--light-black);
         justify-content: end;
-        padding-bottom: 4rem;
+        padding-top: 2rem;
     }
 
     .form {
+        width: 75%;
+        padding: 2rem 8rem;
         justify-content: start;
+        align-items: center;
+    }
+
+    .form > .line-divider {
+        width: 100%;
     }
 }
 
-@media (max-width: 992px) {
+@media (min-width: 768px) and (min-height: 801px) {
+    body.index > main {
+        justify-content: center;
+    }
 }
 
+/* Tablet Screens */
+@media (max-width: 992px) {
+    .form {
+        width: 100%;
+    }
+
+    .banner > img {
+        height: 12rem;
+    }
+}
+
+/* Small Screens */
 @media (max-width: 768px) {
     body.index > main {
         gap: 0;
-        justify-content: center;
     }
 
     .banner,
     .form {
         padding: 2rem;
-    }
-
-    body:has(#register_form) .banner {
-        display: none;
     }
 
     .banner {
@@ -210,9 +228,3 @@ body.index > main {
         font-weight: 400;
     }
 }
-
-/* @media (max-width: 480px) {
-    body:has(#register_form) > main {
-        height: 100%;
-    }
-} */

@@ -39,3 +39,14 @@
 #change_password_form .password-list-validator > li {
 	max-width: 40ch;
 }
+
+@media (max-width: 992px) {
+	.single-form > main {
+		padding: 0 2rem;
+	}
+
+	.single-form-form {	
+		padding-left: var(--space);
+		padding-right: var(--space);
+	}
+}

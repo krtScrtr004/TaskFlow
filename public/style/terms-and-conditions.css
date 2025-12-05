@@ -32,3 +32,15 @@ body:has(.terms-and-conditions) * {
     font-weight: 300;
     font-weight: 300;
 }
+
+@media (max-width: 992px) {
+    .terms-and-conditions {
+        padding: 3rem 5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .terms-and-conditions {
+        padding: 2rem;
+    }
+}
