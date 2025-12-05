@@ -64,14 +64,14 @@ function phaseListCard(Phase $phase): string
         <!-- Phase Info -->
         <div class="flex-col">
             <!-- Phase Name -->
-            <h3>$name</h3>
+            <h3 class="phase-name">$name</h3>
 
             <div>
                 <!-- Project Description -->
                 <p class="phase-description wrap-text">$description</p>
 
                 <!-- Project Schedule -->
-                <div class="project-schedule flex-row">
+                <div class="project-schedule flex-row flex-wrap">
                     <div class="text-w-icon">
                         <!-- Start Date -->
                         <img
@@ -82,7 +82,7 @@ function phaseListCard(Phase $phase): string
 
                         <p class="phase-dates">$startDateTime</p>
                     </div>
-                    -
+                    
                     <div class="text-w-icon">
                         <!-- Completion Date -->
                         <img

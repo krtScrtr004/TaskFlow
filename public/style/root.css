@@ -251,4 +251,26 @@ textarea {
 	:root {
 		--content-side-padding: 2rem;
 	}
+
+	h3 {
+		font-size: 1.2rem !important;
+	}
+
+	p, strong, em, li, input, textarea, button, a {
+		font-size: 0.8rem !important;
+	}
+}
+
+@media (max-width: 480px) {
+	:root {
+		--content-side-padding: 1rem;
+	}
+
+	h3 {
+		font-size: 1rem !important;
+	}
+
+	p, strong, em, li, input, textarea, button, a {
+		font-size: 0.7rem !important;
+	}
 }

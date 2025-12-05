@@ -649,15 +649,24 @@ button > .text-w-icon {
 }
 
 @media (max-width: 992px) {
+	.badge,
+	.job-title-chip {
+		font-size: 0.9rem;
+	}
 }
 
 @media (max-width: 768px) {
+	.content-section-block {
+		padding: 1rem;
+	}
+
 	.modal-wrapper > div,
 	.modal-wrapper > section,
 	.modal.modal-form,
-	.modal.error-list-dialog {
+	.modal.error-list-dialog,
+	.user-info-card {
 		min-width: 10rem !important;
-		max-width: 70%;
+		max-width: 70% !important;
 	}
 
 	.header-w-back > .back-button {
@@ -670,5 +679,94 @@ button > .text-w-icon {
 
 	.header-w-back > h3 {
 		font-size: 1.5rem !important;
+	}
+
+	.badge,
+	.job-title-chip {
+		font-size: 0.7rem;
+	}
+
+	.badge {
+		padding: 0.2rem 3rem;
+	}
+
+	.search-bar input {
+		padding: 0.3rem;
+	}
+
+	.search-bar button > img {
+		height: 1rem;
+		width: 1rem;
+	}
+
+	.user-list-card img {
+		height: 2rem;
+		width: 2rem;
+	}
+
+	.user-list-card .name {
+		max-width: 30ch;
+	}
+
+	.user-list-card .id {
+		font-size: 0.7rem !important;
+	}
+}
+
+@media (max-width: 480px) {
+	.badge,
+	.job-title-chip {
+		font-size: 0.6rem;
+	}
+
+	.badge {
+		padding: 0.2rem 3.5rem;
+	}
+
+		.user-info-card .primary-info {
+		flex-direction: column-reverse;
+	}
+
+	.user-info-card .primary-info #user_info_card_close_button {
+		width: fit-content;
+		margin-left: auto;
+	}
+
+	.user-info-card .primary-info > div:first-child {
+		width: 100%;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.user-info-card .primary-info > div:first-child > *,
+	.user-info-card .user-job-titles,
+	.user-info-card .user-bio {
+		text-align: center;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.user-info-card .user-profile-picture {
+		height: 4rem;
+		width: 4rem;
+		margin: 0;
+	}
+
+	.user-info-card .user-name {
+		font-size: 1.2rem;
+	}
+
+	.user-info-card .user-statistics-container {
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+
+	.user-info-card .user-statistic > h4 {
+		font-size: 1.3rem;
+	}
+
+	.user-info-card .user-performance > .text-w-icon {
+		justify-content: center;
 	}
 }

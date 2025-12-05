@@ -63,3 +63,9 @@
         display: block !important;
     }
 }
+
+@media (max-width: 768px) {
+    .small-sidenav img {
+        width: 1.2rem;
+    }
+}
