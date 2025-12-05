@@ -89,7 +89,6 @@ body {
 }
 
 header,
-main,
 footer {
 	min-width: var(--min-width);
 }

@@ -71,6 +71,7 @@ if (!isset($users))
         </section>
     </main>
 
+    <script type="module" src="<?= EVENT_PATH . 'toggle-menu.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'break-text-fallback.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'logout.js' ?>" defer></script>
 

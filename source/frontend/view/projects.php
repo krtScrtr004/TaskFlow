@@ -206,6 +206,7 @@ if (isset($projects)) {
 
     </main>
 
+    <script type="module" src="<?= EVENT_PATH . 'toggle-menu.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'logout.js' ?>" defer></script>
 
     <script type="module" src="<?= EVENT_PATH . 'projects' . DS . 'infinite-scroll.js' ?>" defer></script>

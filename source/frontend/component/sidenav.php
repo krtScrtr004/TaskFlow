@@ -1,5 +1,15 @@
 <aside class="sidenav flex-col sticky black-bg">
-    <nav>
+    <div class="small-sidenav no-display">
+        <button class="hamburger-button unset-button">
+            <img
+                src="<?= ICON_PATH . 'hamburger_w.svg' ?>"
+                alt="Menu"
+                title="Menu"
+                height="28">
+        </button>
+    </div>
+
+    <nav class="main-sidenav">
         <!-- Project -->
         <a class="" href="<?= REDIRECT_PATH . 'home' ?>">
             <div class="text-w-icon">

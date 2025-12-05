@@ -150,6 +150,7 @@ use App\Middleware\Csrf;
 
     </main>
 
+    <script type="module" src="<?= EVENT_PATH . 'toggle-menu.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'logout.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'about-us' . DS . 'carousel-tracker.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'about-us' . DS . 'send-concern.js' ?>" defer></script>
