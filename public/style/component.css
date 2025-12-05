@@ -719,6 +719,12 @@ button > .text-w-icon {
 	}
 }
 
+@media (max-width: 575px) {
+	.search-bar {
+		width: 100%;
+	}
+}
+
 @media (max-width: 480px) {
 	button:has(.text-w-icon):not(.unset-button) {
 		width: 25ch;
@@ -745,7 +751,7 @@ button > .text-w-icon {
 
 	.user-info-card .primary-info > div:first-child {
 		width: 100%;
-		flex-direction: column;
+		flex-direction: column !important;
 		align-items: center;
 		gap: 0.5rem;
 	}

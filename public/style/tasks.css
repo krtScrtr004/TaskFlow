@@ -1,14 +1,19 @@
 .task-grid,
 .worker-grid {
-	grid-template-columns: repeat(auto-fill, minmax(var(--card-width), 1fr)) !important;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(var(--card-width), 280px));
 	gap: 1rem;
+	align-items: start;
+	align-content: start;
 }
 
 .task-grid-card,
-.worker-grid-card {
+.user-grid-card {
 	aspect-ratio: 1 / 1;
 	background-color: var(--black);
 	border-radius: var(--border-radius);
+	display: flex;
+	flex-direction: column;
 }
 
 /* Main Task Page */
@@ -54,6 +59,11 @@
 
 .task-grid-card .task-schedule > div {
 	gap: 0.3rem;
+}
+
+
+.task-grid-card .task-schedule p {
+	height: 100%;
 }
 
 .task-grid-card .task-badge {
@@ -125,7 +135,7 @@
 	gap: 1rem;
 }
 
-.worker-grid {
+.user-grid {
 	max-height: 80vh;
 	overflow: auto;
 }
@@ -143,8 +153,49 @@
 }
 
 @media (max-width: 768px) {
+	.task-grid-card,
+	.user-grid-card {
+		max-width: 100% !important;
+	}
+
 	.add-task-button img {
 		height: 4rem;
 		margin-bottom: 0.5rem;
+	}
+
+	.task-info .main {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.8rem;
+	}
+
+	.task-info .main .back-button {
+		margin-right: 0;
+	}
+
+	.task-info .main .back-button > img {
+		height: 1rem;
+	}
+}
+
+@media (max-width: 575px) {
+	.task-grid,
+	.worker-grid {
+		grid-template-columns: repeat(auto-fill, minmax(var(--card-width), 100%));
+	}
+
+	.task-grid-card,
+	.user-grid-card {
+		height: 250px;
+		max-height: 230px;
+		aspect-ratio: unset;
+	}
+
+	.user-grid-card p {
+		font-size: 0.9rem !important;
+	}
+
+	.task-info .main > .name-and-status .text-w-icon > img {
+		display: none !important;
 	}
 }

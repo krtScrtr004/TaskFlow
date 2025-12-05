@@ -524,8 +524,10 @@ $performance = ($reportData['phases']?->count() > 0)
         </section>
 
     </main>
-
+    
+    <script type="module" src="<?= EVENT_PATH . 'toggle-menu.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'logout.js' ?>" defer></script>
+
     <script src="<?= EVENT_PATH . 'report' . DS . 'luxon.min.js' ?>"></script>
     <script src="<?= PUBLIC_PATH . 'chart.umd.min.js' ?>"></script>
     <script src="<?= EVENT_PATH . 'report' . DS . 'chartjs-adapter-date-fns.js' ?>"></script>

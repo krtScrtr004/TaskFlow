@@ -10,7 +10,6 @@ use App\Enumeration\WorkStatus;
 use App\Enumeration\TaskPriority;
 use App\Exception\NotFoundException;
 use App\Middleware\Csrf;
-use App\Model\TaskModel;
 use App\Model\TaskWorkerModel;
 
 if (!isset($project) || !$project instanceof Project) {
@@ -86,22 +85,24 @@ $worksOn = TaskWorkerModel::worksOn($task->getId(), Me::getInstance()->getId(), 
 
             <!-- Task Name and Status -->
             <div class="main flex-row">
-                <button class="back-button unset_button">
+                <button class="back-button unset-button">
                     <img src="<?= ICON_PATH . 'back.svg' ?>" alt="Back" title="Back" height="24" width="20">
                 </button>
 
-                <div class="heading text-w-icon">
-                    <img src="<?= ICON_PATH . 'task_w.svg' ?>" alt="<?= $taskData['name'] ?>"
-                        title="<?= $taskData['name'] ?>" height="24">
-
-                    <h3 class="task-name wrap-text">
-                        <?= $taskData['name'] ?>
-                    </h3>
-                </div>
-
-                <div class="center-child">
-                    <?= WorkStatus::badge($taskData['status']) ?>
-                </div>
+                <section class="name-and-status flex-row">
+                    <div class="heading text-w-icon">
+                        <img src="<?= ICON_PATH . 'task_w.svg' ?>" alt="<?= $taskData['name'] ?>"
+                            title="<?= $taskData['name'] ?>" height="24">
+    
+                        <h3 class="task-name wrap-text">
+                            <?= $taskData['name'] ?>
+                        </h3>
+                    </div>
+                    
+                    <div class="center-child">
+                        <?= WorkStatus::badge($taskData['status']) ?>
+                    </div>
+                </section>
             </div>
 
             <p class="task-id"><em><?= $taskData['id'] ?></em></p>
@@ -135,7 +136,7 @@ $worksOn = TaskWorkerModel::worksOn($task->getId(), Me::getInstance()->getId(), 
                     </p>
                 </div>
 
-                <span class="task-actual-completion-datetime" data-actualCompletionDateTime="<?= ($taskData['actualCompletionDateTime'] ? htmlspecialchars(formatDateTime($taskData['actualCompletionDateTime'])) : '') ?>"></span>
+                <span class="task-actual-completion-datetime no-display" data-actualCompletionDateTime="<?= ($taskData['actualCompletionDateTime'] ? htmlspecialchars(formatDateTime($taskData['actualCompletionDateTime'])) : '') ?>"></span>
                 <?php if ($taskData['status'] === WorkStatus::COMPLETED): ?>
                     <div class="text-w-icon">
                         <img src="<?= ICON_PATH . 'complete_w.svg' ?>" alt="Completed At" title="Completed At"
@@ -234,6 +235,7 @@ $worksOn = TaskWorkerModel::worksOn($task->getId(), Me::getInstance()->getId(), 
     </main>
 
     <script type="module" src="<?= EVENT_PATH . 'back-button.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'toggle-menu.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'logout.js' ?>" defer></script>
 
     <script type="module" src="<?= EVENT_PATH . 'tasks' . DS . 'create-worker-card.js' ?>" defer></script>

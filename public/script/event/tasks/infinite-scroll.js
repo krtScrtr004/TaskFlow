@@ -1,7 +1,5 @@
 import { infiniteScroll } from '../../utility/infinite-scroll.js'
 import { Http } from '../../utility/http.js'
-import { Dialog } from '../../render/dialog.js'
-import { errorListDialog } from '../../render/error-list-dialog.js'
 import { createTaskGridCard } from './create-task-grid-card.js'
 import { handleException } from '../../utility/handle-exception.js'
 

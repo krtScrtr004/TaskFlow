@@ -34,14 +34,14 @@ use App\Enumeration\WorkStatus;
  */
 function taskGridCard(Task $task, UUID $projectId): string
 {
-    $id = htmlspecialchars(UUID::toString($task->getPublicId()));
-    $name = htmlspecialchars($task->getName());
-    $description = htmlspecialchars($task->getDescription());
-    $startDateTime = htmlspecialchars(dateToWords($task->getStartDateTime()));
+    $id                 = htmlspecialchars(UUID::toString($task->getPublicId()));
+    $name               = htmlspecialchars($task->getName());
+    $description        = htmlspecialchars($task->getDescription());
+    $startDateTime      = htmlspecialchars(dateToWords($task->getStartDateTime()));
     $completionDateTime = htmlspecialchars(dateToWords($task->getCompletionDateTime()));
-    $status = $task->getStatus();
-    $priority = $task->getPriority();
-    $phaseId = htmlspecialchars(UUID::toString($task->getAdditionalInfo()['phaseId']) ?? '');
+    $status             = $task->getStatus();
+    $priority           = $task->getPriority();
+    $phaseId            = htmlspecialchars(UUID::toString($task->getAdditionalInfo()['phaseId']) ?? '');
 
     $redirect = REDIRECT_PATH . 'project' . DS . UUID::toString($projectId) . DS . 'phase' . DS . $phaseId . DS . 'task' . DS . $id;
 
@@ -58,7 +58,7 @@ function taskGridCard(Task $task, UUID $projectId): string
             </section>
 
             <!-- Task Description -->
-            <p class="task-description multi-line-ellipsis-5" title="<?= $description ?>"><?= $description ?></p>
+            <p class="task-description multi-line-ellipsis-4" title="<?= $description ?>"><?= $description ?></p>
 
             <!-- Task Schedule -->
             <section class="task-schedule flex-col">

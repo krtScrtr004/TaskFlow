@@ -244,13 +244,8 @@ textarea {
 	:root {
 		--min-width: unset;
 		--min-height: unset;
-	}
-}
-
-@media (max-width: 1200px) and (orientation: portrait) {
-	:root {
-		--content-side-padding: 5rem;
-		--space: 1.2rem;	
+		--card-width: 200px;
+		--card-height: 270px;
 	}
 }
 
@@ -258,8 +253,6 @@ textarea {
 	:root {
 		--content-side-padding: 2rem;
 		--space: 1rem;
-		--card-width: 180px;
-		--card-height: 250px;
 	}
 
 	h1 {
@@ -270,16 +263,21 @@ textarea {
 		font-size: 1.2rem !important;
 	}
 
-	p, strong, em, li, input, textarea, button, a {
+	p, strong, em, li, input, textarea, a {
 		font-size: 0.8rem !important;
 	}
+
+	button > .text-w-icon > h1,
+	button > .text-w-icon > h3,
+	button > .text-w-icon > p {
+		font-size: 1.2rem !important;
+	}
+
 }
 
 @media (max-width: 480px) {
 	:root {
 		--content-side-padding: 1rem;
-		--card-width: 150px;
-		--card-height: 230px;
 	}
 
 	h1 {
@@ -289,8 +287,14 @@ textarea {
 	h3 {
 		font-size: 1rem !important;
 	}
-
-	p, strong, em, li, input, textarea, button, a {
+	
+	p, strong, em, li, input, textarea, a {
 		font-size: 0.7rem !important;
+	}
+
+	button > .text-w-icon > h1,
+	button > .text-w-icon > h3,
+	button > .text-w-icon > p {
+		font-size: 1rem !important;
 	}
 }
