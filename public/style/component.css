@@ -373,7 +373,9 @@ button > .text-w-icon {
 }
 
 .no-content-wall h3 {
+	max-width: 20ch;
 	font-weight: 300;
+	text-align: center;
 }
 
 /* ---------------- JOB TITLE CHIP ---------------- */
@@ -665,7 +667,6 @@ button > .text-w-icon {
 	.modal.modal-form,
 	.modal.error-list-dialog,
 	.user-info-card {
-		min-width: 10rem !important;
 		max-width: 70% !important;
 	}
 
@@ -687,6 +688,7 @@ button > .text-w-icon {
 	}
 
 	.badge {
+		width: 15ch !important;
 		padding: 0.2rem 3rem;
 	}
 
@@ -697,6 +699,11 @@ button > .text-w-icon {
 	.search-bar button > img {
 		height: 1rem;
 		width: 1rem;
+	}
+
+	.no-content-wall > img {
+		height: 7rem !important;
+		width: 7rem !important;
 	}
 
 	.user-list-card img {
@@ -714,6 +721,10 @@ button > .text-w-icon {
 }
 
 @media (max-width: 480px) {
+	button:has(.text-w-icon):not(.unset-button) {
+		width: 25ch;
+	}
+
 	.badge,
 	.job-title-chip {
 		font-size: 0.6rem;
@@ -723,7 +734,12 @@ button > .text-w-icon {
 		padding: 0.2rem 3.5rem;
 	}
 
-		.user-info-card .primary-info {
+	.no-content-wall > img {
+		height: 5rem !important;
+		width: 5rem !important;
+	}
+
+	.user-info-card .primary-info {
 		flex-direction: column-reverse;
 	}
 

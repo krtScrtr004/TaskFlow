@@ -66,7 +66,7 @@ if (!isset($users))
                 class="no-users-wall no-content-wall <?= count($users) > 0 ? 'no-display' : 'flex-col' ?>">
                 <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No users available" title="No users available"
                     height="70">
-                <h3 class="center-text">No users available found.</h3>
+                <h3 class="center-text">No users found.</h3>
             </div>
         </section>
     </main>

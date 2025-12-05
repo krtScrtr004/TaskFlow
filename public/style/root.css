@@ -250,6 +250,11 @@ textarea {
 @media (max-width: 768px) {
 	:root {
 		--content-side-padding: 2rem;
+		--space: 1rem;
+	}
+
+	h1 {
+		font-size: 1.5rem !important;
 	}
 
 	h3 {
@@ -264,6 +269,10 @@ textarea {
 @media (max-width: 480px) {
 	:root {
 		--content-side-padding: 1rem;
+	}
+
+	h1 {
+		font-size: 1.2rem !important;
 	}
 
 	h3 {
