@@ -247,10 +247,19 @@ textarea {
 	}
 }
 
+@media (max-width: 1200px) and (orientation: portrait) {
+	:root {
+		--content-side-padding: 5rem;
+		--space: 1.2rem;	
+	}
+}
+
 @media (max-width: 768px) {
 	:root {
 		--content-side-padding: 2rem;
 		--space: 1rem;
+		--card-width: 180px;
+		--card-height: 250px;
 	}
 
 	h1 {
@@ -269,6 +278,8 @@ textarea {
 @media (max-width: 480px) {
 	:root {
 		--content-side-padding: 1rem;
+		--card-width: 150px;
+		--card-height: 230px;
 	}
 
 	h1 {

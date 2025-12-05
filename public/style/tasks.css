@@ -1,6 +1,6 @@
 .task-grid,
 .worker-grid {
-	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)) !important;
+	grid-template-columns: repeat(auto-fill, minmax(var(--card-width), 1fr)) !important;
 	gap: 1rem;
 }
 
@@ -140,4 +140,11 @@
 
 #edit_task_form #task_priority {
 	width: 18ch;
+}
+
+@media (max-width: 768px) {
+	.add-task-button img {
+		height: 4rem;
+		margin-bottom: 0.5rem;
+	}
 }

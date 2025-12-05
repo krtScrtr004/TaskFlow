@@ -11,19 +11,23 @@
 	height: 100%;
 }
 
+.single-form:has(.add-task) .single-form-form {
+	justify-content: center;
+}
+
 .single-form:has(.create-project) .single-form-form,
 .single-form:has(.edit-project) .single-form-form {
 	width: 43rem;
+}
+
+.single-form:has(.add-task) .single-form-form {
+	width: fit-content;
 }
 
 .single-form-form {
 	width: 500px;
 	border-radius: var(--border-radius);
 	gap: 2rem;
-}
-
-.single-form-form h3 {
-	font-size: 2rem;
 }
 
 .single-form-form form {
@@ -43,9 +47,10 @@
 		padding: 0 2rem;
 	}
 
-	.single-form-form {	
-		padding-left: var(--space);
-		padding-right: var(--space);
+	.single-form:has(.create-project) .single-form-form,
+	.single-form:has(.edit-project) .single-form-form,
+	.single-form:has(.add-task) .single-form-form {
+		width: 90%;
 	}
 }
 
@@ -56,11 +61,10 @@
 		padding: 2rem;
 	}
 
-	.single-form:has(.create-project) > .single-form,
-	.single-form:has(.edit-project) > .single-form, 
-	.single-form:has(.add-task) > .single-form {
+	.single-form:has(.create-project) .single-form-form,
+	.single-form:has(.edit-project) .single-form-form,
+	.single-form:has(.add-task) .single-form-form {
 		width: 100%;
-		height: 100%;
 	}
 
 	.single-form .single-form-form .text-w-icon img {

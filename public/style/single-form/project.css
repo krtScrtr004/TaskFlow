@@ -127,7 +127,7 @@
 	width: 100% !important;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 992px) {
 	.project-name.text-w-icon img,
 	.phase > div:first-child .text-w-icon > img {
 		height: 1.3rem !important;
@@ -136,20 +136,27 @@
 
 	.project-name.text-w-icon h1,
 	.phase-name {
-		line-height: unset;
-		font-size: unset !important;
+		font-size: 1.5rem !important;
 	}
 
-    #create_project_form .project-secondary-info,
+	#create_project_form .project-secondary-info,
 	#editable_project_details .project-secondary-info,
-    .phase-secondary-info {
+	.phase-secondary-info {
 		flex-direction: column;
 		gap: 0.8rem;
 	}
 
-    #create_project_form .project-secondary-info input,
+	#create_project_form .project-secondary-info input,
 	#editable_project_details .project-secondary-info input,
-    .phase-secondary-info input {
+	.phase-secondary-info input {
 		width: 100% !important;
+	}
+}
+
+@media (max-width: 768px) {
+	.project-name.text-w-icon h1,
+	.phase-name {
+		line-height: unset;
+		font-size: 1.3rem !important;
 	}
 }

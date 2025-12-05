@@ -689,7 +689,6 @@ button > .text-w-icon {
 
 	.badge {
 		width: 15ch !important;
-		padding: 0.2rem 3rem;
 	}
 
 	.search-bar input {
@@ -728,10 +727,6 @@ button > .text-w-icon {
 	.badge,
 	.job-title-chip {
 		font-size: 0.6rem;
-	}
-
-	.badge {
-		padding: 0.2rem 3.5rem;
 	}
 
 	.no-content-wall > img {
