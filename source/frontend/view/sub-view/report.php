@@ -130,7 +130,8 @@ $performance = ($reportData['phases']?->count() > 0)
 
                         <div class="phase-timeline-data no-display">
                             <?php 
-                            foreach ($reportData['phases'] as $phase): 
+                            $reversed = array_reverse($reportData['phases']->toArray());
+                            foreach ($reversed as $phase): 
                                 $name = htmlspecialchars($phase->getName());
                                 $startDateTime = htmlspecialchars(formatDateTime($phase->getStartDateTime()));
                                 $completionDateTime = htmlspecialchars(formatDateTime($phase->getCompletionDateTime()));
