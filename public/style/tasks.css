@@ -231,6 +231,16 @@
 		height: 1rem;
 	}
 
+	.task-info .action-buttons {
+		margin-top: 1rem;
+	}
+
+	.task-info .action-buttons > button,
+	#add_worker_button {
+		width: 15ch;
+	}
+
+
 	/* Make table scrollable on mobile */
 	.worker-table-container {
 		overflow-x: auto;
@@ -257,6 +267,10 @@
 		height: 250px;
 		max-height: 230px;
 		aspect-ratio: unset;
+	}
+
+	.task-info .action-buttons > button {
+		width: 15ch;
 	}
 
 	.task-info .main > .name-and-status .text-w-icon > img {

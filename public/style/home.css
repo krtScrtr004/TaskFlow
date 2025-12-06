@@ -289,6 +289,10 @@
 	.phase-list-card > div:nth-child(2) {
 		margin-right: auto;
 	}
+
+	.team-members #add_worker_button {
+		width: 15ch !important;
+	}
 }
 
 @media (max-width: 480px) {

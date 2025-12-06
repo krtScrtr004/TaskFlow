@@ -117,6 +117,10 @@
 		width: 10rem;
 		margin-right: auto;
 	}
+
+	#editable_profile_details_form #save_changes_button {
+		width: 15ch;
+	}
 }
 
 @media (max-width: 575px) {
@@ -135,6 +139,11 @@
 		gap: var(--space);
 		padding-bottom: var(--space);
 	}
+
+	#editable_profile_details_form #save_changes_button {
+		width: 100%;
+	}
+
 }
 
 @media (max-width: 480px) {

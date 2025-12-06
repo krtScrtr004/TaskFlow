@@ -625,6 +625,7 @@ button > .text-w-icon {
 	.modal.modal-form,
 	.modal.error-list-dialog,
 	.user-info-card {
+		min-width: 18rem !important;
 		max-width: 70% !important;
 	}
 

@@ -65,7 +65,7 @@ $myData = [
                 <div class="flex-col">
                     <div>
                         <input class="no-display" type="file" name="profile_picker" id="profile_picker"
-                            accept="image/.png, image/.jpg, image/.jpeg">
+                            accept="image/png, image/jpeg, .png, .jpg, .jpeg">
 
                         <!-- Change Profile Picture Button -->
                         <button id="pick_profile_picture_button" class="blue-bg" type="button">
