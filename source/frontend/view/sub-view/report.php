@@ -179,7 +179,7 @@ $performance = ($reportData['phases']?->count() > 0)
                         ?>
                             <div class="phase-card flex-row">
                                 <section class="phase-header flex-col">
-                                    <h3><?= $name ?></h3>
+                                    <h3 class="phase-name"><?= $name ?></h3>
 
                                     <div class="phase-schedule flex-col">
                                         <span class="text-w-icon">
@@ -187,7 +187,7 @@ $performance = ($reportData['phases']?->count() > 0)
                                                 height="16">
 
                                             <p>Start Date: 
-                                                <span class="task-start-datetime">
+                                                <span class="task-start-datetime wrap-text">
                                                     <?= $startDateTime ?>
                                                 </span>
                                             </p>
@@ -208,7 +208,7 @@ $performance = ($reportData['phases']?->count() > 0)
                                                     height="16">
 
                                                 <p>Actual Completion Date: 
-                                                    <span class="task-actual-completion-datetime">
+                                                    <span class="task-actual-completion-datetime wrap-text">
                                                         <?= $actualCompletionDateTime ?>
                                                     </span>
                                                 </p>

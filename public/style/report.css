@@ -175,7 +175,7 @@
 
 .phases-table tbody tr:hover {
 	background-color: var(--light-black);
-}	
+}
 
 .phases-table td {
 	padding: 0.9rem 0.8rem;
@@ -291,4 +291,70 @@
 .recommendation-list {
 	line-height: 1.6rem;
 	font-size: 0.9rem;
+}
+
+@media (max-width: 1024px) {
+	.report {
+		flex-direction: column !important;
+	}
+
+	.second-block {
+		width: 100% !important;
+		flex-direction: row !important;
+	}
+
+	.second-block > .insights-recommendations,
+	.second-block > .insights-recommendations > * {
+		width: 100%;
+		height: 100%;
+	}
+}
+
+@media (max-width: 768px) {
+	.report .content-section-block .text-w-icon > h2,
+	.report .content-section-block .text-w-icon > h3 {
+		font-size: 1.3rem !important;
+		white-space: wrap;
+	}
+
+	.report .content-section-block .text-w-icon > img {
+		height: 1.3rem;
+		width: 1.3rem;
+	}
+
+	.section-heading,
+	.second-block,
+	.phase-card {
+		flex-direction: column !important;
+	}
+
+	.overview-report .section-heading .text-w-icon {
+		align-items: start;
+	}
+
+	.overview-report .section-heading .text-w-icon img {
+		height: 2rem;
+		width: 2rem;
+	}
+
+	.overview-report .section-heading .text-w-icon > .heading-text h2 {
+		font-size: 1.2rem !important;
+	}
+
+	.overview-report .progress-container {
+		width: 100% !important;
+	}
+
+	.phase-card {
+		gap: unset !important;
+	}
+
+	.phase-card .phase-name {
+		font-size: 0.9rem;
+	}
+
+	.phase-card img {
+		height: 0.9rem !important;
+		width: 0.9rem !important;
+	}
 }
