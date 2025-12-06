@@ -47,7 +47,7 @@ function taskGridCard(Task $task, UUID $projectId): string
 
     ob_start();
     ?>
-    <div class="task-grid-card">
+    <div class="task-grid-card grid-card">
         <a class="flex-col full-body-content" href="<?= $redirect ?>">
             <section>
                 <div class="text-w-icon">

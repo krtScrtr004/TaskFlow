@@ -21,6 +21,9 @@
 
 	--card-width: 230px;
 	--card-height: 300px;
+
+	--box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
 }
 
 @font-face {
@@ -106,6 +109,7 @@ header {
 
 aside {
 	padding: 3rem 0;
+	box-shadow: var(--box-shadow);
 }
 
 main {
@@ -180,7 +184,8 @@ textarea {
 	font-weight: 300;
 	background-color: transparent;
 	color: var(--white);
-	border: 1px solid var(--white);
+	border: 1px solid var(--dark-white);
+	background-color: #353637;
 }
 
 input[type="date"]::-webkit-calendar-picker-indicator {
@@ -214,6 +219,7 @@ select option {
 button {
 	border: 1px solid transparent;
 	font-weight: 800;
+	box-shadow: var(--box-shadow);
 }
 
 button:hover {
@@ -233,7 +239,6 @@ fieldset {
 
 textarea {
 	padding: 0.5rem;
-	border: 1px solid var(--white);
 	border-radius: var(--border-radius);
 	resize: none;
 	font-family: inherit;

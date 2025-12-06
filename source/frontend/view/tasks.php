@@ -79,10 +79,10 @@ if (!isset($tasks)) {
                 </div>
             <?php endif; ?>
 
-            <section class="task-grid grid">
+            <section class="task-grid grid-card-container grid">
                 <?php if ($isAddable): ?>
                     <a href="<?= REDIRECT_PATH . "add-task/" . $projectData['publicId'] ?>"
-                        class="add-task-button task-grid-card flex-col flex-child-center-h flex-child-center-v">
+                        class="add-task-button task-grid-card grid-card flex-col flex-child-center-h flex-child-center-v">
                         <img src="<?= ICON_PATH . 'add_w.svg' ?>" alt="Add New Task" title="Add New Task" height="90">
                         <h3>Add New Task</h3>
                     </a>

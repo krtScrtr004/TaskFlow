@@ -1,3 +1,19 @@
+.grid-card-container {
+	grid-template-columns: repeat(auto-fill, minmax(var(--card-width), 280px));
+}
+
+.grid-card {
+	background-color: var(--black);
+	aspect-ratio: 1 / 1;
+	box-shadow: var(--box-shadow);
+	border-radius: var(--border-radius);
+}
+
+.grid-card:hover {
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+	opacity: 0.9;
+}
+
 main.main-page {
 	display: flex;
 	flex-direction: column;
@@ -6,7 +22,7 @@ main.main-page {
 
 .content-section-block {
 	padding: var(--space);
-	border: 1px solid rgba(0, 0, 0, 0.3);
+	box-shadow: var(--box-shadow);
 	border-radius: var(--border-radius);
 }
 
@@ -136,7 +152,7 @@ button:has(.text-w-icon):not(.unset-button) {
 	max-width: 25rem;
 	box-sizing: content-box;
 	padding: var(--space);
-	box-shadow: 0 0 15px rgba(68, 68, 68, 0.2);
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .modal-wrapper hr {
@@ -382,7 +398,6 @@ button > .text-w-icon {
 }
 
 .no-content-wall h3 {
-	max-width: 20ch;
 	font-weight: 300;
 	text-align: center;
 }
@@ -664,6 +679,10 @@ button > .text-w-icon {
 		width: 7rem !important;
 	}
 
+	.no-content-wall h3 {
+		max-width: 20ch;
+	}
+
 	.user-list-card img {
 		height: 2rem;
 		width: 2rem;
@@ -676,11 +695,25 @@ button > .text-w-icon {
 	.user-list-card .id {
 		font-size: 0.7rem !important;
 	}
+
+	.grid-card {
+		max-width: 100% !important;
+	}
 }
 
 @media (max-width: 575px) {
 	.search-bar {
 		width: 100%;
+	}
+
+	.grid-card-container {
+		grid-template-columns: repeat(auto-fill, minmax(var(--card-width), 100%));
+	}
+
+	.grid-card {
+		height: 250px;
+		max-height: var(--card-height);
+		aspect-ratio: unset;
 	}
 }
 

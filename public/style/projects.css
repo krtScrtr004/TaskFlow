@@ -45,6 +45,7 @@
 
 .projects .insights-recommendations {
 	background-color: #f9ef888f;
+	box-shadow: var(--box-shadow);
 }
 
 .projects .insights-recommendations > * {
@@ -65,15 +66,11 @@
 }
 
 .project-grid {
-	grid-template-columns: repeat(auto-fill, minmax(var(--card-width), 280px));
 	gap: var(--space);
 }
 
 .project-grid-card {
-	background-color: var(--black);
-	aspect-ratio: 1 / 1;
 	padding: 1rem;
-	border-radius: var(--border-radius);
 }
 
 .project-grid-card:hover {
@@ -160,21 +157,5 @@
 
 	.projects .insights-recommendations > * {
 		line-height: 1.2rem;
-	}
-
-	.project-grid-card {
-		max-width: 100% !important;
-	}
-}
-
-@media (max-width: 575px) {
-	.project-grid {
-		grid-template-columns: repeat(auto-fill, minmax(var(--card-width), 100%));
-	}
-
-	.project-grid-card {
-		height: 250px;
-		max-height: 230px;
-		aspect-ratio: unset;
 	}
 }

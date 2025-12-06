@@ -61,7 +61,7 @@ function userGridCard(User|Worker $user): string
 
     ob_start();
     ?>
-    <button class="user-grid-card unset-button" data-userid="<?= $id ?>">
+    <div class="user-grid-card grid-card" data-userid="<?= $id ?>">
 
         <!-- User Primary Info -->
         <section class="user-primary-info flex-row flex-child-center-h">
@@ -142,7 +142,7 @@ function userGridCard(User|Worker $user): string
             </section>
         <?php endif; ?>
 
-    </button>
+    </div>
     <?php
     return ob_get_clean();
 }

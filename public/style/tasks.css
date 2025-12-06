@@ -6,16 +6,12 @@
 
 .task-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(var(--card-width), 280px));
 	gap: 1rem;
 	align-items: start;
 	align-content: start;
 }
 
 .task-grid-card {
-	aspect-ratio: 1 / 1;
-	background-color: var(--black);
-	border-radius: var(--border-radius);
 	display: flex;
 	flex-direction: column;
 }
@@ -104,6 +100,7 @@
 .worker-table-container {
 	width: 100%;
 	overflow-x: auto;
+	box-shadow: var(--box-shadow);
 }
 
 .worker-table {
@@ -208,10 +205,6 @@
 }
 
 @media (max-width: 768px) {
-	.task-grid-card {
-		max-width: 100% !important;
-	}
-
 	.add-task-button img {
 		height: 4rem;
 		margin-bottom: 0.5rem;
@@ -259,16 +252,6 @@
 }
 
 @media (max-width: 575px) {
-	.task-grid {
-		grid-template-columns: repeat(auto-fill, minmax(var(--card-width), 100%));
-	}
-
-	.task-grid-card {
-		height: 250px;
-		max-height: 230px;
-		aspect-ratio: unset;
-	}
-
 	.task-info .action-buttons > button {
 		width: 15ch;
 	}

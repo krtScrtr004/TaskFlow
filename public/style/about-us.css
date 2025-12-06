@@ -180,6 +180,15 @@
 	padding: 5px;
 }
 
+.redirects a {
+	font-size: 0.9rem;
+	font-weight: 300;
+}
+
+.redirects a:hover {
+	text-decoration: underline;
+}
+
 @media (max-width: 1024px) {
 	.about-us {
 		padding: 3rem !important;

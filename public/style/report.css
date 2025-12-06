@@ -94,6 +94,11 @@
 	gap: var(--space);
 }
 
+.insights,
+.recommendations {
+	box-shadow: var(--box-shadow);
+} 
+
 .task-statistics .x {
 	font-weight: 300;
 }
@@ -128,6 +133,7 @@
 	max-height: 30rem;
 	border-radius: var(--border-radius);
 	overflow: auto;
+	box-shadow: var(--box-shadow);
 }
 
 .phases-table {
@@ -215,6 +221,7 @@
 	width: 100%;
 	border-collapse: collapse;
 	border-radius: var(--border-radius);
+	box-shadow: var(--box-shadow);
 }
 
 .workers-table th:first-child,

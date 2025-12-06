@@ -53,7 +53,7 @@ if (!isset($users))
         <!-- User Grid -->
         <section class="user-grid-container">
 
-            <section class="user-grid grid">
+            <section class="user-grid grid-card-container grid">
                 <?php foreach ($users as $user) {
                     echo userGridCard($user);
                 } ?>

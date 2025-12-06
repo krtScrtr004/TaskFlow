@@ -220,6 +220,15 @@ use App\Middleware\Csrf;
             </section>
         </section>
 
+        <!-- Redirects -->
+        <section class="redirects center-child">
+            <span class="terms-and-conditions">
+                <a class="center-text" href="<?= REDIRECT_PATH . 'terms-and-conditions' ?>" target="_blank">
+                    Terms and Conditions
+                </a>
+            </span>
+        </section>
+
     </main>
 
     <script type="module" src="<?= EVENT_PATH . 'toggle-menu.js' ?>" defer></script>

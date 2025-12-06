@@ -191,7 +191,7 @@ if (isset($projects)) {
 
         <section id="project_grid" class="project-grid-container">
             <!-- Projects Grid -->
-            <section class="project-grid grid">
+            <section class="project-grid grid-card-container grid">
                 <?php foreach ($projects as $project) {
                     echo projectGridCard($project);
                 } ?>
