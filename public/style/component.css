@@ -650,13 +650,6 @@ button > .text-w-icon {
 	flex: 1;
 }
 
-@media (max-width: 992px) {
-	.badge,
-	.job-title-chip {
-		font-size: 0.9rem;
-	}
-}
-
 @media (max-width: 768px) {
 	.content-section-block {
 		padding: 1rem;
@@ -682,13 +675,8 @@ button > .text-w-icon {
 		font-size: 1.5rem !important;
 	}
 
-	.badge,
-	.job-title-chip {
-		font-size: 0.7rem;
-	}
-
-	.badge {
-		width: 15ch !important;
+	.search-bar > .search-bar-container {
+		width: 70% !important;
 	}
 
 	.search-bar input {
@@ -698,6 +686,11 @@ button > .text-w-icon {
 	.search-bar button > img {
 		height: 1rem;
 		width: 1rem;
+	}
+
+	.search-bar > select {
+		flex: 1;
+		margin-right: 0 !important;
 	}
 
 	.no-content-wall > img {
@@ -728,11 +721,6 @@ button > .text-w-icon {
 @media (max-width: 480px) {
 	button:has(.text-w-icon):not(.unset-button) {
 		width: 25ch;
-	}
-
-	.badge,
-	.job-title-chip {
-		font-size: 0.6rem;
 	}
 
 	.no-content-wall > img {

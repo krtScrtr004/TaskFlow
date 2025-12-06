@@ -3,6 +3,7 @@
 }
 
 .projects .statistics,
+.projects .statistics > .sub-statistics,
 .projects .insights-recommendations {
 	gap: var(--space);
 }
@@ -11,9 +12,8 @@
 	margin-right: 2rem;
 }
 
-.projects .statistics > div:not(.performance) {
+.projects .statistics > .sub-statistics > * {
 	padding: 0.3rem 1rem;
-	border: 1px solid var(--white);
 	border-radius: var(--border-radius);
 }
 
@@ -22,6 +22,7 @@
 .projects .statistics .cancelled > h3, 
 .projects .statistics .cancel-terminate > h3 {
 	width: 10ch;
+	margin-bottom: 0.5rem;
 }
 
 .projects .statistics > div {
@@ -64,7 +65,7 @@
 }
 
 .project-grid {
-	grid-template-columns: repeat(auto-fill, minmax(var(--card-width), 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(var(--card-width), 280px));
 	gap: var(--space);
 }
 
@@ -97,7 +98,6 @@
 }
 
 .project-grid-card .project-description {
-	max-width: 25ch;
 	font-size: 1rem;
 	font-weight: 300;
 	white-space: pre-wrap !important;
@@ -119,4 +119,62 @@
 	margin-top: 0.8rem;
 	font-size: 1.3rem;
 	font-weight: 300;
+}
+
+@media (max-width: 768px) {
+	.projects .statistics,
+	.projects .statistics > .sub-statistics,
+	.projects .insights-recommendations {
+		flex-direction: column;
+	}
+
+	.projects .statistics .performance {
+		margin-right: 0;
+	}
+
+	.projects .statistics > .performance h1 {
+		font-size: 2.3rem !important;
+	}
+
+	.projects .statistics .performance img {
+		width: 2rem;
+	}
+
+	.projects .statistics > .sub-statistics > * {
+		width: 100%;
+		padding: 0.5rem;
+		flex-direction: row-reverse;
+		justify-content: start;
+		align-items: center;
+		gap: 1rem;
+	}
+
+	.projects .statistics > .sub-statistics h3 {
+		margin-bottom: 0;
+	}
+
+	.projects .statistics > .sub-statistics img {
+		height: 1.5rem;
+		width: 1.5rem;
+	}
+
+	.projects .insights-recommendations > * {
+		line-height: 1.2rem;
+	}
+
+	.project-grid-card {
+		max-width: 100% !important;
+	}
+}
+
+@media (max-width: 575px) {
+	.project-grid {
+		grid-template-columns: repeat(auto-fill, minmax(var(--card-width), 100%));
+	}
+
+	.project-grid-card {
+		height: 250px;
+		max-height: 230px;
+		aspect-ratio: unset;
+	}
 }
