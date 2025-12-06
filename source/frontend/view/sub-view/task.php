@@ -72,6 +72,7 @@ $worksOn = TaskWorkerModel::worksOn($task->getId(), Me::getInstance()->getId(), 
     require_once COMPONENT_PATH . 'template/edit-task-modal.php';
     require_once COMPONENT_PATH . 'template/user-info-card.php';
     require_once COMPONENT_PATH . 'template/add-worker-modal.php';
+    require_once COMPONENT_PATH . 'function/user-table-row.php';
     ?>
 
     <main class="view-task-info main-page flex-col" 
@@ -194,17 +195,17 @@ $worksOn = TaskWorkerModel::worksOn($task->getId(), Me::getInstance()->getId(), 
         </section>
 
         <!-- Assigned Workers -->
-        <section class="assigned-workers content-section-block flex-col">
+        <section class="assigned-workers flex-col">
 
             <!-- Heading -->
-            <div class="heading text-w-icon">
+            <!-- <div class="heading text-w-icon">
                 <img src="<?= ICON_PATH . 'worker_w.svg' ?>" alt="Assigned Workers" title="Assigned Workers"
                     height="24">
 
                 <h3 class="task-name wrap-text">
                     Assigned Workers
                 </h3>
-            </div>
+            </div> -->
 
             <!-- No Workers Wall -->
             <div
@@ -214,12 +215,28 @@ $worksOn = TaskWorkerModel::worksOn($task->getId(), Me::getInstance()->getId(), 
                 <h3>No workers assigned to this task.</h3>
             </div>
 
-            <!-- Worker Grid Cards -->
-            <section class="worker-grid grid">
-                <?php foreach ($taskData['workers'] as $worker) {
-                    echo workerGridCard($worker);
-                } ?>
-            </section>
+            <!-- Worker Table -->
+            <div class="worker-table-container <?= count($taskData['workers']) === 0 ? 'no-display' : '' ?>">
+                <table class="worker-table">
+                    <thead>
+                        <tr>
+                            <th>Profile</th>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>Email</th>
+                            <th>Contact</th>
+                            <th>Total Tasks</th>
+                            <th>Completed</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($taskData['workers'] as $worker) {
+                            echo workerTableRow($worker);
+                        } ?>
+                    </tbody>
+                </table>
+            </div>
 
             <?php if (Role::isProjectManager(Me::getInstance()) && $isTaskEditable): ?>
                 <!-- Add Worker Button -->

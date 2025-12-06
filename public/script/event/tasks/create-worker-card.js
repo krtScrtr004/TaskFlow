@@ -6,14 +6,14 @@ import { handleException } from '../../utility/handle-exception.js'
 let isLoading = false
 
 const viewTaskInfo = document.querySelector('.view-task-info')
-const workerGrid = viewTaskInfo.querySelector('.worker-grid')
-if (!workerGrid) {
+const workerTable = viewTaskInfo.querySelector('.worker-table')
+if (!workerTable) {
     console.error('Workers grid not found!')
 }
 
-workerGrid?.addEventListener('click', async e => {
-    const workerCard = e.target.closest('.user-grid-card')
-    if (!workerCard) {
+workerTable?.addEventListener('click', async e => {
+    const userRow = e.target.closest('.user-table-row')
+    if (!userRow) {
         return
     }
 
@@ -24,7 +24,7 @@ workerGrid?.addEventListener('click', async e => {
         return
     }
 
-    const workerId = workerCard.dataset.userid
+    const workerId = userRow.dataset.userid
     if (!workerId || workerId.trim() === '') {
         console.error('Worker ID is missing.')
         Dialog.somethingWentWrong()

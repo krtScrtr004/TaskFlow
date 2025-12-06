@@ -1,5 +1,4 @@
-.task-grid,
-.worker-grid {
+.task-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(var(--card-width), 280px));
 	gap: 1rem;
@@ -106,6 +105,73 @@
 	white-space: normal;
 }
 
+/* Worker Table Styles */
+
+.worker-table-container {
+	width: 100%;
+	overflow-x: auto;
+}
+
+.worker-table {
+	width: 100%;
+	border-collapse: collapse;
+	background-color: var(--black);
+	border-radius: var(--border-radius);
+	overflow: hidden;
+}
+
+.worker-table thead {
+	background-color: rgba(255, 255, 255, 0.05);
+}
+
+.worker-table th {
+	padding: 1rem;
+	text-align: left;
+	font-weight: 600;
+	font-size: 0.9rem;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.worker-table td {
+	padding: 1rem;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.worker-table tbody tr {
+	transition: background-color 0.2s ease;
+	cursor: pointer;
+}
+
+.worker-table tbody tr:hover {
+	background-color: rgba(255, 255, 255, 0.03);
+}
+
+.worker-table .user-profile {
+	display: block;
+}
+
+.worker-table .user-name {
+	display: block;
+	white-space: nowrap;
+}
+
+.worker-table .user-email,
+.worker-table .user-contact {
+	display: block;
+	max-width: 200px;
+}
+
+.worker-table .center-text {
+	text-align: center;
+}
+
+.worker-table tbody tr:last-child td {
+	border-bottom: none;
+}
+
+
 .task-info,
 .task-info .action-buttons {
 	gap: 0.5rem;
@@ -176,6 +242,22 @@
 	.task-info .main .back-button > img {
 		height: 1rem;
 	}
+
+	/* Make table scrollable on mobile */
+	.worker-table-container {
+		overflow-x: auto;
+		-webkit-overflow-scrolling: touch;
+	}
+
+	.worker-table {
+		min-width: 800px;
+	}
+
+	.worker-table th,
+	.worker-table td {
+		padding: 0.75rem 0.5rem;
+		font-size: 0.9rem;
+	}
 }
 
 @media (max-width: 575px) {
@@ -197,5 +279,21 @@
 
 	.task-info .main > .name-and-status .text-w-icon > img {
 		display: none !important;
+	}
+
+	/* Compact table for very small screens */
+	.worker-table {
+		min-width: 700px;
+	}
+
+	.worker-table th,
+	.worker-table td {
+		padding: 0.5rem 0.4rem;
+		font-size: 0.85rem;
+	}
+
+	.worker-table .user-profile {
+		height: 32px;
+		width: 32px;
 	}
 }

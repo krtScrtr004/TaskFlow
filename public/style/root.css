@@ -274,27 +274,3 @@ textarea {
 	}
 
 }
-
-@media (max-width: 480px) {
-	:root {
-		--content-side-padding: 1rem;
-	}
-
-	h1 {
-		font-size: 1.2rem !important;
-	}
-
-	h3 {
-		font-size: 1rem !important;
-	}
-	
-	p, strong, em, li, input, textarea, a {
-		font-size: 0.7rem !important;
-	}
-
-	button > .text-w-icon > h1,
-	button > .text-w-icon > h3,
-	button > .text-w-icon > p {
-		font-size: 1rem !important;
-	}
-}
