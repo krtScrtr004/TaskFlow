@@ -319,6 +319,14 @@ button > .text-w-icon {
 
 /* ---------------- SEARCH BAR ---------------- */
 
+.search-bar-container {
+	position: sticky;
+	top: calc(var(--space) * -1);
+	z-index: 100;
+	background-color: var(--light-black);
+	padding: 0.5rem 0;
+}
+
 .search-bar {
 	width: 60ch;
 	display: flex;
@@ -361,6 +369,7 @@ button > .text-w-icon {
 }
 
 .search-bar > select {
+	width: 13ch;
 	border: none;
 	margin-right: 0.5rem;
 }
@@ -606,50 +615,6 @@ button > .text-w-icon {
     border-radius: var(--border-radius);
 }
 
-/* ---------------- USER GRID CARD ---------------- */
-
-.user-grid-card {
-	background-color: var(--black);
-	display: flex;
-	flex-direction: column;
-	padding: 1rem;
-	gap: 1rem;
-	aspect-ratio: 1 / 1;
-	border-radius: var(--border-radius);
-}
-
-.user-grid-card:hover {
-	opacity: 0.7;
-}
-
-.user-grid-card .user-primary-info {
-	gap: 1rem;
-}
-
-.user-grid-card .user-name {
-	max-width: 18ch;
-	font-size: 1.2rem;
-	font-weight: 500;
-}
-
-.user-grid-card .user-id {
-	font-size: 0.7rem;
-	font-weight: 300;
-}
-
-.user-grid-card .role-badge {
-	width: 100%;
-}
-
-.user-grid-card .user-statistics,
-.user-grid-card .user-contact-info {
-	gap: 0.3rem;
-}
-
-.user-grid-card .user-status {
-	flex: 1;
-}
-
 @media (max-width: 768px) {
 	.content-section-block {
 		padding: 1rem;
@@ -675,7 +640,7 @@ button > .text-w-icon {
 		font-size: 1.5rem !important;
 	}
 
-	.search-bar > .search-bar-container {
+	.search-bar > .search-bar-block {
 		width: 70% !important;
 	}
 

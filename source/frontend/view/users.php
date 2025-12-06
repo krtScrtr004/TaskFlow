@@ -37,7 +37,7 @@ if (!isset($users))
     <main class="users main-page flex-col">
 
         <!-- Search Bar -->
-        <section>
+        <section class="search-bar-container">
             <?= searchBar([
                 'Role' => [
                     Role::PROJECT_MANAGER->getDisplayName(),

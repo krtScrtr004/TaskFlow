@@ -51,7 +51,7 @@ function searchBar(
     ob_start();
     ?>
     <form class="search-bar" action="" method="POST">
-        <div class="search-bar-container">
+        <div class="search-bar-block">
             <input class="search-input" type="text" name="search_bar_input" id="search_bar_input"
                 placeholder="<?= $placeholder ?>" min="<?= NAME_MIN ?>" max="<?= NAME_MAX ?>" value="<?= $searchKey ?>" autocomplete="on" required>
             <button class="search-button" id="search_bar_button" type="submit">

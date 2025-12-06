@@ -177,7 +177,7 @@ if (isset($projects)) {
         </section>
 
         <!-- Search Bar -->
-        <section class="flex-row flex-child-end-v">
+        <section class="search-bar-container flex-row flex-child-end-v">
             <?= searchBar([
                 'Status' => [
                     WorkStatus::PENDING->getDisplayName(),

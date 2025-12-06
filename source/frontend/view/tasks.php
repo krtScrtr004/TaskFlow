@@ -51,7 +51,7 @@ if (!isset($tasks)) {
     <main class="task main-page flex-col">
 
         <!-- Search Bar -->
-        <section>
+        <section class="search-bar-container">
             <?= searchBar([
                 'Status' => [
                     WorkStatus::PENDING->getDisplayName(),

@@ -4,8 +4,8 @@
 	gap: var(--space);
 }
 
-.user-grid{
-	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)) !important;
+.user-grid {
+	grid-template-columns: repeat(auto-fill, minmax(var(--card-width), 280px));
 	gap: 1rem;
 }
 
@@ -25,4 +25,68 @@
 	margin-top: 0.8rem;
 	font-size: 1.3rem;
 	font-weight: 300;
+}
+
+.user-grid-card {
+	background-color: var(--black);
+	display: flex;
+	flex-direction: column;
+	padding: 1rem;
+	gap: 1rem;
+	aspect-ratio: 1 / 1;
+	border-radius: var(--border-radius);
+}
+
+.user-grid-card:hover {
+	opacity: 0.7;
+}
+
+.user-grid-card .user-primary-info {
+	gap: 1rem;
+}
+
+.user-grid-card .user-name {
+	max-width: 18ch;
+	font-size: 1.2rem;
+	font-weight: 500;
+}
+
+.user-grid-card .user-id {
+	font-size: 0.7rem;
+	font-weight: 300;
+}
+
+.user-grid-card .role-badge {
+	width: 100%;
+}
+
+.user-grid-card .user-statistics,
+.user-grid-card .user-contact-info {
+	gap: 0.3rem;
+}
+
+.user-grid-card .user-status {
+	flex: 1;
+}
+
+@media (max-width: 768px) {
+	.user-grid {
+		padding-bottom: var(--space);
+	}
+
+	.user-grid-card {
+		max-width: 100%;
+	}
+}
+
+@media (max-width: 575px) {
+	.user-grid {
+		grid-template-columns: repeat(auto-fill, minmax(var(--card-width), 100%));
+	}
+
+	.user-grid-card {
+		height: 250px;
+		max-height: 230px;
+		aspect-ratio: unset;
+	}
 }
