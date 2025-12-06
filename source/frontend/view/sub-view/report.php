@@ -146,8 +146,8 @@ $performance = ($reportData['phases']?->count() > 0)
                             <?php endforeach; ?>
                         </div>
 
-                        <div class="chart-container phase-timeline-container">
-                            <canvas id="phase_timeline_chart" height="400" width="500"></canvas>
+                        <div class="chart-container phase-timeline-chart-container">
+                            <canvas id="phase_timeline_chart"></canvas>
                         </div>
                     </section>
                 </section>
@@ -283,7 +283,9 @@ $performance = ($reportData['phases']?->count() > 0)
                             <?php endforeach; ?>
                         </div>
 
-                        <canvas id="status_priority_distribution" height="300" width="500"></canvas>
+                        <div class="chart-container status-priority-distribution-chart-container">
+                            <canvas id="status_priority_distribution"></canvas>
+                        </div>
                     </section>
 
                 </section>
@@ -396,7 +398,9 @@ $performance = ($reportData['phases']?->count() > 0)
                         <p>Number of tasks created each period</p>
                     </div>
 
-                    <canvas id="task_periodic_count_chart" width="500" height="200"></canvas>
+                    <div class="task-periodic-count-chart-container chart-container">
+                        <canvas id="task_periodic_count_chart"></canvas>
+                    </div>
                 </section>
 
             </section>
@@ -482,7 +486,7 @@ $performance = ($reportData['phases']?->count() > 0)
                     <p class="center-text">See the current status of workers</p>
                 </div>
 
-                <canvas id="worker_statistics_chart" width="300" height="300"></canvas>
+                <canvas id="worker_statistics_chart"></canvas>
             </section>
 
             <!-- Insights and Recommendations -->

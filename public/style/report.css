@@ -103,19 +103,18 @@
 }
 
 .chart-container {
-	width: 300px !important;
-	height: 300px !important;
-}
-
-.phase-timeline-container {
-	width: 100% !important;
-	height: 550px !important;
+	width: 100%;
+	max-height: 550px;
 	overflow-x: auto;
 	overflow-y: hidden;
 	border-radius: var(--border-radius);
 }
 
-.phase-timeline-container canvas {
+.status-priority-distribution-chart-container.chart-container {
+	height: 400px;
+}
+
+.phase-timeline-chart-container canvas {
 	display: block;
 	min-width: 100%;
 }
@@ -322,12 +321,6 @@
 		width: 1.3rem;
 	}
 
-	.section-heading,
-	.second-block,
-	.phase-card {
-		flex-direction: column !important;
-	}
-
 	.overview-report .section-heading .text-w-icon {
 		align-items: start;
 	}
@@ -345,10 +338,6 @@
 		width: 100% !important;
 	}
 
-	.phase-card {
-		gap: unset !important;
-	}
-
 	.phase-card .phase-name {
 		font-size: 0.9rem;
 	}
@@ -356,5 +345,39 @@
 	.phase-card img {
 		height: 0.9rem !important;
 		width: 0.9rem !important;
+	}
+}
+
+@media (max-width: 575px) {
+	.chart-container {
+		width: 100% !important;
+		height: 100% !important;
+		aspect-ratio: 1 / 1;
+	}
+
+	.phase-timeline-chart-container.chart-container {
+		aspect-ratio: 1 / 1.5 !important;
+	}
+
+	.task-periodic-count-chart-container.chart-container {
+		aspect-ratio: 2 / 1 !important;
+	}
+
+	.section-heading,
+	.second-block,
+	.phase-card {
+		flex-direction: column !important;
+	}
+
+	.phase-card {
+		gap: unset !important;
+	}
+
+	.phase-card > * {
+		width: 100% !important;
+	}
+
+	.phase-card .phase-name {
+		width: unset !important;
 	}
 }

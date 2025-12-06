@@ -322,7 +322,7 @@ button > .text-w-icon {
 .search-bar-container {
 	position: sticky;
 	top: calc(var(--space) * -1);
-	z-index: 100;
+	z-index: 30;
 	background-color: var(--light-black);
 	padding: 0.5rem 0;
 }

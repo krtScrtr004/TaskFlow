@@ -74,6 +74,55 @@ document.addEventListener('DOMContentLoaded', () => {
     // Calculate max value for y-axis
     const maxValue = Math.max(...sortedData, 10)
 
+    // Calculate responsive font sizes based on viewport
+    const getResponsiveFontSizes = () => {
+        const width = window.innerWidth
+        
+        if (width <= 575) {
+            return {
+                title: 12,
+                legend: 9,
+                legendPadding: 10,
+                tooltip: { title: 10, body: 9 },
+                tooltipPadding: 8,
+                xTicks: 8,
+                yTicks: 8
+            }
+        } else if (width <= 768) {
+            return {
+                title: 14,
+                legend: 10,
+                legendPadding: 12,
+                tooltip: { title: 11, body: 10 },
+                tooltipPadding: 10,
+                xTicks: 10,
+                yTicks: 10
+            }
+        } else if (width <= 992) {
+            return {
+                title: 15,
+                legend: 11,
+                legendPadding: 13,
+                tooltip: { title: 12, body: 11 },
+                tooltipPadding: 11,
+                xTicks: 11,
+                yTicks: 11
+            }
+        } else {
+            return {
+                title: 16,
+                legend: 12,
+                legendPadding: 15,
+                tooltip: { title: 12, body: 11 },
+                tooltipPadding: 12,
+                xTicks: 11,
+                yTicks: 11
+            }
+        }
+    }
+
+    const fontSizes = getResponsiveFontSizes()
+
     const data = {
         labels: sortedLabels,
         datasets: [{
@@ -102,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     text: 'Task Creation Timeline',
                     color: '#ffffff',
                     font: {
-                        size: 16,
+                        size: fontSizes.title,
                         weight: 'bold'
                     }
                 },
@@ -111,8 +160,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     position: 'bottom',
                     labels: {
                         color: '#ffffff',
-                        padding: 15,
-                        usePointStyle: true
+                        padding: fontSizes.legendPadding,
+                        usePointStyle: true,
+                        font: {
+                            size: fontSizes.legend
+                        }
                     }
                 },
                 tooltip: {
@@ -123,6 +175,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     bodyColor: '#ffffff',
                     borderColor: '#007bff',
                     borderWidth: 1,
+                    padding: fontSizes.tooltipPadding,
+                    titleFont: {
+                        size: fontSizes.tooltip.title
+                    },
+                    bodyFont: {
+                        size: fontSizes.tooltip.body
+                    },
                     callbacks: {
                         title: function(context) {
                             return context[0].label
@@ -143,7 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     ticks: {
                         color: '#ffffff',
                         font: {
-                            size: 11
+                            size: fontSizes.xTicks
                         }
                     }
                 },
@@ -158,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         color: '#ffffff',
                         stepSize: Math.ceil(maxValue / 10) || 1,
                         font: {
-                            size: 11
+                            size: fontSizes.yTicks
                         }
                     }
                 }
@@ -167,5 +226,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const ctx = canvas.getContext('2d')
-    new Chart(ctx, config)
+    const chart = new Chart(ctx, config)
+
+    // Handle window resize
+    let resizeTimeout
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout)
+        resizeTimeout = setTimeout(() => {
+            const newFontSizes = getResponsiveFontSizes()
+            
+            // Update chart options
+            chart.options.plugins.title.font.size = newFontSizes.title
+            chart.options.plugins.legend.labels.font.size = newFontSizes.legend
+            chart.options.plugins.legend.labels.padding = newFontSizes.legendPadding
+            chart.options.plugins.tooltip.padding = newFontSizes.tooltipPadding
+            chart.options.plugins.tooltip.titleFont.size = newFontSizes.tooltip.title
+            chart.options.plugins.tooltip.bodyFont.size = newFontSizes.tooltip.body
+            chart.options.scales.x.ticks.font.size = newFontSizes.xTicks
+            chart.options.scales.y.ticks.font.size = newFontSizes.yTicks
+            
+            chart.update()
+        }, 250)
+    })
 })
