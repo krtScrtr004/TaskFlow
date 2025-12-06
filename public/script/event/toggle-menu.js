@@ -4,11 +4,6 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-    if (window.innerWidth > 992) {
-        // No need to toggle menu on larger screens
-        return
-    }
-
     const sidenav = document.querySelector('.sidenav')
     const smallSidenav = sidenav.querySelector('.small-sidenav')
     const mainSidenav = sidenav.querySelector('.main-sidenav')
@@ -49,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const isMenuVisible = mainSidenav.classList.contains('show')
 
         // Only close if menu is open and click is outside sidenav
-        if (!isClickInsideSidenav && isMenuVisible) {
+        if (!isClickInsideSidenav && isMenuVisible && window.innerWidth <= 992) {
             adjustSidenav(false)
 
             mainSidenav.classList.remove('show')
@@ -82,13 +77,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function adjustSidenav(state) {
         if (state) {
+            main.style.marginLeft = `${smallSidenavWidth}px`
             sidenav.classList.add('absolute')
             sidenav.classList.remove('sticky')
-            main.style.marginLeft = `${smallSidenavWidth}px`
         } else {
-            sidenav.classList.add('sticky')
-            sidenav.classList.remove('absolute')            
             main.style.marginLeft = `0px`
+            sidenav.classList.add('sticky')
+            sidenav.classList.remove('absolute')
         }
     }
 })
