@@ -263,7 +263,7 @@ textarea {
 		font-size: 1.2rem !important;
 	}
 
-	p, strong, em, li, input, textarea, a {
+	p, strong, em, li, input, textarea, a, label {
 		font-size: 0.8rem !important;
 	}
 

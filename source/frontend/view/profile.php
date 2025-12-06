@@ -57,40 +57,42 @@ $myData = [
         <!-- Profile Overview -->
         <section class="profile-overview content-section-block flex-row">
             <!-- Profile Picture -->
-            <section class="flex-col">
+            <section class="left-section flex-col">
                 <!-- Profile Picture Overview -->
                 <img class="circle fit-cover" id="profile_picture_overview" src="<?= $myData['profileLink'] ?>"
                     alt="<?= $myData['fullName'] ?>" title="<?= $myData['fullName'] ?>" loading="lazy" height="100">
 
-                <div>
-                    <input class="no-display" type="file" name="profile_picker" id="profile_picker"
-                        accept="image/.png, image/.jpg, image/.jpeg">
+                <div class="flex-col">
+                    <div>
+                        <input class="no-display" type="file" name="profile_picker" id="profile_picker"
+                            accept="image/.png, image/.jpg, image/.jpeg">
 
-                    <!-- Change Profile Picture Button -->
-                    <button id="pick_profile_picture_button" class="blue-bg" type="button">
-                        <div class="text-w-icon">
-                            <img src="<?= ICON_PATH . 'upload_w.svg' ?>" alt="Change Profile Picture"
-                                title="Change Profile Picture" height="20">
-                            <h3>Change</h3>
-                        </div>
-                    </button>
-                </div>
-
-                <!-- Role Chip -->
-                <div class="role-chip flex-col white-bg">
-                    <div class="text-w-icon">
-                        <?php if (Role::isProjectManager($me)): ?>
-                            <img src="<?= ICON_PATH . 'manager_b.svg' ?>" alt="Project Manager" title="Project Manager"
-                                height="20">
-                        <?php else: ?>
-                            <img src="<?= ICON_PATH . 'worker_b.svg' ?>" alt="Worker" title="Worker" height="20">
-                        <?php endif; ?>
-
-                        <h3 class="role black-text"><?= htmlspecialchars($myData['role']->getDisplayName()) ?></h3>
+                        <!-- Change Profile Picture Button -->
+                        <button id="pick_profile_picture_button" class="blue-bg" type="button">
+                            <div class="text-w-icon">
+                                <img src="<?= ICON_PATH . 'upload_w.svg' ?>" alt="Change Profile Picture"
+                                    title="Change Profile Picture" height="20">
+                                <h3>Change</h3>
+                            </div>
+                        </button>
                     </div>
 
-                    <!-- Id -->
-                    <p class="id black-text"><?= $myData['id'] ?></p>
+                    <!-- Role Chip -->
+                    <div class="role-chip flex-col white-bg">
+                        <div class="text-w-icon">
+                            <?php if (Role::isProjectManager($me)): ?>
+                                <img src="<?= ICON_PATH . 'manager_b.svg' ?>" alt="Project Manager" title="Project Manager"
+                                    height="20">
+                            <?php else: ?>
+                                <img src="<?= ICON_PATH . 'worker_b.svg' ?>" alt="Worker" title="Worker" height="20">
+                            <?php endif; ?>
+
+                            <h3 class="role black-text"><?= htmlspecialchars($myData['role']->getDisplayName()) ?></h3>
+                        </div>
+
+                        <!-- Id -->
+                        <p class="id black-text"><?= $myData['id'] ?></p>
+                    </div>
                 </div>
             </section>
 
@@ -121,7 +123,7 @@ $myData = [
                 <h3>Edit Profile Details</h3>
             </div>
 
-            <div class="name-inputs three-input-layout flex-row">
+            <div class="name-inputs three-input-layout flex-row flex-wrap">
                 <!-- First Name -->
                 <div class="input-label-container">
                     <label for="first_name">
@@ -191,7 +193,7 @@ $myData = [
 
             </section>
 
-            <div class="three-input-layout flex-row">
+            <div class="additional-info three-input-layout flex-row flex-wrap">
                 <!-- Birth Date -->
                 <div class="input-label-container">
                     <label for="birth_date">

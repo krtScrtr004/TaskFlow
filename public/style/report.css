@@ -201,39 +201,6 @@
 	font-size: 1rem;
 }
 
-.cell-data.completed {
-	color: var(--blue);
-}
-
-.cell-data.ongoing {
-	color: var(--green);
-}
-
-.cell-data.pending {
-	color: var(--yellow);
-}
-
-.cell-data.delayed {
-	color: var(--orange);
-}
-
-.cell-data.cancelled {
-	color: var(--red);
-}
-
-.cell-data.high {
-	color: var(--red);
-}
-
-.cell-data.medium {
-	color: var(--yellow);
-}
-
-.cell-data.low {
-	color: var(--green);
-}
-
-
 .top-performing-workers {
 	gap: var(--space);
 }
@@ -287,17 +254,6 @@
 	font-weight: 400;
 	color: var(--white);
 }
-
-.performance-high {
-	color: #4caf50;
-	font-weight: 700;
-}
-
-.performance-medium {
-	color: #ffa726;
-	font-weight: 700;
-}
-
 
 .worker-statistics {
 	height: fit-content;

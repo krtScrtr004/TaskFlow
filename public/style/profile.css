@@ -1,107 +1,145 @@
 .profile,
 .profile > * {
-    gap: var(--space);
+	gap: var(--space);
 }
 
 .profile {
-    padding: var(--space) calc(3 * var(--space)) !important;
+	padding: var(--space) calc(3 * var(--space)) !important;
 }
 
 .profile > .content-section-block {
-    padding: var(--space) calc(1.5 * var(--space));
+	padding: var(--space) calc(1.5 * var(--space));
 }
 
 .profile .primary-info {
-    gap: 0.8rem;
+	gap: 0.8rem;
 }
 
 .profile .primary-info > .full-name {
-    font-size: 1.8rem;
+	font-size: 1.8rem;
 }
 
 .profile .id {
-    margin-top: 0.3rem;
-    font-weight: 300;
+	margin-top: 0.3rem;
+	font-weight: 300;
 }
 
 .profile .gender-selections {
-    gap: 1rem;
+	gap: 1rem;
 }
 
 .profile .gender-selections label {
-    margin-left: 0.5rem;
-    font-size: 1.3rem;
-    cursor: pointer;
+	margin-left: 0.5rem;
+	font-size: 1.3rem;
+	cursor: pointer;
 }
 
-.profile .gender-selections input[type="radio"] {
-    height: 1.1rem;
-    width: 1.1rem;
+.profile .gender-selections input[type='radio'] {
+	height: 1.1rem;
+	width: 1.1rem;
 }
 
 .profile .role-chip {
-    width: fit-content;
-    padding: 0.4rem 0.8rem;
-    border-radius: var(--border-radius);
+	width: fit-content;
+	padding: 0.4rem 0.8rem;
+	border-radius: var(--border-radius);
 }
 
 .profile .bio {
-    width: 80ch;
-    font-size: 1.1rem;
-    font-weight: 300;
-    margin-top: 1rem;
+	font-size: 1.1rem;
+	font-weight: 300;
+	margin-top: 1rem;
 }
 
 #profile_picture_overview {
-    height: 15rem;
-    width: 15rem;
-    margin: 0 auto;
+	height: 13rem;
+	width: 13rem;
+	margin: 0 auto;
 }
 
 #pick_profile_picture_button {
-    width: 100%;
-    margin: 0.8rem 0;
-}   
+	width: 100%;
+	margin: 0.8rem 0;
+}
 
 #editable_profile_details_form,
 #editable_profile_details_form > .grid {
-    gap: var(--space);
+	gap: var(--space);
 }
 
 #editable_profile_details_form a:hover {
-    text-decoration: underline;
+	text-decoration: underline;
 }
 
 #editable_profile_details_form .three-input-layout {
-    width: 100%;
-    gap: var(--space);
+	width: 100%;
+	gap: var(--space);
 }
 
 #editable_profile_details_form .three-input-layout > * {
-    flex: 1;
+	flex: 1;
 }
 
 #editable_profile_details_form > .grid {
-    grid-template-columns: 1fr 1fr;
+	grid-template-columns: 1fr 1fr;
 }
 
 #editable_profile_details_form a {
-    width: fit-content;
+	width: fit-content;
 }
 
 .profile .actions {
-    gap: 0.5rem;
+	gap: 0.5rem;
 }
 
 .profile .actions button {
-    width: fit-content;
+	width: fit-content;
 }
 
 .profile .actions button:hover {
-    opacity: 1;
+	opacity: 1;
 }
 
 .profile .actions button:hover p {
-    text-decoration: underline;
+	text-decoration: underline;
 }
 
+@media (max-width: 992px) {
+	.profile .bio {
+		font-size: 1rem;
+		margin-top: 0.5rem;
+	}
+}
+
+@media (max-width: 768px) {
+	.profile > .profile-overview #profile_picture_overview {
+		height: 10rem;
+		width: 10rem;
+		margin-right: auto;
+	}
+}
+
+@media (max-width: 575px) {
+	.profile {
+		padding: var(--space) !important;
+	}
+
+	.profile > .profile-overview {
+		flex-direction: column !important;
+	}
+
+	.profile > .profile-overview .left-section {
+		flex-direction: row !important;
+		justify-content: start;
+		align-items: center;
+		gap: var(--space);
+		padding-bottom: var(--space);
+	}
+}
+
+@media (max-width: 480px) {
+    .profile > .profile-overview .left-section {
+        flex-direction: column !important;
+        align-items: center;
+    }
+}
