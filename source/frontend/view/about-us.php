@@ -43,6 +43,78 @@ use App\Middleware\Csrf;
             </p>
         </section>
 
+        <!-- Philosophy -->
+        <section class="philosophy flex-col">
+            <div class="flex-row">
+                <div class="mission">
+                    <h3>Our Mission</h3>
+                    <p>
+                        To empower organizations with intelligent project management tools that transform complex
+                        workflows into measurable success. TaskFlow delivers transparent progress tracking, data-driven
+                        performance insights, and collaborative frameworks that enable teams to execute projects
+                        efficiently, meet deadlines consistently, and achieve strategic objectives with confidence.
+                    </p>
+                </div>
+
+                <div class="vission">
+                    <h3>Our Vision</h3>
+                    <p>
+                        To become the leading hierarchical project management platform that sets the standard for
+                        priority-weighted performance measurement, enabling organizations worldwide to optimize resource
+                        allocation, maximize productivity, and achieve operational excellence through innovative
+                        technology and actionable intelligence.
+                    </p>
+                </div>
+            </div>
+
+            <div class="values">
+                <h3>Our Values</h3>
+                <ul class="center-child flex-wrap">
+                    <li>
+                        <h4>Transparency</h4>
+                        <p>We believe in clear, honest communication through real-time data visibility, ensuring every
+                            stakeholder understands project status and individual contributions without ambiguity.
+                        </p>
+                    </li>
+
+                    <li>
+                        <h4>Accountability</h4>
+                        <p>
+                            We foster a culture of ownership where performance metrics are fair, objective, and
+                            priority-weighted, empowering teams to take responsibility for their deliverables and
+                            celebrate achievements.
+                        </p>
+                    </li>
+
+                    <li>
+                        <h4>Innovation</h4>
+                        <p>
+                            We continuously evolve our algorithms and features to address real-world project management
+                            challenges, leveraging technology to solve complex organizational problems with elegant
+                            solutions.
+                        </p>
+                    </li>
+
+                    <li>
+                        <h4>Collaboration</h4>
+                        <p>
+                            We build tools that connect project managers, workers, and stakeholders seamlessly, breaking
+                            down silos and enabling cross-functional teams to work together effectively toward common
+                            goals.
+                        </p>
+                    </li>
+
+                    <li>
+                        <h4>Excellence</h4>
+                        <p>
+                            We are committed to delivering a robust, scalable platform that exceeds quality standards,
+                            ensuring reliability, security, and user satisfaction in every interaction with our system
+                        </p>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
         <!-- Our Team -->
         <section class="our-team flex-col">
             <h1 class="heading center-text">Our Team</h1>
