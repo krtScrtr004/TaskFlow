@@ -29,7 +29,7 @@ export async function userInfoCard(userId, asyncFunction) {
     }
 
     const userInfoCardTemplate = document.querySelector('#user_info_card_template')
-    if (!userInfoCardTemplate) {
+    if (!userInfoCardTemplate) { 
         throw new Error('User Info Card template not found!')
     }
 

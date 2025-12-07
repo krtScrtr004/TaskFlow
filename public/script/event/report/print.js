@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     })
 
     function preparePrint() {
-        Loader.patch(printReportButton.querySelector('img'))
+        Loader.patch(printReportButton.firstElementChild)
 
         const screenWidth = window.innerWidth
         if (screenWidth < 1024) {

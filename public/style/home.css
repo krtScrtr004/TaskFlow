@@ -186,7 +186,7 @@
 	font-weight: 500;
 }
 
-@media (max-width: 992px), (max-width: 1200px) and (max-height: 801px) {
+@media (max-width: 1024px), (max-width: 1024px) and (max-height: 801px) {
 	.first-col.text-w-icon {
 		align-items: start;
 	}

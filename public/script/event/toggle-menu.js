@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return
     }
 
-    const smallSidenavWidth = smallSidenav.offsetWidth
+    const smallSidenavWidth = sidenav.offsetWidth
 
     // Toggle menu visibility on hamburger click
     hamburgerButton.addEventListener('click', () => {
@@ -23,17 +23,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (isVisible) {
             // Hide menu
-            adjustSidenav(false)
-
             smallSidenav.classList.remove('hide')
             mainSidenav.classList.remove('show')
+            adjustSidenav(false)
             hamburgerButton.setAttribute('aria-expanded', 'false')
         } else {
             // Show menu
-            adjustSidenav(true)
-
             smallSidenav.classList.add('hide')
             mainSidenav.classList.add('show')
+            adjustSidenav(true)
             hamburgerButton.setAttribute('aria-expanded', 'true')
         }
     })
@@ -45,10 +43,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Only close if menu is open and click is outside sidenav
         if (!isClickInsideSidenav && isMenuVisible && window.innerWidth <= 992) {
-            adjustSidenav(false)
-
             mainSidenav.classList.remove('show')
             smallSidenav.classList.remove('hide')
+            adjustSidenav(false)
             hamburgerButton.setAttribute('aria-expanded', 'false')
 
             // Prevent other click handlers on the clicked element from running
@@ -62,10 +59,9 @@ document.addEventListener('DOMContentLoaded', () => {
     navLinks.forEach(link => {
         link.addEventListener('click', () => {
             if (window.innerWidth <= 992) {
-                adjustSidenav(false)
-
                 mainSidenav.classList.remove('show')
                 smallSidenav.classList.remove('hide')
+                adjustSidenav(false)
                 hamburgerButton.setAttribute('aria-expanded', 'false')
             }
         })
@@ -75,15 +71,9 @@ document.addEventListener('DOMContentLoaded', () => {
     hamburgerButton.setAttribute('aria-expanded', 'false')
     hamburgerButton.setAttribute('aria-label', 'Toggle navigation menu')
 
-    function adjustSidenav(state) {
-        if (state) {
-            main.style.marginLeft = `${smallSidenavWidth}px`
-            sidenav.classList.add('absolute')
-            sidenav.classList.remove('sticky')
-        } else {
-            main.style.marginLeft = `0px`
-            sidenav.classList.add('sticky')
-            sidenav.classList.remove('absolute')
-        }
+    function adjustSidenav(isExpanded) {
+        sidenav.classList.toggle('absolute', isExpanded)
+        sidenav.classList.toggle('sticky', !isExpanded)
+        main.style.marginLeft = isExpanded ? `${smallSidenavWidth}px` : '0'
     }
 })

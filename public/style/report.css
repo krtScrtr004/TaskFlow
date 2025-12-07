@@ -6,7 +6,7 @@
 #print_report_button {
 	display: grid;
 	place-items: center;
-	position: fixed;
+	position: fixed !important;
 	top: 1rem;
 	right: 1rem;
 	border: 1px solid var(--white);
