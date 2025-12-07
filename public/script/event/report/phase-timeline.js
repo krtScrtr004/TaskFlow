@@ -153,21 +153,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 legendPadding: 15,
                 tooltip: { title: 10, body: 9 },
                 tooltipPadding: 8,
-                axisTitle: 12,
+                axisTitle: 9,
                 axisTitlePadding: 10,
-                xTicks: 9,
-                yTicks: 9,
+                xTicks: 7,
+                yTicks: 7,
                 barThickness: 16,
                 maxLabelLength: 8
             }
         } else if (width <= 768) {
             return {
-                legend: 10,
+                legend: 9,
                 legendBoxWidth: 11,
                 legendPadding: 20,
                 tooltip: { title: 11, body: 10 },
                 tooltipPadding: 10,
-                axisTitle: 14,
+                axisTitle: 9,
                 axisTitlePadding: 12,
                 xTicks: 9,
                 yTicks: 9,
@@ -176,12 +176,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } else if (width <= 992) {
             return {
-                legend: 11,
+                legend: 9,
                 legendBoxWidth: 12,
                 legendPadding: 25,
                 tooltip: { title: 12, body: 11 },
                 tooltipPadding: 12,
-                axisTitle: 15,
+                axisTitle: 9,
                 axisTitlePadding: 13,
                 xTicks: 9,
                 yTicks: 9,
@@ -190,12 +190,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } else {
             return {
-                legend: 11,
+                legend: 9,
                 legendBoxWidth: 12,
                 legendPadding: 30,
                 tooltip: { title: 12, body: 11 },
                 tooltipPadding: 12,
-                axisTitle: 16,
+                axisTitle: 9,
                 axisTitlePadding: 15,
                 xTicks: 9,
                 yTicks: 9,
@@ -358,7 +358,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         display: true,
                         drawBorder: true,
                         lineWidth: 0,
-                        tickLength: 20
+                        tickLength: 10
                     },
                     categoryPercentage: 0.7,
                     barPercentage: 0.9

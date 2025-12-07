@@ -28,7 +28,7 @@ export function initializeAddWorkerModal(projectId, endpoint, workerListContaine
 export function cancelAddWorkerModal() {
     const workerContainer = addWorkerModalTemplate?.querySelector('.worker-list > .list')
     const cancelButton = addWorkerModalTemplate?.querySelector('#cancel_add_worker_button')
-    
+
     if (!cancelButton) {
         console.error('Cancel button not found.')
         return
@@ -79,7 +79,7 @@ export async function addWorker(
         return
     }
 
-    confirmAddWorkerButton.addEventListener('click', e => 
+    confirmAddWorkerButton.addEventListener('click', e =>
         debounceAsync(addWorkerButtonEvent(e, projectId, confirmAddWorkerButton, asyncFunction, action, onSuccess), 300)
     )
 }
@@ -96,29 +96,29 @@ export async function addWorker(
  */
 async function addWorkerButtonEvent(e, projectId, confirmAddWorkerButton, asyncFunction, action, onSuccess) {
     e.preventDefault()
-    
-    Loader.patch(confirmAddWorkerButton.querySelector('.text-w-icon'))
-
-    if (selectedUsers.size === 0) {
-        Dialog.errorOccurred('No workers selected. Please select at least one worker to add.')
-        return
-    }
-
-    if (!await confirmationDialog(
-        'Add Workers',
-        `Are you sure you want to add ${selectedUsers.size} worker(s) to this project?`,
-    )) return
-
-    if (!projectId) {
-        console.error('Project ID not found in modal dataset.')
-        Dialog.somethingWentWrong()
-        return
-    }
 
     try {
+        Loader.patch(confirmAddWorkerButton.querySelector('.text-w-icon'))
+
+        if (selectedUsers.size === 0) {
+            Dialog.errorOccurred('No workers selected. Please select at least one worker to add.')
+            return
+        }
+
+        if (!await confirmationDialog(
+            'Add Workers',
+            `Are you sure you want to add ${selectedUsers.size} worker(s) to this project?`,
+        )) return
+
+        if (!projectId) {
+            console.error('Project ID not found in modal dataset.')
+            Dialog.somethingWentWrong()
+            return
+        }
+
         const result = await asyncFunction(projectId, Array.from(selectedUsers.values()))
-        
-        if (typeof action === 'function') { 
+
+        if (typeof action === 'function') {
             action(result)
         }
 
@@ -126,7 +126,7 @@ async function addWorkerButtonEvent(e, projectId, confirmAddWorkerButton, asyncF
         const cancelButton = addWorkerModalTemplate.querySelector('#cancel_add_worker_button')
         cancelButton?.click()
 
-        if (onSuccess.length > 0) { 
+        if (onSuccess.length > 0) {
             onSuccess(result)
         } else {
             onSuccess()

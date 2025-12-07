@@ -77,46 +77,62 @@ document.addEventListener('DOMContentLoaded', () => {
     // Calculate responsive font sizes based on viewport
     const getResponsiveFontSizes = () => {
         const width = window.innerWidth
-        
-        if (width <= 575) {
+
+         if (width <= 575) {
             return {
-                title: 12,
                 legend: 9,
-                legendPadding: 10,
+                legendBoxWidth: 10,
+                legendPadding: 15,
                 tooltip: { title: 10, body: 9 },
                 tooltipPadding: 8,
-                xTicks: 8,
-                yTicks: 8
+                axisTitle: 9,
+                axisTitlePadding: 10,
+                xTicks: 7,
+                yTicks: 7,
+                barThickness: 16,
+                maxLabelLength: 8
             }
         } else if (width <= 768) {
             return {
-                title: 14,
-                legend: 10,
-                legendPadding: 12,
+                legend: 9,
+                legendBoxWidth: 11,
+                legendPadding: 20,
                 tooltip: { title: 11, body: 10 },
                 tooltipPadding: 10,
-                xTicks: 10,
-                yTicks: 10
+                axisTitle: 9,
+                axisTitlePadding: 12,
+                xTicks: 9,
+                yTicks: 9,
+                barThickness: 20,
+                maxLabelLength: 10
             }
         } else if (width <= 992) {
             return {
-                title: 15,
-                legend: 11,
-                legendPadding: 13,
+                legend: 9,
+                legendBoxWidth: 12,
+                legendPadding: 25,
                 tooltip: { title: 12, body: 11 },
-                tooltipPadding: 11,
-                xTicks: 11,
-                yTicks: 11
+                tooltipPadding: 12,
+                axisTitle: 9,
+                axisTitlePadding: 13,
+                xTicks: 9,
+                yTicks: 9,
+                barThickness: 22,
+                maxLabelLength: 10
             }
         } else {
             return {
-                title: 16,
-                legend: 12,
-                legendPadding: 15,
+                legend: 9,
+                legendBoxWidth: 12,
+                legendPadding: 30,
                 tooltip: { title: 12, body: 11 },
                 tooltipPadding: 12,
-                xTicks: 11,
-                yTicks: 11
+                axisTitle: 9,
+                axisTitlePadding: 15,
+                xTicks: 9,
+                yTicks: 9,
+                barThickness: 24,
+                maxLabelLength: 10
             }
         }
     }
@@ -144,12 +160,11 @@ document.addEventListener('DOMContentLoaded', () => {
         data: data,
         options: {
             responsive: true,
-            maintainAspectRatio: true,
+            maintainAspectRatio: false,
             plugins: {
                 title: {
                     display: true,
                     text: 'Task Creation Timeline',
-                    color: '#ffffff',
                     font: {
                         size: fontSizes.title,
                         weight: 'bold'
@@ -159,8 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     display: true,
                     position: 'bottom',
                     labels: {
-                        color: '#ffffff',
-                        padding: fontSizes.legendPadding,
+                            padding: fontSizes.legendPadding,
                         usePointStyle: true,
                         font: {
                             size: fontSizes.legend
@@ -200,7 +214,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         drawBorder: false
                     },
                     ticks: {
-                        color: '#ffffff',
                         font: {
                             size: fontSizes.xTicks
                         }
@@ -214,7 +227,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         drawBorder: false
                     },
                     ticks: {
-                        color: '#ffffff',
                         stepSize: Math.ceil(maxValue / 10) || 1,
                         font: {
                             size: fontSizes.yTicks

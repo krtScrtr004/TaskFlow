@@ -43,57 +43,61 @@ document.addEventListener('DOMContentLoaded', () => {
     const getResponsiveFontSizes = () => {
         const width = window.innerWidth
         
-        if (width <= 575) {
+         if (width <= 575) {
             return {
                 legend: 9,
                 legendBoxWidth: 10,
-                legendPadding: 6,
+                legendPadding: 15,
                 tooltip: { title: 10, body: 9 },
                 tooltipPadding: 8,
-                axisTitle: 12,
-                axisTitlePadding: 8,
-                xTicks: 9,
-                yTicks: 8,
-                layoutPadding: 5
+                axisTitle: 9,
+                axisTitlePadding: 10,
+                xTicks: 7,
+                yTicks: 7,
+                barThickness: 16,
+                maxLabelLength: 8
             }
         } else if (width <= 768) {
             return {
-                legend: 10,
+                legend: 9,
                 legendBoxWidth: 11,
-                legendPadding: 7,
+                legendPadding: 20,
                 tooltip: { title: 11, body: 10 },
                 tooltipPadding: 10,
-                axisTitle: 13,
-                axisTitlePadding: 9,
-                xTicks: 10,
+                axisTitle: 9,
+                axisTitlePadding: 12,
+                xTicks: 9,
                 yTicks: 9,
-                layoutPadding: 8
+                barThickness: 20,
+                maxLabelLength: 10
             }
         } else if (width <= 992) {
             return {
-                legend: 11,
+                legend: 9,
                 legendBoxWidth: 12,
-                legendPadding: 8,
+                legendPadding: 25,
                 tooltip: { title: 12, body: 11 },
-                tooltipPadding: 11,
-                axisTitle: 14,
-                axisTitlePadding: 10,
-                xTicks: 11,
-                yTicks: 10,
-                layoutPadding: 10
+                tooltipPadding: 12,
+                axisTitle: 9,
+                axisTitlePadding: 13,
+                xTicks: 9,
+                yTicks: 9,
+                barThickness: 22,
+                maxLabelLength: 10
             }
         } else {
             return {
-                legend: 12,
+                legend: 9,
                 legendBoxWidth: 12,
-                legendPadding: 8,
+                legendPadding: 30,
                 tooltip: { title: 12, body: 11 },
                 tooltipPadding: 12,
-                axisTitle: 14,
-                axisTitlePadding: 10,
-                xTicks: 11,
-                yTicks: 10,
-                layoutPadding: 10
+                axisTitle: 9,
+                axisTitlePadding: 15,
+                xTicks: 9,
+                yTicks: 9,
+                barThickness: 24,
+                maxLabelLength: 10
             }
         }
     }

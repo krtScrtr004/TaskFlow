@@ -61,7 +61,10 @@ $performance = ($reportData['phases']?->count() > 0)
 <body>
     <?php require_once COMPONENT_PATH . 'sidenav.php' ?>
 
-    <main class="report main-page ">
+    <main class="report main-page relative">
+        <button id="print_report_button" class="unset-button">
+            <img src="<?= ICON_PATH . 'print_w.svg' ?>" alt="Print Report" title="Print Report" title="Print Report" height="24">
+        </button>
 
         <section class="first-block flex-col">
 
@@ -84,7 +87,7 @@ $performance = ($reportData['phases']?->count() > 0)
 
                 <!-- Progress Bar -->
                 <div>
-                    <p>This project is <strong><?= $performance['progressPercentage'] ?>%</strong> complete.</p>
+                    <p>This project is <strong><?= $performance['progressPercentage'] ?>%</strong> completed.</p>
 
                     <span class="progress-percentage no-display"
                         data-projectPercentage="<?= $performance['progressPercentage'] ?>"></span>
@@ -225,7 +228,7 @@ $performance = ($reportData['phases']?->count() > 0)
                                         <div class="progress-bar white-text"></div>    
                                     </div>
                                     
-                                    <p class="end-text">This phase is <strong><?= $progress ?>%</strong> complete</p>
+                                    <p class="end-text">This phase is <strong><?= $progress ?>%</strong> completed</p>
                                 </section>
 
                             </div>
@@ -487,7 +490,9 @@ $performance = ($reportData['phases']?->count() > 0)
                     <p class="center-text">See the current status of workers</p>
                 </div>
 
-                <canvas id="worker_statistics_chart"></canvas>
+                <div class="worker-statistics-chart-container chart-container">
+                    <canvas id="worker_statistics_chart"></canvas>
+                </div>
             </section>
 
             <!-- Insights and Recommendations -->
@@ -527,7 +532,6 @@ $performance = ($reportData['phases']?->count() > 0)
                 </section>
             </section>
         </section>
-
     </main>
     
     <script type="module" src="<?= EVENT_PATH . 'toggle-menu.js' ?>" defer></script>
@@ -543,6 +547,7 @@ $performance = ($reportData['phases']?->count() > 0)
     <script type="module" src="<?= EVENT_PATH . 'report' . DS . 'task-periodic-count.js' ?>"></script>
     <script type="module" src="<?= EVENT_PATH . 'report' . DS . 'worker-statistics.js' ?>"></script>
     <script type="module" src="<?= EVENT_PATH . 'report' . DS . 'status_priority_distribution_count.js' ?>"></script>
+    <script type="module" src="<?= EVENT_PATH . 'report' . DS . 'print.js' ?>"></script>
 </body>
 
 </html>

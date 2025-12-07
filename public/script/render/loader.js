@@ -47,7 +47,10 @@ export const Loader = (() => {
         if (!parentElem) {
             return
         }
-        parentElem.style.position = 'relative'
+
+        const originalPosition = parentElem.style.position
+
+        parentElem.style.position = originalPosition !== 'absolute' ? originalPosition : 'relative'
         parentElem.insertAdjacentHTML(position, loaderHtml)
         parent = parentElem
     }
