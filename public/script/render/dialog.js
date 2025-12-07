@@ -179,7 +179,7 @@ export const Dialog = (() => {
                 false,
                 'too_many_attempt_dialog',
                 'Too Many Attempt',
-                'Access temporarily locked due to multiple failed attempts. Try again in 2 minutes.'
+                'Access temporarily locked due to multiple failed attempts. Try again later.'
             )
         },
 

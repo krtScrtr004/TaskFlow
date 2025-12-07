@@ -20,6 +20,9 @@ export function handleException(exception, message = exception?.message || 'An e
     const status = exception?.status
 
     switch (status) {
+        case 429:
+            Dialog.tooManyAttempt()
+            break
         case 422:
             errorListDialog(exception?.message || message, exception.errors)
             break
