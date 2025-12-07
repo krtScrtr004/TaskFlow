@@ -2,6 +2,7 @@
 
 namespace App\Endpoint;
 
+use App\Abstract\Endpoint;
 use App\Auth\HttpAuth;
 use App\Auth\SessionAuth;
 use App\Core\UUID;
@@ -14,7 +15,7 @@ use App\Utility\ProjectManagerPerformanceCalculator;
 use App\Utility\ResponseExceptionHandler;
 use Throwable;
 
-class ProjectManagerEndpoint
+class ProjectManagerEndpoint extends Endpoint
 {
     /**
      * Retrieves a project manager by ID, optionally scoped to a specific project.
@@ -90,5 +91,33 @@ class ProjectManagerEndpoint
         } catch (Throwable $e) {
             ResponseExceptionHandler::handle('Manager Fetch Failed.', $e);
         }
+    }
+
+    /**
+     * Not implemented (No use case)
+     */
+    public static function getByKey(array $args = []): void
+    {
+    }
+
+    /**
+     * Not implemented (No use case)
+     */
+    public static function create(array $args = []): void
+    {
+    }
+
+    /**
+     * Not implemented (No use case)
+     */
+    public static function edit(array $args = []): void
+    {
+    }
+
+    /**
+     * Not implemented (No use case)
+     */
+    public static function delete(array $args = []): void
+    {
     }
 }

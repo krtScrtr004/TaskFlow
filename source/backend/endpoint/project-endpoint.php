@@ -2,6 +2,7 @@
 
 namespace App\Endpoint;
 
+use App\Abstract\Endpoint;
 use App\Auth\HttpAuth;
 use App\Auth\SessionAuth;
 use App\Container\PhaseContainer;
@@ -25,7 +26,7 @@ use Exception;
 use Throwable;
 use ValueError;
 
-class ProjectEndpoint
+class ProjectEndpoint extends Endpoint
 {
     /**
      * Retrieves projects by key with optional filtering and pagination.
@@ -123,6 +124,8 @@ class ProjectEndpoint
      * - Determines phase and project status based on dates
      * - Creates partial Phase entities and adds them to a container
      * - Creates and persists the project with all phases
+     * 
+     * @param array $args Associative array containing route parameters (not used here)
      *
      * @throws ForbiddenException If user session attempts to create project or user already has active project (403)
      * @throws ValidationException If data cannot be decoded or required fields are missing/empty (422)
@@ -158,7 +161,7 @@ class ProjectEndpoint
      * - 403: Forbidden (session user or duplicate project)
      * - 500: Unexpected server error
      */
-    public static function create(): void
+    public static function create(array $args = []): void
     {
         try {
             if (!SessionAuth::hasAuthorizedSession()) {
@@ -450,5 +453,19 @@ class ProjectEndpoint
         } catch (Throwable $e) {
             ResponseExceptionHandler::handle('Project Edit Failed.', $e);
         }
+    }
+
+    /**
+     * Not implemented (No use case)
+     */
+    public static function getById(array $args = []): void
+    {
+    }
+
+    /**
+     * Not implemented (No use case)
+     */
+    public static function delete(array $args = []): void
+    {
     }
 }

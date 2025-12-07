@@ -1,5 +1,6 @@
 <?php
 
+use App\Abstract\Endpoint;
 use App\Auth\HttpAuth;
 use App\Auth\SessionAuth;
 use App\Core\UUID;
@@ -16,7 +17,7 @@ use App\Model\TaskModel;
 use App\Model\TaskWorkerModel;
 use App\Utility\ResponseExceptionHandler;
 
-class TaskWorkerEndpoint
+class TaskWorkerEndpoint extends Endpoint
 {
     /**
      * Retrieves a TaskWorker by its ID, with project, phase, and task context.
@@ -41,7 +42,7 @@ class TaskWorkerEndpoint
      * @throws ValidationException If validation of input data fails.
      * @throws Exception For any other unexpected errors.
      */
-    public static function getById($args = []): void
+    public static function getById(array $args = []): void
     {
         try {
             if (!HttpAuth::isGETRequest()) {
@@ -521,5 +522,12 @@ class TaskWorkerEndpoint
         } catch (Throwable $e) {
             ResponseExceptionHandler::handle('Remove Worker Failed.', $e);
         }
+    }
+
+    /**
+     * Not implemented (No use case)
+     */
+    public static function create(array $args = []): void
+    {
     }
 }

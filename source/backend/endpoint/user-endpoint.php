@@ -2,6 +2,7 @@
 
 namespace App\Endpoint;
 
+use App\Abstract\Endpoint;
 use App\Auth\HttpAuth;
 use App\Auth\SessionAuth;
 use App\Container\JobTitleContainer;
@@ -28,7 +29,7 @@ use Exception;
 use Throwable;
 use ValueError;
 
-class UserEndpoint
+class UserEndpoint extends Endpoint
 {
     /**
      * Retrieves a user by their unique identifier.
@@ -102,13 +103,15 @@ class UserEndpoint
      *      - 422: Validation failed, returns validation errors
      *      - 500: Unexpected error, returns a generic error message
      *
+     * @param array $args Associative array containing request arguments (not used here)
+     *
      * @throws ValidationException If validation of input parameters fails
      * @throws ForbiddenException If the request method is not GET or session is unauthorized
      * @throws Exception For any other unexpected errors
      *
      * @return void Outputs a JSON response with user data or error information
      */
-    public static function getByKey(): void
+    public static function getByKey(array $args = []): void
     {
         try {
             if (!HttpAuth::isGETRequest()) {
@@ -168,7 +171,7 @@ class UserEndpoint
      * - Returns a success response if the profile is edited successfully.
      * - Handles and returns appropriate error responses for validation, not found, forbidden, and unexpected exceptions.
      *
-     * No parameters are accepted; all data is retrieved from the request body and session.
+     * @param array $args Associative array of arguments (not used here).
      *
      * @throws ValidationException If profile data validation fails.
      * @throws NotFoundException If the user profile is not found.
@@ -177,7 +180,7 @@ class UserEndpoint
      *
      * @return void
      */
-    public static function edit(): void
+    public static function edit(array $args = []): void
     {
         try {
             if (!SessionAuth::hasAuthorizedSession()) {
@@ -378,5 +381,12 @@ class UserEndpoint
         } catch (Throwable $e) {
             ResponseExceptionHandler::handle('User Deletion Failed.', $e);
         }
+    }
+
+    /**
+     * Not implemented (No use case)
+     */
+    public static function create(array $args = []): void
+    {
     }
 }

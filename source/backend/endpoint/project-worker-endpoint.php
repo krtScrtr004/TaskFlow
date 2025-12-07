@@ -2,6 +2,7 @@
 
 namespace App\Endpoint;
 
+use App\Abstract\Endpoint;
 use App\Auth\HttpAuth;
 use App\Auth\SessionAuth;
 use App\Core\UUID;
@@ -18,7 +19,7 @@ use App\Utility\WorkerPerformanceCalculator;
 use Exception;
 use Throwable;
 
-class ProjectWorkerEndpoint
+class ProjectWorkerEndpoint extends Endpoint
 {
 
     /**
@@ -43,7 +44,7 @@ class ProjectWorkerEndpoint
      *
      * @return void Outputs a JSON response with the worker(s) data or error message.
      */
-    public static function getById($args = []): void
+    public static function getById(array $args = []): void
     {
         try {
             if (!HttpAuth::isGETRequest()) {
@@ -92,7 +93,6 @@ class ProjectWorkerEndpoint
             ResponseExceptionHandler::handle('Worker Fetch Failed.', $e);
         }
     }
-
 
     /**
      * Retrieves project workers based on provided criteria.
@@ -405,5 +405,12 @@ class ProjectWorkerEndpoint
         } catch (Throwable $e) {
             ResponseExceptionHandler::handle('Remove Worker Failed.', $e);
         }
+    }
+
+    /**
+     * Not implemented (No use case)
+     */
+    public static function create(array $args = []): void
+    {
     }
 }

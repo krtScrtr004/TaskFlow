@@ -2,6 +2,7 @@
 
 namespace App\Endpoint;
 
+use App\Abstract\Endpoint;
 use App\Core\Session;
 use App\Entity\User;
 use App\Enumeration\Role;
@@ -25,17 +26,13 @@ use DateTime;
 use Exception;
 use Throwable;
 
-class AuthEndpoint implements Controller
+class AuthEndpoint extends Endpoint
 {
     private AuthService $service;
 
     private function __construct()
     {
         $this->service = new AuthService();
-    }
-
-    public static function index(array $args = []): void
-    {
     }
 
     /**
@@ -216,8 +213,8 @@ class AuthEndpoint implements Controller
                 'password' => $password,
                 'createdAt' => new DateTime()
             ]);
-            UserModel::create($partialUser); 
-            
+            UserModel::create($partialUser);
+
             $token = bin2hex(random_bytes(16));
             TemporaryLinkModel::create([
                 'email' => $email,
@@ -246,7 +243,7 @@ class AuthEndpoint implements Controller
     {
         try {
             Session::destroy();
-            
+
             Me::destroy();
 
             Response::success([], 'Logout successful.');
@@ -394,7 +391,7 @@ class AuthEndpoint implements Controller
             Response::success([], 'Reset password link has been sent to your email.');
         } catch (Throwable $e) {
             // Clean up the temporary link if email sending fails
-            TemporaryLinkModel::delete($email); 
+            TemporaryLinkModel::delete($email);
             ResponseExceptionHandler::handle('Reset Password Failed.', $e);
         }
     }
@@ -470,8 +467,8 @@ class AuthEndpoint implements Controller
 
             // Update password
             UserModel::save([
-                'id'        => $user->getId(),
-                'password'  => $newPassword
+                'id' => $user->getId(),
+                'password' => $newPassword
             ]);
 
             // Delete temporary link token in the database
@@ -481,5 +478,40 @@ class AuthEndpoint implements Controller
         } catch (Throwable $e) {
             ResponseExceptionHandler::handle('Change Password Failed.', $e);
         }
+    }
+
+    /**
+     * Not implemented (No use case)
+     */
+    public static function getById(array $args = []): void
+    {
+    }
+
+    /**
+     * Not implemented (No use case)
+     */
+    public static function getByKey(array $args = []): void
+    {
+    }
+
+    /**
+     * Not implemented (No use case)
+     */
+    public static function create(array $args = []): void
+    {
+    }
+
+    /**
+     * Not implemented (No use case)
+     */
+    public static function edit(array $args = []): void
+    {
+    }
+
+    /**
+     * Not implemented (No use case)
+     */
+    public static function delete(array $args = []): void
+    {
     }
 }
