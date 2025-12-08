@@ -3,7 +3,10 @@
 		"TaskFlow/": "IndexController",
 		"TaskFlow/login": "IndexController",
 		"TaskFlow/register": "IndexController",
-		"TaskFlow/confirm-email(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": ["IndexController", "confirmEmail"],
+		"TaskFlow/confirm-email(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": [
+			"IndexController",
+			"confirmEmail"
+		],
 
 		"TaskFlow/reset-password": "SingleFormController",
 		"TaskFlow/change-password(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": "SingleFormController",
@@ -17,22 +20,22 @@
 			"viewOther"
 		],
 		"TaskFlow/project/{projectId:[\\w+_-]+}/report": [
-			"ProjectController", 
+			"ProjectController",
 			"viewReport"
 		],
 
 		"TaskFlow/project/{projectId:[\\w+_-]+}/task/worker/{workerId:[\\w+_-]+}(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": [
-			"TaskController", 
+			"TaskController",
 			"viewGrid"
 		],
 		"TaskFlow/project/{projectId:[\\w+_-]+}/task/worker/{workerId:[\\w+_-]+}": [
-			"TaskController", 
+			"TaskController",
 			"viewGrid"
 		],
 		"TaskFlow/project/{projectId:[\\w+_-]+}/task(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": [
-			"TaskController", 
+			"TaskController",
 			"viewGrid"
-		],		
+		],
 		"TaskFlow/project/{projectId:[\\w+_-]+}/phase/{phaseId:[\\w+_-]+}/task/{taskId:[\\w+_-]+}": [
 			"TaskController",
 			"viewInfo"
@@ -45,7 +48,16 @@
 
 		"TaskFlow/users(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": "UserController",
 
-		"TaskFlow/profile": "ProfileController", 
+		"TaskFlow/profile": "ProfileController",
+
+		"TaskFlow/about-us": [
+			"AboutUsController",
+			"viewAboutUs"
+		],
+		"TaskFlow/terms-and-conditions": [
+			"AboutUsController",
+			"viewTermsAndConditions"
+		],
 
 		"TaskFlow/not-found": ["ErrorController", "notFound"],
 		"TaskFlow/forbidden": ["ErrorController", "forbidden"]

@@ -3,6 +3,18 @@
 	gap: var(--space);
 }
 
+#print_report_button {
+	display: grid;
+	place-items: center;
+	position: fixed !important;
+	top: 1rem;
+	right: 1rem;
+	border: 1px solid var(--white);
+	border-radius: 50%;
+	padding: 0.5rem;
+	opacity: 0.3;
+}
+
 .report > .first-block {
 	flex: 1;
 	height: fit-content;
@@ -94,6 +106,11 @@
 	gap: var(--space);
 }
 
+.insights,
+.recommendations {
+	box-shadow: var(--box-shadow);
+}
+
 .task-statistics .x {
 	font-weight: 300;
 }
@@ -103,19 +120,19 @@
 }
 
 .chart-container {
-	width: 300px !important;
-	height: 300px !important;
-}
-
-.phase-timeline-container {
-	width: 100% !important;
-	height: 550px !important;
+	width: 100%;
+	max-height: 550px;
 	overflow-x: auto;
 	overflow-y: hidden;
 	border-radius: var(--border-radius);
+	aspect-ratio: 1 / 1 !important;
 }
 
-.phase-timeline-container canvas {
+.task-periodic-count-chart-container.chart-container {
+	height: 400px;
+}
+
+.phase-timeline-chart-container canvas {
 	display: block;
 	min-width: 100%;
 }
@@ -129,6 +146,7 @@
 	max-height: 30rem;
 	border-radius: var(--border-radius);
 	overflow: auto;
+	box-shadow: var(--box-shadow);
 }
 
 .phases-table {
@@ -175,7 +193,7 @@
 
 .phases-table tbody tr:hover {
 	background-color: var(--light-black);
-}	
+}
 
 .phases-table td {
 	padding: 0.9rem 0.8rem;
@@ -201,39 +219,6 @@
 	font-size: 1rem;
 }
 
-.cell-data.completed {
-	color: var(--blue);
-}
-
-.cell-data.ongoing {
-	color: var(--green);
-}
-
-.cell-data.pending {
-	color: var(--yellow);
-}
-
-.cell-data.delayed {
-	color: var(--orange);
-}
-
-.cell-data.cancelled {
-	color: var(--red);
-}
-
-.cell-data.high {
-	color: var(--red);
-}
-
-.cell-data.medium {
-	color: var(--yellow);
-}
-
-.cell-data.low {
-	color: var(--green);
-}
-
-
 .top-performing-workers {
 	gap: var(--space);
 }
@@ -249,6 +234,7 @@
 	width: 100%;
 	border-collapse: collapse;
 	border-radius: var(--border-radius);
+	box-shadow: var(--box-shadow);
 }
 
 .workers-table th:first-child,
@@ -288,17 +274,6 @@
 	color: var(--white);
 }
 
-.performance-high {
-	color: #4caf50;
-	font-weight: 700;
-}
-
-.performance-medium {
-	color: #ffa726;
-	font-weight: 700;
-}
-
-
 .worker-statistics {
 	height: fit-content;
 	gap: 0.8rem;
@@ -335,4 +310,459 @@
 .recommendation-list {
 	line-height: 1.6rem;
 	font-size: 0.9rem;
+}
+
+@media (max-width: 1024px) {
+	.report {
+		flex-direction: column !important;
+	}
+
+	.second-block {
+		width: 100% !important;
+		flex-direction: row !important;
+	}
+
+	.second-block > .insights-recommendations,
+	.second-block > .insights-recommendations > * {
+		width: 100%;
+		height: 100%;
+	}
+}
+
+@media (max-width: 768px) {
+	.report .content-section-block .text-w-icon > h2,
+	.report .content-section-block .text-w-icon > h3 {
+		font-size: 1.3rem !important;
+		white-space: wrap;
+	}
+
+	.report .content-section-block .text-w-icon > img {
+		height: 1.3rem;
+		width: 1.3rem;
+	}
+
+	.overview-report .section-heading .text-w-icon {
+		align-items: start;
+	}
+
+	.overview-report .section-heading .text-w-icon img {
+		height: 2rem;
+		width: 2rem;
+	}
+
+	.overview-report .section-heading .text-w-icon > .heading-text h2 {
+		font-size: 1.2rem !important;
+	}
+
+	.overview-report .progress-container {
+		width: 100% !important;
+	}
+
+	.phase-card .phase-name {
+		font-size: 0.9rem;
+	}
+
+	.phase-card img {
+		height: 0.9rem !important;
+		width: 0.9rem !important;
+	}
+}
+
+@media (max-width: 575px) {
+	#print_report_button {
+		padding: 0.3rem;
+	}
+
+	#print_report_button > img {
+		height: 1rem;
+		width: 1rem;
+	}
+
+	.chart-container {
+		width: 100% !important;
+		height: 100% !important;
+		aspect-ratio: 1 / 1 !important;
+	}
+
+	.section-heading,
+	.second-block,
+	.phase-card {
+		flex-direction: column !important;
+	}
+
+	.phase-card {
+		gap: unset !important;
+	}
+
+	.phase-card > * {
+		width: 100% !important;
+	}
+
+	.phase-card .phase-name {
+		width: unset !important;
+	}
+}
+
+@media print {
+	/* Reset colors for print */
+	* {
+		color: #000 !important;
+		border: none !important;
+		box-shadow: none !important;
+	}
+
+	body {
+		background: #fff !important;
+		color: #000 !important;
+		font-size: 10pt;
+		margin: 0;
+		padding: 0;
+	}
+
+	/* Hide non-printable elements */
+	aside,
+	.sidenav,
+	.navbar,
+	.print-button,
+	.action-buttons,
+	button,
+	hr {
+		display: none !important;
+	}
+
+	/* Adjust main content */
+	main.report {
+		width: 100% !important;
+		max-width: 100% !important;
+		margin: 0 !important;
+		padding: 0 !important;
+		flex-direction: column !important;
+		height: auto !important;
+		overflow: visible !important;
+	}
+
+	.report > .first-block,
+	.report > .second-block {
+		width: 100% !important;
+		height: auto !important;
+		overflow: visible !important;
+		padding: 0 !important;
+		gap: 0 !important;
+		page-break-inside: avoid;
+	}
+
+	.report > .second-block {
+		flex-direction: column !important;
+	}
+
+	/* Section spacing */
+	.content-section-block {
+		margin-bottom: 0.5cm;
+		padding: 0 !important;
+		background: #fff !important;
+		height: auto !important;
+		overflow: visible !important;
+	}
+
+	/* Hide icons and badges */
+	.text-w-icon img,
+	.badge {
+		display: none !important;
+	}
+
+	/* Headings */
+	.section-heading h2,
+	.section-heading h3 {
+		color: #000 !important;
+		font-size: 12pt !important;
+		margin-bottom: 0.3cm;
+	}
+
+	.section-heading p {
+		color: #333 !important;
+		font-size: 9pt !important;
+	}
+
+	/* Overview section */
+	.overview-report {
+		gap: 0 !important;
+	}
+
+	.overview-report .heading {
+		padding-bottom: 0.3cm;
+		margin-bottom: 0.5cm;
+	}
+
+	.overview-report > .section-heading > .text-w-icon > .heading-text > h2 {
+		font-size: 20pt !important;
+	}
+
+	.overview-report .progress-container + p {
+		font-size: 16pt !important;
+	}
+
+	/* Progress bars */
+	.progress-container {
+		display: none !important;
+	}
+
+	.progress-container + p,
+	.phase-progress-bar p {
+		display: block !important;
+		color: #000 !important;
+		font-weight: bold !important;
+		margin: 0 !important;
+		padding: 0 !important;
+		gap: 0 !important;
+	}
+
+	/* Phase cards */
+	.phase-card {
+		flex-direction: column !important;
+		border-left: 3px solid #000 !important;
+		padding-left: 0.3cm !important;
+		margin-bottom: 0.5cm;
+		gap: 0 !important;
+		page-break-inside: avoid;
+	}
+
+	.phase-card .phase-header {
+		width: 100%;
+	}
+
+	.phase-card .phase-name {
+		font-size: 11pt !important;
+		color: #000 !important;
+	}
+
+	.phase-card .phase-progress-bar p {
+		text-align: start !important;
+	}
+
+	.phase-schedule {
+		font-size: 8pt !important;
+	}
+
+	/* Tables */
+	table {
+		box-shadow: none !important;
+		page-break-inside: avoid !important;
+	}
+
+	.phases-table-container,
+	.workers-table-container {
+		max-height: none !important;
+		min-height: auto !important;
+		height: auto !important;
+		overflow: visible !important;
+		box-shadow: none !important;
+		border: 1px solid #000 !important;
+	}
+
+	.phases-table,
+	.workers-table {
+		page-break-inside: auto !important;
+		border-collapse: collapse !important;
+		width: 100% !important;
+	}
+
+	.phases-table thead,
+	.workers-table thead {
+		display: table-header-group !important;
+		background: #f0f0f0 !important;
+	}
+
+	.phases-table tbody,
+	.workers-table tbody {
+		min-height: auto !important;
+		height: auto !important;
+	}
+
+	.phases-table th,
+	.workers-table th {
+		background: #e0e0e0 !important;
+		color: #000 !important;
+		border: 1px solid #000 !important;
+		padding: 0.2cm !important;
+		font-size: 9pt !important;
+	}
+
+	.phases-table td,
+	.workers-table td {
+		border: 1px solid #ccc !important;
+		padding: 0.15cm !important;
+		font-size: 8pt !important;
+		color: #000 !important;
+		background: #fff !important;
+	}
+
+	.phases-table tbody tr,
+	.workers-table tbody tr {
+		page-break-inside: avoid;
+	}
+
+	.status-header {
+		background: #d0e0ff !important;
+	}
+
+	.priority-header {
+		background: #fff9c4 !important;
+	}
+
+	.cell-data {
+		font-weight: 600 !important;
+		text-align: center !important;
+	}
+
+	/* Charts */
+	.chart-container {
+		width: 100% !important;
+		overflow: visible !important;
+		margin: 0.5cm 0 !important;
+		page-break-inside: avoid !important;
+	}
+
+	canvas,
+	.chart-print-image {
+		width: auto !important;
+		page-break-inside: avoid !important;
+	}
+
+	.worker-statistics-chart-container.chart-container {
+		width: 100% !important;
+		height: fit-content !important;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		aspect-ratio: unset !important;
+	}
+
+	/* Wrapper sections */
+	.phase-statistics,
+	.task-statistics,
+	.phase-progress,
+	.status-priority-distribution,
+	.per-phase-breakdown,
+	.periodic-count,
+	.top-performing-workers,
+	.worker-statistics {
+		height: auto !important;
+		overflow: visible !important;
+	}
+
+	.task-statistics > section {
+		page-break-inside: avoid !important;
+	}
+
+	/* Insights and Recommendations */
+	.insights,
+	.recommendations {
+		page-break-inside: avoid;
+		page-break-before: auto;
+		border: 1px solid #000 !important;
+		padding: 0.4cm !important;
+		margin-bottom: 0.5cm;
+		background: #fff !important;
+	}
+
+	.insights h3,
+	.recommendations h3 {
+		color: #000 !important;
+		font-size: 11pt !important;
+		margin-bottom: 0.2cm;
+	}
+
+	.insights hr,
+	.recommendations hr {
+		display: block !important;
+		border-color: #000 !important;
+		margin: 0.2cm 0 !important;
+	}
+
+	.insight-list,
+	.recommendation-list {
+		color: #000 !important;
+		font-size: 9pt !important;
+		line-height: 1.4;
+	}
+
+	.insight-list li,
+	.recommendation-list li {
+		margin-bottom: 0.2cm;
+		color: #000 !important;
+	}
+
+	/* Text utilities */
+	.text-w-icon {
+		align-items: center !important;
+	}
+
+	.no-display {
+		display: none !important;
+	}
+
+	/* Icons */
+	img {
+		max-width: 0.4cm !important;
+		max-height: 0.4cm !important;
+		-webkit-print-color-adjust: exact;
+		print-color-adjust: exact;
+	}
+
+	/* Page breaks */
+	.overview-report {
+		page-break-after: avoid;
+	}
+
+	.phase-statistics,
+	.task-statistics,
+	.top-performing-workers,
+	.worker-statistics {
+		page-break-before: auto;
+		page-break-after: auto;
+		page-break-inside: auto;
+	}
+
+	.per-phase-breakdown,
+	.status-priority-distribution,
+	.phase-progress,
+	.periodic-count {
+		page-break-inside: auto;
+		page-break-before: auto;
+	}
+
+	.phase-statistics > *,
+	.task-statistics > * {
+		page-break-inside: auto;
+	}
+
+	/* Page margins */
+	@page {
+		margin: 1.5cm 1cm;
+
+		@bottom-right {
+			content: 'Page ' counter(page) ' of ' counter(pages);
+			font-size: 8pt;
+		}
+	}
+
+	/* Color preservation */
+	.completed,
+	.green-text {
+		color: #2e7d32 !important;
+	}
+
+	.ongoing,
+	.blue-text {
+		color: #1565c0 !important;
+	}
+
+	.delayed,
+	.yellow-text {
+		color: #f57c00 !important;
+	}
+
+	.cancelled {
+		color: #c62828 !important;
+	}
 }

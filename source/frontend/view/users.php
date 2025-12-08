@@ -37,7 +37,7 @@ if (!isset($users))
     <main class="users main-page flex-col">
 
         <!-- Search Bar -->
-        <section>
+        <section class="search-bar-container">
             <?= searchBar([
                 'Role' => [
                     Role::PROJECT_MANAGER->getDisplayName(),
@@ -53,7 +53,7 @@ if (!isset($users))
         <!-- User Grid -->
         <section class="user-grid-container">
 
-            <section class="user-grid grid">
+            <section class="user-grid grid-card-container grid">
                 <?php foreach ($users as $user) {
                     echo userGridCard($user);
                 } ?>
@@ -66,11 +66,12 @@ if (!isset($users))
                 class="no-users-wall no-content-wall <?= count($users) > 0 ? 'no-display' : 'flex-col' ?>">
                 <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No users available" title="No users available"
                     height="70">
-                <h3 class="center-text">No users available found.</h3>
+                <h3 class="center-text">No users found.</h3>
             </div>
         </section>
     </main>
 
+    <script type="module" src="<?= EVENT_PATH . 'toggle-menu.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'break-text-fallback.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'logout.js' ?>" defer></script>
 

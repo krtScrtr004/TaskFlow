@@ -16,6 +16,10 @@ $projectData = [
     'status'    => $project->getStatus()
 ];
 
+$isAddable = Role::isProjectManager(Me::getInstance()) && 
+            $projectData['status'] !== WorkStatus::COMPLETED && 
+            $projectData['status'] !== WorkStatus::CANCELLED;
+
 if (!isset($tasks)) {
     throw new Exception('Tasks data is required.');
 }
@@ -47,7 +51,7 @@ if (!isset($tasks)) {
     <main class="task main-page flex-col">
 
         <!-- Search Bar -->
-        <section>
+        <section class="search-bar-container">
             <?= searchBar([
                 'Status' => [
                     WorkStatus::PENDING->getDisplayName(),
@@ -66,7 +70,7 @@ if (!isset($tasks)) {
 
         <!-- Task Grid -->
         <section class="task-grid-container" data-projectid="<?= $projectData['publicId'] ?>">
-            <?php if ($tasks->count() === 0 && $projectData['status'] === WorkStatus::COMPLETED && $projectData['status'] === WorkStatus::CANCELLED): ?>
+            <?php if ($tasks->count() === 0 && !$isAddable): ?>
                 <div
                     class="no-tasks-wall no-content-wall <?= $tasks->count() > 0 ? 'no-display' : 'flex-col' ?>">
                     <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No tasks available" title="No tasks available"
@@ -75,12 +79,10 @@ if (!isset($tasks)) {
                 </div>
             <?php endif; ?>
 
-            <section class="task-grid grid">
-                <?php if (Role::isProjectManager(Me::getInstance()) && 
-                        $projectData['status'] !== WorkStatus::COMPLETED && 
-                        $projectData['status'] !== WorkStatus::CANCELLED): ?>
+            <section class="task-grid grid-card-container grid">
+                <?php if ($isAddable): ?>
                     <a href="<?= REDIRECT_PATH . "add-task/" . $projectData['publicId'] ?>"
-                        class="add-task-button task-grid-card flex-col flex-child-center-h flex-child-center-v">
+                        class="add-task-button task-grid-card grid-card flex-col flex-child-center-h flex-child-center-v">
                         <img src="<?= ICON_PATH . 'add_w.svg' ?>" alt="Add New Task" title="Add New Task" height="90">
                         <h3>Add New Task</h3>
                     </a>
@@ -99,6 +101,7 @@ if (!isset($tasks)) {
         </section>
     </main>
 
+    <script type="module" src="<?= EVENT_PATH . 'toggle-menu.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'break-text-fallback.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'logout.js' ?>" defer></script>
 

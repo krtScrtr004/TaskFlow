@@ -36,23 +36,24 @@ require_once COMPONENT_PATH . 'template/add-worker-modal.php';
     <!-- Project Primary Info -->
     <section class="project-primary-info content-section-block">
         <div class="">
-            <div class="flex-row flex-space-between">
+            <div class="flex-row flex-space-betwee`n">
 
                 <!-- Project Name and Status -->
-                <div class="main flex-row">
-                    <div class=" first-col text-w-icon"> <img src="<?= ICON_PATH . 'project_w.svg' ?>"
-                            alt="<?= $projectData['name'] ?>" title="<?= $projectData['name'] ?>" height="24">
+                <div class="first-col text-w-icon"> <img src="<?= ICON_PATH . 'project_w.svg' ?>"
+                    alt="<?= $projectData['name'] ?>" title="<?= $projectData['name'] ?>" height="24">
 
+
+                    <div class="name-and-status flex-row">
                         <h3 class=" project-name wrap-text">
                             <?= $projectData['name'] ?>
                         </h3>
-                    </div>
 
-                    <?= WorkStatus::badge($projectData['status']) ?>
+                        <?= WorkStatus::badge($projectData['status']) ?>
+                    </div>
                 </div>
 
                 <?php if (Role::isProjectManager(Me::getInstance())): ?>
-                    <div>
+                    <div class="edit-project-container flex-row-reverse">
                         <!-- Edit Project -->
                         <a class="edit-project" href="<?= REDIRECT_PATH . 'edit-project/' . $projectData['id'] ?>">
                             <img src="<?= ICON_PATH . 'edit_w.svg' ?>" alt="Edit Project" title="Edit Project" height="24">

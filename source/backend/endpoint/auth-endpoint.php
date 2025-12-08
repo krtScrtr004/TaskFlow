@@ -2,11 +2,11 @@
 
 namespace App\Endpoint;
 
+use App\Abstract\Endpoint;
 use App\Core\Session;
 use App\Entity\User;
 use App\Enumeration\Role;
 use App\Exception\DatabaseException;
-use App\Interface\Controller;
 use App\Middleware\Csrf;
 use App\Middleware\Response;
 use App\Validator\UserValidator;
@@ -18,6 +18,7 @@ use App\Core\Me;
 use App\Exception\ForbiddenException;
 use App\Exception\NotFoundException;
 use App\Exception\ValidationException;
+use App\Middleware\RateLimiter;
 use App\Model\TemporaryLinkModel;
 use App\Service\AuthService;
 use App\Utility\ResponseExceptionHandler;
@@ -25,17 +26,14 @@ use DateTime;
 use Exception;
 use Throwable;
 
-class AuthEndpoint implements Controller
+class AuthEndpoint extends Endpoint
 {
     private AuthService $service;
 
     private function __construct()
     {
         $this->service = new AuthService();
-    }
-
-    public static function index(array $args = []): void
-    {
+        $this->rateLimiter = new RateLimiter();
     }
 
     /**
@@ -43,6 +41,7 @@ class AuthEndpoint implements Controller
      *
      * This method performs the following steps:
      * - Protects against CSRF attacks.
+     * - Applies rate limiting to prevent excessive login attempts.
      * - Decodes incoming JSON data from the request body.
      * - Validates the provided email and password using UserValidator.
      * - Checks user credentials against the database.
@@ -58,7 +57,9 @@ class AuthEndpoint implements Controller
     public static function login(): void
     {
         try {
+            // Protection guards
             Csrf::protect();
+            self::rateLimit(5, 900); // 5 requests per 15 minutes
 
             $data = decodeData('php://input');
             if (!$data) {
@@ -109,6 +110,7 @@ class AuthEndpoint implements Controller
      * 4. Creating a new user record in the database
      * 
      * The method expects JSON data with user details including:
+     * - agreedToTerms: Boolean indicating if the user agreed to terms and conditions
      * - firstName: User's first name
      * - middleName: User's middle name (optional)
      * - lastName: User's last name
@@ -130,6 +132,8 @@ class AuthEndpoint implements Controller
     {
         try {
             Csrf::protect();
+            self::rateLimit(5, 1800); // 5 requests per 30 minutes
+
             $instance = new self();
 
             $data = decodeData('php://input');
@@ -138,6 +142,7 @@ class AuthEndpoint implements Controller
             }
 
             // Extract Data
+            $agreedToTerms = isset($data['agreedToTerms']) ? filter_var($data['agreedToTerms'], FILTER_VALIDATE_BOOLEAN) : false;
             $firstName = trimOrNull($data['firstName']);
             $middleName = trimOrNull($data['middleName']);
             $lastName = trimOrNull($data['lastName']);
@@ -155,6 +160,13 @@ class AuthEndpoint implements Controller
                         fn($title) => trim($title) !== ''
                     )
                 );
+            }
+
+            // Check Terms Agreement
+            if (!$agreedToTerms) {
+                throw new ValidationException('Registration Failed.', [
+                    'You must agree to the terms and conditions to register.'
+                ]);
             }
 
             // Validate Data
@@ -207,8 +219,8 @@ class AuthEndpoint implements Controller
                 'password' => $password,
                 'createdAt' => new DateTime()
             ]);
-            UserModel::create($partialUser); 
-            
+            UserModel::create($partialUser);
+
             $token = bin2hex(random_bytes(16));
             TemporaryLinkModel::create([
                 'email' => $email,
@@ -226,6 +238,7 @@ class AuthEndpoint implements Controller
      * Logs out the current user by destroying the session and user context.
      *
      * This method performs the following actions:
+     * - Applies rate limiting to prevent excessive logout attempts (20 requests per 30 seconds).
      * - Destroys the current session using Session::destroy()
      * - Removes the current user context with Me::destroy()
      * - Returns a success response if logout is successful
@@ -236,8 +249,9 @@ class AuthEndpoint implements Controller
     public static function logout(): void
     {
         try {
+            self::rateLimit(20, 30); // 20 requests per 30 seconds
+
             Session::destroy();
-            
             Me::destroy();
 
             Response::success([], 'Logout successful.');
@@ -327,6 +341,7 @@ class AuthEndpoint implements Controller
      *
      * This method performs the following steps:
      * - Protects against CSRF attacks.
+     * - Applies rate limiting to prevent excessive reset password requests (3 requests per hour).
      * - Decodes input data from the request body.
      * - Validates the provided email address.
      * - Checks if a user with the given email exists.
@@ -345,6 +360,8 @@ class AuthEndpoint implements Controller
     {
         try {
             Csrf::protect();
+            self::rateLimit(3, 3600); // 3 requests per hour
+
             $instance = new self();
 
             $data = decodeData('php://input');
@@ -385,7 +402,7 @@ class AuthEndpoint implements Controller
             Response::success([], 'Reset password link has been sent to your email.');
         } catch (Throwable $e) {
             // Clean up the temporary link if email sending fails
-            TemporaryLinkModel::delete($email); 
+            TemporaryLinkModel::delete($email);
             ResponseExceptionHandler::handle('Reset Password Failed.', $e);
         }
     }
@@ -395,6 +412,7 @@ class AuthEndpoint implements Controller
      *
      * This method performs the following steps:
      * - Protects against CSRF attacks.
+     * - Applies rate limiting to prevent excessive password change attempts (3 requests per hour).
      * - Extracts the user's email from session or authenticated user instance.
      * - Validates the existence of the user by email.
      * - Decodes and validates the new password from the request body.
@@ -415,6 +433,7 @@ class AuthEndpoint implements Controller
     {
         try {
             Csrf::protect();
+            self::rateLimit(3, 3600); // 3 requests per hour
 
             $data = decodeData('php://input');
             if (!$data) {
@@ -461,8 +480,8 @@ class AuthEndpoint implements Controller
 
             // Update password
             UserModel::save([
-                'id'        => $user->getId(),
-                'password'  => $newPassword
+                'id' => $user->getId(),
+                'password' => $newPassword
             ]);
 
             // Delete temporary link token in the database
@@ -472,5 +491,40 @@ class AuthEndpoint implements Controller
         } catch (Throwable $e) {
             ResponseExceptionHandler::handle('Change Password Failed.', $e);
         }
+    }
+
+    /**
+     * Not implemented (No use case)
+     */
+    public static function getById(array $args = []): void
+    {
+    }
+
+    /**
+     * Not implemented (No use case)
+     */
+    public static function getByKey(array $args = []): void
+    {
+    }
+
+    /**
+     * Not implemented (No use case)
+     */
+    public static function create(array $args = []): void
+    {
+    }
+
+    /**
+     * Not implemented (No use case)
+     */
+    public static function edit(array $args = []): void
+    {
+    }
+
+    /**
+     * Not implemented (No use case)
+     */
+    public static function delete(array $args = []): void
+    {
     }
 }

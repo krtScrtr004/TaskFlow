@@ -1,0 +1,46 @@
+body:has(.terms-and-conditions) * {
+    background-color: var(--white) !important;
+    color: var(--black) !important;
+    font-family: 'Times New Roman', Times, serif;
+}
+
+.terms-and-conditions {
+    padding: 3rem 20rem;
+}
+
+.terms-and-conditions > .heading {
+    margin-bottom: 1.5rem;
+}
+
+.terms-and-conditions > .heading > p {
+    font-size: 1rem;
+    font-weight: 300;
+}
+
+.declarations {
+    gap: 1.3rem;
+}
+
+.declaration > h2 {
+    font-size: 1.3rem;
+    margin-bottom: 0.3rem;
+}
+
+.terms-and-conditions > .heading > p,
+.declaration > p,
+.declarations > .footer {
+    font-weight: 300;
+    font-weight: 300;
+}
+
+@media (max-width: 992px) {
+    .terms-and-conditions {
+        padding: 3rem 5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .terms-and-conditions {
+        padding: 2rem;
+    }
+}

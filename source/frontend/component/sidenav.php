@@ -1,5 +1,15 @@
 <aside class="sidenav flex-col sticky black-bg">
-    <nav>
+    <div class="small-sidenav no-display">
+        <button class="hamburger-button unset-button">
+            <img
+                src="<?= ICON_PATH . 'hamburger_w.svg' ?>"
+                alt="Menu"
+                title="Menu"
+                height="28">
+        </button>
+    </div>
+
+    <nav class="main-sidenav">
         <!-- Project -->
         <a class="" href="<?= REDIRECT_PATH . 'home' ?>">
             <div class="text-w-icon">
@@ -46,6 +56,19 @@
                     height="32">
 
                 <h3 class="white-text">PROFILE</h3>
+            </div>
+        </a>
+        <!-- About Us -->
+        <a class="" href="<?= REDIRECT_PATH . 'about-us' ?>">
+            <div class="text-w-icon">
+                <img
+                    src="<?= ICON_PATH . 'about_w.svg' ?>"
+                    alt="About Us"
+                    title="About Us"
+                    height="32"
+                    width="32">
+
+                <h3 class="white-text">ABOUT US</h3>
             </div>
         </a>
         <!-- Logout -->

@@ -2,6 +2,7 @@
 
 namespace App\Endpoint;
 
+use App\Abstract\Endpoint;
 use App\Auth\HttpAuth;
 use App\Auth\SessionAuth;
 use App\Container\PhaseContainer;
@@ -25,8 +26,9 @@ use Exception;
 use Throwable;
 use ValueError;
 
-class ProjectEndpoint
+class ProjectEndpoint extends Endpoint
 {
+
     /**
      * Retrieves projects by key with optional filtering and pagination.
      *
@@ -53,6 +55,8 @@ class ProjectEndpoint
     public static function getByKey(array $args = []): void
     {
         try {
+            self::rateLimit();
+
             if (!HttpAuth::isGETRequest()) {
                 throw new ForbiddenException('Invalid HTTP request method.');
             }
@@ -87,16 +91,17 @@ class ProjectEndpoint
             }
 
             $options = [
-                'offset' => isset($_GET['offset']) ? (int)$_GET['offset'] : 0,
-                'limit' => isset($_GET['limit']) ? (int)$_GET['limit'] : 50,
+                'offset' => isset($_GET['offset']) ? (int) $_GET['offset'] : 0,
+                'limit' => isset($_GET['limit']) ? (int) $_GET['limit'] : 50,
             ];
 
             $projects = ProjectModel::search(
-                $key, 
-                Me::getInstance()->getId(), 
+                $key,
+                Me::getInstance()->getId(),
                 $status,
-                $options);
-    
+                $options
+            );
+
             if (!$projects) {
                 Response::success([], 'No tasks found for the specified project.');
             } else {
@@ -123,6 +128,8 @@ class ProjectEndpoint
      * - Determines phase and project status based on dates
      * - Creates partial Phase entities and adds them to a container
      * - Creates and persists the project with all phases
+     * 
+     * @param array $args Associative array containing route parameters (not used here)
      *
      * @throws ForbiddenException If user session attempts to create project or user already has active project (403)
      * @throws ValidationException If data cannot be decoded or required fields are missing/empty (422)
@@ -158,9 +165,11 @@ class ProjectEndpoint
      * - 403: Forbidden (session user or duplicate project)
      * - 500: Unexpected server error
      */
-    public static function create(): void
+    public static function create(array $args = []): void
     {
         try {
+            self::formRateLimit();
+
             if (!SessionAuth::hasAuthorizedSession()) {
                 throw new ForbiddenException();
             }
@@ -213,7 +222,7 @@ class ProjectEndpoint
                 $phase['id'] = $index++;
                 // Determine phase status
                 $phase['status'] = WorkStatus::getStatusFromDates(
-                    new DateTime($phase['startDateTime']), 
+                    new DateTime($phase['startDateTime']),
                     new DateTime($phase['completionDateTime'])
                 );
 
@@ -300,6 +309,8 @@ class ProjectEndpoint
     public static function edit(array $args = []): void
     {
         try {
+            self::formRateLimit();
+
             if (!SessionAuth::hasAuthorizedSession()) {
                 throw new ForbiddenException();
             }
@@ -375,7 +386,7 @@ class ProjectEndpoint
                     }
 
                     $startDateTime = isset($value['startDateTime'])
-                        ? new DateTime($value['startDateTime']) 
+                        ? new DateTime($value['startDateTime'])
                         : $existingPhase->getStartDateTime();
                     $completionDateTime = isset($value['completionDateTime'])
                         ? new DateTime($value['completionDateTime'])
@@ -397,34 +408,34 @@ class ProjectEndpoint
                     if ($key === 'toEdit') {
                         // Phase to edit
                         $validator->validateMultiple([
-                            'description'           => $value['description'],
-                            'startDateTime'         => $startDateTime,
-                            'completionDateTime'    => $completionDateTime
+                            'description' => $value['description'],
+                            'startDateTime' => $startDateTime,
+                            'completionDateTime' => $completionDateTime
                         ]);
                         if ($validator->hasErrors()) {
                             throw new ValidationException('Phase Validation Failed.', $validator->getErrors());
                         }
                         $phases['toEdit'][] = [
-                            'publicId'              => UUID::fromString($value['id']),
-                            'description'           => $value['description'],
-                            'startDateTime'         => $startDateTime,
-                            'completionDateTime'    => $completionDateTime,
-                            'status'                => WorkStatus::getStatusFromDates($startDateTime, $completionDateTime)
+                            'publicId' => UUID::fromString($value['id']),
+                            'description' => $value['description'],
+                            'startDateTime' => $startDateTime,
+                            'completionDateTime' => $completionDateTime,
+                            'status' => WorkStatus::getStatusFromDates($startDateTime, $completionDateTime)
                         ];
                     } elseif ($key === 'toAdd') {
                         // New phase to add
                         $phases['toAdd']->add(Phase::createPartial([
-                            'name'                  => $value['name'],
-                            'description'           => $value['description'],
-                            'startDateTime'         => $startDateTime,
-                            'completionDateTime'    => $completionDateTime,
-                            'status'                => WorkStatus::getStatusFromDates($startDateTime, $completionDateTime)
+                            'name' => $value['name'],
+                            'description' => $value['description'],
+                            'startDateTime' => $startDateTime,
+                            'completionDateTime' => $completionDateTime,
+                            'status' => WorkStatus::getStatusFromDates($startDateTime, $completionDateTime)
                         ]));
                     } else {
                         // Phase to cancel
                         $phases['toEdit'][] = [
-                            'publicId'              => UUID::fromString($value['id']),
-                            'status'                => WorkStatus::CANCELLED
+                            'publicId' => UUID::fromString($value['id']),
+                            'status' => WorkStatus::CANCELLED
                         ];
                     }
                 }
@@ -450,5 +461,19 @@ class ProjectEndpoint
         } catch (Throwable $e) {
             ResponseExceptionHandler::handle('Project Edit Failed.', $e);
         }
+    }
+
+    /**
+     * Not implemented (No use case)
+     */
+    public static function getById(array $args = []): void
+    {
+    }
+
+    /**
+     * Not implemented (No use case)
+     */
+    public static function delete(array $args = []): void
+    {
     }
 }

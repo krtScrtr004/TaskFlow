@@ -5,12 +5,17 @@
     top: 0;
     left: 0;
     bottom: 0;
+    z-index: 50;
 }
 
 .sidenav a,
-.sidenav button {
+.sidenav button:not(.hamburger-button) {
     display: block;
     padding: 1rem 4rem;
+}
+
+.sidenav button.hamburger-button {
+    padding: 0.5rem 1rem;
 }
 
 .sidenav button {
@@ -29,4 +34,38 @@
 .sidenav button:hover {
     background-color: var(--light-black);
     font-weight: 800;
+}
+
+@media (max-width: 992px) {
+    .sidenav {
+        width: fit-content;
+        padding: 1rem 0;
+    }
+
+    .sidenav a,
+    .sidenav button:not(.hamburger-button) {
+        padding: 1rem 2.5rem;
+    }
+
+    .sidenav .small-sidenav {
+        display: block;
+    }
+
+    .sidenav .small-sidenav.hide {
+        display: none !important;
+    }
+
+    .main-sidenav {
+        display: none;
+    }
+
+    .main-sidenav.show {
+        display: block !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .small-sidenav img {
+        width: 1.2rem;
+    }
 }

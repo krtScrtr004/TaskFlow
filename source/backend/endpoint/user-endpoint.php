@@ -2,6 +2,7 @@
 
 namespace App\Endpoint;
 
+use App\Abstract\Endpoint;
 use App\Auth\HttpAuth;
 use App\Auth\SessionAuth;
 use App\Container\JobTitleContainer;
@@ -28,7 +29,7 @@ use Exception;
 use Throwable;
 use ValueError;
 
-class UserEndpoint
+class UserEndpoint extends Endpoint
 {
     /**
      * Retrieves a user by their unique identifier.
@@ -51,6 +52,8 @@ class UserEndpoint
     public static function getById(array $args = []): void
     {
         try {
+            self::rateLimit();
+            
             if (!HttpAuth::isGETRequest()) {
                 throw new ForbiddenException('Invalid HTTP request method.');
             }
@@ -70,10 +73,13 @@ class UserEndpoint
             if (!$user) {
                 Response::error('User not found.', [], 404);
             } else {
-                $performance =  (Role::isProjectManager($user)) 
-                    ? ProjectManagerPerformanceCalculator::calculate($user->getAdditionalInfo('projectHistory'))
-                    : WorkerPerformanceCalculator::calculate($user->getAdditionalInfo('projectHistory'));
-                $user->addAdditionalInfo('performance', $performance['overallScore']);
+                $projectHistory = $user->getAdditionalInfo('projectHistory');
+                if ($projectHistory !== null || $projectHistory !== []) {
+                    $performance = (Role::isProjectManager($user))
+                        ? ProjectManagerPerformanceCalculator::calculate($projectHistory)
+                        : WorkerPerformanceCalculator::calculate($projectHistory);
+                    $user->addAdditionalInfo('performance', $performance['overallScore']);
+                }
                 Response::success([$user], 'User fetched successfully.');
             }
         } catch (Throwable $e) {
@@ -99,15 +105,19 @@ class UserEndpoint
      *      - 422: Validation failed, returns validation errors
      *      - 500: Unexpected error, returns a generic error message
      *
+     * @param array $args Associative array containing request arguments (not used here)
+     *
      * @throws ValidationException If validation of input parameters fails
      * @throws ForbiddenException If the request method is not GET or session is unauthorized
      * @throws Exception For any other unexpected errors
      *
      * @return void Outputs a JSON response with user data or error information
      */
-    public static function getByKey(): void
+    public static function getByKey(array $args = []): void
     {
         try {
+            self::rateLimit();
+
             if (!HttpAuth::isGETRequest()) {
                 throw new ForbiddenException('Invalid HTTP request method.');
             }
@@ -165,7 +175,7 @@ class UserEndpoint
      * - Returns a success response if the profile is edited successfully.
      * - Handles and returns appropriate error responses for validation, not found, forbidden, and unexpected exceptions.
      *
-     * No parameters are accepted; all data is retrieved from the request body and session.
+     * @param array $args Associative array of arguments (not used here).
      *
      * @throws ValidationException If profile data validation fails.
      * @throws NotFoundException If the user profile is not found.
@@ -174,9 +184,11 @@ class UserEndpoint
      *
      * @return void
      */
-    public static function edit(): void
+    public static function edit(array $args = []): void
     {
         try {
+            self::formRateLimit();
+
             if (!SessionAuth::hasAuthorizedSession()) {
                 throw new ForbiddenException();
             }
@@ -287,23 +299,23 @@ class UserEndpoint
                 if (Session::has('userData')) {
                     $updatedUser = Me::getInstance();
                     Session::set('userData', [
-                        'id'                => $updatedUser->getId(),
-                        'publicId'          => UUID::toString($updatedUser->getPublicId()),
-                        'firstName'         => $updatedUser->getFirstName(),
-                        'middleName'        => $updatedUser->getMiddleName(),
-                        'lastName'          => $updatedUser->getLastName(),
-                        'gender'            => $updatedUser->getGender()->value,
-                        'birthDate'         => $updatedUser->getBirthDate()?->format('Y-m-d'),
-                        'role'              => $updatedUser->getRole()->value,
-                        'jobTitles'         => implode(',', $updatedUser->getJobTitles()->toArray()),
-                        'contactNumber'     => $updatedUser->getContactNumber(),
-                        'email'             => $updatedUser->getEmail(),
-                        'bio'               => $updatedUser->getBio(),
-                        'profileLink'       => $updatedUser->getProfileLink(),
-                        'createdAt'         => $updatedUser->getCreatedAt()->format('Y-m-d H:i:s'),
-                        'confirmedAt'       => $updatedUser->getConfirmedAt()?->format('Y-m-d H:i:s'),
-                        'deletedAt'         => $updatedUser->getDeletedAt()?->format('Y-m-d H:i:s'),
-                        'additionalInfo'    => $updatedUser->getAdditionalInfo()
+                        'id' => $updatedUser->getId(),
+                        'publicId' => UUID::toString($updatedUser->getPublicId()),
+                        'firstName' => $updatedUser->getFirstName(),
+                        'middleName' => $updatedUser->getMiddleName(),
+                        'lastName' => $updatedUser->getLastName(),
+                        'gender' => $updatedUser->getGender()->value,
+                        'birthDate' => $updatedUser->getBirthDate()?->format('Y-m-d'),
+                        'role' => $updatedUser->getRole()->value,
+                        'jobTitles' => implode(',', $updatedUser->getJobTitles()->toArray()),
+                        'contactNumber' => $updatedUser->getContactNumber(),
+                        'email' => $updatedUser->getEmail(),
+                        'bio' => $updatedUser->getBio(),
+                        'profileLink' => $updatedUser->getProfileLink(),
+                        'createdAt' => $updatedUser->getCreatedAt()->format('Y-m-d H:i:s'),
+                        'confirmedAt' => $updatedUser->getConfirmedAt()?->format('Y-m-d H:i:s'),
+                        'deletedAt' => $updatedUser->getDeletedAt()?->format('Y-m-d H:i:s'),
+                        'additionalInfo' => $updatedUser->getAdditionalInfo()
                     ]);
                 }
             }
@@ -339,6 +351,8 @@ class UserEndpoint
     public static function delete(array $args = []): void
     {
         try {
+            self::formRateLimit();
+
             if (!SessionAuth::hasAuthorizedSession()) {
                 throw new ForbiddenException();
             }
@@ -375,5 +389,12 @@ class UserEndpoint
         } catch (Throwable $e) {
             ResponseExceptionHandler::handle('User Deletion Failed.', $e);
         }
+    }
+
+    /**
+     * Not implemented (No use case)
+     */
+    public static function create(array $args = []): void
+    {
     }
 }

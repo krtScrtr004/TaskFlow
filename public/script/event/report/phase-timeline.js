@@ -8,7 +8,7 @@
  * @returns {Date|undefined} The new Date object with one day added, or undefined if input is invalid.
  */
 function addOneDay(stringDate) {
-    if (typeof(stringDate) !== 'string') {
+    if (typeof (stringDate) !== 'string') {
         return
     }
 
@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Handle empty phases with placeholder data
     if (phases.length === 0) {
         console.warn('No phases found for timeline, showing placeholder')
-        
+
         // Create placeholder phase spanning the entire project timeline
         const placeholderPhase = {
             name: 'No phases available',
@@ -142,10 +142,79 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const datasets = [plannedDataset, actualDataset]
 
+    // Calculate responsive font sizes based on viewport
+    const getResponsiveFontSizes = () => {
+        const width = window.innerWidth
+
+        if (width <= 575) {
+            return {
+                legend: 9,
+                legendBoxWidth: 10,
+                legendPadding: 15,
+                tooltip: { title: 10, body: 9 },
+                tooltipPadding: 8,
+                axisTitle: 9,
+                axisTitlePadding: 10,
+                xTicks: 7,
+                yTicks: 7,
+                barThickness: 16,
+                maxLabelLength: 8
+            }
+        } else if (width <= 768) {
+            return {
+                legend: 9,
+                legendBoxWidth: 11,
+                legendPadding: 20,
+                tooltip: { title: 11, body: 10 },
+                tooltipPadding: 10,
+                axisTitle: 9,
+                axisTitlePadding: 12,
+                xTicks: 9,
+                yTicks: 9,
+                barThickness: 20,
+                maxLabelLength: 10
+            }
+        } else if (width <= 992) {
+            return {
+                legend: 9,
+                legendBoxWidth: 12,
+                legendPadding: 25,
+                tooltip: { title: 12, body: 11 },
+                tooltipPadding: 12,
+                axisTitle: 9,
+                axisTitlePadding: 13,
+                xTicks: 9,
+                yTicks: 9,
+                barThickness: 22,
+                maxLabelLength: 10
+            }
+        } else {
+            return {
+                legend: 9,
+                legendBoxWidth: 12,
+                legendPadding: 30,
+                tooltip: { title: 12, body: 11 },
+                tooltipPadding: 12,
+                axisTitle: 9,
+                axisTitlePadding: 15,
+                xTicks: 9,
+                yTicks: 9,
+                barThickness: 24,
+                maxLabelLength: 10
+            }
+        }
+    }
+
+    const fontSizes = getResponsiveFontSizes()
+
+    // Update bar thickness based on screen size
+    plannedDataset.barThickness = fontSizes.barThickness
+    actualDataset.barThickness = fontSizes.barThickness
+
     // Initialize Chart.js
     const ctx = chartCanvas.getContext('2d')
 
-    new Chart(ctx, {
+    const chart = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: labels,
@@ -160,11 +229,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     display: true,
                     position: 'top',
                     labels: {
-                        boxWidth: 12,
+                        boxWidth: fontSizes.legendBoxWidth,
                         font: {
-                            size: 11
+                            size: fontSizes.legend
                         },
-                        padding: 30
+                        padding: fontSizes.legendPadding
                     }
                 },
                 title: {
@@ -202,9 +271,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     },
                     backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    padding: 12,
-                    titleFont: { size: 12, weight: 'bold' },
-                    bodyFont: { size: 11 },
+                    padding: fontSizes.tooltipPadding,
+                    titleFont: { size: fontSizes.tooltip.title, weight: 'bold' },
+                    bodyFont: { size: fontSizes.tooltip.body },
                     borderColor: 'rgba(255, 255, 255, 0.3)',
                     borderWidth: 1,
                 }
@@ -224,14 +293,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         display: true,
                         text: 'Timeline',
                         font: {
-                            size: 16,
+                            size: fontSizes.axisTitle,
                             weight: 'bold'
                         },
-                        padding: 15
+                        padding: fontSizes.axisTitlePadding
                     },
                     ticks: {
                         font: {
-                            size: 10
+                            size: fontSizes.xTicks
                         }
                     },
                     grid: {
@@ -240,24 +309,28 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 },
                 y: {
-                    type: 'linear',
+                    type: 'category',
                     offset: true,
                     title: {
                         display: true,
                         text: 'Phases',
                         font: {
-                            size: 16,
+                            size: fontSizes.axisTitle,
                             weight: 'bold'
                         },
-                        padding: 15
+                        padding: fontSizes.axisTitlePadding
                     },
                     ticks: {
                         font: {
-                            size: 12
+                            size: fontSizes.yTicks
                         },
-                        callback: function (value) {
-                            const label = labels[value] || ''
-                            const maxLength = 10 // Maximum characters per line
+                        autoSkip: false,
+                        padding: 1,
+                        callback: function (value, index) {
+                            const label = this.getLabelForValue(index)
+                            if (!label) return ''
+
+                            const maxLength = fontSizes.maxLabelLength
 
                             if (label.length <= maxLength) {
                                 return label
@@ -280,9 +353,46 @@ document.addEventListener('DOMContentLoaded', () => {
                             if (currentLine) lines.push(currentLine)
                             return lines
                         }
-                    }
+                    },
+                    grid: {
+                        display: true,
+                        drawBorder: true,
+                        lineWidth: 0,
+                        tickLength: 10
+                    },
+                    categoryPercentage: 0.7,
+                    barPercentage: 0.9
                 }
             }
         }
+    })
+
+    // Handle window resize
+    let resizeTimeout
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout)
+        resizeTimeout = setTimeout(() => {
+            const newFontSizes = getResponsiveFontSizes()
+
+            // Update chart options
+            chart.options.plugins.legend.labels.boxWidth = newFontSizes.legendBoxWidth
+            chart.options.plugins.legend.labels.font.size = newFontSizes.legend
+            chart.options.plugins.legend.labels.padding = newFontSizes.legendPadding
+            chart.options.plugins.tooltip.padding = newFontSizes.tooltipPadding
+            chart.options.plugins.tooltip.titleFont.size = newFontSizes.tooltip.title
+            chart.options.plugins.tooltip.bodyFont.size = newFontSizes.tooltip.body
+            chart.options.scales.x.title.font.size = newFontSizes.axisTitle
+            chart.options.scales.x.title.padding = newFontSizes.axisTitlePadding
+            chart.options.scales.x.ticks.font.size = newFontSizes.xTicks
+            chart.options.scales.y.title.font.size = newFontSizes.axisTitle
+            chart.options.scales.y.title.padding = newFontSizes.axisTitlePadding
+            chart.options.scales.y.ticks.font.size = newFontSizes.yTicks
+
+            // Update bar thickness
+            chart.data.datasets[0].barThickness = newFontSizes.barThickness
+            chart.data.datasets[1].barThickness = newFontSizes.barThickness
+
+            chart.update()
+        }, 250)
     })
 })

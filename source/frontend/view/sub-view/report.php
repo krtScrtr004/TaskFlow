@@ -3,6 +3,7 @@
 use App\Core\UUID;
 use App\Enumeration\TaskPriority;
 use App\Enumeration\WorkStatus;
+use App\Middleware\Csrf;
 use App\Utility\ProjectProgressCalculator;
 
 if (!$projectReport) {
@@ -44,6 +45,7 @@ $performance = ($reportData['phases']?->count() > 0)
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<?= Csrf::get() ?>">
 
     <title>Report</title>
 
@@ -59,7 +61,10 @@ $performance = ($reportData['phases']?->count() > 0)
 <body>
     <?php require_once COMPONENT_PATH . 'sidenav.php' ?>
 
-    <main class="report main-page ">
+    <main class="report main-page relative">
+        <button id="print_report_button" class="unset-button">
+            <img src="<?= ICON_PATH . 'print_w.svg' ?>" alt="Print Report" title="Print Report" title="Print Report" height="24">
+        </button>
 
         <section class="first-block flex-col">
 
@@ -82,7 +87,7 @@ $performance = ($reportData['phases']?->count() > 0)
 
                 <!-- Progress Bar -->
                 <div>
-                    <p>This project is <strong><?= $performance['progressPercentage'] ?>%</strong> complete.</p>
+                    <p>This project is <strong><?= $performance['progressPercentage'] ?>%</strong> completed.</p>
 
                     <span class="progress-percentage no-display"
                         data-projectPercentage="<?= $performance['progressPercentage'] ?>"></span>
@@ -128,7 +133,8 @@ $performance = ($reportData['phases']?->count() > 0)
 
                         <div class="phase-timeline-data no-display">
                             <?php 
-                            foreach ($reportData['phases'] as $phase): 
+                            $reversed = array_reverse($reportData['phases']->toArray());
+                            foreach ($reversed as $phase): 
                                 $name = htmlspecialchars($phase->getName());
                                 $startDateTime = htmlspecialchars(formatDateTime($phase->getStartDateTime()));
                                 $completionDateTime = htmlspecialchars(formatDateTime($phase->getCompletionDateTime()));
@@ -144,8 +150,8 @@ $performance = ($reportData['phases']?->count() > 0)
                             <?php endforeach; ?>
                         </div>
 
-                        <div class="chart-container phase-timeline-container">
-                            <canvas id="phase_timeline_chart" height="400" width="500"></canvas>
+                        <div class="chart-container phase-timeline-chart-container">
+                            <canvas id="phase_timeline_chart"></canvas>
                         </div>
                     </section>
                 </section>
@@ -177,7 +183,7 @@ $performance = ($reportData['phases']?->count() > 0)
                         ?>
                             <div class="phase-card flex-row">
                                 <section class="phase-header flex-col">
-                                    <h3><?= $name ?></h3>
+                                    <h3 class="phase-name"><?= $name ?></h3>
 
                                     <div class="phase-schedule flex-col">
                                         <span class="text-w-icon">
@@ -185,7 +191,7 @@ $performance = ($reportData['phases']?->count() > 0)
                                                 height="16">
 
                                             <p>Start Date: 
-                                                <span class="task-start-datetime">
+                                                <span class="task-start-datetime wrap-text">
                                                     <?= $startDateTime ?>
                                                 </span>
                                             </p>
@@ -206,7 +212,7 @@ $performance = ($reportData['phases']?->count() > 0)
                                                     height="16">
 
                                                 <p>Actual Completion Date: 
-                                                    <span class="task-actual-completion-datetime">
+                                                    <span class="task-actual-completion-datetime wrap-text">
                                                         <?= $actualCompletionDateTime ?>
                                                     </span>
                                                 </p>
@@ -222,7 +228,7 @@ $performance = ($reportData['phases']?->count() > 0)
                                         <div class="progress-bar white-text"></div>    
                                     </div>
                                     
-                                    <p class="end-text">This phase is <strong><?= $progress ?>%</strong> complete</p>
+                                    <p class="end-text">This phase is <strong><?= $progress ?>%</strong> completed</p>
                                 </section>
 
                             </div>
@@ -281,7 +287,9 @@ $performance = ($reportData['phases']?->count() > 0)
                             <?php endforeach; ?>
                         </div>
 
-                        <canvas id="status_priority_distribution" height="300" width="500"></canvas>
+                        <div class="chart-container status-priority-distribution-chart-container">
+                            <canvas id="status_priority_distribution"></canvas>
+                        </div>
                     </section>
 
                 </section>
@@ -394,7 +402,9 @@ $performance = ($reportData['phases']?->count() > 0)
                         <p>Number of tasks created each period</p>
                     </div>
 
-                    <canvas id="task_periodic_count_chart" width="500" height="200"></canvas>
+                    <div class="task-periodic-count-chart-container chart-container">
+                        <canvas id="task_periodic_count_chart"></canvas>
+                    </div>
                 </section>
 
             </section>
@@ -480,7 +490,9 @@ $performance = ($reportData['phases']?->count() > 0)
                     <p class="center-text">See the current status of workers</p>
                 </div>
 
-                <canvas id="worker_statistics_chart" width="300" height="300"></canvas>
+                <div class="worker-statistics-chart-container chart-container">
+                    <canvas id="worker_statistics_chart"></canvas>
+                </div>
             </section>
 
             <!-- Insights and Recommendations -->
@@ -520,9 +532,10 @@ $performance = ($reportData['phases']?->count() > 0)
                 </section>
             </section>
         </section>
-
     </main>
-
+    
+    <script type="module" src="<?= EVENT_PATH . 'toggle-menu.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'logout.js' ?>" defer></script>
 
     <script src="<?= EVENT_PATH . 'report' . DS . 'luxon.min.js' ?>"></script>
     <script src="<?= PUBLIC_PATH . 'chart.umd.min.js' ?>"></script>
@@ -534,6 +547,7 @@ $performance = ($reportData['phases']?->count() > 0)
     <script type="module" src="<?= EVENT_PATH . 'report' . DS . 'task-periodic-count.js' ?>"></script>
     <script type="module" src="<?= EVENT_PATH . 'report' . DS . 'worker-statistics.js' ?>"></script>
     <script type="module" src="<?= EVENT_PATH . 'report' . DS . 'status_priority_distribution_count.js' ?>"></script>
+    <script type="module" src="<?= EVENT_PATH . 'report' . DS . 'print.js' ?>"></script>
 </body>
 
 </html>

@@ -87,50 +87,53 @@ if (isset($projects)) {
                 </div>
             </div>
 
-            <!-- Total -->
-            <div class="total blue-bg flex-col flex-child-center-v">
-                <h3 class="start-text">Total</h3>
-
-                <div class="text-w-icon">
-                    <img src="<?= ICON_PATH . 'add_w.svg' ?>" alt="Total Projects" title="Total Projects" height="30">
-                    <h3><?= $statisticsData['total'] ?></h3>
-                </div>
-            </div>
-
-            <!-- Completed -->
-            <div class="completed green-bg flex-col flex-child-center-v">
-                <h3 class="start-text black-text">Completed</h3>
-
-                <div class="text-w-icon">
-                    <img src="<?= ICON_PATH . 'complete_b.svg' ?>" alt="Completed Projects" title="Completed Projects"
-                        height="30">
-                    <h3 class="black-text"><?= $statisticsData['completed'] ?></h3>
-                </div>
-            </div>
-
-            <!-- Canceled -->
-            <div class="cancel cancelled red-bg flex-col flex-child-center-v">
-                <h3 class="start-text">Canceled</h3>
-
-                <div class="text-w-icon">
-                    <img src="<?= ICON_PATH . 'close_w.svg' ?>" alt="Canceled Projects" title="Canceled Projects"
-                        height="30">
-                    <h3><?= $statisticsData['cancelled'] ?></h3>
-                </div>
-            </div>
-
-            <?php if (Role::isWorker(Me::getInstance())): ?>
-                <!-- Terminated -->
-                <div class="cancel-terminate orange-bg flex-col flex-child-center-v">
-                    <h3 class="start-text">Terminated</h3>
+            <section class="sub-statistics flex-row">
+                <!-- Total -->
+                <div class="total blue-bg flex-col flex-child-center-v">
+                    <h3 class="start-text">Total</h3>
 
                     <div class="text-w-icon">
-                        <img src="<?= ICON_PATH . 'close_w.svg' ?>" alt="Terminated Projects" title="Terminated Projects"
-                            height="30">
-                        <h3><?= $terminatedProjectCount ?></h3>
+                        <img src="<?= ICON_PATH . 'add_w.svg' ?>" alt="Total Projects" title="Total Projects" height="30">
+                        <h3><?= $statisticsData['total'] ?></h3>
                     </div>
                 </div>
-            <?php endif; ?>
+
+                <!-- Completed -->
+                <div class="completed green-bg flex-col flex-child-center-v">
+                    <h3 class="start-text black-text">Completed</h3>
+
+                    <div class="text-w-icon">
+                        <img src="<?= ICON_PATH . 'complete_b.svg' ?>" alt="Completed Projects" title="Completed Projects"
+                            height="30">
+                        <h3 class="black-text"><?= $statisticsData['completed'] ?></h3>
+                    </div>
+                </div>
+
+                <!-- Canceled -->
+                <div class="cancel cancelled red-bg flex-col flex-child-center-v">
+                    <h3 class="start-text">Canceled</h3>
+
+                    <div class="text-w-icon">
+                        <img src="<?= ICON_PATH . 'close_w.svg' ?>" alt="Canceled Projects" title="Canceled Projects"
+                            height="30">
+                        <h3><?= $statisticsData['cancelled'] ?></h3>
+                    </div>
+                </div>
+
+                <?php if (Role::isWorker(Me::getInstance())): ?>
+                    <!-- Terminated -->
+                    <div class="cancel-terminate orange-bg flex-col flex-child-center-v">
+                        <h3 class="start-text">Terminated</h3>
+
+                        <div class="text-w-icon">
+                            <img src="<?= ICON_PATH . 'close_w.svg' ?>" alt="Terminated Projects" title="Terminated Projects"
+                                height="30">
+                            <h3><?= $terminatedProjectCount ?></h3>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+            </section>
         </section>
 
         <!-- Insights and Recommendations -->
@@ -174,7 +177,7 @@ if (isset($projects)) {
         </section>
 
         <!-- Search Bar -->
-        <section class="flex-row flex-child-end-v">
+        <section class="search-bar-container flex-row flex-child-end-v">
             <?= searchBar([
                 'Status' => [
                     WorkStatus::PENDING->getDisplayName(),
@@ -186,9 +189,9 @@ if (isset($projects)) {
             ]) ?>
         </section>
 
-        <section class="project-grid-container">
+        <section id="project_grid" class="project-grid-container">
             <!-- Projects Grid -->
-            <section class="project-grid grid">
+            <section class="project-grid grid-card-container grid">
                 <?php foreach ($projects as $project) {
                     echo projectGridCard($project);
                 } ?>
@@ -206,6 +209,7 @@ if (isset($projects)) {
 
     </main>
 
+    <script type="module" src="<?= EVENT_PATH . 'toggle-menu.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'logout.js' ?>" defer></script>
 
     <script type="module" src="<?= EVENT_PATH . 'projects' . DS . 'infinite-scroll.js' ?>" defer></script>

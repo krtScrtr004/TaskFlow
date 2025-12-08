@@ -1,3 +1,19 @@
+.grid-card-container {
+	grid-template-columns: repeat(auto-fill, minmax(var(--card-width), 280px));
+}
+
+.grid-card {
+	background-color: var(--black);
+	aspect-ratio: 1 / 1;
+	box-shadow: var(--box-shadow);
+	border-radius: var(--border-radius);
+}
+
+.grid-card:hover {
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+	opacity: 0.9;
+}
+
 main.main-page {
 	display: flex;
 	flex-direction: column;
@@ -6,7 +22,7 @@ main.main-page {
 
 .content-section-block {
 	padding: var(--space);
-	border: 1px solid rgba(0, 0, 0, 0.3);
+	box-shadow: var(--box-shadow);
 	border-radius: var(--border-radius);
 }
 
@@ -136,7 +152,7 @@ button:has(.text-w-icon):not(.unset-button) {
 	max-width: 25rem;
 	box-sizing: content-box;
 	padding: var(--space);
-	box-shadow: 0 0 15px rgba(68, 68, 68, 0.2);
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .modal-wrapper hr {
@@ -319,6 +335,14 @@ button > .text-w-icon {
 
 /* ---------------- SEARCH BAR ---------------- */
 
+.search-bar-container {
+	position: sticky;
+	top: calc(var(--space) * -1);
+	z-index: 30;
+	background-color: var(--light-black);
+	padding: 0.5rem 0;
+}
+
 .search-bar {
 	width: 60ch;
 	display: flex;
@@ -361,6 +385,7 @@ button > .text-w-icon {
 }
 
 .search-bar > select {
+	width: 13ch;
 	border: none;
 	margin-right: 0.5rem;
 }
@@ -374,6 +399,7 @@ button > .text-w-icon {
 
 .no-content-wall h3 {
 	font-weight: 300;
+	text-align: center;
 }
 
 /* ---------------- JOB TITLE CHIP ---------------- */
@@ -604,46 +630,147 @@ button > .text-w-icon {
     border-radius: var(--border-radius);
 }
 
-/* ---------------- USER GRID CARD ---------------- */
+@media (max-width: 768px) {
+	.content-section-block {
+		padding: 1rem;
+	}
 
-.user-grid-card {
-	background-color: var(--black);
-	display: flex;
-	flex-direction: column;
-	padding: 1rem;
-	gap: 1rem;
-	aspect-ratio: 1 / 1;
-	border-radius: var(--border-radius);
+	.modal-wrapper > div,
+	.modal-wrapper > section,
+	.modal.modal-form,
+	.modal.error-list-dialog,
+	.user-info-card {
+		min-width: 18rem !important;
+		max-width: 70% !important;
+	}
+
+	.header-w-back > .back-button {
+		left: -5px !important;
+	}
+
+	.header-w-back > .back-button > img {
+		height: 1.2rem !important;
+	}
+
+	.header-w-back > h3 {
+		font-size: 1.5rem !important;
+	}
+
+	.search-bar > .search-bar-block {
+		width: 70% !important;
+	}
+
+	.search-bar input {
+		padding: 0.3rem;
+	}
+
+	.search-bar button > img {
+		height: 1rem;
+		width: 1rem;
+	}
+
+	.search-bar > select {
+		flex: 1;
+		margin-right: 0 !important;
+	}
+
+	.no-content-wall > img {
+		height: 7rem !important;
+		width: 7rem !important;
+	}
+
+	.no-content-wall h3 {
+		max-width: 20ch;
+	}
+
+	.user-list-card img {
+		height: 2rem;
+		width: 2rem;
+	}
+
+	.user-list-card .name {
+		max-width: 30ch;
+	}
+
+	.user-list-card .id {
+		font-size: 0.7rem !important;
+	}
+
+	.grid-card {
+		max-width: 100% !important;
+	}
 }
 
-.user-grid-card:hover {
-	opacity: 0.7;
+@media (max-width: 575px) {
+	.search-bar {
+		width: 100%;
+	}
+
+	.grid-card-container {
+		grid-template-columns: repeat(auto-fill, minmax(var(--card-width), 100%));
+	}
+
+	.grid-card {
+		height: 250px;
+		max-height: var(--card-height);
+		aspect-ratio: unset;
+	}
 }
 
-.user-grid-card .user-primary-info {
-	gap: 1rem;
-}
+@media (max-width: 480px) {
+	button:has(.text-w-icon):not(.unset-button) {
+		width: 25ch;
+	}
 
-.user-grid-card .user-name {
-	max-width: 18ch;
-	font-size: 1.2rem;
-	font-weight: 500;
-}
+	.no-content-wall > img {
+		height: 5rem !important;
+		width: 5rem !important;
+	}
 
-.user-grid-card .user-id {
-	font-size: 0.7rem;
-	font-weight: 300;
-}
+	.user-info-card .primary-info {
+		flex-direction: column-reverse;
+	}
 
-.user-grid-card .role-badge {
-	width: 100%;
-}
+	.user-info-card .primary-info #user_info_card_close_button {
+		width: fit-content;
+		margin-left: auto;
+	}
 
-.user-grid-card .user-statistics,
-.user-grid-card .user-contact-info {
-	gap: 0.3rem;
-}
+	.user-info-card .primary-info > div:first-child {
+		width: 100%;
+		flex-direction: column !important;
+		align-items: center;
+		gap: 0.5rem;
+	}
 
-.user-grid-card .user-status {
-	flex: 1;
+	.user-info-card .primary-info > div:first-child > *,
+	.user-info-card .user-job-titles,
+	.user-info-card .user-bio {
+		text-align: center;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.user-info-card .user-profile-picture {
+		height: 4rem;
+		width: 4rem;
+		margin: 0;
+	}
+
+	.user-info-card .user-name {
+		font-size: 1.2rem;
+	}
+
+	.user-info-card .user-statistics-container {
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+
+	.user-info-card .user-statistic > h4 {
+		font-size: 1.3rem;
+	}
+
+	.user-info-card .user-performance > .text-w-icon {
+		justify-content: center;
+	}
 }

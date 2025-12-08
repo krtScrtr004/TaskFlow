@@ -97,6 +97,6 @@ class AuthService
      */
     private function sendTemporaryLink(string $email, string $subject, string $body): bool
     {
-        return Email::send($email, $subject, $body);
+        return Email::sendHtml($email, $subject, $body);
     }
 }

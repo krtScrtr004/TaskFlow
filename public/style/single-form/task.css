@@ -1,5 +1,9 @@
 #add_task_form {
-    gap: 2rem;
+    gap: 5rem;
+}
+
+#add_task_form .heading  .text-w-icon {
+    margin-bottom: 1rem;
 }
 
 .task-detail,
@@ -85,4 +89,65 @@
 
 .no-assigned-worker-wall h3 {
     font-size: 1.2rem;
+}
+
+@media (max-width: 1200px) {
+    .single-form:has(.add-task) > main {
+        padding: 0;
+    }
+
+	.single-form:has(.add-task) .single-form-form {
+        justify-content: unset !important;
+        padding-top: 2rem;
+	}
+
+    #add_task_form {
+        width: 100%;
+        flex-direction: column;
+        padding-bottom: 2rem;
+        gap: 3rem;
+    }
+
+    #add_task_form .task-worker {
+        width: 100%;
+    }
+
+    .task-detail .heading .text-w-icon img {
+        height: 2rem;
+        width: 2rem;
+    }
+
+    .task-detail .heading .text-w-icon h3 {
+        font-size: 1.8rem;
+    }
+
+    .task-detail .task-schedule > * {
+        flex: 1;
+    }
+
+    .no-assigned-worker-wall img {
+        height: 5rem !important;
+        width: 5rem !important;
+    }
+}
+
+
+@media (max-width: 768px) {
+	.single-form:has(.add-task) .single-form-form {
+        padding: 2rem;
+    }
+
+    .task-detail .task-primary-info {
+        flex-direction: column;
+    }
+
+    .task-detail .task-primary-info > .input-label-container:first-child > input {
+        width: 100%;
+    }
+}
+
+@media (min-width: 768px) and (min-height: 801px) {
+    .single-form:has(.add-task) .single-form-form {
+        justify-content: center !important;
+    }
 }

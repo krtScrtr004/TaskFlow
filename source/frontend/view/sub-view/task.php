@@ -10,7 +10,6 @@ use App\Enumeration\WorkStatus;
 use App\Enumeration\TaskPriority;
 use App\Exception\NotFoundException;
 use App\Middleware\Csrf;
-use App\Model\TaskModel;
 use App\Model\TaskWorkerModel;
 
 if (!isset($project) || !$project instanceof Project) {
@@ -73,6 +72,7 @@ $worksOn = TaskWorkerModel::worksOn($task->getId(), Me::getInstance()->getId(), 
     require_once COMPONENT_PATH . 'template/edit-task-modal.php';
     require_once COMPONENT_PATH . 'template/user-info-card.php';
     require_once COMPONENT_PATH . 'template/add-worker-modal.php';
+    require_once COMPONENT_PATH . 'function/user-table-row.php';
     ?>
 
     <main class="view-task-info main-page flex-col" 
@@ -86,22 +86,24 @@ $worksOn = TaskWorkerModel::worksOn($task->getId(), Me::getInstance()->getId(), 
 
             <!-- Task Name and Status -->
             <div class="main flex-row">
-                <button class="back-button unset_button">
+                <button class="back-button unset-button">
                     <img src="<?= ICON_PATH . 'back.svg' ?>" alt="Back" title="Back" height="24" width="20">
                 </button>
 
-                <div class="heading text-w-icon">
-                    <img src="<?= ICON_PATH . 'task_w.svg' ?>" alt="<?= $taskData['name'] ?>"
-                        title="<?= $taskData['name'] ?>" height="24">
-
-                    <h3 class="task-name wrap-text">
-                        <?= $taskData['name'] ?>
-                    </h3>
-                </div>
-
-                <div class="center-child">
-                    <?= WorkStatus::badge($taskData['status']) ?>
-                </div>
+                <section class="name-and-status flex-row">
+                    <div class="heading text-w-icon">
+                        <img src="<?= ICON_PATH . 'task_w.svg' ?>" alt="<?= $taskData['name'] ?>"
+                            title="<?= $taskData['name'] ?>" height="24">
+    
+                        <h3 class="task-name wrap-text">
+                            <?= $taskData['name'] ?>
+                        </h3>
+                    </div>
+                    
+                    <div class="center-child">
+                        <?= WorkStatus::badge($taskData['status']) ?>
+                    </div>
+                </section>
             </div>
 
             <p class="task-id"><em><?= $taskData['id'] ?></em></p>
@@ -135,7 +137,7 @@ $worksOn = TaskWorkerModel::worksOn($task->getId(), Me::getInstance()->getId(), 
                     </p>
                 </div>
 
-                <span class="task-actual-completion-datetime" data-actualCompletionDateTime="<?= ($taskData['actualCompletionDateTime'] ? htmlspecialchars(formatDateTime($taskData['actualCompletionDateTime'])) : '') ?>"></span>
+                <span class="task-actual-completion-datetime no-display" data-actualCompletionDateTime="<?= ($taskData['actualCompletionDateTime'] ? htmlspecialchars(formatDateTime($taskData['actualCompletionDateTime'])) : '') ?>"></span>
                 <?php if ($taskData['status'] === WorkStatus::COMPLETED): ?>
                     <div class="text-w-icon">
                         <img src="<?= ICON_PATH . 'complete_w.svg' ?>" alt="Completed At" title="Completed At"
@@ -193,18 +195,7 @@ $worksOn = TaskWorkerModel::worksOn($task->getId(), Me::getInstance()->getId(), 
         </section>
 
         <!-- Assigned Workers -->
-        <section class="assigned-workers content-section-block flex-col">
-
-            <!-- Heading -->
-            <div class="heading text-w-icon">
-                <img src="<?= ICON_PATH . 'worker_w.svg' ?>" alt="Assigned Workers" title="Assigned Workers"
-                    height="24">
-
-                <h3 class="task-name wrap-text">
-                    Assigned Workers
-                </h3>
-            </div>
-
+        <section class="assigned-workers flex-col">
             <!-- No Workers Wall -->
             <div
                 class="no-workers-wall no-content-wall <?= count($taskData['workers']) > 0 ? 'no-display' : 'flex-col' ?>">
@@ -213,12 +204,28 @@ $worksOn = TaskWorkerModel::worksOn($task->getId(), Me::getInstance()->getId(), 
                 <h3>No workers assigned to this task.</h3>
             </div>
 
-            <!-- Worker Grid Cards -->
-            <section class="worker-grid grid">
-                <?php foreach ($taskData['workers'] as $worker) {
-                    echo workerGridCard($worker);
-                } ?>
-            </section>
+            <!-- Worker Table -->
+            <div class="worker-table-container <?= count($taskData['workers']) === 0 ? 'no-display' : '' ?>">
+                <table class="worker-table">
+                    <thead>
+                        <tr>
+                            <th>Profile</th>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>Email</th>
+                            <th>Contact</th>
+                            <th>Total Tasks</th>
+                            <th>Completed</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($taskData['workers'] as $worker) {
+                            echo workerTableRow($worker);
+                        } ?>
+                    </tbody>
+                </table>
+            </div>
 
             <?php if (Role::isProjectManager(Me::getInstance()) && $isTaskEditable): ?>
                 <!-- Add Worker Button -->
@@ -234,6 +241,7 @@ $worksOn = TaskWorkerModel::worksOn($task->getId(), Me::getInstance()->getId(), 
     </main>
 
     <script type="module" src="<?= EVENT_PATH . 'back-button.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'toggle-menu.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'logout.js' ?>" defer></script>
 
     <script type="module" src="<?= EVENT_PATH . 'tasks' . DS . 'create-worker-card.js' ?>" defer></script>

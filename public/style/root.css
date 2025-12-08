@@ -21,6 +21,9 @@
 
 	--card-width: 230px;
 	--card-height: 300px;
+
+	--box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
 }
 
 @font-face {
@@ -89,7 +92,6 @@ body {
 }
 
 header,
-main,
 footer {
 	min-width: var(--min-width);
 }
@@ -107,6 +109,7 @@ header {
 
 aside {
 	padding: 3rem 0;
+	box-shadow: var(--box-shadow);
 }
 
 main {
@@ -181,7 +184,8 @@ textarea {
 	font-weight: 300;
 	background-color: transparent;
 	color: var(--white);
-	border: 1px solid var(--white);
+	border: 1px solid var(--dark-white);
+	background-color: #353637;
 }
 
 input[type="date"]::-webkit-calendar-picker-indicator {
@@ -215,6 +219,7 @@ select option {
 button {
 	border: 1px solid transparent;
 	font-weight: 800;
+	box-shadow: var(--box-shadow);
 }
 
 button:hover {
@@ -234,9 +239,51 @@ fieldset {
 
 textarea {
 	padding: 0.5rem;
-	border: 1px solid var(--white);
 	border-radius: var(--border-radius);
 	resize: none;
 	font-family: inherit;
 	font-size: 1rem;
+}
+
+@media (max-width: 992px) {
+	:root {
+		--min-width: unset;
+		--min-height: unset;
+		--card-width: 200px;
+		--card-height: 270px;
+	}
+}
+
+@media (max-width: 768px) {
+	:root {
+		--content-side-padding: 2rem;
+		--space: 1rem;
+	}
+
+	h1 {
+		font-size: 1.5rem !important;
+	}
+
+	h3 {
+		font-size: 1.2rem !important;
+	}
+
+	p, strong, em, li, input, textarea, a, label {
+		font-size: 0.8rem !important;
+	}
+
+	button {
+		padding: 0.5rem;
+	}
+
+	button > .text-w-icon > img {
+		height: 1rem !important;
+	}
+
+	button > .text-w-icon > h1,
+	button > .text-w-icon > h3,
+	button > .text-w-icon > p {
+		font-size: 1rem !important;
+	}
+
 }

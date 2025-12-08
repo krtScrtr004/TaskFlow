@@ -3,6 +3,7 @@ import { errorListDialog } from '../render/error-list-dialog.js'
 
 const LENGTH_VALIDATION = {
     'name':             { min: 1, max: 50 },
+    'fullName':         { min: 3, max: 255 },
     'uri':              { min: 3, max: 255 },
     'contactNumber':    { min: 11, max: 20 },
     'password':         { min: 8, max: 255 },
@@ -67,7 +68,9 @@ function hasConsecutiveSpecialChars(str) {
  * - firstName: Required, length between LENGTH_VALIDATION.name.min and LENGTH_VALIDATION.name.max, valid characters, no three or more consecutive special characters.
  * - middleName: Optional, length between LENGTH_VALIDATION.name.min and LENGTH_VALIDATION.name.max if present, valid characters, no three or more consecutive special characters.
  * - lastName: Required, length between LENGTH_VALIDATION.name.min and LENGTH_VALIDATION.name.max, valid characters, no three or more consecutive special characters.
+ * - fullName: Required, length between LENGTH_VALIDATION.fullName.min and LENGTH_VALIDATION.fullName.max, valid characters, no three or more consecutive special characters.
  * - bio: Optional, length between LENGTH_VALIDATION.longText.min and LENGTH_VALIDATION.longText.max if present, no three or more consecutive special characters.
+ * - message: Optional, length between LENGTH_VALIDATION.longText.min and LENGTH_VALIDATION.longText.max if present, no three or more consecutive special characters.
  * - gender: Required, must be one of ['male', 'female', 'Male', 'Female'].
  * - birthDate: Required, must be a valid date, user must be at least 18 years old.
  * - jobTitles: Required, length between LENGTH_VALIDATION.longText.min and LENGTH_VALIDATION.longText.max, each title between 1 and 20 characters, valid characters.
@@ -125,6 +128,20 @@ export function userValidationRules() {
             }
         },
 
+        'fullName': {
+            condition: (inputs) => {
+                const errors = []
+                if (!inputs.fullName || inputs.fullName.trim() === '' || inputs.fullName.length < LENGTH_VALIDATION.fullName.min || inputs.fullName.length > LENGTH_VALIDATION.fullName.max) {
+                    errors.push(`Full name must be between ${LENGTH_VALIDATION.fullName.min} and ${LENGTH_VALIDATION.fullName.max} characters long.`)
+                } else if (!/^[a-zA-Z\s'-.]{1,255}$/.test(inputs.fullName)) {
+                    errors.push('Full name contains invalid characters.')
+                } else if (hasConsecutiveSpecialChars(inputs.fullName.trim())) {
+                    errors.push('Full name contains three or more consecutive special characters.')
+                }
+                return errors
+            }
+        },
+
         'bio': {
             condition: (inputs) => {
                 const errors = []
@@ -134,6 +151,20 @@ export function userValidationRules() {
 
                 if (inputs.bio && hasConsecutiveSpecialChars(inputs.bio.trim())) {
                     errors.push('Bio contains three or more consecutive special characters.')
+                }
+                return errors
+            }
+        },
+
+        'message': {
+            condition: (inputs) => {
+                const errors = []
+                if (inputs.message && (inputs.message.trim().length < LENGTH_VALIDATION.longText.min || inputs.message.trim().length > LENGTH_VALIDATION.longText.max)) {
+                    errors.push(`Message must be between ${LENGTH_VALIDATION.longText.min} and ${LENGTH_VALIDATION.longText.max} characters long.`)
+                }
+
+                if (inputs.message && hasConsecutiveSpecialChars(inputs.message.trim())) {
+                    errors.push('Message contains three or more consecutive special characters.')
                 }
                 return errors
             }

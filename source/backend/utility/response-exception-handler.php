@@ -4,6 +4,7 @@ namespace App\Utility;
 
 use App\Exception\ForbiddenException;
 use App\Exception\NotFoundException;
+use App\Exception\RateLimitException;
 use App\Exception\ValidationException;
 use App\Middleware\Response;
 use Throwable;
@@ -36,6 +37,8 @@ class ResponseExceptionHandler
             Response::error($title, [$exception->getMessage()], 404);
         } elseif ($exception instanceof ForbiddenException) {
             Response::error($title, [$exception->getMessage()], 403);
+        } elseif ($exception instanceof RateLimitException) {
+            Response::error($title, [$exception->getMessage()], 429);
         } else {
             Response::error($title, ['An unexpected error occurred. Please try again later.'], 500);
         }

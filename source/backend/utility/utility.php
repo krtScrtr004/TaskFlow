@@ -325,9 +325,9 @@ function trimOrNull(?string $string): ?string
  *      - description: string
  *      - startDateTime: string
  *      - completionDateTime: string
- *      - actionDateTime: string
+ *      - actualCompletionDateTime: string
  * @param string[] $trimmableFields Optional list of keys whose values should be trimmed. Defaults to:
- *      ['name', 'description', 'startDateTime', 'completionDateTime', 'actionDateTime']
+ *      ['name', 'description', 'startDateTime', 'completionDateTime', 'actualCompletionDateTime']
  *
  * @return void
  */
@@ -338,7 +338,7 @@ function sanitizeData(
         'description',
         'startDateTime',
         'completionDateTime',
-        'actionDateTime'
+        'actualCompletionDateTime'
     ]
 ): void {
     foreach ($data as $key => $value) {

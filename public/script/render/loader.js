@@ -47,7 +47,10 @@ export const Loader = (() => {
         if (!parentElem) {
             return
         }
-        parentElem.style.position = 'relative'
+
+        const originalPosition = parentElem.style.position
+
+        parentElem.style.position = originalPosition === 'fixed' ? originalPosition : 'relative'
         parentElem.insertAdjacentHTML(position, loaderHtml)
         parent = parentElem
     }
@@ -137,6 +140,7 @@ export const Loader = (() => {
                 patchedElem.originalText = elementToPatch.textContent
                 patchedElem.parent.innerHTML = ''
             }
+            console.log(patchedElem.parent.style.position)
             render(patchedElem.parent, loaderElem, 'afterbegin')
         },
 

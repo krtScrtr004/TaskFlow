@@ -2,6 +2,7 @@
 
 namespace App\Endpoint;
 
+use App\Abstract\Endpoint;
 use App\Auth\HttpAuth;
 use App\Auth\SessionAuth;
 use App\Core\Me;
@@ -27,7 +28,7 @@ use Exception;
 use Throwable;
 use ValueError;
 
-class TaskEndpoint
+class TaskEndpoint extends Endpoint
 {
 
     /**
@@ -55,6 +56,8 @@ class TaskEndpoint
     public static function getById(array $args = []): void
     {
         try {
+            self::rateLimit();
+
             if (!HttpAuth::isGETRequest()) {
                 throw new ForbiddenException('Invalid HTTP request method.');
             }
@@ -141,6 +144,8 @@ class TaskEndpoint
     public static function getByKey(array $args = []): void
     {
         try {
+            self::rateLimit();
+
             if (!HttpAuth::isGETRequest()) {
                 throw new ForbiddenException('Invalid HTTP request method.');
             }
@@ -154,8 +159,8 @@ class TaskEndpoint
                 : null;
             if (!$projectId) {
                 throw new ForbiddenException('Project ID is required.');
-            } 
-            
+            }
+
             $project = ProjectModel::findById($projectId);
             if (!$project) {
                 throw new NotFoundException('Project not found.');
@@ -208,19 +213,19 @@ class TaskEndpoint
             }
 
             $options = [
-                'offset' => isset($_GET['offset']) ? (int)$_GET['offset'] : 0,
-                'limit' => isset($_GET['limit']) ? (int)$_GET['limit'] : 50,
+                'offset' => isset($_GET['offset']) ? (int) $_GET['offset'] : 0,
+                'limit' => isset($_GET['limit']) ? (int) $_GET['limit'] : 50,
             ];
 
             $tasks = TaskModel::search(
-                $key, 
-                $worker?->getId() ?? Me::getInstance()->getId(), 
-                $phase?->getId() ?? null, 
+                $key,
+                $worker?->getId() ?? Me::getInstance()->getId(),
+                $phase?->getId() ?? null,
                 $project->getId(),
-                $filter, 
+                $filter,
                 $options
             );
-    
+
             if (!$tasks) {
                 Response::success([], 'No tasks found for the specified phase.');
             } else {
@@ -274,6 +279,8 @@ class TaskEndpoint
     public static function add(array $args = []): void
     {
         try {
+            self::formRateLimit();
+
             if (!SessionAuth::hasAuthorizedSession()) {
                 throw new ForbiddenException();
             }
@@ -311,8 +318,8 @@ class TaskEndpoint
             $phase = isset($args['phaseId'])
                 ? PhaseModel::findById($phaseId)
                 : PhaseModel::findByScheduleBoundary(
-                    $project->getId(), 
-                    $data['startDateTime'] ?? null, 
+                    $project->getId(),
+                    $data['startDateTime'] ?? null,
                     $data['completionDateTime'] ?? null
                 );
             if (!$phase) {
@@ -343,7 +350,7 @@ class TaskEndpoint
             if (!isset($data['workerIds']) || !is_array($data['workerIds']) || count($data['workerIds']) < 1) {
                 throw new ForbiddenException('Worker IDs are required.');
             }
-            
+
             $temporaryId = 0;
             foreach ($workerIds as $workerId) {
                 $task->addWorker(Worker::createPartial([
@@ -398,6 +405,8 @@ class TaskEndpoint
     public static function edit(array $args = []): void
     {
         try {
+            self::formRateLimit();
+
             if (!SessionAuth::hasAuthorizedSession()) {
                 throw new ForbiddenException();
             }
@@ -509,5 +518,19 @@ class TaskEndpoint
         } catch (Throwable $e) {
             ResponseExceptionHandler::handle('Edit Task Failed.', $e);
         }
+    }
+
+    /**
+     * Not implemented (No use case)
+     */
+    public static function create(array $args = []): void
+    {
+    }
+
+    /**
+     * Not implemented (No use case)
+     */
+    public static function delete(array $args = []): void
+    {
     }
 }

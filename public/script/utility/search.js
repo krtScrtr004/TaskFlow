@@ -1,5 +1,18 @@
 import { debounce } from './debounce.js'
 
+let target = null
+
+document.addEventListener('DOMContentLoaded', () => {
+    const searchParams = new URLSearchParams(window.location.search)
+    const targetId = searchParams.get('target')
+    const target = targetId ? document.getElementById(targetId) : null
+
+    if (target) {
+        // Scroll to the target element if it exists
+        target.scrollIntoView({ behavior: 'smooth' })
+    }
+})
+
 /**
  * Attaches search functionality to a search bar form element.
  *
@@ -8,19 +21,23 @@ import { debounce } from './debounce.js'
  * to prevent rapid repeated submissions. Throws errors if required elements are not found.
  *
  * @param {HTMLFormElement} searchBarForm The form element containing the search bar and search button.
+ * @param {HTMLElement|null} targetSection An optional target section to focus on after search.
  * @throws {Error} If the search bar form is not found.
  * @throws {Error} If the search button within the form is not found.
  */
-export function search(searchBarForm) {
+export function search(searchBarForm, targetSection = null) {
     if (!searchBarForm) {
         throw new Error('Search Bar form not found.')
     }
+    target = targetSection
 
     const searchButton = searchBarForm?.querySelector('button.search-button')
 
     if (!searchButton) {
         throw new Error('Search Task button not found.')
     }
+    
+    // Create debounced submit handler    
     searchButton.addEventListener('click', e => debounce(submit(e, searchBarForm), 300))
     searchBarForm.addEventListener('submit', e => debounce(submit(e, searchBarForm), 300))
 }
@@ -45,6 +62,10 @@ function submit(e, searchBarForm) {
 
     const params = new URLSearchParams()
     params.append('key', key)
+
+    if (target) {
+        params.append('target', target.id)
+    }
 
     const searchFilter = searchBarForm?.querySelector('select.search-filter')
     if (searchFilter) {

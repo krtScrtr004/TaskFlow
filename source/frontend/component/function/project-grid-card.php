@@ -44,7 +44,7 @@ function projectGridCard(Project $project): string
 
     ob_start();
     ?>
-    <div class="project-grid-card">
+    <div class="project-grid-card grid-card">
         <a class="full-body-content flex-col" href="<?= REDIRECT_PATH . 'project' . DS . $id ?>">
 
             <!-- Primary Info -->
