@@ -47,30 +47,24 @@ abstract class Endpoint
     }
 
     /**
-     * Retrieve the client's IP address from server variables.
+     * Returns the client's IP address from the PHP server environment.
      *
-     * This method checks common server-provided headers in the following order:
-     * 1. HTTP_CLIENT_IP
-     * 2. HTTP_X_FORWARDED_FOR (may contain a comma-separated list of IPs)
-     * 3. REMOTE_ADDR
+     * This method reads the REMOTE_ADDR value from $_SERVER and returns it as a string.
+     * - Typical return values are IPv4 (e.g. "127.0.0.1") or IPv6 (e.g. "::1").
+     * - If $_SERVER['REMOTE_ADDR'] is not set (for example in CLI context or unusual server configs),
+     *   the method returns the literal string "UNKNOWN".
      *
-     * Behaviour details:
-     * - If HTTP_X_FORWARDED_FOR contains multiple addresses, the header value is returned as-is;
-     *   callers should parse and validate the first/appropriate entry if they need the originating IP.
-     * - These headers can be spoofed by clients. For security-sensitive use cases, ensure headers are
-     *   set or validated by a trusted proxy/load balancer before trusting the returned value.
+     * Note:
+     * - REMOTE_ADDR represents the immediate peer IP as seen by the web server. It does not account for
+     *   proxy headers such as X-Forwarded-For; if your application is behind proxies, handle and validate
+     *   those headers separately and only from trusted proxies.
      *
-     * @return string Client IP address, or the literal string 'UNKNOWN' if no address is available
+     * @return string Client IP address (IPv4/IPv6) or "UNKNOWN" when unavailable
      */
     public static function getIpAddress()
     {
-        if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
-            return $_SERVER['HTTP_CLIENT_IP'];
-        } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-            return $_SERVER['HTTP_X_FORWARDED_FOR'];
-        } else {
-            return $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN';
-        }
+        // NOTE: In production, consider validating/trusting proxy headers if behind a load balancer.
+        return $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN';
     }
 
     /**
