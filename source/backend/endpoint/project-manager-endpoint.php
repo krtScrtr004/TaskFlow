@@ -41,6 +41,8 @@ class ProjectManagerEndpoint extends Endpoint
     public static function getById(array $args = []): void
     {
         try {
+            self::rateLimit();
+            
             if (!HttpAuth::isGETRequest()) {
                 throw new ForbiddenException('Invalid HTTP request method.');
             }
@@ -75,12 +77,12 @@ class ProjectManagerEndpoint extends Endpoint
             }
 
             $manager = $managerId
-                ? ProjectManagerModel::findById($managerId,  $project->getId() ?? $projectId, true)
-                : ProjectManagerModel::findById($project->getManager()->getId(),  $project->getId() ?? $projectId, true);
+                ? ProjectManagerModel::findById($managerId, $project->getId() ?? $projectId, true)
+                : ProjectManagerModel::findById($project->getManager()->getId(), $project->getId() ?? $projectId, true);
             if (!$manager) {
                 throw new NotFoundException('Manager not found.');
-            } 
-            
+            }
+
             $projectHistory = $manager->getAdditionalInfo('projectHistory');
             if ($projectHistory !== null || $projectHistory !== []) {
                 $performance = ProjectManagerPerformanceCalculator::calculate($manager->getAdditionalInfo('projectHistory') ?? []);

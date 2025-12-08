@@ -47,6 +47,8 @@ class ProjectWorkerEndpoint extends Endpoint
     public static function getById(array $args = []): void
     {
         try {
+            self::rateLimit();
+
             if (!HttpAuth::isGETRequest()) {
                 throw new ForbiddenException('Invalid HTTP request method.');
             }
@@ -75,11 +77,11 @@ class ProjectWorkerEndpoint extends Endpoint
             }
 
 
-            $worker = ProjectWorkerModel::findById($workerId,  $project->getId() ?? null, true);
+            $worker = ProjectWorkerModel::findById($workerId, $project->getId() ?? null, true);
             if (!$worker) {
                 throw new NotFoundException('Worker not found.');
             }
-            
+
             $projectHistory = $worker->getAdditionalInfo('projectHistory');
             if ($projectHistory !== null || $projectHistory !== []) {
                 $performance = WorkerPerformanceCalculator::calculate($worker->getAdditionalInfo('projectHistory'));
@@ -127,6 +129,8 @@ class ProjectWorkerEndpoint extends Endpoint
     public static function getByKey(array $args = []): void
     {
         try {
+            self::rateLimit();
+
             if (!HttpAuth::isGETRequest()) {
                 throw new ForbiddenException('Invalid HTTP request method.');
             }
@@ -179,9 +183,9 @@ class ProjectWorkerEndpoint extends Endpoint
                     $project->getId() ?? $projectId,
                     $status,
                     [
-                        'excludeProjectTerminated'  => $excludeProjectTerminated,
-                        'limit'                     => isset($_GET['limit']) ? (int) $_GET['limit'] : 10,
-                        'offset'                    => isset($_GET['offset']) ? (int) $_GET['offset'] : 0,
+                        'excludeProjectTerminated' => $excludeProjectTerminated,
+                        'limit' => isset($_GET['limit']) ? (int) $_GET['limit'] : 10,
+                        'offset' => isset($_GET['offset']) ? (int) $_GET['offset'] : 0,
                     ]
                 );
             }
@@ -227,6 +231,8 @@ class ProjectWorkerEndpoint extends Endpoint
     public static function add(array $args = []): void
     {
         try {
+            self::formRateLimit();
+
             if (!SessionAuth::hasAuthorizedSession()) {
                 throw new ForbiddenException();
             }
@@ -253,13 +259,13 @@ class ProjectWorkerEndpoint extends Endpoint
             if (!isset($data['workerIds']) || !is_array($data['workerIds']) || count($data['workerIds']) < 1) {
                 throw new ForbiddenException('Worker IDs are required.');
             }
-            
+
             $ids = [];
             foreach ($workerIds as $workerId) {
                 $ids[] = UUID::fromString($workerId);
             }
             ProjectWorkerModel::createMultiple($project->getId(), $ids);
-            
+
             Response::success([], 'Workers added successfully.');
         } catch (Throwable $e) {
             ResponseExceptionHandler::handle('Add Workers Failed.', $e);
@@ -296,6 +302,8 @@ class ProjectWorkerEndpoint extends Endpoint
     public static function edit(array $args = []): void
     {
         try {
+            self::formRateLimit();
+
             if (!SessionAuth::hasAuthorizedSession()) {
                 throw new ForbiddenException();
             }
@@ -313,8 +321,8 @@ class ProjectWorkerEndpoint extends Endpoint
                 throw new NotFoundException('Project not found.');
             }
 
-            $workerId = isset($args['workerId']) 
-                ? UUID::fromString($args['workerId']) 
+            $workerId = isset($args['workerId'])
+                ? UUID::fromString($args['workerId'])
                 : null;
             if (!isset($workerId)) {
                 throw new ForbiddenException('Worker ID is required.');
@@ -331,9 +339,9 @@ class ProjectWorkerEndpoint extends Endpoint
             }
 
             ProjectWorkerModel::save([
-                'projectId'     => $project->getId(),
-                'workerId'      => $worker->getId(),
-                'status'        => isset($data['status']) ? WorkerStatus::from($data['status']) : null,
+                'projectId' => $project->getId(),
+                'workerId' => $worker->getId(),
+                'status' => isset($data['status']) ? WorkerStatus::from($data['status']) : null,
             ]);
 
             Response::success([], 'Worker status updated successfully.');
@@ -367,6 +375,8 @@ class ProjectWorkerEndpoint extends Endpoint
     public static function delete(array $args = []): void
     {
         try {
+            self::formRateLimit();
+
             if (!SessionAuth::hasAuthorizedSession()) {
                 throw new ForbiddenException();
             }
@@ -384,8 +394,8 @@ class ProjectWorkerEndpoint extends Endpoint
                 throw new NotFoundException('Project not found.');
             }
 
-            $workerId = isset($args['workerId']) 
-                ? UUID::fromString($args['workerId']) 
+            $workerId = isset($args['workerId'])
+                ? UUID::fromString($args['workerId'])
                 : null;
             if (!isset($workerId)) {
                 throw new ForbiddenException('Worker ID is required.');
@@ -397,8 +407,8 @@ class ProjectWorkerEndpoint extends Endpoint
             }
 
             ProjectWorkerModel::delete([
-                'projectId'     => $project->getId(),
-                'workerId'      => $worker->getId(),
+                'projectId' => $project->getId(),
+                'workerId' => $worker->getId(),
             ]);
 
             Response::success([], 'Worker removed from project successfully.');

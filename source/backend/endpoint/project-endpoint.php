@@ -28,6 +28,7 @@ use ValueError;
 
 class ProjectEndpoint extends Endpoint
 {
+
     /**
      * Retrieves projects by key with optional filtering and pagination.
      *
@@ -54,6 +55,8 @@ class ProjectEndpoint extends Endpoint
     public static function getByKey(array $args = []): void
     {
         try {
+            self::rateLimit();
+
             if (!HttpAuth::isGETRequest()) {
                 throw new ForbiddenException('Invalid HTTP request method.');
             }
@@ -88,16 +91,17 @@ class ProjectEndpoint extends Endpoint
             }
 
             $options = [
-                'offset' => isset($_GET['offset']) ? (int)$_GET['offset'] : 0,
-                'limit' => isset($_GET['limit']) ? (int)$_GET['limit'] : 50,
+                'offset' => isset($_GET['offset']) ? (int) $_GET['offset'] : 0,
+                'limit' => isset($_GET['limit']) ? (int) $_GET['limit'] : 50,
             ];
 
             $projects = ProjectModel::search(
-                $key, 
-                Me::getInstance()->getId(), 
+                $key,
+                Me::getInstance()->getId(),
                 $status,
-                $options);
-    
+                $options
+            );
+
             if (!$projects) {
                 Response::success([], 'No tasks found for the specified project.');
             } else {
@@ -164,6 +168,8 @@ class ProjectEndpoint extends Endpoint
     public static function create(array $args = []): void
     {
         try {
+            self::formRateLimit();
+
             if (!SessionAuth::hasAuthorizedSession()) {
                 throw new ForbiddenException();
             }
@@ -216,7 +222,7 @@ class ProjectEndpoint extends Endpoint
                 $phase['id'] = $index++;
                 // Determine phase status
                 $phase['status'] = WorkStatus::getStatusFromDates(
-                    new DateTime($phase['startDateTime']), 
+                    new DateTime($phase['startDateTime']),
                     new DateTime($phase['completionDateTime'])
                 );
 
@@ -303,6 +309,8 @@ class ProjectEndpoint extends Endpoint
     public static function edit(array $args = []): void
     {
         try {
+            self::formRateLimit();
+
             if (!SessionAuth::hasAuthorizedSession()) {
                 throw new ForbiddenException();
             }
@@ -378,7 +386,7 @@ class ProjectEndpoint extends Endpoint
                     }
 
                     $startDateTime = isset($value['startDateTime'])
-                        ? new DateTime($value['startDateTime']) 
+                        ? new DateTime($value['startDateTime'])
                         : $existingPhase->getStartDateTime();
                     $completionDateTime = isset($value['completionDateTime'])
                         ? new DateTime($value['completionDateTime'])
@@ -400,34 +408,34 @@ class ProjectEndpoint extends Endpoint
                     if ($key === 'toEdit') {
                         // Phase to edit
                         $validator->validateMultiple([
-                            'description'           => $value['description'],
-                            'startDateTime'         => $startDateTime,
-                            'completionDateTime'    => $completionDateTime
+                            'description' => $value['description'],
+                            'startDateTime' => $startDateTime,
+                            'completionDateTime' => $completionDateTime
                         ]);
                         if ($validator->hasErrors()) {
                             throw new ValidationException('Phase Validation Failed.', $validator->getErrors());
                         }
                         $phases['toEdit'][] = [
-                            'publicId'              => UUID::fromString($value['id']),
-                            'description'           => $value['description'],
-                            'startDateTime'         => $startDateTime,
-                            'completionDateTime'    => $completionDateTime,
-                            'status'                => WorkStatus::getStatusFromDates($startDateTime, $completionDateTime)
+                            'publicId' => UUID::fromString($value['id']),
+                            'description' => $value['description'],
+                            'startDateTime' => $startDateTime,
+                            'completionDateTime' => $completionDateTime,
+                            'status' => WorkStatus::getStatusFromDates($startDateTime, $completionDateTime)
                         ];
                     } elseif ($key === 'toAdd') {
                         // New phase to add
                         $phases['toAdd']->add(Phase::createPartial([
-                            'name'                  => $value['name'],
-                            'description'           => $value['description'],
-                            'startDateTime'         => $startDateTime,
-                            'completionDateTime'    => $completionDateTime,
-                            'status'                => WorkStatus::getStatusFromDates($startDateTime, $completionDateTime)
+                            'name' => $value['name'],
+                            'description' => $value['description'],
+                            'startDateTime' => $startDateTime,
+                            'completionDateTime' => $completionDateTime,
+                            'status' => WorkStatus::getStatusFromDates($startDateTime, $completionDateTime)
                         ]));
                     } else {
                         // Phase to cancel
                         $phases['toEdit'][] = [
-                            'publicId'              => UUID::fromString($value['id']),
-                            'status'                => WorkStatus::CANCELLED
+                            'publicId' => UUID::fromString($value['id']),
+                            'status' => WorkStatus::CANCELLED
                         ];
                     }
                 }

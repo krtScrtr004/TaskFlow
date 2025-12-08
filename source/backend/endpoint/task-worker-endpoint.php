@@ -45,6 +45,8 @@ class TaskWorkerEndpoint extends Endpoint
     public static function getById(array $args = []): void
     {
         try {
+            self::rateLimit();
+
             if (!HttpAuth::isGETRequest()) {
                 throw new ForbiddenException('Invalid HTTP request method.');
             }
@@ -79,7 +81,7 @@ class TaskWorkerEndpoint extends Endpoint
                 throw new ForbiddenException('Phase ID is required.');
             }
 
-            $taskId =  isset($args['taskId'])
+            $taskId = isset($args['taskId'])
                 ? UUID::fromString($args['taskId'])
                 : null;
             if (!$taskId) {
@@ -91,10 +93,10 @@ class TaskWorkerEndpoint extends Endpoint
                 throw new NotFoundException('Task not found.');
             }
 
-            $worker = TaskWorkerModel::findById($workerId,  $task->getId() ?? null,  null, $project->getId() ?? null);
+            $worker = TaskWorkerModel::findById($workerId, $task->getId() ?? null, null, $project->getId() ?? null);
             if (!$worker) {
                 throw new NotFoundException('Worker not found.');
-            } 
+            }
 
             Response::success([$worker], 'Worker fetched successfully.');
         } catch (Throwable $e) {
@@ -142,6 +144,8 @@ class TaskWorkerEndpoint extends Endpoint
     public static function getByKey(array $args = []): void
     {
         try {
+            self::rateLimit();
+
             if (!HttpAuth::isGETRequest()) {
                 throw new ForbiddenException('Invalid HTTP request method.');
             }
@@ -224,9 +228,9 @@ class TaskWorkerEndpoint extends Endpoint
                     $project?->getId() ?? null,
                     $status,
                     [
-                        'excludeTaskTerminated'  => $excludeTaskTerminated,
-                        'limit'                     => isset($_GET['limit']) ? (int) $_GET['limit'] : 10,
-                        'offset'                    => isset($_GET['offset']) ? (int) $_GET['offset'] : 0,
+                        'excludeTaskTerminated' => $excludeTaskTerminated,
+                        'limit' => isset($_GET['limit']) ? (int) $_GET['limit'] : 10,
+                        'offset' => isset($_GET['offset']) ? (int) $_GET['offset'] : 0,
                     ]
                 );
             }
@@ -277,6 +281,8 @@ class TaskWorkerEndpoint extends Endpoint
     public static function add(array $args = []): void
     {
         try {
+            self::formRateLimit();
+
             if (!SessionAuth::hasAuthorizedSession()) {
                 throw new ForbiddenException();
             }
@@ -322,19 +328,18 @@ class TaskWorkerEndpoint extends Endpoint
             if (!isset($data['workerIds']) || !is_array($data['workerIds']) || count($data['workerIds']) < 1) {
                 throw new ForbiddenException('Worker IDs are required.');
             }
-            
+
             $ids = [];
             foreach ($workerIds as $workerId) {
                 $ids[] = UUID::fromString($workerId);
             }
             TaskWorkerModel::createMultiple($taskId, $ids);
-            
+
             Response::success([], 'Workers added successfully.');
         } catch (Throwable $e) {
             ResponseExceptionHandler::handle('Add Worker Failed.', $e);
         }
     }
-
 
     /**
      * Edits the status of a worker assigned to a specific task within a project phase.
@@ -366,6 +371,8 @@ class TaskWorkerEndpoint extends Endpoint
     public static function edit(array $args = []): void
     {
         try {
+            self::formRateLimit();
+
             if (!SessionAuth::hasAuthorizedSession()) {
                 throw new ForbiddenException();
             }
@@ -386,7 +393,7 @@ class TaskWorkerEndpoint extends Endpoint
             }
 
             $taskId = isset($args['taskId'])
-                ? UUID::fromString($args['taskId']) 
+                ? UUID::fromString($args['taskId'])
                 : null;
             if (!$taskId) {
                 throw new ForbiddenException('Task ID is required.');
@@ -418,9 +425,9 @@ class TaskWorkerEndpoint extends Endpoint
             }
 
             TaskWorkerModel::save([
-                'taskId'        => $task->getId(),
-                'workerId'      => $worker->getId(),
-                'status'        => isset($data['status']) ? WorkerStatus::from($data['status']) : null,
+                'taskId' => $task->getId(),
+                'workerId' => $worker->getId(),
+                'status' => isset($data['status']) ? WorkerStatus::from($data['status']) : null,
             ]);
 
             Response::success([], 'Worker status updated successfully.');
@@ -460,6 +467,8 @@ class TaskWorkerEndpoint extends Endpoint
     public static function delete(array $args = []): void
     {
         try {
+            self::formRateLimit();
+
             if (!SessionAuth::hasAuthorizedSession()) {
                 throw new ForbiddenException();
             }
@@ -501,8 +510,8 @@ class TaskWorkerEndpoint extends Endpoint
                 throw new NotFoundException('Task not found.');
             }
 
-            $workerId = isset($args['workerId']) 
-                ? UUID::fromString($args['workerId']) 
+            $workerId = isset($args['workerId'])
+                ? UUID::fromString($args['workerId'])
                 : null;
             if (!isset($workerId)) {
                 throw new ForbiddenException('Worker ID is required.');
@@ -514,8 +523,8 @@ class TaskWorkerEndpoint extends Endpoint
             }
 
             TaskWorkerModel::delete([
-                'taskId'        => $task->getId(),
-                'workerId'      => $worker->getId(),
+                'taskId' => $task->getId(),
+                'workerId' => $worker->getId(),
             ]);
 
             Response::success([], 'Worker removed from task successfully.');

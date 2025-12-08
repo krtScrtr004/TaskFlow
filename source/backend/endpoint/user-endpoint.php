@@ -52,6 +52,8 @@ class UserEndpoint extends Endpoint
     public static function getById(array $args = []): void
     {
         try {
+            self::rateLimit();
+            
             if (!HttpAuth::isGETRequest()) {
                 throw new ForbiddenException('Invalid HTTP request method.');
             }
@@ -73,7 +75,7 @@ class UserEndpoint extends Endpoint
             } else {
                 $projectHistory = $user->getAdditionalInfo('projectHistory');
                 if ($projectHistory !== null || $projectHistory !== []) {
-                    $performance =  (Role::isProjectManager($user)) 
+                    $performance = (Role::isProjectManager($user))
                         ? ProjectManagerPerformanceCalculator::calculate($projectHistory)
                         : WorkerPerformanceCalculator::calculate($projectHistory);
                     $user->addAdditionalInfo('performance', $performance['overallScore']);
@@ -114,6 +116,8 @@ class UserEndpoint extends Endpoint
     public static function getByKey(array $args = []): void
     {
         try {
+            self::rateLimit();
+
             if (!HttpAuth::isGETRequest()) {
                 throw new ForbiddenException('Invalid HTTP request method.');
             }
@@ -183,6 +187,8 @@ class UserEndpoint extends Endpoint
     public static function edit(array $args = []): void
     {
         try {
+            self::formRateLimit();
+
             if (!SessionAuth::hasAuthorizedSession()) {
                 throw new ForbiddenException();
             }
@@ -293,23 +299,23 @@ class UserEndpoint extends Endpoint
                 if (Session::has('userData')) {
                     $updatedUser = Me::getInstance();
                     Session::set('userData', [
-                        'id'                => $updatedUser->getId(),
-                        'publicId'          => UUID::toString($updatedUser->getPublicId()),
-                        'firstName'         => $updatedUser->getFirstName(),
-                        'middleName'        => $updatedUser->getMiddleName(),
-                        'lastName'          => $updatedUser->getLastName(),
-                        'gender'            => $updatedUser->getGender()->value,
-                        'birthDate'         => $updatedUser->getBirthDate()?->format('Y-m-d'),
-                        'role'              => $updatedUser->getRole()->value,
-                        'jobTitles'         => implode(',', $updatedUser->getJobTitles()->toArray()),
-                        'contactNumber'     => $updatedUser->getContactNumber(),
-                        'email'             => $updatedUser->getEmail(),
-                        'bio'               => $updatedUser->getBio(),
-                        'profileLink'       => $updatedUser->getProfileLink(),
-                        'createdAt'         => $updatedUser->getCreatedAt()->format('Y-m-d H:i:s'),
-                        'confirmedAt'       => $updatedUser->getConfirmedAt()?->format('Y-m-d H:i:s'),
-                        'deletedAt'         => $updatedUser->getDeletedAt()?->format('Y-m-d H:i:s'),
-                        'additionalInfo'    => $updatedUser->getAdditionalInfo()
+                        'id' => $updatedUser->getId(),
+                        'publicId' => UUID::toString($updatedUser->getPublicId()),
+                        'firstName' => $updatedUser->getFirstName(),
+                        'middleName' => $updatedUser->getMiddleName(),
+                        'lastName' => $updatedUser->getLastName(),
+                        'gender' => $updatedUser->getGender()->value,
+                        'birthDate' => $updatedUser->getBirthDate()?->format('Y-m-d'),
+                        'role' => $updatedUser->getRole()->value,
+                        'jobTitles' => implode(',', $updatedUser->getJobTitles()->toArray()),
+                        'contactNumber' => $updatedUser->getContactNumber(),
+                        'email' => $updatedUser->getEmail(),
+                        'bio' => $updatedUser->getBio(),
+                        'profileLink' => $updatedUser->getProfileLink(),
+                        'createdAt' => $updatedUser->getCreatedAt()->format('Y-m-d H:i:s'),
+                        'confirmedAt' => $updatedUser->getConfirmedAt()?->format('Y-m-d H:i:s'),
+                        'deletedAt' => $updatedUser->getDeletedAt()?->format('Y-m-d H:i:s'),
+                        'additionalInfo' => $updatedUser->getAdditionalInfo()
                     ]);
                 }
             }
@@ -345,6 +351,8 @@ class UserEndpoint extends Endpoint
     public static function delete(array $args = []): void
     {
         try {
+            self::formRateLimit();
+
             if (!SessionAuth::hasAuthorizedSession()) {
                 throw new ForbiddenException();
             }

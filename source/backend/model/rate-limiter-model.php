@@ -203,41 +203,26 @@ class RateLimiterModel extends Model
     }
 
     /**
-     * Return a list of rate limiter records.
-     *
-     * @param int $offset
-     * @param int $limit
-     * @return mixed
-     */
+    * Not implemented (No use case)
+    */
     public static function all(int $offset = 0, int $limit = 10): mixed
     {
-        // TODO: implement actual data retrieval using the Model / DB layer.
         return [];
     }
 
     /**
-     * Delete a rate limiter record.
-     *
-     * @param mixed $data
-     * @return bool
-     */
+    * Not implemented (No use case)
+    */
     protected static function delete(mixed $data): bool
     {
-        // TODO: implement deletion logic.
         return false;
     }
 
     /**
-     * Find one or more rate limiter records by a where clause.
-     *
-     * @param string $whereClause
-     * @param array $params
-     * @param array $options
-     * @return mixed
-     */
+    * Not implemented (No use case)
+    */
     protected static function find(string $whereClause = '', array $params = [], array $options = []): mixed
     {
-        // TODO: implement lookup logic and return results or null.
         return null;
     }
 }

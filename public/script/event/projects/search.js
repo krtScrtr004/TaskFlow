@@ -9,6 +9,6 @@ try {
     // Initialize search functionality for projects
     search(searchBarForm, targetSection)
 } catch (error) {
-    handleException(error, 'Error initializing search functionality:', error)
+    handleException(error, 'Error initializing search functionality:' + error)
 }
 

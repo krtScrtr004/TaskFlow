@@ -7,7 +7,6 @@ use App\Core\Session;
 use App\Entity\User;
 use App\Enumeration\Role;
 use App\Exception\DatabaseException;
-use App\Interface\Controller;
 use App\Middleware\Csrf;
 use App\Middleware\Response;
 use App\Validator\UserValidator;
@@ -19,6 +18,7 @@ use App\Core\Me;
 use App\Exception\ForbiddenException;
 use App\Exception\NotFoundException;
 use App\Exception\ValidationException;
+use App\Middleware\RateLimiter;
 use App\Model\TemporaryLinkModel;
 use App\Service\AuthService;
 use App\Utility\ResponseExceptionHandler;
@@ -33,6 +33,7 @@ class AuthEndpoint extends Endpoint
     private function __construct()
     {
         $this->service = new AuthService();
+        $this->rateLimiter = new RateLimiter();
     }
 
     /**
@@ -40,6 +41,7 @@ class AuthEndpoint extends Endpoint
      *
      * This method performs the following steps:
      * - Protects against CSRF attacks.
+     * - Applies rate limiting to prevent excessive login attempts.
      * - Decodes incoming JSON data from the request body.
      * - Validates the provided email and password using UserValidator.
      * - Checks user credentials against the database.
@@ -55,7 +57,9 @@ class AuthEndpoint extends Endpoint
     public static function login(): void
     {
         try {
+            // Protection guards
             Csrf::protect();
+            self::rateLimit(5, 900); // 5 requests per 15 minutes
 
             $data = decodeData('php://input');
             if (!$data) {
@@ -128,6 +132,8 @@ class AuthEndpoint extends Endpoint
     {
         try {
             Csrf::protect();
+            self::rateLimit(5, 1800); // 5 requests per 30 minutes
+
             $instance = new self();
 
             $data = decodeData('php://input');
@@ -232,6 +238,7 @@ class AuthEndpoint extends Endpoint
      * Logs out the current user by destroying the session and user context.
      *
      * This method performs the following actions:
+     * - Applies rate limiting to prevent excessive logout attempts (20 requests per 30 seconds).
      * - Destroys the current session using Session::destroy()
      * - Removes the current user context with Me::destroy()
      * - Returns a success response if logout is successful
@@ -242,8 +249,9 @@ class AuthEndpoint extends Endpoint
     public static function logout(): void
     {
         try {
-            Session::destroy();
+            self::rateLimit(20, 30); // 20 requests per 30 seconds
 
+            Session::destroy();
             Me::destroy();
 
             Response::success([], 'Logout successful.');
@@ -333,6 +341,7 @@ class AuthEndpoint extends Endpoint
      *
      * This method performs the following steps:
      * - Protects against CSRF attacks.
+     * - Applies rate limiting to prevent excessive reset password requests (3 requests per hour).
      * - Decodes input data from the request body.
      * - Validates the provided email address.
      * - Checks if a user with the given email exists.
@@ -351,6 +360,8 @@ class AuthEndpoint extends Endpoint
     {
         try {
             Csrf::protect();
+            self::rateLimit(3, 3600); // 3 requests per hour
+
             $instance = new self();
 
             $data = decodeData('php://input');
@@ -401,6 +412,7 @@ class AuthEndpoint extends Endpoint
      *
      * This method performs the following steps:
      * - Protects against CSRF attacks.
+     * - Applies rate limiting to prevent excessive password change attempts (3 requests per hour).
      * - Extracts the user's email from session or authenticated user instance.
      * - Validates the existence of the user by email.
      * - Decodes and validates the new password from the request body.
@@ -421,6 +433,7 @@ class AuthEndpoint extends Endpoint
     {
         try {
             Csrf::protect();
+            self::rateLimit(3, 3600); // 3 requests per hour
 
             $data = decodeData('php://input');
             if (!$data) {

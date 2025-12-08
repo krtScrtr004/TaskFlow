@@ -28,7 +28,7 @@ try {
         getExistingItemsCount()
     )
 } catch (error) {
-    handleException(error, 'Error initializing infinite scroll:', error)
+    handleException(error, 'Error initializing infinite scroll:' + error)
 }
 
 /**

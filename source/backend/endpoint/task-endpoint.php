@@ -56,6 +56,8 @@ class TaskEndpoint extends Endpoint
     public static function getById(array $args = []): void
     {
         try {
+            self::rateLimit();
+
             if (!HttpAuth::isGETRequest()) {
                 throw new ForbiddenException('Invalid HTTP request method.');
             }
@@ -142,6 +144,8 @@ class TaskEndpoint extends Endpoint
     public static function getByKey(array $args = []): void
     {
         try {
+            self::rateLimit();
+
             if (!HttpAuth::isGETRequest()) {
                 throw new ForbiddenException('Invalid HTTP request method.');
             }
@@ -275,6 +279,8 @@ class TaskEndpoint extends Endpoint
     public static function add(array $args = []): void
     {
         try {
+            self::formRateLimit();
+
             if (!SessionAuth::hasAuthorizedSession()) {
                 throw new ForbiddenException();
             }
@@ -399,6 +405,8 @@ class TaskEndpoint extends Endpoint
     public static function edit(array $args = []): void
     {
         try {
+            self::formRateLimit();
+
             if (!SessionAuth::hasAuthorizedSession()) {
                 throw new ForbiddenException();
             }

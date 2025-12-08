@@ -24,6 +24,7 @@ class AboutUsEndpoint extends Endpoint
      *
      * This method:
      * - Protects the request against CSRF attacks via Csrf::protect()
+     * - Applies rate limiting using RateLimiter middleware (5 requests per minute)
      * - Decodes the request body from php://input into an associative array
      * - Validates required fields (fullName, email, message) using UserValidator
      * - Sanitizes validated input via sanitizeData()
@@ -47,6 +48,13 @@ class AboutUsEndpoint extends Endpoint
     {
         try {
             Csrf::protect();
+
+            $instance = new self();
+            $instance->rateLimiter->handle(
+                $instance->getIpAddress(), 
+                $instance->getEndpointName(), 
+                ['limit' => 5, 'timeWindow' => 60] // 5 requests per minute
+            );
 
             $data = decodeData('php://input');
             if (!$data) {
