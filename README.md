@@ -56,6 +56,13 @@ TaskFlow is a comprehensive PHP-based project management system designed to mana
 
 ### Option 1: Automated Installation (Recommended)
 
+Open PowerShell (Windows) or Bash (Linux / Mac)
+
+Navigate to:
+```powershell
+cd C:\path\to\TaskFlow\folder
+```
+
 #### For Windows (PowerShell):
 ```powershell
 .\install.ps1
@@ -315,7 +322,7 @@ After importing the database, use the following credentials (if seeded):
 
 ## 📄 License
 
-This project is licensed under the ISC License.
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
 
 ---
 
