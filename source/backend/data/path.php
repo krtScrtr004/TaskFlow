@@ -1,9 +1,9 @@
 <?php
 
-define('ROOT_PATH', dirname(__DIR__, 3) . '/');
+define('ROOT_PATH', dirname(__DIR__, 3) . DS);
 
 define('ABS_PATH',  ROOT_PATH . 'source' . DS);
-define('REDIRECT_PATH', 'http://localhost/TaskFlow/');
+define('REDIRECT_PATH', 'http://localhost:8080/TaskFlow/');
 define('VENDOR_PATH', ROOT_PATH . 'vendor' . DS);
 
 // Absolute paths
@@ -43,7 +43,7 @@ define('BE_UTILITY_PATH', BACKEND_PATH . 'utility' . DS);
 define('FE_UTILITY_PATH', FRONTEND_PATH . 'utility' . DS);
 
 // Relative paths
-define('PUBLIC_PATH', DS . 'TaskFlow' . DS . 'public' . DS);
+define('PUBLIC_PATH','public' . DS);
 
 define('ASSET_PATH', 'asset' . DS);
 define('SCRIPT_PATH', 'script' . DS);
