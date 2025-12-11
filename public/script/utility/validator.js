@@ -103,11 +103,11 @@ export function userValidationRules() {
                 const errors = []
                 if (inputs.middleName && inputs.middleName.trim() !== '' && (inputs.middleName.length < LENGTH_VALIDATION.name.min || inputs.middleName.length > LENGTH_VALIDATION.name.max)) {
                     errors.push(`Middle name must be between ${LENGTH_VALIDATION.name.min} and ${LENGTH_VALIDATION.name.max} characters long.`)
-                } else if (!/^[a-zA-Z\s'-.]{0,255}$/.test(inputs.middleName)) {
+                } else if (inputs.middleName && inputs.middleName.trim() !== '' && !/^[a-zA-Z\s'-.]{0,255}$/.test(inputs.middleName)) {
                     errors.push('Middle name contains invalid characters.')
                 }
                 
-                if (inputs.middleName && hasConsecutiveSpecialChars(inputs.middleName.trim())) {
+                if (inputs.middleName && inputs.middleName.trim() !== '' && hasConsecutiveSpecialChars(inputs.middleName.trim())) {
                     errors.push('Middle name contains three or more consecutive special characters.')
                 }
                 return errors

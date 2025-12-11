@@ -66,7 +66,11 @@ class UserValidator extends Validator
      */
     public function validateMiddleName(?string $middleName): void
     {
-        if ($middleName === null || trim($middleName) === '' || strlen($middleName) < NAME_MIN || strlen($middleName) > NAME_MAX) {
+        if (!$middleName || trim($middleName) === '') {
+            return;
+        }
+
+        if (strlen($middleName) < NAME_MIN || strlen($middleName) > NAME_MAX) {
             $this->errors[] = 'Middle name must be between ' . NAME_MIN . ' and ' . NAME_MAX . ' characters long.';
         }
 

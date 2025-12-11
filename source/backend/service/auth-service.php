@@ -98,5 +98,11 @@ class AuthService
     private function sendTemporaryLink(string $email, string $subject, string $body): bool
     {
         return Email::sendHtml($email, $subject, $body);
+        // return Email::sendPlain($_ENV['MAIL_USERNAME'], "Concern from $name", $message, [
+        //     'userFrom' => 'TaskFlow Support',
+        //     'userTo' => 'TaskFlow Support',
+        //     'replyTo' => $email,
+        //     'replyToName' => $name
+        // ]);
     }
 }

@@ -23,7 +23,7 @@ export function errorListDialog(
         <div class="error-list-dialog modal dialog flex-col black-bg">
             <section class="heading">
                 <div class="text-w-icon">
-                    <img src="w/public/asset/image/icon/reject.svg" alt="Error" title="Error" height="28">
+                    <img src="/public/asset/image/icon/reject.svg" alt="Error" title="Error" height="28">
                     <h3 class="wrap-text red-text">${title}</h3>
                 </div>
             </section>
