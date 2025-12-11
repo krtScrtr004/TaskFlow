@@ -926,7 +926,7 @@ class ProjectWorkerModel extends Model
                 $worker = Worker::createPartial([
                     'id'                    => $result['id'],
                     'publicId'              => $result['public_id'],
-                    'firstName'             => $result['firstN_name'],
+                    'firstName'             => $result['first_name'],
                     'middleName'            => $result['middle_name'],
                     'lastName'              => $result['last_name'],
                     'bio'                   => $result['bio'],
