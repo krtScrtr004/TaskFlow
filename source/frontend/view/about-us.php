@@ -14,6 +14,7 @@ use App\Middleware\Csrf;
     <title>About Us</title>
 
     <base href="<?= PUBLIC_PATH ?>">
+    <link rel="icon" type="image/x-icon" href="<?= IMAGE_PATH . 'logo-dark.ico' ?>">
     <link rel="stylesheet" href="<?= STYLE_PATH . 'root.css' ?>">
     <link rel="stylesheet" href="<?= STYLE_PATH . 'utility.css' ?>">
     <link rel="stylesheet" href="<?= STYLE_PATH . 'component.css' ?>">
