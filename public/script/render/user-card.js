@@ -84,7 +84,7 @@ export async function userInfoCard(userId, asyncFunction) {
  * @returns {void}
  */
 function addInfoToCard(card, user) {
-    const ICON_PATH = 'asset/image/icon/'
+    const ICON_PATH = '/public/asset/image/icon/'
 
     // Get DOM elements within the card
     const domElements = getCardDomElements(card)

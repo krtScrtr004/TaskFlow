@@ -1,6 +1,6 @@
 import { hideModal } from '../utility/hide-modal.js'
 
-const ICON_PATH = 'asset/image/icon/'
+const ICON_PATH = '/public/asset/image/icon/'
 const icons = ['confirm.svg', 'reject.svg']
 
 /**

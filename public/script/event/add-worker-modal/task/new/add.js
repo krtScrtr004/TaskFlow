@@ -114,7 +114,7 @@ function createWorkerPrimaryInfo(name, workerId, profileImage) {
         workerIcon.src = profileImage
         workerIcon.className = 'worker-profile-image'
     } else {
-        workerIcon.src = '/TaskFlow/public/asset/image/icon/worker_w.svg'
+        workerIcon.src = '/public/asset/image/icon/worker_w.svg'
     }
     workerIcon.alt = name
     workerIcon.title = name
@@ -140,7 +140,7 @@ function createWorkerPrimaryInfo(name, workerId, profileImage) {
     removeButton.className = 'unset-button'
 
     const removeIcon = document.createElement('img')
-    removeIcon.src = '/TaskFlow/public/asset/image/icon/delete_r.svg'
+    removeIcon.src = '/public/asset/image/icon/delete_r.svg'
     removeIcon.alt = 'Remove Worker'
     removeIcon.title = 'Remove Worker'
     removeIcon.height = 18
@@ -197,14 +197,14 @@ function createWorkerStatistics(totalTasks, completedTasks) {
 
     // Create performance statistic
     const performanceDiv = createStatisticItem(
-        '/TaskFlow/public/asset/image/icon/progress_w.svg',
+        '/public/asset/image/icon/progress_w.svg',
         'Total Tasks',
         `Total Tasks: ${totalTasks}`
     )
 
     // Create completed tasks statistic
     const tasksDiv = createStatisticItem(
-        '/TaskFlow/public/asset/image/icon/task_w.svg',
+        '/public/asset/image/icon/task_w.svg',
         'Worker Completed Task',
         `Completed Tasks: ${completedTasks}`
     )

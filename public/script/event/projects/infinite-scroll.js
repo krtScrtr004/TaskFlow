@@ -98,7 +98,7 @@ async function asyncFunction(offset) {
  * @returns {HTMLElement} The project grid card element
  */
 function domCreator(project) {
-    const ICON_PATH = 'asset/image/icon/'
+    const ICON_PATH = '/public/asset/image/icon/'
     const REDIRECT_PATH = '/TaskFlow/home/' 
     const id = project.id
     const name = project.name
