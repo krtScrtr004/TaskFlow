@@ -614,6 +614,9 @@ class Project implements Entity
      */
     public static function createPartial(array $data): self
     {
+        // Normalize input keys to camelCase to support both snake_case and camelCase input
+        $data = normalizeArrayKeysToCamelCase($data);
+
         // Provide default values for required fields
         $defaults = [
             'id'                        => $data['id'] ?? 0,
@@ -741,18 +744,19 @@ class Project implements Entity
      *      - status: string Display name of the project status
      *      - createdAt: string Formatted creation date/time,
      *      - additionalInfo: array Additional project information
+     * @param bool $useSnakeCase Whether to use snake_case keys (true) or camelCase keys (false, default)
      */
-    public function toArray(): array
+    public function toArray(bool $useSnakeCase = false): array
     {
-        return [
+        $data = [
             'id' => UUID::toString($this->publicId),
             'name' => $this->name,
             'description' => $this->description,
-            'manager' => $this->manager->toArray(),
+            'manager' => $this->manager->toArray($useSnakeCase),
             'budget' => $this->budget,
-            'tasks' => $this->tasks?->toArray() ?? [],
-            'workers' => $this->workers?->toArray() ?? [],
-            'phases' => $this->phases?->toArray() ?? [],
+            'tasks' => $this->tasks?->toArray($useSnakeCase) ?? [],
+            'workers' => $this->workers?->toArray($useSnakeCase) ?? [],
+            'phases' => $this->phases?->toArray($useSnakeCase) ?? [],
             'startDateTime' => formatDateTime($this->startDateTime, DateTime::ATOM),
             'completionDateTime' => formatDateTime($this->completionDateTime, DateTime::ATOM),
             'actualCompletionDateTime' => 
@@ -763,6 +767,8 @@ class Project implements Entity
             'createdAt' => formatDateTime($this->createdAt),
             'additionalInfo' => $this->additionalInfo
         ];
+
+        return $useSnakeCase ? normalizeArrayKeysToSnakeCase($data) : $data;
     }
 
     /**
@@ -801,6 +807,9 @@ class Project implements Entity
      */
     public static function fromArray(array $data): self
     {
+        // Normalize input keys to camelCase to support both snake_case and camelCase input
+        $data = normalizeArrayKeysToCamelCase($data);
+
         $publicId = null;
         if ($data['publicId'] instanceof UUID) {
             $publicId = $data['publicId'];

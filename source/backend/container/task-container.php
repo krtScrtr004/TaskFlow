@@ -273,13 +273,14 @@ class TaskContainer extends Container
      * - Expects each item to provide a toArray() method (e.g. implement Task or TaskInterface)
      * - Any exceptions thrown by an individual task's toArray() will propagate to the caller
      *
+     * @param bool $useSnakeCase Whether to use snake_case keys (true) or camelCase keys (false, default)
      * @return array<int, array<string, mixed>> Array of tasks where each task is represented as an associative array
      */
-    public function toArray(): array
+    public function toArray(bool $useSnakeCase = false): array
     {
         $tasksArray = [];
         foreach ($this->items as $task) {
-            $tasksArray[] = $task->toArray();
+            $tasksArray[] = $task->toArray($useSnakeCase);
         }
         return $tasksArray;
     }

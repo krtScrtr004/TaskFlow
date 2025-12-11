@@ -1,65 +1,65 @@
 {
 	"GET": {
-		"TaskFlow/": "IndexController",
-		"TaskFlow/login": "IndexController",
-		"TaskFlow/register": "IndexController",
-		"TaskFlow/confirm-email(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": [
+		"/": "IndexController",
+		"/login": "IndexController",
+		"/register": "IndexController",
+		"/confirm-email(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": [
 			"IndexController",
 			"confirmEmail"
 		],
 
-		"TaskFlow/reset-password": "SingleFormController",
-		"TaskFlow/change-password(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": "SingleFormController",
-		"TaskFlow/create-project": "SingleFormController",
-		"TaskFlow/edit-project/{projectId:[\\w+_-]+}": "SingleFormController",
-		"TaskFlow/add-task/{projectId:[\\w+_-]+}": "SingleFormController",
+		"/reset-password": "SingleFormController",
+		"/change-password(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": "SingleFormController",
+		"/create-project": "SingleFormController",
+		"/edit-project/{projectId:[\\w+_-]+}": "SingleFormController",
+		"/add-task/{projectId:[\\w+_-]+}": "SingleFormController",
 
-		"TaskFlow/home": ["ProjectController", "viewHome"],
-		"TaskFlow/project/{projectId:[\\w+_-]+}": [
+		"/home": ["ProjectController", "viewHome"],
+		"/project/{projectId:[\\w+_-]+}": [
 			"ProjectController",
 			"viewOther"
 		],
-		"TaskFlow/project/{projectId:[\\w+_-]+}/report": [
+		"/project/{projectId:[\\w+_-]+}/report": [
 			"ProjectController",
 			"viewReport"
 		],
 
-		"TaskFlow/project/{projectId:[\\w+_-]+}/task/worker/{workerId:[\\w+_-]+}(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": [
+		"/project/{projectId:[\\w+_-]+}/task/worker/{workerId:[\\w+_-]+}(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": [
 			"TaskController",
 			"viewGrid"
 		],
-		"TaskFlow/project/{projectId:[\\w+_-]+}/task/worker/{workerId:[\\w+_-]+}": [
+		"/project/{projectId:[\\w+_-]+}/task/worker/{workerId:[\\w+_-]+}": [
 			"TaskController",
 			"viewGrid"
 		],
-		"TaskFlow/project/{projectId:[\\w+_-]+}/task(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": [
+		"/project/{projectId:[\\w+_-]+}/task(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": [
 			"TaskController",
 			"viewGrid"
 		],
-		"TaskFlow/project/{projectId:[\\w+_-]+}/phase/{phaseId:[\\w+_-]+}/task/{taskId:[\\w+_-]+}": [
+		"/project/{projectId:[\\w+_-]+}/phase/{phaseId:[\\w+_-]+}/task/{taskId:[\\w+_-]+}": [
 			"TaskController",
 			"viewInfo"
 		],
 
-		"TaskFlow/projects(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": [
+		"/projects(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": [
 			"ProjectController",
 			"viewGrid"
 		],
 
-		"TaskFlow/users(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": "UserController",
+		"/users(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": "UserController",
 
-		"TaskFlow/profile": "ProfileController",
+		"/profile": "ProfileController",
 
-		"TaskFlow/about-us": [
+		"/about-us": [
 			"AboutUsController",
 			"viewAboutUs"
 		],
-		"TaskFlow/terms-and-conditions": [
+		"/terms-and-conditions": [
 			"AboutUsController",
 			"viewTermsAndConditions"
 		],
 
-		"TaskFlow/not-found": ["ErrorController", "notFound"],
-		"TaskFlow/forbidden": ["ErrorController", "forbidden"]
+		"/not-found": ["ErrorController", "notFound"],
+		"/forbidden": ["ErrorController", "forbidden"]
 	}
 }

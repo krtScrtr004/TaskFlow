@@ -372,3 +372,140 @@ function compareDates(string $date1, string $date2): int
     if ($d1 === $d2) return 0;
     return ($d1 < $d2) ? -1 : 1;
 }
+
+/**
+ * Converts a camelCase string to snake_case.
+ *
+ * This function inserts an underscore between a lowercase letter followed by an uppercase letter,
+ * then converts the entire result to lowercase.
+ *
+ * Examples:
+ * - "firstName" => "first_name"
+ * - "startDateTime" => "start_date_time"
+ * - "publicId" => "public_id"
+ *
+ * @param string $string Input string in camelCase
+ *
+ * @return string snake_case version of the provided string
+ */
+function camelToSnakeCase(string $string): string
+{
+    return strtolower(preg_replace('/([a-z])([A-Z])/', '$1_$2', $string));
+}
+
+/**
+ * Converts a snake_case string to camelCase.
+ *
+ * This function performs the following steps:
+ * - Replaces underscores ('_') with spaces
+ * - Uppercases the first letter of each word (ucwords)
+ * - Removes all spaces to join the words
+ * - Lowercases the first character of the final string (lcfirst)
+ *
+ * Examples:
+ * - "first_name" => "firstName"
+ * - "start_date_time" => "startDateTime"
+ * - "public_id" => "publicId"
+ *
+ * @param string $string Input string in snake_case
+ *
+ * @return string camelCase version of the provided string
+ */
+function snakeToCamelCase(string $string): string
+{
+    return lcfirst(str_replace('_', '', ucwords($string, '_')));
+}
+
+/**
+ * Normalizes array keys to camelCase recursively.
+ *
+ * This function transforms all keys in an associative array from various formats
+ * (snake_case, kebab-case, etc.) to camelCase. It recursively processes nested arrays.
+ *
+ * @param array $data The array with keys to normalize
+ * @param bool $recursive Whether to recursively normalize nested arrays (default: true)
+ *
+ * @return array The array with all keys converted to camelCase
+ */
+function normalizeArrayKeysToCamelCase(array $data, bool $recursive = true): array
+{
+    // helper to convert a single string key from many cases to camelCase
+    $toCamel = function (string $key): string {
+        $key = trim($key);
+        if ($key === '') return $key;
+
+        // If contains separators (dash, underscore, space, dot), split and normalize
+        if (preg_match('/[-_\s\.]/', $key)) {
+            $parts = preg_split('/[-_\s\.]+/', $key);
+            $parts = array_values(array_filter($parts, fn($p) => $p !== ''));
+            if (empty($parts)) return '';
+            $parts = array_map('strtolower', $parts);
+            $first = array_shift($parts);
+            $rest = array_map(fn($p) => ucfirst($p), $parts);
+            return lcfirst($first . implode('', $rest));
+        }
+
+        // Otherwise treat as camelCase or PascalCase: just lowercase first char
+        return lcfirst($key);
+    };
+
+    $normalized = [];
+    foreach ($data as $key => $value) {
+        $newKey = is_string($key) ? $toCamel($key) : $key;
+
+        // Recurse into arrays:
+        if ($recursive && is_array($value)) {
+            if (isAssociativeArray($value)) {
+                $value = normalizeArrayKeysToCamelCase($value, $recursive);
+            } else {
+                // numeric-indexed list: normalize any associative children
+                foreach ($value as $i => $item) {
+                    if (is_array($item) && isAssociativeArray($item)) {
+                        $value[$i] = normalizeArrayKeysToCamelCase($item, $recursive);
+                    }
+                }
+            }
+        }
+
+        $normalized[$newKey] = $value;
+    }
+
+    return $normalized;
+}
+
+/**
+ * Normalizes array keys to snake_case recursively.
+ *
+ * This function transforms all keys in an associative array from camelCase
+ * to snake_case. It recursively processes nested arrays.
+ *
+ * @param array $data The array with keys to normalize
+ * @param bool $recursive Whether to recursively normalize nested arrays (default: true)
+ *
+ * @return array The array with all keys converted to snake_case
+ */
+function normalizeArrayKeysToSnakeCase(array $data, bool $recursive = true): array
+{
+    $normalized = [];
+    foreach ($data as $key => $value) {
+        $newKey = is_string($key) ? camelToSnakeCase($key) : $key;
+
+        // Recurse into arrays:
+        if ($recursive && is_array($value)) {
+            if (isAssociativeArray($value)) {
+                $value = normalizeArrayKeysToSnakeCase($value, $recursive);
+            } else {
+                // numeric-indexed list: normalize any associative children
+                foreach ($value as $i => $item) {
+                    if (is_array($item) && isAssociativeArray($item)) {
+                        $value[$i] = normalizeArrayKeysToSnakeCase($item, $recursive);
+                    }
+                }
+            }
+        }
+
+        $normalized[$newKey] = $value;
+    }
+
+    return $normalized;
+}

@@ -62,7 +62,7 @@ async function submit(e) {
         })
 
         Dialog.operationSuccess('Password Changed', 'Your password has been successfully changed.')
-        setTimeout(() => window.location.href = '/TaskFlow/login', 1500)
+        setTimeout(() => window.location.href = '/login', 1500)
     } catch (error) {
         handleException(error)
     } finally {

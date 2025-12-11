@@ -79,63 +79,63 @@ class ProjectManagerModel extends Model
                     (
                         SELECT CONCAT('[', GROUP_CONCAT(
                             JSON_OBJECT(
-                                'projectId', p2.id,
-                                'projectPublicId', HEX(p2.publicId),
-                                'projectName', p2.name,
-                                'projectStatus', p2.status,
-                                'projectStartDate', p2.startDateTime,
-                                'projectCompletionDate', p2.completionDateTime,
-                                'projectActualCompletionDate', p2.actualCompletionDateTime,
-                                'projectPhases', COALESCE(
+                                'id', p2.id,
+                                'public_id', HEX(p2.public_id),
+                                'name', p2.name,
+                                'status', p2.status,
+                                'start_date_time', p2.start_date_time,
+                                'completion_date_time', p2.completion_date_time,
+                                'actual_completion_date_time', p2.actual_completion_date_time,
+                                'phases', COALESCE(
                                     (
                                         SELECT CONCAT('[', GROUP_CONCAT(
                                             JSON_OBJECT(
-                                                'phaseId', pp2.id,
-                                                'phasePublicId', HEX(pp2.publicId),
-                                                'phaseName', pp2.name,
-                                                'phaseStatus', pp2.status,
-                                                'phaseStartDate', pp2.startDateTime,
-                                                'phaseCompletionDate', pp2.completionDateTime,
-                                                'phaseActualCompletionDate', pp2.actualCompletionDateTime,
-                                                'phaseTasks', COALESCE(
+                                                'id', pp2.id,
+                                                'public_id', HEX(pp2.public_id),
+                                                'name', pp2.name,
+                                                'status', pp2.status,
+                                                'start_date_time', pp2.start_date_time,
+                                                'completion_date_time', pp2.completion_date_time,
+                                                'actual_completion_date_time', pp2.actual_completion_date_time,
+                                                'tasks', COALESCE(
                                                     (
                                                         SELECT CONCAT('[', GROUP_CONCAT(
                                                             JSON_OBJECT(
-                                                                'taskId', pt2.id,
-                                                                'taskPublicId', HEX(pt2.publicId),
-                                                                'taskName', pt2.name,
-                                                                'taskStatus', pt2.status,
-                                                                'taskPriority', pt2.priority,
-                                                                'taskStartDate', pt2.startDateTime,
-                                                                'taskCompletionDate', pt2.completionDateTime,
-                                                                'taskActualCompletionDate', pt2.actualCompletionDateTime
-                                                            ) ORDER BY pt2.startDateTime ASC SEPARATOR ','
+                                                                'id', pt2.id,
+                                                                'public_id', HEX(pt2.public_id),
+                                                                'name', pt2.name,
+                                                                'status', pt2.status,
+                                                                'priority', pt2.priority,
+                                                                'start_date_time', pt2.start_date_time,
+                                                                'completion_date_time', pt2.completion_date_time,
+                                                                'actual_completion_date_time', pt2.actual_completion_date_time
+                                                            ) ORDER BY pt2.start_date_time ASC SEPARATOR ','
                                                         ), ']')
                                                         FROM 
-                                                            `phaseTask` AS pt2
+                                                            `phase_task` AS pt2
                                                         WHERE 
-                                                            pt2.phaseId = pp2.id
+                                                            pt2.phase_id = pp2.id
                                                     ), 
                                                     '[]'
                                                 )
-                                            ) ORDER BY pp2.startDateTime ASC SEPARATOR ','
+                                            ) ORDER BY pp2.start_date_time ASC SEPARATOR ','
                                         ), ']')
                                         FROM 
-                                            `projectPhase` AS pp2
+                                            `project_phase` AS pp2
                                         WHERE 
-                                            pp2.projectId = p2.id
+                                            pp2.project_id = p2.id
                                     ), 
                                     '[]'
                                 )
-                            ) ORDER BY p2.startDateTime ASC SEPARATOR ','
+                            ) ORDER BY p2.start_date_time ASC SEPARATOR ','
                         ), ']')
                         FROM 
                             `project` AS p2
                         WHERE 
-                            p2.managerId = u.id
+                            p2.manager_id = u.id
                     ), 
                     '[]'
-                ) AS 'projectHistory'"
+                ) AS 'project_history'"
             : '';
 
             $whereClause = [];
@@ -145,7 +145,7 @@ class ProjectManagerModel extends Model
 
             $whereClause[] = is_int($managerId)
                 ? 'u.id = :managerId'
-                : 'u.publicId = :managerId';
+                : 'u.public_id = :managerId';
 
             $params[':managerId'] = is_int($managerId)
                 ? $managerId
@@ -165,49 +165,49 @@ class ProjectManagerModel extends Model
             $query = "
                 SELECT 
                     u.id,
-                    u.publicId,
-                    u.firstName,
-                    u.middleName,
-                    u.lastName,
+                    u.public_id,
+                    u.first_name,
+                    u.middle_name,
+                    u.last_name,
                     u.gender,
                     u.email,
-                    u.birthDate,
-                    u.contactNumber,
+                    u.birth_date,
+                    u.contact_number,
                     u.bio,
-                    u.profileLink,
-                    u.createdAt,
-                    u.confirmedAt,
-                    u.deletedAt,
-                    GROUP_CONCAT(DISTINCT ujt.title) AS jobTitles,
+                    u.profile_link,
+                    u.created_at,
+                    u.confirmed_at,
+                    u.deleted_at,
+                    GROUP_CONCAT(DISTINCT ujt.title) AS job_titles,
                     (
                         SELECT 
                             COUNT(*)
                         FROM 
                             `project` AS p2
                         WHERE 
-                            p2.managerId = u.id
-                    ) AS totalProjects,
+                            p2.manager_id = u.id
+                    ) AS total_projects,
                     (
                         SELECT 
                             COUNT(*)
                         FROM 
                             `project` AS p3
                         WHERE 
-                            p3.managerId = u.id 
+                            p3.manager_id = u.id 
                         AND 
                             p3.status = :completedStatus
-                    ) AS completedProjects
+                    ) AS completed_projects
                     $projectHistory
                 FROM 
                     `user` AS u
                 LEFT JOIN
                     `project` AS p
                 ON 
-                    p.managerId = u.id
+                    p.manager_id = u.id
                 LEFT JOIN
-                    `userJobTitle` AS ujt
+                    `user_job_title` AS ujt
                 ON 
-                    ujt.userId = u.id
+                    ujt.user_id = u.id
                 WHERE 
                     $where
                 GROUP BY
@@ -225,77 +225,77 @@ class ProjectManagerModel extends Model
 
             $user = new User(
                 id: (int)$result['id'],
-                publicId: UUID::fromBinary($result['publicId']),
-                firstName: $result['firstName'],
-                middleName: $result['middleName'],
-                lastName: $result['lastName'],
+                publicId: UUID::fromBinary($result['public_id']),
+                firstName: $result['first_name'],
+                middleName: $result['middle_name'],
+                lastName: $result['last_name'],
                 role: Role::PROJECT_MANAGER,
                 gender: Gender::from($result['gender']),
-                birthDate: new DateTime($result['birthDate']),
-                contactNumber: $result['contactNumber'],
+                birthDate: new DateTime($result['birth_date']),
+                contactNumber: $result['contact_number'],
                 email: $result['email'],
                 bio: $result['bio'],
-                profileLink: $result['profileLink'],
-                jobTitles: new JobTitleContainer(explode(',', $result['jobTitles'])),
-                createdAt: new DateTime($result['createdAt']),
-                confirmedAt: new DateTime($result['confirmedAt']),
-                deletedAt: new DateTime($result['deletedAt']),
+                profileLink: $result['profile_link'],
+                jobTitles: new JobTitleContainer(explode(',', $result['job_titles'])),
+                createdAt: new DateTime($result['created_at']),
+                confirmedAt: new DateTime($result['confirmed_at']),
+                deletedAt: new DateTime($result['deleted_at']),
                 additionalInfo: [
-                    'totalProjects' => (int)$result['totalProjects'],
-                    'completedProjects' => (int)$result['completedProjects'],
+                    'totalProjects' => (int)$result['total_projects'],
+                    'completedProjects' => (int)$result['completed_projects'],
                 ]
             );
 
                         // Process project history if included
             if ($includeHistory) {
                 $projectContainer = new ProjectContainer();
-                $projects = json_decode($result['projectHistory'], true);
+                $projects = json_decode($result['project_history'], true);
 
                 // Process projects
                 foreach ($projects as $project) {
                     $phaseContainer = new PhaseContainer();
 
                     // Process phases
-                    $phases = json_decode($project['projectPhases'], true);
+                    $phases = json_decode($project['phases'], true);
                     foreach ($phases as $phase) {
                         $taskContainer = new TaskContainer();
 
                         // Process tasks
-                        $tasks = json_decode($phase['phaseTasks'], true);
+                        $tasks = json_decode($phase['tasks'], true);
                         foreach ($tasks as $task) {
                             $taskContainer->add(Task::createPartial([
-                                'id'                        => (int)$task['taskId'],
-                                'publicId'                  => UUID::fromHex($task['taskPublicId']),
-                                'name'                      => $task['taskName'],
-                                'status'                    => WorkStatus::from($task['taskStatus']),
-                                'priority'                  => TaskPriority::from($task['taskPriority']),
-                                'startDateTime'             => new DateTime($task['taskStartDate']),
-                                'completionDateTime'        => new DateTime($task['taskCompletionDate']),
-                                'actualCompletionDateTime'  => new DateTime($task['taskActualCompletionDate']),
+                                'id'                        => (int)$task['id'],
+                                'publicId'                  => UUID::fromHex($task['public_id']),
+                                'name'                      => $task['name'],
+                                'status'                    => WorkStatus::from($task['status']),
+                                'priority'                  => TaskPriority::from($task['priority']),
+                                'startDateTime'             => new DateTime($task['start_date_time']),
+                                'completionDateTime'        => new DateTime($task['completion_date_time']),
+                                'actualCompletionDateTime'  => new DateTime($task['actual_completion_date_time']),
                             ]));
                         }
 
                         $phaseContainer->add(Phase::createPartial([
-                            'id'                        => (int)$phase['phaseId'],
-                            'publicId'                  => UUID::fromHex($phase['phasePublicId']),
-                            'name'                      => $phase['phaseName'],
-                            'status'                    => WorkStatus::from($phase['phaseStatus']),
+                            'id'                        => (int)$phase['id'],
+                            'publicId'                  => UUID::fromHex($phase['public_id']),
+                            'name'                      => $phase['name'],
+                            'status'                    => WorkStatus::from($phase['status']),
                             'tasks'                     => $taskContainer,
-                            'startDateTime'             => new DateTime($phase['phaseStartDate']),
-                            'completionDateTime'        => new DateTime($phase['phaseCompletionDate']),
-                            'actualCompletionDateTime'  => new DateTime($phase['phaseActualCompletionDate']),
+                            'startDateTime'             => new DateTime($phase['start_date_time']),
+                            'completionDateTime'        => new DateTime($phase['completion_date_time']),
+                            'actualCompletionDateTime'  => new DateTime($phase['actual_completion_date_time']),
                         ]));
                     }
 
                     $projectContainer->add(Project::createPartial([
-                        'id'                        => (int)$project['projectId'],
-                        'publicId'                  => UUID::fromHex($project['projectPublicId']),
-                        'name'                      => $project['projectName'],
-                        'status'                    => WorkStatus::from($project['projectStatus']),
+                        'id'                        => (int)$project['id'],
+                        'publicId'                  => UUID::fromHex($project['public_id']),
+                        'name'                      => $project['name'],
+                        'status'                    => WorkStatus::from($project['status']),
                         'phases'                    => $phaseContainer,
-                        'startDateTime'             => new DateTime($project['projectStartDate']),
-                        'completionDateTime'        => new DateTime($project['projectCompletionDate']),
-                        'actualCompletionDateTime'  => new DateTime($project['projectActualCompletionDate']),
+                        'startDateTime'             => new DateTime($project['start_date_time']),
+                        'completionDateTime'        => new DateTime($project['completion_date_time']),
+                        'actualCompletionDateTime'  => new DateTime($project['actual_completion_date_time']),
                     ]));
                 }
                 

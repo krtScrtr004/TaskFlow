@@ -54,7 +54,7 @@ class RateLimiterModel extends Model
 
             $query = "
                 INSERT INTO
-                    `rateLimiter` (ip, endpoint, expiresAt)
+                    `rate_limiter` (ip, endpoint, expires_at)
                 VALUES
                     (:ip, :endpoint, :expiresAt)
             ";
@@ -105,7 +105,7 @@ class RateLimiterModel extends Model
                 SELECT 
                     *
                 FROM 
-                    `rateLimiter`
+                    `rate_limiter`
                 WHERE 
                     ip = :ip
                 AND
@@ -179,10 +179,10 @@ class RateLimiterModel extends Model
 
             $query = "
                 UPDATE
-                    `rateLimiter`
+                    `rate_limiter`
                 SET
                     count = :count,
-                    expiresAt = :expiresAt
+                    expires_at = :expiresAt
                 WHERE
                     ip = :ip
                 AND

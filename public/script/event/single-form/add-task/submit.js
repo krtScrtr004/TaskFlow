@@ -93,7 +93,7 @@ async function submitForm(e) {
             throw new Error('No response from server.')
         }
 
-        setTimeout(() => window.location.href = `/TaskFlow/project/${projectId}/phase/${phaseId}/task/${response.id}`, 1500)
+        setTimeout(() => window.location.href = `/project/${projectId}/phase/${phaseId}/task/${response.id}`, 1500)
         Dialog.operationSuccess('Task Added.', 'The task has been added to the project.')
     } catch (error) {
         handleException(error, 'Error submitting form:', error)

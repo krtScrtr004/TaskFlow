@@ -73,7 +73,7 @@ class RateLimiter
             ]);
         } else {
             $count = (int) ($search['count'] ?? 0);
-            $expiresAt = (int) $search['expiresAt'];
+            $expiresAt = (int) $search['expires_at'];
             $isExpired = $currentTime >= $expiresAt;
 
             if (!$isExpired) {

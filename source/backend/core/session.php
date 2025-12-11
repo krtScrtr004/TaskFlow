@@ -6,8 +6,8 @@ use App\Middleware\Csrf;
 
 define('SESSION_LIFETIME', 3600);  // Cookie lifetime: 1 hour
 define('SESSION_ACTIVITY_TIMEOUT', 1800);  // Inactivity timeout: 30 minutes
-define('SESSION_PATH', '/TaskFlow/');  // Must match your web application path, not file system path
-define('SESSION_DOMAIN', 'localhost');
+define('SESSION_PATH', '/');  // Must match your web application path, not file system path
+define('SESSION_DOMAIN', 'TaskFlow.local');  // Set to your domain
 define('SESSION_SECURE', false);  // Set to true only when using HTTPS in production
 define('SESSION_HTTPONLY', true);
 
@@ -51,11 +51,11 @@ class Session
             ini_set('session.use_strict_mode', 1);
 
             session_set_cookie_params([
-                'lifetime' => SESSION_LIFETIME,
-                'path' => SESSION_PATH,
-                'domain' => SESSION_DOMAIN,
-                'secure' => SESSION_SECURE,
-                'httponly' => SESSION_HTTPONLY
+                'lifetime'      => SESSION_LIFETIME,
+                'path'          => SESSION_PATH,
+                'domain'        => SESSION_DOMAIN,
+                'secure'        => SESSION_SECURE,
+                'httponly'      => SESSION_HTTPONLY
             ]);
         }
 

@@ -95,7 +95,7 @@ async function submitForm(e) {
             throw new Error('No response from server.')
         }
 
-        setTimeout(() => window.location.href = `/TaskFlow/home`, 1500)
+        setTimeout(() => window.location.href = `/home`, 1500)
         Dialog.operationSuccess('Project Created.', 'The project has been successfully created.')
     } catch (error) {
         handleException(error, 'Error submitting form:', error)

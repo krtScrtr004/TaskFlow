@@ -53,102 +53,102 @@ class TaskModel extends Model
             'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
             'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
             'groupBy'   => $options[':groupBy'] ?? $options['groupBy'] ?? 'pt.id',
-            'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 'pt.startDateTime DESC',
+            'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 'pt.start_date_time DESC',
         ];
 
         $instance = new self();
         try {
             $query = "
                 SELECT 
-                    pt.id AS taskId,
-                    pt.publicId AS taskPublicId,
-                    pp.publicId AS taskPhaseId,
-                    pt.name AS taskName,
-                    pt.description AS taskDescription,
-                    pt.startDateTime AS taskStartDateTime,
-                    pt.completionDateTime AS taskCompletionDateTime,
-                    pt.actualCompletionDateTime AS taskActualCompletionDateTime,
-                    pt.priority AS taskPriority,
-                    pt.status AS taskStatus,
-                    pt.createdAt AS taskCreatedAt,
+                    pt.id AS id,
+                    pt.public_id AS public_id,
+                    pp.public_id AS phase_id,
+                    pt.name AS name,
+                    pt.description AS description,
+                    pt.start_date_time AS start_date_time,
+                    pt.completion_date_time AS completion_date_time,
+                    pt.actual_completion_date_time AS actual_completion_date_time,
+                    pt.priority AS priority,
+                    pt.status AS status,
+                    pt.created_at AS created_at,
                     COALESCE(
                         (
                             SELECT CONCAT('[', GROUP_CONCAT(
                                 JSON_OBJECT(
-                                    'workerId', u.id,
-                                    'workerPublicId', HEX(u.publicId),
-                                    'workerFirstName', u.firstName,
-                                    'workerMiddleName', u.middleName,
-                                    'workerLastName', u.lastName,
-                                    'workerEmail', u.email,
-                                    'workerContactNumber', u.contactNumber,
-                                    'workerProfileLink', u.profileLink,
-                                    'workerGender', u.gender,
-                                    'workerStatus', ptw.status,
-                                    'workerCreatedAt', u.createdAt,
-                                    'workerConfirmedAt', u.confirmedAt,
-                                    'workerDeletedAt', u.deletedAt,
-                                    'workerJobTitles', COALESCE(
+                                    'id', u.id,
+                                    'public_id', HEX(u.public_id),
+                                    'first_name', u.first_name,
+                                    'middle_name', u.middle_name,
+                                    'last_name', u.last_name,
+                                    'email', u.email,
+                                    'contact_number', u.contact_number,
+                                    'profile_link', u.profile_link,
+                                    'gender', u.gender,
+                                    'status', ptw.status,
+                                    'created_at', u.created_at,
+                                    'confirmed_at', u.confirmed_at,
+                                    'deleted_at', u.deleted_at,
+                                    'job_titles', COALESCE(
                                         (
                                             SELECT 
                                                 CONCAT('[', GROUP_CONCAT(CONCAT('\"', wjt.title, '\"')), ']')
                                             FROM 
-                                                `userJobTitle` AS wjt
+                                                `user_job_title` AS wjt
                                             WHERE 
-                                                wjt.userId = u.id
+                                                wjt.user_id = u.id
                                         ),
                                         '[]'
                                     ),
-                                    'workerTotalTasks', (
+                                    'worker_total_tasks', (
                                         SELECT 
                                             COUNT(*)
                                         FROM 
-                                            `phaseTaskWorker` AS ptw2
+                                            `phase_task_worker` AS ptw2
                                         WHERE 
-                                            ptw2.workerId = u.id
+                                            ptw2.worker_id = u.id
                                     ),
-                                    'workerCompletedTasks', (
+                                    'worker_completed_tasks', (
                                         SELECT 
                                             COUNT(*)
                                         FROM 
-                                            `phaseTaskWorker` AS ptw3
+                                            `phase_task_worker` AS ptw3
                                         INNER JOIN 
-                                            `phaseTask` AS pt3 
+                                            `phase_task` AS pt3 
                                         ON
-                                            ptw3.taskId = pt3.id
+                                            ptw3.task_id = pt3.id
                                         WHERE 
-                                            ptw3.workerId = u.id
+                                            ptw3.worker_id = u.id
                                         AND 
                                             pt3.status = 'completed'
                                     )
-                                ) ORDER BY u.lastName ASC SEPARATOR ','
+                                ) ORDER BY u.last_name ASC SEPARATOR ','
                             ), ']')
                             FROM 
-                                `phaseTaskWorker` AS ptw
+                                `phase_task_worker` AS ptw
                             INNER JOIN 
                                 `user` AS u
                             ON 
-                                ptw.workerId = u.id
+                                ptw.worker_id = u.id
                             WHERE 
-                                ptw.taskId = pt.id
+                                ptw.task_id = pt.id
                         ), '[]'
-                    ) AS taskWorkers
+                    ) AS task_workers
                 FROM 
-                    `phaseTask` AS pt
+                    `phase_task` AS pt
                 INNER JOIN 
-                    `projectPhase` AS pp 
+                    `project_phase` AS pp 
                 ON 
-                    pt.phaseId = pp.id
+                    pt.phase_id = pp.id
                 INNER JOIN 
                     `project` AS p 
                 ON 
-                    pp.projectId = p.id
+                    pp.project_id = p.id
                 LEFT JOIN 
-                    `phaseTaskWorker` AS ptw 
+                    `phase_task_worker` AS ptw 
                 ON 
-                    pt.id = ptw.taskId
+                    pt.id = ptw.task_id
                 LEFT JOIN 
-                    `user` AS u ON ptw.workerId = u.id
+                    `user` AS u ON ptw.worker_id = u.id
             ";
             $projectTaskQuery = $instance->appendOptionsToFindQuery(
                 $instance->appendWhereClause($query, $whereClause),
@@ -165,44 +165,44 @@ class TaskModel extends Model
             $tasks = new TaskContainer();
             foreach ($results as $row) {
                 $task = Task::createPartial([
-                    'id'                        => $row['taskId'],
-                    'publicId'                  => $row['taskPublicId'],
-                    'name'                      => $row['taskName'],
-                    'description'               => $row['taskDescription'],
+                    'id'                        => $row['id'],
+                    'publicId'                  => $row['public_id'],
+                    'name'                      => $row['name'],
+                    'description'               => $row['description'],
                     'workers'                   => new WorkerContainer(),
-                    'startDateTime'             => new DateTime($row['taskStartDateTime']),
-                    'completionDateTime'        => new DateTime($row['taskCompletionDateTime']),
-                    'actualCompletionDateTime'  => $row['taskActualCompletionDateTime']
-                        ? new DateTime($row['taskActualCompletionDateTime'])
+                    'startDateTime'             => new DateTime($row['start_date_time']),
+                    'completionDateTime'        => new DateTime($row['completion_date_time']),
+                    'actualCompletionDateTime'  => $row['actual_completion_date_time']
+                        ? new DateTime($row['actual_completion_date_time'])
                         : null,
-                    'priority'                  => TaskPriority::from($row['taskPriority']),
-                    'status'                    => WorkStatus::from($row['taskStatus']),
-                    'createdAt'                 => new DateTime($row['taskCreatedAt']),
-                    'additionalInfo'            => ['phaseId' => UUID::fromBinary($row['taskPhaseId'])]
+                    'priority'                  => TaskPriority::from($row['priority']),
+                    'status'                    => WorkStatus::from($row['status']),
+                    'createdAt'                 => new DateTime($row['created_at']),
+                    'additionalInfo'            => ['phaseId' => UUID::fromBinary($row['phase_id'])]
                 ]);
 
-                $workers = json_decode($row['taskWorkers'], true) ?? [];
+                $workers = json_decode($row['task_workers'], true) ?? [];
                 foreach ($workers as $worker) {
                     $task->addWorker(Worker::createPartial([
-                        'id' => $worker['workerId'],
-                        'publicId' => UUID::fromHex($worker['workerPublicId']),
-                        'firstName' => $worker['workerFirstName'],
-                        'middleName' => $worker['workerMiddleName'],
-                        'lastName' => $worker['workerLastName'],
-                        'email' => $worker['workerEmail'],
-                        'contactNumber' => $worker['workerContactNumber'],
-                        'profileLink' => $worker['workerProfileLink'],
-                        'gender' => Gender::from($worker['workerGender']),
-                        'status' => WorkerStatus::from($worker['workerStatus']),
-                        'jobTitles' => isset($worker['workerJobTitles'])
-                            ? new JobTitleContainer(json_decode($worker['workerJobTitles'], true))
+                        'id'                => $worker['id'],
+                        'publicId'          => UUID::fromHex($worker['public_id']),
+                        'firstName'         => $worker['first_name'],
+                        'middleName'        => $worker['middle_name'],
+                        'lastName'          => $worker['last_name'],
+                        'email'             => $worker['email'],
+                        'contactNumber'     => $worker['contact_number'],
+                        'profileLink'       => $worker['profile_link'],
+                        'gender'            => Gender::from($worker['gender']),
+                        'status'            => WorkerStatus::from($worker['status']),
+                        'jobTitles'         => isset($worker['job_titles'])
+                            ? new JobTitleContainer(json_decode($worker['job_titles'], true))
                             : new JobTitleContainer(),
-                        'createdAt' => $worker['workerCreatedAt'],
-                        'confirmedAt' => $worker['workerConfirmedAt'],
-                        'deletedAt' => $worker['workerDeletedAt'],
-                        'additionalInfo' => [
-                            'totalTasks' => (int)$worker['workerTotalTasks'],
-                            'completedTasks' => (int)$worker['workerCompletedTasks']
+                        'createdAt'         => $worker['created_at'],
+                        'confirmedAt'       => $worker['confirmed_at'],
+                        'deletedAt'         => $worker['deleted_at'],
+                        'additionalInfo'    => [
+                            'totalTasks'        => (int)$worker['worker_total_tasks'],
+                            'completedTasks'    => (int)$worker['worker_completed_tasks']
                         ]
                     ]));
                 }
@@ -275,22 +275,22 @@ class TaskModel extends Model
             // Filter by user role if provided
             if ($userId) {
                 $where[] = is_int($userId) 
-                    ? ' (p.managerId = :userId1 OR ptw.workerId = :userId2)'
-                    : ' (ptw.workerId IN (
+                    ? ' (p.manager_id = :userId1 OR ptw.worker_id = :userId2)'
+                    : ' (ptw.worker_id IN (
                             SELECT 
                                 id
                             FROM 
                                 `user` 
                             WHERE 
-                                publicId = :userId1)
+                                public_id = :userId1)
                         OR 
-                            p.managerId IN (
+                            p.manager_id IN (
                                 SELECT 
                                     id
                                 FROM 
                                     `user`
                                 WHERE 
-                                    publicId = :userId2)
+                                    public_id = :userId2)
                         )';
                 $params[':userId1'] = is_int($userId) 
                     ? $userId 
@@ -303,14 +303,14 @@ class TaskModel extends Model
             // Narrow by phase if provided
             if ($phaseId !== null) {
                 $where[] = is_int($phaseId) 
-                    ? ' pt.phaseId = :phaseId'
-                    : ' pt.phaseId IN (
+                    ? ' pt.phase_id = :phaseId'
+                    : ' pt.phase_id IN (
                         SELECT 
                             id 
                         FROM 
-                            `projectPhase` 
+                            `project_phase` 
                         WHERE 
-                            publicId = :phaseId)';
+                            public_id = :phaseId)';
                 $params[':phaseId'] = is_int($phaseId) 
                     ? $phaseId 
                     : UUID::toBinary($phaseId);
@@ -319,7 +319,7 @@ class TaskModel extends Model
             if ($projectId) {
                 $where[] = is_int($projectId) 
                     ? ' p.id = :projectId'
-                    : ' p.publicId = :projectId';
+                    : ' p.public_id = :projectId';
                 $params[':projectId'] = is_int($projectId) 
                     ? $projectId 
                     : UUID::toBinary($projectId);
@@ -373,7 +373,7 @@ class TaskModel extends Model
         try {
             $whereClause = is_int($taskId) 
                 ? 'pt.id = :taskId' 
-                : 'pt.publicId = :taskId';
+                : 'pt.public_id = :taskId';
             $params = [
                 ':taskId' => is_int($taskId) 
                     ? $taskId 
@@ -383,7 +383,7 @@ class TaskModel extends Model
             if ($phaseId) {
                 $whereClause .= is_int($phaseId)
                     ? ' AND pp.id = :phaseId'
-                    : ' AND pp.publicId = :phaseId';
+                    : ' AND pp.public_id = :phaseId';
                 $params[':phaseId'] = is_int($phaseId)
                     ? $phaseId
                     : UUID::toBinary($phaseId);
@@ -392,7 +392,7 @@ class TaskModel extends Model
             if ($projectId) {
                 $whereClause .= is_int($projectId)
                     ? ' AND p.id = :projectId'
-                    : ' AND p.publicId = :projectId';
+                    : ' AND p.public_id = :projectId';
                 $params[':projectId'] = is_int($projectId)
                     ? $projectId
                     : UUID::toBinary($projectId);
@@ -409,7 +409,7 @@ class TaskModel extends Model
      * Retrieves all tasks associated with a specific phase ID, with optional filtering by project ID and status or priority.
      *
      * This method constructs a dynamic SQL WHERE clause based on the provided parameters:
-     * - Supports both integer and UUID formats for phaseId and projectId.
+     * - Supports both integer and UUID formats for phase_id and projectId.
      * - Filters tasks by phase, and optionally by project, status, or priority.
      * - Handles conversion of UUIDs to binary format for database queries.
      * - Applies pagination options such as offset and limit.
@@ -421,7 +421,7 @@ class TaskModel extends Model
      *      - offset: int The starting index for results (default: 0).
      *      - limit: int The maximum number of results to return (default: 10).
      *
-     * @throws InvalidArgumentException If the provided phaseId is invalid.
+     * @throws InvalidArgumentException If the provided phase_id is invalid.
      * @throws Exception If an error occurs during query execution.
      *
      * @return TaskContainer|null A container of tasks matching the criteria, or null if none found.
@@ -441,14 +441,14 @@ class TaskModel extends Model
 
         try {
             $whereClause = is_int($phaseId) 
-                ? 'pt.phaseId = :phaseId'
-                : 'pt.phaseId IN (
+                ? 'pt.phase_id = :phaseId'
+                : 'pt.phase_id IN (
                     SELECT 
                         id 
                     FROM 
-                        `projectPhase` 
+                        `project_phase` 
                     WHERE 
-                        publicId = :phaseId)';
+                        public_id = :phaseId)';
             $params = [
                 ':phaseId' => is_int($phaseId) 
                     ? $phaseId 
@@ -458,7 +458,7 @@ class TaskModel extends Model
             if ($projectId) {
                 $whereClause .= is_int($projectId)
                     ? ' AND p.id = :projectId'
-                    : ' AND p.publicId = :projectId';
+                    : ' AND p.public_id = :projectId';
                 $params[':projectId'] = is_int($projectId)
                     ? $projectId
                     : UUID::toBinary($projectId);
@@ -522,7 +522,7 @@ class TaskModel extends Model
         try {
             $whereClause = is_int($workerId) 
                 ? 'u.id = :workerId'
-                : 'u.publicId = :workerId';
+                : 'u.public_id = :workerId';
             $params = [
                 ':workerId' => is_int($workerId) 
                     ? $workerId 
@@ -532,7 +532,7 @@ class TaskModel extends Model
             if ($projectId) {
                 $whereClause .= is_int($projectId)
                     ? ' AND p.id = :projectId'
-                    : ' AND p.publicId = :projectId';
+                    : ' AND p.public_id = :projectId';
                 $params[':projectId'] = is_int($projectId)
                     ? $projectId
                     : UUID::toBinary($projectId);
@@ -577,21 +577,21 @@ class TaskModel extends Model
             $taskWorkerQuery = "
                 SELECT 
                     u.id,
-                    u.publicId,
-                    u.firstName,
-                    u.middleName,
-                    u.lastName,
-                    u.profileLink
+                    u.public_id,
+                    u.first_name,
+                    u.middle_name,
+                    u.last_name,
+                    u.profile_link
                 FROM 
                     `user` AS u
                 INNER JOIN 
                     `projectTaskWorker` AS tw 
                 ON 
-                    u.id = tw.workerId
+                    u.id = tw.worker_id
                 WHERE 
-                    tw.taskId = :taskId
+                    tw.task_id = :taskId
                 ORDER BY 
-                    u.lastName ASC";
+                    u.last_name ASC";
             $statement = $instance->connection->prepare($taskWorkerQuery);
             $statement->execute([':taskId' => $taskId]);
             $result = $statement->fetchAll();
@@ -653,7 +653,7 @@ class TaskModel extends Model
             if ($phaseId) {
                 $whereClause .= is_int($phaseId)
                     ? ' AND pp.id = :phaseId'
-                    : ' AND pp.publicId = :phaseId';
+                    : ' AND pp.public_id = :phaseId';
                 $params[':phaseId'] = is_int($phaseId)
                     ? $phaseId
                     : UUID::toBinary($phaseId);
@@ -712,7 +712,7 @@ class TaskModel extends Model
             if ($phaseId) {
                 $whereClause .= is_int($phaseId)
                     ? ' AND pp.id = :phaseId'
-                    : ' AND pp.publicId = :phaseId';
+                    : ' AND pp.public_id = :phaseId';
                 $params[':phaseId'] = is_int($phaseId)
                     ? $phaseId
                     : UUID::toBinary($phaseId);
@@ -750,12 +750,12 @@ class TaskModel extends Model
         try {
             $query = "
                 SELECT 
-                    pt.status AS taskStatus,
-                    COUNT(*) AS taskCount
+                    pt.status AS task_status,
+                    COUNT(*) AS task_count
                 FROM 
-                    `phaseTask` AS pt
+                    `phase_task` AS pt
                 WHERE 
-                    pt.phaseId = :phaseId
+                    pt.phase_id = :phaseId
                 GROUP BY 
                     pt.status";
             $statement = $instance->connection->prepare($query);
@@ -768,7 +768,7 @@ class TaskModel extends Model
 
             $statusCounts = [];
             foreach ($results as $row) {
-                $statusCounts[$row['taskStatus']] = (int)$row['taskCount'];
+                $statusCounts[$row['task_status']] = (int)$row['task_count'];
             }
 
             return $statusCounts;
@@ -805,12 +805,12 @@ class TaskModel extends Model
         try {
             $query = "
                 SELECT 
-                    pt.priority AS taskPriority,
-                    COUNT(*) AS taskCount
+                    pt.priority AS task_priority,
+                    COUNT(*) AS task_count
                 FROM 
-                    `phaseTask` AS pt
+                    `phase_task` AS pt
                 WHERE 
-                    pt.phaseId = :phaseId
+                    pt.phase_id = :phaseId
                 GROUP BY 
                     pt.priority";
             $statement = $instance->connection->prepare($query);
@@ -823,7 +823,7 @@ class TaskModel extends Model
 
             $priorityCounts = [];
             foreach ($results as $row) {
-                $priorityCounts[$row['taskPriority']] = (int)$row['taskCount'];
+                $priorityCounts[$row['task_priority']] = (int)$row['task_count'];
             }
 
             return $priorityCounts;
@@ -857,32 +857,32 @@ class TaskModel extends Model
             $query = "
                 SELECT 
                     p.*,
-                    u.id AS managerId,
-                    u.publicId AS managerPublicId,
-                    u.firstName AS managerFirstName,
-                    u.middleName AS managerMiddleName,
-                    u.lastName AS managerLastName,
-                    u.gender AS managerGender,
-                    u.email AS managerEmail,
-                    u.profileLink AS managerProfileLink 
+                    u.id AS id,
+                    u.public_id AS public_id,
+                    u.first_name AS first_name,
+                    u.middle_name AS middle_name,
+                    u.last_name AS last_name,
+                    u.gender AS gender,
+                    u.email AS email,
+                    u.profile_link AS profile_link 
                 FROM 
                     `project` AS p
                 INNER JOIN
                     `user` AS u 
                 ON 
-                    p.managerId = u.id
+                    p.manager_id = u.id
                 INNER JOIN 
-                    `projectPhase` AS pp
+                    `project_phase` AS pp
                 ON
-                    p.id = pp.projectId
+                    p.id = pp.project_id
                 INNER JOIN
-                    `phaseTask` AS pt
+                    `phase_task` AS pt
                 ON
-                    pp.id = pt.phaseId
+                    pp.id = pt.phase_id
                 WHERE 
                     " . (is_int($taskId) 
                         ? 'pt.id = :taskId' 
-                        : 'pt.publicId = :taskId') . "
+                        : 'pt.public_id = :taskId') . "
                 LIMIT 1";
             $statement = $instance->connection->prepare($query);
             $statement->execute([
@@ -898,24 +898,24 @@ class TaskModel extends Model
 
             $project = Project::createPartial([
                 'id'                        => $result['id'],
-                'publicId'                  => $result['publicId'],
+                'publicId'                  => $result['public_id'],
                 'name'                      => $result['name'],
                 'description'               => $result['description'],
                 'budget'                    => $result['budget'],
                 'status'                    => $result['status'],
-                'startDateTime'             => new DateTime($result['startDateTime']),
-                'completionDateTime'        => new DateTime($result['completionDateTime']),
-                'actualCompletionDateTime'  => new DateTime($result['actualCompletionDateTime']),
-                'createdAt'                 => new DateTime($result['createdAt']),
+                'startDateTime'             => new DateTime($result['start_date_time']),
+                'completionDateTime'        => new DateTime($result['completion_date_time']),
+                'actualCompletionDateTime'  => new DateTime($result['actual_completion_date_time']),
+                'createdAt'                 => new DateTime($result['created_at']),
                 'manager'                   => User::createPartial([
-                    'id'           => $result['managerId'],
-                    'publicId'     => $result['managerPublicId'],
-                    'firstName'    => $result['managerFirstName'],
-                    'middleName'   => $result['managerMiddleName'],
-                    'lastName'     => $result['managerLastName'],
-                    'gender'       => $result['managerGender'],
-                    'email'        => $result['managerEmail'],
-                    'profileLink'  => $result['managerProfileLink'],
+                    'id'           => $result['id'],
+                    'publicId'     => $result['public_id'],
+                    'firstName'    => $result['first_name'],
+                    'middleName'   => $result['middle_name'],
+                    'lastName'     => $result['last_name'],
+                    'gender'       => $result['gender'],
+                    'email'        => $result['email'],
+                    'profileLink'  => $result['profile_link'],
                 ]),
             ]);
             return $project;
@@ -967,7 +967,7 @@ class TaskModel extends Model
      *
      * This method performs the following operations within a transaction:
      * - Validates that the provided object is an instance of Task.
-     * - Generates or retrieves the publicId for the task.
+     * - Generates or retrieves the public_id for the task.
      * - Extracts and formats task properties (name, description, priority, status, start and completion dates).
      * - Inserts the task into the `projectTask` table.
      * - Assigns workers to the task by inserting records into the `projectTaskWorker` table.
@@ -988,7 +988,7 @@ class TaskModel extends Model
      * @throws InvalidArgumentException If the provided object is not a Task instance.
      * @throws DatabaseException If a PDOException occurs during database operations.
      *
-     * @return Task The Task object with updated id and publicId after successful insertion.
+     * @return Task The Task object with updated id and public_id after successful insertion.
      */
     public static function create(mixed $task): mixed
     {
@@ -1011,20 +1011,20 @@ class TaskModel extends Model
             $completionDateTime = formatDateTime($task->getCompletionDateTime());
 
             $taskQuery = "
-                INSERT INTO `phaseTask` (
-                    publicId, 
-                    phaseId,
+                INSERT INTO `phase_task` (
+                    public_id, 
+                    phase_id,
                     name, 
                     description, 
                     priority, 
                     status, 
-                    startDateTime, 
-                    completionDateTime
+                    start_date_time, 
+                    completion_date_time
                 ) VALUES (
                     :publicId, 
                     " . (is_int($phaseId) 
                         ? ':phaseId,' 
-                        : '(SELECT id FROM `projectPhase` WHERE publicId = :phaseId),') . "
+                        : '(SELECT id FROM `project_phase` WHERE public_id = :phaseId),') . "
                     :name, 
                     :description, 
                     :priority, 
@@ -1035,26 +1035,26 @@ class TaskModel extends Model
             ";
             $statement = $instance->connection->prepare($taskQuery);
             $statement->execute([
-                ':publicId'         => UUID::toBinary($taskPublicId),
-                ':phaseId'          => is_int($phaseId) ? $phaseId : UUID::toBinary($phaseId),
-                ':name'             => $taskName,
-                ':description'      => $taskDescription,
-                ':priority'         => $taskPriority,
-                ':status'           => $taskStatus,
-                ':startDateTime'    => $taskStartDateTime,
-                ':completionDateTime'=> $completionDateTime,
+                ':publicId'             => UUID::toBinary($taskPublicId),
+                ':phaseId'              => is_int($phaseId) ? $phaseId : UUID::toBinary($phaseId),
+                ':name'                 => $taskName,
+                ':description'          => $taskDescription,
+                ':priority'             => $taskPriority,
+                ':status'               => $taskStatus,
+                ':startDateTime'        => $taskStartDateTime,
+                ':completionDateTime'   => $completionDateTime,
             ]);
             $taskId = (int)$instance->connection->lastInsertId();
 
             if ($taskWorkers && count($taskWorkers) > 0) {
                 $taskWorkerQuery = "
-                    INSERT INTO `phaseTaskWorker` (
-                        taskId,
-                        workerId,
+                    INSERT INTO `phase_task_worker` (
+                        task_id,
+                        worker_id,
                         status
                     ) SELECT :taskId, id, :status
                     FROM `user`
-                    WHERE publicId = :workerId";
+                    WHERE public_id = :workerId";
                 $workerStatement = $instance->connection->prepare($taskWorkerQuery);
                 foreach ($taskWorkers as $worker) {
                     $workerStatement->execute([
@@ -1138,24 +1138,24 @@ class TaskModel extends Model
             }
 
             if (isset($data['startDateTime'])) {
-                $updateFields[] = 'startDateTime = :startDateTime';
+                $updateFields[] = 'start_date_time = :startDateTime';
                 $params[':startDateTime'] = formatDateTime($data['startDateTime']);
             }
 
             if (isset($data['completionDateTime'])) {
-                $updateFields[] = 'completionDateTime = :completionDateTime';
+                $updateFields[] = 'completion_date_time = :completionDateTime';
                 $params[':completionDateTime'] = formatDateTime($data['completionDateTime']);
             }
 
             if (isset($data['actualCompletionDateTime'])) {
-                $updateFields[] = 'actualCompletionDateTime = :actualCompletionDateTime';
+                $updateFields[] = 'actual_completion_date_time = :actualCompletionDateTime';
                 $params[':actualCompletionDateTime'] = $data['actualCompletionDateTime'] !== null 
                     ? formatDateTime($data['actualCompletionDateTime']) 
                     : null;
             }
 
             if (!empty($updateFields)) {
-                $phaseQuery = "UPDATE `phaseTask` SET " . implode(', ', $updateFields) . " WHERE id = :id";
+                $phaseQuery = "UPDATE `phase_task` SET " . implode(', ', $updateFields) . " WHERE id = :id";
                 $statement = $instance->connection->prepare($phaseQuery);
                 $statement->execute($params);
             }

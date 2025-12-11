@@ -36,7 +36,7 @@ require_once COMPONENT_PATH . 'template/add-worker-modal.php';
     <!-- Project Primary Info -->
     <section class="project-primary-info content-section-block">
         <div class="">
-            <div class="flex-row flex-space-betwee`n">
+            <div class="flex-row flex-space-between">
 
                 <!-- Project Name and Status -->
                 <div class="first-col text-w-icon"> <img src="<?= ICON_PATH . 'project_w.svg' ?>"

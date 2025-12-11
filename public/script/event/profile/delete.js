@@ -45,7 +45,7 @@ async function submit(e) {
             'Account Deleted',
             'Your account has been successfully deleted. You will be redirected to the login page.'
         )
-        setTimeout(() => window.location.href = '/TaskFlow/login', 1500)
+        setTimeout(() => window.location.href = '/login', 1500)
     } catch (error) {
         handleException(error, `Error during account deletion: ${error}`)
     }

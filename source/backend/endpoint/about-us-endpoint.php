@@ -48,13 +48,7 @@ class AboutUsEndpoint extends Endpoint
     {
         try {
             Csrf::protect();
-
-            $instance = new self();
-            $instance->rateLimiter->handle(
-                $instance->getIpAddress(), 
-                $instance->getEndpointName(), 
-                ['limit' => 5, 'timeWindow' => 60] // 5 requests per minute
-            );
+            self::rateLimit(5, 60); // 5 requests per minute
 
             $data = decodeData('php://input');
             if (!$data) {

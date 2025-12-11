@@ -133,7 +133,7 @@ $performance = ($reportData['phases']?->count() > 0)
 
                         <div class="phase-timeline-data no-display">
                             <?php 
-                            $reversed = array_reverse($reportData['phases']->toArray());
+                            $reversed = $reportData['phases']->reverse();
                             foreach ($reversed as $phase): 
                                 $name = htmlspecialchars($phase->getName());
                                 $startDateTime = htmlspecialchars(formatDateTime($phase->getStartDateTime()));

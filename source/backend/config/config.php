@@ -14,24 +14,24 @@ require_once __DIR__ . DS . 'env.php';
 spl_autoload_register(function ($class) {
     // Map namespace folders to actual paths
     static $pathMap = [
-    'abstract' => ABSTRACT_PATH,
-    'auth' => AUTH_PATH,
-    'config' => CONFIG_PATH,
-    'container' => CONTAINER_PATH,
-    'controller' => CONTROLLER_PATH,
-    'core' => CORE_PATH,
-    'dependent' => DEPENDENT_PATH,
-    'dump' => DUMP_PATH,
-    'endpoint' => ENDPOINT_PATH,
-    'entity' => ENTITY_PATH,
-    'enumeration' => ENUM_PATH,
-    'exception' => EXCEPTION_PATH,
-    'interface' => INTERFACE_PATH,
-    'router' => ROUTER_PATH,
-    'middleware' => MIDDLEWARE_PATH,
-    'model' => MODEL_PATH,
-    'service' => SERVICE_PATH,
-    'validator' => VALIDATOR_PATH,
+        'abstract' => ABSTRACT_PATH,
+        'auth' => AUTH_PATH,
+        'config' => CONFIG_PATH,
+        'container' => CONTAINER_PATH,
+        'controller' => CONTROLLER_PATH,
+        'core' => CORE_PATH,
+        'dependent' => DEPENDENT_PATH,
+        'dump' => DUMP_PATH,
+        'endpoint' => ENDPOINT_PATH,
+        'entity' => ENTITY_PATH,
+        'enumeration' => ENUM_PATH,
+        'exception' => EXCEPTION_PATH,
+        'interface' => INTERFACE_PATH,
+        'router' => ROUTER_PATH,
+        'middleware' => MIDDLEWARE_PATH,
+        'model' => MODEL_PATH,
+        'service' => SERVICE_PATH,
+        'validator' => VALIDATOR_PATH,
     ];
 
     $prefix = 'App\\';
@@ -96,5 +96,4 @@ ini_set('display_errors', 0);               // Do not display errors on browser
 set_error_handler(['Logger', 'logError']);
 set_exception_handler(['Logger', 'logException']);
 
-App\Core\Session::restore();
 

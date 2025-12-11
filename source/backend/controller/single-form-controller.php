@@ -8,7 +8,7 @@ use App\Core\UUID;
 use App\Exception\ForbiddenException;
 use App\Exception\NotFoundException;
 use App\Interface\Controller;
-use App\Middleware\Csrf;
+use App\Middleware\Csrf; 
 use App\Model\PhaseModel;
 use App\Model\ProjectModel;
 
@@ -120,8 +120,8 @@ class SingleFormController implements Controller
 
         $uriParts = explode('?', $_SERVER['REQUEST_URI'], 2);
         $path = $uriParts[0];
-        $segments = explode('/', $path);
-        $page = kebabToCamelCase($segments[2] ?? '') ?: 'forgetPassword';
+        $segments = explode('/', trim($path, '/'));
+        $page = kebabToCamelCase($segments[0] ?? '') ?: 'forgetPassword';
         $component = $components[$page];
 
         $scripts = $component['script'];

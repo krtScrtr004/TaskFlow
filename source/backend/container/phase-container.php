@@ -100,6 +100,25 @@ class PhaseContainer extends Container
     }
 
     /**
+     * Converts all phases in the container to an array representation.
+     *
+     * This method iterates over all phases and converts each to an array:
+     * - Calls toArray() on each Phase instance
+     * - Preserves the original order of phases
+     *
+     * @param bool $useSnakeCase Whether to use snake_case keys (true) or camelCase keys (false, default)
+     * @return array<int, array<string, mixed>> Array of phases where each phase is represented as an associative array
+     */
+    public function toArray(bool $useSnakeCase = false): array
+    {
+        $phasesArray = [];
+        foreach ($this->items as $phase) {
+            $phasesArray[] = $phase->toArray($useSnakeCase);
+        }
+        return $phasesArray;
+    }
+
+    /**
      * Creates a PhaseContainer instance from an array of phase data.
      *
      * This method takes an array of phase data and maps each element to a Phase object
