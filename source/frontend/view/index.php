@@ -30,7 +30,7 @@ if (!$component) {
     <main class="flex-row">
         <section class="banner flex-col flex-child-center-h flex-child-center-v black-bg">
             <img src="<?= IMAGE_PATH . 'logo-light.svg' ?>" alt="TaskFlow" title="TaskFlow" height="200">
-            <h1 class="white-text center-text">IT Project Management Platform</h1>
+            <h1 class="white-text center-text">Project Management Platform</h1>
         </section>
 
         <section class="form flex-col flex-child-center-v">
