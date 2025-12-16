@@ -69,7 +69,7 @@ async function submit(e) {
         await sendToBackend(email, password)
 
         // Redirect to home page after successful login
-        window.location.href = `/TaskFlow/home` 
+        window.location.href = `/home` 
     } catch (error) {
         handleException(error, 'Error during login:', error)
     } finally {

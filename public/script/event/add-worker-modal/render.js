@@ -1,6 +1,6 @@
 import { createFullName } from '../../utility/utility.js'
 
-const ICON_PATH = 'asset/image/icon/'
+const ICON_PATH = '/public/asset/image/icon/'
 
 /**
  * Creates and appends a worker card to the worker list.

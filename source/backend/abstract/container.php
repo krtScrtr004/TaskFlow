@@ -111,6 +111,24 @@ abstract class Container implements IteratorAggregate, Countable, JsonSerializab
     }
 
     /**
+     * Reverses the order of items in the container.
+     *
+     * This method performs the following steps:
+     * - Reverses the sequence of elements stored in the container's internal $items array.
+     * - Modifies the internal state in-place.
+     * - Reindexes numeric keys as array_reverse() does by default.
+     * - Ensures subsequent iteration or access will reflect the new order.
+     *
+     * @throws Exception For unexpected errors during array reversal.
+     *
+     * @return array The reversed array of items after modification.
+     */
+    public function reverse(): array
+    {
+        return $this->items = array_reverse($this->items, true);
+    }
+
+    /**
      * Returns the container's items as an array.
      *
      * This method exposes the internal storage of the container:
@@ -118,9 +136,10 @@ abstract class Container implements IteratorAggregate, Countable, JsonSerializab
      * - Returns a shallow copy of the internal array; modifying the returned array does not alter the container's internal state
      * - Useful for iteration, serialization, debugging, or converting to other representations
      *
+     * @param bool $useSnakeCase Whether to use snake_case keys (true) or camelCase keys (false, default)
      * @return array<string|int,mixed> Associative array of stored items where keys are item identifiers and values are the stored values
      */
-    public function toArray(): array
+    public function toArray(bool $useSnakeCase = false): array
     {
         return $this->items;
     }

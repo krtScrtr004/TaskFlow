@@ -160,6 +160,9 @@ class Worker extends User
      */
     public static function createPartial(array $data): Worker
     {
+        // Normalize input keys to camelCase to support both snake_case and camelCase input
+        $data = normalizeArrayKeysToCamelCase($data);
+
         $partial = User::createPartial($data)->toWorker();
         if (isset($data['status'])) {
             $partial->setStatus(
@@ -252,13 +255,14 @@ class Worker extends User
      * This method extends the parent's toArray functionality by adding
      * the specific role identifier for Worker objects.
      *
+     * @param bool $useSnakeCase Whether to use snake_case keys (true) or camelCase keys (false, default)
      * @return array Associative array containing all worker data including:
      *      - All base user properties from the parent class
      *      - role: string The role identifier set to 'worker'
      */
-    public function toArray(): array
+    public function toArray(bool $useSnakeCase = false): array
     {
-        $worker = parent::toArray();
+        $worker = parent::toArray($useSnakeCase);
         $worker['role'] = Role::WORKER->value;
 
         return $worker;
@@ -294,6 +298,9 @@ class Worker extends User
      */
     public static function fromArray(array $data): self
     {
+        // Normalize input keys to camelCase to support both snake_case and camelCase input
+        $data = normalizeArrayKeysToCamelCase($data);
+
         $user = User::fromArray($data);
 
         $status = (is_string($data['status']))

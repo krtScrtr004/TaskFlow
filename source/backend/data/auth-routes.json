@@ -1,10 +1,10 @@
 {
     "POST": {
-        "TaskFlow/endpoint/auth/login": ["AuthEndpoint", "login"],
-        "TaskFlow/endpoint/auth/register": ["AuthEndpoint", "register"],
-        "TaskFlow/endpoint/auth/logout": ["AuthEndpoint", "logout"],
-        "TaskFlow/endpoint/auth/confirm-email": ["AuthEndpoint", "confirmEmail"],
-        "TaskFlow/endpoint/auth/reset-password": ["AuthEndpoint", "resetPassword"],
-        "TaskFlow/endpoint/auth/change-password": ["AuthEndpoint", "changePassword"]
+        "/endpoint/auth/login": ["AuthEndpoint", "login"],
+        "/endpoint/auth/register": ["AuthEndpoint", "register"],
+        "/endpoint/auth/logout": ["AuthEndpoint", "logout"],
+        "/endpoint/auth/confirm-email": ["AuthEndpoint", "confirmEmail"],
+        "/endpoint/auth/reset-password": ["AuthEndpoint", "resetPassword"],
+        "/endpoint/auth/change-password": ["AuthEndpoint", "changePassword"]
     }
 }

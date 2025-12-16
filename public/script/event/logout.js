@@ -13,7 +13,7 @@ if (!logoutButton) {
             isLoading = true
 
             await Http.POST('auth/logout')
-            window.location.href = '/TaskFlow/login'
+            window.location.href = '/login'
         } catch (error) {
             handleException(error)
         } finally {

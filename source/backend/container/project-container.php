@@ -196,11 +196,11 @@ class ProjectContainer extends Container
     }
 
 
-    public function toArray(): array
+    public function toArray(bool $useSnakeCase = false): array
     {
         $projectsArray = [];
         foreach ($this->items as $project) {
-            $projectsArray[] = $project->toArray();
+            $projectsArray[] = $project->toArray($useSnakeCase);
         }
         return $projectsArray;
     }

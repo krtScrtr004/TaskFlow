@@ -672,6 +672,9 @@ class User implements Entity
      */
     public static function createPartial(array $data): self
     {
+        // Normalize input keys to camelCase to support both snake_case and camelCase input
+        $data = normalizeArrayKeysToCamelCase($data);
+
         // Provide default values for required fields
         $defaults = [
             'id'                        => $data['id'] ?? 0,
@@ -825,10 +828,11 @@ class User implements Entity
      *      - confirmedAt: string|null User confirmation timestamp (Y-m-d H:i:s format) or null if not confirmed
      *      - deletedAt: string|null User deletion timestamp (Y-m-d H:i:s format) or null if not deleted
      *      - additionalInfo: array Additional user information
+     * @param bool $useSnakeCase Whether to use snake_case keys (true) or camelCase keys (false, default)
      */
-    public function toArray(): array
+    public function toArray(bool $useSnakeCase = false): array
     {
-        return [
+        $data = [
             'id' => UUID::toString($this->publicId),
             'firstName' => $this->firstName,
             'middleName' => $this->middleName,
@@ -846,6 +850,8 @@ class User implements Entity
             'deletedAt' => $this->deletedAt ? $this->deletedAt->format('Y-m-d H:i:s') : null,
             'additionalInfo' => $this->additionalInfo
         ];
+
+        return $useSnakeCase ? normalizeArrayKeysToSnakeCase($data) : $data;
     }
 
     /**
@@ -883,6 +889,9 @@ class User implements Entity
      */
     public static function fromArray(array $data): self
     {
+        // Normalize input keys to camelCase to support both snake_case and camelCase input
+        $data = normalizeArrayKeysToCamelCase($data);
+
         $publicId = null;
         if ($data['publicId'] instanceof UUID) {
             $publicId = $data['publicId'];

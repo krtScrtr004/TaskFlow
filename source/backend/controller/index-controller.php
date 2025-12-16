@@ -10,7 +10,7 @@ use App\Middleware\Csrf;
 class IndexController implements Controller
 {
     private static array $components = [
-        'login' => [
+        'login' => [ 
             'title' => 'Log In Your Account', 
             'form'  => 'login',
             'scripts' => [
@@ -67,8 +67,8 @@ class IndexController implements Controller
         }
 
         // Dynamically display appropriate page (login / signup) based on URL
-        $uris = explode('/', $_SERVER['REQUEST_URI']);
-        $page = kebabToCamelCase(($uris[2] !== '') ? $uris[2] : 'login');
+        $uris = explode('/', trim($_SERVER['REQUEST_URI'], '/'));
+        $page = kebabToCamelCase(($uris[0] !== '') ? $uris[0] : 'login');
         $component = self::$components[$page] ?? null;
         $scripts = $component['scripts'] ?? [];
 

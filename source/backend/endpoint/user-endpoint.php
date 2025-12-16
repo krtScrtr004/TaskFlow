@@ -74,8 +74,8 @@ class UserEndpoint extends Endpoint
                 Response::error('User not found.', [], 404);
             } else {
                 $projectHistory = $user->getAdditionalInfo('projectHistory');
-                if ($projectHistory !== null || $projectHistory !== []) {
-                    $performance = (Role::isProjectManager($user))
+                if (count($projectHistory?->getItems() ?? []) > 0) {
+                    $performance = (Role::isProjectManager($user))  
                         ? ProjectManagerPerformanceCalculator::calculate($projectHistory)
                         : WorkerPerformanceCalculator::calculate($projectHistory);
                     $user->addAdditionalInfo('performance', $performance['overallScore']);

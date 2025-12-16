@@ -43,7 +43,7 @@ echo ""
 echo "Checking for pnpm..."
 if ! command -v pnpm &> /dev/null; then
     print_error "pnpm is not installed."
-    print_info "Installing pnpm via npm..."
+    print_info "Installing pnpm..."
     
     # Check if npm is installed
     if ! command -v npm &> /dev/null; then
@@ -52,7 +52,24 @@ if ! command -v pnpm &> /dev/null; then
         exit 1
     fi
     
-    npm install -g pnpm
+    # Try installing pnpm - use sudo if available and needed
+    if sudo -n true 2>/dev/null; then
+        # User has passwordless sudo
+        sudo npm install -g pnpm
+    elif [ -w "$(npm config get prefix)/lib/node_modules" ] 2>/dev/null; then
+        # User has write permission to npm global directory
+        npm install -g pnpm
+    else
+        # Need sudo with password prompt
+        print_info "Global npm install requires sudo privileges..."
+        sudo npm install -g pnpm
+    fi
+    
+    if ! command -v pnpm &> /dev/null; then
+        print_error "Failed to install pnpm"
+        print_info "Try manually: sudo npm install -g pnpm"
+        exit 1
+    fi
     print_success "pnpm installed successfully"
 fi
 print_success "pnpm found: $(pnpm --version)"

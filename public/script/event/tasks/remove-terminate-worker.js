@@ -1,4 +1,3 @@
-import { Dialog } from '../../render/dialog.js'
 import { removeTerminateWorker } from '../../utility/remove-terminate-worker.js'
 import { handleException } from '../../utility/handle-exception.js'
 
@@ -32,9 +31,9 @@ import { handleException } from '../../utility/handle-exception.js'
         }
 
         const endpoint = `projects/${projectId}/phases/${phaseId}/tasks/${taskId}`
-        const workerContainer = viewTaskInfo?.querySelector('.worker-grid')
+        const workerContainer = viewTaskInfo?.querySelector('.worker-table')
         // Initialize worker termination functionality
-        removeTerminateWorker(projectId, workerContainer, '.user-grid-card', endpoint)
+        removeTerminateWorker(projectId, workerContainer, '.user-table-row', endpoint)
     } catch (error) {
         handleException(error, 'Error terminating worker:', error)
     }

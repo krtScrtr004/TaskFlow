@@ -1,4 +1,4 @@
-const apiUrl = 'http://localhost/TaskFlow/endpoint/'
+const apiUrl = 'http://TaskFlow.local/endpoint/'
 
 /**
  * Http utility module for making HTTP requests with error handling and CSRF protection.

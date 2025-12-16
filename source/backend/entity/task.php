@@ -432,6 +432,9 @@ class Task implements Entity
      */
     public static function createPartial(array $data): self
     {
+        // Normalize input keys to camelCase to support both snake_case and camelCase input
+        $data = normalizeArrayKeysToCamelCase($data);
+
         $defaults = [
             'id'                        => $data['id'] ?? 0,
             'publicId'                  => $data['publicId'] ?? UUID::get(),
@@ -536,14 +539,15 @@ class Task implements Entity
      *      - status: string Display name of the task status
      *      - createdAt: string Formatted creation date/time
      *      - additionalInfo: array Additional information related to the task
+     * @param bool $useSnakeCase Whether to use snake_case keys (true) or camelCase keys (false, default)
      */
-    public function toArray(): array
+    public function toArray(bool $useSnakeCase = false): array
     {
-        return [
+        $data = [
             'id' => UUID::toString($this->publicId),
             'name' => $this->name,
             'description' => $this->description,
-            'workers' => $this->workers->toArray(),
+            'workers' => $this->workers->toArray($useSnakeCase),
             'startDateTime' => formatDateTime($this->startDateTime, DateTime::ATOM),
             'completionDateTime' => formatDateTime($this->completionDateTime, DateTime::ATOM),
             'actualCompletionDateTime' => 
@@ -555,6 +559,8 @@ class Task implements Entity
             'createdAt' => formatDateTime($this->createdAt, DateTime::ATOM),
             'additionalInfo' => $this->additionalInfo
         ];
+
+        return $useSnakeCase ? normalizeArrayKeysToSnakeCase($data) : $data;
     }
 
     /**
@@ -588,6 +594,9 @@ class Task implements Entity
      */
     public static function fromArray(array $data): self
     {
+        // Normalize input keys to camelCase to support both snake_case and camelCase input
+        $data = normalizeArrayKeysToCamelCase($data);
+
         $publicId = null;
         if ($data['publicId'] instanceof UUID) {
             $publicId = $data['publicId'];

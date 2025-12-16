@@ -37,7 +37,7 @@ class UserModel extends Model
      * @param array $options Query options:
      *      - limit: int Maximum number of records to return (default: 10)
      *      - offset: int Number of records to skip (default: 0)
-     *      - orderBy: string SQL ORDER BY clause (default: 'u.firstName DESC')
+     *      - orderBy: string SQL ORDER BY clause (default: 'u.first_name DESC')
      *      - groupBy: string SQL GROUP BY clause (default: 'u.id')
      *
      * @return array|null Array of User instances with attached project statistics, or null if no data found
@@ -50,7 +50,7 @@ class UserModel extends Model
             'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
             'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
             'groupBy'   => $options[':groupBy'] ?? $options['groupBy'] ?? 'u.id',
-            'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 'u.lastName ASC',
+            'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 'u.last_name ASC',
         ];
 
         $instance = new self();
@@ -67,62 +67,62 @@ class UserModel extends Model
                         FROM 
                             `project` AS p
                         LEFT JOIN 
-                            `projectWorker` AS pw 
+                            `project_worker` AS pw 
                         ON 
-                            p.id = pw.projectId
+                            p.id = pw.project_id
                         WHERE 
-                            p.managerId = u.id
+                            p.manager_id = u.id
                         OR 
-                            pw.workerId = u.id
-                    ) AS totalProjects,
+                            pw.worker_id = u.id
+                    ) AS total_projects,
                     (
                         SELECT 
                             COUNT(DISTINCT p.id)
                         FROM 
                             `project` AS p
                         LEFT JOIN 
-                            `projectWorker` AS pw 
+                            `project_worker` AS pw 
                         ON 
-                            p.id = pw.projectId
+                            p.id = pw.project_id
                         WHERE 
-                            (p.managerId = u.id
+                            (p.manager_id = u.id
                         OR 
-                            pw.workerId = u.id)
+                            pw.worker_id = u.id)
                         AND 
                             p.status = :completedStatus
                         AND 
                             pw.status != :terminatedStatus1
-                    ) AS completedProjects,
+                    ) AS completed_projects,
                     (
                         SELECT 
                             COUNT(DISTINCT p.id)
                         FROM 
                             `project` AS p
                         LEFT JOIN 
-                            `projectWorker` AS pw 
+                            `project_worker` AS pw 
                         ON 
-                            p.id = pw.projectId
+                            p.id = pw.project_id
                         WHERE 
-                            pw.workerId = u.id 
+                            pw.worker_id = u.id 
                         AND 
                             p.status = :cancelledStatus
-                    ) AS cancelledProjectCount,
+                    ) AS cancelled_project_count,
                     (
                         SELECT 
                             COUNT(*)
                         FROM 
-                            `projectWorker` AS pw
+                            `project_worker` AS pw
                         WHERE 
-                            pw.workerId = u.id
+                            pw.worker_id = u.id
                         AND 
                             pw.status = :terminatedStatus2
-                    ) AS terminatedProjectCount
+                    ) AS terminated_project_count
                 FROM 
                     `user` AS u
                 LEFT JOIN 
-                    `userJobTitle` AS ujt 
+                    `user_job_title` AS ujt 
                 ON 
-                    u.id = ujt.userId";
+                    u.id = ujt.user_id";
             $query = $instance->appendOptionsToFindQuery(
                 $instance->appendWhereClause($queryString, $whereClause),
             $paramOptions);
@@ -142,12 +142,12 @@ class UserModel extends Model
 
             $users = [];
             foreach ($result as $row) {
-                $row['jobTitles'] = explode(',', $row['jobTitles']);
+                $row['job_titles'] = explode(',', $row['job_titles']);
                 $row['additionalInfo'] = [
-                    'totalProjects'             => (int) $row['totalProjects'] ?? 0,
-                    'completedProjects'         => (int) $row['completedProjects'] ?? 0,
-                    'cancelledProjectCount'     => (int) $row['cancelledProjectCount'] ?? 0,
-                    'terminatedProjectCount'    => (int) $row['terminatedProjectCount'] ?? 0
+                    'totalProjects'             => (int) $row['total_projects'] ?? 0,
+                    'completedProjects'         => (int) $row['completed_projects'] ?? 0,
+                    'cancelledProjectCount'     => (int) $row['cancelled_project_count'] ?? 0,
+                    'terminatedProjectCount'    => (int) $row['terminated_project_count'] ?? 0
                 ];
 
                 $users[] = User::fromArray($row);
@@ -195,7 +195,7 @@ class UserModel extends Model
 
         $instance = new self();
         try {
-            $searchRole = "SELECT id, role FROM `user` WHERE " . (is_int($userId) ? "id" : "publicId") . " = :userId LIMIT 1";
+            $searchRole = "SELECT id, role FROM `user` WHERE " . (is_int($userId) ? "id" : "public_id") . " = :userId LIMIT 1";
             $statement = $instance->connection->prepare($searchRole);
             $statement->execute([':userId' => is_int($userId) ? $userId : UUID::toBinary($userId)]);
             $result = $statement->fetch();
@@ -226,7 +226,7 @@ class UserModel extends Model
     public static function findByEmail(string $email): ?User
     {
         try {
-            $result = self::find('email = :email AND deletedAt IS NULL', [':email' => $email], ['limit' => 1]);
+            $result = self::find('email = :email AND deleted_at IS NULL', [':email' => $email], ['limit' => 1]);
             return $result ? $result[0] : null;
         } catch (Exception $e) {
             throw $e;
@@ -281,7 +281,7 @@ class UserModel extends Model
             }
 
             if ($contactNumber) {
-                $whereConditions[] = "contactNumber = :contactNumber";
+                $whereConditions[] = "contact_number = :contactNumber";
                 $params[':contactNumber1'] = $contactNumber;
                 $params[':contactNumber2'] = $contactNumber;
             }
@@ -289,7 +289,7 @@ class UserModel extends Model
             if ($excludeUserId) {
                 $whereConditions[] = is_int($excludeUserId) 
                     ? "id != :excludeUserId" 
-                    : "publicId != :excludeUserId";
+                    : "public_id != :excludeUserId";
                 $params[':excludeUserId'] = is_int($excludeUserId) 
                     ? $excludeUserId 
                     : UUID::toBinary($excludeUserId);
@@ -298,15 +298,15 @@ class UserModel extends Model
             $query = "
                 SELECT 
                     (CASE WHEN " . ($email ? "email = :email1" : "0") . " THEN 1 ELSE 0 END) as email_duplicate,
-                    (CASE WHEN " . ($contactNumber ? "contactNumber = :contactNumber1" : "0") . " THEN 1 ELSE 0 END) as contact_duplicate
+                    (CASE WHEN " . ($contactNumber ? "contact_number = :contactNumber1" : "0") . " THEN 1 ELSE 0 END) as contact_duplicate
                 FROM `user`
                 WHERE " . implode(" OR ", array_filter([
                     $email ? "email = :email2" : null,
-                    $contactNumber ? "contactNumber = :contactNumber2" : null
+                    $contactNumber ? "contact_number = :contactNumber2" : null
                 ]));
 
             if ($excludeUserId) {
-                $query .= (is_int($excludeUserId) ? " AND id != :excludeUserId" : " AND publicId != :excludeUserId");
+                $query .= (is_int($excludeUserId) ? " AND id != :excludeUserId" : " AND public_id != :excludeUserId");
             }
 
             $query .= " LIMIT 1";
@@ -404,7 +404,7 @@ class UserModel extends Model
 
             if (trimOrNull($key)) {
                 $where[] = "
-                    MATCH(u.firstName, u.middleName, u.lastName, u.email, u.bio)
+                    MATCH(u.first_name, u.middle_name, u.last_name, u.email, u.bio)
                     AGAINST (:key IN NATURAL LANGUAGE MODE)
                 ";
                 $params[':key'] = $key;
@@ -424,7 +424,7 @@ class UserModel extends Model
                             FROM 
                                 `project` AS p
                             WHERE 
-                                p.managerId = u.id
+                                p.manager_id = u.id
                             AND 
                                 p.status NOT IN (
                                     :completedStatusUnassigned1, :cancelledStatusUnassigned1
@@ -433,11 +433,11 @@ class UserModel extends Model
                         AND NOT EXISTS (
                             SELECT 1
                             FROM 
-                                `projectWorker` AS pw
+                                `project_worker` AS pw
                             JOIN 
-                                `project` AS p ON pw.projectId = p.id
+                                `project` AS p ON pw.project_id = p.id
                             WHERE 
-                                pw.workerId = u.id
+                                pw.worker_id = u.id
                             AND 
                                 p.status NOT IN (
                                     :completedStatusUnassigned2, :cancelledStatusUnassigned2
@@ -446,11 +446,11 @@ class UserModel extends Model
                         AND NOT EXISTS (
                             SELECT 1
                             FROM 
-                                `phaseTaskWorker` AS ptw
+                                `phase_task_worker` AS ptw
                             JOIN 
-                                `phaseTask` AS pt ON ptw.taskId = pt.id
+                                `phase_task` AS pt ON ptw.task_id = pt.id
                             WHERE 
-                                ptw.workerId = u.id
+                                ptw.worker_id = u.id
                             AND 
                                 pt.status NOT IN (
                                     :completedStatusUnassigned3, :cancelledStatusUnassigned3
@@ -470,7 +470,7 @@ class UserModel extends Model
                             FROM 
                                 `project` p
                             WHERE 
-                                p.managerId = u.id
+                                p.manager_id = u.id
                             AND 
                                 p.status NOT IN (
                                     :completedStatusUnassigned, :cancelledStatusUnassigned
@@ -479,17 +479,17 @@ class UserModel extends Model
                         (EXISTS (
                             SELECT 1
                             FROM 
-                                `projectWorker` pw
+                                `project_worker` pw
                             WHERE 
-                                pw.workerId = u.id
+                                pw.worker_id = u.id
                             AND 
                                 pw.status = :workerStatus1
                         ) OR EXISTS (
                             SELECT 1
                             FROM 
-                                `phaseTaskWorker` ptw
+                                `phase_task_worker` ptw
                             WHERE 
-                                ptw.workerId = u.id
+                                ptw.worker_id = u.id
                             AND 
                                 ptw.status = :workerStatus2
                         )))
@@ -502,7 +502,7 @@ class UserModel extends Model
             }
 
             // Exclude unconfirmed and deleted users
-            $where[] = "u.createdAt IS NOT NULL AND u.deletedAt IS NULL";
+            $where[] = "u.created_at IS NOT NULL AND u.deleted_at IS NULL";
 
             $whereClause = !empty($where) ? implode(' AND ', $where) : '';
             return self::find($whereClause, $params, $paramOptions);
@@ -555,17 +555,17 @@ class UserModel extends Model
             // Insert User Data
             $userQuery = "
                 INSERT INTO `user` (
-                    publicId, 
-                    firstName, 
-                    middleName, 
-                    lastName, 
+                    public_id, 
+                    first_name, 
+                    middle_name, 
+                    last_name, 
                     gender, 
-                    birthDate, 
+                    birth_date, 
                     role, 
-                    contactNumber, 
+                    contact_number, 
                     email, 
                     bio, 
-                    profileLink, 
+                    profile_link, 
                     password
                 ) VALUES (
                     :publicId, 
@@ -584,32 +584,32 @@ class UserModel extends Model
             ";
             $statement = $instance->connection->prepare($userQuery);
             $statement->execute([
-                ':publicId' => UUID::toBinary($uuid),
-                ':firstName' => $firstName,
-                ':middleName' => $middleName,
-                ':lastName' => $lastName,
-                ':gender' => $gender,
-                ':birthDate' => formatDateTime($birthDate, DateTime::ATOM),
-                ':role' => $role,
-                ':contactNumber' => $contactNumber,
-                ':email' => $email,
-                ':bio' => $bio,
-                ':profileLink' => $profileLink,
-                ':password' => password_hash($password, PASSWORD_ARGON2ID)
+                ':publicId'         => UUID::toBinary($uuid),
+                ':firstName'        => $firstName,
+                ':middleName'       => $middleName,
+                ':lastName'         => $lastName,
+                ':gender'           => $gender,
+                ':birthDate'        => formatDateTime($birthDate),
+                ':role'             => $role,
+                ':contactNumber'    => $contactNumber,
+                ':email'            => $email,
+                ':bio'              => $bio,
+                ':profileLink'      => $profileLink,
+                ':password'         => password_hash($password, \PASSWORD_ARGON2ID)
             ]);
             $userId = $instance->connection->lastInsertId();
 
             // Insert Job Titles, if any
             if (!empty($jobTitles)) {
                 $jobTitleQuery = "
-                    INSERT INTO `userJobTitle` (userId, title)
+                    INSERT INTO `user_job_title` (user_id, title)
                     VALUES (:userId, :title)
                 ";
                 $jobTitleStatement = $instance->connection->prepare($jobTitleQuery);
                 foreach ($jobTitles as $title) {
                     $jobTitleStatement->execute([
-                        ':userId' => $userId,
-                        ':title' => $title
+                        ':userId'   => $userId,
+                        ':title'    => $title
                     ]);
                 }
             }
@@ -642,7 +642,7 @@ class UserModel extends Model
      * All updates are performed within a transaction. If any error occurs, the transaction is rolled back.
      *
      * @param array $data Associative array containing user data to update. Supported keys:
-     *      - id: int User ID (required if publicId is not provided)
+     *      - id: int User ID (required if public_id is not provided)
      *      - publicId: string|binary User public identifier (required if id is not provided)
      *      - firstName: string User's first name
      *      - middleName: string User's middle name
@@ -679,17 +679,17 @@ class UserModel extends Model
             }
 
             if (isset($data['firstName'])) {
-                $updateFields[] = 'firstName = :firstName';
+                $updateFields[] = 'first_name = :firstName';
                 $params[':firstName'] = trimOrNull($data['firstName']);
             }
 
             if (isset($data['middleName'])) {
-                $updateFields[] = 'middleName = :middleName';
+                $updateFields[] = 'middle_name = :middleName';
                 $params[':middleName'] = trimOrNull($data['middleName']);
             }
 
             if (isset($data['lastName'])) {
-                $updateFields[] = 'lastName = :lastName';
+                $updateFields[] = 'last_name = :lastName';
                 $params[':lastName'] = trimOrNull($data['lastName']);
             }
 
@@ -704,37 +704,37 @@ class UserModel extends Model
             }
 
             if (isset($data['birthDate'])) {
-                $updateFields[] = 'birthDate = :birthDate';
+                $updateFields[] = 'birth_date = :birthDate';
                 $params[':birthDate'] = formatDateTime($data['birthDate']);
             }
             
             if (isset($data['contactNumber'])) {
-                $updateFields[] = 'contactNumber = :contactNumber';
+                $updateFields[] = 'contact_number = :contactNumber';
                 $params[':contactNumber'] = trimOrNull($data['contactNumber']);
             }
 
             if (isset($data['profileLink'])) {
-                $updateFields[] = 'profileLink = :profileLink';
+                $updateFields[] = 'profile_link = :profileLink';
                 $params[':profileLink'] = trimOrNull($data['profileLink']);
             }
 
             if (isset($data['password'])) {
                 $updateFields[] = 'password = :password';
-                $params[':password'] = password_hash(trimOrNull($data['password']), PASSWORD_ARGON2ID);
+                $params[':password'] = password_hash(trimOrNull($data['password']), \PASSWORD_ARGON2ID);
             }
 
             if (isset($data['confirm']) && $data['confirm'] === true) {
-                $updateFields[] = 'confirmedAt = :confirmedAt';
+                $updateFields[] = 'confirmed_at = :confirmedAt';
                 $params[':confirmedAt'] = formatDateTime(new DateTime());
             }
 
             if (isset($data['delete']) && $data['delete'] === true) {
-                $updateFields[] = 'deletedAt = :deletedAt';
+                $updateFields[] = 'deleted_at = :deletedAt';
                 $params[':deletedAt'] = formatDateTime(new DateTime());
             }
 
             if (!empty($updateFields)) {
-                $projectQuery = "UPDATE `user` SET " . implode(', ', $updateFields) . " WHERE id = " . (isset($params[':id']) ? ":id" : "(SELECT id FROM users WHERE publicId = :publicId)") . "";
+                $projectQuery = "UPDATE `user` SET " . implode(', ', $updateFields) . " WHERE id = " . (isset($params[':id']) ? ":id" : "(SELECT id FROM users WHERE public_id = :publicId)") . "";
                 $statement = $instance->connection->prepare($projectQuery);
                 $statement->execute($params);
             }
@@ -761,7 +761,7 @@ class UserModel extends Model
      * This method performs the following operations:
      * - Deletes job titles from the user if provided in $jobTitlesToDelete.
      * - Adds job titles to the user if provided in $jobTitlesToAdd.
-     * - Handles both integer user IDs and UUIDs (publicId).
+     * - Handles both integer user IDs and UUIDs (public_id).
      * - Skips execution if both $jobTitlesToDelete and $jobTitlesToAdd are empty or null.
      * - Throws an exception if the user ID is invalid.
      * - Uses prepared statements to prevent SQL injection.
@@ -788,8 +788,8 @@ class UserModel extends Model
         try {        
             if (count($jobTitlesToDelete) > 0) {
                 $deleteQuery = "
-                    DELETE FROM `userJobTitle`
-                    WHERE userId = " . (is_int($userId) ? ":userId" : "(SELECT id FROM users WHERE publicId = :userId)") . "
+                    DELETE FROM `user_job_title`
+                    WHERE user_id = " . (is_int($userId) ? ":userId" : "(SELECT id FROM users WHERE public_id = :userId)") . "
                     AND title = :title
                 ";
 
@@ -805,9 +805,9 @@ class UserModel extends Model
             if (count($jobTitlesToAdd) > 0) {
                 $insertQuery = "
                     INSERT INTO
-                        `userJobTitle` (userId, title)
+                        `user_job_title` (user_id, title)
                     VALUES (
-                        " . (is_int($userId) ? ":userId" : "(SELECT id FROM users WHERE publicId = :userId)") . "   
+                        " . (is_int($userId) ? ":userId" : "(SELECT id FROM users WHERE public_id = :userId)") . "   
                         , :title
                     )
                 ";

@@ -13,7 +13,7 @@ import { createFullName } from '../../utility/utility.js'
  * @returns {HTMLElement} The worker list card button element
  */
 export function createWorkerListCard(worker) {
-    const ICON_PATH = 'asset/image/icon/'
+    const ICON_PATH = '/public/asset/image/icon/'
 
     // Determine profile picture URL
     const profileLink = worker.profileLink ||

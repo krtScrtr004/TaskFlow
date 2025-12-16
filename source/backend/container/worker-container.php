@@ -294,6 +294,72 @@ class WorkerContainer extends Container
     }
 
     /**
+     * Converts all workers in the container to an array representation.
+     *
+     * This method iterates over all workers and converts each to an array:
+     * - Calls toArray() on each Worker instance
+     * - Preserves the original order of workers
+     *
+     * @param bool $useSnakeCase Whether to use snake_case keys (true) or camelCase keys (false, default)
+     * @return array<int, array<string, mixed>> Array of workers where each worker is represented as an associative array
+     */
+    public function toArray(bool $useSnakeCase = false): array
+    {
+        $workersArray = [];
+        foreach ($this->getItems() as $worker) {
+            $workersArray[] = $worker->toArray($useSnakeCase);
+        }
+        return $workersArray;
+    }
+
+    /**
+     * Reverses the order of the assigned items.
+     *
+     * This method performs the following steps:
+     * - Reverses the order of the $this->assigned array.
+     * - Updates the object's assigned property with the reversed array.
+     * - Returns the updated array of assigned items.
+     *
+     * @return array The reversed array of assigned items.
+     */
+    public function reverseAssigned(): array
+    {
+        return $this->assigned = array_reverse($this->assigned, true);
+    }
+
+    /**
+     * Reverses the internal unassigned items list.
+     *
+     * This method performs the following steps:
+     * - Reverses the order of the $this->unassigned array.
+     * - Assigns the reversed array back to the $this->unassigned property.
+     * - Returns the reversed array for immediate use by the caller.
+     *
+     * @throws UnexpectedValueException If the unassigned property is not an array.
+     *
+     * @return array The reversed unassigned items.
+     */
+    public function reverseUnassigned(): array
+    {
+        return $this->unassigned = array_reverse($this->unassigned, true);
+    }
+
+    /**
+     * Reverses the internal terminated container.
+     *
+     * This method performs the following steps:
+     * - Reverses the order of the internal $this->terminated array.
+     * - Assigns the reversed array back to $this->terminated to update internal state.
+     * - Returns the updated terminated array for further use.
+     *
+     * @return array The reversed terminated array.
+     */
+    public function reverseTerminated(): array
+    {
+        return $this->terminated = array_reverse($this->terminated, true);
+    }
+
+    /**
      * Creates a WorkerContainer instance from an array of worker data.
      *
      * This static factory method takes an array of worker data and converts each element

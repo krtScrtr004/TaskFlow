@@ -293,6 +293,10 @@
 	.team-members #add_worker_button {
 		width: 15ch !important;
 	}
+
+	#cancel_project_button {
+		font-size: 0.8rem !important;
+	}
 }
 
 @media (max-width: 480px) {

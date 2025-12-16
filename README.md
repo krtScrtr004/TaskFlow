@@ -38,7 +38,7 @@ TaskFlow is a comprehensive PHP-based project management system designed to mana
 
 - **PHP**: 8.2 or higher
 - **Database**: MariaDB 10.4+ or MySQL 8.0+
-- **Web Server**: Apache with mod_rewrite enabled
+- **Web Server**: Apache with mod_rewrite enabled (XAMPP recommended)
 - **Composer**: Latest version
 - **Node.js**: 16+ (for frontend dependencies)
 - **pnpm**: Latest version (will be installed automatically if missing)
@@ -54,17 +54,15 @@ TaskFlow is a comprehensive PHP-based project management system designed to mana
 
 ## 🚀 Installation
 
-### Option 1: Automated Installation (Recommended)
+### Step 1: Clone and Install Dependencies
 
-Open PowerShell (Windows) or Bash (Linux / Mac)
+#### Option A: Automated Installation (Recommended)
 
-Navigate to:
+Open PowerShell (Windows) or Bash (Linux/Mac) and navigate to the TaskFlow folder:
+
+**For Windows (PowerShell):**
 ```powershell
-cd C:\path\to\TaskFlow\folder
-```
-
-#### For Windows (PowerShell):
-```powershell
+cd C:\xampp\htdocs\TaskFlow
 .\install.ps1
 ```
 
@@ -74,13 +72,15 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\install.ps1
 ```
 
-#### For Linux/Mac (Bash):
+**For Linux/Mac (Bash):**
 ```bash
+cd /var/www/html/TaskFlow
+# or for XAMPP: cd /opt/lampp/htdocs/TaskFlow
 chmod +x install.sh
 ./install.sh
 ```
 
-### Option 2: Manual Installation
+#### Option B: Manual Installation
 
 1. **Clone the repository**
    ```bash
@@ -106,10 +106,10 @@ chmod +x install.sh
 
 ---
 
-## 🗄️ Database Setup
+### Step 2: Database Setup
 
 1. **Create the database**
-   - Open phpMyAdmin or your preferred MySQL client
+   - Open phpMyAdmin (`http://localhost/phpmyadmin`)
    - Create a new database named `taskflow`
 
 2. **Import the schema**
@@ -130,7 +130,7 @@ chmod +x install.sh
 
 ---
 
-## ⚙️ Configuration
+### Step 3: Environment Configuration
 
 1. **Create environment file**
    ```bash
@@ -144,12 +144,12 @@ chmod +x install.sh
    DB_HOST=localhost
    DB_PORT=3306
    DB_NAME=taskflow
-   DB_USER=your_username
-   DB_PASSWORD=your_password
+   DB_USER=root
+   DB_PASSWORD=
 
    # Application
    APP_ENV=development
-   APP_URL=http://localhost/TaskFlow
+   APP_URL=http://taskflow.local
 
    # Cloudinary (Optional - for image uploads)
    CLOUDINARY_URL=cloudinary://api_key:api_secret@cloud_name
@@ -162,48 +162,136 @@ chmod +x install.sh
    MAIL_FROM=noreply@taskflow.com
    ```
 
-3. **Configure Apache Virtual Host (Optional)**
+---
+
+### Step 4: Configure Local Domain (taskflow.local)
+
+#### For Windows (XAMPP)
+
+1. **Edit the hosts file** (Run Notepad as Administrator)
    
-   For better routing, set up a virtual host:
+   Open `C:\Windows\System32\drivers\etc\hosts` and add:
+   ```
+   127.0.0.1    taskflow.local
+   ```
+
+2. **Configure Apache Virtual Host**
+   
+   Open `C:\xampp\apache\conf\extra\httpd-vhosts.conf` and add:
    ```apache
    <VirtualHost *:80>
+       ServerAdmin admin@taskflow.local
        ServerName taskflow.local
-       DocumentRoot "C:/path/to/TaskFlow/public"
-       
-       <Directory "C:/path/to/TaskFlow/public">
+       DocumentRoot "C:/xampp/htdocs/TaskFlow"
+
+       <Directory "C:/xampp/htdocs/TaskFlow">
            Options Indexes FollowSymLinks
            AllowOverride All
            Require all granted
        </Directory>
+
+       ErrorLog "logs/taskflow_error.log"
+       CustomLog "logs/taskflow_access.log" combined
+   </VirtualHost>
+   ```
+
+3. **Enable Virtual Hosts**
+   
+   Open `C:\xampp\apache\conf\httpd.conf` and ensure this line is uncommented:
+   ```apache
+   Include conf/extra/httpd-vhosts.conf
+   ```
+
+4. **Restart Apache** from XAMPP Control Panel
+
+#### For Linux (XAMPP or Native Apache)
+
+1. **Edit the hosts file**
+   ```bash
+   sudo nano /etc/hosts
+   ```
+   
+   Add this line:
+   ```
+   127.0.0.1    taskflow.local
+   ```
+
+2. **Create Apache Virtual Host configuration**
+   
+   **For Native Apache (Ubuntu/Debian):**
+   ```bash
+   sudo nano /etc/apache2/sites-available/taskflow.conf
+   ```
+   
+   **For XAMPP:**
+   ```bash
+   sudo nano /opt/lampp/etc/extra/httpd-vhosts.conf
+   ```
+   
+   Add the following:
+   ```apache
+   <VirtualHost *:80>
+       ServerAdmin admin@taskflow.local
+       ServerName taskflow.local
+       DocumentRoot /var/www/html/TaskFlow
+
+       <Directory /var/www/html/TaskFlow>
+           Options Indexes FollowSymLinks
+           AllowOverride All
+           Require all granted
+       </Directory>
+
+       ErrorLog ${APACHE_LOG_DIR}/taskflow_error.log
+       CustomLog ${APACHE_LOG_DIR}/taskflow_access.log combined
    </VirtualHost>
    ```
    
-   Add to your hosts file:
+   *For XAMPP, use `/opt/lampp/htdocs/TaskFlow` as DocumentRoot*
+
+3. **Enable the site and required modules** (Native Apache only)
+   ```bash
+   sudo a2ensite taskflow.conf
+   sudo a2enmod rewrite
+   sudo systemctl restart apache2
    ```
-   127.0.0.1 taskflow.local
+   
+   **For XAMPP:**
+   ```bash
+   sudo /opt/lampp/lampp restart
+   ```
+
+4. **Set proper file permissions** (Linux)
+   ```bash
+   sudo chown -R $USER:$USER /var/www/html/TaskFlow
+   sudo chmod -R 755 /var/www/html/TaskFlow
    ```
 
 ---
 
 ## 🏃 Running the Application
 
-### Using PHP Built-in Server (Development)
+### Using XAMPP (Recommended)
+
+1. **Start XAMPP services**
+   - **Windows:** Open XAMPP Control Panel → Start Apache and MySQL
+   - **Linux:** `sudo /opt/lampp/lampp start` or `sudo systemctl start apache2 mysql`
+
+2. **Access the application**
+   
+   Open your browser and navigate to:
+   ```
+   http://taskflow.local
+   ```
+
+### Using PHP Built-in Server (Development Only)
 ```bash
 cd public
 php -S localhost:8000
 ```
 
-Access the application at: `http://localhost:8000`
+Access at: `http://localhost:8000`
 
-### Using XAMPP/WAMP
-1. Move the project to your web server's document root (e.g., `C:/xampp/htdocs/TaskFlow`)
-2. Start Apache and MySQL services
-3. Access at: `http://localhost/TaskFlow/login`
-
-### Using Docker (Optional)
-```bash
-docker-compose up -d
-```
+> ⚠️ **Note:** The built-in PHP server is for development only. Use XAMPP/Apache for production.
 
 ---
 

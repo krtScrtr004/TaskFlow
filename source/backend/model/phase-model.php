@@ -42,13 +42,13 @@ class PhaseModel extends Model
         $paramOptions = [
             'limit'     => $options[':limit'] ?? $options['limit'] ?? null,
             'offset'    => $options[':offset'] ?? $options['offset'] ?? null,
-            'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 'startDateTime ASC',
+            'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 'start_date_time ASC',
         ];
 
         $instance = new self();
         try {
             $query = $instance->appendOptionsToFindQuery(
-                $instance->appendWhereClause("SELECT * FROM `projectPhase` ", $whereClause), 
+                $instance->appendWhereClause("SELECT * FROM `project_phase` ", $whereClause), 
                 $paramOptions);
             $statement = $instance->connection->prepare($query);
             $statement->execute($params);
@@ -93,7 +93,7 @@ class PhaseModel extends Model
         try {
             $whereClause = is_int($phaseId) 
                 ? 'id = :phaseId' 
-                : 'publicId = :phaseId';
+                : 'public_id = :phaseId';
             $params = [
                 'phaseId' => is_int($phaseId) 
                     ? $phaseId 
@@ -137,10 +137,10 @@ class PhaseModel extends Model
 
         try {
             $whereClause = is_int($projectId) 
-                ? 'projectId = :projectId' 
-                : 'projectId = (SELECT id FROM `project` WHERE publicId = :projectId)';
+                ? 'project_id = :projectId' 
+                : 'project_id = (SELECT id FROM `project` WHERE public_id = :projectId)';
 
-            $whereClause .= " AND status = :status AND startDateTime <= NOW()";
+            $whereClause .= " AND status = :status AND start_date_time <= NOW()";
 
             $params = [
                 'projectId' => is_int($projectId) 
@@ -164,16 +164,16 @@ class PhaseModel extends Model
      *
      * This method retrieves phase records that match the given project ID and fall within the specified start and/or completion date boundaries.
      * - Validates that the project ID is a positive integer or a UUID.
-     * - Requires at least one of startDateTime or completionDateTime to be provided.
-     * - Converts projectId to binary if it is a UUID.
-     * - Formats startDateTime and completionDateTime for query parameters.
+     * - Requires at least one of start_date_time or completion_date_time to be provided.
+     * - Converts project_id to binary if it is a UUID.
+     * - Formats start_date_time and completion_date_time for query parameters.
      * - Constructs a WHERE clause based on provided parameters.
      *
      * @param int|UUID $projectId The project identifier (integer or UUID).
      * @param DateTime|null $startDateTime The lower boundary for phase start date (inclusive).
      * @param DateTime|null $completionDateTime The upper boundary for phase completion date (inclusive).
      * 
-     * @throws InvalidArgumentException If projectId is invalid or both date boundaries are missing.
+     * @throws InvalidArgumentException If project_id is invalid or both date boundaries are missing.
      * 
      * @return self[]|null Array of phase instances matching the criteria, or null if an error occurs.
      */
@@ -196,16 +196,16 @@ class PhaseModel extends Model
             $params = [];
 
             if ($startDateTime) {
-                $where[] = 'startDateTime >= :startDateTime';
+                $where[] = 'start_date_time >= :startDateTime';
                 $params[':startDateTime'] = formatDateTime($startDateTime);
             }
 
             if ($completionDateTime) {
-                $where[] = 'completionDateTime <= :completionDateTime';
+                $where[] = 'completion_date_time <= :completionDateTime';
                 $params[':completionDateTime'] = formatDateTime($completionDateTime);
             }
 
-            $where[] = 'projectId = :projectId';
+            $where[] = 'project_id = :projectId';
             $params[':projectId'] = is_int($projectId) 
                 ? $projectId 
                 : UUID::toBinary($projectId);
@@ -248,22 +248,22 @@ class PhaseModel extends Model
                         SELECT CONCAT('[', GROUP_CONCAT(
                             JSON_OBJECT(
                                 'id', pt.id,
-                                'publicId', HEX(pt.publicId),
+                                'public_id', HEX(pt.public_id),
                                 'name', pt.name,
                                 'description', pt.description,
                                 'status', pt.status,
                                 'priority', pt.priority,
-                                'startDateTime', pt.startDateTime,
-                                'completionDateTime', pt.completionDateTime,
-                                'createdAt', pt.createdAt,
-                                'updatedAt', pt.updatedAt
+                                'start_date_time', pt.start_date_time,
+                                'completion_date_time', pt.completion_date_time,
+                                'created_at', pt.created_at,
+                                'updated_at', pt.updated_at
                             )
-                            ORDER BY pt.startDateTime ASC SEPARATOR ','
+                            ORDER BY pt.start_date_time ASC SEPARATOR ','
                         ), ']')
                         FROM 
-                            `phaseTask` AS pt
+                            `phase_task` AS pt
                         WHERE 
-                            pt.phaseId = pp.id
+                            pt.phase_id = pp.id
                     ),
                     '[]'
                 ) AS tasks";
@@ -272,15 +272,15 @@ class PhaseModel extends Model
             $query = "
                 SELECT pp.* {$taskQuery}
                 FROM 
-                    `projectPhase` AS pp
+                    `project_phase` AS pp
                 INNER JOIN
                     `project` AS p
                 ON 
-                    pp.projectId = p.id
+                    pp.project_id = p.id
                 WHERE 
-                    " . (is_int($projectId) ? 'p.id = :projectId' : 'p.publicId = :projectId') . 
+                    " . (is_int($projectId) ? 'p.id = :projectId' : 'p.public_id = :projectId') . 
                 " ORDER BY
-                    pp.startDateTime ASC";
+                    pp.start_date_time ASC";
 
             $statement = $instance->connection->prepare($query);
             $statement->execute([
@@ -298,16 +298,18 @@ class PhaseModel extends Model
             foreach ($result as $item) {
                 $phase = Phase::createPartial([
                     'id'                        => $item['id'],
-                    'publicId'                  => UUID::fromBinary($item['publicId']),
+                    'publicId'                  => UUID::fromBinary($item['public_id']),
                     'name'                      => $item['name'],
                     'description'               => $item['description'],
                     'status'                    => WorkStatus::from($item['status']),
                     'tasks'                     => new TaskContainer(),
-                    'startDateTime'             => new DateTime($item['startDateTime']),
-                    'completionDateTime'        => new DateTime($item['completionDateTime']),
-                    'actualCompletionDateTime'  => isset($item['actualCompletionDateTime']) ? new DateTime($item['actualCompletionDateTime']) : null,
-                    'createdAt'                 => new DateTime($item['createdAt']),
-                    'updatedAt'                 => new DateTime($item['updatedAt'])
+                    'startDateTime'             => new DateTime($item['start_date_time']),
+                    'completionDateTime'        => new DateTime($item['completion_date_time']),
+                    'actualCompletionDateTime'  => isset($item['actual_completion_date_time']) 
+                        ? new DateTime($item['actual_completion_date_time']) 
+                        : null,
+                    'createdAt'                 => new DateTime($item['created_at']),
+                    'updatedAt'                 => new DateTime($item['updated_at'])
                 ]);
 
                 // Populate tasks if requested
@@ -317,16 +319,18 @@ class PhaseModel extends Model
                         foreach ($tasks as $taskData) {
                             $task = Task::createPartial([
                                 'id'                        => $taskData['id'],
-                                'publicId'                  => UUID::fromHex($taskData['publicId']),
+                                'publicId'                  => UUID::fromHex($taskData['public_id']),
                                 'name'                      => $taskData['name'],
                                 'description'               => $taskData['description'],
                                 'status'                    => WorkStatus::from($taskData['status']),
                                 'priority'                  => TaskPriority::from($taskData['priority']),
-                                'startDateTime'             => new DateTime($taskData['startDateTime']),
-                                'completionDateTime'        => new DateTime($taskData['completionDateTime']),
-                                'actualCompletionDateTime'  => isset($taskData['actualCompletionDateTime']) ? new DateTime($taskData['actualCompletionDateTime']) : null,
-                                'createdAt'                 => new DateTime($taskData['createdAt']),
-                                'updatedAt'                 => new DateTime($taskData['updatedAt'])
+                                'startDateTime'             => new DateTime($taskData['start_date_time']),
+                                'completionDateTime'        => new DateTime($taskData['completion_date_time']),
+                                'actualCompletionDateTime'  => isset($taskData['actual_completion_date_time']) 
+                                    ? new DateTime($taskData['actual_completion_date_time']) 
+                                    : null,
+                                'createdAt'                 => new DateTime($taskData['created_at']),
+                                'updatedAt'                 => new DateTime($taskData['updated_at'])
                             ]);
 
                             $phase->addTask($task);
@@ -409,7 +413,7 @@ class PhaseModel extends Model
      *
      * @return void
      *
-     * @throws InvalidArgumentException If PhaseContainer is empty, projectId is invalid, container contains non-Phase objects, or required fields are missing
+     * @throws InvalidArgumentException If PhaseContainer is empty, project_id is invalid, container contains non-Phase objects, or required fields are missing
      * @throws DatabaseException If a database error occurs during any insertion operation
      * 
      * @example
@@ -442,13 +446,13 @@ class PhaseModel extends Model
             $instance->connection->beginTransaction();
 
             $insertQuery = "
-                INSERT INTO `projectPhase` (
-                    projectId,
-                    publicId,
+                INSERT INTO `project_phase` (
+                    project_id,
+                    public_id,
                     name,
                     description,
-                    startDateTime,
-                    completionDateTime,
+                    start_date_time,
+                    completion_date_time,
                     status
                 ) VALUES (
                     :projectId,
@@ -579,18 +583,18 @@ class PhaseModel extends Model
                 }
 
                 if (isset($data['startDateTime'])) {
-                    $updateFields[] = 'startDateTime = :startDateTime';
+                    $updateFields[] = 'start_date_time = :startDateTime';
                     $params[':startDateTime'] = formatDateTime($data['startDateTime']);
                 }
 
                 if (isset($data['completionDateTime'])) {
-                    $updateFields[] = 'completionDateTime = :completionDateTime';
+                    $updateFields[] = 'completion_date_time = :completionDateTime';
                     $params[':completionDateTime'] = formatDateTime($data['completionDateTime']);
                 }
 
                 // Only execute update if there are fields to update
                 if (!empty($updateFields)) {
-                    $query = "UPDATE `projectPhase` SET " . implode(', ', $updateFields) . " WHERE " . (isset($data['id']) ? 'id' : 'publicId') . " = :id";
+                    $query = "UPDATE `project_phase` SET " . implode(', ', $updateFields) . " WHERE " . (isset($data['id']) ? 'id' : 'publicId') . " = :id";
                     $statement = $instance->connection->prepare($query);
                     $statement->execute($params);
                 }
@@ -656,7 +660,7 @@ class PhaseModel extends Model
             // Find the phase
             $whereClause = is_int($phaseId) 
                 ? 'id = :phaseId'
-                : 'publicId = :phaseId';
+                : 'public_id = :phaseId';
             $params = [
                 ':phaseId' => is_int($phaseId) 
                     ? $phaseId

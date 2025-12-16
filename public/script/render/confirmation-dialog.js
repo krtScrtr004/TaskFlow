@@ -20,7 +20,7 @@ export async function confirmationDialog(
     parent = document.body
 ) {
     return new Promise((resolve) => {
-        const ICON_PATH = 'asset/image/icon/'
+        const ICON_PATH = '/public/asset/image/icon/'
 
         // Prevent body scrolling
         const originalOverflow = document.body.style.overflow

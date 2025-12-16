@@ -328,6 +328,9 @@ class Phase implements Entity
      */
     public static function createPartial(array $data): self
     {
+        // Normalize input keys to camelCase to support both snake_case and camelCase input
+        $data = normalizeArrayKeysToCamelCase($data);
+
         // Provide default values for required fields
         $defaults = [
             'id' => $data['id'] ?? 0,
@@ -403,18 +406,21 @@ class Phase implements Entity
      *      - actualCompletionDateTime: string|null Formatted actual completion date/time
      *      - status: string String value of the phase status
      *      - tasks: array Array representation of the phase's tasks
+     * @param bool $useSnakeCase Whether to use snake_case keys (true) or camelCase keys (false, default)
      */
-    public function toArray(): array
+    public function toArray(bool $useSnakeCase = false): array
     {
-        return [
+        $data = [
             'id' => UUID::toString($this->publicId),
             'name' => $this->name,
             'description' => $this->description,
             'startDateTime' => formatDateTime($this->startDateTime, DateTime::ATOM),
             'completionDateTime' => formatDateTime($this->completionDateTime, DateTime::ATOM),
             'status' => $this->status->value,
-            'tasks' => $this->tasks?->toArray() ?? []
+            'tasks' => $this->tasks?->toArray($useSnakeCase) ?? []
         ];
+
+        return $useSnakeCase ? normalizeArrayKeysToSnakeCase($data) : $data;
     }
 
     /**
@@ -442,6 +448,9 @@ class Phase implements Entity
      */
     public static function fromArray(array $data): self
     {
+        // Normalize input keys to camelCase to support both snake_case and camelCase input
+        $data = normalizeArrayKeysToCamelCase($data);
+
         $publicId = null;
         if ($data['publicId'] instanceof UUID) {
             $publicId = $data['publicId'];
