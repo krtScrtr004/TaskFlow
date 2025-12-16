@@ -114,19 +114,19 @@ chmod +x install.sh
 
 2. **Import the schema**
    ```bash
-   mysql -u your_username -p taskflow < database/taskflow_snake_case.sql
+   mysql -u your_username -p taskflow < database/taskflow.sql
    ```
 
 3. **Import the event scheduler**
    ```bash
-   mysql -u your_username -p taskflow < database/event-scheduler_snake_case.sql
+   mysql -u your_username -p taskflow < database/event-scheduler.sql
    ```
 
    Or via phpMyAdmin:
    - Select the `taskflow` database
    - Click "Import"
-   - Upload `database/taskflow_snake_case.sql`
-   - Upload `database/event-scheduler_snake_case.sql`
+   - Upload `database/taskflow.sql`
+   - Upload `database/event-scheduler.sql`
 
 ---
 
