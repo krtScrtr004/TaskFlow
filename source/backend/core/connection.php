@@ -45,11 +45,11 @@ class Connection {
      */
     public static function getInstance(): PDO {
         if (self::$instance === null) {
-            $host = 'localhost';
-            $db = 'taskflow';
-            $user = 'root';
-            $pass = '';
-            $charset = 'utf8mb4';
+            $host = $_ENV['CONN_HOST'] ?? 'localhost';
+            $db = $_ENV['CONN_DB'] ?? 'taskflow';
+            $user = $_ENV['CONN_USER'] ?? 'root';
+            $pass = $_ENV['CONN_PASSWORD'] ?? '';
+            $charset = $_ENV['CONN_CHARSET'] ?? 'utf8mb4';
 
             $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
             $options = [

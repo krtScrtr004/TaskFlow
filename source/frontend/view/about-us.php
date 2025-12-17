@@ -190,8 +190,8 @@ use App\Middleware\Csrf;
 
                             <div class="flex-col">
                                 <h3 class="contact-link blue-text bold-text">Email:</h3>
-                                <a class="contact-link"
-                                    href="https://mail.google.com/mail/u/0/#inbox?compose=CllgCJlHnRnmffXbCrHkkkPqmBbdHxktLkWxmbgvfKDrlBlzCzXKlPkfWfTkdxXNZLddTVPsNHg"><em>taskflow.reset@gmail.com</em></a>
+                                <a class="contact-link" target="_blank"
+                                    href="https://mail.google.com/mail/u/0/#inbox?compose=CllgCJTHVmfVxlzTJRTRsHQPlGSXxGtTbGKVWFvHwkZpkNNdFZzzSqTwdJJPTrFmjvPgMTGcxfg"><em>taskflow.official39@gmail.com</em></a>
                             </div>
                         </div>
 
@@ -209,7 +209,7 @@ use App\Middleware\Csrf;
 
                             <div class="flex-col">
                                 <h3 class="contact-link blue-text bold-text start-text">Address:</h3>
-                                <a class="contact-link"
+                                <a class="contact-link" target="_blank"
                                     href="https://www.google.com/maps/place/Lt.+Gen.+Alfonso+Arellano,+Taguig,+Kalakhang+Maynila/@14.5301671,121.0434605,17z/data=!3m1!4b1!4m6!3m5!1s0x3397c8c53373305f:0x91d78e54d31b54e4!8m2!3d14.5301619!4d121.0460354!16s%2Fg%2F1tk656h1?entry=ttu&g_ep=EgoyMDI1MTEzMC4wIKXMDSoASAFQAw%3D%3D"><em>Lt.
                                         Gen. Alfonso Arellano, Fort Bonifacio, Taguig City, Metro Manila</em></a>
                             </div>
