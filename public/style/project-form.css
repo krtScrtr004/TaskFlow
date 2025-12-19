@@ -32,7 +32,7 @@
 	background-color: var(--black);
 	padding: 1rem 1.5rem;
 	border-bottom: 1px solid transparent;
-	transition: all var(--transition-dur) ease;
+	transition: background-color var(--transition-dur) ease;
 }
 
 .project-form header a:first-child {
@@ -169,6 +169,7 @@
 	border: 0.5px solid #343435;
 	border-radius: var(--input-border-radius);
 	position: relative;
+	transition: unset !important;
 	transition: background-color var(--transition-dur) ease;
 }
 

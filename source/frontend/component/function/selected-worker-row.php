@@ -1,22 +1,28 @@
 <?php
 
-use App\Entity\User;
+use App\Core\UUID;
+use App\Dependent\Worker;
 
-function selectedWorkerRow(User $user): bool|string
+function selectedWorkerRow(Worker $worker): bool|string
 {
-    // TODO: Implement dynamic selected worker row rendering
+    $id             = htmlspecialchars(UUID::toString($worker->getPublicId()));
+    $name           = htmlspecialchars(createFullName($worker->getFirstName(), $worker->getMiddleName(), $worker->getLastName()));
+    $jobTitles      = $worker->getJobTitles();
+
     ob_start();
     ?>
 
     <!-- Selected workers will be added here dynamically -->
-    <tr class="selected-worker-row">
+    <tr class="selected-worker-row" data-workerid="<?= $id ?>">
         <td>
-            <p class="name multi-line-ellipsis-2">John DoeJohn DoeJohn Doe</p>
+            <p class="name multi-line-ellipsis-2"><?= $name ?></p>
         </td>
 
         <td>
             <div class="roles flex-row flex-wrap">
-                <span class="role-chip badge">Developer</span>
+                <?php foreach ($jobTitles as $jobTitle): ?>
+                    <span class="role-chip badge"><?= htmlspecialchars($jobTitle) ?></span>
+                <?php endforeach; ?>    
             </div>
         </td>
 

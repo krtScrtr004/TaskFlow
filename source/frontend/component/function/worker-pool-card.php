@@ -1,20 +1,27 @@
 <?php
 
+use App\Core\UUID;
 use App\Dependent\Worker;
 
 function workerPoolCard(Worker $worker): bool|string
 {
-    // TODO: Implement dynamic worker card rendering
+    $id             = htmlspecialchars(UUID::toString($worker->getPublicId()));
+    $name           = htmlspecialchars(createFullName($worker->getFirstName(), $worker->getMiddleName(), $worker->getLastName()));
+    $jobTitles      = $worker->getJobTitles();
+    $profileLink    = htmlspecialchars($worker->getProfileLink()) ?? ICON_PATH . 'profile_w.svg';
+
     ob_start();
     ?>
     <li>
-        <button class="worker-pool-card unset-button" type="button">
-            <img src="<?= ICON_PATH . 'profile_w.svg' ?>" class="circle fit-cover" alt="" height="55">
+        <button class="worker-pool-card unset-button" type="button" data-workerid="<?= $id ?>">
+            <img src="<?= $profileLink ?>" class="circle fit-cover" alt="" height="55">
 
             <div class="flex-col flex-child-start-h worker-info">
-                <span class="name">John Doe</span>
+                <span class="name"><?= $name ?></span>
                 <div class="flex-row flex-wrap">
-                    <span class="role-chip chip badge light-text">Developer</span>
+                    <?php foreach ($jobTitles as $jobTitle): ?>
+                        <span class="role-chip chip badge light-text"><?= htmlspecialchars($jobTitle) ?></span>
+                    <?php endforeach; ?>
                 </div>
             </div>
         </button>

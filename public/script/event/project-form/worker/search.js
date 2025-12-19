@@ -1,13 +1,12 @@
 import { createFullName } from '../../../utility/utility.js'
 import { Loader } from '../../../render/loader.js'
-import { handleException } from '../../../utility/handle-exception.js'
 import { debounceAsync } from '../../../utility/debounce.js'
-import { createWorkerFetcher } from './fetch-workers.js'
+import { createWorkerFetcher } from './fetch.js'
 
 let endpoint = null
 
 const workersSection = document.querySelector('#workers_section')
-const noWorkersWall = workersSection.querySelector('.no-workers-wall')
+const noWorkersWall = workersSection.querySelector('.worker-pool-listing .no-workers-wall')
 
 const searchBarForm = workersSection.querySelector('.search-bar')
 if (!searchBarForm) {
@@ -213,7 +212,7 @@ function renderWorkerPoolCard(worker) {
     button.type = 'button'
     button.className = 'worker-pool-card unset-button'
     if (worker && (worker.id || worker.workerId)) {
-        button.dataset.workerId = worker.id ?? worker.workerId
+        button.dataset.workerid = worker.id ?? worker.workerId
     }
 
     const img = document.createElement('img')

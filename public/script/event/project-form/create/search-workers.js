@@ -1,5 +1,5 @@
 import { handleException } from '../../../utility/handle-exception.js'
-import { initializeSearch } from '../workers/search-workers.js'
+import { initializeSearch } from '../worker/search.js'
 
 try {
     const params = new URLSearchParams()

@@ -202,7 +202,7 @@ if ($project) {
                         <!-- Worker Pool -->
                         <section class="worker-pool">
                             <section class="heading">
-                                <div class="search-bar">                                
+                                <div class="search-bar">
                                     <?= searchBar() ?>
                                 </div>
 
@@ -265,6 +265,8 @@ if ($project) {
     <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'scroll-navigation.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'clone-phase-form-card.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'create' . DS . 'search-workers.js' ?>"
+        defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'worker' . DS . 'add.js' ?>"
         defer></script>
 </body>
 
