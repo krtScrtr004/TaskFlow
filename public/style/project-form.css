@@ -24,6 +24,10 @@
 	box-shadow: var(--box-shadow);
 }
 
+.project-form header.moved {
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
 .project-form header a {
 	background-color: var(--black);
 	padding: 1rem 1.5rem;
@@ -47,6 +51,10 @@
 	height: fit-content;
 	padding: 0.5rem 1rem !important;
 	margin-right: 1.5rem;
+}
+
+.project-form header #create_project_button:hover {
+	transform: scale(1.05);
 }
 
 #project_form {
