@@ -10,7 +10,8 @@
 
 		"/reset-password": "SingleFormController",
 		"/change-password(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": "SingleFormController",
-		"/create-project": "SingleFormController",
+
+		"/create-project": ["ProjectController", "viewProjectForm"],
 		"/edit-project/{projectId:[\\w+_-]+}": "SingleFormController",
 		"/add-task/{projectId:[\\w+_-]+}": "SingleFormController",
 
