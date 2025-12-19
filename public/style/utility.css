@@ -203,6 +203,10 @@
 	font-weight: 800;
 }
 
+.light-text {
+	font-weight: 300;
+}
+
 .start-text {
 	text-align: start;
 }

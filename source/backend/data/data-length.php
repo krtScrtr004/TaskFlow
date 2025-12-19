@@ -20,3 +20,9 @@ define('LONG_TEXT_MAX', 1000);
 
 define('BUDGET_MIN', 0);
 define('BUDGET_MAX', 999999999999);
+
+define('WORKER_COUNT_MIN', 1);
+define('WORKER_COUNT_MAX', 1000);
+
+define('CONTINGENCY_RATE_MIN', 0);
+define('CONTINGENCY_RATE_MAX', 100);

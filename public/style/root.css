@@ -5,14 +5,17 @@
 	--blue: #007bff;
 	--light-black: #242424;
 	--black: #1e1e1e;
-	--red: #dc3545;
-	--green: #38ff5d;
+	--red: #050404;
+	--green: #38ff5d;	
 	--yellow: #ffb61e;
 	--orange: #cb5835;
 
-	--space: 1.5rem;
+	--input-color: #353637;
+	--input-border-radius: 8px;
 
-	--border-radius: 3px;
+	--space: 2rem;
+
+	--border-radius: 15px;
 
 	--content-side-padding: 10rem;
 
@@ -22,7 +25,10 @@
 	--card-width: 230px;
 	--card-height: 300px;
 
-	--box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	--box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+	--box-shadow-hover: 0 4px 8px rgba(0, 0, 0, 0.3);
+
+	--transition-dur: 0.3s;
 
 }
 
@@ -142,8 +148,8 @@ select,
 button {
 	display: block;
 	width: 100%;
-	padding: 8px;
-	border-radius: var(--border-radius);
+	padding: 12px;
+	border-radius: var(--input-border-radius);
 	font-size: 1rem;
 }
 
@@ -185,7 +191,7 @@ textarea {
 	background-color: transparent;
 	color: var(--white);
 	border: 1px solid var(--dark-white);
-	background-color: #353637;
+	background-color: var(--input-color);
 }
 
 input[type="date"]::-webkit-calendar-picker-indicator {
@@ -224,6 +230,7 @@ button {
 
 button:hover {
 	cursor: pointer;
+	transition: all var(--transition-dur) ease;
 }
 
 button:disabled {
@@ -238,7 +245,7 @@ fieldset {
 }
 
 textarea {
-	padding: 0.5rem;
+	padding: 12px;
 	border-radius: var(--border-radius);
 	resize: none;
 	font-family: inherit;
@@ -257,7 +264,7 @@ textarea {
 @media (max-width: 768px) {
 	:root {
 		--content-side-padding: 2rem;
-		--space: 1rem;
+		--space: 1.8rem;
 	}
 
 	h1 {
