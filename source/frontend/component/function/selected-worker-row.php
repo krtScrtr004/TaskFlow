@@ -4,6 +4,7 @@ use App\Entity\User;
 
 function selectedWorkerRow(User $user): bool|string
 {
+    // TODO: Implement dynamic selected worker row rendering
     ob_start();
     ?>
 
