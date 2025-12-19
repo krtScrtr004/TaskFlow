@@ -11,8 +11,6 @@ if ($project) {
 } else {
     $uiState['pageName'] = 'Create Project';
 }
-
-include_once COMPONENT_PATH . 'function' . DS . 'selected-worker-row.php';
 ?>
 
 <!DOCTYPE html>
@@ -36,7 +34,12 @@ include_once COMPONENT_PATH . 'function' . DS . 'selected-worker-row.php';
 </head>
 
 <body>
-    <?php require_once COMPONENT_PATH . 'sidenav.php' ?>
+    <?php
+    require_once COMPONENT_PATH . 'sidenav.php';
+
+    include_once COMPONENT_PATH . 'function' . DS . 'selected-worker-row.php';
+    include_once COMPONENT_PATH . 'function' . DS . 'search-bar.php';
+    ?>
 
     <main class="project-form flex-col flex-child-center-h main-page">
         <section class="flex-col relative">
@@ -199,13 +202,8 @@ include_once COMPONENT_PATH . 'function' . DS . 'selected-worker-row.php';
                         <!-- Worker Pool -->
                         <section class="worker-pool">
                             <section class="heading">
-                                <div class="search-bar input-w-suffix">
-                                    <input type="text" id="worker_search_input" placeholder="Search workers..."
-                                        autocomplete="off">
-                                    <button type="button" id="worker_search_button" class="transparent-bg">
-                                        <img src="<?= ICON_PATH . 'search_w.svg' ?>" alt="Search" title="Search"
-                                            height="20">
-                                    </button>
+                                <div class="search-bar">                                
+                                    <?= searchBar() ?>
                                 </div>
 
                                 <p class="light-text">Select workers to assign to this project.</p>
@@ -213,21 +211,7 @@ include_once COMPONENT_PATH . 'function' . DS . 'selected-worker-row.php';
 
                             <section class="worker-pool-listing">
                                 <ul class="list">
-                                    <?php for ($i = 0; $i < 10; $i++): ?>
-                                        <li>
-                                            <button class="worker-pool-card unset-button" type="button">
-                                                <img src="<?= ICON_PATH . 'profile_w.svg' ?>" class="circle fit-cover"
-                                                    alt="" height="55">
-
-                                                <div class="flex-col flex-child-start-h worker-info">
-                                                    <span class="name">John Doe</span>
-                                                    <div class="flex-row flex-wrap">
-                                                        <span class="role-chip chip badge light-text">Developer</span>
-                                                    </div>
-                                                </div>
-                                            </button>
-                                        </li>
-                                    <?php endfor; ?>
+                                    <!-- Worker items will be added here dynamically -->
                                 </ul>
 
                                 <div class="no-workers-wall no-content-wall flex-col">
@@ -278,8 +262,10 @@ include_once COMPONENT_PATH . 'function' . DS . 'selected-worker-row.php';
 
     </main>
 
-    <script type="module" src="<?= EVENT_PATH . 'project-form/scroll-navigation.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'project-form/clone-phase-card.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'scroll-navigation.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'clone-phase-form-card.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'create' . DS . 'search-workers.js' ?>"
+        defer></script>
 </body>
 
 </html>

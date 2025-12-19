@@ -218,6 +218,10 @@
 	background-color: #343435;
 }
 
+#workers_section .selected-workers-table .no-workers-wall {
+	border-radius: 0 0 var(--input-border-radius) var(--input-border-radius);
+}
+
 #workers_section .selected-workers-table tbody tr:nth-child(even) {
 	background-color: var(--light-black);
 }

@@ -394,45 +394,48 @@ button > .text-w-icon {
 	padding: 0.5rem 0;
 }
 
-.search-bar {
+.search-bar,
+.search-bar > .search-bar-block {
 	width: 100%;
 	display: flex;
 	align-items: center;
 	padding: 0;
 	background-color: var(--input-color);	
+	border-radius: var(--input-border-radius);
 }
 
 .search-bar > div:first-child {
 	width: 100%;
 	display: flex;
-	border: 1px solid var(--white);
-	border-radius: var(--border-radius);
+	border-radius: var(--input-border-radius);
 }
 
-.search-bar input {
+.search-bar #search_bar_input {
 	flex: 1;
 	font-size: 0.8rem;
 	border: none;
 	box-shadow: none;
+	border-radius: var(--input-border-radius) 0 0 var(--input-border-radius);
 }
 
-.search-bar input:focus,
-.search-bar input:hover,
-.search-bar input:active,
+.search-bar #search_bar_input:focus,
+.search-bar #search_bar_input:hover,
+.search-bar #search_bar_input:active,
 .search-bar > select:focus,
 .search-bar > select:hover,
 .search-bar > select:active {
 	outline: none;
 }
 
-.search-bar button {
+.search-bar #search_bar_button {
 	width: fit-content;
 	padding: 0.5rem 1rem;
 	border-left: 1px solid var(--dark-white);
 	border-radius: 0 var(--input-border-radius) var(--input-border-radius) 0;
+	background-color: transparent;
 }
 
-.search-bar button:hover {
+.search-bar #search_bar_button:hover {
 	box-shadow: none;
 	transform: unset;
 	opacity: 0.7;
