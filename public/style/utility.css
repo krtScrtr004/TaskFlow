@@ -302,3 +302,29 @@
 .fit-contain {
 	object-fit: contain;
 }
+
+/* ---------ANIMATIONS--------- */
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+.fade-in {
+	animation: fadeIn var(--transition-dur) ease-in-out forwards;
+}
+
+@keyframes fadeOut {
+	from {
+		opacity: 1;
+	}
+	to {
+		opacity: 0;
+	}
+}
+.fade-out {
+	animation: fadeOut var(--transition-dur) ease-in-out forwards;
+}

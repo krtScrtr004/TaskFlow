@@ -1,5 +1,5 @@
 <template id="phase_form_card_template">
-    <div class="phase-form-card flex-col">
+    <div class="phase-form-card flex-col fade-in">
         <section class="heading flex-row flex-space-between black-bg">
             <div class="text-w-icon">
                 <img src="<?= ICON_PATH . 'phase_w.svg' ?>" alt="Phase 1" title="Phase 1" height="24">
