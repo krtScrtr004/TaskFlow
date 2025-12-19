@@ -50,7 +50,7 @@ class ProjectWorkerModel extends Model
         $paramOptions = [
             'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
             'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
-            'groupBy'   => $options[':groupBy'] ?? $options['groupBy'] ?? 'p.id',
+            'groupBy'   => $options[':groupBy'] ?? $options['groupBy'] ?? 'u.id, pw.status',
             'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 'u.last_name ASC',
         ];
 
@@ -321,7 +321,7 @@ class ProjectWorkerModel extends Model
             }
             $query .= " 
                 GROUP BY 
-                    u.id 
+                    u.id, pw.status
                 ORDER BY 
                     u.last_name ASC  
                 LIMIT " 

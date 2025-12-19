@@ -146,8 +146,10 @@ class ProjectWorkerEndpoint extends Endpoint
                 throw new ForbiddenException('Project ID is required.');
             }
 
-            $project = ProjectModel::findById($projectId);
-            if (!isset($projectId) && !$project) {
+            $project = $projectId
+                ? ProjectModel::findById($projectId) 
+                : null;
+            if (isset($projectId) && !$project) {
                 throw new NotFoundException('Project not found.');
             }
 
@@ -158,7 +160,7 @@ class ProjectWorkerEndpoint extends Endpoint
                 foreach ($ids as $id) {
                     $uuids[] = UUID::fromString($id);
                 }
-                $workers = ProjectWorkerModel::findMultipleById($uuids, $project->getId() ?? null, false);
+                $workers = ProjectWorkerModel::findMultipleById($uuids, $project?->getId() ?? null, false);
             } else {
                 $key = null;
                 if (isset($_GET['key']) && trim($_GET['key']) !== '') {
@@ -180,7 +182,7 @@ class ProjectWorkerEndpoint extends Endpoint
 
                 $workers = ProjectWorkerModel::search(
                     $key,
-                    $project->getId() ?? $projectId,
+                    $project?->getId() ?? $projectId,
                     $status,
                     [
                         'excludeProjectTerminated' => $excludeProjectTerminated,
