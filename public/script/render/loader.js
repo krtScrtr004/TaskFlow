@@ -101,7 +101,19 @@ export const Loader = (() => {
                 parent: elementToPatch.parentElement,
                 originalText: null,
                 style: null,
+                // Store original parent dimensions to prevent resize
+                originalParentStyle: {
+                    minWidth: elementToPatch.parentElement.style.minWidth,
+                    minHeight: elementToPatch.parentElement.style.minHeight,
+                    width: elementToPatch.parentElement.style.width,
+                    height: elementToPatch.parentElement.style.height,
+                }
             }
+
+            // Lock the parent's current dimensions before patching
+            const parentRect = patchedElem.parent.getBoundingClientRect()
+            patchedElem.parent.style.minWidth = `${parentRect.width}px`
+            patchedElem.parent.style.minHeight = `${parentRect.height}px`
 
             let elemHeight = 0
             // If patching an element, use the element directly.
@@ -119,11 +131,8 @@ export const Loader = (() => {
                 const borderBottom = parseFloat(computedStyle.borderBottomWidth) || 0
                 const borderWidth = borderTop + borderBottom
 
-                const parentRec = patchedElem.parent.getBoundingClientRect()
-
-                elemHeight = parentRec.height - (paddingWidth + borderWidth)
+                elemHeight = parentRect.height - (paddingWidth + borderWidth)
             }
-            const parentElemWidth = patchedElem.parent.clientWidth
 
             const loaderElem = `
                 <div 
@@ -140,7 +149,6 @@ export const Loader = (() => {
                 patchedElem.originalText = elementToPatch.textContent
                 patchedElem.parent.innerHTML = ''
             }
-            console.log(patchedElem.parent.style.position)
             render(patchedElem.parent, loaderElem, 'afterbegin')
         },
 
@@ -155,6 +163,13 @@ export const Loader = (() => {
                 } else {
                     patchedElem.parent.innerHTML = patchedElem.originalText
                 }
+
+                // Restore original parent dimensions
+                patchedElem.parent.style.minWidth = patchedElem.originalParentStyle.minWidth
+                patchedElem.parent.style.minHeight = patchedElem.originalParentStyle.minHeight
+                patchedElem.parent.style.width = patchedElem.originalParentStyle.width
+                patchedElem.parent.style.height = patchedElem.originalParentStyle.height
+
                 patchedElem = null
             }
         }
