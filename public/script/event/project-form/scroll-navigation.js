@@ -33,9 +33,11 @@ document.addEventListener('DOMContentLoaded', () => {
         link.addEventListener('click', (e) => {
             e.preventDefault()
 
+            // Get target section
             const targetId = link.getAttribute('href').substring(1)
             const targetSection = document.getElementById(targetId)
 
+            // Scroll to target section with offset
             if (targetSection) {
                 const targetPosition = targetSection.offsetTop - headerHeight
 
@@ -54,29 +56,49 @@ document.addEventListener('DOMContentLoaded', () => {
     mainContainer.addEventListener('scroll', () => {
         let currentSection = null
 
+        // Add shadow to header when scrolled
         if (mainContainer.scrollTop !== headerOriginalPosition) {
             header.classList.add('moved')   
         } else {
             header.classList.remove('moved')
         }
 
+        // Determine current section in view
         sections.forEach(section => {
-            const sectionTop = section.offsetTop - headerHeight - 50
-            const sectionBottom = sectionTop + section.offsetHeight
+            // Get visible height of the scroll container (fallback to window height)
+            const viewportHeight = mainContainer.clientHeight || window.innerHeight
+            const threshold = viewportHeight / 2 // Halfway point of viewport
 
-            if (mainContainer.scrollTop >= sectionTop && mainContainer.scrollTop < sectionBottom) {
+            // Calculate section top position with offset, accounting for header height and threshold
+            const sectionTop = section.offsetTop - headerHeight - threshold 
+
+            // Check if scroll position is within section bounds
+            if (mainContainer.scrollTop >= sectionTop) {
                 currentSection = section
             }
         })
 
+        // Update active link based on current section
         if (currentSection) {
-            const activeLink = document.querySelector(`main.project-form > header a[href="#${currentSection.id}"]`)
+            const activeLink = document.querySelector(`main.project-form header a[href="#${currentSection.id}"]`)
             if (activeLink) {
                 updateActiveLink(activeLink)
             }
         }
     })
 
+    /**
+     * Marks a navigation link as active.
+     *
+     * This function removes the 'active' class from every element in the surrounding
+     * navLinks collection and then adds the 'active' class to the provided activeLink,
+     * updating the visual active state of the navigation UI.
+     *
+     * @param {Element} activeLink The DOM element (e.g. an <a> or <button>) to mark as active.
+     *                             It is expected to be one of the elements contained in the
+     *                             navLinks collection available in the enclosing scope.
+     * @returns {void}
+     */
     function updateActiveLink(activeLink) {
         navLinks.forEach(link => link.classList.remove('active'))
         activeLink.classList.add('active')

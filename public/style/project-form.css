@@ -46,6 +46,11 @@
 	border-bottom: 1px solid var(--blue);
 }
 
+.project-form header a.active {
+	background-color: var(--blue);
+	border-bottom: 1px solid var(--blue);
+}
+
 .project-form header #create_project_button {
 	width: fit-content;
 	height: fit-content;

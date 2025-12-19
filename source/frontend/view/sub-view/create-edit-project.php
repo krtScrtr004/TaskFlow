@@ -279,6 +279,7 @@ include_once COMPONENT_PATH . 'function' . DS . 'selected-worker-row.php';
     </main>
 
     <script type="module" src="<?= EVENT_PATH . 'project-form/scroll-navigation.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'project-form/clone-phase-card.js' ?>" defer></script>
 </body>
 
 </html>

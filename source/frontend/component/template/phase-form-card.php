@@ -3,7 +3,7 @@
         <section class="heading flex-row flex-space-between black-bg">
             <div class="text-w-icon">
                 <img src="<?= ICON_PATH . 'phase_w.svg' ?>" alt="Phase 1" title="Phase 1" height="24">
-                <h2>Phase 1</h2>
+                <h2>New Project Phase</h2>
             </div>
 
             <button class="remove-phase-button unset-button" type="button">
