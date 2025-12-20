@@ -294,6 +294,9 @@ class WorkValidator extends Validator
      *      - name: string|null Name of the work (trimmed before validation)
      *      - description: string|null Description of the work (trimmed before validation)
      *      - budget: int|float|string|null Budget value (numeric or numeric-string)
+     *      - maxWorkers: int Maximum number of workers allowed
+     *      - contingencyRate: float Contingency rate percentage
+     *      - budgetNote: string|null Notes regarding the budget (trimmed before validation)
      *      - startDateTime: string|\DateTime|null Start date/time of the work
      *      - completionDateTime: string|\DateTime|null Completion date/time of the work (may be compared to startDateTime)
      *

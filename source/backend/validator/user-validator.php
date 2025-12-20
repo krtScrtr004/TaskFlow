@@ -7,8 +7,6 @@ use App\Container\JobTitleContainer;
 use App\Enumeration\WorkerStatus;
 use App\Enumeration\Gender;
 use App\Enumeration\Role;
-use App\Exception\ValidationException;
-use COM;
 use DateTime;
 
 class UserValidator extends Validator
@@ -374,6 +372,32 @@ class UserValidator extends Validator
     }
 
     /**
+     * Validates a default rate and appends any validation error messages to $this->errors.
+     *
+     * This method performs the following checks:
+     * - Ensures the default rate is not null.
+     * - Verifies the default rate is between the constants DEFAULT_RATE_MIN and DEFAULT_RATE_MAX.
+     *
+     * Possible error messages appended to $this->errors:
+     * - 'Default rate must be provided.' when the value is null.
+     * - 'Default rate must be between {DEFAULT_RATE_MIN} and {DEFAULT_RATE_MAX}.' when the rate is out of range.
+     *
+     * @param float|null $defaultRate The default rate to validate. May be null.
+     *
+     * @return void
+     */
+    public function validateDefaultRate(?float $defaultRate): void
+    {
+        if ($defaultRate === null) {
+            $this->errors[] = 'Default rate must be provided.';
+        }
+
+        if ($defaultRate < DEFAULT_RATE_MIN || $defaultRate > DEFAULT_RATE_MAX) {
+            $this->errors[] = 'Default rate must be between ' . DEFAULT_RATE_MIN . ' and ' . DEFAULT_RATE_MAX . '.';
+        }
+    }
+
+    /**
      * Validates a worker status enumeration value and appends any validation error messages to $this->errors.
      *
      * This method performs the following checks:
@@ -480,6 +504,7 @@ class UserValidator extends Validator
      * - email: Validates using validateEmail().
      * - bio: Validates using validateBio().
      * - message: Validates using validateMessage().
+     * - defaultRate: Validates using validateDefaultRate().
      * - profileLink: Validates using UrlValidator's validateUrl().
      * - createdAt: Ensures the DateTime value is not in the future.
      *
@@ -554,6 +579,10 @@ class UserValidator extends Validator
 
         if ($data['createdAt'] > new DateTime()) {
             $this->addError("createdAt", "Created At date cannot be in the future.");
+        }
+
+        if ($data['defaultRate'] !== null) {
+            $this->validateDefaultRate($data['defaultRate'] ?? null);
         }
 
         if ($data['role'] !== null) {
