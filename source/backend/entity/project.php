@@ -93,7 +93,7 @@ class Project implements Entity
             ]);
 
             if ($this->workValidator->hasErrors()) {
-                throw new ValidationException("Project validation failed", $this->workValidator->getErrors());
+                throw new ValidationException("Project Validation Failed", $this->workValidator->getErrors());
             }
         } catch (ValidationException $th) {
             throw $th;

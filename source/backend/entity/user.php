@@ -106,6 +106,10 @@ class User implements Entity
                 'password' => $password,
                 'additionalInfo' => $additionalInfo
             ]);
+
+            if ($this->userValidator->hasErrors()) {
+                throw new ValidationException("User Validation Failed", $this->userValidator->getErrors());
+            }
         } catch (ValidationException $th) {
             throw $th;
         }
@@ -791,6 +795,7 @@ class User implements Entity
             email: $this->email,
             bio: $this->bio,
             profileLink: $this->profileLink,
+            defaultRate: DEFAULT_RATE_MIN,
             status: WorkerStatus::ASSIGNED,
             createdAt: new DateTime(),
             confirmedAt: $this->confirmedAt,
@@ -833,22 +838,22 @@ class User implements Entity
     public function toArray(bool $useSnakeCase = false): array
     {
         $data = [
-            'id' => UUID::toString($this->publicId),
-            'firstName' => $this->firstName,
-            'middleName' => $this->middleName,
-            'lastName' => $this->lastName,
-            'gender' => $this->gender->getDisplayName(),
-            'birthDate' => $this->birthDate->format('Y-m-d'),
-            'role' => $this->role,
-            'jobTitles' => $this->jobTitles->toArray(),
-            'contactNumber' => $this->contactNumber,
-            'email' => $this->email,
-            'bio' => $this->bio,
-            'profileLink' => $this->profileLink,
-            'createdAt' => $this->createdAt->format('Y-m-d H:i:s'),
-            'confirmedAt' => $this->confirmedAt ? $this->confirmedAt->format('Y-m-d H:i:s') : null,
-            'deletedAt' => $this->deletedAt ? $this->deletedAt->format('Y-m-d H:i:s') : null,
-            'additionalInfo' => $this->additionalInfo
+            'id'                => UUID::toString($this->publicId),
+            'firstName'         => $this->firstName,
+            'middleName'        => $this->middleName,
+            'lastName'          => $this->lastName,
+            'gender'            => $this->gender->getDisplayName(),
+            'birthDate'         => $this->birthDate->format('Y-m-d'),
+            'role'              => $this->role,
+            'jobTitles'         => $this->jobTitles->toArray(),
+            'contactNumber'     => $this->contactNumber,
+            'email'             => $this->email,
+            'bio'               => $this->bio,
+            'profileLink'       => $this->profileLink,
+            'createdAt'         => $this->createdAt->format('Y-m-d H:i:s'),
+            'confirmedAt'       => $this->confirmedAt ? $this->confirmedAt->format('Y-m-d H:i:s') : null,
+            'deletedAt'         => $this->deletedAt ? $this->deletedAt->format('Y-m-d H:i:s') : null,
+            'additionalInfo'    => $this->additionalInfo
         ];
 
         return $useSnakeCase ? normalizeArrayKeysToSnakeCase($data) : $data;

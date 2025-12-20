@@ -8,12 +8,14 @@ use App\Enumeration\WorkerStatus;
 use App\Enumeration\Role;
 use App\Container\JobTitleContainer;
 use App\Core\UUID;
+use App\Exception\ValidationException;
 use App\Validator\UserValidator;
 use InvalidArgumentException;
 use DateTime;
 
 class Worker extends User
 {
+    private float $defaultRate;
     private WorkerStatus $status;
 
     /**
@@ -35,6 +37,7 @@ class Worker extends User
      * @param string $email Worker's email address
      * @param string|null $bio Worker's biography or description
      * @param string|null $profileLink Link to worker's profile
+     * @param float $defaultRate Default hourly rate for the worker
      * @param WorkerStatus $status Current status of the worker (enum)
      * @param DateTime $createdAt Timestamp when the worker was created
      * @param DateTime|null $confirmedAt Timestamp when the worker was confirmed, or null if not confirmed
@@ -54,6 +57,7 @@ class Worker extends User
         string $email,
         ?string $bio,
         ?string $profileLink,
+        float $defaultRate,
         WorkerStatus $status,
         DateTime $createdAt,
         ?DateTime $confirmedAt = null,
@@ -80,14 +84,41 @@ class Worker extends User
             password: null,
             additionalInfo: $additionalInfo
         );
+        
+        $this->userValidator->validateDefaultRate($defaultRate);
+        if ($this->userValidator->hasErrors()) {
+            throw new ValidationException("Worker Validation Failed", $this->userValidator->getErrors());
+        }
+        $this->defaultRate = $defaultRate;
         $this->status = $status;
     }
 
     // GETTERS 
 
+    /**
+     * Retrieves the worker as a User object.
+     *
+     * This method returns the current Worker instance
+     * cast as a User object, allowing access to base user properties.
+     *
+     * @return User The User representation of the worker
+     */
     public function getWorker(): User
     {
         return $this;
+    }
+
+    /**
+     * Retrieves the worker's default hourly rate.
+     *
+     * This method returns the default rate assigned to the worker,
+     * which is used for billing and compensation calculations.
+     *
+     * @return float The default hourly rate of the worker
+     */
+    public function getDefaultRate(): float
+    {
+        return $this->defaultRate;
     }
 
     /**
@@ -106,6 +137,27 @@ class Worker extends User
     // SETTERS
 
     /**
+     * Sets the worker's default hourly rate.
+     *
+     * This method updates the default rate for the worker after validating it:
+     * - Uses UserValidator to check if the provided rate is valid
+     * - Throws an exception if validation fails
+     * - Updates the worker's default rate if validation passes
+     *
+     * @param float $defaultRate The new default hourly rate to set for the worker
+     * @throws InvalidArgumentException If the provided rate is invalid
+     * @return void
+     */
+    public function setDefaultRate(float $defaultRate): void
+    {
+        $this->userValidator->validateDefaultRate($defaultRate);
+        if ($this->userValidator->hasErrors()) {
+            throw new ValidationException("Invalid Default Rate", $this->userValidator->getErrors());
+        }
+        $this->defaultRate = $defaultRate;
+    }
+
+    /**
      * Sets the worker's status.
      *
      * This method updates the status of a worker after validating it:
@@ -119,10 +171,9 @@ class Worker extends User
      */
     public function setStatus(WorkerStatus $status): void
     {
-        $validator = new UserValidator();
-        $validator->validateStatus($status);
-        if ($validator->hasErrors()) {
-            throw new InvalidArgumentException('Invalid worker status provided.');
+        $this->userValidator->validateStatus($status);
+        if ($this->userValidator->hasErrors()) {
+            throw new ValidationException("Invalid Status", $this->userValidator->getErrors());
         }
         $this->status = $status;
     }
@@ -216,7 +267,7 @@ class Worker extends User
      * This method converts a User object to a Worker object after verifying
      * that the user has the Worker role. The resulting Worker instance
      * inherits most properties from the User object but initializes with
-     * a predefined WorkerStatus.ASSIGNED status.
+     * a predefined DEFAULT_RATE_MIN default rate and WorkerStatus.ASSIGNED status.
      *
      * @param User $user The User object to convert to a Worker
      * @throws InvalidArgumentException If the User does not have the Worker role
@@ -241,6 +292,7 @@ class Worker extends User
             email: $user->getEmail(),
             bio: $user->getBio(),
             profileLink: $user->getProfileLink(),
+            defaultRate: DEFAULT_RATE_MIN,
             status: WorkerStatus::ASSIGNED,
             createdAt: $user->getCreatedAt(),
             confirmedAt: $user->getConfirmedAt(),
@@ -303,6 +355,8 @@ class Worker extends User
 
         $user = User::fromArray($data);
 
+        $defaultRate = $data['defaultRate'] ?? DEFAULT_RATE_MIN;
+
         $status = (is_string($data['status']))
             ? WorkerStatus::tryFrom(trimOrNull($data['status']))
             : $data['status'];
@@ -320,6 +374,7 @@ class Worker extends User
             email: $user->getEmail(),
             bio: $user->getBio(),
             profileLink: $user->getProfileLink(),
+            defaultRate: $defaultRate,
             status: $status,
             createdAt: $user->getCreatedAt(),
             confirmedAt: $user->getConfirmedAt(),
