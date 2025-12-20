@@ -6,9 +6,11 @@ use App\Abstract\Endpoint;
 use App\Auth\HttpAuth;
 use App\Auth\SessionAuth;
 use App\Container\PhaseContainer;
+use App\Container\WorkerContainer;
 use App\Core\Me;
 use App\Core\UUID;
 use App\Dependent\Phase;
+use App\Dependent\Worker;
 use App\Entity\Project;
 use App\Enumeration\Role;
 use App\Enumeration\WorkStatus;
@@ -20,6 +22,8 @@ use App\Model\PhaseModel;
 use App\Model\ProjectModel;
 use App\Middleware\Csrf;
 use App\Utility\ResponseExceptionHandler;
+use App\Validator\userValidator;
+use App\Validator\UuidValidator;
 use App\Validator\WorkValidator;
 use DateTime;
 use Exception;
@@ -127,6 +131,7 @@ class ProjectEndpoint extends Endpoint
      * - Sanitizes all input data
      * - Determines phase and project status based on dates
      * - Creates partial Phase entities and adds them to a container
+     * - Creates partial Worker entities and adds them to a container
      * - Creates and persists the project with all phases
      * 
      * @param array $args Associative array containing route parameters (not used here)
@@ -152,7 +157,13 @@ class ProjectEndpoint extends Endpoint
      *             "completionDateTime": string (datetime),
      *             ...other phase fields
      *         }
-     *     ]
+     *     ],
+     *    "workers": [
+     *        {
+     *             "id": string (UUID),
+     *             "defaultRate": float
+     *         }
+     *    ]
      * }
      * 
      * Success response (201):
@@ -199,21 +210,27 @@ class ProjectEndpoint extends Endpoint
                 throw new ValidationException('Phases data is required.');
             }
 
+            $workers = $data['workers'] ?? null;
+            if (!$workers || empty($workers)) {
+                throw new ValidationException('Workers data is required.');
+            }
+
             sanitizeData($project);
 
-            $validator = new WorkValidator();
+            $workValidator = new WorkValidator();
+            $userValidator = new userValidator();
 
             $index = 0;
             $phasesContainer = new PhaseContainer();
             foreach ($phases as &$phase) {
-                $validator->validateDateBounds(
+                $workValidator->validateDateBounds(
                     new DateTime($phase['startDateTime']),
                     new DateTime($phase['completionDateTime']),
                     new DateTime($project['startDateTime']),
                     new DateTime($project['completionDateTime'])
                 );
-                if ($validator->hasErrors()) {
-                    throw new ValidationException('Phase Validation Failed.', $validator->getErrors());
+                if ($workValidator->hasErrors()) {
+                    throw new ValidationException('Phase Validation Failed.', $workValidator->getErrors());
                 }
 
                 sanitizeData($phase);
@@ -230,16 +247,31 @@ class ProjectEndpoint extends Endpoint
                 $phasesContainer->add(Phase::createPartial($phase));
             }
 
+            $workersContainer= new WorkerContainer();
+            foreach ($workers as $worker) {
+                $userValidator->validateDefaultRate($worker['defaultRate']);
+                if ($userValidator->hasErrors()) {
+                    throw new ValidationException('Worker Validation Failed.', $userValidator->getErrors());
+                }
+                $workersContainer->add(Worker::createPartial([
+                    'publicId'      => UUID::fromString($worker['id']),
+                    'defaultRate'   => floatval($worker['defaultRate']) ?? DEFAULT_RATE_MIN
+                ]));
+            }
+
             // Create partial Project entity
             $newProject = Project::createPartial([
-                'name' => $project['name'],
-                'description' => $project['description'],
-                'budget' => floatval($project['budget']) ?? 0.00,
-                'startDateTime' => $project['startDateTime'],
-                'completionDateTime' => $project['completionDateTime'],
-                'phases' => $phasesContainer,
-                'tasks' => [],
-                'status' => WorkStatus::getStatusFromDates(new DateTime($project['startDateTime']), new DateTime($project['completionDateTime']))
+                'name'                  => $project['name'],
+                'description'           => $project['description'],
+                'budget'                => floatval($project['budget']) ?? 0.00,
+                'startDateTime'         => $project['startDateTime'],
+                'completionDateTime'    => $project['completionDateTime'],
+                'workers'               => $workersContainer,
+                'phases'                => $phasesContainer,
+                'tasks'                 => [],
+                'status'                => WorkStatus::getStatusFromDates(
+                    new DateTime($project['startDateTime']), 
+                    new DateTime($project['completionDateTime']))
             ]);
             $newProject = ProjectModel::create($newProject);
 
@@ -337,7 +369,7 @@ class ProjectEndpoint extends Endpoint
                 throw new NotFoundException('Project is not found.');
             }
 
-            $validator = new WorkValidator();
+            $workValidator = new WorkValidator();
 
             $projectData = ['id' => $project->getId()];
 
@@ -394,26 +426,26 @@ class ProjectEndpoint extends Endpoint
 
                     // Validate date bounds for edits and additions
                     if ($key === 'toAdd' || $key === 'toEdit') {
-                        $validator->validateDateBounds(
+                        $workValidator->validateDateBounds(
                             $startDateTime,
                             $completionDateTime,
                             $projectData['startDateTime'] ?? $project->getStartDateTime(),
                             $projectData['completionDateTime'] ?? $project->getCompletionDateTime()
                         );
-                        if ($validator->hasErrors()) {
-                            throw new ValidationException('Phase Validation Failed.', $validator->getErrors());
+                        if ($workValidator->hasErrors()) {
+                            throw new ValidationException('Phase Validation Failed.', $workValidator->getErrors());
                         }
                     }
 
                     if ($key === 'toEdit') {
                         // Phase to edit
-                        $validator->validateMultiple([
+                        $workValidator->validateMultiple([
                             'description' => $value['description'],
                             'startDateTime' => $startDateTime,
                             'completionDateTime' => $completionDateTime
                         ]);
-                        if ($validator->hasErrors()) {
-                            throw new ValidationException('Phase Validation Failed.', $validator->getErrors());
+                        if ($workValidator->hasErrors()) {
+                            throw new ValidationException('Phase Validation Failed.', $workValidator->getErrors());
                         }
                         $phases['toEdit'][] = [
                             'publicId' => UUID::fromString($value['id']),
@@ -443,9 +475,9 @@ class ProjectEndpoint extends Endpoint
 
             // Save project edits
             if ($projectData && count($projectData) > 1) {
-                $validator->validateMultiple($projectData);
-                if ($validator->hasErrors()) {
-                    throw new ValidationException('Project Validation Failed.', $validator->getErrors());
+                $workValidator->validateMultiple($projectData);
+                if ($workValidator->hasErrors()) {
+                    throw new ValidationException('Project Validation Failed.', $workValidator->getErrors());
                 }
                 sanitizeData($projectData);
                 ProjectModel::save($projectData);
