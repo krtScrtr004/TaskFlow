@@ -90,10 +90,46 @@ foreach ($paths as $path) {
 /**
  * Dynamically load and define validation constraints constants from JSON file
  */
-$validationConstraints = decodeData(DATA_PATH . 'validation-constraints.json');
-foreach ($validationConstraints as $key => $value) {
-    define($key, $value);
-}
+// TODO: Uncomment these lines on deployment and remove the manual define statements below
+//  $validationConstraints = decodeData(DATA_PATH . 'validation-constraints.json');
+// foreach ($validationConstraints as $key => $value) {
+//     define($key, $value);
+// }
+
+// ============================================================================= //
+define('BUDGET_MIN', 0.0);
+define('BUDGET_MAX', 999999999999);
+
+define('CONTACT_NUMBER_MIN', 11);
+define('CONTACT_NUMBER_MAX', 20);
+
+define('CONTINGENCY_RATE_MIN', 0.0);
+define('CONTINGENCY_RATE_MAX', 100.0);
+
+define('DEFAULT_RATE_MIN', 0.0);
+define('DEFAULT_RATE_MAX', 999999999);
+
+define('FULL_NAME_MIN', 3);
+define('FULL_NAME_MAX', 255);
+
+define('LONG_TEXT_MIN', 5);
+define('LONG_TEXT_MAX', 1000);
+
+define('NAME_MIN', 1);
+define('NAME_MAX', 50);
+
+define('PASSWORD_MIN', 8);
+define('PASSWORD_MAX', 255);
+
+define('URI_MIN', 3);
+define('URI_MAX', 255);
+
+define('WORKER_COUNT_MIN', 1);
+define('WORKER_COUNT_MAX', 1000);
+
+define('YEAR_MIN', 1900);
+define('YEAR_MAX', 2100);
+// ============================================================================= //
 
 /**
  * Error Handling Config
