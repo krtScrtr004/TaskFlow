@@ -158,6 +158,10 @@
 	margin-bottom: 0.5rem;
 }
 
+#workers_section .search-bar {
+	width: 100%;
+}
+
 .worker-pool-card {
 	width: 100%;
 	padding: 0.5rem 1rem;

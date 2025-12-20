@@ -19,9 +19,14 @@ export function hideModal(modalWrapper) {
     buttons.forEach(button => {
         button.addEventListener('click', e => {
             e.preventDefault()
-            if (modalWrapper.style.display !== 'none') {
-                modalWrapper.style.display = 'none'
-            }
+
+            modalWrapper.classList.add('fade-out')
+            modalWrapper.addEventListener('animationend', () => {
+                if (modalWrapper.style.display !== 'none') {
+                    modalWrapper.style.display = 'none'
+                }
+                modalWrapper.classList.remove('fade-out')
+            }, { once: true })
         })
     })
 }

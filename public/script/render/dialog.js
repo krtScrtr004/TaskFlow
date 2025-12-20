@@ -33,7 +33,7 @@ function render(
     option.okayButtonClass = option.okayButtonClass ?? (status ? 'blue-bg' : 'red-bg')
 
     const html = `
-        <section id="${id}_wrapper" class="modal-wrapper flex-col">
+        <section id="${id}_wrapper" class="modal-wrapper flex-col face-in">
             <section class="dialog black-bg flex-col">
                 <img 
                     src="${ICON_PATH + option.statusIcon}" 

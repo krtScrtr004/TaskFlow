@@ -167,8 +167,6 @@ if ($project) {
                         </span>
                     </div>
 
-                    <?php include_once COMPONENT_PATH . 'template' . DS . 'phase-form-card.php' ?>
-
                     <div class="no-phases-wall no-content-wall flex-col">
                         <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No Phases Found" title="No Phases Found"
                             height="100">
@@ -263,7 +261,7 @@ if ($project) {
     </main>
 
     <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'scroll-navigation.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'clone-phase-form-card.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'create-phase-form-card.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'create' . DS . 'search-workers.js' ?>"
         defer></script>
     <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'worker' . DS . 'add.js' ?>"

@@ -61,42 +61,41 @@ button:has(.text-w-icon):not(.unset-button) {
 
 .input-w-prefix,
 .input-w-suffix {
-    display: flex;
-    align-items: center;
-    background-color: #353637;
-    border: 1px solid var(--dark-white);
-    border-radius: 8px;
-    overflow: hidden;
+	display: flex;
+	align-items: center;
+	background-color: #353637;
+	border: 1px solid var(--dark-white);
+	border-radius: 8px;
+	overflow: hidden;
 }
 
 .input-w-prefix input,
 .input-w-suffix input {
-    border: none;
-    background-color: transparent;
-    flex: 1;
+	border: none;
+	background-color: transparent;
+	flex: 1;
 }
 
 .input-w-prefix input:focus,
 .input-w-suffix input:focus {
-    outline: none;
+	outline: none;
 }
 
 .input-prefix,
 .input-suffix {
-    padding: 8px 12px;
-    background-color: rgba(255, 255, 255, 0.05);
-    font-weight: 600;
-    color: var(--dark-white);
+	padding: 8px 12px;
+	background-color: rgba(255, 255, 255, 0.05);
+	font-weight: 600;
+	color: var(--dark-white);
 }
 
 .input-prefix {
-    border-right: 1px solid var(--dark-white);
+	border-right: 1px solid var(--dark-white);
 }
 
 .input-suffix {
-    border-left: 1px solid var(--dark-white);
+	border-left: 1px solid var(--dark-white);
 }
-
 
 /* ---------------- PASSWORD TOGGLE WRAPPER ---------------- */
 .password-toggle-wrapper {
@@ -397,15 +396,15 @@ button > .text-w-icon {
 .search-bar,
 .search-bar > .search-bar-block {
 	width: 100%;
+	max-width: 65ch;
 	display: flex;
 	align-items: center;
 	padding: 0;
-	background-color: var(--input-color);	
+	background-color: var(--input-color);
 	border-radius: var(--input-border-radius);
 }
 
-.search-bar > div:first-child {
-	width: 100%;
+.search-bar > .search-bar-block {
 	display: flex;
 	border-radius: var(--input-border-radius);
 }
@@ -443,6 +442,7 @@ button > .text-w-icon {
 
 .search-bar > select {
 	width: 13ch;
+	background-color: transparent;
 	border: none;
 	margin-right: 0.5rem;
 }
@@ -682,23 +682,23 @@ button > .text-w-icon {
 /* ---------------- CANNOT EDIT WARNING ---------------- */
 
 .cannot-edit-warning {
-    position: relative;
-    width: 100%;
-    padding: 0.5rem 0.8rem;
-    border-radius: var(--border-radius);
+	position: relative;
+	width: 100%;
+	padding: 0.5rem 0.8rem;
+	border-radius: var(--border-radius);
 }
 
 .cannot-edit-warning::before {
-    content: '';
-    background-color: var(--red);
-    opacity: 0.7;
-    position: absolute; 
-    top: 0;
-    left: 0;
-    width: 100%; 
-    height: 100%;
-    z-index: -1; 
-    border-radius: var(--border-radius);
+	content: '';
+	background-color: var(--red);
+	opacity: 0.7;
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: -1;
+	border-radius: var(--border-radius);
 }
 
 @media (max-width: 768px) {
@@ -778,7 +778,10 @@ button > .text-w-icon {
 	}
 
 	.grid-card-container {
-		grid-template-columns: repeat(auto-fill, minmax(var(--card-width), 100%));
+		grid-template-columns: repeat(
+			auto-fill,
+			minmax(var(--card-width), 100%)
+		);
 	}
 
 	.grid-card {

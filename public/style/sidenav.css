@@ -12,6 +12,7 @@
 .sidenav button:not(.hamburger-button) {
     display: block;
     padding: 1rem 4rem;
+    transition: background-color var(--transition-dur) ease;
 }
 
 .sidenav button.hamburger-button {

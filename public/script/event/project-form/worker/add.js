@@ -1,4 +1,5 @@
 import { Notification } from '../../../render/notification.js'
+import { handleException } from '../../../utility/handle-exception.js'
 
 export const addedWorkers = new Set()
 
@@ -22,25 +23,27 @@ workerPoolListingList.addEventListener('click', e => {
     }
     e.stopImmediatePropagation()
 
-    const workerId = card.dataset.workerid
-    if (addedWorkers.has(workerId)) {
-        Notification.error('Worker already added to the project.', 3000)
-        return
+    try {
+        const workerId = card.dataset.workerid
+        if (addedWorkers.has(workerId)) {
+            Notification.error('Worker already added to the project.', 3000)
+            return
+        }
+        addedWorkers.add(workerId) // Mark this worker as added
+        card.classList.add('selected')
+
+        toggleNoWorkersWall(false)
+
+        // Render and append the new selected worker row
+        const newRow = renderSelectedWorkerRow({
+            name: card.querySelector('.worker-info .name')?.textContent || '',
+            jobTitles: Array.from(card.querySelectorAll('.worker-info .role-chip')).map(el => el.textContent || ''),
+            id: workerId
+        })
+        selectedWorkersTableList.appendChild(newRow)
+    } catch (error) {
+        handleException(error, `Error handling worker pool listing click.`)
     }
-    addedWorkers.add(workerId) // Mark this worker as added
-    card.classList.add('selected')
-
-    toggleNoWorkersWall(false)
-
-    // Render and append the new selected worker row
-    const newRow = renderSelectedWorkerRow({
-        name: card.querySelector('.worker-info .name')?.textContent || '',
-        jobTitles: Array.from(card.querySelectorAll('.worker-info .role-chip')).map(el => el.textContent || ''),
-        id: workerId
-    })
-    selectedWorkersTableList.appendChild(newRow)
-    console.log(Array.from(addedWorkers.values()))
-
 })
 
 /**
