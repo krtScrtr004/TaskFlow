@@ -252,7 +252,7 @@ async function sendToBackend(data) {
     isLoading = true
 
     try {
-        const endpoint = `project/`
+        const endpoint = `projects/`
         const response = await Http.POST(endpoint, data)
         if (!response) {
             throw new Error('No response from server')

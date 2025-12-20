@@ -310,13 +310,11 @@ class UserValidator extends Validator
      * Validates a collection of job titles and appends any validation error messages to $this->errors.
      *
      * This method performs the following checks:
-     * - Ensures the JobTitleContainer is not null and contains at least one job title.
      * - For each job title in the container:
      *   - Verifies the trimmed length is between 1 and 100 characters.
      *   - Verifies the title contains only valid characters (letters, numbers, spaces, apostrophes, hyphens, forward/back slashes).
      *
      * Possible error messages appended to $this->errors:
-     * - 'Job titles must be provided.' when the container is null or empty.
      * - 'Each job title must be between 1 and 100 characters long.' when any title's length is invalid (breaks after first occurrence).
      * - 'Job title "{title}" contains invalid characters.' when any title contains disallowed characters (breaks after first occurrence).
      *
@@ -326,8 +324,7 @@ class UserValidator extends Validator
      */
     public function validateJobTitles(?JobTitleContainer $jobTitles): void
     {
-        if ($jobTitles === null || $jobTitles->count() < 1) {
-            $this->errors[] = 'Job titles must be provided.';
+        if (!$jobTitles || $jobTitles === null || $jobTitles->count() < 1) {
             return;
         }
 

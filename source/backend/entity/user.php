@@ -103,7 +103,6 @@ class User implements Entity
                 'bio' => $bio,
                 'profileLink' => $profileLink,
                 'createdAt' => $createdAt,
-                'password' => $password,
                 'additionalInfo' => $additionalInfo
             ]);
 
@@ -669,6 +668,8 @@ class User implements Entity
      *      - bio: string|null User's biography
      *      - profileLink: string|null User's profile link
      *      - createdAt: string|DateTime|null User creation timestamp
+     *      - confirmedAt: string|DateTime|null User confirmation timestamp
+     *      - deletedAt: string|DateTime|null User deletion timestamp
      *      - password: string|null User's password
      *      - additionalInfo: array Additional user information
      * 
@@ -738,7 +739,7 @@ class User implements Entity
 
         // Handle JobTitleContainer conversion
         if (isset($data['jobTitles']) && !($data['jobTitles'] instanceof JobTitleContainer)) {
-            $defaults['jobTitles'] = is_array($data['jobTitles'])
+            $defaults['jobTitles'] = is_array($data['jobTitles']) && !empty($data['jobTitles'])
                 ? JobTitleContainer::fromArray($data['jobTitles'])
                 : new JobTitleContainer();
         }
@@ -916,9 +917,10 @@ class User implements Entity
             ? Role::tryFrom(trimOrNull($data['role']))
             : $data['role'];
 
-        $jobTitles = (!($data['jobTitles'] instanceof JobTitleContainer))
-            ? JobTitleContainer::fromArray($data['jobTitles'])
-            : $data['jobTitles'];
+        $jobTitles =  $data['jobTitles'];
+        if (is_array($data['jobTitles']) && !empty($data['jobTitles'])) {
+            $jobTitles = JobTitleContainer::fromArray($data['jobTitles']);
+        }
 
         $createdAt = (is_string($data['createdAt']))
             ? new DateTime(trimOrNull($data['createdAt']))
