@@ -168,11 +168,13 @@ class ProjectController implements Controller
                     'id' => (int) $key,
                     'status' => WorkStatus::ON_GOING
                 ];
-            } 
+            }
             // Transition: ON_GOING → COMPLETED or DELAYED (when completion date has passed)
-            elseif (($status === WorkStatus::ON_GOING
-                    || $status === WorkStatus::DELAYED) 
-                    && compareDates($completionDateTime, $now) < 0) {
+            elseif (
+                ($status === WorkStatus::ON_GOING
+                    || $status === WorkStatus::DELAYED)
+                && compareDates($completionDateTime, $now) < 0
+            ) {
                 if ($value['simpleProgress'] >= 100.0) {
                     $reference->setStatus(WorkStatus::COMPLETED);
                     $phasesToUpdate[] = [
@@ -186,7 +188,7 @@ class ProjectController implements Controller
                         'status' => WorkStatus::DELAYED
                     ];
                 }
-            } 
+            }
         }
 
         // Update phase status in the database
@@ -410,7 +412,7 @@ class ProjectController implements Controller
         require_once VIEW_PATH . 'home.php';
     }
 
-    public static function viewReport(array $args = []): void 
+    public static function viewReport(array $args = []): void
     {
         try {
             if (!SessionAuth::hasAuthorizedSession()) {
@@ -430,6 +432,43 @@ class ProjectController implements Controller
             $projectReport = ProjectModel::getReport($projectId);
 
             require_once SUB_VIEW_PATH . 'report.php';
+        } catch (NotFoundException $e) {
+            ErrorController::notFound();
+        } catch (ForbiddenException $e) {
+            ErrorController::forbidden();
+        }
+    }
+
+    /**
+     * Displays the project creation/edit form view.
+     *
+     * This method checks for an authorized session before rendering the form.
+     * If a projectId is provided in the arguments, it retrieves the existing
+     * project for editing; otherwise, it prepares the form for creating a new project.
+     *
+     * @param array $args Optional associative array of arguments:
+     *      - projectId: string UUID of the project to edit (optional)
+     *
+     * @return void
+     *
+     * @throws NotFoundException Redirects to 404 error page if the project is not found
+     * @throws ForbiddenException Redirects to 403 error page if access is denied
+     */
+    public static function viewProjectForm(array $args = []): void {
+        try {
+            if (!SessionAuth::hasAuthorizedSession()) {
+                header('Location: ' . REDIRECT_PATH . 'login');
+                exit();
+            }
+            
+            $projectId = isset($args['projectId'])
+                ? UUID::fromString($args['projectId'])
+                : null;
+            $project = isset($projectId)
+                ? ProjectModel::findById($projectId)
+                : null;
+
+            require_once SUB_VIEW_PATH . 'create-edit-project.php';
         } catch (NotFoundException $e) {
             ErrorController::notFound();
         } catch (ForbiddenException $e) {
