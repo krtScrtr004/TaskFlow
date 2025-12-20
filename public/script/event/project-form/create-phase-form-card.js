@@ -1,5 +1,7 @@
 import { handleException } from '../../utility/handle-exception.js'
-import { VALIDATION_CONSTANTS } from '../../utility/work-rules-validators.js'
+import { getValidationConstraints } from '../../utility/utility.js'
+
+const VALIDATION_CONSTANTS = await getValidationConstraints()
 
 const phaseSection = document.querySelector('#phase_section')
 const noPhasesWall = phaseSection.querySelector('.no-phases-wall')

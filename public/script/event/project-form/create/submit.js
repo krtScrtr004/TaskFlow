@@ -205,14 +205,14 @@ function getWorkersData() {
  */
 function formatData(info, phases, workers) {
     return {
-        'name': info.name,
-        'description': info.description,
-        'budget': info.budget,
-        'maxWorkers': info.maxWorkers,
-        'startDateTime': info.startDateTime,
-        'completionDateTime': info.completionDateTime,
-        'phases': phases,
-        'workers': workers,
+        'project': {
+            'name': info.name,
+            'description': info.description,
+            'budget': info.budget,
+            'maxWorkers': info.maxWorkers,
+            'startDateTime': info.startDateTime,
+            'completionDateTime': info.completionDateTime,
+        },
         'phases': Array.from(phases).map(phase => ({
             'name': phase.name,
             'description': phase.description,

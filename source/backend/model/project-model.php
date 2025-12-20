@@ -117,7 +117,21 @@ class ProjectModel extends Model
                     'email'         => $row['email'],
                     'profileLink'   => $row['profile_link'],
                 ]);
-                $projects->add(Project::createPartial($row));
+
+                $projects->add(Project::createPartial([
+                    'id'                        => $row['id'],
+                    'publicId'                  => UUID::fromBinary($row['public_id']),
+                    'name'                      => $row['name'],
+                    'description'               => $row['description'],
+                    'manager'                   => $row['manager'],
+                    'maxWorkers'                => $row['max_worker'],
+                    'budget'                    => $row['budget'],
+                    'startDateTime'             => new DateTime($row['start_date_time']),
+                    'completionDateTime'        => new DateTime($row['completion_date_time']),
+                    'actualCompletionDateTime'  => $row['actual_completion_date_time'] 
+                        ? new DateTime($row['actual_completion_date_time']) 
+                        : null,
+                ]));
             }
             return $projects;
         } catch (PDOException $e) {
@@ -125,6 +139,7 @@ class ProjectModel extends Model
         }
     }
 
+    // FIXME: Apply changes from the database =============================================================================
 
     /**
      * Retrieves a Project instance with optional related data.
@@ -345,42 +360,42 @@ class ProjectModel extends Model
                 'jobTitles'    => new JobTitleContainer(json_decode($mangerData['job_titles'], true))
             ]);
 
-            $project = new Project(
-                id: $result['id'],
-                publicId: UUID::fromBinary($result['public_id']),
-                name: $result['name'],
-                description: $result['description'],
-                manager: $manager,
-                budget: $result['budget'],
-                tasks: new TaskContainer(),
-                workers: new WorkerContainer(),
-                phases: new PhaseContainer(),
-                startDateTime: new DateTime($result['start_date_time']),
-                completionDateTime: new DateTime($result['completion_date_time']),
-                actualCompletionDateTime: $result['actual_completion_date_time'] 
+            $project = Project::createPartial([
+                'id'                        => $result['id'],
+                'publicId'                  => UUID::fromBinary($result['public_id']),
+                'name'                      => $result['name'],
+                'description'               => $result['description'],
+                'manager'                   => $manager,
+                'budget'                    => $result['budget'],
+                'tasks'                     => new TaskContainer(),
+                'workers'                   => new WorkerContainer(),
+                'phases'                    => new PhaseContainer(),
+                'startDateTime'             => new DateTime($result['start_date_time']),
+                'completionDateTime'        => new DateTime($result['completion_date_time']),
+                'actualCompletionDateTime'  => $result['actual_completion_date_time'] 
                     ? new DateTime($result['actual_completion_date_time']) 
                     : null,
-                status: WorkStatus::from($result['status']),
-                createdAt: new DateTime($result['created_at']),
-            );
+                'status'                    => WorkStatus::from($result['status']),
+                'createdAt'                 => new DateTime($result['created_at']),
+            ]);
 
             // Process phases if included
             if ($includePhases && isset($result['project_phases'])) {
                 $projectPhases = json_decode($result['project_phases'], true);
                 foreach ($projectPhases as $phase) {
-                    $project->addPhase(new Phase(
-                        id: $phase['id'],
-                        publicId: UUID::fromHex($phase['public_id']),
-                        name: $phase['name'],
-                        description: $phase['description'],
-                        startDateTime: new DateTime($phase['start_date_time']),
-                        completionDateTime: new DateTime($phase['completion_date_time']),
-                        actualCompletionDateTime: $phase['actual_completion_date_time'] 
+                    $project->addPhase(Phase::createPartial([
+                        'id'                        => $phase['id'],
+                        'publicId'                  => UUID::fromHex($phase['public_id']),
+                        'name'                      => $phase['name'],
+                        'description'               => $phase['description'],
+                        'startDateTime'             => new DateTime($phase['start_date_time']),
+                        'completionDateTime'        => new DateTime($phase['completion_date_time']),
+                        'actualCompletionDateTime'  => $phase['actual_completion_date_time'] 
                             ? new DateTime($phase['actual_completion_date_time']) 
                             : null,
-                        status: WorkStatus::from($phase['status']),
-                        tasks: new TaskContainer()
-                    ));
+                        'status'                    => WorkStatus::from($phase['status']),
+                        'tasks'                     => new TaskContainer()
+                    ]));
                 }
             }
 
@@ -388,21 +403,21 @@ class ProjectModel extends Model
             if ($includeTasks && isset($result['project_tasks'])) {
                 $projectTask = json_decode($result['project_tasks'], true);
                 foreach ($projectTask as $task) {
-                    $project->addTask(new Task(
-                        id: $task['id'],
-                        publicId: UUID::fromHex($task['public_id']),
-                        name: $task['name'],
-                        description: $task['description'],
-                        status: WorkStatus::from($task['status']),
-                        priority: TaskPriority::from($task['priority']),
-                        workers: new WorkerContainer(),
-                        startDateTime: new DateTime($task['start_date_time']),
-                        completionDateTime: new DateTime($task['completion_date_time']),
-                        actualCompletionDateTime: $task['actual_completion_date_time'] 
+                    $project->addTask(Task::createPartial([
+                        'id'                        => $task['id'],
+                        'publicId'                  => UUID::fromHex($task['public_id']),
+                        'name'                      => $task['name'],
+                        'description'               => $task['description'],
+                        'status'                    => WorkStatus::from($task['status']),
+                        'priority'                  => TaskPriority::from($task['priority']),
+                        'workers'                   => new WorkerContainer(),
+                        'startDateTime'             => new DateTime($task['start_date_time']),
+                        'completionDateTime'        => new DateTime($task['completion_date_time']),
+                        'actualCompletionDateTime'  => $task['actual_completion_date_time'] 
                             ? new DateTime($task['actual_completion_date_time']) 
                             : null,
-                        createdAt: new DateTime($task['created_at'])
-                    ));
+                        'createdAt'                 => new DateTime($task['created_at'])
+                    ]));
                 }
             }
 
@@ -432,6 +447,7 @@ class ProjectModel extends Model
             throw new DatabaseException($e->getMessage());
         }
     }
+    // ===================================================================================================================
 
     /**
      * Retrieves a Project by its ID.
@@ -688,6 +704,7 @@ class ProjectModel extends Model
                 return null;
             }
 
+            // Build manager object
             $result['manager'] = User::createPartial([
                 'id'            => $result['id'],
                 'publicId'      => UUID::fromBinary($result['public_id']),
@@ -701,7 +718,21 @@ class ProjectModel extends Model
                 'confirmedAt'   => $result['managerConfirmedAt'],
                 'deletedAt'     => $result['managerDeletedAt'],
             ]);
-            return Project::createPartial($result);;
+
+            return Project::createPartial([
+                'id'                        => $result['id'],
+                'publicId'                  => UUID::fromBinary($result['public_id']),
+                'name'                      => $result['name'],
+                'description'               => $result['description'],
+                'manager'                   => $result['manager'],
+                'maxWorkers'                => $result['max_worker'],
+                'budget'                    => $result['budget'],
+                'startDateTime'             => new DateTime($result['start_date_time']),
+                'completionDateTime'        => new DateTime($result['completion_date_time']),
+                'actualCompletionDateTime'  => $result['actual_completion_date_time'] 
+                    ? new DateTime($result['actual_completion_date_time']) 
+                    : null, 
+            ]);
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
@@ -851,7 +882,7 @@ class ProjectModel extends Model
      * - Validation of the Project instance
      * - Generation of UUID if not provided
      * - Insertion of project data into the database
-     * - Creation of associated project phases if any exist
+     * - Creation of associated project phases and budget if any exist
      * - Transaction management to ensure data integrity
      *
      * @param mixed $project Project instance to be created. Must be an instance of Project class.
@@ -877,12 +908,12 @@ class ProjectModel extends Model
             $projectName               =   trimOrNull($project->getName());
             $projectDescription        =   trimOrNull($project->getDescription());
             $projectBudget             =   ($project->getBudget()) ?? 0.00;
+            $projectMaxWorkers         =   ($project->getMaxWorkers()) ?? WORKER_COUNT_MIN;
             $projectStatus             =   $project->getStatus() ?? WorkStatus::PENDING;
             $projectStartDateTime      =   formatDateTime($project->getStartDateTime());
             $projectCompletionDateTime =   formatDateTime($project->getCompletionDateTime());
             $projectPhases             =   $project->getPhases();
 
-            
             $projectQuery = "
                 INSERT INTO `project` (
                     public_id,
@@ -890,6 +921,7 @@ class ProjectModel extends Model
                     description,
                     budget,
                     status,
+                    max_worker,
                     start_date_time,
                     completion_date_time,
                     manager_id
@@ -899,6 +931,7 @@ class ProjectModel extends Model
                     :description,
                     :budget,
                     :status,
+                    :maxWorker,
                     :startDateTime,
                     :completionDateTime,
                     :managerId
@@ -910,6 +943,7 @@ class ProjectModel extends Model
                 ':description'          => $projectDescription,
                 ':budget'               => $projectBudget,
                 ':status'               => $projectStatus->value,
+                ':maxWorker'            => $projectMaxWorkers,
                 ':startDateTime'        => $projectStartDateTime,
                 ':completionDateTime'   => $projectCompletionDateTime,
                 ':managerId'            => Me::getInstance()->getId(),
@@ -917,6 +951,7 @@ class ProjectModel extends Model
             $projectId = intval($instance->connection->lastInsertId());
 
             if ($projectPhases && $projectPhases->count() > 0) {
+                // Phase Insertion Query
                 $projectPhaseQuery = "
                     INSERT INTO `project_phase` (
                         project_id,
@@ -946,6 +981,29 @@ class ProjectModel extends Model
                         ':completionDateTime'   => formatDateTime($phase->getCompletionDateTime()),
                         ':status'               => $phase->getStatus()->value,
                     ]);
+                    $phaseId = $instance->connection->lastInsertId();
+
+                    // Phase Budget Insertion Query
+                    $projectPhaseBudgetQuery = "
+                        INSERT INTO `project_phase_budget` (
+                            phase_id,
+                            budget,
+                            contingency_rate,
+                            notes
+                        ) VALUES (
+                            :phaseId,
+                            :budget,
+                            :contingencyRate,
+                            :notes
+                        )";
+                    $phaseBudgetStatement = $instance->connection->prepare($projectPhaseBudgetQuery);
+                    $phaseBudgetStatement->execute([
+                        ':phaseId'          => $phaseId,
+                        ':budget'           => $phase->getBudget() ?? BUDGET_MIN,
+                        ':contingencyRate'  => $phase->getContingencyRate() ?? CONTINGENCY_RATE_MIN,
+                        ':notes'            => trimOrNull($phase->getBudgetNotes()),
+                    ]);
+
                 }
             }
 
@@ -960,6 +1018,7 @@ class ProjectModel extends Model
         }
     }
 
+    // FIXME: Apply changes to the database =============================================================================
     /**
      * Saves or updates a project with its associated data in the database.
      *
@@ -967,9 +1026,7 @@ class ProjectModel extends Model
      * an UPDATE query based on provided fields and handles various data conversions:
      * - Trims string fields (name, description) or sets them to null
      * - Converts status enum to its value
-     * - Formats DateTime objects to ATOM format for storage
      * - Handles nullable actual_completion_date_time field
-     * - Recursively saves associated tasks if provided
      * - Uses either 'id' or 'publicId' for identifying the project record
      *
      * @param array $data Associative array containing project data with following keys:
@@ -978,10 +1035,10 @@ class ProjectModel extends Model
      *      - description: string (optional) Project description
      *      - budget: float|int (optional) Project budget amount
      *      - status: ProjectStatus (optional) Project status enum
+     *      - maxWorkers: int (optional) Maximum number of workers allowed
      *      - startDateTime: DateTime|string (optional) Project start date and time
      *      - completionDateTime: DateTime|string (optional) Planned completion date and time
      *      - actualCompletionDateTime: DateTime|string|null (optional) Actual completion date and time
-     *      - tasks: TaskContainer (optional) Container of associated Task objects to be saved
      * 
      * @return bool Returns true if save operation was successful
      * 
@@ -1028,6 +1085,11 @@ class ProjectModel extends Model
                 $params[':status'] = $data['status']->value;
             }
 
+            if (isset($data['maxWorkers'])) {
+                $updateFields[] = 'max_worker = :maxWorkers';
+                $params[':maxWorkers'] = $data['maxWorkers'];
+            }
+
             if (isset($data['startDateTime'])) {
                 $updateFields[] = 'start_date_time = :startDateTime';
                 $params[':startDateTime'] = formatDateTime($data['startDateTime']);
@@ -1057,12 +1119,6 @@ class ProjectModel extends Model
                 $statement->execute($params);
             }
 
-            if (isset($data['tasks']) && $data['tasks'] instanceof TaskContainer) {
-                foreach ($data['tasks'] as $task) {
-                    $task->save();
-                }
-            }
-
             $instance->connection->commit();
             return true;
         } catch (PDOException $e) {
@@ -1070,6 +1126,7 @@ class ProjectModel extends Model
             throw new DatabaseException($e->getMessage());
         }
     }
+    // ==================================================================================================================
 
     /**
      * Deletes a phase entity.
