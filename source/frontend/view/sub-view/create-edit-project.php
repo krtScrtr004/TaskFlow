@@ -84,73 +84,97 @@ if ($project) {
                     </div>
 
                     <section class="inputs-section flex-col">
-                        <div class="input-label-container">
-                            <div class="text-w-icon">
-                                <img src="<?= ICON_PATH . 'name_w.svg' ?>" alt="Name" title="Name" height="24">
-                                <label for="name">Name</label>
+                        <div class="input-rules-container">
+                            <div class="input-label-container">
+                                <div class="text-w-icon">
+                                    <img src="<?= ICON_PATH . 'name_w.svg' ?>" alt="Name" title="Name" height="24">
+                                    <label for="name">Name</label>
+                                </div>
+                                <input type="text" name="name" id="name" placeholder="(eg. Project Management System)"
+                                    min="<?= NAME_MIN ?>" max="<?= NAME_MAX ?>" autocapitalize="on" autocomplete="on"
+                                    required>
                             </div>
-                            <input type="text" name="name" id="name" placeholder="(eg. Project Management System)"
-                                min="<?= NAME_MIN ?>" max="<?= NAME_MAX ?>" autocapitalize="on" autocomplete="on"
-                                required>
+
+                            <?= workNameRules() ?>
                         </div>
 
-                        <div class="input-label-container">
-                            <div class="text-w-icon">
-                                <img src="<?= ICON_PATH . 'description_w.svg' ?>" alt="Description" title="Description"
-                                    height="24">
-                                <label for="description">Description</label>
+                        <div class="input-rules-container">
+                            <div class="input-label-container">
+                                <div class="text-w-icon">
+                                    <img src="<?= ICON_PATH . 'description_w.svg' ?>" alt="Description"
+                                        title="Description" height="24">
+                                    <label for="description">Description</label>
+                                </div>
+                                <textarea name="description" id="description" rows="4"
+                                    placeholder="Describe what your project objectives, scope, and deliverables (optional)"
+                                    min="<?= LONG_TEXT_MIN ?>" max="<?= LONG_TEXT_MAX ?>" autocapitalize="on"
+                                    autocomplete="on" required></textarea>
                             </div>
-                            <textarea name="description" id="description" rows="4"
-                                placeholder="Describe what your project objectives, scope, and deliverables (optional)"
-                                min="<?= LONG_TEXT_MIN ?>" max="<?= LONG_TEXT_MAX ?>" autocapitalize="on"
-                                autocomplete="on" required></textarea>
+
+                            <?= workDescriptionRules() ?>
                         </div>
 
                         <section class="row-inputs flex-row">
-                            <div class="input-label-container">
-                                <div class="text-w-icon">
-                                    <img src="<?= ICON_PATH . 'budget_w.svg' ?>" alt="Budget" title="Budget"
-                                        height="24">
-                                    <label for="budget">Budget</label>
+                            <div class="input-rules-container">
+                                <div class="input-label-container">
+                                    <div class="text-w-icon">
+                                        <img src="<?= ICON_PATH . 'budget_w.svg' ?>" alt="Budget" title="Budget"
+                                            height="24">
+                                        <label for="budget">Budget</label>
+                                    </div>
+                                    <div class="input-w-prefix">
+                                        <span class="input-prefix">₱</span>
+                                        <input type="number" name="budget" id="budget" placeholder="0.00" required>
+                                    </div>
                                 </div>
-                                <div class="input-w-prefix">
-                                    <span class="input-prefix">₱</span>
-                                    <input type="number" name="budget" id="budget" placeholder="0.00" required>
-                                </div>
+
+                                <?= workBudgetRules() ?>
                             </div>
 
-                            <div class="input-label-container">
-                                <div class="text-w-icon">
-                                    <img src="<?= ICON_PATH . 'worker_w.svg' ?>" alt="Max Workers" title="Max Workers"
-                                        height="24">
-                                    <label for="max_workers">Max Workers</label>
+                            <div class="input-rules-container">
+                                <div class="input-label-container">
+                                    <div class="text-w-icon">
+                                        <img src="<?= ICON_PATH . 'worker_w.svg' ?>" alt="Max Workers"
+                                            title="Max Workers" height="24">
+                                        <label for="max_workers">Max Workers</label>
+                                    </div>
+                                    <input type="number" name="max_workers" id="max_workers"
+                                        placeholder="Define the maximum number of workers (eg. 10)"
+                                        min="<?= WORKER_COUNT_MIN ?>" max="<?= WORKER_COUNT_MAX ?>"
+                                        value="<?= WORKER_COUNT_MIN ?>" required>
                                 </div>
-                                <input type="number" name="max_workers" id="max_workers"
-                                    placeholder="Define the maximum number of workers (eg. 10)"
-                                    min="<?= WORKER_COUNT_MIN ?>" max="<?= WORKER_COUNT_MAX ?>"
-                                    value="<?= WORKER_COUNT_MIN ?>" required>
+
+                                <?= workWorkerCountRules() ?>
                             </div>
                         </section>
 
                         <section class="row-inputs flex-row">
-                            <div class="input-label-container">
-                                <div class="text-w-icon">
-                                    <img src="<?= ICON_PATH . 'start_w.svg' ?>" alt="Start Date" title="Start Date"
-                                        height="24">
-                                    <label for="start_date_time">Start Date</label>
+                            <div class="input-rules-container">
+                                <div class="input-label-container">
+                                    <div class="text-w-icon">
+                                        <img src="<?= ICON_PATH . 'start_w.svg' ?>" alt="Start Date" title="Start Date"
+                                            height="24">
+                                        <label for="start_date_time">Start Date</label>
+                                    </div>
+                                    <input type="date" name="start_date_time" id="start_date_time"
+                                        value="<?= formatDateTime(new DateTime(), 'Y-m-d') ?>" required>
                                 </div>
-                                <input type="date" name="start_date_time" id="start_date_time"
-                                    value="<?= formatDateTime(new DateTime(), 'Y-m-d') ?>" required>
+
+                                <?= workStartDateTimeRules() ?>
                             </div>
 
-                            <div class="input-label-container">
-                                <div class="text-w-icon">
-                                    <img src="<?= ICON_PATH . 'complete_w.svg' ?>" alt="Completion Date"
-                                        title="Completion Date" height="24">
-                                    <label for="completion_date_time">End Date</label>
+                            <div class="input-rules-container">
+                                <div class="input-label-container">
+                                    <div class="text-w-icon">
+                                        <img src="<?= ICON_PATH . 'complete_w.svg' ?>" alt="Completion Date"
+                                            title="Completion Date" height="24">
+                                        <label for="completion_date_time">End Date</label>
+                                    </div>
+                                    <input type="date" name="completion_date_time" id="completion_date_time"
+                                        value="<?= formatDateTime(new DateTime(), 'Y-m-d') ?>" required>
                                 </div>
-                                <input type="date" name="completion_date_time" id="completion_date_time"
-                                    value="<?= formatDateTime(new DateTime(), 'Y-m-d') ?>" required>
+
+                                <?= workCompletionDateTimeRules() ?>
                             </div>
                         </section>
 
@@ -262,10 +286,10 @@ if ($project) {
 
     <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'scroll-navigation.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'create-phase-form-card.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'validate-forms.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'create' . DS . 'search-workers.js' ?>"
         defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'worker' . DS . 'add.js' ?>"
-        defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'worker' . DS . 'add.js' ?>" defer></script>
 </body>
 
 </html>
