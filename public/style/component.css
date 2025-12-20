@@ -712,16 +712,19 @@ button > .text-w-icon {
 
 .input-rules-container > .rules li {
 	font-size: 0.9rem;
+	font-weight: 300;
 	padding-left: 1.2rem;
 	color: var(--dark-white);
 }
 
 .input-rules-container > .rules li.valid {
 	color: var(--green);
+	opacity: 0.8;
 }
 
 .input-rules-container > .rules li.invalid {
 	color: var(--red);
+	opacity: 0.8;
 }
 
 

@@ -2,6 +2,7 @@
 // TODO: Fix table width on smaller screens
 
 use App\Entity\User;
+use App\Middleware\Csrf;
 
 $uiState = [];
 $projectData = [];
@@ -19,6 +20,7 @@ if ($project) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<?= Csrf::get() ?>">
 
     <title><?= $uiState['pageName'] ?></title>
 
@@ -287,9 +289,9 @@ if ($project) {
     <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'scroll-navigation.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'create-phase-form-card.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'validate-forms.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'create' . DS . 'search-workers.js' ?>"
-        defer></script>
     <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'worker' . DS . 'add.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'create' . DS . 'search-workers.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'create' . DS . 'submit.js' ?>" defer></script>
 </body>
 
 </html>
