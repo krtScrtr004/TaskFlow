@@ -7,7 +7,6 @@ date_default_timezone_set('Asia/Manila');
 
 require_once dirname(__DIR__, 1) . DS . 'data' . DS . 'path.php';
 require_once VENDOR_PATH . 'autoload.php';
-require_once DATA_PATH . 'data-length.php';
 
 require_once __DIR__ . DS . 'env.php';
 
@@ -86,6 +85,14 @@ foreach ($paths as $path) {
     foreach (glob($path . '*.php') as $fileName) {
         require_once $fileName;
     }
+}
+
+/**
+ * Dynamically load and define validation constraints constants from JSON file
+ */
+$validationConstraints = decodeData(DATA_PATH . 'validation-constraints.json');
+foreach ($validationConstraints as $key => $value) {
+    define($key, $value);
 }
 
 /**
