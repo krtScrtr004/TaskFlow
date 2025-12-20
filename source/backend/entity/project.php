@@ -25,7 +25,8 @@ class Project implements Entity
     private string $name;
     private ?string $description;
     private User $manager;
-    private float $budget; 
+    private float $budget;
+    private int $maxWorkers;
     private ?TaskContainer $tasks;
     private WorkerContainer $workers;
     private ?PhaseContainer $phases;
@@ -69,6 +70,7 @@ class Project implements Entity
         string $description,
         User $manager,
         float $budget,
+        int $maxWorkers,
         ?TaskContainer $tasks,
         WorkerContainer $workers,
         ?PhaseContainer $phases,
@@ -77,7 +79,7 @@ class Project implements Entity
         ?DateTime $actualCompletionDateTime,
         WorkStatus $status,
         DateTime $createdAt,
-        array $additionalInfo = [] 
+        array $additionalInfo = []
     ) {
         try {
             $this->workValidator = new WorkValidator();
@@ -85,10 +87,11 @@ class Project implements Entity
                 'name' => $name,
                 'description' => $description,
                 'budget' => $budget,
+                'maxWorkers' => $maxWorkers,
                 'startDateTime' => $startDateTime,
                 'completionDateTime' => $completionDateTime
             ]);
-            
+
             if ($this->workValidator->hasErrors()) {
                 throw new ValidationException("Project validation failed", $this->workValidator->getErrors());
             }
@@ -102,6 +105,7 @@ class Project implements Entity
         $this->description = trimOrNull($description);
         $this->manager = $manager;
         $this->budget = $budget;
+        $this->maxWorkers = $maxWorkers;
         $this->tasks = $tasks;
         $this->workers = $workers;
         $this->phases = $phases;
@@ -196,6 +200,16 @@ class Project implements Entity
     }
 
     /**
+     * Gets the maximum number of workers allowed for the project.
+     *
+     * @return int The maximum number of workers allowed for the project
+     */
+    public function getMaxWorkers(): int
+    {
+        return $this->maxWorkers;
+    }
+
+    /**
      * Gets the project budget.
      *
      * @return int The budget in cents (to avoid floating point issues)
@@ -265,7 +279,7 @@ class Project implements Entity
      * 
      * @return mixed The value associated with the key if it exists, null otherwise
      */
-    public function getAdditionalInfo(string $key): mixed 
+    public function getAdditionalInfo(string $key): mixed
     {
         return $this->additionalInfo[$key] ?? null;
     }
@@ -280,7 +294,7 @@ class Project implements Entity
      * @return array Associative array containing all additional project information.
      *               Returns an empty array if no additional information is set.
      */
-    public function getAllAdditionalInfo(): array 
+    public function getAllAdditionalInfo(): array
     {
         return $this->additionalInfo;
     }
@@ -363,6 +377,22 @@ class Project implements Entity
             throw new ValidationException("User does not have Project Manager role");
         }
         $this->manager = $manager;
+    }
+
+    /**
+     * Sets the maximum number of workers allowed for the project.
+     *
+     * @param int $maxWorkers The maximum number of workers (1-100)
+     * @throws ValidationException If the max workers is invalid
+     * @return void
+     */
+    public function setMaxWorkers(int $maxWorkers): void
+    {
+        $this->workValidator->validateMaxWorkers($maxWorkers);
+        if ($this->workValidator->hasErrors()) {
+            throw new ValidationException("Invalid max workers", $this->workValidator->getErrors());
+        }
+        $this->maxWorkers = $maxWorkers;
     }
 
     /**
@@ -600,6 +630,7 @@ class Project implements Entity
      *      - name: string Project name
      *      - description: string|null Project description
      *      - manager: array|User|null Project manager information
+     *      - maxWorkers: int|null Maximum number of workers
      *      - budget: float|int|null Project budget
      *      - tasks: array|TaskContainer|null Project tasks
      *      - workers: array|WorkerContainer|null Project workers
@@ -619,21 +650,22 @@ class Project implements Entity
 
         // Provide default values for required fields
         $defaults = [
-            'id'                        => $data['id'] ?? 0,
-            'publicId'                  => $data['publicId'] ?? UUID::get(),
-            'name'                      => $data['name'] ?? 'Untitled Project',
-            'description'               => $data['description'] ?? 'No description provided',
-            'manager'                   => $data['manager'] ?? User::createPartial([]),
-            'budget'                    => $data['budget'] ?? 0,
-            'tasks'                     => $data['tasks'] ?? null,
-            'workers'                   => $data['workers'] ?? new WorkerContainer(),
-            'phases'                    => $data['phases'] ?? null,
-            'startDateTime'             => $data['startDateTime'] ?? new DateTime(),
-            'completionDateTime'        => $data['completionDateTime'] ?? new DateTime('+30 days'),
-            'actualCompletionDateTime'  => $data['actualCompletionDateTime'] ?? null,
-            'status'                    => $data['status'] ?? WorkStatus::PENDING,
-            'additionalInfo'            => $data['additionalInfo'] ?? [],
-            'createdAt'                 => $data['createdAt'] ?? new DateTime()
+            'id'                            => $data['id'] ?? 0,
+            'publicId'                      => $data['publicId'] ?? UUID::get(),
+            'name'                          => $data['name'] ?? 'Untitled Project',
+            'description'                   => $data['description'] ?? 'No description provided',
+            'manager'                       => $data['manager'] ?? User::createPartial([]),
+            'maxWorkers'                    => $data['maxWorkers'] ?? WORKER_COUNT_MIN,
+            'budget'                        => $data['budget'] ?? BUDGET_MIN,
+            'tasks'                         => $data['tasks'] ?? null,
+            'workers'                       => $data['workers'] ?? new WorkerContainer(),
+            'phases'                        => $data['phases'] ?? null,
+            'startDateTime'                 => $data['startDateTime'] ?? new DateTime(),
+            'completionDateTime'            => $data['completionDateTime'] ?? new DateTime('+30 days'),
+            'actualCompletionDateTime'      => $data['actualCompletionDateTime'] ?? null,
+            'status'                        => $data['status'] ?? WorkStatus::PENDING,
+            'additionalInfo'                => $data['additionalInfo'] ?? [],
+            'createdAt'                     => $data['createdAt'] ?? new DateTime()
         ];
 
         // Handle UUID conversion
@@ -704,6 +736,7 @@ class Project implements Entity
             name: $defaults['name'],
             description: $defaults['description'],
             manager: $defaults['manager'],
+            maxWorkers: $defaults['maxWorkers'],
             budget: $defaults['budget'],
             tasks: $defaults['tasks'],
             workers: $defaults['workers'],
@@ -734,6 +767,7 @@ class Project implements Entity
      *      - name: string Project name
      *      - description: string Project description
      *      - manager: array Manager data as array
+     *      - maxWorkers: int Maximum number of workers
      *      - budget: float|int Project budget
      *      - tasks: array Collection of tasks as array
      *      - workers: array Collection of workers as array
@@ -749,23 +783,24 @@ class Project implements Entity
     public function toArray(bool $useSnakeCase = false): array
     {
         $data = [
-            'id' => UUID::toString($this->publicId),
-            'name' => $this->name,
-            'description' => $this->description,
-            'manager' => $this->manager->toArray($useSnakeCase),
-            'budget' => $this->budget,
-            'tasks' => $this->tasks?->toArray($useSnakeCase) ?? [],
-            'workers' => $this->workers?->toArray($useSnakeCase) ?? [],
-            'phases' => $this->phases?->toArray($useSnakeCase) ?? [],
-            'startDateTime' => formatDateTime($this->startDateTime, DateTime::ATOM),
-            'completionDateTime' => formatDateTime($this->completionDateTime, DateTime::ATOM),
-            'actualCompletionDateTime' => 
-                $this->actualCompletionDateTime 
-                    ? formatDateTime($this->actualCompletionDateTime, DateTime::ATOM) 
-                    : null,
-            'status' => $this->status->getDisplayName(),
-            'createdAt' => formatDateTime($this->createdAt),
-            'additionalInfo' => $this->additionalInfo
+            'id'                        => UUID::toString($this->publicId),
+            'name'                      => $this->name,
+            'description'               => $this->description,
+            'manager'                   => $this->manager->toArray($useSnakeCase),
+            'maxWorkers'                => $this->maxWorkers,
+            'budget'                    => $this->budget,
+            'tasks'                     => $this->tasks?->toArray($useSnakeCase) ?? [],
+            'workers'                   => $this->workers?->toArray($useSnakeCase) ?? [],
+            'phases'                    => $this->phases?->toArray($useSnakeCase) ?? [],
+            'startDateTime'             => formatDateTime($this->startDateTime, DateTime::ATOM),
+            'completionDateTime'        => formatDateTime($this->completionDateTime, DateTime::ATOM),
+            'actualCompletionDateTime'  =>
+                $this->actualCompletionDateTime
+                ? formatDateTime($this->actualCompletionDateTime, DateTime::ATOM)
+                : null,
+            'status'                    => $this->status->getDisplayName(),
+            'createdAt'                 => formatDateTime($this->createdAt),
+            'additionalInfo'            => $this->additionalInfo
         ];
 
         return $useSnakeCase ? normalizeArrayKeysToSnakeCase($data) : $data;
@@ -792,6 +827,7 @@ class Project implements Entity
      *      - name: string Project name
      *      - description: string Project description
      *      - manager: array|User Project manager information
+     *      - maxWorkers: int Maximum number of workers
      *      - budget: float|int Project budget
      *      - tasks: array|TaskContainer Project tasks
      *      - workers: array|WorkerContainer Project workers
@@ -816,6 +852,10 @@ class Project implements Entity
         } else if (is_string($data['publicId'])) {
             $publicId = UUID::fromBinary(trimOrNull($data['publicId']));
         }
+
+        $maxWorkers = !is_int($data['maxWorkers'])
+            ? (int) $data['maxWorkers']
+            : $data['maxWorkers'];
 
         $manager = (!($data['manager'] instanceof User))
             ? User::fromArray($data['manager'])
@@ -859,6 +899,7 @@ class Project implements Entity
             name: trimOrNull($data['name']),
             description: trimOrNull($data['description']),
             manager: User::fromArray($data['manager']),
+            maxWorkers: $maxWorkers,
             budget: $data['budget'],
             tasks: $tasks,
             workers: $workers,
