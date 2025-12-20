@@ -22,6 +22,9 @@ class Phase implements Entity
     private ?DateTime $actualCompletionDateTime;
     private WorkStatus $status;
     private ?TaskContainer $tasks;
+    private float $budget;
+    private float $contingencyRate;
+    private string $budgetNote;
 
     protected WorkValidator $workValidator;
 
@@ -40,6 +43,9 @@ class Phase implements Entity
      * @param DateTime|null $actualCompletionDateTime Actual phase completion date and time (optional)
      * @param WorkStatus $status Current status of the phase (enum)
      * @param TaskContainer $tasks Container of tasks associated with the phase
+     * @param float $budget Budget amount allocated for the phase
+     * @param float $contingencyRate Contingency rate percentage for the phase budget
+     * @param string $budgetNote Notes regarding the phase budget
      * 
      * @throws ValidationException If any of the provided data fails validation
      */
@@ -52,15 +58,21 @@ class Phase implements Entity
         DateTime $completionDateTime,
         ?DateTime $actualCompletionDateTime,
         WorkStatus $status,
-        ?TaskContainer $tasks
+        ?TaskContainer $tasks,
+        float $budget,
+        float $contingencyRate,
+        string $budgetNote
     ) {
         try {
             $this->workValidator = new WorkValidator();
             $this->workValidator->validateMultiple([
-                'name' => $name,
-                'description' => $description,
-                'startDateTime' => $startDateTime,
-                'completionDateTime' => $completionDateTime
+                'name'                  => $name,
+                'description'           => $description,
+                'startDateTime'         => $startDateTime,
+                'completionDateTime'    => $completionDateTime,
+                'budget'                => $budget,
+                'contingencyRate'       => $contingencyRate,
+                'budgetNote'            => $budgetNote
             ]);
 
             if ($this->workValidator->hasErrors()) {
@@ -79,6 +91,9 @@ class Phase implements Entity
         $this->actualCompletionDateTime = $actualCompletionDateTime;
         $this->status = $status;
         $this->tasks = $tasks;
+        $this->budget = $budget;
+        $this->contingencyRate = $contingencyRate;
+        $this->budgetNote = trimOrNull($budgetNote);
     }
 
     // Getters
@@ -166,6 +181,36 @@ class Phase implements Entity
     public function getTasks(): ?TaskContainer
     {
         return $this->tasks;
+    }
+
+    /**
+     * Gets the budget allocated for the phase.
+     *
+     * @return float The budget amount for the phase
+     */
+    public function getBudget(): float
+    {
+        return $this->budget;
+    }
+
+    /**
+     * Gets the contingency rate for the phase budget.
+     *
+     * @return float The contingency rate percentage
+     */
+    public function getContingencyRate(): float
+    {
+        return $this->contingencyRate;
+    }
+
+    /**
+     * Gets the budget notes for the phase.
+     *
+     * @return string The notes regarding the phase budget
+     */
+    public function getBudgetNote(): string
+    {
+        return $this->budgetNote;
     }
 
     // Setters
@@ -288,6 +333,54 @@ class Phase implements Entity
     }
 
     /**
+     * Sets the budget allocated for the phase.
+     *
+     * @param float $budget The budget amount to set
+     * @throws ValidationException If the budget amount is invalid
+     * @return void
+     */
+    public function setBudget(float $budget): void
+    {
+        $this->workValidator->validateBudget($budget);
+        if ($this->workValidator->hasErrors()) {
+            throw new ValidationException("Invalid budget amount", $this->workValidator->getErrors());
+        }
+        $this->budget = $budget;
+    }
+
+    /**
+     * Sets the contingency rate for the phase budget.
+     *
+     * @param float $contingencyRate The contingency rate percentage to set
+     * @throws ValidationException If the contingency rate is invalid
+     * @return void
+     */
+    public function setContingencyRate(float $contingencyRate): void
+    {
+        $this->workValidator->validateContingencyRate($contingencyRate);
+        if ($this->workValidator->hasErrors()) {
+            throw new ValidationException("Invalid contingency rate", $this->workValidator->getErrors());
+        }
+        $this->contingencyRate = $contingencyRate;
+    }
+
+    /**
+     * Sets the budget notes for the phase.
+     *
+     * @param string $budgetNote The notes regarding the phase budget
+     * @throws ValidationException If the budget note is invalid
+     * @return void
+     */
+    public function setBudgetNote(string $budgetNote): void
+    {
+        $this->workValidator->validateBudgetNote(trimOrNull($budgetNote));
+        if ($this->workValidator->hasErrors()) {
+            throw new ValidationException("Invalid budget note", $this->workValidator->getErrors());
+        }
+        $this->budgetNote = trimOrNull($budgetNote);
+    }
+
+    /**
      * Adds a task to the phase's task collection.
      *
      * @param \App\Entity\Task $task The task instance to be added to this phase
@@ -323,6 +416,9 @@ class Phase implements Entity
      *      - actualCompletionDateTime: string|DateTime|null Actual completion date and time
      *      - status: string|WorkStatus|null Current work status of the phase
      *      - tasks: TaskContainer|null Container of tasks associated with the phase
+     *      - budget: float|int|null Budget amount allocated for the phase
+     *      - contingencyRate: float|int|null Contingency rate percentage for the phase budget
+     *      - budgetNote: string|null Notes regarding the phase budget
      * 
      * @return self New Phase instance created from provided data with defaults for missing values
      */
@@ -333,15 +429,18 @@ class Phase implements Entity
 
         // Provide default values for required fields
         $defaults = [
-            'id' => $data['id'] ?? 0,
-            'publicId' => $data['publicId'] ?? UUID::get(),
-            'name' => $data['name'] ?? 'Untitled Phase',
-            'description' => $data['description'] ?? null,
-            'startDateTime' => $data['startDateTime'] ?? new DateTime(),
-            'completionDateTime' => $data['completionDateTime'] ?? new DateTime('+7 days'),
-            'actualCompletionDateTime' => $data['actualCompletionDateTime'] ?? null,
-            'status' => $data['status'] ?? WorkStatus::PENDING,
-            'tasks' => $data['tasks'] ?? null
+            'id'                        => $data['id'] ?? 0,
+            'publicId'                  => $data['publicId'] ?? UUID::get(),
+            'name'                      => $data['name'] ?? 'Untitled Phase',
+            'description'               => $data['description'] ?? null,
+            'startDateTime'             => $data['startDateTime'] ?? new DateTime(),
+            'completionDateTime'        => $data['completionDateTime'] ?? new DateTime('+7 days'),
+            'actualCompletionDateTime'  => $data['actualCompletionDateTime'] ?? null,
+            'status'                    => $data['status'] ?? WorkStatus::PENDING,
+            'tasks'                     => $data['tasks'] ?? null,
+            'budget'                    => $data['budget'] ?? BUDGET_MIN,
+            'contingencyRate'           => $data['contingencyRate'] ?? CONTINGENCY_RATE_MIN,
+            'budgetNote'                => $data['budgetNote'] ?? ''
         ];
 
         // Handle UUID conversion
@@ -373,6 +472,15 @@ class Phase implements Entity
             $defaults['status'] = WorkStatus::from(trimOrNull($data['status']));
         }
 
+        if (isset($data['budget']) && !is_float($data['budget'])) {
+            $defaults['budget'] = (float) $data['budget'];
+        }
+
+        if (isset($data['contingencyRate']) && !is_float($data['contingencyRate'])) {
+            $defaults['contingencyRate'] = (float) $data['contingencyRate'];
+        }
+
+
         // Create instance with default values
         $instance = new self(
             id: $defaults['id'],
@@ -383,7 +491,10 @@ class Phase implements Entity
             completionDateTime: $defaults['completionDateTime'],
             actualCompletionDateTime: $defaults['actualCompletionDateTime'],
             status: $defaults['status'],
-            tasks: $defaults['tasks'] ?? null
+            tasks: $defaults['tasks'] ?? null,
+            budget: $defaults['budget'],
+            contingencyRate: $defaults['contingencyRate'],
+            budgetNote: $defaults['budgetNote']
         );
 
         return $instance;
@@ -406,18 +517,27 @@ class Phase implements Entity
      *      - actualCompletionDateTime: string|null Formatted actual completion date/time
      *      - status: string String value of the phase status
      *      - tasks: array Array representation of the phase's tasks
+     *      - budget: float Budget amount allocated for the phase
+     *      - contingencyRate: float Contingency rate percentage for the phase budget
+     *      - budgetNote: string Notes regarding the phase budget
      * @param bool $useSnakeCase Whether to use snake_case keys (true) or camelCase keys (false, default)
      */
     public function toArray(bool $useSnakeCase = false): array
     {
         $data = [
-            'id' => UUID::toString($this->publicId),
-            'name' => $this->name,
-            'description' => $this->description,
-            'startDateTime' => formatDateTime($this->startDateTime, DateTime::ATOM),
-            'completionDateTime' => formatDateTime($this->completionDateTime, DateTime::ATOM),
-            'status' => $this->status->value,
-            'tasks' => $this->tasks?->toArray($useSnakeCase) ?? []
+            'id'                        => UUID::toString($this->publicId),
+            'name'                      => $this->name,
+            'description'               => $this->description,
+            'startDateTime'             => formatDateTime($this->startDateTime, DateTime::ATOM),
+            'completionDateTime'        => formatDateTime($this->completionDateTime, DateTime::ATOM),
+            'actualCompletionDateTime'  => $this->actualCompletionDateTime
+                ? formatDateTime($this->actualCompletionDateTime, DateTime::ATOM)
+                : null,
+            'status'                    => $this->status->value,
+            'tasks'                     => $this->tasks?->toArray($useSnakeCase) ?? [],
+            'budget'                    => $this->budget,
+            'contingencyRate'           => $this->contingencyRate,
+            'budgetNote'                => $this->budgetNote
         ];
 
         return $useSnakeCase ? normalizeArrayKeysToSnakeCase($data) : $data;
@@ -443,6 +563,9 @@ class Phase implements Entity
      *      - actualCompletionDateTime: string|DateTime Actual completion date and time
      *      - status: string|WorkStatus Current work status of the phase
      *      - tasks: array|TaskContainer Tasks associated with the phase
+     *      - budget: float|int Budget amount allocated for the phase
+     *      - contingencyRate: float|int Contingency rate percentage for the phase budget
+     *      - budgetNote: string Notes regarding the phase budget
      * 
      * @return self New Phase instance created from provided data
      */
@@ -478,7 +601,6 @@ class Phase implements Entity
             ? TaskContainer::fromArray($data['tasks'])
             : $data['tasks'];
 
-
         return new self(
             id: $data['id'],
             publicId: $publicId,
@@ -488,7 +610,10 @@ class Phase implements Entity
             completionDateTime: $completionDateTime,
             actualCompletionDateTime: $actualCompletionDateTime,
             status: $status,
-            tasks: $tasks
+            tasks: $tasks,
+            budget: (float) $data['budget'],
+            contingencyRate: (float) $data['contingencyRate'],
+            budgetNote: trimOrNull($data['budgetNote'])
         );
     }
 
