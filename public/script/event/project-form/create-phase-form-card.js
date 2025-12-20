@@ -1,4 +1,5 @@
 import { handleException } from '../../utility/handle-exception.js'
+import { VALIDATION_CONSTANTS } from '../../utility/work-input-validators.js'
 
 const phaseSection = document.querySelector('#phase_section')
 const noPhasesWall = phaseSection.querySelector('.no-phases-wall')
@@ -135,8 +136,8 @@ function renderPhaseFormCard(phaseData = {}) {
     const inputsSection = document.createElement('section')
     inputsSection.className = 'inputs-section flex-col'
 
-    // Name input
-    inputsSection.appendChild(createInputContainer({
+    // Name input with rules
+    inputsSection.appendChild(createInputWithRules({
         iconSrc: ICON_PATH + 'name_w.svg',
         iconAlt: 'Name',
         label: 'Name',
@@ -144,11 +145,14 @@ function renderPhaseFormCard(phaseData = {}) {
         inputName: 'name',
         placeholder: '(eg. Requirement Analysis)',
         value: data.name,
+        min: VALIDATION_CONSTANTS.NAME_MIN,
+        max: VALIDATION_CONSTANTS.NAME_MAX,
         required: true,
+        rules: renderWorkNameRules(),
     }))
 
-    // Description textarea
-    inputsSection.appendChild(createTextareaContainer({
+    // Description textarea with rules
+    inputsSection.appendChild(createTextareaWithRules({
         iconSrc: ICON_PATH + 'description_w.svg',
         iconAlt: 'Description',
         label: 'Description',
@@ -156,14 +160,20 @@ function renderPhaseFormCard(phaseData = {}) {
         placeholder: 'Describe the phase objectives, scope, and deliverables (optional)',
         value: data.description,
         rows: 4,
+        min: VALIDATION_CONSTANTS.LONG_TEXT_MIN,
+        max: VALIDATION_CONSTANTS.LONG_TEXT_MAX,
         required: true,
+        rules: renderWorkDescriptionRules(),
     }))
 
     // Budget and Contingency Rate row
     const budgetRow = document.createElement('section')
     budgetRow.className = 'row-inputs flex-row'
 
-    // Budget input with prefix
+    // Budget input with prefix and rules
+    const budgetRulesContainer = document.createElement('div')
+    budgetRulesContainer.className = 'input-rules-container'
+
     const budgetContainer = document.createElement('div')
     budgetContainer.className = 'input-label-container'
 
@@ -204,9 +214,13 @@ function renderPhaseFormCard(phaseData = {}) {
     budgetContainer.appendChild(budgetTextIcon)
     budgetContainer.appendChild(inputWithPrefix)
 
-    // Contingency Rate input
-    budgetRow.appendChild(budgetContainer)
-    budgetRow.appendChild(createInputContainer({
+    budgetRulesContainer.appendChild(budgetContainer)
+    budgetRulesContainer.appendChild(renderWorkBudgetRules())
+
+    budgetRow.appendChild(budgetRulesContainer)
+
+    // Contingency Rate input with rules
+    budgetRow.appendChild(createInputWithRules({
         iconSrc: ICON_PATH + 'safe_w.svg',
         iconAlt: 'Contingency Rate',
         label: 'Contingency Rate',
@@ -214,15 +228,16 @@ function renderPhaseFormCard(phaseData = {}) {
         inputName: 'contingency_rate',
         placeholder: '0',
         value: data.contingencyRate,
-        min: 0,
-        max: 100,
+        min: VALIDATION_CONSTANTS.CONTINGENCY_RATE_MIN,
+        max: VALIDATION_CONSTANTS.CONTINGENCY_RATE_MAX,
         required: true,
+        rules: renderWorkContingencyRateRules(),
     }))
 
     inputsSection.appendChild(budgetRow)
 
-    // Budget Note textarea
-    inputsSection.appendChild(createTextareaContainer({
+    // Budget Note textarea with rules
+    inputsSection.appendChild(createTextareaWithRules({
         iconSrc: ICON_PATH + 'description_w.svg',
         iconAlt: 'Budget Note',
         label: 'Budget Note',
@@ -230,14 +245,17 @@ function renderPhaseFormCard(phaseData = {}) {
         placeholder: 'Provide additional details about the budget allocation for this phase (optional)',
         value: data.budgetNote,
         rows: 4,
+        min: VALIDATION_CONSTANTS.LONG_TEXT_MIN,
+        max: VALIDATION_CONSTANTS.LONG_TEXT_MAX,
         required: true,
+        rules: renderWorkBudgetNoteRules(),
     }))
 
     // Start and Completion Date row
     const dateRow = document.createElement('section')
     dateRow.className = 'row-inputs flex-row'
 
-    dateRow.appendChild(createInputContainer({
+    dateRow.appendChild(createInputWithRules({
         iconSrc: ICON_PATH + 'start_w.svg',
         iconAlt: 'Start Date',
         label: 'Start Date',
@@ -245,9 +263,10 @@ function renderPhaseFormCard(phaseData = {}) {
         inputName: 'start_date_time',
         value: data.startDateTime,
         required: true,
+        rules: renderWorkStartDateTimeRules(),
     }))
 
-    dateRow.appendChild(createInputContainer({
+    dateRow.appendChild(createInputWithRules({
         iconSrc: ICON_PATH + 'complete_w.svg',
         iconAlt: 'Completion Date',
         label: 'End Date',
@@ -255,6 +274,7 @@ function renderPhaseFormCard(phaseData = {}) {
         inputName: 'completion_date_time',
         value: data.completionDateTime,
         required: true,
+        rules: renderWorkCompletionDateTimeRules(),
     }))
 
     inputsSection.appendChild(dateRow)
@@ -266,9 +286,12 @@ function renderPhaseFormCard(phaseData = {}) {
 }
 
 /**
- * Helper function to create an input container with label and icon.
+ * Helper function to create an input container with label, icon, and rules wrapped in input-rules-container.
  */
-function createInputContainer({ iconSrc, iconAlt, label, inputType, inputName, placeholder = '', value = '', min, max, required = false }) {
+function createInputWithRules({ iconSrc, iconAlt, label, inputType, inputName, placeholder = '', value = '', min, max, required = false, rules = null }) {
+    const rulesContainer = document.createElement('div')
+    rulesContainer.className = 'input-rules-container'
+
     const container = document.createElement('div')
     container.className = 'input-label-container'
 
@@ -301,13 +324,19 @@ function createInputContainer({ iconSrc, iconAlt, label, inputType, inputName, p
     container.appendChild(textIcon)
     container.appendChild(input)
 
-    return container
+    rulesContainer.appendChild(container)
+    if (rules) rulesContainer.appendChild(rules)
+
+    return rulesContainer
 }
 
 /**
- * Helper function to create a textarea container with label and icon.
+ * Helper function to create a textarea container with label, icon, and rules wrapped in input-rules-container.
  */
-function createTextareaContainer({ iconSrc, iconAlt, label, inputName, placeholder = '', value = '', rows = 4, required = false }) {
+function createTextareaWithRules({ iconSrc, iconAlt, label, inputName, placeholder = '', value = '', rows = 4, min, max, required = false, rules = null }) {
+    const rulesContainer = document.createElement('div')
+    rulesContainer.className = 'input-rules-container'
+
     const container = document.createElement('div')
     container.className = 'input-label-container'
 
@@ -333,10 +362,139 @@ function createTextareaContainer({ iconSrc, iconAlt, label, inputName, placehold
     textarea.rows = rows
     textarea.placeholder = placeholder
     textarea.textContent = value
+    if (min !== undefined) textarea.setAttribute('min', min)
+    if (max !== undefined) textarea.setAttribute('max', max)
     if (required) textarea.required = true
 
     container.appendChild(textIcon)
     container.appendChild(textarea)
 
-    return container
+    rulesContainer.appendChild(container)
+    if (rules) rulesContainer.appendChild(rules)
+
+    return rulesContainer
+}
+
+// ============================================= //
+// Rules Rendering Functions
+// ============================================= //
+
+/**
+ * Renders the work name validation rules element.
+ * @returns {HTMLDivElement}
+ */
+function renderWorkNameRules() {
+    const rules = document.createElement('div')
+    rules.className = 'rules'
+
+    const ul = document.createElement('ul')
+    ul.innerHTML = `
+        <li>Must be between ${VALIDATION_CONSTANTS.NAME_MIN} and ${VALIDATION_CONSTANTS.NAME_MAX} characters.</li>
+        <li>Must not contain three or more consecutive special characters.</li>
+    `
+    rules.appendChild(ul)
+    return rules
+}
+
+/**
+ * Renders the work description validation rules element.
+ * @returns {HTMLDivElement}
+ */
+function renderWorkDescriptionRules() {
+    const rules = document.createElement('div')
+    rules.className = 'rules'
+
+    const ul = document.createElement('ul')
+    ul.innerHTML = `
+        <li>Must be between ${VALIDATION_CONSTANTS.LONG_TEXT_MIN} and ${VALIDATION_CONSTANTS.LONG_TEXT_MAX} characters.</li>
+        <li>Must not contain three or more consecutive special characters.</li>
+    `
+    rules.appendChild(ul)
+    return rules
+}
+
+/**
+ * Renders the work budget validation rules element.
+ * @returns {HTMLDivElement}
+ */
+function renderWorkBudgetRules() {
+    const rules = document.createElement('div')
+    rules.className = 'rules'
+
+    const ul = document.createElement('ul')
+    ul.innerHTML = `
+        <li>Must be a positive number.</li>
+        <li>Maximum budget is ₱${VALIDATION_CONSTANTS.BUDGET_MAX.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.</li>
+        <li>Have up to two decimal places.</li>
+    `
+    rules.appendChild(ul)
+    return rules
+}
+
+/**
+ * Renders the contingency rate validation rules element.
+ * @returns {HTMLDivElement}
+ */
+function renderWorkContingencyRateRules() {
+    const rules = document.createElement('div')
+    rules.className = 'rules'
+
+    const ul = document.createElement('ul')
+    ul.innerHTML = `
+        <li>Must be a number between ${VALIDATION_CONSTANTS.CONTINGENCY_RATE_MIN} and ${VALIDATION_CONSTANTS.CONTINGENCY_RATE_MAX}.</li>
+    `
+    rules.appendChild(ul)
+    return rules
+}
+
+/**
+ * Renders the budget note validation rules element.
+ * @returns {HTMLDivElement}
+ */
+function renderWorkBudgetNoteRules() {
+    const rules = document.createElement('div')
+    rules.className = 'rules'
+
+    const ul = document.createElement('ul')
+    ul.innerHTML = `
+        <li>Must be between ${VALIDATION_CONSTANTS.LONG_TEXT_MIN} and ${VALIDATION_CONSTANTS.LONG_TEXT_MAX} characters.</li>
+        <li>Must not contain three or more consecutive special characters.</li>
+    `
+    rules.appendChild(ul)
+    return rules
+}
+
+/**
+ * Renders the start date/time validation rules element.
+ * @returns {HTMLDivElement}
+ */
+function renderWorkStartDateTimeRules() {
+    const rules = document.createElement('div')
+    rules.className = 'rules'
+
+    const ul = document.createElement('ul')
+    ul.innerHTML = `
+        <li>Must be a valid date.</li>
+        <li>Must be between ${VALIDATION_CONSTANTS.YEAR_MIN} and ${VALIDATION_CONSTANTS.YEAR_MAX}.</li>
+    `
+    rules.appendChild(ul)
+    return rules
+}
+
+/**
+ * Renders the completion date/time validation rules element.
+ * @returns {HTMLDivElement}
+ */
+function renderWorkCompletionDateTimeRules() {
+    const rules = document.createElement('div')
+    rules.className = 'rules'
+
+    const ul = document.createElement('ul')
+    ul.innerHTML = `
+        <li>Must be a valid date.</li>
+        <li>Must be between ${VALIDATION_CONSTANTS.YEAR_MIN} and ${VALIDATION_CONSTANTS.YEAR_MAX}.</li>
+        <li>Must be after the start date.</li>
+    `
+    rules.appendChild(ul)
+    return rules
 }

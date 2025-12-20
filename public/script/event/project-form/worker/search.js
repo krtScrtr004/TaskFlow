@@ -43,10 +43,9 @@ export function initializeSearch(endpointParam) {
     }
     endpoint = endpointParam
 
-    const submitHandler = (e) => debounceAsync(submit(e), 300)
-
-    searchBarForm?.addEventListener('submit', submitHandler)
-    searchButton?.addEventListener('click', submitHandler)
+    const handler = e => debounceAsync(submit(e), 300)
+    searchBarForm?.addEventListener('submit', handler)
+    searchButton?.addEventListener('click', handler)
 
     searchButton?.click() // Trigger initial load
 }

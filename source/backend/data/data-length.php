@@ -26,3 +26,6 @@ define('WORKER_COUNT_MAX', 1000);
 
 define('CONTINGENCY_RATE_MIN', 0);
 define('CONTINGENCY_RATE_MAX', 100);
+
+define('YEAR_MIN', 1900);
+define('YEAR_MAX', 2100);

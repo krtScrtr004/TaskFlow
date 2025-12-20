@@ -1,5 +1,15 @@
 <?php
 
+/**
+ * TODO:
+ * 
+ * Implement validation methods for work-related fields such as:
+ * - Max number of workers
+ * - Contingency Rate
+ * - Budget Note
+ * 
+ */
+
 namespace App\Validator;
 
 use App\Abstract\Validator;
@@ -115,6 +125,10 @@ class WorkValidator extends Validator
         if (!self::isValidYear((int) $startDateTime->format('Y'))) {
             $this->errors[] = 'Start date year is not valid.';
         }
+
+        if ((int) $startDateTime->format('Y') < YEAR_MIN || (int) $startDateTime->format('Y') > YEAR_MAX) {
+            $this->errors[] = 'Start date year must be between ' . YEAR_MIN . ' and ' . YEAR_MAX . '.';
+        }
     }
 
     /**
@@ -156,6 +170,10 @@ class WorkValidator extends Validator
 
         if ($startDateTime !== null && $completionDateTime <= $startDateTime) {
             $this->errors[] = 'Completion date must be after the start date.';
+        }
+
+        if ((int) $completionDateTime->format('Y') < YEAR_MIN || (int) $completionDateTime->format('Y') > YEAR_MAX) {
+            $this->errors[] = 'Completion date year must be between ' . YEAR_MIN . ' and ' . YEAR_MAX . '.';
         }
     }
 

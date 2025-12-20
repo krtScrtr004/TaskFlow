@@ -701,6 +701,31 @@ button > .text-w-icon {
 	border-radius: var(--border-radius);
 }
 
+/* ---------------- INPUT RULES CONTAINER ---------------- */
+
+.input-rules-container > .rules {
+	display: flex;
+	flex-direction: column;
+	gap: 0.3rem;
+	padding: 0.5rem;
+}
+
+.input-rules-container > .rules li {
+	font-size: 0.9rem;
+	padding-left: 1.2rem;
+	color: var(--dark-white);
+}
+
+.input-rules-container > .rules li.valid {
+	color: var(--green);
+}
+
+.input-rules-container > .rules li.invalid {
+	color: var(--red);
+}
+
+
+
 @media (max-width: 768px) {
 	.content-section-block {
 		padding: 1rem;
