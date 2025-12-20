@@ -116,21 +116,21 @@ export function normalizeDateFormat(dateString) {
     if (!dateString) {
         return ''
     }
-    
+
     // Parse the date string into a Date object
     const date = new Date(dateString)
-    
+
     // Check if date is valid
     if (isNaN(date.getTime())) {
         console.warn(`Invalid date: ${dateString}`)
         return dateString
     }
-    
+
     // Return ISO format: YYYY-MM-DD
     const year = date.getFullYear()
     const month = String(date.getMonth() + 1).padStart(2, '0')
     const day = String(date.getDate()).padStart(2, '0')
-    
+
     return `${year}-${month}-${day}`
 }
 
@@ -157,4 +157,25 @@ export function createFullName(firstName, middleName, lastName) {
         fullName += ` ${lastName}`
     }
     return fullName.trim()
+}
+
+/**
+ * Fetches validation constraints from a JSON file.
+ *
+ * This function asynchronously retrieves validation constraints from a JSON configuration
+ * file located in the backend data directory. It is used to load validation rules
+ * for form inputs or data validation throughout the application.
+ *
+ * @async
+ * @returns {Promise<Object>} A promise that resolves to the parsed JSON object containing validation constraints
+ * @throws {Error} Throws an error if the fetch request fails or if the JSON parsing fails,
+ *      with the original error message appended to 'Error loading validation constraints: '
+ */
+export async function getValidationConstraints() {
+    try {
+        const response = await fetch('../../../source/backend/data/validation-constraints.json')
+        return await response.json()
+    } catch (error) {
+        throw new Error('Error loading validation constraints: ' + error.message)
+    }
 }

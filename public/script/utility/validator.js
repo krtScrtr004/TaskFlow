@@ -1,15 +1,7 @@
-import { isValidDate } from './utility.js'
+import { getValidationConstraints, isValidDate } from './utility.js'
 import { errorListDialog } from '../render/error-list-dialog.js'
 
-const LENGTH_VALIDATION = {
-    'name':             { min: 1, max: 50 },
-    'fullName':         { min: 3, max: 255 },
-    'uri':              { min: 3, max: 255 },
-    'contactNumber':    { min: 11, max: 20 },
-    'password':         { min: 8, max: 255 },
-    'longText':         { min: 10, max: 1000 },
-    'budget':           { min: 0, max: 999999999999 }
-}
+const VALIDATION_CONSTANTS = await getValidationConstraints()
 
 /**
  * Validates a date string in the format 'YYYY-MM-DD'.
@@ -59,36 +51,56 @@ function hasConsecutiveSpecialChars(str) {
     return false
 }
 
-
 /**
- * Returns an object containing validation rules for user input fields.
+ * Returns validation rule definitions for user-related input fields.
  *
- * Each field has a `condition` function that takes an `inputs` object and returns an array of error messages
- * if the input does not meet the validation criteria. The rules cover the following fields:
- * - firstName: Required, length between LENGTH_VALIDATION.name.min and LENGTH_VALIDATION.name.max, valid characters, no three or more consecutive special characters.
- * - middleName: Optional, length between LENGTH_VALIDATION.name.min and LENGTH_VALIDATION.name.max if present, valid characters, no three or more consecutive special characters.
- * - lastName: Required, length between LENGTH_VALIDATION.name.min and LENGTH_VALIDATION.name.max, valid characters, no three or more consecutive special characters.
- * - fullName: Required, length between LENGTH_VALIDATION.fullName.min and LENGTH_VALIDATION.fullName.max, valid characters, no three or more consecutive special characters.
- * - bio: Optional, length between LENGTH_VALIDATION.longText.min and LENGTH_VALIDATION.longText.max if present, no three or more consecutive special characters.
- * - message: Optional, length between LENGTH_VALIDATION.longText.min and LENGTH_VALIDATION.longText.max if present, no three or more consecutive special characters.
- * - gender: Required, must be one of ['male', 'female', 'Male', 'Female'].
- * - birthDate: Required, must be a valid date, user must be at least 18 years old.
- * - jobTitles: Required, length between LENGTH_VALIDATION.longText.min and LENGTH_VALIDATION.longText.max, each title between 1 and 20 characters, valid characters.
- * - contactNumber: Required, length between LENGTH_VALIDATION.contactNumber.min and LENGTH_VALIDATION.contactNumber.max, valid characters.
- * - email: Required, length between LENGTH_VALIDATION.uri.min and LENGTH_VALIDATION.uri.max, must be a valid email format.
- * - password: Required, length between LENGTH_VALIDATION.password.min and LENGTH_VALIDATION.password.max, must contain at least one lowercase and one uppercase letter, only allowed special characters (_ ! @ ' . -).
- * - role: Required, must be one of ['projectManager', 'worker'].
+ * Each rule is an object with a `condition` function that accepts an `inputs` object
+ * and returns an array of error messages (empty when valid). The rules reference
+ * VALIDATION_CONSTANTS for length bounds and use helper functions/regexes such as
+ * isValidDateHelper and hasConsecutiveSpecialChars where applicable.
  *
- * @function
- * @returns {Object} Validation rules for user input fields, where each key is a field name and each value is an object with a `condition(inputs)` function returning an array of error messages.
+ * Fields and validation behavior:
+ *  - firstName, lastName, fullName
+ *      - Required; trimmed length must be within VALIDATION_CONSTANTS.NAME_MIN..NAME_MAX.
+ *      - Allowed characters: letters, spaces, single quote ('), hyphen (-), dot (.).
+ *      - Disallowed: three or more consecutive special characters (checked via hasConsecutiveSpecialChars).
+ *  - middleName
+ *      - Optional; when present (non-empty trimmed) must meet the same length and character constraints as name fields.
+ *  - bio, message
+ *      - Optional; when present trimmed length must be within VALIDATION_CONSTANTS.LONG_TEXT_MIN..VALIDATION_CONSTANTS.LONG_TEXT_MAX.
+ *      - Disallowed: three or more consecutive special characters.
+ *  - gender
+ *      - Required; must be one of the allowed values (e.g. 'male', 'female' — case variations included).
+ *  - birthDate
+ *      - Required; must be a valid date (isValidDateHelper).
+ *      - User must be at least 18 years old (age computed from current date versus parsed birth date).
+ *  - jobTitles
+ *      - Required; comma-separated list of titles.
+ *      - Overall length expected between VALIDATION_CONSTANTS.LONG_TEXT_MIN..VALIDATION_CONSTANTS.LONG_TEXT_MAX.
+ *      - Each title trimmed must be length 1..100.
+ *      - Per-title allowed characters: alphanumeric, spaces, underscore, hyphen, apostrophe, backslash, forward slash (invalid other characters rejected).
+ *  - contactNumber
+ *      - Required; trimmed length must be within VALIDATION_CONSTANTS.CONTACT_NUMBER_MIN..VALIDATION_CONSTANTS.CONTACT_NUMBER_MAX.
+ *      - Allowed characters: digits, plus, hyphen, spaces, parentheses. Validated with a length-aware regex.
+ *  - email
+ *      - Required; trimmed length must be within VALIDATION_CONSTANTS.URI_MIN..VALIDATION_CONSTANTS.URI_MAX.
+ *      - Basic email format validated via regex (local@domain.tld).
+ *  - password
+ *      - Required; length must be within VALIDATION_CONSTANTS.PASSWORD_MIN..VALIDATION_CONSTANTS.PASSWORD_MAX.
+ *      - Must contain at least one lowercase and one uppercase ASCII letter.
+ *      - Allowed special characters: _ ! @ ' . - (other special characters are rejected).
+ *  - role
+ *      - Required; must be one of the allowed roles ('projectManager' or 'worker').
+ *
+ * @returns {Object<string, {condition: function(Object): string[]}>} An object mapping field names to validator objects.
  */
 export function userValidationRules() {
     return {
         'firstName': {
             condition: (inputs) => {
                 const errors = []
-                if (!inputs.firstName || inputs.firstName.trim() === '' || inputs.firstName.length < LENGTH_VALIDATION.name.min || inputs.firstName.length > LENGTH_VALIDATION.name.max) {
-                    errors.push(`First name must be between ${LENGTH_VALIDATION.name.min} and ${LENGTH_VALIDATION.name.max} characters long.`)
+                if (!inputs.firstName || inputs.firstName.trim() === '' || inputs.firstName.length < VALIDATION_CONSTANTS.NAME_MIN || inputs.firstName.length > VALIDATION_CONSTANTS.NAME_MAX) {
+                    errors.push(`First name must be between ${VALIDATION_CONSTANTS.NAME_MIN} and ${VALIDATION_CONSTANTS.NAME_MAX} characters long.`)
                 } else if (!/^[a-zA-Z\s'-.]{1,255}$/.test(inputs.firstName)) {
                     errors.push('First name contains invalid characters.')
                 } else if (hasConsecutiveSpecialChars(inputs.firstName.trim())) {
@@ -101,8 +113,8 @@ export function userValidationRules() {
         'middleName': {
             condition: (inputs) => {
                 const errors = []
-                if (inputs.middleName && inputs.middleName.trim() !== '' && (inputs.middleName.length < LENGTH_VALIDATION.name.min || inputs.middleName.length > LENGTH_VALIDATION.name.max)) {
-                    errors.push(`Middle name must be between ${LENGTH_VALIDATION.name.min} and ${LENGTH_VALIDATION.name.max} characters long.`)
+                if (inputs.middleName && inputs.middleName.trim() !== '' && (inputs.middleName.length < VALIDATION_CONSTANTS.NAME_MIN || inputs.middleName.length > VALIDATION_CONSTANTS.NAME_MAX)) {
+                    errors.push(`Middle name must be between ${VALIDATION_CONSTANTS.NAME_MIN} and ${VALIDATION_CONSTANTS.NAME_MAX} characters long.`)
                 } else if (inputs.middleName && inputs.middleName.trim() !== '' && !/^[a-zA-Z\s'-.]{0,255}$/.test(inputs.middleName)) {
                     errors.push('Middle name contains invalid characters.')
                 }
@@ -117,8 +129,8 @@ export function userValidationRules() {
         'lastName': {
             condition: (inputs) => {
                 const errors = []
-                if (!inputs.lastName || inputs.lastName.trim() === '' || inputs.lastName.length < LENGTH_VALIDATION.name.min || inputs.lastName.length > LENGTH_VALIDATION.name.max) {
-                    errors.push(`Last name must be between ${LENGTH_VALIDATION.name.min} and ${LENGTH_VALIDATION.name.max} characters long.`)
+                if (!inputs.lastName || inputs.lastName.trim() === '' || inputs.lastName.length < VALIDATION_CONSTANTS.NAME_MIN || inputs.lastName.length > VALIDATION_CONSTANTS.NAME_MAX) {
+                    errors.push(`Last name must be between ${VALIDATION_CONSTANTS.NAME_MIN} and ${VALIDATION_CONSTANTS.NAME_MAX} characters long.`)
                 } else if (!/^[a-zA-Z\s'-.]{1,255}$/.test(inputs.lastName)) {
                     errors.push('Last name contains invalid characters.')
                 } else if (hasConsecutiveSpecialChars(inputs.lastName.trim())) {
@@ -131,8 +143,8 @@ export function userValidationRules() {
         'fullName': {
             condition: (inputs) => {
                 const errors = []
-                if (!inputs.fullName || inputs.fullName.trim() === '' || inputs.fullName.length < LENGTH_VALIDATION.fullName.min || inputs.fullName.length > LENGTH_VALIDATION.fullName.max) {
-                    errors.push(`Full name must be between ${LENGTH_VALIDATION.fullName.min} and ${LENGTH_VALIDATION.fullName.max} characters long.`)
+                if (!inputs.fullName || inputs.fullName.trim() === '' || inputs.fullName.length < VALIDATION_CONSTANTS.NAME_MIN || inputs.fullName.length > VALIDATION_CONSTANTS.NAME_MAX) {
+                    errors.push(`Full name must be between ${VALIDATION_CONSTANTS.NAME_MIN} and ${VALIDATION_CONSTANTS.NAME_MAX} characters long.`)
                 } else if (!/^[a-zA-Z\s'-.]{1,255}$/.test(inputs.fullName)) {
                     errors.push('Full name contains invalid characters.')
                 } else if (hasConsecutiveSpecialChars(inputs.fullName.trim())) {
@@ -145,8 +157,8 @@ export function userValidationRules() {
         'bio': {
             condition: (inputs) => {
                 const errors = []
-                if (inputs.bio && (inputs.bio.trim().length < LENGTH_VALIDATION.longText.min || inputs.bio.trim().length > LENGTH_VALIDATION.longText.max)) {
-                    errors.push(`Bio must be between ${LENGTH_VALIDATION.longText.min} and ${LENGTH_VALIDATION.longText.max} characters long.`)
+                if (inputs.bio && (inputs.bio.trim().length < VALIDATION_CONSTANTS.LONG_TEXT_MIN || inputs.bio.trim().length > VALIDATION_CONSTANTS.LONG_TEXT_MAX)) {
+                    errors.push(`Bio must be between ${VALIDATION_CONSTANTS.LONG_TEXT_MIN} and ${VALIDATION_CONSTANTS.LONG_TEXT_MAX} characters long.`)
                 }
 
                 if (inputs.bio && hasConsecutiveSpecialChars(inputs.bio.trim())) {
@@ -159,8 +171,8 @@ export function userValidationRules() {
         'message': {
             condition: (inputs) => {
                 const errors = []
-                if (inputs.message && (inputs.message.trim().length < LENGTH_VALIDATION.longText.min || inputs.message.trim().length > LENGTH_VALIDATION.longText.max)) {
-                    errors.push(`Message must be between ${LENGTH_VALIDATION.longText.min} and ${LENGTH_VALIDATION.longText.max} characters long.`)
+                if (inputs.message && (inputs.message.trim().length < VALIDATION_CONSTANTS.LONG_TEXT_MIN || inputs.message.trim().length > VALIDATION_CONSTANTS.LONG_TEXT_MAX)) {
+                    errors.push(`Message must be between ${VALIDATION_CONSTANTS.LONG_TEXT_MIN} and ${VALIDATION_CONSTANTS.LONG_TEXT_MAX} characters long.`)
                 }
 
                 if (inputs.message && hasConsecutiveSpecialChars(inputs.message.trim())) {
@@ -208,7 +220,7 @@ export function userValidationRules() {
             condition: (inputs) => {
                 const errors = []
                 if (!inputs.jobTitles || inputs.jobTitles.trim() === '' || inputs.jobTitles.length < 1 || inputs.jobTitles.length > 500) {
-                    errors.push(`Job titles must be between ${LENGTH_VALIDATION.longText.min} and ${LENGTH_VALIDATION.longText.max} characters long.`)
+                    errors.push(`Job titles must be between ${VALIDATION_CONSTANTS.LONG_TEXT_MIN} and ${VALIDATION_CONSTANTS.LONG_TEXT_MAX} characters long.`)
                 }
 
                 if (inputs.jobTitles) {
@@ -232,9 +244,9 @@ export function userValidationRules() {
         'contactNumber': {
             condition: (inputs) => {
                 const errors = []
-                if (!inputs.contactNumber || inputs.contactNumber.trim() === '' || inputs.contactNumber.length < LENGTH_VALIDATION.contactNumber.min || inputs.contactNumber.length > LENGTH_VALIDATION.contactNumber.max) {
-                    errors.push(`Contact number must be between ${LENGTH_VALIDATION.contactNumber.min} and ${LENGTH_VALIDATION.contactNumber.max} characters long.`)
-                } else if (!/^[0-9+\-\s()]{11,20}$/.test(inputs.contactNumber)) {
+                if (!inputs.contactNumber || inputs.contactNumber.trim() === '' || inputs.contactNumber.length < VALIDATION_CONSTANTS.CONTACT_NUMBER_MIN || inputs.contactNumber.length > VALIDATION_CONSTANTS.CONTACT_NUMBER_MAX) {
+                    errors.push(`Contact number must be between ${VALIDATION_CONSTANTS.CONTACT_NUMBER_MIN} and ${VALIDATION_CONSTANTS.CONTACT_NUMBER_MAX} characters long.`)
+                } else if (!/^[0-9+\-\s()]{${VALIDATION_CONSTANTS.CONTACT_NUMBER_MIN},${VALIDATION_CONSTANTS.CONTACT_NUMBER_MAX}}$/.test(inputs.contactNumber)) {
                     errors.push('Contact number contains invalid characters.')
                 }
                 return errors
@@ -244,8 +256,8 @@ export function userValidationRules() {
         'email': {
             condition: (inputs) => {
                 const errors = []
-                if (!inputs.email || inputs.email.trim().length < LENGTH_VALIDATION.uri.min || inputs.email.trim().length > LENGTH_VALIDATION.uri.max) {
-                    errors.push(`Email must be between ${LENGTH_VALIDATION.uri.min} and ${LENGTH_VALIDATION.uri.max} characters long.`)
+                if (!inputs.email || inputs.email.trim().length < VALIDATION_CONSTANTS.URI_MIN || inputs.email.trim().length > VALIDATION_CONSTANTS.URI_MAX) {
+                    errors.push(`Email must be between ${VALIDATION_CONSTANTS.URI_MIN} and ${VALIDATION_CONSTANTS.URI_MAX} characters long.`)
                 } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inputs.email)) {
                     errors.push('Invalid email address.')
                 }
@@ -256,8 +268,8 @@ export function userValidationRules() {
         'password': {
             condition: (inputs) => {
                 const errors = []
-                if (!inputs.password || inputs.password.length < LENGTH_VALIDATION.password.min || inputs.password.length > LENGTH_VALIDATION.password.max) {
-                    errors.push(`Password must be between ${LENGTH_VALIDATION.password.min} and ${LENGTH_VALIDATION.password.max} characters long.`)
+                if (!inputs.password || inputs.password.length < VALIDATION_CONSTANTS.PASSWORD_MIN || inputs.password.length > VALIDATION_CONSTANTS.PASSWORD_MAX) {
+                    errors.push(`Password must be between ${VALIDATION_CONSTANTS.PASSWORD_MIN} and ${VALIDATION_CONSTANTS.PASSWORD_MAX} characters long.`)
                 }
                 if (inputs.password && !/[a-z]/.test(inputs.password)) {
                     errors.push('Password must contain at least one lowercase letter.')
@@ -284,56 +296,56 @@ export function userValidationRules() {
     }
 }
 
-
-
 /**
- * Returns a set of validation rules for work-related form inputs.
+ * Returns validation rules for a "work" entity used by forms or APIs.
  *
- * Each rule contains a `condition` function that validates the corresponding input field and returns an array of error messages if validation fails.
- * The validation covers the following fields:
- * - name: Checks length constraints and consecutive special characters.
- * - description: Checks length constraints and consecutive special characters.
- * - budget: Ensures the value is a number within a specified range.
- * - startDateTime: Validates date format and ensures the date is not in the past.
- * - completionDateTime: Validates date format and ensures the date is after the start date.
+ * Each rule is an object with a `condition` function that receives an `inputs`
+ * object and returns an array of error messages (empty array if no errors).
  *
- * @function
- * @returns {Object} Validation rules object with the following keys:
- *      - name: {
- *            condition: function(inputs: Object): string[]
- *              Validates the 'name' field. Returns error messages if:
- *                  - Name is missing or not within allowed length.
- *                  - Name contains three or more consecutive special characters.
- *        }
- *      - description: {
- *            condition: function(inputs: Object): string[]
- *              Validates the 'description' field. Returns error messages if:
- *                  - Description is not within allowed length.
- *                  - Description contains three or more consecutive special characters.
- *        }
- *      - budget: {
- *            condition: function(inputs: Object): string[]
- *              Validates the 'budget' field. Returns error messages if:
- *                  - Budget is missing, not a number, or outside allowed range.
- *        }
- *      - startDateTime: {
- *            condition: function(inputs: Object): string[]
- *              Validates the 'startDateTime' field. Returns error messages if:
- *                  - Date is missing, invalid, or in the past.
- *        }
- *      - completionDateTime: {
- *            condition: function(inputs: Object): string[]
- *              Validates the 'completionDateTime' field. Returns error messages if:
- *                  - Date is missing, invalid, or not after the start date.
- *        }
+ * Field rules included:
+ *  - name
+ *      - Required (non-empty) and trimmed length must be between
+ *        VALIDATION_CONSTANTS.NAME_MIN and VALIDATION_CONSTANTS.NAME_MAX.
+ *      - Rejects names containing three or more consecutive special characters
+ *        (uses hasConsecutiveSpecialChars).
+ *  - description
+ *      - Optional; when present trimmed length must be between
+ *        VALIDATION_CONSTANTS.LONG_TEXT_MIN and VALIDATION_CONSTANTS.LONG_TEXT_MAX.
+ *      - Rejects three or more consecutive special characters.
+ *  - maxWWorkers
+ *      - Parsed as integer; must be a number > VALIDATION_CONSTANTS.WORKER_COUNT_MIN
+ *        and <= VALIDATION_CONSTANTS.WORKER_COUNT_MAX.
+ *  - budget
+ *      - Parsed as Number; must be between VALIDATION_CONSTANTS.BUDGET_MIN and
+ *        VALIDATION_CONSTANTS.BUDGET_MAX (inclusive).
+ *  - contingencyRate
+ *      - Parsed as Number; must be between
+ *        VALIDATION_CONSTANTS.CONTINGENCY_RATE_MIN and VALIDATION_CONSTANTS.CONTINGENCY_RATE_MAX.
+ *  - budgetNote
+ *      - Optional; when present trimmed length must be between
+ *        VALIDATION_CONSTANTS.LONG_TEXT_MIN and VALIDATION_CONSTANTS.LONG_TEXT_MAX.
+ *      - Rejects three or more consecutive special characters.
+ *  - startDateTime
+ *      - Required; must be a valid date (isValidDateHelper).
+ *      - Date (date-only comparison) must not be in the past.
+ *  - completionDateTime
+ *      - Required; must be a valid date (isValidDateHelper).
+ *      - When startDateTime is provided and valid, completion must be strictly
+ *        after the start date/time.
+ *
+ * Notes:
+ *  - Validation messages are returned as human-readable strings.
+ *  - This function references globals: VALIDATION_CONSTANTS, hasConsecutiveSpecialChars, isValidDateHelper.
+ *
+ * @returns {Object.<string, {condition: function(Object): string[]}>} Map of field names to validation rule objects.
  */
 export function workValidationRules() {
     return {
         'name': {
             condition: (inputs) => {
                 const errors = []
-                if (!inputs.name || inputs.name.trim().length < LENGTH_VALIDATION.name.min || inputs.name.trim().length > LENGTH_VALIDATION.name.max) {
-                    errors.push(`Name must be between ${LENGTH_VALIDATION.name.min} and ${LENGTH_VALIDATION.name.max} characters long.`)
+                if (!inputs.name || inputs.name.trim().length < VALIDATION_CONSTANTS.NAME_MIN || inputs.name.trim().length > VALIDATION_CONSTANTS.NAME_MAX) {
+                    errors.push(`Name must be between ${VALIDATION_CONSTANTS.NAME_MIN} and ${VALIDATION_CONSTANTS.NAME_MAX} characters long.`)
                 } 
                 
                 if (inputs.name && hasConsecutiveSpecialChars(inputs.name.trim())) {
@@ -346,8 +358,8 @@ export function workValidationRules() {
         'description': {
             condition: (inputs) => {
                 const errors = []
-                if (inputs.description && (inputs.description.trim().length < LENGTH_VALIDATION.longText.min || inputs.description.trim().length > LENGTH_VALIDATION.longText.max)) {
-                    errors.push(`Description must be between ${LENGTH_VALIDATION.longText.min} and ${LENGTH_VALIDATION.longText.max} characters long.`)
+                if (inputs.description && (inputs.description.trim().length < VALIDATION_CONSTANTS.LONG_TEXT_MIN || inputs.description.trim().length > VALIDATION_CONSTANTS.LONG_TEXT_MAX)) {
+                    errors.push(`Description must be between ${VALIDATION_CONSTANTS.LONG_TEXT_MIN} and ${VALIDATION_CONSTANTS.LONG_TEXT_MAX} characters long.`)
                 }
                 
                 if (inputs.description && hasConsecutiveSpecialChars(inputs.description.trim())) {
@@ -357,14 +369,48 @@ export function workValidationRules() {
             }
         },
 
+        'maxWWorkers': {
+            condition: (inputs) => {
+                const errors = []
+                const value = parseInt(inputs.maxWWorkers, 10)
+                if (!value || isNaN(value) || value <= VALIDATION_CONSTANTS.WORKER_COUNT_MIN || value > VALIDATION_CONSTANTS.WORKER_COUNT_MAX) {
+                    errors.push(`Max number of workers must be a number between ${VALIDATION_CONSTANTS.WORKER_COUNT_MIN} and ${VALIDATION_CONSTANTS.WORKER_COUNT_MAX}.`)
+                }
+                return errors
+            }
+        },
+
         'budget': {
             condition: (inputs) => {
                 const errors = []
-                const value = inputs.budget
-                if (value === undefined || value === null || value === '') {
-                    errors.push(`Budget must be a number between ${LENGTH_VALIDATION.budget.min} and ${LENGTH_VALIDATION.budget.max}.`)
-                } else if (isNaN(Number(value)) || Number(value) < LENGTH_VALIDATION.budget.min || Number(value) > LENGTH_VALIDATION.budget.max) {
-                    errors.push(`Budget must be a number between ${LENGTH_VALIDATION.budget.min} and ${LENGTH_VALIDATION.budget.max}.`)
+                const value = inputs.budget                
+                if (!value || isNaN(Number(value)) || Number(value) < VALIDATION_CONSTANTS.BUDGET_MIN || Number(value) > VALIDATION_CONSTANTS.BUDGET_MAX) {
+                    errors.push(`Budget must be a number between ${VALIDATION_CONSTANTS.BUDGET_MIN} and ${VALIDATION_CONSTANTS.BUDGET_MAX}.`)
+                }
+                return errors
+            }
+        },
+
+        'contingencyRate': {
+            condition: (inputs) => {
+                const errors = []
+                const value = inputs.contingencyRate
+                if (!value || isNaN(Number(value)) || Number(value) < VALIDATION_CONSTANTS.CONTINGENCY_RATE_MIN || Number(value) > VALIDATION_CONSTANTS.CONTINGENCY_RATE_MAX) {
+                    errors.push(`Contingency rate must be a number between ${VALIDATION_CONSTANTS.CONTINGENCY_RATE_MIN} and ${VALIDATION_CONSTANTS.CONTINGENCY_RATE_MAX}.`)
+                }
+                return errors
+            }
+        },
+
+        'budgetNote': {
+            condition: (inputs) => {
+                const errors = []
+                if (inputs.budgetNote && (inputs.budgetNote.trim().length < VALIDATION_CONSTANTS.LONG_TEXT_MIN || inputs.budgetNote.trim().length > VALIDATION_CONSTANTS.LONG_TEXT_MAX)) {
+                    errors.push(`Budget note must be between ${VALIDATION_CONSTANTS.LONG_TEXT_MIN} and ${VALIDATION_CONSTANTS.LONG_TEXT_MAX} characters long.`)
+                }
+                
+                if (inputs.budgetNote && hasConsecutiveSpecialChars(inputs.budgetNote.trim())) {
+                    errors.push('Budget note contains three or more consecutive special characters.')
                 }
                 return errors
             }

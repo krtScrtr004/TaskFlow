@@ -1,15 +1,5 @@
 <?php
 
-/**
- * TODO:
- * 
- * Implement validation methods for work-related fields such as:
- * - Max number of workers
- * - Contingency Rate
- * - Budget Note
- * 
- */
-
 namespace App\Validator;
 
 use App\Abstract\Validator;
@@ -78,22 +68,79 @@ class WorkValidator extends Validator
     }
 
     /**
-     * Validates a budget value and records an error if it is invalid.
+     * Validates the maximum number of workers.
      *
-     * This method performs the following checks:
-     * - Ensures the value is not null
-     * - Ensures the value is numeric (int, float, or numeric string)
-     * - Ensures the numeric value is within the inclusive range defined by BUDGET_MIN and BUDGET_MAX
+     * This method checks if the provided workers count falls within the acceptable range
+     * defined by WORKER_COUNT_MIN and WORKER_COUNT_MAX constants. If the value is outside
+     * this range, an error message is added to the errors array.
      *
-     * If any check fails, an error message is appended to $this->errors describing the allowed range.
+     * @param int $workersCount The number of workers to validate
      *
-     * @param int|float|string|null $budget The budget value to validate. Accepts numeric types or numeric strings; null is considered invalid.
+     * @return void
+     */
+    public function validateMaxWorkers(int $workersCount): void
+    {
+        if ($workersCount < WORKER_COUNT_MIN || $workersCount > WORKER_COUNT_MAX) {
+            $this->errors[] = 'Maximum number of workers must be between ' . WORKER_COUNT_MIN . ' and ' . WORKER_COUNT_MAX . '.';
+        }
+    }
+
+    /**
+     * Validates the budget value for a work item.
+     *
+     * This method checks if the provided budget is a valid numeric value
+     * within the acceptable range defined by BUDGET_MIN and BUDGET_MAX constants.
+     * If validation fails, an error message is added to the errors array.
+     *
+     * @param mixed $budget The budget value to validate
+     *
      * @return void
      */
     public function validateBudget($budget): void
     {
         if ($budget === null || !is_numeric($budget) || $budget < BUDGET_MIN || $budget > BUDGET_MAX) {
             $this->errors[] = 'Budget must be a number between ' . BUDGET_MIN . ' and ' . BUDGET_MAX . '.';
+        }
+    }
+
+    /**
+     * Validates the contingency rate value.
+     *
+     * This method checks if the provided contingency rate falls within the acceptable
+     * range defined by CONTINGENCY_RATE_MIN and CONTINGENCY_RATE_MAX constants.
+     * If the rate is outside this range, an error message is added to the errors array.
+     *
+     * @param float $contingencyRate The contingency rate percentage to validate
+     *
+     * @return void
+     */
+    public function validateContingencyRate(float $contingencyRate): void
+    {
+        if ($contingencyRate < CONTINGENCY_RATE_MIN || $contingencyRate > CONTINGENCY_RATE_MAX) {
+            $this->errors[] = 'Contingency rate must be between ' . CONTINGENCY_RATE_MIN . '% and ' . CONTINGENCY_RATE_MAX . '%.';
+        }
+    }
+
+    /**
+     * Validates a budget note field.
+     *
+     * This method checks if the provided budget note meets the length requirements
+     * (between LONG_TEXT_MIN and LONG_TEXT_MAX characters) and ensures it does not
+     * contain three or more consecutive special characters. Validation is only
+     * performed when the budget note is not null.
+     *
+     * @param string|null $budgetNote The budget note text to validate, or null if not provided
+     *
+     * @return void Errors are added to the $this->errors array if validation fails
+     */
+    public function validateBudgetNote(?string $budgetNote): void
+    {
+        if ($budgetNote !== null && (strlen(trim($budgetNote)) < LONG_TEXT_MIN || strlen(trim($budgetNote)) > LONG_TEXT_MAX)) {
+            $this->errors[] = 'Budget note must be between ' . LONG_TEXT_MIN . ' and ' . LONG_TEXT_MAX . ' characters long.';
+        }
+
+        if ($budgetNote !== null && $this->hasConsecutiveSpecialChars($budgetNote)) {
+            $this->errors[] = 'Budget note contains three or more consecutive special characters.';
         }
     }
 
@@ -264,8 +311,20 @@ class WorkValidator extends Validator
             $this->validateDescription(trim($data['description']) ?? null);
         }
 
+        if (isset($data['maxWorkers'])) {
+            $this->validateMaxWorkers((int) $data['maxWorkers']);
+        }
+
         if (isset($data['budget'])) {
             $this->validateBudget($data['budget'] ?? null);
+        }
+
+        if (isset($data['contingencyRate'])) {
+            $this->validateContingencyRate((float) $data['contingencyRate']);
+        }
+
+        if (isset($data['budgetNote'])) {
+            $this->validateBudgetNote(trim($data['budgetNote']) ?? null);
         }
 
         if (isset($data['startDateTime'])) {

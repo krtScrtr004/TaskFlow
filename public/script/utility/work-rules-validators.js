@@ -1,3 +1,4 @@
+import { getValidationConstraints } from './utility.js'
 /**
  *  Input Validators
  * 
@@ -6,21 +7,7 @@
  * Use these to highlight rules in red (failed) or green (passed).
  */
 
-// Constants matching PHP data-length.php
-export const VALIDATION_CONSTANTS = {
-    NAME_MIN: 1,
-    NAME_MAX: 50,
-    LONG_TEXT_MIN: 5,
-    LONG_TEXT_MAX: 1000,
-    BUDGET_MIN: 0,
-    BUDGET_MAX: 999999999999,
-    WORKER_COUNT_MIN: 1,
-    WORKER_COUNT_MAX: 1000,
-    CONTINGENCY_RATE_MIN: 0,
-    CONTINGENCY_RATE_MAX: 100,
-    YEAR_MIN: 1900,
-    YEAR_MAX: 2100,
-}
+export const VALIDATION_CONSTANTS = await getValidationConstraints()
 
 // Regex to detect three or more consecutive special characters
 const CONSECUTIVE_SPECIAL_CHARS_REGEX = /[^a-zA-Z0-9\s]{3,}/
