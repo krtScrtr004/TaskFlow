@@ -1,5 +1,6 @@
 import { Notification } from '../../../render/notification.js'
 import { handleException } from '../../../utility/handle-exception.js'
+import { die } from '../../../utility/utility.js'
 
 export const addedWorkers = new Set()
 
@@ -8,12 +9,12 @@ const noWorkersWall = workersSection.querySelector('.selected-workers-table  .no
 
 const workerPoolListingList = workersSection.querySelector('.worker-pool-listing .list')
 if (!workerPoolListingList) {
-    console.warn('Worker pool listing list not found.')
+    die('Worker pool listing list not found.')
 }
 
 const selectedWorkersTableList = workersSection.querySelector('.selected-workers-table tbody')
 if (!selectedWorkersTableList) {
-    throw new Error('Selected workers table list not found.')
+    die('Selected workers table list not found.')
 }
 
 workerPoolListingList.addEventListener('click', e => {
@@ -22,6 +23,12 @@ workerPoolListingList.addEventListener('click', e => {
         return
     }
     e.stopImmediatePropagation()
+
+    const maxWorkers = document.querySelector('#project_form input[name="max_workers"]')?.value
+    if (addedWorkers.size >= parseInt(maxWorkers, 10)) {
+        Notification.error(`Cannot add more than ${maxWorkers} workers to the project.`, 5000)
+        return
+    }
 
     try {
         const workerId = card.dataset.workerid

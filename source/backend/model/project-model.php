@@ -1001,7 +1001,7 @@ class ProjectModel extends Model
                         ':phaseId'          => $phaseId,
                         ':budget'           => $phase->getBudget() ?? BUDGET_MIN,
                         ':contingencyRate'  => $phase->getContingencyRate() ?? CONTINGENCY_RATE_MIN,
-                        ':notes'            => trimOrNull($phase->getBudgetNotes()),
+                        ':notes'            => trimOrNull($phase->getBudgetNote()),
                     ]);
 
                 }

@@ -1,7 +1,8 @@
-import { createFullName } from '../../../utility/utility.js'
+import { createFullName, die } from '../../../utility/utility.js'
 import { Loader } from '../../../render/loader.js'
 import { debounceAsync } from '../../../utility/debounce.js'
 import { createWorkerFetcher } from './fetch.js'
+import { addedWorkers } from './add.js'
 
 let endpoint = null
 
@@ -10,12 +11,12 @@ const noWorkersWall = workersSection.querySelector('.worker-pool-listing .no-wor
 
 const searchBarForm = workersSection.querySelector('.search-bar')
 if (!searchBarForm) {
-    console.warn('Search bar not found in workers section.')
+    die('Search bar not found in workers section.')
 }
 
 const searchButton = searchBarForm.querySelector('#search_bar_button')
 if (!searchButton) {
-    console.warn('Search button not found in workers section.')
+    die('Search button not found in workers section.')
 }
 
 /**
@@ -44,10 +45,10 @@ export function initializeSearch(endpointParam) {
     endpoint = endpointParam
 
     const handler = e => debounceAsync(submit(e), 300)
-    searchBarForm?.addEventListener('submit', handler)
-    searchButton?.addEventListener('click', handler)
+    searchBarForm.addEventListener('submit', handler)
+    searchButton.addEventListener('click', handler)
 
-    searchButton?.click() // Trigger initial load
+    searchButton.click() // Trigger initial load
 }
 
 /**
@@ -210,9 +211,10 @@ function renderWorkerPoolCard(worker) {
     const button = document.createElement('button')
     button.type = 'button'
     button.className = 'worker-pool-card unset-button'
-    if (worker && (worker.id || worker.workerId)) {
-        button.dataset.workerid = worker.id ?? worker.workerId
+    if (addedWorkers.has(String(worker.id || worker.workerId))) {
+        button.classList.add('selected')
     }
+    button.dataset.workerid = worker.id ?? worker.workerId
 
     const img = document.createElement('img')
     img.className = 'circle fit-cover'

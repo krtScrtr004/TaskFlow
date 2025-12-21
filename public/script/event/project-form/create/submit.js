@@ -3,17 +3,18 @@ import { Http } from '../../../utility/http.js'
 import { debounceAsync } from '../../../utility/debounce.js'
 import { Dialog } from '../../../render/dialog.js'
 import { Loader } from '../../../render/loader.js'
+import { die } from '../../../utility/utility.js'
 
 let isLoading = false
 
 const projectForm = document.querySelector('#project_form')
 if (!projectForm) {
-    console.warn('Project form not found on the page')
+    die('Project form not found on the page')
 }
 
 const createProjectButton = document.querySelector('#create_project_button')
 if (!createProjectButton) {
-    console.warn('Create Project button not found in the form')
+    die('Create Project button not found in the form')
 }
 
 const handler = e => debounceAsync(submit(e), 300)
@@ -121,16 +122,16 @@ function getPhasesData() {
         throw new Error('Phases section not found in the form')
     }
 
-    const phaseFormCards = phaseSection.querySelectorAll('.phase_form_card')
+    const phaseFormCards = phaseSection.querySelectorAll('.phase-form-card')
     const phasesData = []
     phaseFormCards.forEach(card => {
-        const name = card.querySelector('input[name="phase_name"]').value.trim()
-        const description = card.querySelector('textarea[name="phase_description"]').value.trim()
-        const budget = parseFloat(card.querySelector('input[name="phase_budget"]').value.trim())
-        const contingencyRate = parseFloat(card.querySelector('input[name="phase_contingency_rate"]').value.trim())
-        const budgetNote = card.querySelector('textarea[name="phase_budget_note"]').value.trim()
-        const startDateTime = card.querySelector('input[name="phase_start_date_time"]').value.trim()
-        const completionDateTime = card.querySelector('input[name="phase_completion_date_time"]').value.trim()
+        const name = card.querySelector('input[name="name"]').value.trim()
+        const description = card.querySelector('textarea[name="description"]').value.trim()
+        const budget = parseFloat(card.querySelector('input[name="budget"]').value.trim())
+        const contingencyRate = parseFloat(card.querySelector('input[name="contingency_rate"]').value.trim())
+        const budgetNote = card.querySelector('textarea[name="budget_note"]').value.trim()
+        const startDateTime = card.querySelector('input[name="start_date_time"]').value.trim()
+        const completionDateTime = card.querySelector('input[name="completion_date_time"]').value.trim()
 
         phasesData.push({
             name,
@@ -168,7 +169,7 @@ function getWorkersData() {
     const workersData = []
     selectedWorkerRows.forEach(row => {
         const id = row.getAttribute('data-workerid')
-        const defaultRate = parseFloat(row.querySelector('input[name="default_rate"]').value.trim())
+        const defaultRate = parseFloat(row.querySelector('input.default-rate-input').value.trim())
 
         workersData.push({ id, defaultRate })
     })

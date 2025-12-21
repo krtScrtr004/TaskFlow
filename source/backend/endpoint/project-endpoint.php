@@ -197,22 +197,22 @@ class ProjectEndpoint extends Endpoint
 
             $data = decodeData('php://input');
             if (!$data) {
-                throw new ValidationException('Cannot decode data.');
+                throw new ValidationException('Cannot decode data.', ['Invalid JSON data.']);
             }
 
             $project = $data['project'] ?? null;
             if (!$project || empty($project)) {
-                throw new ValidationException('Project data is required.');
+                throw new ValidationException('Project data is required.', ['Project details are required.']);
             }
 
             $phases = $data['phases'] ?? null;
             if (!$phases || empty($phases)) {
-                throw new ValidationException('Phases data is required.');
+                throw new ValidationException('Phases data is required.', ['At least one phase is required.']);
             }
 
             $workers = $data['workers'] ?? null;
             if (!$workers || empty($workers)) {
-                throw new ValidationException('Workers data is required.');
+                throw new ValidationException('Workers data is required.', ['At least one worker is required.']);
             }
 
             sanitizeData($project);
