@@ -135,11 +135,15 @@ class WorkValidator extends Validator
      */
     public function validateBudgetNote(?string $budgetNote): void
     {
-        if ($budgetNote !== null && (strlen(trim($budgetNote)) < LONG_TEXT_MIN || strlen(trim($budgetNote)) > LONG_TEXT_MAX)) {
+        if ($budgetNote === null || empty(trim($budgetNote))) {
+            return;
+        }
+
+        if ((strlen(trim($budgetNote)) < LONG_TEXT_MIN || strlen(trim($budgetNote)) > LONG_TEXT_MAX)) {
             $this->errors[] = 'Budget note must be between ' . LONG_TEXT_MIN . ' and ' . LONG_TEXT_MAX . ' characters long.';
         }
 
-        if ($budgetNote !== null && $this->hasConsecutiveSpecialChars($budgetNote)) {
+        if ($this->hasConsecutiveSpecialChars($budgetNote)) {
             $this->errors[] = 'Budget note contains three or more consecutive special characters.';
         }
     }

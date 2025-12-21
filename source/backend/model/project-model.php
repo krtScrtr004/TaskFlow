@@ -109,30 +109,18 @@ class ProjectModel extends Model
             foreach ($result as $row) {
                 $row['manager'] = User::createPartial([
                     'id'            => $row['u_id'],
-                    'publicId'      => UUID::fromBinary($row['u_public_id']),
-                    'firstName'     => $row['first_name'],
-                    'middleName'    => $row['middle_name'],
-                    'lastName'      => $row['last_name'],
+                    'public_id'     => $row['u_public_id'],
+                    'first_name'    => $row['first_name'],
+                    'middle_name'   => $row['middle_name'],
+                    'last_name'     => $row['last_name'],
                     'gender'        => $row['gender'],
                     'email'         => $row['email'],
-                    'profileLink'   => $row['profile_link'],
+                    'profile_link'  => $row['profile_link'],
                 ]);
 
-                $projects->add(Project::createPartial([
-                    'id'                        => $row['id'],
-                    'publicId'                  => UUID::fromBinary($row['public_id']),
-                    'name'                      => $row['name'],
-                    'description'               => $row['description'],
-                    'manager'                   => $row['manager'],
-                    'maxWorkers'                => $row['max_worker'],
-                    'budget'                    => $row['budget'],
-                    'startDateTime'             => new DateTime($row['start_date_time']),
-                    'completionDateTime'        => new DateTime($row['completion_date_time']),
-                    'actualCompletionDateTime'  => $row['actual_completion_date_time'] 
-                        ? new DateTime($row['actual_completion_date_time']) 
-                        : null,
-                ]));
+                $projects->add(Project::createPartial($row));
             }
+
             return $projects;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
@@ -349,53 +337,17 @@ class ProjectModel extends Model
             }
 
             $mangerData = json_decode($result['project_manager'], true);
-            $manager = User::createPartial([
-                'id'            => $mangerData['id'],
-                'publicId'      => UUID::fromHex($mangerData['public_id']),
-                'firstName'     => $mangerData['first_name'],
-                'middleName'    => $mangerData['middle_name'],
-                'lastName'      => $mangerData['last_name'],
-                'email'         => $mangerData['email'],
-                'profileLink'   => $mangerData['profile_link'],
-                'jobTitles'    => new JobTitleContainer(json_decode($mangerData['job_titles'], true))
-            ]);
+            $managerData['publicId'] = UUID::fromHex($mangerData['public_id']);
+            $result['manager'] = User::createPartial($managerData);
 
-            $project = Project::createPartial([
-                'id'                        => $result['id'],
-                'publicId'                  => UUID::fromBinary($result['public_id']),
-                'name'                      => $result['name'],
-                'description'               => $result['description'],
-                'manager'                   => $manager,
-                'budget'                    => $result['budget'],
-                'tasks'                     => new TaskContainer(),
-                'workers'                   => new WorkerContainer(),
-                'phases'                    => new PhaseContainer(),
-                'startDateTime'             => new DateTime($result['start_date_time']),
-                'completionDateTime'        => new DateTime($result['completion_date_time']),
-                'actualCompletionDateTime'  => $result['actual_completion_date_time'] 
-                    ? new DateTime($result['actual_completion_date_time']) 
-                    : null,
-                'status'                    => WorkStatus::from($result['status']),
-                'createdAt'                 => new DateTime($result['created_at']),
-            ]);
+            $project = Project::createPartial($result);
 
             // Process phases if included
             if ($includePhases && isset($result['project_phases'])) {
                 $projectPhases = json_decode($result['project_phases'], true);
                 foreach ($projectPhases as $phase) {
-                    $project->addPhase(Phase::createPartial([
-                        'id'                        => $phase['id'],
-                        'publicId'                  => UUID::fromHex($phase['public_id']),
-                        'name'                      => $phase['name'],
-                        'description'               => $phase['description'],
-                        'startDateTime'             => new DateTime($phase['start_date_time']),
-                        'completionDateTime'        => new DateTime($phase['completion_date_time']),
-                        'actualCompletionDateTime'  => $phase['actual_completion_date_time'] 
-                            ? new DateTime($phase['actual_completion_date_time']) 
-                            : null,
-                        'status'                    => WorkStatus::from($phase['status']),
-                        'tasks'                     => new TaskContainer()
-                    ]));
+                    $phase['public_id'] = UUID::fromHex($phase['public_id']);
+                    $project->addPhase(Phase::createPartial($phase));
                 }
             }
 
@@ -403,21 +355,8 @@ class ProjectModel extends Model
             if ($includeTasks && isset($result['project_tasks'])) {
                 $projectTask = json_decode($result['project_tasks'], true);
                 foreach ($projectTask as $task) {
-                    $project->addTask(Task::createPartial([
-                        'id'                        => $task['id'],
-                        'publicId'                  => UUID::fromHex($task['public_id']),
-                        'name'                      => $task['name'],
-                        'description'               => $task['description'],
-                        'status'                    => WorkStatus::from($task['status']),
-                        'priority'                  => TaskPriority::from($task['priority']),
-                        'workers'                   => new WorkerContainer(),
-                        'startDateTime'             => new DateTime($task['start_date_time']),
-                        'completionDateTime'        => new DateTime($task['completion_date_time']),
-                        'actualCompletionDateTime'  => $task['actual_completion_date_time'] 
-                            ? new DateTime($task['actual_completion_date_time']) 
-                            : null,
-                        'createdAt'                 => new DateTime($task['created_at'])
-                    ]));
+                    $task['public_id'] = UUID::fromHex($task['public_id']);
+                    $project->addTask(Task::createPartial($task));
                 }
             }
 
@@ -425,20 +364,7 @@ class ProjectModel extends Model
             if ($includeWorkers && isset($result['project_workers'])) {
                 $projectWorkers = json_decode($result['project_workers'], true);
                 foreach ($projectWorkers as $worker) {
-                    $project->addWorker(Worker::createPartial([
-                        'id'            => $worker['id'],
-                        'publicId'      => UUID::fromHex($worker['public_id']),
-                        'firstName'     => $worker['first_name'],
-                        'middleName'    => $worker['middle_name'] ?? null,
-                        'lastName'      => $worker['last_name'],
-                        'email'         => $worker['email'] ?? null,
-                        'profileLink'   => $worker['profile_link'] ?? null,
-                        'status'        => WorkerStatus::from($worker['status']),
-                        'jobTitles'     => new JobTitleContainer(json_decode($worker['job_titles'], true)),
-                        'createdAt'     => new DateTime($worker['created_at']),
-                        'confirmedAt'   => $worker['confirmed_at'] ? new DateTime($worker['confirmed_at']) : null,
-                        'deletedAt'     => $worker['deleted_at'] ? new DateTime($worker['deleted_at']) : null,
-                    ]));
+                    $project->addWorker(Worker::createPartial($worker));
                 }
             }
                     
@@ -485,111 +411,6 @@ class ProjectModel extends Model
 
             $projects = self::find($whereClause, $params);
             return $projects->first() ?? null;
-        } catch (Exception $e) {
-            throw $e;
-        }
-    }
-
-    /**
-     * Finds all projects managed by a specific manager.
-     *
-     * This method retrieves projects from the database where the manager_id matches
-     * the provided ID. It validates the manager ID before executing the query and
-     * handles potential database errors.
-     *
-     * @param int|UUID $managerId The ID (integer or UUID) of the manager whose projects to retrieve
-     * @param WorkStatus|null $status Optional status filter to retrieve projects with a specific status
-     * 
-     * @return ProjectContainer|null Container with projects managed by the specified manager,
-     *                               or null if no projects are found.
-     * 
-     * @throws InvalidArgumentException If the provided manager ID is less than 1.
-     * @throws DatabaseException If a database error occurs during the query execution.
-     */
-    public static function findByManagerId(int|UUID $managerId, WorkStatus|null $status = null): ?ProjectContainer
-    {
-        if (is_int($managerId) && $managerId < 1) {
-            throw new InvalidArgumentException('Invalid manager ID provided.');
-        }
-
-        try {
-            $whereClause = is_int($managerId) 
-                ? 'p.manager_id = :managerId' 
-                : 'p.manager_id = (SELECT id FROM user WHERE public_id = :managerId)';
-
-            $params['managerId'] = is_int($managerId) 
-                ? $managerId
-                : UUID::toBinary($managerId);
-
-            if ($status) {
-                $whereClause .= ' AND p.status = :status';
-                $params['status'] = $status->value;
-            }
-
-            return self::find($whereClause, $params);
-        } catch (Exception $e) {
-            throw $e;
-        }
-    }
-
-    /**
-     * Finds projects associated with a given worker (user) ID.
-     *
-     * This method validates the provided worker ID and queries the database for
-     * projects that have an entry in the projectWorker table referencing the worker:
-     * - Validates that $workerId is a positive integer (>= 1)
-     * - Executes a SELECT with a subquery: id IN (SELECT project_id FROM projectWorker WHERE user_id = :workerId)
-     * - Optionally filters by project status if $status is provided
-     * - Uses a prepared/bound parameter (:workerId) to avoid SQL injection
-     * - Wraps lower-level PDO exceptions in a DatabaseException
-     *
-     * @param int $workerId Positive integer ID of the worker whose projects should be retrieved
-     * @param WorkStatus|null $status Optional status filter to retrieve projects with a specific status
-     *
-     * @return ProjectContainer|null ProjectContainer containing the found project(s) or null if none found
-     *
-     * @throws InvalidArgumentException If $workerId is not a valid positive integer
-     * @throws DatabaseException If a database error occurs (wraps the underlying PDOException)
-     */
-    public static function findByWorkerId(int|UUID $workerId, WorkStatus|null $status = null): ?ProjectContainer
-    {
-        if (is_int($workerId) && $workerId < 1) {
-            throw new InvalidArgumentException('Invalid worker ID provided.');
-        }
-
-        try {
-            $whereClause = is_int($workerId) 
-                ? 'p.id IN (
-                    SELECT 
-                        project_id 
-                    FROM 
-                        `project_worker`
-                    WHERE   
-                        worker_id = :workerId
-                )' 
-                : 'p.id IN (
-                    SELECT 
-                        project_id 
-                    FROM 
-                        `project_worker` AS pw
-                    INNER JOIN 
-                        user AS u 
-                    ON 
-                        pw.worker_id = u.id
-                    WHERE 
-                        u.public_id = :workerId
-                )';
-
-            $param['workerId'] = is_int($workerId) 
-                ? $workerId
-                : UUID::toBinary($workerId);
-
-            if ($status) {
-                $whereClause .= ' AND p.status = :status';
-                $param['status'] = $status->value;
-            }
-
-            return self::find($whereClause,$param);
         } catch (Exception $e) {
             throw $e;
         }
@@ -660,17 +481,17 @@ class ProjectModel extends Model
             $query = "
                 SELECT
                     p.*,
-                    u.id AS id,
-                    u.public_id AS public_id,
+                    u.id AS u_id,
+                    u.public_id AS u_public_id,
                     u.first_name AS first_name,
                     u.middle_name AS middle_name,
                     u.last_name AS last_name,
                     u.gender AS gender,
                     u.email AS email,
                     u.profile_link AS profile_link,
-                    u.created_at AS created_at,
-                    u.confirmed_at AS confirmed_at,
-                    u.deleted_at AS deleted_at
+                    u.created_at AS u_created_at,
+                    u.confirmed_at AS u_confirmed_at,
+                    u.deleted_at AS u_deleted_at
                 FROM
                     `project` AS p
                 INNER JOIN 
@@ -706,33 +527,20 @@ class ProjectModel extends Model
 
             // Build manager object
             $result['manager'] = User::createPartial([
-                'id'            => $result['id'],
-                'publicId'      => UUID::fromBinary($result['public_id']),
+                'id'            => $result['u_id'],
+                'publicId'      => UUID::fromBinary($result['u_public_id']),
                 'firstName'     => $result['first_name'],
                 'middleName'    => $result['middle_name'],
                 'lastName'      => $result['last_name'],
                 'gender'        => $result['gender'],
                 'email'         => $result['email'],
                 'profileLink'   => $result['profile_link'],
-                'createdAt'     => $result['managerCreatedAt'],
-                'confirmedAt'   => $result['managerConfirmedAt'],
-                'deletedAt'     => $result['managerDeletedAt'],
+                'createdAt'     => $result['u_created_at'],
+                'confirmedAt'   => $result['u_confirmed_at'],
+                'deletedAt'     => $result['u_deleted_at'],
             ]);
 
-            return Project::createPartial([
-                'id'                        => $result['id'],
-                'publicId'                  => UUID::fromBinary($result['public_id']),
-                'name'                      => $result['name'],
-                'description'               => $result['description'],
-                'manager'                   => $result['manager'],
-                'maxWorkers'                => $result['max_worker'],
-                'budget'                    => $result['budget'],
-                'startDateTime'             => new DateTime($result['start_date_time']),
-                'completionDateTime'        => new DateTime($result['completion_date_time']),
-                'actualCompletionDateTime'  => $result['actual_completion_date_time'] 
-                    ? new DateTime($result['actual_completion_date_time']) 
-                    : null, 
-            ]);
+            return Project::createPartial($result);
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
