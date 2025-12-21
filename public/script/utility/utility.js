@@ -1,3 +1,6 @@
+import { Dialog } from '../render/dialog.js'
+
+
 /**
  * @param {number} year
  * @param {number} month - 1-based (1 = January, 12 = December)
@@ -178,4 +181,24 @@ export async function getValidationConstraints() {
     } catch (error) {
         throw new Error('Error loading validation constraints: ' + error.message)
     }
+}
+
+/**
+ * Terminates execution by throwing an Error and optionally displays an error dialog.
+ *
+ * @param {string|Error} error - Error instance or message.
+ * @param {object} [options]
+ * @param {boolean} [options.showDialog=false]
+ * @throws {Error}
+ */
+export function die(error, { showDialog = false } = {}) {
+    const err = error instanceof Error
+        ? error
+        : new Error(String(error));
+
+    if (showDialog) {
+        Dialog.errorOccurred(err.message);
+    }
+
+    throw err;
 }
