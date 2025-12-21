@@ -24,7 +24,7 @@ class Phase implements Entity
     private ?TaskContainer $tasks;
     private float $budget;
     private float $contingencyRate;
-    private string $budgetNote;
+    private ?string $budgetNote;
 
     protected WorkValidator $workValidator;
 
@@ -45,7 +45,7 @@ class Phase implements Entity
      * @param TaskContainer $tasks Container of tasks associated with the phase
      * @param float $budget Budget amount allocated for the phase
      * @param float $contingencyRate Contingency rate percentage for the phase budget
-     * @param string $budgetNote Notes regarding the phase budget
+     * @param string|null $budgetNote Notes regarding the phase budget (optional)
      * 
      * @throws ValidationException If any of the provided data fails validation
      */
@@ -61,7 +61,7 @@ class Phase implements Entity
         ?TaskContainer $tasks,
         float $budget,
         float $contingencyRate,
-        string $budgetNote
+        ?string $budgetNote
     ) {
         try {
             $this->workValidator = new WorkValidator();
