@@ -71,9 +71,9 @@ export function formatDateToString(date) {
 }
 
 /**
- * Compares two date strings by date only (ignores time).
- * @param {string} date1 - First date string to compare
- * @param {string} date2 - Second date string to compare
+ * Compares two dates by date only (ignores time).
+ * @param {Date|string} date1 - First date string to compare
+ * @param {Date|string} date2 - Second date string to compare
  * @returns {number} -1 if date1 is later, 1 if date2 is later, 0 if equal
  * @throws {Error} If either date string is invalid or missing
  */
@@ -82,8 +82,8 @@ export function compareDates(date1, date2) {
         throw new Error('Both date strings are required.')
     }
 
-    const d1 = new Date(date1)
-    const d2 = new Date(date2)
+    const d1 = date1 instanceof Date ? date1 : new Date(date1)
+    const d2 = date2 instanceof Date ? date2 : new Date(date2)
 
     if (isNaN(d1.getTime()) || isNaN(d2.getTime())) {
         throw new Error('Invalid date string.')
@@ -188,17 +188,18 @@ export async function getValidationConstraints() {
  *
  * @param {string|Error} error - Error instance or message.
  * @param {object} [options]
- * @param {boolean} [options.showDialog=false]
+ * @param {boolean} [options.showDialog=true]
  * @throws {Error}
  */
-export function die(error, { showDialog = false } = {}) {
+export function die(error, { showDialog = true } = {}) {
     const err = error instanceof Error
         ? error
-        : new Error(String(error));
+        : new Error(String(error))
 
     if (showDialog) {
-        Dialog.errorOccurred(err.message);
+        Dialog.errorOccurred(err.message)
     }
+    console.error(err.message)
 
-    throw err;
+    throw err
 }

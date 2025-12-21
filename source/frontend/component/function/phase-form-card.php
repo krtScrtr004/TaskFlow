@@ -12,17 +12,16 @@ function phaseFormCard(?Phase $phase): bool|string
         'budget' => '',
         'contingencyRate' => '',
         'budgetNote' => '',
-        'startDateTime' => formatDateTime(new DateTime(), 'Y-m-d'),
-        'completionDateTime' => formatDateTime(new DateTime(), 'Y-m-d'),
+        'startDateTime' => '',
+        'completionDateTime' => '',
     ];
     if ($phase) {
         $phaseData['id'] = htmlspecialchars(UUID::toString($phase->getPublicId()));
         $phaseData['name'] = htmlspecialchars($phase->getName());
         $phaseData['description'] = htmlspecialchars($phase->getDescription());
-        // TODO: Implement these changes
-        // $phaseData['budget'] = htmlspecialchars($phase->getBudget());
-        // $phaseData['contingencyRate'] = htmlspecialchars($phase->getContingencyRate());
-        // $phaseData['budgetNote'] = htmlspecialchars($phase->getBudgetNote());
+        $phaseData['budget'] = htmlspecialchars($phase->getBudget());
+        $phaseData['contingencyRate'] = htmlspecialchars($phase->getContingencyRate());
+        $phaseData['budgetNote'] = htmlspecialchars($phase->getBudgetNote());
         $phaseData['startDateTime'] = htmlspecialchars(formatDateTime($phase->getStartDateTime(), 'Y-m-d'));
         $phaseData['completionDateTime'] = htmlspecialchars(formatDateTime($phase->getCompletionDateTime(), 'Y-m-d'));
     }
@@ -127,10 +126,11 @@ function phaseFormCard(?Phase $phase): bool|string
                             <label for="start_date_time">Start Date</label>
                         </div>
                         <input type="date" name="start_date_time" id="start_date_time"
-                            value="<?= $phaseData['startDateTime'] ?>" required>
+                            min="<?= formatDateTime(new DateTime(), 'Y-m-d') ?>" value="<?= $phaseData['startDateTime'] ?>"
+                            required>
                     </div>
 
-                    <?= workStartDateTimeRules() ?>
+                    <?= workStartDateTimeRules(1) ?>
                 </div>
 
                 <div class="input-rules-container">
@@ -141,10 +141,11 @@ function phaseFormCard(?Phase $phase): bool|string
                             <label for="completion_date_time">End Date</label>
                         </div>
                         <input type="date" name="completion_date_time" id="completion_date_time"
+                            min="<?= formatDateTime(new DateTime(), 'Y-m-d') ?>"
                             value="<?= $phaseData['completionDateTime'] ?>" required>
                     </div>
 
-                    <?= workCompletionDateTimeRules() ?>
+                    <?= workCompletionDateTimeRules(1) ?>
                 </div>
             </section>
     </div>

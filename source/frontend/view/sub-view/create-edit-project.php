@@ -159,7 +159,7 @@ if ($project) {
                                         <label for="start_date_time">Start Date</label>
                                     </div>
                                     <input type="date" name="start_date_time" id="start_date_time"
-                                        value="<?= formatDateTime(new DateTime(), 'Y-m-d') ?>" required>
+                                        min="<?= formatDateTime(new DateTime(), 'Y-m-d') ?>" required>
                                 </div>
 
                                 <?= workStartDateTimeRules() ?>
@@ -173,7 +173,7 @@ if ($project) {
                                         <label for="completion_date_time">End Date</label>
                                     </div>
                                     <input type="date" name="completion_date_time" id="completion_date_time"
-                                        value="<?= formatDateTime(new DateTime(), 'Y-m-d') ?>" required>
+                                        min="<?= formatDateTime(new DateTime(), 'Y-m-d') ?>" required>
                                 </div>
 
                                 <?= workCompletionDateTimeRules() ?>
@@ -290,7 +290,8 @@ if ($project) {
     <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'create-phase-form-card.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'validate-forms.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'worker' . DS . 'add.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'create' . DS . 'search-workers.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'create' . DS . 'search-workers.js' ?>"
+        defer></script>
     <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'create' . DS . 'submit.js' ?>" defer></script>
 </body>
 

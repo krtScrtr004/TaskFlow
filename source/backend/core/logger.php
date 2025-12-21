@@ -86,8 +86,8 @@ class Logger
             $exceptionMessage = "[$date] -> $exception\n" . PHP_EOL;
             $handle = fopen(self::$fileName['exception'], 'a');
             if (!$handle) {
-            throw new ErrorException('Cannot open ' . self::$fileName['exception']);
-        }
+                throw new ErrorException('Cannot open ' . self::$fileName['exception']);
+            }
 
         fwrite($handle, $exceptionMessage);
         fclose($handle);

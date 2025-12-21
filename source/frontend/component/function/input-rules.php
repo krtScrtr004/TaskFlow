@@ -85,21 +85,28 @@ function workBudgetNoteRules(): bool|string
     return ob_get_clean();
 }
 
-function workStartDateTimeRules(): bool|string
+function workStartDateTimeRules(int $mode = 0): bool|string
 {
+    // Modes: 0 => project, 1 => phase, 2 => task
     ob_start();
     ?>
     <div class="rules">
         <ul>
             <li>Must be a valid date.</li>
             <li>Must be between <?= YEAR_CURRENT ?> and <?= YEAR_MAX ?>.</li>
+            <?php if ($mode === 1 || $mode === 2): ?>
+                <li>Must be within the timeline of <?php echo $mode === 1 ? 'Project' : 'Task' ?>.</li>
+            <?php endif; ?>
+            <?php if ($mode === 2): ?>
+                <li>Must not conflict with other Phases.</li>
+            <?php endif; ?>
         </ul>
     </div>
     <?php
     return ob_get_clean();
 }
 
-function workCompletionDateTimeRules(): bool|string
+function workCompletionDateTimeRules(int $mode = 0): bool|string
 {
     ob_start();
     ?>
@@ -108,6 +115,12 @@ function workCompletionDateTimeRules(): bool|string
             <li>Must be a valid date.</li>
             <li>Must be between <?= YEAR_CURRENT ?> and <?= YEAR_MAX ?>.</li>
             <li>Must be after the start date.</li>
+            <?php if ($mode === 1 || $mode === 2): ?>
+                <li>Must be within the timeline of <?php echo $mode === 1 ? 'Project' : 'Task' ?>.</li>
+            <?php endif; ?>
+            <?php if ($mode === 2): ?>
+                <li>Must not conflict with other Phases.</li>
+            <?php endif; ?>
         </ul>
     </div>
     <?php

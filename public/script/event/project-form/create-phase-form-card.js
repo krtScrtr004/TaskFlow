@@ -1,5 +1,5 @@
 import { handleException } from '../../utility/handle-exception.js'
-import { getValidationConstraints } from '../../utility/utility.js'
+import { getValidationConstraints, die } from '../../utility/utility.js'
 
 const VALIDATION_CONSTANTS = await getValidationConstraints()
 
@@ -8,10 +8,10 @@ const noPhasesWall = phaseSection.querySelector('.no-phases-wall')
 
 const addPhaseButton = phaseSection.querySelector('#add_phase_button')
 if (!addPhaseButton) {
-    console.warn('Clone Phase Card: Add Phase button not found.')
+    die('Clone Phase Card: Add Phase button not found.')
 }
 
-addPhaseButton?.addEventListener('click', () => {
+addPhaseButton.addEventListener('click', () => {
     try {
         const phaseCard = renderPhaseFormCard()
         phaseSection.insertBefore(phaseCard, addPhaseButton)
@@ -47,8 +47,7 @@ addPhaseButton?.addEventListener('click', () => {
 function addRemoveListeners(card) {
     const removeButton = card.querySelector('.remove-phase-button')
     if (!removeButton) {
-        console.warn('Clone Phase Card: Remove button not found in card.')
-        return
+        die('Remove button not found in card.')
     }
 
     removeButton.addEventListener('click', () => {
@@ -83,7 +82,6 @@ function addRemoveListeners(card) {
  */
 function renderPhaseFormCard(phaseData = {}) {
     const ICON_PATH = '/public/asset/image/icon/'
-    const today = new Date().toISOString().split('T')[0]
 
     const defaults = {
         id: Math.random().toString(36).substring(2, 15), // Generate a random temporary id for the phase card
@@ -92,8 +90,8 @@ function renderPhaseFormCard(phaseData = {}) {
         budget: '',
         contingencyRate: '',
         budgetNote: '',
-        startDateTime: today,
-        completionDateTime: today,
+        startDateTime: '',
+        completionDateTime: '',
     }
     const data = { ...defaults, ...phaseData }
 
@@ -377,10 +375,6 @@ function createTextareaWithRules({ iconSrc, iconAlt, label, inputName, placehold
     return rulesContainer
 }
 
-// ============================================= //
-// Rules Rendering Functions
-// ============================================= //
-
 /**
  * Renders the work name validation rules element.
  * @returns {HTMLDivElement}
@@ -477,7 +471,9 @@ function renderWorkStartDateTimeRules() {
     const ul = document.createElement('ul')
     ul.innerHTML = `
         <li>Must be a valid date.</li>
-        <li>Must be between ${VALIDATION_CONSTANTS.YEAR_MIN} and ${VALIDATION_CONSTANTS.YEAR_MAX}.</li>
+        <li>Must be between ${VALIDATION_CONSTANTS.YEAR_CURRENT} and ${VALIDATION_CONSTANTS.YEAR_MAX}.</li>
+        <li>Must be within the timeline of Project.</li>
+        <li>Must not conflict with other Phases.</li>
     `
     rules.appendChild(ul)
     return rules
@@ -494,8 +490,10 @@ function renderWorkCompletionDateTimeRules() {
     const ul = document.createElement('ul')
     ul.innerHTML = `
         <li>Must be a valid date.</li>
-        <li>Must be between ${VALIDATION_CONSTANTS.YEAR_MIN} and ${VALIDATION_CONSTANTS.YEAR_MAX}.</li>
+        <li>Must be between ${VALIDATION_CONSTANTS.YEAR_CURRENT} and ${VALIDATION_CONSTANTS.YEAR_MAX}.</li>
         <li>Must be after the start date.</li>
+        <li>Must be within the timeline of Project.</li>
+        <li>Must not conflict with other Phases.</li>
     `
     rules.appendChild(ul)
     return rules
