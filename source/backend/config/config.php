@@ -128,6 +128,7 @@ define('WORKER_COUNT_MIN', 1);
 define('WORKER_COUNT_MAX', 1000);
 
 define('YEAR_MIN', 1900);
+define('YEAR_CURRENT', 2025);
 define('YEAR_MAX', 2100);
 // ============================================================================= //
 

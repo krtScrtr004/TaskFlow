@@ -92,7 +92,7 @@ function workStartDateTimeRules(): bool|string
     <div class="rules">
         <ul>
             <li>Must be a valid date.</li>
-            <li>Must be between <?= YEAR_MIN ?> and <?= YEAR_MAX ?>.</li>
+            <li>Must be between <?= YEAR_CURRENT ?> and <?= YEAR_MAX ?>.</li>
         </ul>
     </div>
     <?php
@@ -106,7 +106,7 @@ function workCompletionDateTimeRules(): bool|string
     <div class="rules">
         <ul>
             <li>Must be a valid date.</li>
-            <li>Must be between <?= YEAR_MIN ?> and <?= YEAR_MAX ?>.</li>
+            <li>Must be between <?= YEAR_CURRENT ?> and <?= YEAR_MAX ?>.</li>
             <li>Must be after the start date.</li>
         </ul>
     </div>
