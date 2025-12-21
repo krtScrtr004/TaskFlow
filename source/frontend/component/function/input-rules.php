@@ -42,7 +42,7 @@ function workWorkerCountRules(): bool|string
     return ob_get_clean();
 }
 
-function workBudgetRules(): bool|string
+function workBudgetRules(int $mode = 0): bool|string
 {
     ob_start();
     ?>
@@ -51,6 +51,9 @@ function workBudgetRules(): bool|string
             <li>Must be a positive number.</li>
             <li>Maximum budget is ₱<?= number_format(BUDGET_MAX, 2) ?>.</li>
             <li>Have up to two decimal places.</li>
+            <?php if ($mode === 1 || $mode === 2): ?>
+                <li>Total budget must not exceed the <?php echo $mode === 1 ? 'Project' : 'Phase' ?> budget.</li>
+            <?php endif; ?>
         </ul>
     </div>
     <?php

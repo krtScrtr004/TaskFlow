@@ -422,6 +422,7 @@ function renderWorkBudgetRules() {
         <li>Must be a positive number.</li>
         <li>Maximum budget is ₱${VALIDATION_CONSTANTS.BUDGET_MAX.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.</li>
         <li>Have up to two decimal places.</li>
+        <li>Total budget must not exceed the Project budget.</li>
     `
     rules.appendChild(ul)
     return rules

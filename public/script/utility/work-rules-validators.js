@@ -61,9 +61,10 @@ export function validateWorkerCount(value) {
 /**
  * Validates a budget input.
  * @param {string|number} value - The budget value to validate.
+ * @param {number|null} totalBudget - Optional total budget to compare against.
  * @returns {Object} Object with rule keys and boolean results.
  */
-export function validateBudget(value) {
+export function validateBudget(value, totalBudget = null) {
     const strValue = String(value ?? '').trim()
     const num = parseFloat(strValue)
     const isPositive = !isNaN(num) && num >= 0
@@ -76,6 +77,7 @@ export function validateBudget(value) {
         isPositiveNumber: isPositive,
         withinMax: isPositive && num <= VALIDATION_CONSTANTS.BUDGET_MAX,
         validDecimalPlaces: hasValidDecimals,
+        withinTotalBudget: totalBudget !== null ? isPositive && num <= totalBudget : true,
     }
 }
 
@@ -370,6 +372,7 @@ export const RULE_MAPPINGS = {
         isPositiveNumber: 0,
         withinMax: 1,
         validDecimalPlaces: 2,
+        withinTotalBudget: 3,
     },
     contingencyRate: {
         withinRange: 0,

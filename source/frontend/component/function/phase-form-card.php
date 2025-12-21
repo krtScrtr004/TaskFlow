@@ -84,7 +84,7 @@ function phaseFormCard(?Phase $phase): bool|string
                         </div>
                     </div>
 
-                    <?= workBudgetRules() ?>
+                    <?= workBudgetRules(1) ?>
                 </div>
 
                 <div class="input-rules-container">
