@@ -739,9 +739,11 @@ class User implements Entity
 
         // Handle JobTitleContainer conversion
         if (isset($data['jobTitles']) && !($data['jobTitles'] instanceof JobTitleContainer)) {
-            $defaults['jobTitles'] = is_array($data['jobTitles']) && !empty($data['jobTitles'])
-                ? JobTitleContainer::fromArray($data['jobTitles'])
-                : new JobTitleContainer();
+            if (is_array($data['jobTitles'])) {
+                $defaults['jobTitles'] = new JobTitleContainer($data['jobTitles']);
+            } elseif (is_string($data['jobTitles'])) {
+                $defaults['jobTitles'] = new JobTitleContainer(explode(',', $data['jobTitles']));
+            }
         }
 
         // Create instance bypassing full constructor validation
