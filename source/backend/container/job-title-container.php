@@ -25,6 +25,9 @@ class JobTitleContainer extends Container
             if (!is_string($jobTitle)) {
                 throw new InvalidArgumentException('All elements of jobTitles array must be instances of String.');
             }
+            if (empty($jobTitle)) {
+                continue;
+            }
             $this->add($jobTitle);
         }
     }

@@ -143,32 +143,13 @@ class UserModel extends Model
 
             $users = [];
             foreach ($result as $row) {
-                $users[] = User::createPartial([
-                    'id'                => $row['id'],
-                    'publicId'          => UUID::fromBinary($row['public_id']),
-                    'firstName'         => $row['first_name'],
-                    'middleName'        => $row['middle_name'],
-                    'lastName'          => $row['last_name'],
-                    'gender'            => Gender::tryFrom($row['gender']),
-                    'birthDate'         => $row['birth_date'],
-                    'role'              => Role::tryFrom($row['role']),
-                    'contactNumber'     => $row['contact_number'],
-                    'email'             => $row['email'],
-                    'password'          => $row['password'],
-                    'bio'               => $row['bio'],
-                    'profileLink'       => $row['profile_link'],
-                    'jobTitles'         => JobTitleContainer::fromArray(explode(',', $row['job_titles'])),
-                    'createdAt'         => $row['created_at'],
-                    'confirmedAt'       => $row['confirmed_at'],
-                    'updatedAt'         => $row['updated_at'],
-                    'deletedAt'         => $row['deleted_at'],
-                    'additionalInfo'    => [
-                        'totalProjects'             => (int) $row['total_projects'] ?? 0,
-                        'completedProjects'         => (int) $row['completed_projects'] ?? 0,
-                        'cancelledProjectCount'     => (int) $row['cancelled_project_count'] ?? 0,
-                        'terminatedProjectCount'    => (int) $row['terminated_project_count'] ?? 0
-                    ],
-                ]);
+                $row['additional_info'] = [
+                    'totalProjects'             => (int) $row['total_projects'] ?? 0,
+                    'completedProjects'         => (int) $row['completed_projects'] ?? 0,
+                    'cancelledProjectCount'     => (int) $row['cancelled_project_count'] ?? 0,
+                    'terminatedProjectCount'    => (int) $row['terminated_project_count'] ?? 0
+                ];
+                $users[] = User::createPartial($row);
             }
             return $users;
         } catch (PDOException $e) {
