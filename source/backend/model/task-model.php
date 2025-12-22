@@ -58,8 +58,8 @@ class TaskModel extends Model
 
         $instance = new self();
         try {
-            $query = "
-                SELECT 
+            $query = 
+                "SELECT 
                     pt.id AS id,
                     pt.public_id AS public_id,
                     pp.public_id AS phase_id,
@@ -148,8 +148,7 @@ class TaskModel extends Model
                 ON 
                     pt.id = ptw.task_id
                 LEFT JOIN 
-                    `user` AS u ON ptw.worker_id = u.id
-            ";
+                    `user` AS u ON ptw.worker_id = u.id";
             $projectTaskQuery = $instance->appendOptionsToFindQuery(
                 $instance->appendWhereClause($query, $whereClause),
                 $paramOptions);
@@ -574,8 +573,8 @@ class TaskModel extends Model
 
         $instance = new self();
         try {
-            $taskWorkerQuery = "
-                SELECT 
+            $taskWorkerQuery = 
+                "SELECT 
                     u.id,
                     u.public_id,
                     u.first_name,
@@ -748,8 +747,8 @@ class TaskModel extends Model
 
         $instance = new self();
         try {
-            $query = "
-                SELECT 
+            $query = 
+                "SELECT 
                     pt.status AS task_status,
                     COUNT(*) AS task_count
                 FROM 
@@ -803,8 +802,8 @@ class TaskModel extends Model
 
         $instance = new self();
         try {
-            $query = "
-                SELECT 
+            $query = 
+                "SELECT 
                     pt.priority AS task_priority,
                     COUNT(*) AS task_count
                 FROM 
@@ -854,8 +853,8 @@ class TaskModel extends Model
 
         $instance = new self();
         try {
-            $query = "
-                SELECT 
+            $query = 
+                "SELECT 
                     p.*,
                     u.id AS id,
                     u.public_id AS public_id,
@@ -1010,8 +1009,8 @@ class TaskModel extends Model
             $taskStartDateTime  = formatDateTime($task->getStartDateTime());
             $completionDateTime = formatDateTime($task->getCompletionDateTime());
 
-            $taskQuery = "
-                INSERT INTO `phase_task` (
+            $taskQuery = 
+                "INSERT INTO `phase_task` (
                     public_id, 
                     phase_id,
                     name, 
@@ -1031,8 +1030,7 @@ class TaskModel extends Model
                     :status, 
                     :startDateTime, 
                     :completionDateTime
-                )
-            ";
+                )";
             $statement = $instance->connection->prepare($taskQuery);
             $statement->execute([
                 ':publicId'             => UUID::toBinary($taskPublicId),
@@ -1047,14 +1045,16 @@ class TaskModel extends Model
             $taskId = (int)$instance->connection->lastInsertId();
 
             if ($taskWorkers && count($taskWorkers) > 0) {
-                $taskWorkerQuery = "
-                    INSERT INTO `phase_task_worker` (
+                $taskWorkerQuery = 
+                    "INSERT INTO `phase_task_worker` (
                         task_id,
                         worker_id,
                         status
                     ) SELECT :taskId, id, :status
-                    FROM `user`
-                    WHERE public_id = :workerId";
+                    FROM
+                        `user`
+                    WHERE 
+                        public_id = :workerId";
                 $workerStatement = $instance->connection->prepare($taskWorkerQuery);
                 foreach ($taskWorkers as $worker) {
                     $workerStatement->execute([

@@ -194,7 +194,7 @@ class ProjectManagerModel extends Model
                         AND 
                             p3.status = :completedStatus
                     ) AS completed_projects,
-                    ($projectHistory) AS project_history
+                    COALESCE (($projectHistory), JSON_ARRAY()) AS project_history
                 FROM 
                     `user` AS u
                 LEFT JOIN
@@ -218,29 +218,6 @@ class ProjectManagerModel extends Model
             if (!$instance->hasData($result)) {
                 return null;
             }
-
-            // $user = new User(
-            //     id: (int)$result['id'],
-            //     publicId: UUID::fromBinary($result['public_id']),
-            //     firstName: $result['first_name'],
-            //     middleName: $result['middle_name'],
-            //     lastName: $result['last_name'],
-            //     role: Role::PROJECT_MANAGER,
-            //     gender: Gender::from($result['gender']),
-            //     birthDate: new DateTime($result['birth_date']),
-            //     contactNumber: $result['contact_number'],
-            //     email: $result['email'],
-            //     bio: $result['bio'],
-            //     profileLink: $result['profile_link'],
-            //     jobTitles: new JobTitleContainer(explode(',', $result['job_titles'])),
-            //     createdAt: new DateTime($result['created_at']),
-            //     confirmedAt: new DateTime($result['confirmed_at']),
-            //     deletedAt: new DateTime($result['deleted_at']),
-            //     additionalInfo: [
-            //         'totalProjects' => (int)$result['total_projects'],
-            //         'completedProjects' => (int)$result['completed_projects'],
-            //     ]
-            // );
 
             $result['role'] = Role::PROJECT_MANAGER;
             $result['additionalInfo'] = [

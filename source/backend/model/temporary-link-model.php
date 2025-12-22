@@ -40,13 +40,12 @@ class TemporaryLinkModel extends Model
             $instance = new self();
 
             $hashedToken = hash('sha256', $data['token']);
-            $query = "
-                INSERT INTO 
+            $query = 
+                "INSERT INTO 
                     `temporary_link` (user_email, token) 
                 VALUES 
                     (:email, :token1) 
-                ON DUPLICATE KEY UPDATE token = :token2
-            ";
+                ON DUPLICATE KEY UPDATE token = :token2";
             $statement = $instance->connection->prepare($query);
             $statement->execute([
                 ':email' => $data['email'],
@@ -84,11 +83,13 @@ class TemporaryLinkModel extends Model
         try {
             $instance = new self();
 
-            $query = "
-                SELECT * FROM `temporary_link`
-                WHERE token = :token
-                LIMIT 1
-            ";
+            $query = 
+                "SELECT * 
+                FROM 
+                    `temporary_link`
+                WHERE 
+                    token = :token
+                LIMIT 1";
             $statement = $instance->connection->prepare($query);
             $statement->execute([
                 ':token' => hash('sha256', $token)
@@ -129,10 +130,11 @@ class TemporaryLinkModel extends Model
 		try {
             $instance = new self();
 
-            $query = "
-                DELETE FROM `temporary_link`
-                WHERE token = :token    
-            ";
+            $query = 
+                "DELETE FROM 
+                    `temporary_link`
+                WHERE 
+                    token = :token";
             $statement = $instance->connection->prepare($query);
             $statement->execute([':token' => hash('sha256', $token)]);
 

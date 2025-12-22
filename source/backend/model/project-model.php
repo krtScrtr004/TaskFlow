@@ -75,8 +75,8 @@ class ProjectModel extends Model
 
         $instance = new self();
         try {
-            $queryString = "
-                SELECT 
+            $queryString = 
+                "SELECT 
                     p.*,
                     u.id AS u_id,
                     u.public_id AS u_public_id,
@@ -91,8 +91,7 @@ class ProjectModel extends Model
                 INNER JOIN
                     `user` AS u 
                 ON 
-                    p.manager_id = u.id
-            ";
+                    p.manager_id = u.id";
             $query = $instance->appendOptionsToFindQuery(
                 $instance->appendWhereClause($queryString, $whereClause), 
                 $paramOptions);
@@ -205,104 +204,107 @@ class ProjectModel extends Model
 
             // Conditionally add phases subquery
             if ($includePhases) {
-                $selectFields[] = "COALESCE(
-                    (
-                        SELECT JSON_ARRAYAGG(
-                            JSON_OBJECT(
-                                'id', pp.id,
-                                'public_id', HEX(pp.public_id),
-                                'name', pp.name,
-                                'description', pp.description,
-                                'status', pp.status,
-                                'start_date_time', pp.start_date_time,
-                                'completion_date_time', pp.completion_date_time,
-                                'actual_completion_date_time', pp.actual_completion_date_time
-                            )
-                        ) FROM 
-                            `project_phase` pp
-                        WHERE 
-                            pp.project_id = p.id
-                    ), JSON_ARRAY()
-                ) AS project_phases";
+                $selectFields[] = 
+                    "COALESCE(
+                        (
+                            SELECT JSON_ARRAYAGG(
+                                JSON_OBJECT(
+                                    'id', pp.id,
+                                    'public_id', HEX(pp.public_id),
+                                    'name', pp.name,
+                                    'description', pp.description,
+                                    'status', pp.status,
+                                    'start_date_time', pp.start_date_time,
+                                    'completion_date_time', pp.completion_date_time,
+                                    'actual_completion_date_time', pp.actual_completion_date_time
+                                )
+                            ) FROM 
+                                `project_phase` pp
+                            WHERE 
+                                pp.project_id = p.id
+                        ), JSON_ARRAY()
+                    ) AS project_phases";
             }
 
             // Conditionally add workers subquery
             if ($includeWorkers) {
-                $selectFields[] = "COALESCE(
-                    (
-                        SELECT JSON_ARRAYAGG(
-                            JSON_OBJECT(
-                                'id', w.id,
-                                    'public_id', HEX(w.public_id),
-                                    'first_name', w.first_name,
-                                    'middle_name', w.middle_name,
-                                    'last_name', w.last_name,
-                                    'email', w.email,
-                                    'profile_link', w.profile_link,
-                                    'gender', w.gender,
-                                    'status', pw.status,
-                                    'created_at', w.created_at,
-                                    'confirmed_at', w.confirmed_at,
-                                    'deleted_at', w.deleted_at,
-                                    'job_titles', COALESCE(
-                                        (
-                                            SELECT 
-                                                JSON_ARRAYAGG(wjt.title)
-                                            FROM 
-                                                `user_job_title` AS wjt
-                                            WHERE 
-                                                wjt.user_id = w.id
-                                        ), JSON_ARRAY()
-                                    )
-                            )
-                        ) FROM 
-                            `project_worker` AS pw
-                        INNER JOIN 
-                            `user` AS w 
-                        ON 
-                            pw.worker_id = w.id
-                        WHERE 
-                            pw.project_id = p.id
-                    ), JSON_ARRAY()
-                ) AS project_workers";
+                $selectFields[] = 
+                    "COALESCE(
+                        (
+                            SELECT JSON_ARRAYAGG(
+                                JSON_OBJECT(
+                                    'id', w.id,
+                                        'public_id', HEX(w.public_id),
+                                        'first_name', w.first_name,
+                                        'middle_name', w.middle_name,
+                                        'last_name', w.last_name,
+                                        'email', w.email,
+                                        'profile_link', w.profile_link,
+                                        'gender', w.gender,
+                                        'status', pw.status,
+                                        'created_at', w.created_at,
+                                        'confirmed_at', w.confirmed_at,
+                                        'deleted_at', w.deleted_at,
+                                        'job_titles', COALESCE(
+                                            (
+                                                SELECT 
+                                                    JSON_ARRAYAGG(wjt.title)
+                                                FROM 
+                                                    `user_job_title` AS wjt
+                                                WHERE 
+                                                    wjt.user_id = w.id
+                                            ), JSON_ARRAY()
+                                        )
+                                )
+                            ) FROM 
+                                `project_worker` AS pw
+                            INNER JOIN 
+                                `user` AS w 
+                            ON 
+                                pw.worker_id = w.id
+                            WHERE 
+                                pw.project_id = p.id
+                        ), JSON_ARRAY()
+                    ) AS project_workers";
             }
 
             // Select all tasks associated with the project
             if ($includeTasks) {
-                $selectFields[] = "COALESCE(
-                    (
-                        SELECT JSON_ARRAYAGG(
-                            JSON_OBJECT(
-                                'id', pt.id,
-                                'public_id', HEX(pt.public_id),
-                                'name', pt.name,
-                                'description', pt.description,
-                                'status', pt.status,
-                                'priority', pt.priority,
-                                'start_date_time', pt.start_date_time,
-                                'completion_date_time', pt.completion_date_time,
-                                'actual_completion_date_time', pt.actual_completion_date_time,
-                                'created_at', pt.created_at
-                            )
-                        ) FROM 
-                            `phase_task` AS pt
-                        LEFT JOIN 
-                            `project_phase` AS pp 
-                        ON 
-                            pt.phase_id = pp.id
-                        LEFT JOIN 
-                            `project` AS p2 
-                        ON 
-                            pp.project_id = p2.id
-                        WHERE 
-                            p2.id = p.id
-                    ), JSON_ARRAY()
-                ) AS project_tasks";
+                $selectFields[] = 
+                    "COALESCE(
+                        (
+                            SELECT JSON_ARRAYAGG(
+                                JSON_OBJECT(
+                                    'id', pt.id,
+                                    'public_id', HEX(pt.public_id),
+                                    'name', pt.name,
+                                    'description', pt.description,
+                                    'status', pt.status,
+                                    'priority', pt.priority,
+                                    'start_date_time', pt.start_date_time,
+                                    'completion_date_time', pt.completion_date_time,
+                                    'actual_completion_date_time', pt.actual_completion_date_time,
+                                    'created_at', pt.created_at
+                                )
+                            ) FROM 
+                                `phase_task` AS pt
+                            LEFT JOIN 
+                                `project_phase` AS pp 
+                            ON 
+                                pt.phase_id = pp.id
+                            LEFT JOIN 
+                                `project` AS p2 
+                            ON 
+                                pp.project_id = p2.id
+                            WHERE 
+                                p2.id = p.id
+                        ), JSON_ARRAY()
+                    ) AS project_tasks";
             }
 
             // Build the final query
-            $query = "
-                SELECT *
+            $query = 
+                "SELECT *
                 FROM (
                     SELECT 
                         " . implode(",\n                        ", $selectFields) . "
@@ -316,8 +318,7 @@ class ProjectModel extends Model
                         p.public_id = :projectId
                     ORDER BY
                         p.start_date_time ASC
-                ) AS projectData
-            ";
+                ) AS projectData";
 
             $statement = $instance->connection->prepare($query);
             $statement->execute([':projectId' => UUID::toBinary($projectId)]);
@@ -328,8 +329,8 @@ class ProjectModel extends Model
                 return null;
             }
 
-            $mangerData = json_decode($result['project_manager'], true);
-            $managerData['publicId'] = UUID::fromHex($mangerData['public_id']);
+            $managerData = json_decode($result['project_manager'], true);
+            $managerData['publicId'] = UUID::fromHex($managerData['public_id']);
             $result['manager'] = User::createPartial($managerData);
 
             $project = Project::createPartial($result);
@@ -470,8 +471,8 @@ class ProjectModel extends Model
 
         $instance = new self();
         try {
-            $query = "
-                SELECT
+            $query = 
+                "SELECT
                     p.*,
                     u.id AS u_id,
                     u.public_id AS u_public_id,
@@ -714,8 +715,8 @@ class ProjectModel extends Model
             $projectCompletionDateTime =   formatDateTime($project->getCompletionDateTime());
             $projectPhases             =   $project->getPhases();
 
-            $projectQuery = "
-                INSERT INTO `project` (
+            $projectQuery = 
+                "INSERT INTO `project` (
                     public_id,
                     name,
                     description,
@@ -752,8 +753,8 @@ class ProjectModel extends Model
 
             if ($projectPhases && $projectPhases->count() > 0) {
                 // Phase Insertion Query
-                $projectPhaseQuery = "
-                    INSERT INTO `project_phase` (
+                $projectPhaseQuery = 
+                    "INSERT INTO `project_phase` (
                         project_id,
                         public_id,
                         name,
@@ -784,8 +785,8 @@ class ProjectModel extends Model
                     $phaseId = $instance->connection->lastInsertId();
 
                     // Phase Budget Insertion Query
-                    $projectPhaseBudgetQuery = "
-                        INSERT INTO `project_phase_budget` (
+                    $projectPhaseBudgetQuery = 
+                        "INSERT INTO `project_phase_budget` (
                             phase_id,
                             budget,
                             contingency_rate,
@@ -908,8 +909,8 @@ class ProjectModel extends Model
             }
 
             if (!empty($updateFields)) {
-                $projectQuery = "
-                    UPDATE `project` 
+                $projectQuery = 
+                    "UPDATE `project` 
                     SET " . implode(', ', $updateFields) . 
                     " WHERE " . (
                         is_int($data['id']) 
@@ -1196,8 +1197,8 @@ class ProjectModel extends Model
      */ 
     private static function projectStatistics(int|UUID $projectId)
     {
-        $query = "
-            SELECT 
+        $query = 
+            "SELECT 
                 p.id AS id,
                 p.public_id AS public_id,
                 p.name AS name,
@@ -1299,8 +1300,8 @@ class ProjectModel extends Model
      *      Returns null if the project was not found or no row was returned.
      */
     private static function workerCount(int|UUID $projectId) {
-        $query = "
-            SELECT 
+        $query = 
+            "SELECT 
                 (
                     SELECT 
                         COUNT(DISTINCT ptw.worker_id)
@@ -1438,8 +1439,8 @@ class ProjectModel extends Model
      */
     private static function periodicTaskCount(int|UUID $projectId) 
     {
-        $query = "
-            SELECT 
+        $query = 
+            "SELECT 
                 YEAR(pt.created_at) AS year,
                 MONTH(pt.created_at) AS month,
                 COUNT(*) AS task_count
@@ -1517,8 +1518,8 @@ class ProjectModel extends Model
      */
     private static function topWorkersQuery(int|UUID $projectId): ?array
     {
-        $query = "
-            SELECT 
+        $query = 
+            "SELECT 
                 ws.id,
                 ws.first_name,
                 ws.last_name,
@@ -1664,8 +1665,7 @@ class ProjectModel extends Model
             ) AS ws
             ORDER BY 
                 overall_score DESC
-            LIMIT 10
-        ";
+            LIMIT 10";
 
         $instance = new self();
         $statement = $instance->connection->prepare($query);

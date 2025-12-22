@@ -52,12 +52,11 @@ class RateLimiterModel extends Model
 
             $expiresAt = time() + $timeWindow;
 
-            $query = "
-                INSERT INTO
+            $query = 
+                "INSERT INTO
                     `rate_limiter` (ip, endpoint, expires_at)
                 VALUES
-                    (:ip, :endpoint, :expiresAt)
-            ";
+                    (:ip, :endpoint, :expiresAt)";
             $statement = $instance->connection->prepare($query);
             $statement->execute([
                 ':ip'           => $ip,
@@ -101,8 +100,8 @@ class RateLimiterModel extends Model
         try {
             $instance = new self();
 
-            $query = "
-                SELECT 
+            $query = 
+                "SELECT 
                     *
                 FROM 
                     `rate_limiter`
@@ -110,8 +109,7 @@ class RateLimiterModel extends Model
                     ip = :ip
                 AND
                     endpoint = :endpoint
-                LIMIT 1
-            ";
+                LIMIT 1";
             $statement = $instance->connection->prepare($query);
             $statement->execute([
                 ':ip'       => $ip,
@@ -177,8 +175,8 @@ class RateLimiterModel extends Model
 
             $expiresAt = time() + $timeWindow;
 
-            $query = "
-                UPDATE
+            $query = 
+                "UPDATE
                     `rate_limiter`
                 SET
                     count = :count,
@@ -186,8 +184,7 @@ class RateLimiterModel extends Model
                 WHERE
                     ip = :ip
                 AND
-                    endpoint = :endpoint
-            ";
+                    endpoint = :endpoint";
             $statement = $instance->connection->prepare($query);
             $statement->execute([
                 ':ip'           => $ip,

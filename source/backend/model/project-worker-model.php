@@ -5,6 +5,7 @@ namespace App\Model;
 use App\Abstract\Model;
 use App\Container\JobTitleContainer;
 use App\Container\ProjectContainer;
+use App\Container\TaskContainer;
 use App\Container\WorkerContainer;
 use App\Core\UUID;
 use App\Dependent\Phase;
@@ -56,8 +57,8 @@ class ProjectWorkerModel extends Model
 
 		$instance = new self();
         try {
-            $queryString = "
-                SELECT 
+            $queryString = 
+                "SELECT 
                     u.public_id,
                     u.first_name,
                     u.middle_name,
@@ -130,8 +131,7 @@ class ProjectWorkerModel extends Model
                 LEFT JOIN
                     `user_job_title` AS ujt
                 ON 
-                    u.id = ujt.user_id
-            ";
+                    u.id = ujt.user_id";
             $query = $instance->appendOptionsToFindQuery(
                 $instance->appendWhereClause($queryString, $whereClause), 
                 $paramOptions);
@@ -207,8 +207,8 @@ class ProjectWorkerModel extends Model
             $where = [];
             $params = [];
 
-            $query = "
-                SELECT 
+            $query = 
+                "SELECT 
                     u.id,
                     u.public_id,
                     u.first_name,
@@ -233,8 +233,7 @@ class ProjectWorkerModel extends Model
                 LEFT JOIN
                     `user_job_title` AS ujt
                 ON
-                    u.id = ujt.user_id
-            ";
+                    u.id = ujt.user_id";
 
             if (trimOrNull($key))  {
                 $where[] = "
@@ -554,13 +553,21 @@ class ProjectWorkerModel extends Model
                 FROM
                     `user` AS u
                 LEFT JOIN
+                    `project_worker` AS pw
+                ON
+                    u.id = pw.worker_id
+                INNER JOIN
+                    `project` AS p
+                ON
+                    pw.project_id = p.id
+                LEFT JOIN
                     `user_job_title` AS ujt
                 ON 
                     u.id = ujt.user_id
                 WHERE
                     $where
                 GROUP BY
-                    u.id
+                    u.id, p.id
                 LIMIT 1 ";
             $statement = $instance->connection->prepare($query);
             $statement->execute($params);
@@ -586,14 +593,17 @@ class ProjectWorkerModel extends Model
 
                     $phaseLists = $project['phases'];
                     foreach ($phaseLists as $phase) {
-                        $phaseEntry = Phase::createPartial($phase);
-
                         $taskLists = $phase['tasks'];
+
+                        $tasks = new TaskContainer();
                         foreach ($taskLists as $task) {
-                            $phaseEntry->addTask(
+                            $tasks->add(
                                 Task::createPartial($task)
                             );
                         }
+                        $phase['tasks'] = $tasks;
+                        $phaseEntry = Phase::createPartial($phase);
+
                         $entry->addPhase($phaseEntry);
                     }
                     $projects->add($entry);
@@ -745,8 +755,8 @@ class ProjectWorkerModel extends Model
                 $params[':projectId2'] = $params[':projectId'];
             }
 
-            $query = "
-                SELECT 
+            $query = 
+                "SELECT 
                     u.id,
                     u.public_id,
                     u.first_name,
@@ -821,10 +831,18 @@ class ProjectWorkerModel extends Model
                             p2.status = '" . WorkStatus::COMPLETED->value . "'
                         AND 
                             pw3.status != '" . WorkerStatus::TERMINATED->value . "'
-                    ) AS completed_projects
-                    $projectHistory
+                    ) AS completed_projects,
+                    COALESCE($projectHistory, JSON_ARRAY()) AS project_history
                 FROM
                     `user` AS u
+                LEFT JOIN
+                    `project_worker` AS pw
+                ON
+                    u.id = pw.worker_id
+                INNER JOIN
+                    `project` AS p
+                ON
+                    pw.project_id = p.id
                 LEFT JOIN
                     `user_job_title` AS ujt
                 ON 
@@ -832,7 +850,7 @@ class ProjectWorkerModel extends Model
                 WHERE
                     $where
                 GROUP BY
-                    u.id
+                    u.id, p.id
                 ORDER BY
                     u.last_name ASC
             ";
@@ -1020,8 +1038,8 @@ class ProjectWorkerModel extends Model
         try {
             $instance->connection->beginTransaction();
 
-            $insertQuery = "
-                INSERT INTO `project_worker` (
+            $insertQuery = 
+                "INSERT INTO `project_worker` (
                     project_id, 
                     worker_id, 
                     status
@@ -1104,8 +1122,8 @@ class ProjectWorkerModel extends Model
 
         try {
             $instance = new self();
-            $query = "
-                SELECT *
+            $query = 
+                "SELECT *
                 FROM 
                     `project_worker` AS pw
                 INNER JOIN 
@@ -1286,8 +1304,8 @@ class ProjectWorkerModel extends Model
         }
 
         try {
-            $query = "
-                DELETE FROM
+            $query = 
+                "DELETE FROM
                     `project_worker`
                 WHERE 
                     project_id = " . (is_int($data['projectId']) ? ':projectId' : '(
@@ -1304,8 +1322,7 @@ class ProjectWorkerModel extends Model
                         FROM 
                             `user` 
                         WHERE
-                            public_id = :workerId)') . "
-            ";
+                            public_id = :workerId)') . "";
 
             $instance = new self();
             $statement = $instance->connection->prepare($query);

@@ -58,8 +58,8 @@ class UserModel extends Model
         try {
             Csrf::protect();
 
-            $queryString = "    
-                SELECT 
+            $queryString = 
+                "SELECT 
                     u.*,
                     GROUP_CONCAT(ujt.title) AS job_titles,
                     (
@@ -194,7 +194,14 @@ class UserModel extends Model
 
         $instance = new self();
         try {
-            $searchRole = "SELECT id, role FROM `user` WHERE " . (is_int($userId) ? "id" : "public_id") . " = :userId LIMIT 1";
+            $searchRole = 
+                "SELECT 
+                    id, 
+                    role 
+                FROM 
+                    `user` 
+                WHERE " . (is_int($userId) ? "id" : "public_id") . " = :userId 
+                LIMIT 1";
             $statement = $instance->connection->prepare($searchRole);
             $statement->execute([':userId' => is_int($userId) ? $userId : UUID::toBinary($userId)]);
             $result = $statement->fetch();
@@ -294,8 +301,8 @@ class UserModel extends Model
                     : UUID::toBinary($excludeUserId);
             }
 
-            $query = "
-                SELECT 
+            $query = 
+                "SELECT 
                     (CASE WHEN " . ($email ? "email = :email1" : "0") . " THEN 1 ELSE 0 END) as email_duplicate,
                     (CASE WHEN " . ($contactNumber ? "contact_number = :contactNumber1" : "0") . " THEN 1 ELSE 0 END) as contact_duplicate
                 FROM `user`
@@ -402,10 +409,8 @@ class UserModel extends Model
             $params = [];
 
             if (trimOrNull($key)) {
-                $where[] = "
-                    MATCH(u.first_name, u.middle_name, u.last_name, u.email, u.bio)
-                    AGAINST (:key IN NATURAL LANGUAGE MODE)
-                ";
+                $where[] = "MATCH(u.first_name, u.middle_name, u.last_name, u.email, u.bio)
+                    AGAINST (:key IN NATURAL LANGUAGE MODE)";
                 $params[':key'] = $key;
             }
 
@@ -417,8 +422,8 @@ class UserModel extends Model
             if ($status) {
                 // Special case: UNASSIGNED means no active work as manager OR worker
                 if ($status === WorkerStatus::UNASSIGNED) {
-                    $where[] = "
-                        NOT EXISTS (
+                    $where[] = 
+                        "NOT EXISTS (
                             SELECT 1
                             FROM 
                                 `project` AS p
@@ -454,8 +459,7 @@ class UserModel extends Model
                                 pt.status NOT IN (
                                     :completedStatusUnassigned3, :cancelledStatusUnassigned3
                                 )
-                        )
-                    ";
+                        )";
                     $params[':completedStatusUnassigned1'] = WorkStatus::COMPLETED->value;
                     $params[':cancelledStatusUnassigned1'] = WorkStatus::CANCELLED->value;
                     $params[':completedStatusUnassigned2'] = WorkStatus::COMPLETED->value;
@@ -463,8 +467,8 @@ class UserModel extends Model
                     $params[':completedStatusUnassigned3'] = WorkStatus::COMPLETED->value;
                     $params[':cancelledStatusUnassigned3'] = WorkStatus::CANCELLED->value;
                 } else {
-                    $where[] = "
-                        ((EXISTS (
+                    $where[] = 
+                        "((EXISTS (
                             SELECT 1
                             FROM 
                                 `project` p
@@ -491,8 +495,7 @@ class UserModel extends Model
                                 ptw.worker_id = u.id
                             AND 
                                 ptw.status = :workerStatus2
-                        )))
-                    ";
+                        )))";
                     $params[':completedStatusUnassigned'] = WorkStatus::COMPLETED->value;
                     $params[':cancelledStatusUnassigned'] = WorkStatus::CANCELLED->value;
                     $params[':workerStatus1'] = $status->value;
@@ -552,8 +555,8 @@ class UserModel extends Model
             $instance->connection->beginTransaction();
 
             // Insert User Data
-            $userQuery = "
-                INSERT INTO `user` (
+            $userQuery = 
+                "INSERT INTO `user` (
                     public_id, 
                     first_name, 
                     middle_name, 
@@ -579,8 +582,7 @@ class UserModel extends Model
                     :bio, 
                     :profileLink, 
                     :password
-                )
-            ";
+                )";
             $statement = $instance->connection->prepare($userQuery);
             $statement->execute([
                 ':publicId'         => UUID::toBinary($uuid),
@@ -600,10 +602,14 @@ class UserModel extends Model
 
             // Insert Job Titles, if any
             if (!empty($jobTitles)) {
-                $jobTitleQuery = "
-                    INSERT INTO `user_job_title` (user_id, title)
-                    VALUES (:userId, :title)
-                ";
+                $jobTitleQuery = 
+                    "INSERT INTO `user_job_title` (
+                    user_id, 
+                    title
+                    ) VALUES (
+                        :userId, 
+                        :title
+                    )";
                 $jobTitleStatement = $instance->connection->prepare($jobTitleQuery);
                 foreach ($jobTitles as $title) {
                     $jobTitleStatement->execute([
@@ -786,11 +792,13 @@ class UserModel extends Model
         $instance = new self();
         try {        
             if (count($jobTitlesToDelete) > 0) {
-                $deleteQuery = "
-                    DELETE FROM `user_job_title`
-                    WHERE user_id = " . (is_int($userId) ? ":userId" : "(SELECT id FROM users WHERE public_id = :userId)") . "
-                    AND title = :title
-                ";
+                $deleteQuery = 
+                    "DELETE FROM 
+                        `user_job_title`
+                    WHERE 
+                        user_id = " . (is_int($userId) ? ":userId" : "(SELECT id FROM users WHERE public_id = :userId)") . "
+                    AND 
+                        title = :title";
 
                 foreach ($jobTitlesToDelete as $title) {
                     $deleteStatement = $instance->connection->prepare($deleteQuery);
@@ -802,14 +810,13 @@ class UserModel extends Model
             }
 
             if (count($jobTitlesToAdd) > 0) {
-                $insertQuery = "
-                    INSERT INTO
+                $insertQuery = 
+                    "INSERT INTO
                         `user_job_title` (user_id, title)
                     VALUES (
                         " . (is_int($userId) ? ":userId" : "(SELECT id FROM users WHERE public_id = :userId)") . "   
                         , :title
-                    )
-                ";
+                    )";
 
                 foreach ($jobTitlesToAdd as $title) {
                     $insertStatement = $instance->connection->prepare($insertQuery);

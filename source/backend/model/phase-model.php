@@ -47,8 +47,8 @@ class PhaseModel extends Model
 
         $instance = new self();
         try {
-            $queryString = "
-                SELECT 
+            $queryString = 
+                "SELECT 
                     pp.id,
                     pp.public_id,
                     pp.name,
@@ -265,9 +265,9 @@ class PhaseModel extends Model
 
             $taskQuery = '';
             if ($includeTasks) {
-                $taskQuery = ", COALESCE(
-                    (
-                        SELECT CONCAT('[', GROUP_CONCAT(
+                $taskQuery = 
+                    "SELECT 
+                        JSON_ARRAYAGG(
                             JSON_OBJECT(
                                 'id', pt.id,
                                 'public_id', HEX(pt.public_id),
@@ -280,24 +280,20 @@ class PhaseModel extends Model
                                 'created_at', pt.created_at,
                                 'updated_at', pt.updated_at
                             )
-                            ORDER BY pt.start_date_time ASC SEPARATOR ','
-                        ), ']')
-                        FROM 
-                            `phase_task` AS pt
-                        WHERE 
-                            pt.phase_id = pp.id
-                    ),
-                    '[]'
-                ) AS tasks";
+                        )
+                    FROM
+                        `phase_task` AS pt
+                    WHERE 
+                        pt.phase_id = pp.id";
             }
 
-            $query = "
-                SELECT 
+            $query = 
+                "SELECT 
                     pp.*,  
                     ppb.budget,
                     ppb.contingency_rate,
-                    ppb.notes
-                    {$taskQuery}
+                    ppb.notes,
+                    COALESCE (($taskQuery), JSON_ARRAY()) AS tasks
                 FROM 
                     `project_phase` AS pp
                 INNER JOIN 
@@ -322,7 +318,7 @@ class PhaseModel extends Model
             ]);
             $result = $statement->fetchAll();
 
-            if (!$instance->hasData($result)) {
+                if (!$instance->hasData($result)) {
                 return null;
             }
 
@@ -454,8 +450,8 @@ class PhaseModel extends Model
         try {
             $instance->connection->beginTransaction();
 
-            $phaseInsertQuery = "
-                INSERT INTO `project_phase` (
+            $phaseInsertQuery = 
+                "INSERT INTO `project_phase` (
                     project_id,
                     public_id,
                     name,

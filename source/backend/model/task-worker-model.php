@@ -50,8 +50,8 @@ class TaskWorkerModel extends Model
 
         $instance = new self();
         try {
-            $queryString = "
-                SELECT 
+            $queryString =
+                "SELECT 
                     u.id,
                     u.public_id,
                     u.first_name,
@@ -110,8 +110,7 @@ class TaskWorkerModel extends Model
                 LEFT JOIN
                     `user_job_title` AS ujt
                 ON 
-                    u.id = ujt.user_id
-            ";
+                    u.id = ujt.user_id";
             $query = $instance->appendOptionsToFindQuery(
                 $instance->appendWhereClause($queryString, $whereClause),
                 $paramOptions
@@ -388,8 +387,8 @@ class TaskWorkerModel extends Model
                     throw new InvalidArgumentException('Project ID is required.');
                 }
 
-                $query = "
-                    SELECT 
+                $query =
+                    "SELECT 
                         u.id,
                         u.public_id,
                         u.first_name,
@@ -419,8 +418,7 @@ class TaskWorkerModel extends Model
                     LEFT JOIN
                         `user_job_title` AS ujt
                     ON
-                        u.id = ujt.user_id
-                ";
+                        u.id = ujt.user_id";
 
                 $params[':projectIdJoin'] = is_int($projectId)
                     ? $projectId
@@ -429,19 +427,20 @@ class TaskWorkerModel extends Model
 
                 if ($taskId && ($options['excludeTaskTerminated'])) {
                     // Exclude workers terminated from this specific task
-                    $where[] = "NOT EXISTS (
-                        SELECT 1
-                        FROM 
-                            `phase_task_worker` AS ptw3
-                        WHERE 
-                            ptw3.worker_id = u.id
-                        AND 
-                            ptw3.task_id = " . (is_int($taskId) 
-                            ? ":taskIdTermCheck" 
-                            : "(SELECT id FROM `phase_task` WHERE public_id = :taskIdTermCheck)") . "
-                        AND 
-                            ptw3.status = :terminatedStatus
-                    )";
+                    $where[] = 
+                        "NOT EXISTS (
+                            SELECT 1
+                            FROM 
+                                `phase_task_worker` AS ptw3
+                            WHERE 
+                                ptw3.worker_id = u.id
+                            AND 
+                                ptw3.task_id = " . (is_int($taskId) 
+                                ? ":taskIdTermCheck" 
+                                : "(SELECT id FROM `phase_task` WHERE public_id = :taskIdTermCheck)") . "
+                            AND 
+                                ptw3.status = :terminatedStatus
+                        )";
                     $params[':terminatedStatus'] = WorkerStatus::TERMINATED->value;
                     $params[':taskIdTermCheck'] = is_int($taskId)
                         ? $taskId
@@ -449,8 +448,8 @@ class TaskWorkerModel extends Model
                 }
             } else {
                 // For assigned/terminated: query task workers directly
-                $query = "
-                    SELECT 
+                $query = 
+                    "SELECT 
                         u.id,
                         u.public_id,
                         u.first_name,
@@ -487,8 +486,7 @@ class TaskWorkerModel extends Model
                     LEFT JOIN
                         `user_job_title` AS ujt
                     ON
-                        u.id = ujt.user_id
-                ";
+                        u.id = ujt.user_id";
 
                 if ($taskId) {
                     $where[] = is_int($taskId)
@@ -661,23 +659,22 @@ class TaskWorkerModel extends Model
 
             $projectJoin = '';
             if ($projectId) {
-                $projectJoin = "
-                    INNER JOIN
+                $projectJoin = 
+                    "INNER JOIN
                         `project_phase` AS pp
                     ON
                         pp.id = pt.phase_id
                     INNER JOIN
                         `project` AS p
                     ON
-                        p.id = pp.project_id
-                ";
+                        p.id = pp.project_id";
                 $params[':projectId'] = ($projectId instanceof UUID)
                     ? UUID::toBinary($projectId)
                     : $projectId;
             }
 
-            $query = "
-                SELECT *
+            $query = 
+                "SELECT *
                 FROM 
                     `phase_task_worker` AS ptw
                 INNER JOIN
@@ -695,8 +692,7 @@ class TaskWorkerModel extends Model
                     " . (is_int($userId) ? 'u.id' : 'u.public_id') . " = :userId
                     " . ($projectId ? "AND " . (is_int($projectId) ? 'p.id' : 'p.public_id') . " = :projectId" : '') . "
                 AND 
-                    ptw.status != :terminatedStatus
-            ";
+                    ptw.status != :terminatedStatus";
             $statement = $instance->connection->prepare($query);
             $statement->execute($params);
             return $instance->hasData($statement->fetchAll());
@@ -758,8 +754,8 @@ class TaskWorkerModel extends Model
             $isTaskInt = is_int($taskId);
             $isWorkerInt = is_int($data[0]);
             
-            $insertQuery = "
-                INSERT INTO 
+            $insertQuery = 
+                "INSERT INTO 
                     `phase_task_worker` (task_id, worker_id, status)
                 VALUES (
                     " . ($isTaskInt 
@@ -914,8 +910,8 @@ class TaskWorkerModel extends Model
         }
 
         try {
-            $query = "
-                DELETE FROM
+            $query = 
+                "DELETE FROM
                     `phase_task_worker`
                 WHERE 
                     task_id = " . (is_int($data['taskId']) ? ':taskId' : '(
@@ -932,8 +928,7 @@ class TaskWorkerModel extends Model
                         FROM 
                             `user` 
                         WHERE
-                            public_id = :workerId)') . "
-            ";
+                            public_id = :workerId)') . "";
 
             $instance = new self();
             $statement = $instance->connection->prepare($query);
