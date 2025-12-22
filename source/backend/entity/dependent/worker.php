@@ -64,7 +64,7 @@ class Worker extends User
         ?DateTime $deletedAt = null,
         array $additionalInfo = []
     ) {
-        parent::__construct(
++        parent::__construct(
             id: $id,
             publicId: $publicId,
             firstName: $firstName,

@@ -452,12 +452,7 @@ class Task implements Entity
 
         // Handle publicId conversion (accept UUID or string)
         if (isset($data['publicId']) && !($data['publicId'] instanceof UUID)) {
-            try {
-                $defaults['publicId'] = UUID::fromString($data['publicId']);
-            } catch (Exception $e) {
-                // fall back to generated UUID
-                $defaults['publicId'] = UUID::fromBinary($data['publicId']);
-            }
+            $defaults['publicId'] = UUID::tryFromString(trimOrNull($data['publicId']));
         }
 
         // Convert workers to WorkerContainer when provided as array
@@ -601,7 +596,7 @@ class Task implements Entity
         if ($data['publicId'] instanceof UUID) {
             $publicId = $data['publicId'];
         } else if (is_string($data['publicId'])) {
-            $publicId = UUID::fromBinary(trimOrNull($data['publicId']));
+            $publicId = UUID::tryFromString(trimOrNull($data['publicId']));
         }
 
         $workers = (!($data['workers'] instanceof WorkerContainer))

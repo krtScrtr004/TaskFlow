@@ -3,6 +3,7 @@
 namespace App\Core;
 
 use App\Exception\ValidationException;
+use Exception;
 use Ramsey\Uuid\Exception\InvalidUuidStringException;
 use Ramsey\Uuid\Uuid as RamseyUuid;
 use Ramsey\Uuid\UuidInterface;
@@ -159,4 +160,83 @@ class UUID
             throw new ValidationException('Invalid UUID string provided.');
         }
     }
+
+    /**
+     * Attempts to create a UUID instance from a string representation.
+     *
+     * This method inspects the given $uuidString and tries the supported encodings
+     * in order: canonical (hyphenated) form, hexadecimal form, and raw binary form.
+     * When a format matches, it delegates to the corresponding factory method:
+     * UUID::fromString(), UUID::fromHex(), or UUID::fromBinary(). If the input does
+     * not match any supported format, null is returned.
+     *
+     * @param string $uuidString UUID value in canonical (hyphenated), hex, or binary form
+     *
+     * @return UUID|null A UUID instance on success, or null if the input format is unsupported or invalid
+     */
+    public static function tryFromString(string $uuidString): ?UUID
+    {
+        if (self::isCanonical($uuidString)) {
+            return UUID::fromString($uuidString);
+        }
+
+        if (self::isHex($uuidString)) {
+            return UUID::fromHex($uuidString);
+        }
+
+        if (self::isBinary($uuidString)) {
+            return UUID::fromBinary($uuidString);
+        }
+
+        return null;
+    }
+
+    /**
+     * Determines whether a string is a canonical UUID (RFC 4122) in hyphenated form.
+     *
+     * Validates that the value matches the 8-4-4-4-12 hexadecimal group pattern,
+     * enforces a UUID version of 1–5 in the third group and the RFC 4122 variant
+     * (8, 9, a, or b) in the fourth group using a case-insensitive regular expression.
+     *
+     * @param string $value The string to validate as a canonical UUID.
+     * @return bool True if the string is a canonical hyphenated UUID (versions 1-5), false otherwise.
+     */
+    private static function isCanonical(string $value): bool
+    {
+        return preg_match(
+            '/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i',
+            $value
+        ) === 1;
+    }
+
+    /**
+     * Validates that a string is a 32-character hexadecimal value.
+     *
+     * This method checks whether the provided value consists solely of hexadecimal
+     * characters (0-9, a-f) and is exactly 32 characters long. The validation is
+     * performed case-insensitively.
+     *
+     * @param string $value Input string to validate
+     * @return bool True if $value is a 32-character hexadecimal string, false otherwise
+     */
+    private static function isHex(string $value): bool
+    {
+        return preg_match('/^[0-9a-f]{32}$/i', $value) === 1;
+    }
+
+    /**
+     * Determines whether the provided string is a 16-byte binary value.
+     *
+     * This method checks if the given $value has exactly 16 bytes in length,
+     * which is commonly used to identify raw 128-bit binary UUIDs (as opposed
+     * to their textual/hex representations).
+     *
+     * @param string $value Input string to evaluate (expected raw binary)
+     * @return bool True if $value is exactly 16 bytes long, false otherwise
+     */
+    private static function isBinary(string $value): bool
+    {
+        return strlen($value) === 16;
+    }
+
 }

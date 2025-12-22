@@ -445,11 +445,7 @@ class Phase implements Entity
 
         // Handle UUID conversion
         if (isset($data['publicId']) && !($data['publicId'] instanceof UUID)) {
-            try {
-                $defaults['publicId'] = UUID::fromString($data['publicId']);
-            } catch (Exception $e) {
-                $defaults['publicId'] = UUID::fromBinary($data['publicId']);
-            }
+            $defaults['publicId'] = UUID::tryFromString(trimOrNull($data['publicId']));
         }
 
         // Handle DateTime conversions
@@ -578,7 +574,7 @@ class Phase implements Entity
         if ($data['publicId'] instanceof UUID) {
             $publicId = $data['publicId'];
         } else if (is_string($data['publicId'])) {
-            $publicId = UUID::fromBinary(trimOrNull($data['publicId']));
+            $publicId = UUID::tryFromString(trimOrNull($data['publicId']));
         }
 
         $startDateTime = (is_string($data['startDateTime']))
