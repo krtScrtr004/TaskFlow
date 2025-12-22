@@ -35,7 +35,7 @@ export function searchWorkerEvent(projectId, localEndpoint, options = {}) {
         return
     }
 
-    const button = searchBarForm.querySelector('#search_assigned_worker_button') || searchBarForm.querySelector('#search_worker_button')
+    const button = searchBarForm.querySelector('#search_bar_button')
     if (!button) {
         console.error('Search button not found.')
         return
@@ -105,9 +105,7 @@ async function searchForWorker(e, projectId, endpoint, container, options = {}) 
     }
 
     try {
-        const searchTerm = container.parentElement.querySelector('input[type="text"]#search_worker')
-            ? container.parentElement.querySelector('input[type="text"]#search_worker').value.trim()
-            : container.parentElement.querySelector('input[type="text"]#search_assigned_worker').value.trim()
+        const searchTerm = container.querySelector('input[type="text"]#search_bar_input').value.trim()
         
         // Await fetch completion before setting up infinite scroll
         const workers = await fetchWorkers(endpoint, searchTerm, 0)
