@@ -193,13 +193,12 @@ class ProjectModel extends Model
                     'job_titles', COALESCE(
                         (
                             SELECT 
-                                CONCAT('[', GROUP_CONCAT(CONCAT('\"', mjt.title, '\"')), ']')
-                            FROM 
+                                JSON_ARRAYAGG(mjt.title)
+                            FROM
                                 `user_job_title` AS mjt
                             WHERE 
                                 mjt.user_id = m.id
-                        ),
-                        '[]'
+                        ), JSON_ARRAY()
                     )
                 ) AS project_manager"
             ];
@@ -208,7 +207,7 @@ class ProjectModel extends Model
             if ($includePhases) {
                 $selectFields[] = "COALESCE(
                     (
-                        SELECT CONCAT('[', GROUP_CONCAT(
+                        SELECT JSON_ARRAYAGG(
                             JSON_OBJECT(
                                 'id', pp.id,
                                 'public_id', HEX(pp.public_id),
@@ -218,14 +217,12 @@ class ProjectModel extends Model
                                 'start_date_time', pp.start_date_time,
                                 'completion_date_time', pp.completion_date_time,
                                 'actual_completion_date_time', pp.actual_completion_date_time
-                            ) ORDER BY pp.start_date_time ASC SEPARATOR ','
-                        ), ']')
-                        FROM 
+                            )
+                        ) FROM 
                             `project_phase` pp
                         WHERE 
                             pp.project_id = p.id
-                    ),
-                    '[]'
+                    ), JSON_ARRAY()
                 ) AS project_phases";
             }
 
@@ -233,34 +230,32 @@ class ProjectModel extends Model
             if ($includeWorkers) {
                 $selectFields[] = "COALESCE(
                     (
-                        SELECT CONCAT('[', GROUP_CONCAT(
+                        SELECT JSON_ARRAYAGG(
                             JSON_OBJECT(
                                 'id', w.id,
-                                'public_id', HEX(w.public_id),
-                                'first_name', w.first_name,
-                                'middle_name', w.middle_name,
-                                'last_name', w.last_name,
-                                'email', w.email,
-                                'profile_link', w.profile_link,
-                                'gender', w.gender,
-                                'status', pw.status,
-                                'created_at', w.created_at,
-                                'confirmed_at', w.confirmed_at,
-                                'deleted_at', w.deleted_at,
-                                'job_titles', COALESCE(
-                                    (
-                                        SELECT 
-                                            CONCAT('[', GROUP_CONCAT(CONCAT('\"', wjt.title, '\"')), ']')
-                                        FROM 
-                                            `user_job_title` AS wjt
-                                        WHERE 
-                                            wjt.user_id = w.id
-                                    ),
-                                    '[]'
-                                )
-                            ) ORDER BY w.last_name SEPARATOR ','
-                        ), ']')
-                        FROM 
+                                    'public_id', HEX(w.public_id),
+                                    'first_name', w.first_name,
+                                    'middle_name', w.middle_name,
+                                    'last_name', w.last_name,
+                                    'email', w.email,
+                                    'profile_link', w.profile_link,
+                                    'gender', w.gender,
+                                    'status', pw.status,
+                                    'created_at', w.created_at,
+                                    'confirmed_at', w.confirmed_at,
+                                    'deleted_at', w.deleted_at,
+                                    'job_titles', COALESCE(
+                                        (
+                                            SELECT 
+                                                JSON_ARRAYAGG(wjt.title)
+                                            FROM 
+                                                `user_job_title` AS wjt
+                                            WHERE 
+                                                wjt.user_id = w.id
+                                        ), JSON_ARRAY()
+                                    )
+                            )
+                        ) FROM 
                             `project_worker` AS pw
                         INNER JOIN 
                             `user` AS w 
@@ -268,8 +263,7 @@ class ProjectModel extends Model
                             pw.worker_id = w.id
                         WHERE 
                             pw.project_id = p.id
-                    ),
-                    '[]'
+                    ), JSON_ARRAY()
                 ) AS project_workers";
             }
 
@@ -277,7 +271,7 @@ class ProjectModel extends Model
             if ($includeTasks) {
                 $selectFields[] = "COALESCE(
                     (
-                        SELECT CONCAT('[', GROUP_CONCAT(
+                        SELECT JSON_ARRAYAGG(
                             JSON_OBJECT(
                                 'id', pt.id,
                                 'public_id', HEX(pt.public_id),
@@ -289,9 +283,8 @@ class ProjectModel extends Model
                                 'completion_date_time', pt.completion_date_time,
                                 'actual_completion_date_time', pt.actual_completion_date_time,
                                 'created_at', pt.created_at
-                            ) ORDER BY pt.start_date_time DESC SEPARATOR ','
-                        ), ']')
-                        FROM 
+                            )
+                        ) FROM 
                             `phase_task` AS pt
                         LEFT JOIN 
                             `project_phase` AS pp 
@@ -303,8 +296,7 @@ class ProjectModel extends Model
                             pp.project_id = p2.id
                         WHERE 
                             p2.id = p.id
-                    ),
-                    '[]'
+                    ), JSON_ARRAY()
                 ) AS project_tasks";
             }
 
