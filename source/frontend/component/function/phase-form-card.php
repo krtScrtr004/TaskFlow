@@ -103,8 +103,8 @@ function phaseFormCard(?Phase $phase): bool|string
                 </div>
             </section>
 
-            <div class="input-label-container">
-                <div class="input-rules-container">
+            <div class="input-rules-container">
+                <div class="input-label-container">
                     <div class="text-w-icon">
                         <img src="<?= ICON_PATH . 'description_w.svg' ?>" alt="Budget Note" title="Budget Note" height="24">
                         <label for="budget_note">Budget Note</label>
@@ -119,6 +119,7 @@ function phaseFormCard(?Phase $phase): bool|string
             </div>
 
             <section class="row-inputs flex-row">
+
                 <div class="input-rules-container">
                     <div class="input-label-container">
                         <div class="text-w-icon">

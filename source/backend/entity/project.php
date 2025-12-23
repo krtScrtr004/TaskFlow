@@ -16,7 +16,6 @@ use App\Exception\ValidationException;
 use App\Validator\UuidValidator;
 use App\Validator\WorkValidator;
 use DateTime;
-use Exception;
 
 class Project implements Entity
 {

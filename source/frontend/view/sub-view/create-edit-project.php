@@ -1,14 +1,40 @@
 <?php
 // TODO: Fix table width on smaller screens
 
+use App\Container\WorkerContainer;
 use App\Entity\User;
 use App\Middleware\Csrf;
 
 $uiState = [];
-$projectData = [];
+$projectData = [
+    'name'                      => '',
+    'description'               => '',
+    'budget'                    => '',
+    'maxWorkers'                => '',
+    'workers'                   => [],
+    'phases'                    => [],
+    'startDateTime'             => '',
+    'completionDateTime'        => '',
+    'actualCompletionDateTime'  => ''
+];
 
 if ($project) {
     $uiState['pageName'] = 'Edit Project';
+
+    $projectData['name'] = htmlspecialchars($project->getName());
+    $projectData['description'] = htmlspecialchars($project->getDescription());
+    $projectData['budget'] = $project->getBudget();
+    $projectData['maxWorkers'] = $project->getMaxWorkers();
+    $projectData['workers'] = $project->getWorkers()?->getItems();
+    $projectData['phases'] = $project->getPhases();
+    $projectData['startDateTime'] = formatDateTime($project->getStartDateTime(), 'Y-m-d');
+    $projectData['completionDateTime'] = formatDateTime($project->getCompletionDateTime(), 'Y-m-d');
+    $projectData['actualCompletionDateTime'] = $project->getActualCompletionDateTime()
+        ? formatDateTime($project->getActualCompletionDateTime(), 'Y-m-d')
+        : null;
+
+    $uiState['phaseNoWall'] = count($projectData['phases'] ?? []) > 0 ? 'no-display' : 'flex-col';
+    $uiState['workerNoWall'] = count($projectData['workers'] ?? []) > 0 ? 'no-display' : 'flex-col';
 } else {
     $uiState['pageName'] = 'Create Project';
 }
@@ -86,6 +112,8 @@ if ($project) {
                     </div>
 
                     <section class="inputs-section flex-col">
+
+                        <!-- NAME -->
                         <div class="input-rules-container">
                             <div class="input-label-container">
                                 <div class="text-w-icon">
@@ -93,13 +121,14 @@ if ($project) {
                                     <label for="name">Name</label>
                                 </div>
                                 <input type="text" name="name" id="name" placeholder="(eg. Project Management System)"
-                                    min="<?= NAME_MIN ?>" max="<?= NAME_MAX ?>" autocapitalize="on" autocomplete="on"
-                                    required>
+                                    value="<?= $projectData['name'] ?>" min="<?= NAME_MIN ?>" max="<?= NAME_MAX ?>"
+                                    autocapitalize="on" autocomplete="on" required>
                             </div>
 
                             <?= workNameRules() ?>
                         </div>
 
+                        <!-- DESCRIPTION -->
                         <div class="input-rules-container">
                             <div class="input-label-container">
                                 <div class="text-w-icon">
@@ -110,13 +139,15 @@ if ($project) {
                                 <textarea name="description" id="description" rows="4"
                                     placeholder="Describe what your project objectives, scope, and deliverables (optional)"
                                     min="<?= LONG_TEXT_MIN ?>" max="<?= LONG_TEXT_MAX ?>" autocapitalize="on"
-                                    autocomplete="on" required></textarea>
+                                    autocomplete="on" required><?= $projectData['description'] ?></textarea>
                             </div>
 
                             <?= workDescriptionRules() ?>
                         </div>
 
                         <section class="row-inputs flex-row">
+
+                            <!-- BUDGET -->
                             <div class="input-rules-container">
                                 <div class="input-label-container">
                                     <div class="text-w-icon">
@@ -126,13 +157,14 @@ if ($project) {
                                     </div>
                                     <div class="input-w-prefix">
                                         <span class="input-prefix">₱</span>
-                                        <input type="number" name="budget" id="budget" placeholder="0.00" required>
+                                        <input type="number" name="budget" id="budget" placeholder="0.00" value="<?= $projectData['budget'] ?>" required>
                                     </div>
                                 </div>
 
                                 <?= workBudgetRules() ?>
                             </div>
 
+                            <!-- MAX WORKERS -->
                             <div class="input-rules-container">
                                 <div class="input-label-container">
                                     <div class="text-w-icon">
@@ -141,7 +173,7 @@ if ($project) {
                                         <label for="max_workers">Max Workers</label>
                                     </div>
                                     <input type="number" name="max_workers" id="max_workers"
-                                        placeholder="Define the maximum number of workers (eg. 10)"
+                                        placeholder="Define the maximum number of workers (eg. 10)" value="<?= $projectData['maxWorkers'] ?>"
                                         min="<?= WORKER_COUNT_MIN ?>" max="<?= WORKER_COUNT_MAX ?>"
                                         value="<?= WORKER_COUNT_MIN ?>" required>
                                 </div>
@@ -151,6 +183,8 @@ if ($project) {
                         </section>
 
                         <section class="row-inputs flex-row">
+
+                            <!-- START DATE -->
                             <div class="input-rules-container">
                                 <div class="input-label-container">
                                     <div class="text-w-icon">
@@ -159,12 +193,14 @@ if ($project) {
                                         <label for="start_date_time">Start Date</label>
                                     </div>
                                     <input type="date" name="start_date_time" id="start_date_time"
+                                        value="<?= $projectData['startDateTime'] ?>"
                                         min="<?= formatDateTime(new DateTime(), 'Y-m-d') ?>" required>
                                 </div>
 
                                 <?= workStartDateTimeRules() ?>
                             </div>
 
+                            <!-- COMPLETION DATE -->
                             <div class="input-rules-container">
                                 <div class="input-label-container">
                                     <div class="text-w-icon">
@@ -172,7 +208,7 @@ if ($project) {
                                             title="Completion Date" height="24">
                                         <label for="completion_date_time">End Date</label>
                                     </div>
-                                    <input type="date" name="completion_date_time" id="completion_date_time"
+                                    <input type="date" name="completion_date_time" id="completion_date_time" value="<?= $projectData['completionDateTime'] ?>"
                                         min="<?= formatDateTime(new DateTime(), 'Y-m-d') ?>" required>
                                 </div>
 
@@ -193,7 +229,12 @@ if ($project) {
                         </span>
                     </div>
 
-                    <div class="no-phases-wall no-content-wall flex-col">
+                    <!-- Existing Phases (If any) -->
+                    <?php foreach ($projectData['phases'] as $phase) {
+                        echo phaseFormCard($phase);
+                    } ?>
+
+                    <div class="no-phases-wall no-content-wall <?= $uiState['phaseNoWall'] ?>">
                         <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No Phases Found" title="No Phases Found"
                             height="100">
                         <span>
@@ -235,10 +276,12 @@ if ($project) {
 
                             <section class="worker-pool-listing">
                                 <ul class="list">
-                                    <!-- Worker items will be added here dynamically -->
+                                    <?php foreach ($projectData['workers'] as $worker) {
+                                        echo workerPoolCard($worker);
+                                    } ?>
                                 </ul>
 
-                                <div class="no-workers-wall no-content-wall flex-col">
+                                <div class="no-workers-wall no-content-wall <?= $uiState['workerNoWall'] ?>">
                                     <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No Workers Found
                                     title=" No Workers Found" height="80">
                                     <span>
@@ -255,19 +298,20 @@ if ($project) {
                                 <thead>
                                     <tr>
                                         <th>Worker Name</th>
-                                        <th>Role</th>
-                                        <th>Default Rate (₱)</th>
-                                        <th>Action</th>
+                                        <th>Default Rate (₱/hr)</th>
+                                        <th class="center-text">Action</th>
                                     </tr>
                                 </thead>
 
                                 <tbody>
                                     <!-- Selected workers will be added here dynamically -->
-                                    <?php //selectedWorkerRow(User::createPartial([])) ?>
+                                    <?php foreach ($projectData['workers'] as $worker) {
+                                        echo selectedWorkerRow($worker);
+                                    } ?>
                                 </tbody>
                             </table>
 
-                            <div class="no-workers-wall no-content-wall flex-col">
+                            <div class="no-workers-wall no-content-wall <?= $uiState['workerNoWall'] ?>">
                                 <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No Workers Selected"
                                     title="No Workers Selected" height="80">
                                 <span>

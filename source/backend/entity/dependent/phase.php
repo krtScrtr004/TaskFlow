@@ -208,7 +208,7 @@ class Phase implements Entity
      *
      * @return string The notes regarding the phase budget
      */
-    public function getBudgetNote(): string
+    public function getBudgetNote(): ?string
     {
         return $this->budgetNote;
     }

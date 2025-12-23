@@ -214,12 +214,19 @@ class ProjectModel extends Model
                                     'name', pp.name,
                                     'description', pp.description,
                                     'status', pp.status,
+                                    'budget', pb.budget,
+                                    'contingency_rate', pb.contingency_rate,
+                                    'budget_note', pb.notes,
                                     'start_date_time', pp.start_date_time,
                                     'completion_date_time', pp.completion_date_time,
                                     'actual_completion_date_time', pp.actual_completion_date_time
                                 )
                             ) FROM 
                                 `project_phase` pp
+                            INNER JOIN
+                                `project_phase_budget` AS pb
+                            ON
+                                pp.id = pb.phase_id
                             WHERE 
                                 pp.project_id = p.id
                         ), JSON_ARRAY()
@@ -242,6 +249,7 @@ class ProjectModel extends Model
                                         'profile_link', w.profile_link,
                                         'gender', w.gender,
                                         'status', pw.status,
+                                        'default_rate', pw.default_rate,
                                         'created_at', w.created_at,
                                         'confirmed_at', w.confirmed_at,
                                         'deleted_at', w.deleted_at,

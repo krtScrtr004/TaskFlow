@@ -460,12 +460,16 @@ class ProjectController implements Controller
                 header('Location: ' . REDIRECT_PATH . 'login');
                 exit();
             }
+            $instance = new self();
             
             $projectId = isset($args['projectId'])
                 ? UUID::fromString($args['projectId'])
                 : null;
             $project = isset($projectId)
-                ? ProjectModel::findById($projectId)
+                ? $instance->getProjectInfo($projectId, [
+                    'phases' => true,
+                    'workers' => true,
+                ])
                 : null;
 
             require_once SUB_VIEW_PATH . 'create-edit-project.php';

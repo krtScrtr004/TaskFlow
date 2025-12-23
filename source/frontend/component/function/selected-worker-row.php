@@ -7,7 +7,6 @@ function selectedWorkerRow(Worker $worker): bool|string
 {
     $id = htmlspecialchars(UUID::toString($worker->getPublicId()));
     $name = htmlspecialchars(createFullName($worker->getFirstName(), $worker->getMiddleName(), $worker->getLastName()));
-    $jobTitles = $worker->getJobTitles();
 
     ob_start();
     ?>
@@ -16,14 +15,6 @@ function selectedWorkerRow(Worker $worker): bool|string
     <tr class="selected-worker-row" data-workerid="<?= $id ?>">
         <td>
             <p class="name multi-line-ellipsis-2"><?= $name ?></p>
-        </td>
-
-        <td>
-            <div class="roles flex-row flex-wrap">
-                <?php foreach ($jobTitles as $jobTitle): ?>
-                    <span class="role-chip badge"><?= htmlspecialchars($jobTitle) ?></span>
-                <?php endforeach; ?>
-            </div>
         </td>
 
         <td>

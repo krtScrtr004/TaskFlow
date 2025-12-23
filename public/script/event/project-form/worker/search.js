@@ -187,9 +187,6 @@ function rebuildEndpointWithSearchTerm(baseEndpoint, term) {
  * @param {string} [worker.firstName] - First name part; passed to createFullName().
  * @param {string} [worker.middleName] - Middle name part; passed to createFullName().
  * @param {string} [worker.lastName] - Last name part; passed to createFullName().
- * @param {string[]} [worker.roles] - Array of role strings to render as chips.
- * @param {string} [worker.role] - Single role string to include among chips.
- * @param {string} [worker.primaryRole] - Primary role string; prioritized when ordering chips.
  *
  * @returns {HTMLLIElement} The constructed <li> element containing the worker card.
  *
@@ -228,31 +225,6 @@ function renderWorkerPoolCard(worker) {
     const nameSpan = document.createElement('span')
     nameSpan.className = 'name'
     nameSpan.textContent = createFullName(worker.firstName, worker.middleName, worker.lastName) || 'Unknown'
-
-    const roleContainer = document.createElement('div')
-    roleContainer.className = 'flex-row flex-wrap'
-
-    // Collect roles from different possible shapes: role string or roles array
-    const roles = []
-    if (worker) {
-        if (Array.isArray(worker.roles)) {
-            roles.push(...worker.roles)
-        }
-        if (worker.role && typeof worker.role === 'string') {
-            roles.unshift(worker.role)
-        }
-        if (worker.primaryRole && typeof worker.primaryRole === 'string') {
-            roles.unshift(worker.primaryRole)
-        }
-    }
-
-    // Deduplicate and render up to 3 chips
-    Array.from(new Set(roles)).slice(0, 3).forEach(r => {
-        const roleSpan = document.createElement('span')
-        roleSpan.className = 'role-chip chip badge light-text'
-        roleSpan.textContent = r
-        roleContainer.appendChild(roleSpan)
-    })
 
     infoDiv.appendChild(nameSpan)
     infoDiv.appendChild(roleContainer)

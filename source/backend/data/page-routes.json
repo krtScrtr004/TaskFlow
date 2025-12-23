@@ -12,7 +12,7 @@
 		"/change-password(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": "SingleFormController",
 
 		"/create-project": ["ProjectController", "viewProjectForm"],
-		"/edit-project/{projectId:[\\w+_-]+}": "SingleFormController",
+		"/edit-project/{projectId:[\\w+_-]+}": ["ProjectController", "viewProjectForm"],
 		"/add-task/{projectId:[\\w+_-]+}": "SingleFormController",
 
 		"/home": ["ProjectController", "viewHome"],
