@@ -3,6 +3,10 @@
 namespace App\Validator;
 
 use App\Abstract\Validator;
+use App\Container\PhaseContainer;
+use App\Container\TaskContainer;
+use App\Dependent\Phase;
+use App\Entity\Project;
 use DateTime;
 
 class WorkValidator extends Validator
@@ -226,6 +230,41 @@ class WorkValidator extends Validator
         if ((int) $completionDateTime->format('Y') < YEAR_MIN || (int) $completionDateTime->format('Y') > YEAR_MAX) {
             $this->errors[] = 'Completion date year must be between ' . YEAR_MIN . ' and ' . YEAR_MAX . '.';
         }
+    }
+
+    /**
+     * Creates a budget boundary validator.
+     *
+     * Returns an associative array with two closures:
+     *  - 'addBudget' (callable(float)): increments an internal running total ($currentBudget,
+     *    captured by reference). If the new total exceeds $totalBudget, appends an error to $this->errors.
+     *  - 'validateTotal' (callable()): validates the final running total against $totalBudget
+     *    and appends an error to $this->errors if it exceeds the allowed limit.
+     *
+     * @param float $totalBudget Maximum allowed total budget
+     *
+     * @return array{
+     *     addBudget: callable(float): void,
+     *     validateTotal: callable(): void
+     * } Associative array of validator closures. Closures update $currentBudget (by reference)
+     * and may add formatted error messages to $this->errors when the budget limit is exceeded.
+     */
+    public function createBudgetBoundaryValidator(float $totalBudget) {
+        $currentBudget = 0.0;
+        return [
+            'addBudget' => function (float $budget) use (&$currentBudget, $totalBudget) {
+                $currentBudget += $budget;
+                if ($currentBudget > $totalBudget) {
+                    $this->errors[] = 'Total budget of ₱' . formatNumber($currentBudget) . ' exceeds the allowed budget of ₱' . formatNumber($totalBudget) . '.';
+                }                
+            },
+
+            'validateTotal' => function () use (&$currentBudget, $totalBudget) {
+                if ($currentBudget > $totalBudget) {
+                    $this->errors[] = 'Total budget of ₱' . formatNumber($currentBudget) . ' exceeds the allowed budget of ₱' . formatNumber($totalBudget) . '.';
+                }
+            }
+        ];
     }
 
     /**

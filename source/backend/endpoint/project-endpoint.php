@@ -220,6 +220,10 @@ class ProjectEndpoint extends Endpoint
             $workValidator = new WorkValidator();
             $userValidator = new userValidator();
 
+            $projectPhaseBudgetValidator = $workValidator->createBudgetBoundaryValidator($project['budget'] ?? 0.00);
+
+            $totalPhasesBudget = 0.00;
+            
             $index = 0;
             $phasesContainer = new PhaseContainer();
             foreach ($phases as &$phase) {
@@ -229,9 +233,11 @@ class ProjectEndpoint extends Endpoint
                     new DateTime($project['startDateTime']),
                     new DateTime($project['completionDateTime'])
                 );
+                $projectPhaseBudgetValidator['addBudget']((float) $phase['budget'] ?? 0.00);
                 if ($workValidator->hasErrors()) {
                     throw new ValidationException('Phase Validation Failed.', $workValidator->getErrors());
                 }
+                $totalPhasesBudget += (float) $phase['budget'] ?? 0.00;
 
                 sanitizeData($phase);
 
@@ -247,9 +253,12 @@ class ProjectEndpoint extends Endpoint
                 $phasesContainer->add(Phase::createPartial($phase));
             }
 
+            $phaseWorkerBudgetValidator = $workValidator->createBudgetBoundaryValidator($totalPhasesBudget);
+
             $workersContainer= new WorkerContainer();
             foreach ($workers as $worker) {
                 $userValidator->validateDefaultRate($worker['defaultRate']);
+                $phaseWorkerBudgetValidator['addBudget']((float) $worker['defaultRate'] ?? DEFAULT_RATE_MIN);
                 if ($userValidator->hasErrors()) {
                     throw new ValidationException('Worker Validation Failed.', $userValidator->getErrors());
                 }
@@ -273,6 +282,7 @@ class ProjectEndpoint extends Endpoint
                     new DateTime($project['startDateTime']), 
                     new DateTime($project['completionDateTime']))
             ]);
+
             $newProject = ProjectModel::create($newProject);
 
             Response::success([
