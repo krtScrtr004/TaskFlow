@@ -1,9 +1,8 @@
 import { Notification } from '../../../render/notification.js'
 import { handleException } from '../../../utility/handle-exception.js'
 import { die } from '../../../utility/utility.js'
+import { addedWorkers, removedWorkers } from '../record-changes.js'
 
-export const addedWorkers = new Set()
-export const removedWorkers = new Set()
 const existingWorkers = new Set()
 
 const workersSection = document.querySelector('#workers_section')

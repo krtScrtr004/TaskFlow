@@ -1,5 +1,6 @@
 import { handleException } from '../../utility/handle-exception.js'
 import { getValidationConstraints, die } from '../../utility/utility.js'
+import { addedPhases, changedPhases, removedPhases } from './record-changes.js'
 
 const VALIDATION_CONSTANTS = await getValidationConstraints()
 
@@ -15,6 +16,25 @@ addPhaseButton.addEventListener('click', () => {
     try {
         const phaseCard = renderPhaseFormCard()
         phaseSection.insertBefore(phaseCard, addPhaseButton)
+
+        const {
+            phaseNameInput,
+            phaseDescriptionInput,
+            phaseBudgetInput,
+            phaseContingencyRateInput,
+            phaseBudgetNoteInput,
+            phaseStartDateTimeInput,
+            phaseCompletionDateTimeInput
+        } = getPhaseDomParts(card) ?? {}
+        addedPhases.set(id, {
+            name: phaseNameInput.value.trim() || '',
+            description: phaseDescriptionInput.value.trim() || '',
+            budget: phaseBudgetInput.value.trim() || '',
+            contingencyRate: phaseContingencyRateInput.value.trim() || '',
+            budgetNote: phaseBudgetNoteInput.value.trim() || '',
+            startDateTime: phaseStartDateTimeInput.value.trim() || '',
+            completionDateTime: phaseCompletionDateTimeInput.value.trim() || ''
+        })
 
         const newCard = phaseSection.querySelector('.phase-form-card:last-of-type')
         addRemoveListeners(newCard)
@@ -64,6 +84,11 @@ function addRemoveListeners(card) {
             }
         })
     })
+
+    const id = card.dataset.phaseid
+    addedPhases.delete(id)
+    changedPhases.delete(id)
+    removedPhases.add(id)
 }
 
 /**

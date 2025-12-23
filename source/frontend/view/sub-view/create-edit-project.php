@@ -41,14 +41,22 @@ if ($project) {
         : null;
     $projectData['scripts'] = [
         'edit' . DS . 'search-workers.js',
+        'edit' . DS . 'submit.js',
     ];
+
+    $uiState['submitButtonId'] = 'edit_project_button';
+    $uiState['submitButtonText'] = 'Save Changes';
 
     $uiState['noPhaseWall'] = count($projectData['phases'] ?? []) > 0 ? 'no-display' : 'flex-col';
     $uiState['noWorkerWall'] = count($projectData['workers'] ?? []) > 0 ? 'no-display' : 'flex-col';
 } else {
     $projectData['scripts'] = [
         'create' . DS . 'search-workers.js',
+        'create' . DS . 'submit.js',
     ];
+
+    $uiState['submitButtonId'] = 'create_project_button';
+    $uiState['submitButtonText'] = 'Create Project';
 
     $uiState['pageName'] = 'Create Project';}
 ?>
@@ -103,11 +111,11 @@ if ($project) {
                     </a>
                 </div>
 
-                <button id="create_project_button" class="blue-bg">
+                <button id="<?= $uiState['submitButtonId'] ?>" class="blue-bg">
                     <div class="text-w-icon">
-                        <img src="<?= ICON_PATH . 'save_w.svg' ?>" alt="Create Project" title="Create Project"
+                        <img src="<?= ICON_PATH . 'save_w.svg' ?>" alt="<?= $uiState['submitButtonText'] ?>" title="<?= $uiState['submitButtonText'] ?>"
                             height="20">
-                        <h3>Create Project</h3>
+                        <h3><?= $uiState['submitButtonText'] ?></h3>
                     </div>
                 </button>
             </header>
@@ -343,9 +351,9 @@ if ($project) {
 
     <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'scroll-navigation.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'create-phase-form-card.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'record-changes.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'validate-forms.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'worker' . DS . 'add.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'create' . DS . 'submit.js' ?>" defer></script>
 
     <?php foreach ($projectData['scripts'] as $script) : ?>
         <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . $script ?>" defer></script>
