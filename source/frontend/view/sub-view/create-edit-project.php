@@ -276,12 +276,10 @@ if ($project) {
 
                             <section class="worker-pool-listing">
                                 <ul class="list">
-                                    <?php foreach ($projectData['workers'] as $worker) {
-                                        echo workerPoolCard($worker);
-                                    } ?>
+                                    <!-- List will dynamically display here -->
                                 </ul>
 
-                                <div class="no-workers-wall no-content-wall <?= $uiState['workerNoWall'] ?>">
+                                <div class="no-workers-wall no-content-wall flex-col">
                                     <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No Workers Found
                                     title=" No Workers Found" height="80">
                                     <span>

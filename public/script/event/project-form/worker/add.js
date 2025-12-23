@@ -3,19 +3,35 @@ import { handleException } from '../../../utility/handle-exception.js'
 import { die } from '../../../utility/utility.js'
 
 export const addedWorkers = new Set()
+export const removedWorkers = new Set()
+const existingWorkers = new Set()
 
 const workersSection = document.querySelector('#workers_section')
-const noWorkersWall = workersSection.querySelector('.selected-workers-table  .no-workers-wall')
+
+const selectedWorkersTable = workersSection.querySelector('.selected-workers-table')
+if (!selectedWorkersTable) {
+    die('Selected workers table not found in workers section.')
+}
+
+const noWorkersWall = selectedWorkersTable.querySelector('.no-workers-wall')
 
 const workerPoolListingList = workersSection.querySelector('.worker-pool-listing .list')
 if (!workerPoolListingList) {
     die('Worker pool listing list not found.')
 }
 
-const selectedWorkersTableList = workersSection.querySelector('.selected-workers-table tbody')
+const selectedWorkersTableList = selectedWorkersTable.querySelector('tbody')
 if (!selectedWorkersTableList) {
     die('Selected workers table list not found.')
 }
+
+const existingSelectedWorkers = selectedWorkersTableList.querySelectorAll('.selected-worker-row')
+existingSelectedWorkers.forEach(row => {
+    const workerId = row.dataset.workerid
+    if (workerId) {
+        existingWorkers.add(workerId)
+    }
+})
 
 workerPoolListingList.addEventListener('click', e => {
     const card = e.target.closest('.worker-pool-card')
@@ -32,7 +48,7 @@ workerPoolListingList.addEventListener('click', e => {
 
     try {
         const workerId = card.dataset.workerid
-        if (addedWorkers.has(workerId)) {
+        if (existingWorkers.has(workerId) || addedWorkers.has(workerId)) {
             Notification.error('Worker already added to the project.', 3000)
             return
         }
@@ -44,12 +60,35 @@ workerPoolListingList.addEventListener('click', e => {
         // Render and append the new selected worker row
         const newRow = renderSelectedWorkerRow({
             name: card.querySelector('.worker-info .name')?.textContent || '',
-            jobTitles: Array.from(card.querySelectorAll('.worker-info .role-chip')).map(el => el.textContent || ''),
             id: workerId
         })
         selectedWorkersTableList.appendChild(newRow)
     } catch (error) {
         handleException(error, `Error handling worker pool listing click.`)
+    }
+})
+
+selectedWorkersTableList.addEventListener('click', e => {
+    const removeWorkerButton = e.target.closest('.remove-worker-button')
+    if (!removeWorkerButton) {
+        return
+    }
+    e.stopImmediatePropagation()
+    
+    const row = removeWorkerButton.closest('.selected-worker-row')
+    if (!row) {
+        return
+    }
+
+    const workerId = row.dataset.workerid
+    addedWorkers.delete(workerId) // Remove from added workers set, if exists
+    removedWorkers.add(workerId) // Mark as removed if it was an existing worker
+    existingWorkers.delete(workerId) // Remove from existing workers set, if exists
+    row.remove()
+
+    const remaining = selectedWorkersTableList?.querySelectorAll('.selected-worker-row') ?? []
+    if (remaining.length === 0) {
+        toggleNoWorkersWall(true)
     }
 })
 
@@ -59,7 +98,6 @@ workerPoolListingList.addEventListener('click', e => {
  * This function creates and returns an HTMLTableRowElement (<tr>) that represents
  * a selected worker in the "selected workers" table. The row contains:
  *  - a name cell with a paragraph (.name.multi-line-ellipsis-2),
- *  - a roles cell with zero or more role chips (.role-chip.badge) created from worker.jobTitles,
  *  - a rate cell with a prefixed currency input (₱) that formats the provided worker.rate to two decimals
  *    (defaults to "500.00" when rate is not provided), and
  *  - a remove cell with a button containing a delete icon.
@@ -70,11 +108,6 @@ workerPoolListingList.addEventListener('click', e => {
  *    stringified worker.id (or an empty string when missing).
  *  - The rate <input> is numeric, min="0", step="0.01", required, and will set a max attribute when
  *    the global BUDGET_MAX is defined.
- *  - Clicking the remove button adds a "fade-out" class and waits for the animationend event, then:
- *      - removes the row from the DOM,
- *      - removes the worker id from the global addedWorkers set,
- *      - removes the 'selected' class from the corresponding worker-pool-card in workerPoolListingList (if present),
- *      - and, if no selected rows remain, invokes toggleNoWorkersWall(true).
  *  - When rendering, if a global noWorkersWall element exists, it will be hidden (adds 'hidden' class).
  *  - The function references several globals: BUDGET_MAX, addedWorkers, workerPoolListingList,
  *    selectedWorkersTableList, noWorkersWall, toggleNoWorkersWall. The icon src uses a constant ICON_PATH
@@ -83,7 +116,6 @@ workerPoolListingList.addEventListener('click', e => {
  * @param {Object} worker Worker data used to populate the row
  * @param {number|string} [worker.id] Unique identifier for the worker (used for dataset and set membership)
  * @param {string} [worker.name] Display name for the worker
- * @param {Array<string>} [worker.jobTitles] Array of job title strings rendered as role chips
  * @param {number|string} [worker.rate] Default rate for the worker; formatted to two decimal places in the input
  *
  * @returns {HTMLTableRowElement} The fully constructed <tr> element representing the selected worker
@@ -106,19 +138,6 @@ function renderSelectedWorkerRow(worker) {
     pName.className = 'name multi-line-ellipsis-2'
     pName.textContent = worker.name || ''
     tdName.appendChild(pName)
-
-    // Roles cell
-    const tdRoles = document.createElement('td')
-    const rolesWrapper = document.createElement('div')
-    rolesWrapper.className = 'roles flex-row flex-wrap'
-    const jobTitles = Array.isArray(worker.jobTitles) ? worker.jobTitles : []
-    jobTitles.forEach(title => {
-        const span = document.createElement('span')
-        span.className = 'role-chip badge'
-        span.textContent = title
-        rolesWrapper.appendChild(span)
-    })
-    tdRoles.appendChild(rolesWrapper)
 
     // Rate cell (with prefix)
     const tdRate = document.createElement('td')
@@ -145,7 +164,7 @@ function renderSelectedWorkerRow(worker) {
     center.className = 'center-child'
     const btn = document.createElement('button')
     btn.type = 'button'
-    btn.className = 'unset-button'
+    btn.className = 'remove-worker-button unset-button'
     const img = document.createElement('img')
     img.src = (typeof ICON_PATH !== 'undefined') ? ICON_PATH + 'delete_r.svg' : ''
     img.alt = 'Remove Worker'
@@ -156,26 +175,8 @@ function renderSelectedWorkerRow(worker) {
     tdRemove.appendChild(center)
 
     tr.appendChild(tdName)
-    tr.appendChild(tdRoles)
     tr.appendChild(tdRate)
     tr.appendChild(tdRemove)
-
-    // Hook up remove behavior
-    btn.addEventListener('click', () => {
-        const card = workerPoolListingList.querySelector(`.worker-pool-card[data-workerid="${worker.id}"]`)
-        card?.classList.remove('selected')
-
-        tr.classList.add('fade-out')
-        tr.addEventListener('animationend', () => {
-            tr.remove()
-            addedWorkers.delete(String(worker.id))
-
-            const remaining = selectedWorkersTableList?.querySelectorAll('.selected-worker-row') ?? []
-            if (remaining.length === 0) {
-                toggleNoWorkersWall(true)
-            }
-        }, { once: true })
-    })
 
     // When rendering a row, hide the "no workers" wall if present
     if (noWorkersWall) {

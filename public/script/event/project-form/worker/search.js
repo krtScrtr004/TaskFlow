@@ -19,6 +19,11 @@ if (!searchButton) {
     die('Search button not found in workers section.')
 }
 
+const workerList = workersSection.querySelector('.worker-pool-listing .list')
+if (!workerList) {
+    throw new Error('Worker list container not found in workers section.')
+}
+
 /**
  * Initializes search workers by configuring the search endpoint and wiring UI event handlers.
  *
@@ -88,12 +93,6 @@ async function submit(e) {
         throw new Error('Endpoint is not defined for searching workers.')
     }
 
-    const workerList = workersSection.querySelector('.worker-pool-listing .list')
-    if (!workerList) {
-        throw new Error('Worker list container not found in workers section.')
-    }
-    workerList.innerHTML = ''
-
     const searchInput = searchBarForm.querySelector('#search_bar_input')
     if (!searchInput) {
         throw new Error('Search input field not found in search bar form.')
@@ -106,11 +105,12 @@ async function submit(e) {
     try {
         Loader.full(workerList)
 
+        workerList.innerHTML = '' // Clear existing workers
+
         const fetchWorkers = createWorkerFetcher() // Create a new fetcher instance
         const workers = await fetchWorkers(endpoint)
         if (workers.length === 0) {
-            noWorkersWall?.classList.add('flex-col')
-            noWorkersWall?.classList.remove('no-display')
+            toggleNoWorkersWall(true)
             return
         }
 
@@ -119,8 +119,7 @@ async function submit(e) {
             workerList.appendChild(workerCard)
         })
 
-        noWorkersWall?.classList.add('no-display')
-        noWorkersWall?.classList.remove('flex-col')
+        toggleNoWorkersWall(false)
     } catch (error) {
         throw error
     } finally {
@@ -163,7 +162,6 @@ function rebuildEndpointWithSearchTerm(baseEndpoint, term) {
  * Creates and returns an HTMLLIElement containing a button-styled card with:
  *  - an avatar <img> (uses worker.profileLink or a fallback icon),
  *  - a name <span> (built via createFullName(firstName, middleName, lastName) or 'Unknown'),
- *  - up to three deduplicated role chips collected from worker.primaryRole, worker.role, and worker.roles.
  *
  * Structure:
  *  <li>
@@ -171,10 +169,6 @@ function rebuildEndpointWithSearchTerm(baseEndpoint, term) {
  *      <img class="circle fit-cover" alt="..." height="55" src="..." />
  *      <div class="flex-col flex-child-start-h worker-info">
  *        <span class="name">...</span>
- *        <div class="flex-row flex-wrap">
- *          <span class="role-chip chip badge light-text">Role</span>
- *          ...
- *        </div>
  *      </div>
  *    </button>
  *  </li>
@@ -193,7 +187,6 @@ function rebuildEndpointWithSearchTerm(baseEndpoint, term) {
  * @throws {Error} If the worker argument is missing or falsy.
  *
  * Notes:
- * - Role values are deduplicated and trimmed to a maximum of 3 chips.
  * - The created element is not appended to the DOM; the caller must insert it where needed.
  * - This function relies on a global helper createFullName(firstName, middleName, lastName) to compute the displayed name.
  */
@@ -227,11 +220,32 @@ function renderWorkerPoolCard(worker) {
     nameSpan.textContent = createFullName(worker.firstName, worker.middleName, worker.lastName) || 'Unknown'
 
     infoDiv.appendChild(nameSpan)
-    infoDiv.appendChild(roleContainer)
 
     button.appendChild(img)
     button.appendChild(infoDiv)
     li.appendChild(button)
 
     return li
+}
+
+/**
+ * Toggle the visibility of the "no workers" wall element.
+ *
+ * When `show` is true, the function makes the element visible by adding
+ * the 'flex-col' class and removing 'no-display'. When `show` is false,
+ * it hides the element by adding 'no-display' and removing 'flex-col'.
+ * The operation is safe — if `noWorkersWall` is undefined or null, the
+ * function performs no action.
+ *
+ * @param {boolean} show True to show the no-workers wall, false to hide it.
+ * @returns {void}
+ */
+function toggleNoWorkersWall(show) {
+    if (show) {
+        noWorkersWall?.classList.add('flex-col')
+        noWorkersWall?.classList.remove('no-display')
+    } else {
+        noWorkersWall?.classList.add('no-display')
+        noWorkersWall?.classList.remove('flex-col')
+    }
 }

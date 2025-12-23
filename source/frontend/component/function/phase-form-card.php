@@ -3,6 +3,24 @@
 use App\Core\UUID;
 use App\Dependent\Phase;
 
+/**
+ * Renders an HTML form card for creating or editing a project phase.
+ *
+ * When a Phase object is provided, its properties populate the form fields; otherwise the form
+ * is rendered with empty/default values. Field values are escaped with htmlspecialchars before
+ * output and date values are formatted using formatDateTime(..., 'Y-m-d'). The generated markup
+ * includes inputs for name, description, budget, contingency rate, budget note, start date, and
+ * completion date, and it injects validation/rules snippets produced by helper functions such as
+ * workNameRules(), workDescriptionRules(), workBudgetRules(), workContingencyRateRules(),
+ * workBudgetNoteRules(), workStartDateTimeRules(), and workCompletionDateTimeRules().
+ *
+ * Note: The function uses ICON_PATH and various constants (e.g. NAME_MIN, NAME_MAX, CONTINGENCY_RATE_MIN,
+ * CONTINGENCY_RATE_MAX, LONG_TEXT_MIN, LONG_TEXT_MAX) to build attributes and assets.
+ *
+ * @param Phase|null $phase Phase domain object to populate the form, or null to render a blank form
+ *
+ * @return string|bool Rendered HTML string on success, or false on failure
+ */
 function phaseFormCard(?Phase $phase): bool|string
 {
     $phaseData = [
