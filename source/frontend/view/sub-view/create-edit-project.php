@@ -2,11 +2,12 @@
 // TODO: Fix table width on smaller screens
 
 use App\Container\WorkerContainer;
+use App\Core\UUID;
 use App\Entity\User;
 use App\Middleware\Csrf;
 
-$uiState = [];
 $projectData = [
+    'id'                        => '',
     'name'                      => '',
     'description'               => '',
     'budget'                    => '',
@@ -18,9 +19,15 @@ $projectData = [
     'actualCompletionDateTime'  => ''
 ];
 
+$uiState = [
+    'noPhaseWall'  => 'flex-col',
+    'noWorkerWall' => 'flex-col',
+];
+
 if ($project) {
     $uiState['pageName'] = 'Edit Project';
 
+    $projectData['id'] = htmlspecialchars(UUID::toString($project->getPublicId()));
     $projectData['name'] = htmlspecialchars($project->getName());
     $projectData['description'] = htmlspecialchars($project->getDescription());
     $projectData['budget'] = $project->getBudget();
@@ -32,12 +39,18 @@ if ($project) {
     $projectData['actualCompletionDateTime'] = $project->getActualCompletionDateTime()
         ? formatDateTime($project->getActualCompletionDateTime(), 'Y-m-d')
         : null;
+    $projectData['scripts'] = [
+        'edit' . DS . 'search-workers.js',
+    ];
 
-    $uiState['phaseNoWall'] = count($projectData['phases'] ?? []) > 0 ? 'no-display' : 'flex-col';
-    $uiState['workerNoWall'] = count($projectData['workers'] ?? []) > 0 ? 'no-display' : 'flex-col';
+    $uiState['noPhaseWall'] = count($projectData['phases'] ?? []) > 0 ? 'no-display' : 'flex-col';
+    $uiState['noWorkerWall'] = count($projectData['workers'] ?? []) > 0 ? 'no-display' : 'flex-col';
 } else {
-    $uiState['pageName'] = 'Create Project';
-}
+    $projectData['scripts'] = [
+        'create' . DS . 'search-workers.js',
+    ];
+
+    $uiState['pageName'] = 'Create Project';}
 ?>
 
 <!DOCTYPE html>
@@ -99,7 +112,7 @@ if ($project) {
                 </button>
             </header>
 
-            <form id="project_form" class="flex-col" method="POST" action="">
+            <form id="project_form" class="flex-col" method="POST" action="" data-projectid="<?= $projectData['id'] ?>">
 
                 <!-- Info -->
                 <fieldset id="info_section" class="flex-col content-section-block">
@@ -234,7 +247,7 @@ if ($project) {
                         echo phaseFormCard($phase);
                     } ?>
 
-                    <div class="no-phases-wall no-content-wall <?= $uiState['phaseNoWall'] ?>">
+                    <div class="no-phases-wall no-content-wall <?= $uiState['noPhaseWall'] ?>">
                         <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No Phases Found" title="No Phases Found"
                             height="100">
                         <span>
@@ -309,7 +322,7 @@ if ($project) {
                                 </tbody>
                             </table>
 
-                            <div class="no-workers-wall no-content-wall <?= $uiState['workerNoWall'] ?>">
+                            <div class="no-workers-wall no-content-wall <?= $uiState['noWorkerWall'] ?>">
                                 <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No Workers Selected"
                                     title="No Workers Selected" height="80">
                                 <span>
@@ -332,9 +345,11 @@ if ($project) {
     <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'create-phase-form-card.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'validate-forms.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'worker' . DS . 'add.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'create' . DS . 'search-workers.js' ?>"
-        defer></script>
     <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'create' . DS . 'submit.js' ?>" defer></script>
+
+    <?php foreach ($projectData['scripts'] as $script) : ?>
+        <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . $script ?>" defer></script>
+    <?php endforeach; ?>
 </body>
 
 </html>

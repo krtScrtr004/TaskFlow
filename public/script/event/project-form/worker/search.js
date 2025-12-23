@@ -53,7 +53,7 @@ export function initializeSearch(endpointParam) {
     searchBarForm.addEventListener('submit', handler)
     searchButton.addEventListener('click', handler)
 
-    searchButton.click() // Trigger initial load
+    searchButton?.click()
 }
 
 /**

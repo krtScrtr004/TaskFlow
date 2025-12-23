@@ -236,10 +236,14 @@ class ProjectWorkerModel extends Model
                     u.id = ujt.user_id";
 
             if (trimOrNull($key))  {
-                $where[] = "
-                    MATCH(u.first_name, u.middle_name, u.last_name, u.bio, u.email) 
-                    AGAINST (:key IN NATURAL LANGUAGE MODE)
-                ";
+                $where[] = 
+                    "MATCH (
+                        u.first_name, 
+                        u.middle_name, 
+                        u.last_name, 
+                        u.bio, 
+                        u.email) 
+                    AGAINST (:key IN NATURAL LANGUAGE MODE)";
                 $params[':key'] = $key;
             }
 
