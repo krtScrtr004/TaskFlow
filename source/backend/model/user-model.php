@@ -383,6 +383,9 @@ class UserModel extends Model
      * @param Role|null $role Optional role filter (Role enum).
      * @param WorkerStatus|null $status Optional worker status filter (WorkerStatus enum).
      * @param array $options Optional search options:
+     *      - excludeProjectTerminated: bool Whether to exclude users associated with terminated projects (default: false)
+     *      - projectReferenceId: int|UUID|null Project reference ID to filter users by (default: null)
+     * 
      *      - limit: int Maximum number of results to return (default: 10)
      *      - offset: int Number of results to skip (default: 0)
      *
@@ -395,6 +398,9 @@ class UserModel extends Model
         Role|null $role = null,
         WorkerStatus|null $status = null,
         array $options = [
+            'excludeProjectTerminated' => false,
+            'projectReferenceId' => null,
+
             'limit' => 10,
             'offset' => 0,
         ]): ?array
@@ -501,6 +507,34 @@ class UserModel extends Model
                     $params[':workerStatus1'] = $status->value;
                     $params[':workerStatus2'] = $status->value;
                 }
+            }
+
+            if ($options['excludeProjectTerminated'] && $options['projectReferenceId'] !== null) {
+                $where[] = 
+                    "NOT EXISTS (
+                        SELECT 1
+                        FROM
+                            `project_worker` AS pw
+                        WHERE
+                            pw.worker_id = u.id
+                        AND 
+                            pw.project_id = " . ($options['projectReferenceId'] instanceof UUID 
+                                ? '(SELECT 
+                                        id
+                                    FROM 
+                                        `project`
+                                    WHERE 
+                                        public_id = :projectReferenceId)'
+                                : ':projectReferenceId') . "
+                        AND
+                            pw.status != :terminatedStatus
+                    )";
+                if ($options['projectReferenceId'] instanceof UUID) {
+                    $params[':projectReferenceId'] = UUID::toBinary($options['projectReferenceId']);
+                } else {
+                    $params[':projectReferenceId'] = $options['projectReferenceId'];
+                }
+                $params[':terminatedStatus'] = WorkerStatus::TERMINATED->value;
             }
 
             // Exclude unconfirmed and deleted users

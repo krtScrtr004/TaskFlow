@@ -126,20 +126,25 @@ class UserEndpoint extends Endpoint
                 throw new ForbiddenException();
             }
 
-            $filter = null;
-            if (isset($_GET['filter']) && trim($_GET['filter']) !== '' && $_GET['filter'] !== 'all') {
-                try {
-                    $filter = Role::from($_GET['filter']);
-                } catch (ValueError $e) {
-                    $filter = WorkStatus::from($_GET['filter']);
-                }
-            }
+            $status = isset($_GET['status']) 
+                ? Role::tryFrom(trim($_GET['status'])) 
+                : null;
+            $role = isset($_GET['role']) 
+                ? Role::tryFrom(trim($_GET['role'])) 
+                : null;
 
             $users = UserModel::search(
                 isset($_GET['key']) ? trim($_GET['key']) : '',
-                $filter instanceof Role ? $filter : null,
-                $filter instanceof WorkStatus ? $filter : null,
+                $role instanceof Role ? $role : null,
+                $status instanceof Role ? $status : null,
                 [
+                    'excludeProjectTerminated' => isset($_GET['excludeProjectTerminated']) 
+                        ? filter_var($_GET['excludeProjectTerminated'], FILTER_VALIDATE_BOOLEAN) 
+                        : false,
+                    'projectReferenceId' => isset($_GET['projectReferenceId']) 
+                        ? UUID::tryFromString($_GET['projectReferenceId']) 
+                        : null,
+
                     'limit' => isset($_GET['limit']) ? (int) $_GET['limit'] : 10,
                     'offset' => isset($_GET['offset']) ? (int) $_GET['offset'] : 0
                 ]
@@ -299,23 +304,23 @@ class UserEndpoint extends Endpoint
                 if (Session::has('userData')) {
                     $updatedUser = Me::getInstance();
                     Session::set('userData', [
-                        'id' => $updatedUser->getId(),
-                        'publicId' => UUID::toString($updatedUser->getPublicId()),
-                        'firstName' => $updatedUser->getFirstName(),
-                        'middleName' => $updatedUser->getMiddleName(),
-                        'lastName' => $updatedUser->getLastName(),
-                        'gender' => $updatedUser->getGender()->value,
-                        'birthDate' => $updatedUser->getBirthDate()?->format('Y-m-d'),
-                        'role' => $updatedUser->getRole()->value,
-                        'jobTitles' => implode(',', $updatedUser->getJobTitles()->toArray()),
-                        'contactNumber' => $updatedUser->getContactNumber(),
-                        'email' => $updatedUser->getEmail(),
-                        'bio' => $updatedUser->getBio(),
-                        'profileLink' => $updatedUser->getProfileLink(),
-                        'createdAt' => $updatedUser->getCreatedAt()->format('Y-m-d H:i:s'),
-                        'confirmedAt' => $updatedUser->getConfirmedAt()?->format('Y-m-d H:i:s'),
-                        'deletedAt' => $updatedUser->getDeletedAt()?->format('Y-m-d H:i:s'),
-                        'additionalInfo' => $updatedUser->getAdditionalInfo()
+                        'id'                => $updatedUser->getId(),
+                        'publicId'          => UUID::toString($updatedUser->getPublicId()),
+                        'firstName'         => $updatedUser->getFirstName(),
+                        'middleName'        => $updatedUser->getMiddleName(),
+                        'lastName'          => $updatedUser->getLastName(),
+                        'gender'            => $updatedUser->getGender()->value,
+                        'birthDate'         => $updatedUser->getBirthDate()?->format('Y-m-d'),
+                        'role'              => $updatedUser->getRole()->value,
+                        'jobTitles'         => implode(',', $updatedUser->getJobTitles()->toArray()),
+                        'contactNumber'     => $updatedUser->getContactNumber(),
+                        'email'             => $updatedUser->getEmail(),
+                        'bio'               => $updatedUser->getBio(),
+                        'profileLink'       => $updatedUser->getProfileLink(),
+                        'createdAt'         => $updatedUser->getCreatedAt()->format('Y-m-d H:i:s'),
+                        'confirmedAt'       => $updatedUser->getConfirmedAt()?->format('Y-m-d H:i:s'),
+                        'deletedAt'         => $updatedUser->getDeletedAt()?->format('Y-m-d H:i:s'),
+                        'additionalInfo'    => $updatedUser->getAdditionalInfo()
                     ]);
                 }
             }
