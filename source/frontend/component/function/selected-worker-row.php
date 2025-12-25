@@ -28,6 +28,7 @@ function selectedWorkerRow(Worker $worker): bool|string
 {
     $id = htmlspecialchars(UUID::toString($worker->getPublicId()));
     $name = htmlspecialchars(createFullName($worker->getFirstName(), $worker->getMiddleName(), $worker->getLastName()));
+    $defaultRate = $worker->getDefaultRate();
 
     ob_start();
     ?>
@@ -41,8 +42,8 @@ function selectedWorkerRow(Worker $worker): bool|string
         <td>
             <div class="input-w-prefix">
                 <span class="input-prefix">₱</span>
-                <input type="number" class="default-rate-input" id="default_rate" name="default_rate" value="500.00" min="0"
-                    max="<?= BUDGET_MAX ?>" step="0.01" required>
+                <input type="number" class="default-rate-input" id="default_rate" name="default_rate" min="0"
+                    max="<?= BUDGET_MAX ?>" value="<?= $defaultRate ?>" step="0.01" required>
             </div>
         </td>
 

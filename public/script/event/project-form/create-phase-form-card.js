@@ -43,9 +43,6 @@ addPhaseButton.addEventListener('click', () => {
             completionDateTime: phaseCompletionDateTimeInput.value.trim() || ''
         })
 
-        const newCard = phaseSection.querySelector('.phase-form-card:last-of-type')
-        addRemoveListeners(newCard)
-
         // Hide no phases wall
         noPhasesWall?.classList.add('no-display')
         noPhasesWall?.classList.remove('flex-col')
@@ -54,49 +51,38 @@ addPhaseButton.addEventListener('click', () => {
     }
 })
 
-/**
- * Attaches a click listener to the remove button inside a phase card.
- *
- * Locates the '.remove-phase-button' within the provided card and, if found,
- * registers a click handler that:
- *  - removes the card from the DOM,
- *  - queries the outer-scope `phaseSection` for remaining '.phase-form-card' elements,
- *  - if none remain, makes the `noPhasesWall` visible by removing 'no-display' and
- *    adding 'flex-col'.
- *
- * If the remove button is not found, a warning is logged and no listener is attached.
- * Note: this function relies on the presence of `phaseSection` and `noPhasesWall` in
- * the surrounding scope and does not return a value.
- *
- * @param {Element|HTMLElement} card - The DOM element representing a phase form card.
- * @returns {void}
- */
-function addRemoveListeners(card) {
-    const removeButton = card.querySelector('.remove-phase-button')
+phaseSection.addEventListener('click', e => {
+    const removeButton = e.target.closest('.remove-phase-button')
     if (!removeButton) {
-        die('Remove button not found in card.')
+        return
+    }
+    e.stopImmediatePropagation()
+
+    const card = removeButton.closest('.phase-form-card')
+    if (!card) {
+        return
     }
 
-    removeButton.addEventListener('click', () => {
-        card.classList.add('fade-out')
-        // Wait for animation to finish before removing
-        card.addEventListener('animationend', () => {
-            card.remove()
+    card.classList.add('fade-out')
+    // Wait for animation to finish before removing
+    card.addEventListener('animationend', () => {
+        card.remove()
 
-            // Check if any phase cards remain, show no phases wall if none
-            const remainingCards = phaseSection.querySelectorAll('.phase-form-card')
-            if (remainingCards.length === 0) {
-                noPhasesWall?.classList.remove('no-display')
-                noPhasesWall?.classList.add('flex-col')
-            }
-        })
+        // Check if any phase cards remain, show no phases wall if none
+        const remainingCards = phaseSection.querySelectorAll('.phase-form-card')
+        if (remainingCards.length === 0) {
+            noPhasesWall?.classList.remove('no-display')
+            noPhasesWall?.classList.add('flex-col')
+        }
     })
 
     const id = card.dataset.phaseid
     addedPhases.delete(id)
     changedPhases.delete(id)
-    removedPhases.add(id)
-}
+    if (!addedPhases.has(id)) {
+        removedPhases.add(id)
+    }
+})
 
 /**
  * Renders a phase form card element with all input fields.

@@ -232,4 +232,3 @@ async function sendToBackend(data) {
         isLoading = false
     }
 }
-

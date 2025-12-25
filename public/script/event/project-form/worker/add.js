@@ -80,9 +80,12 @@ selectedWorkersTableList.addEventListener('click', e => {
     }
 
     const workerId = row.dataset.workerid
-    addedWorkers.delete(workerId) // Remove from added workers set, if exists
-    removedWorkers.add(workerId) // Mark as removed if it was an existing worker
-    existingWorkers.delete(workerId) // Remove from existing workers set, if exists
+    addedWorkers.delete(workerId) 
+    existingWorkers.delete(workerId)
+    if (existingWorkers.has(workerId) || !addedWorkers.has(workerId)) {
+        removedWorkers.add(workerId) 
+    }
+
     row.remove()
 
     const remaining = selectedWorkersTableList?.querySelectorAll('.selected-worker-row') ?? []
@@ -148,7 +151,7 @@ function renderSelectedWorkerRow(worker) {
     const input = document.createElement('input')
     input.type = 'number'
     input.className = 'default-rate-input'
-    input.value = (typeof worker.rate !== 'undefined') ? Number(worker.rate).toFixed(2) : '0.00'
+    input.value = (typeof worker.rate !== 'undefined') ? Number(worker.defaultRate).toFixed(2) : '0.00'
     input.min = '0'
     if (typeof BUDGET_MAX !== 'undefined') input.max = String(BUDGET_MAX)
     input.step = '0.01'

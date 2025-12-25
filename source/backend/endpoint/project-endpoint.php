@@ -269,19 +269,12 @@ class ProjectEndpoint extends Endpoint
             }
 
             // Create partial Project entity
-            $newProject = Project::createPartial([
-                'name'                  => $project['name'],
-                'description'           => $project['description'],
-                'budget'                => floatval($project['budget']) ?? 0.00,
-                'startDateTime'         => $project['startDateTime'],
-                'completionDateTime'    => $project['completionDateTime'],
-                'workers'               => $workersContainer,
-                'phases'                => $phasesContainer,
-                'tasks'                 => [],
-                'status'                => WorkStatus::getStatusFromDates(
-                    new DateTime($project['startDateTime']), 
-                    new DateTime($project['completionDateTime']))
-            ]);
+            $project['workers'] = $workersContainer;
+            $project['phases'] = $phasesContainer;
+            $project['status'] = WorkStatus::getStatusFromDates(
+            new DateTime($project['startDateTime']), 
+            new DateTime($project['completionDateTime']));
+            $newProject = Project::createPartial($project);
 
             $newProject = ProjectModel::create($newProject);
 

@@ -42,35 +42,31 @@ projectNameInput?.addEventListener('input', () => {
     const value = projectNameInput.value
     if (oldProjectData['name'] === value) {
         return
-    }
-
-    if (!addedProjectInfo.has('name') && !changedProjectInfo.has('name')) {
+    } else if (addedProjectInfo.has('name')) {
         addedProjectInfo.set('name', value)
     } else {
         changedProjectInfo.set('name', value)
     }
+
 })
 
 projectDescriptionInput?.addEventListener('input', () => {
     const value = projectDescriptionInput.value
     if (oldProjectData['description'] === value) {
         return
-    }
-
-    if (!addedProjectInfo.has('description') && !changedProjectInfo.has('description')) {
+    } else if (addedProjectInfo.has('description')) {
         addedProjectInfo.set('description', value)
     } else {
         changedProjectInfo.set('description', value)
     }
+
 })
 
 projectBudgetInput?.addEventListener('input', () => {
     const value = projectBudgetInput.value
     if (oldProjectData['budget'] === value) {
         return
-    }
-
-    if (!addedProjectInfo.has('budget') && !changedProjectInfo.has('budget')) {
+    } else if (addedProjectInfo.has('budget')) {
         addedProjectInfo.set('budget', value)
     } else {
         changedProjectInfo.set('budget', value)
@@ -81,9 +77,7 @@ projectMaxWorkersInput?.addEventListener('input', () => {
     const value = projectMaxWorkersInput.value
     if (oldProjectData['maxWorkers'] === value) {
         return
-    }
-
-    if (!addedProjectInfo.has('maxWorkers') && !changedProjectInfo.has('maxWorkers')) {
+    } else if (addedProjectInfo.has('maxWorkers')) {
         addedProjectInfo.set('maxWorkers', value)
     } else {
         changedProjectInfo.set('maxWorkers', value)
@@ -94,9 +88,7 @@ projectStartDateTimeInput?.addEventListener('input', () => {
     const value = projectStartDateTimeInput.value
     if (oldProjectData['startDateTime'] === value) {
         return
-    }
-
-    if (!addedProjectInfo.has('startDateTime') && !changedProjectInfo.has('startDateTime')) {
+    } else if (addedProjectInfo.has('startDateTime')) {
         addedProjectInfo.set('startDateTime', value)
     } else {
         changedProjectInfo.set('startDateTime', value)
@@ -107,9 +99,7 @@ projectCompletionDateTimeInput?.addEventListener('input', () => {
     const value = projectCompletionDateTimeInput.value
     if (oldProjectData['completionDateTime'] === value) {
         return
-    }
-
-    if (!addedProjectInfo.has('completionDateTime') && !changedProjectInfo.has('completionDateTime')) {
+    } else if (addedProjectInfo.has('completionDateTime')) {
         addedProjectInfo.set('completionDateTime', value)
     } else {
         changedProjectInfo.set('completionDateTime', value)
@@ -210,9 +200,13 @@ phaseSection?.addEventListener('input', e => {
             return
         }
 
-        let phaseChanges = changedPhases.get(id) || {}
+        let phaseChanges = changedPhases.get(id) || addedPhases.get(id) || {}
         phaseChanges['name'] = value
-        changedPhases.set(id, phaseChanges)
+        if (!oldPhasesData.has(id) || addedPhases.has(id)) {
+            addedPhases.set(id, phaseChanges)
+        } else {
+            changedPhases.set(id, phaseChanges)
+        }
     }
 
     if (e.target === phaseDescriptionInput) {
@@ -221,9 +215,13 @@ phaseSection?.addEventListener('input', e => {
             return
         }
 
-        let phaseChanges = changedPhases.get(id) || {}
+        let phaseChanges = changedPhases.get(id) || addedPhases.get(id) || {}
         phaseChanges['description'] = value
-        changedPhases.set(id, phaseChanges)
+        if (!oldPhasesData.has(id) || addedPhases.has(id)) {
+            addedPhases.set(id, phaseChanges)
+        } else {
+            changedPhases.set(id, phaseChanges)
+        }
     }
 
     if (e.target === phaseBudgetInput) {
@@ -232,9 +230,13 @@ phaseSection?.addEventListener('input', e => {
             return
         }
 
-        let phaseChanges = changedPhases.get(id) || {}
+        let phaseChanges = changedPhases.get(id) || addedPhases.get(id) || {}
         phaseChanges['budget'] = value
-        changedPhases.set(id, phaseChanges)
+        if (!oldPhasesData.has(id) || addedPhases.has(id)) {
+            addedPhases.set(id, phaseChanges)
+        } else {
+            changedPhases.set(id, phaseChanges)
+        }
     }
 
     if (e.target === phaseContingencyRateInput) {
@@ -243,9 +245,13 @@ phaseSection?.addEventListener('input', e => {
             return
         }
 
-        let phaseChanges = changedPhases.get(id) || {}
+        let phaseChanges = changedPhases.get(id) || addedPhases.get(id) || {}
         phaseChanges['contingencyRate'] = value
-        changedPhases.set(id, phaseChanges)
+        if (!oldPhasesData.has(id) || addedPhases.has(id)) {
+            addedPhases.set(id, phaseChanges)
+        } else {
+            changedPhases.set(id, phaseChanges)
+        }
     }
 
     if (e.target === phaseBudgetNoteInput) {
@@ -254,9 +260,13 @@ phaseSection?.addEventListener('input', e => {
             return
         }
 
-        let phaseChanges = changedPhases.get(id) || {}
+        let phaseChanges = changedPhases.get(id) || addedPhases.get(id) || {}
         phaseChanges['budgetNote'] = value
-        changedPhases.set(id, phaseChanges)
+        if (!oldPhasesData.has(id) || addedPhases.has(id)) {
+            addedPhases.set(id, phaseChanges)
+        } else {
+            changedPhases.set(id, phaseChanges)
+        }
     }
 
     if (e.target === phaseStartDateTimeInput) {
@@ -265,9 +275,13 @@ phaseSection?.addEventListener('input', e => {
             return
         }
 
-        let phaseChanges = changedPhases.get(id) || {}
+        let phaseChanges = changedPhases.get(id) || addedPhases.get(id) || {}
         phaseChanges['startDateTime'] = value
-        changedPhases.set(id, phaseChanges)
+        if (!oldPhasesData.has(id) || addedPhases.has(id)) {
+            addedPhases.set(id, phaseChanges)
+        } else {
+            changedPhases.set(id, phaseChanges)
+        }
     }
 
     if (e.target === phaseCompletionDateTimeInput) {
@@ -276,9 +290,13 @@ phaseSection?.addEventListener('input', e => {
             return
         }
 
-        let phaseChanges = changedPhases.get(id) || {}
+        let phaseChanges = changedPhases.get(id) || addedPhases.get(id) || {}
         phaseChanges['completionDateTime'] = value
-        changedPhases.set(id, phaseChanges)
+        if (!oldPhasesData.has(id) || addedPhases.has(id)) {
+            addedPhases.set(id, phaseChanges)
+        } else {
+            changedPhases.set(id, phaseChanges)
+        }
     }
 })
 
@@ -376,7 +394,7 @@ if (!selectedWorkersTableList) {
 
 export const addedWorkers = new Map()
 export const changedWorkers = new Map()
-export const removedWorkers = new Map()
+export const removedWorkers = new Set()
 
 // Record old workers data
 const oldWorkersData = new Map()
@@ -404,7 +422,11 @@ selectedWorkersTableList?.addEventListener('input', e => {
     }
 
     const defaultRateInput = row.querySelector('input.default-rate-input')
-    changedWorkers.set(id, defaultRateInput.value.trim())
+    if (!oldWorkersData.has(id)) {
+        addedWorkers.set(id, defaultRateInput.value.trim())
+    } else {
+        changedWorkers.set(id, defaultRateInput.value.trim())
+    }
 })
 
 /**

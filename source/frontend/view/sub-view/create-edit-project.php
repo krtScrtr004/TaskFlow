@@ -111,7 +111,7 @@ if ($project) {
                     </a>
                 </div>
 
-                <button id="<?= $uiState['submitButtonId'] ?>" class="blue-bg">
+                <button id="<?= $uiState['submitButtonId'] ?>" class="submit-project-button blue-bg">
                     <div class="text-w-icon">
                         <img src="<?= ICON_PATH . 'save_w.svg' ?>" alt="<?= $uiState['submitButtonText'] ?>" title="<?= $uiState['submitButtonText'] ?>"
                             height="20">

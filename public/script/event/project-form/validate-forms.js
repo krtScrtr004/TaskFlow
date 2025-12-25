@@ -46,7 +46,7 @@ const projectSchedule = { 'start': projectStartDateTimeInput?.value || new Date(
 projectNameInput?.addEventListener('input', () => {
     const results = validateName(projectNameInput.value)
     const rulesContainer = projectNameInput.closest('.input-rules-container').querySelector('.rules ul')
-    updateCreateButtonState(
+    updateSubmitProjectButtonState(
         applyValidationToRules(rulesContainer, results, RULE_MAPPINGS.workName)
     )
 })
@@ -54,7 +54,7 @@ projectNameInput?.addEventListener('input', () => {
 projectDescriptionInput?.addEventListener('input', () => {
     const results = validateDescription(projectDescriptionInput.value)
     const rulesContainer = projectDescriptionInput.closest('.input-rules-container').querySelector('.rules ul')
-    updateCreateButtonState(
+    updateSubmitProjectButtonState(
         applyValidationToRules(rulesContainer, results, RULE_MAPPINGS.workDescription)
     )
 })
@@ -62,7 +62,7 @@ projectDescriptionInput?.addEventListener('input', () => {
 projectBudgetInput?.addEventListener('input', () => {
     const results = validateBudget(projectBudgetInput.value)
     const rulesContainer = projectBudgetInput.closest('.input-rules-container').querySelector('.rules ul')
-    updateCreateButtonState(
+    updateSubmitProjectButtonState(
         applyValidationToRules(rulesContainer, results, RULE_MAPPINGS.workBudget)
     )
 })
@@ -70,7 +70,7 @@ projectBudgetInput?.addEventListener('input', () => {
 projectMaxWorkersInput?.addEventListener('input', () => {
     const results = validateWorkerCount(projectMaxWorkersInput.value)
     const rulesContainer = projectMaxWorkersInput.closest('.input-rules-container').querySelector('.rules ul')
-    updateCreateButtonState(
+    updateSubmitProjectButtonState(
         applyValidationToRules(rulesContainer, results, RULE_MAPPINGS.workerCount)
     )
 })
@@ -78,7 +78,7 @@ projectMaxWorkersInput?.addEventListener('input', () => {
 projectStartDateTimeInput?.addEventListener('input', () => {
     const results = validateStartDateTime(projectStartDateTimeInput.value)
     const rulesContainer = projectStartDateTimeInput.closest('.input-rules-container').querySelector('.rules ul')
-    updateCreateButtonState(
+    updateSubmitProjectButtonState(
         applyValidationToRules(rulesContainer, results, RULE_MAPPINGS.startDateTime)
     )
     projectSchedule.start = projectStartDateTimeInput.value
@@ -87,7 +87,7 @@ projectStartDateTimeInput?.addEventListener('input', () => {
 projectCompletionDateTimeInput?.addEventListener('input', () => {
     const results = validateCompletionDateTime(projectCompletionDateTimeInput.value, projectStartDateTimeInput.value)
     const rulesContainer = projectCompletionDateTimeInput.closest('.input-rules-container').querySelector('.rules ul')
-    updateCreateButtonState(
+    updateSubmitProjectButtonState(
         applyValidationToRules(rulesContainer, results, RULE_MAPPINGS.completionDateTime)
     )
     projectSchedule.completion = projectCompletionDateTimeInput.value
@@ -128,7 +128,7 @@ phaseSection?.addEventListener('input', e => {
     if (e.target === phaseNameInput) {
         const results = validateName(phaseNameInput.value)
         const rulesContainer = phaseNameInput.closest('.input-rules-container').querySelector('.rules ul')
-        updateCreateButtonState(
+        updateSubmitProjectButtonState(
             applyValidationToRules(rulesContainer, results, RULE_MAPPINGS.workName)
         )
     }
@@ -136,7 +136,7 @@ phaseSection?.addEventListener('input', e => {
     if (e.target === phaseDescriptionInput) {
         const results = validateDescription(phaseDescriptionInput.value)
         const rulesContainer = phaseDescriptionInput.closest('.input-rules-container').querySelector('.rules ul')
-        updateCreateButtonState(
+        updateSubmitProjectButtonState(
             applyValidationToRules(rulesContainer, results, RULE_MAPPINGS.workDescription)
         )
     }
@@ -144,7 +144,7 @@ phaseSection?.addEventListener('input', e => {
     if (e.target === phaseBudgetInput) {
         const results = validateBudget(phaseBudgetInput.value, parseFloat(projectBudgetInput.value) || 0)
         const rulesContainer = phaseBudgetInput.closest('.input-rules-container').querySelector('.rules ul')
-        updateCreateButtonState(
+        updateSubmitProjectButtonState(
             applyValidationToRules(rulesContainer, results, RULE_MAPPINGS.workBudget)
         )
     }
@@ -152,7 +152,7 @@ phaseSection?.addEventListener('input', e => {
     if (e.target === phaseContingencyRateInput) {
         const results = validateContingencyRate(phaseContingencyRateInput.value)
         const rulesContainer = phaseContingencyRateInput.closest('.input-rules-container').querySelector('.rules ul')
-        updateCreateButtonState(
+        updateSubmitProjectButtonState(
             applyValidationToRules(rulesContainer, results, RULE_MAPPINGS.contingencyRate)
         )
     }
@@ -160,7 +160,7 @@ phaseSection?.addEventListener('input', e => {
     if (e.target === phaseBudgetNoteInput) {
         const results = validateBudgetNote(phaseBudgetNoteInput.value)
         const rulesContainer = phaseBudgetNoteInput.closest('.input-rules-container').querySelector('.rules ul')
-        updateCreateButtonState(
+        updateSubmitProjectButtonState(
             applyValidationToRules(rulesContainer, results, RULE_MAPPINGS.budgetNote)
         )
     }
@@ -178,7 +178,7 @@ phaseSection?.addEventListener('input', e => {
             'phasesSchedule': phaseSchedules
         })
         const rulesContainer = phaseStartDateTimeInput.closest('.input-rules-container').querySelector('.rules ul')
-        updateCreateButtonState(
+        updateSubmitProjectButtonState(
             applyValidationToRules(rulesContainer, results, RULE_MAPPINGS.startDateTime)
         )
         if (Object.values(results).includes(false)) {
@@ -201,7 +201,7 @@ phaseSection?.addEventListener('input', e => {
             'phasesSchedule': phaseSchedules
         })
         const rulesContainer = phaseCompletionDateTimeInput.closest('.input-rules-container').querySelector('.rules ul')
-        updateCreateButtonState(
+        updateSubmitProjectButtonState(
             applyValidationToRules(rulesContainer, results, RULE_MAPPINGS.completionDateTime)
         )
         if (Object.values(results).includes(false)) {
@@ -257,7 +257,7 @@ selectedWorkersTableList?.addEventListener('input', e => {
     totalWithinProjectBudget += parseFloat(value) || 0
     if (totalWithinProjectBudget > parseFloat(projectBudgetInput.value || 0)) {
         Notification.error('The total of all default rates exceeds the project budget.', 5000)
-        updateCreateButtonState(true)
+        updateSubmitProjectButtonState(true)
     }
 
     const isValidNumber = /^[-+]?\d*\.?\d+$/.test(value)
@@ -267,10 +267,10 @@ selectedWorkersTableList?.addEventListener('input', e => {
     // If a valid number, within the range, and within project budget
     if (isValidNumber && withinRange && withinProjectBudget) {
         defaultRateInput.parentElement.classList.remove('invalid')
-        updateCreateButtonState(false)
+        updateSubmitProjectButtonState(false)
     } else {
         invalidateDefaultRate()
-        updateCreateButtonState(true)
+        updateSubmitProjectButtonState(true)
     }
 })
 
@@ -280,21 +280,21 @@ selectedWorkersTableList?.addEventListener('input', e => {
  * Disable form submission if there are validation errors
  */
 
-const createProjectButton = document.querySelector('#create_project_button')
-if (!createProjectButton) {
-    console.warn('Create Project button not found in the form')
+const submitProjectButton = document.querySelector('.submit-project-button')
+if (!submitProjectButton) {
+    console.warn('Submit Project button not found in the form')
 }
-function updateCreateButtonState(hasInvalid) {
-    if (!createProjectButton) {
+function updateSubmitProjectButtonState(hasInvalid) {
+    if (!submitProjectButton) {
         return
     }
 
     if (hasInvalid) {
-        createProjectButton.disabled = true
-        createProjectButton.title = 'Please fix validation errors before submitting the form.'
+        submitProjectButton.disabled = true
+        submitProjectButton.title = 'Please fix validation errors before submitting the form.'
     } else {
-        createProjectButton.disabled = false
-        createProjectButton.title = ''
+        submitProjectButton.disabled = false
+        submitProjectButton.title = ''
     }
 }
 
