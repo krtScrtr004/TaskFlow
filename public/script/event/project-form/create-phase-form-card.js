@@ -77,11 +77,11 @@ phaseSection.addEventListener('click', e => {
     })
 
     const id = card.dataset.phaseid
-    addedPhases.delete(id)
-    changedPhases.delete(id)
     if (!addedPhases.has(id)) {
         removedPhases.add(id)
     }
+    addedPhases.delete(id)
+    changedPhases.delete(id)
 })
 
 /**
