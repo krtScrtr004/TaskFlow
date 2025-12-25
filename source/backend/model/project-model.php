@@ -830,7 +830,7 @@ class ProjectModel extends Model
         foreach ($phases as $phase) {
             $phaseStatement->execute([
                 ':projectId'            => $projectId,
-                ':publicId'             => UUID::toBinary($phase->getPublicId() ?? UUID::get()),
+                ':publicId'             => UUID::toBinary($phase->getPublicId()),
                 ':name'                 => $phase->getName(),
                 ':description'          => $phase->getDescription(),
                 ':startDateTime'        => formatDateTime($phase->getStartDateTime()),
@@ -850,9 +850,11 @@ class ProjectModel extends Model
                     :contingencyRate,
                     :notes
                 )";
+
+            $phaseId = (int) $this->connection->lastInsertId();
             $budgetStatement = $this->connection->prepare($projectPhaseBudgetQuery);
             $budgetStatement->execute([
-                ':phaseId'         => (int) $this->connection->lastInsertId(),
+                ':phaseId'         => $phaseId,
                 ':budget'          => $phase->getBudget() ?? 0.00,
                 ':contingencyRate' => $phase->getContingencyRate() ?? 0.00,
                 ':notes'           => $phase->getBudgetNote() ?? null,
@@ -893,7 +895,7 @@ class ProjectModel extends Model
                 :projectId,
                 (SELECT id FROM `user` WHERE public_id = :workerId),
                 :status,
-                :default_rate
+                :defaultRate
             )";
         $workerStatement = $this->connection->prepare($projectWorkerQuery);                       
         foreach ($workers as $worker) {
@@ -901,7 +903,7 @@ class ProjectModel extends Model
                 ':projectId'    => $projectId,
                 ':workerId'     => UUID::toBinary($worker->getPublicId()),
                 ':status'       => WorkerStatus::ASSIGNED->value,
-                ':default_rate' => $worker->getDefaultRate() ?? 0.00,
+                ':defaultRate'  => $worker->getDefaultRate(),
             ]);
         }
     }

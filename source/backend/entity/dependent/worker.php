@@ -215,6 +215,13 @@ class Worker extends User
         $data = normalizeArrayKeysToCamelCase($data);
 
         $partial = User::createPartial($data)->toWorker();
+
+        if (isset($data['defaultRate'])) {
+            $partial->setDefaultRate($data['defaultRate']);
+        } else {
+            $partial->setDefaultRate(0.00);
+        }
+
         if (isset($data['status'])) {
             $partial->setStatus(
                 is_string($data['status'])

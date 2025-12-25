@@ -255,7 +255,7 @@ class ProjectEndpoint extends Endpoint
 
             $phaseWorkerBudgetValidator = $workValidator->createBudgetBoundaryValidator($totalPhasesBudget);
 
-            $workersContainer= new WorkerContainer();
+            $workersContainer = new WorkerContainer();
             foreach ($workers as $worker) {
                 $userValidator->validateDefaultRate($worker['defaultRate']);
                 $phaseWorkerBudgetValidator['addBudget']((float) $worker['defaultRate'] ?? DEFAULT_RATE_MIN);
