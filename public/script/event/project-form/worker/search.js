@@ -2,7 +2,7 @@ import { createFullName, die } from '../../../utility/utility.js'
 import { Loader } from '../../../render/loader.js'
 import { debounceAsync } from '../../../utility/debounce.js'
 import { createWorkerFetcher } from './fetch.js'
-import { addedWorkers } from './add.js'
+import { addedWorkers } from '../record-changes.js'
 
 let endpoint = null
 

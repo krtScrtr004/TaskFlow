@@ -1,11 +1,3 @@
-/**
- * TODO:
- * 
- * 
- * FIXME:
- * 
- */
-
 import {
     validateName,
     applyValidationToRules,
@@ -311,7 +303,6 @@ function updateCreateButtonState(hasInvalid) {
  * 
  * Initialize phase schedules
  */
-
 
 const phaseCards = phaseSection?.querySelectorAll('.phase-form-card') || []
 phaseCards.forEach(card => {

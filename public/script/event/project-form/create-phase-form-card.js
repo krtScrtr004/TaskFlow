@@ -1,6 +1,7 @@
 import { handleException } from '../../utility/handle-exception.js'
 import { getValidationConstraints, die } from '../../utility/utility.js'
 import { addedPhases, changedPhases, removedPhases } from './record-changes.js'
+import { getPhaseDomParts } from './record-changes.js'
 
 const VALIDATION_CONSTANTS = await getValidationConstraints()
 
@@ -17,6 +18,12 @@ addPhaseButton.addEventListener('click', () => {
         const phaseCard = renderPhaseFormCard()
         phaseSection.insertBefore(phaseCard, addPhaseButton)
 
+        const lastCard = Array.from(phaseSection.querySelectorAll('.phase-form-card')).pop()
+        const id = lastCard?.dataset.phaseid
+        if (!id) {
+            throw new Error('Phase ID not found')
+        }
+
         const {
             phaseNameInput,
             phaseDescriptionInput,
@@ -25,7 +32,7 @@ addPhaseButton.addEventListener('click', () => {
             phaseBudgetNoteInput,
             phaseStartDateTimeInput,
             phaseCompletionDateTimeInput
-        } = getPhaseDomParts(card) ?? {}
+        } = getPhaseDomParts(phaseCard) ?? {}
         addedPhases.set(id, {
             name: phaseNameInput.value.trim() || '',
             description: phaseDescriptionInput.value.trim() || '',

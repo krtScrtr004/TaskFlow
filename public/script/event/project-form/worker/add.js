@@ -51,7 +51,7 @@ workerPoolListingList.addEventListener('click', e => {
             Notification.error('Worker already added to the project.', 3000)
             return
         }
-        addedWorkers.add(workerId) // Mark this worker as added
+        addedWorkers.set(workerId, 0) // Mark this worker as added
         card.classList.add('selected')
 
         toggleNoWorkersWall(false)
@@ -148,7 +148,7 @@ function renderSelectedWorkerRow(worker) {
     const input = document.createElement('input')
     input.type = 'number'
     input.className = 'default-rate-input'
-    input.value = (typeof worker.rate !== 'undefined') ? Number(worker.rate).toFixed(2) : '500.00'
+    input.value = (typeof worker.rate !== 'undefined') ? Number(worker.rate).toFixed(2) : '0.00'
     input.min = '0'
     if (typeof BUDGET_MAX !== 'undefined') input.max = String(BUDGET_MAX)
     input.step = '0.01'

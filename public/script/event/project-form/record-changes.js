@@ -1,4 +1,4 @@
-import { die } from "../../utility/utility"
+import { die } from '../../utility/utility.js'
 
 const projectForm = document.querySelector('#project_form')
 if (!projectForm) {
@@ -27,6 +27,7 @@ if (!projectNameInput || !projectDescriptionInput || !projectBudgetInput
     die('One or more project info inputs not found in the form')
 }
 
+// Record old project data
 const oldProjectData = {
     name: projectNameInput?.value || '',
     description: projectDescriptionInput?.value || '',
@@ -36,6 +37,7 @@ const oldProjectData = {
     completionDateTime: projectCompletionDateTimeInput?.value || ''
 }
 
+// Record any changes
 projectNameInput?.addEventListener('input', () => {
     const value = projectNameInput.value
     if (oldProjectData['name'] === value) {
@@ -67,7 +69,7 @@ projectBudgetInput?.addEventListener('input', () => {
     if (oldProjectData['budget'] === value) {
         return
     }
-    
+
     if (!addedProjectInfo.has('budget') && !changedProjectInfo.has('budget')) {
         addedProjectInfo.set('budget', value)
     } else {
@@ -81,10 +83,10 @@ projectMaxWorkersInput?.addEventListener('input', () => {
         return
     }
 
-    if (!addedProjectInfo.has('max_workers') && !changedProjectInfo.has('max_workers')) {
-        addedProjectInfo.set('max_workers', value)
+    if (!addedProjectInfo.has('maxWorkers') && !changedProjectInfo.has('maxWorkers')) {
+        addedProjectInfo.set('maxWorkers', value)
     } else {
-        changedProjectInfo.set('max_workers', value)
+        changedProjectInfo.set('maxWorkers', value)
     }
 })
 
@@ -94,10 +96,10 @@ projectStartDateTimeInput?.addEventListener('input', () => {
         return
     }
 
-    if (!addedProjectInfo.has('start_date_time') && !changedProjectInfo.has('start_date_time')) {
-        addedProjectInfo.set('start_date_time', value)
+    if (!addedProjectInfo.has('startDateTime') && !changedProjectInfo.has('startDateTime')) {
+        addedProjectInfo.set('startDateTime', value)
     } else {
-        changedProjectInfo.set('start_date_time', value)
+        changedProjectInfo.set('startDateTime', value)
     }
 })
 
@@ -107,12 +109,37 @@ projectCompletionDateTimeInput?.addEventListener('input', () => {
         return
     }
 
-    if (!addedProjectInfo.has('completion_date_time') && !changedProjectInfo.has('completion_date_time')) {
-        addedProjectInfo.set('completion_date_time', value)
+    if (!addedProjectInfo.has('completionDateTime') && !changedProjectInfo.has('completionDateTime')) {
+        addedProjectInfo.set('completionDateTime', value)
     } else {
-        changedProjectInfo.set('completion_date_time', value)
+        changedProjectInfo.set('completionDateTime', value)
     }
 })
+
+/**
+ * Builds and returns a merged Map of project information from added and changed sources.
+ *
+ * This function creates a new Map, inserts entries from addedProjectInfo first, and then
+ * overlays entries from changedProjectInfo so that any project IDs present in both are
+ * replaced by the changedProjectInfo version. Neither source collection is modified.
+ *
+ * @returns {Map<any, any>} A Map keyed by project id containing the merged project info
+ */
+export function getMergedAddedAndChangedProjectsMap() {
+    const merged = new Map()
+
+    // Start with addedProjects
+    for (const [id, added] of addedProjectInfo) {
+        merged.set(id, added)
+    }
+
+    // Override with changedProjects
+    for (const [id, changed] of changedProjectInfo) {
+        merged.set(id, changed)
+    }
+
+    return merged
+}
 
 /**
  * END
@@ -129,7 +156,8 @@ export const addedPhases = new Map()
 export const changedPhases = new Map()
 export const removedPhases = new Set()
 
-const oldPhasesData = new Map()()
+// Record old phase data
+const oldPhasesData = new Map()
 const phaseCards = phaseSection?.querySelectorAll('.phase-form-card') || []
 phaseCards.forEach(card => {
     const id = card.dataset.phaseid || null
@@ -158,6 +186,7 @@ phaseCards.forEach(card => {
     })
 })
 
+// Record any changes
 phaseSection?.addEventListener('input', e => {
     const card = e.target.closest('.phase-form-card')
     if (!card) {
@@ -219,7 +248,7 @@ phaseSection?.addEventListener('input', e => {
         changedPhases.set(id, phaseChanges)
     }
 
-    if (e.target === phaseBudgetNoteInput) {      
+    if (e.target === phaseBudgetNoteInput) {
         const value = phaseBudgetNoteInput.value.trim()
         if (oldPhasesData.get(id)?.['budgetNote'] === value) {
             return
@@ -257,7 +286,7 @@ phaseSection?.addEventListener('input', e => {
  * Extracts and validates DOM input elements for a phase form card.
  *
  * This function queries the provided card element for the expected phase inputs:
- * name, description, budget, contingency_rate, budget_note, start_date_time and completion_date_time.
+ * name, description, budget, contingency_rate, budget_note, startDateTime and completionDateTime.
  * If any input is missing it logs a warning and returns null. Otherwise it returns an object
  * with named references to each input element for further manipulation or change detection.
  *
@@ -270,8 +299,8 @@ phaseSection?.addEventListener('input', e => {
  *      - phaseBudgetInput: HTMLInputElement input[name="budget"]
  *      - phaseContingencyRateInput: HTMLInputElement input[name="contingency_rate"]
  *      - phaseBudgetNoteInput: HTMLTextAreaElement textarea[name="budget_note"]
- *      - phaseStartDateTimeInput: HTMLInputElement input[name="start_date_time"]
- *      - phaseCompletionDateTimeInput: HTMLInputElement input[name="completion_date_time"]
+ *      - phaseStartDateTimeInput: HTMLInputElement input[name="startDateTime"]
+ *      - phaseCompletionDateTimeInput: HTMLInputElement input[name="completionDateTime"]
  */
 export function getPhaseDomParts(card) {
     const phaseNameInput = card.querySelector('input[name="name"]')
@@ -281,7 +310,7 @@ export function getPhaseDomParts(card) {
     const phaseBudgetNoteInput = card.querySelector('textarea[name="budget_note"]')
     const phaseStartDateTimeInput = card.querySelector('input[name="start_date_time"]')
     const phaseCompletionDateTimeInput = card.querySelector('input[name="completion_date_time"]')
-    if (!phaseNameInput || !phaseDescriptionInput || !phaseBudgetInput || !phaseContingencyRateInput 
+    if (!phaseNameInput || !phaseDescriptionInput || !phaseBudgetInput || !phaseContingencyRateInput
         || !phaseBudgetNoteInput || !phaseStartDateTimeInput || !phaseCompletionDateTimeInput) {
         console.warn('One or more phase inputs not found in the form card')
         return null
@@ -296,6 +325,37 @@ export function getPhaseDomParts(card) {
         phaseStartDateTimeInput,
         phaseCompletionDateTimeInput
     }
+}
+
+/**
+ * Creates and returns a new Map of phase objects merged from two external collections:
+ * - Start with entries from `addedPhases` (each value shallow-copied).
+ * - Then apply entries from `changedPhases`, performing a shallow merge over any
+ *   existing entry so that properties in `changedPhases` override those from `addedPhases`.
+ *
+ * If a changed entry has no corresponding added entry, it is merged into an empty base
+ * object and still included in the resulting Map. Note that merges are shallow (spread),
+ * so nested objects are not deep-cloned.
+ *
+ * @return {Map<any, Object>} A Map keyed by phase id whose values are the merged phase objects
+ */
+export function getMergedAddedAndChangedPhasesMap() {
+    const merged = new Map()
+
+    // Start with addedPhases
+    for (const [id, added] of addedPhases) {
+        merged.set(id, { ...added })
+    }
+
+    // Override with changedPhases
+    for (const [id, changed] of changedPhases) {
+        const base = merged.get(id) ?? {}
+        merged.set(id, {
+            ...base, ...changed
+        })
+    }
+
+    return merged
 }
 
 /**
@@ -318,6 +378,7 @@ export const addedWorkers = new Map()
 export const changedWorkers = new Map()
 export const removedWorkers = new Map()
 
+// Record old workers data
 const oldWorkersData = new Map()
 const selectedWorkerRows = selectedWorkersTableList.querySelectorAll('tr.selected-worker-row')
 selectedWorkerRows.forEach(row => {
@@ -327,9 +388,10 @@ selectedWorkerRows.forEach(row => {
     }
 
     const defaultRateInput = row.querySelector('input.default-rate-input')
-    oldWorkersData.set(id, { defaultRate: defaultRateInput.value.trim() })
+    oldWorkersData.set(id, defaultRateInput.value.trim())
 })
 
+// Record any changes
 selectedWorkersTableList?.addEventListener('input', e => {
     const row = e.target.closest('tr.selected-worker-row')
     if (!row) {
@@ -342,5 +404,29 @@ selectedWorkersTableList?.addEventListener('input', e => {
     }
 
     const defaultRateInput = row.querySelector('input.default-rate-input')
-    changedWorkers.set(id, { defaultRate: defaultRateInput.value.trim() })
+    changedWorkers.set(id, defaultRateInput.value.trim())
 })
+
+/**
+ * Merges entries from addedWorkers and changedWorkers into a single Map.
+ *
+ * This function creates a new Map, copies all entries from addedWorkers into it,
+ * then copies all entries from changedWorkers, overwriting any existing entry with the same id.
+ * Both addedWorkers and changedWorkers are expected to be iterables of [id, value] pairs
+ * (e.g., Map instances or arrays of tuples).
+ *
+ * @returns {Map<any, any>} A Map of merged worker records keyed by id; entries from changedWorkers
+ *                          take precedence over entries from addedWorkers when ids conflict.
+ */
+export function getMergedAddedAndChangedWorkersMap() {
+    const merged = new Map()
+    for (const [id, added] of addedWorkers) {
+        merged.set(id, added)
+    }
+
+    for (const [id, changed] of changedWorkers) {
+        merged.set(id, changed)
+    }
+
+    return merged
+}

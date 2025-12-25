@@ -4,6 +4,11 @@ import { debounceAsync } from '../../../utility/debounce.js'
 import { Dialog } from '../../../render/dialog.js'
 import { Loader } from '../../../render/loader.js'
 import { die } from '../../../utility/utility.js'
+import { 
+    getMergedAddedAndChangedPhasesMap, 
+    getMergedAddedAndChangedProjectsMap, 
+    getMergedAddedAndChangedWorkersMap 
+} from '../record-changes.js'
 
 let isLoading = false
 
@@ -58,35 +63,34 @@ async function submit(e) {
 }
 
 /**
- * Retrieves project data from the project form.
+ * Constructs a plain object containing project fields by reading values from the
+ * Map returned by getMergedAddedAndChangedProjectsMap().
  *
- * This function extracts all project-related input values from the info section
- * of the project form, including name, description, budget, maximum workers,
- * and date/time fields. All string values are trimmed, and numeric values are
- * parsed to their appropriate types.
+ * The function extracts the following keys from the merged Map:
+ *  - 'name'
+ *  - 'description'
+ *  - 'budget'
+ *  - 'maxWorkers'
+ *  - 'startDateTime'
+ *  - 'completionDateTime'
  *
- * @throws {Error} Throws an error if the info section is not found in the form
- *
- * @returns {Object} An object containing the project data:
- *      - name: string The project name
- *      - description: string The project description
- *      - budget: number The project budget as a floating-point number
- *      - maxWorkers: number The maximum number of workers as an integer
- *      - startDateTime: string The project start date and time
- *      - completionDateTime: string The project completion date and time
+ * @returns {Object} Project data object
+ * @property {(string|null)} name Human-readable project name
+ * @property {(string|null)} description Project description or notes
+ * @property {(number|null)} budget Numeric budget value (currency units)
+ * @property {(number|null)} maxWorkers Maximum allowed workers for the project
+ * @property {(string|null)} startDateTime ISO-8601 start date/time string, if available
+ * @property {(string|null)} completionDateTime ISO-8601 completion date/time string, if available
  */
 function getProjectData() {
-    const infoSection = projectForm.querySelector('#info_section')
-    if (!infoSection) {
-        throw new Error('Info section not found in the form')
-    }
+    const merged = getMergedAddedAndChangedProjectsMap()
 
-    const name = infoSection.querySelector('input[name="name"]').value.trim()
-    const description = infoSection.querySelector('textarea[name="description"]').value.trim()
-    const budget = parseFloat(infoSection.querySelector('input[name="budget"]').value.trim())
-    const maxWorkers = parseInt(infoSection.querySelector('input[name="max_workers"]').value.trim(), 10)
-    const startDateTime = infoSection.querySelector('input[name="start_date_time"]').value.trim()
-    const completionDateTime = infoSection.querySelector('input[name="completion_date_time"]').value.trim()
+    const name = merged.get('name');
+    const description = merged.get('description');
+    const budget = merged.get('budget');
+    const maxWorkers = merged.get('maxWorkers');
+    const startDateTime = merged.get('startDateTime');
+    const completionDateTime = merged.get('completionDateTime');
 
     return {
         name,
@@ -99,80 +103,44 @@ function getProjectData() {
 }
 
 /**
- * Retrieves phase data from the project form.
+ * Collects phase records from the merged map of added and changed phases.
  *
- * This function queries the project form for the phase section and extracts
- * all phase form cards within it. For each card, it collects the phase details
- * including name, description, budget information, and date/time values.
+ * This function retrieves the Map returned by getMergedAddedAndChangedPhasesMap(),
+ * extracts each value (phase object) preserving the Map's iteration order, and
+ * returns them as an array suitable for submission or further processing.
  *
- * @throws {Error} If the phase section element is not found in the form
- *
- * @returns {Array<Object>} An array of phase data objects, each containing:
- *      - name: string The trimmed phase name
- *      - description: string The trimmed phase description
- *      - budget: number The parsed budget value as a float
- *      - contingencyRate: number The parsed contingency rate as a float
- *      - budgetNote: string The trimmed budget note
- *      - startDateTime: string The trimmed start date and time value
- *      - completionDateTime: string The trimmed completion date and time value
+ * @returns {Array<Object>} Array of phase objects (empty if no phases present)
  */
 function getPhasesData() {
-    const phaseSection = projectForm.querySelector('#phase_section')
-    if (!phaseSection) {
-        throw new Error('Phases section not found in the form')
+    const phasesData = []
+
+    const merged = getMergedAddedAndChangedPhasesMap()
+    for (const value of merged.values()) {
+        phasesData.push(value)
     }
 
-    const phaseFormCards = phaseSection.querySelectorAll('.phase-form-card')
-    const phasesData = []
-    phaseFormCards.forEach(card => {
-        const name = card.querySelector('input[name="name"]').value.trim()
-        const description = card.querySelector('textarea[name="description"]').value.trim()
-        const budget = parseFloat(card.querySelector('input[name="budget"]').value.trim())
-        const contingencyRate = parseFloat(card.querySelector('input[name="contingency_rate"]').value.trim())
-        const budgetNote = card.querySelector('textarea[name="budget_note"]').value.trim()
-        const startDateTime = card.querySelector('input[name="start_date_time"]').value.trim()
-        const completionDateTime = card.querySelector('input[name="completion_date_time"]').value.trim()
-
-        phasesData.push({
-            name,
-            description,
-            budget,
-            contingencyRate,
-            budgetNote,
-            startDateTime,
-            completionDateTime
-        })
-    })
     return phasesData
 }
 
 /**
- * Retrieves worker data from the project form's workers section.
+ * Builds an array of worker data objects from the merged added/changed workers map.
  *
- * This function queries the DOM for selected worker rows within the workers section
- * of the project form and extracts the worker ID and default rate from each row.
- * It validates that the workers section exists before attempting to gather data.
+ * This function retrieves a Map via getMergedAddedAndChangedWorkersMap(), iterates
+ * over its entries [id, defaultRate], and returns an array where each element is
+ * an object with 'id' and 'defaultRate' properties. The resulting array preserves
+ * the iteration order of the Map and is suitable for serialization or form submission.
  *
- * @throws {Error} If the workers section element is not found in the form
- *
- * @returns {Array<Object>} An array of worker data objects:
- *      - id: string The worker's unique identifier from the data-workerid attribute
- *      - defaultRate: number The worker's default rate parsed as a float
+ * @returns {Array<{id: (string|number), defaultRate: number}>} Array of worker objects:
+ *      - id: string|number Identifier of the worker (key from the Map)
+ *      - defaultRate: number Default rate/value associated with the worker (Map value)
  */
 function getWorkersData() {
-    const workersSection = projectForm.querySelector('#workers_section')
-    if (!workersSection) {
-        throw new Error('Workers section not found in the form')
-    }
-
-    const selectedWorkerRows = workersSection.querySelectorAll('.selected-workers-table > table tr.selected-worker-row')
     const workersData = []
-    selectedWorkerRows.forEach(row => {
-        const id = row.getAttribute('data-workerid')
-        const defaultRate = parseFloat(row.querySelector('input.default-rate-input').value.trim())
 
+    const merged = getMergedAddedAndChangedWorkersMap()
+    for (const [id, defaultRate] of merged) {
         workersData.push({ id, defaultRate })
-    })
+    }
     return workersData
 }
 
