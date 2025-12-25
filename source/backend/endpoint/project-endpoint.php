@@ -217,6 +217,13 @@ class ProjectEndpoint extends Endpoint
                 throw new ValidationException('Workers data is required.', ['At least one worker is required.']);
             }
 
+            $maximumWorkers = (int) $project['maxWorkers'];
+            if (count($workers) > $maximumWorkers) {
+                throw new ValidationException('Exceeded maximum number of workers.', [
+                    "Number of workers exceeds the maximum allowed ({$maximumWorkers})."
+                ]);
+            }
+
             sanitizeData($project);
 
             $workValidator = new WorkValidator();
@@ -260,10 +267,15 @@ class ProjectEndpoint extends Endpoint
             $workersContainer = new WorkerContainer();
             foreach ($workers as $worker) {
                 $userValidator->validateDefaultRate($worker['defaultRate']);
-                $phaseWorkerBudgetValidator['addBudget']((float) $worker['defaultRate'] ?? DEFAULT_RATE_MIN);
                 if ($userValidator->hasErrors()) {
                     throw new ValidationException('Worker Validation Failed.', $userValidator->getErrors());
                 }
+
+                $phaseWorkerBudgetValidator['addBudget']((float) $worker['defaultRate'] ?? DEFAULT_RATE_MIN);
+                if ($workValidator->hasErrors()) {
+                    throw new ValidationException('Phase Validation Failed.', $workValidator->getErrors());
+                }
+
                 $workersContainer->add(Worker::createPartial([
                     'publicId'      => UUID::fromString($worker['id']),
                     'defaultRate'   => floatval($worker['defaultRate']) ?? DEFAULT_RATE_MIN
@@ -391,7 +403,7 @@ class ProjectEndpoint extends Endpoint
                 throw new ValidationException('Cannot decode data.');
             }
 
-            $project = ProjectModel::findById($projectId);
+            $project = ProjectModel::findFull($projectId, ['phases' => true]);
             if (!$project) {
                 throw new NotFoundException('Project is not found.');
             }
@@ -479,7 +491,8 @@ class ProjectEndpoint extends Endpoint
                 }
             }
 
-            // TODO: Add validations here
+            $instance = new self();
+
             $workersArray = $data['workers'] ?? [];
             foreach ($workersArray as $key => $arr) {
                 foreach ($arr as $value) {
@@ -495,6 +508,21 @@ class ProjectEndpoint extends Endpoint
             // Save project edits
             if ($projectData && count($projectData) > 1) {
                 $workValidator->validateMultiple($projectData);
+                
+                if (!empty($projectData['phases'])) {
+                    // Validate project - phase budget bounds
+                    $totalPhasesBudget = $instance->getTotalPhaseBudget($project,  $projectData['phases']);
+                    $projectPhaseBudgetValidator = $workValidator->createBudgetBoundaryValidator($projectData['budget'] ?? $project->getBudget());
+                    $projectPhaseBudgetValidator['addBudget']($totalPhasesBudget);
+                }
+
+                if (!empty($projectData['workers'])) {
+                    // Validate phase - worker budget bounds
+                    $totalDefaultRate = $instance->getTotalWorkerDefaultRate($project, $projectData['workers']);
+                    $phaseWorkerBudgetValidator = $workValidator->createBudgetBoundaryValidator($totalPhasesBudget);
+                    $phaseWorkerBudgetValidator['addBudget']($totalDefaultRate);
+                }
+
                 if ($workValidator->hasErrors()) {
                     throw new ValidationException('Project Validation Failed.', $workValidator->getErrors());
                 }
@@ -508,6 +536,154 @@ class ProjectEndpoint extends Endpoint
             ResponseExceptionHandler::handle('Project Edit Failed.', $e);
         }
     }
+
+    /**
+     * Calculates the total budget for a project's phases, taking into account new and edited phases.
+     *
+     * This method merges the provided 'toAdd' and 'toEdit' entries from $phasesRaw, constructs
+     * partial Phase objects for entries that include a 'budget' key, and then computes the
+     * total budget by iterating the project's existing phases. For each existing phase, if a
+     * corresponding new/edited phase exists it uses the new phase's budget; otherwise it uses
+     * the existing phase's budget.
+     *
+     * Expected $phasesRaw structure:
+     *      - toAdd: array[] Optional list of phase data to add
+     *      - toEdit: array[] Optional list of phase data to edit
+     * Only entries that contain a 'budget' key are considered when creating partial Phase objects.
+     *
+     * @param Project $project The project whose existing phases are considered
+     * @param array $phasesRaw Associative array of raw phase data, typically containing
+     *      - 'toAdd': array List of phases to add
+     *      - 'toEdit': array List of phases to edit
+     *
+     * @return float The summed budget of all phases after applying additions/edits
+     */
+    private function getTotalPhaseBudget(Project $project, array $phasesRaw): float
+    {
+        // Build overrides lookup
+        $overrides = [];
+
+        $merged = array_merge(
+            $phasesRaw['toAdd'] ?? [],
+            $phasesRaw['toEdit'] ?? []
+        );
+
+        foreach ($merged as $phaseRaw) {
+            if (!isset($phaseRaw['publicId'], $phaseRaw['budget'])) {
+                continue;
+            }
+
+            $overrides[$phaseRaw['publicId']] = (float) $phaseRaw['budget'];
+        }
+
+        // Sum budgets of existing phases (with overrides)
+        $total = 0.0;
+        $existingIds = [];
+
+        foreach ($project->getPhases() as $phase) {
+            $id = UUID::toString($phase->getPublicId());
+            $existingIds[] = $id;
+
+            $total += $overrides[$id] ?? $phase->getBudget();
+        }
+
+        // Add budgets of newly added phases
+        foreach ($overrides as $id => $budget) {
+            if (!in_array($id, $existingIds, true)) {
+                $total += $budget;
+            }
+        }
+
+        return $total;
+    }
+
+
+    /**
+     * Calculate the total default rate for a project's workers, taking into account
+     * new or edited worker entries provided in $workersRaw.
+     *
+     * This method builds a temporary WorkerContainer from the merged 'toAdd' and
+     * 'toEdit' entries in $workersRaw (only entries that include a 'defaultRate'
+     * are converted via Worker::createPartial). It then iterates the project's
+     * existing workers and, for each worker, uses the updated worker's defaultRate
+     * when an updated entry exists (matched by worker ID), or the existing worker's
+     * defaultRate otherwise. The sum of these rates is returned.
+     *
+     * @param Project $project The project whose existing workers are considered
+     * @param array $workersRaw Associative array possibly containing:
+     *      - 'toAdd': array List of worker data arrays to add (may include 'defaultRate')
+     *      - 'toEdit': array List of worker data arrays to edit (may include 'defaultRate')
+     *      Only entries with a 'defaultRate' key are considered for overrides.
+     *
+     * @return float The summed default rate of the project's workers after applying
+     *               additions/edits (as a float).
+     */
+    private function getTotalWorkerDefaultRate(Project $project, array $workersRaw): float
+    {
+        // Build overrides lookup
+        $overrides = [];
+
+        $merged = array_merge(
+            $workersRaw['toAdd'] ?? [],
+            $workersRaw['toEdit'] ?? []
+        );
+
+        foreach ($merged as $workersRaw) {
+            if (!isset($workersRaw['publicId'], $workersRaw['defaultRate'])) {
+                continue;
+            }
+
+            $overrides[$workersRaw['publicId']] = (float) $workersRaw['defaultRate'];
+        }
+
+        // Sum budgets of existing workers (with overrides)
+        $total = 0.0;
+        $existingIds = [];
+
+        foreach ($project->getWorkers() as $worker) {
+            $id = UUID::toString($worker->getPublicId());
+            $existingIds[] = $id;
+
+            $total += $overrides[$id] ?? $worker->getDefaultRate();
+        }
+
+        // Add budgets of newly added workers
+        foreach ($overrides as $id => $budget) {
+            if (!in_array($id, $existingIds, true)) {
+                $total += $budget;
+            }
+        }
+
+        return $total;
+    }
+
+    // private function getTotalWorkerDefaultRate(Project $project, array $workersRaw): float 
+    // {
+    //     $oldWorkers = $project->getWorkers();
+    //     $newWorkers = new WorkerContainer();
+
+    //     $mergedWorkersRaw = array_merge($workersRaw['toAdd'] ?? [], $workersRaw['toEdit'] ?? []);
+    //     foreach ($mergedWorkersRaw as $workerRaw) {
+    //         if (isset($workerRaw['defaultRate'])) {
+    //             $newWorkers->add(Worker::createPartial($workerRaw));
+    //         }
+    //     }
+
+    //     $totalDefaultRate = 0.00;
+    //     foreach ($oldWorkers as $oldWorker) {
+    //         $oldWorkerId = $oldWorker->getPublicId();
+    //         foreach ($newWorkers as $newWorker) {
+    //             $isTheSame = UUID::equals($oldWorkerId, $newWorker->getPublicId());
+    //             if ($isTheSame) {
+    //                 $totalDefaultRate += $newWorker->getDefaultRate();
+    //             } else {
+    //                 $totalDefaultRate += $oldWorker->getDefaultRate();
+    //             }
+    //         }
+    //     }
+        
+    //     return $totalDefaultRate;
+    // }
 
     /**
      * Not implemented (No use case)

@@ -42,6 +42,23 @@ class UUID
     }
 
     /**
+     * Compares two UUID instances for equality.
+     *
+     * This method delegates the comparison to the underlying uuid object's
+     * equals method and returns true if both UUID values represent the same
+     * identifier.
+     *
+     * @param UUID $firstId The first UUID instance to compare
+     * @param UUID $secondId The second UUID instance to compare
+     *
+     * @return bool True if the UUIDs are equal, false otherwise
+     */
+    public static function equals(UUID $firstId, UUID $secondId): bool
+    {
+        return $firstId->uuid->equals($secondId->uuid);
+    }
+
+    /**
      * Creates a UUID instance from a string representation.
      *
      * Parses the provided UUID string using Ramsey\Uuid and wraps the result in the project's UUID value object.

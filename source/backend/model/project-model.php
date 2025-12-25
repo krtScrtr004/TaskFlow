@@ -770,7 +770,6 @@ class ProjectModel extends Model
         }
     }
 
-    // FIXME: Apply changes to the database =============================================================================
     /**
      * Saves or updates a project with its associated data in the database.
      *
@@ -874,7 +873,6 @@ class ProjectModel extends Model
             throw new DatabaseException($e->getMessage());
         }
     }
-    // ==================================================================================================================
 
     /**
      * Deletes a phase entity.
