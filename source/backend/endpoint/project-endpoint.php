@@ -13,6 +13,7 @@ use App\Dependent\Phase;
 use App\Dependent\Worker;
 use App\Entity\Project;
 use App\Enumeration\Role;
+use App\Enumeration\WorkerStatus;
 use App\Enumeration\WorkStatus;
 use App\Exception\ForbiddenException;
 use App\Exception\NotFoundException;
@@ -21,6 +22,7 @@ use App\Middleware\Response;
 use App\Model\PhaseModel;
 use App\Model\ProjectModel;
 use App\Middleware\Csrf;
+use App\Service\ProjectService;
 use App\Utility\ResponseExceptionHandler;
 use App\Validator\userValidator;
 use App\Validator\UuidValidator;
@@ -276,7 +278,7 @@ class ProjectEndpoint extends Endpoint
             new DateTime($project['completionDateTime']));
             $newProject = Project::createPartial($project);
 
-            $newProject = ProjectModel::create($newProject);
+            $newProject = ProjectService::create($newProject);
 
             Response::success([
                 'projectId' => UUID::toString($newProject->getPublicId())
@@ -325,7 +327,29 @@ class ProjectEndpoint extends Endpoint
      *         "id": string (UUID)
      *       }
      *     ]
+     *   },
+     *   "workers": {
+     *     "toEdit": [
+     *       {
+     *         "id": string (UUID),
+     *         "defaultRate": float,
+     *         "status": string,
+     *       }
+     *     ],
+     *     "toAdd": [
+     *       {
+     *         "id": string (UUID),
+     *         "defaultRate": float,
+     *         "status": string,
+     *       }
+     *     ],
+     *     "toCancel": [
+     *       {
+     *         "id": string (UUID)
+     *       }
+     *     ]
      *   }
+     * 
      * }
      *
      * @param array $args Associative array containing route parameters:
@@ -376,12 +400,20 @@ class ProjectEndpoint extends Endpoint
 
             $projectData = ['id' => $project->getId()];
 
+            if (isset($data['project']['name'])) {
+                $projectData['name'] = $data['project']['name'];
+            }
+
             if (isset($data['project']['description'])) {
                 $projectData['description'] = $data['project']['description'];
             }
 
             if (isset($data['project']['budget'])) {
                 $projectData['budget'] = floatval($data['project']['budget']) ?? 0.00;
+            }
+
+            if (isset($data['project']['maxWorkers'])) {
+                $projectData['maxWorkers'] = $data['project']['maxWorkers'];
             }
 
             if (isset($data['project']['startDateTime'])) {
@@ -401,20 +433,18 @@ class ProjectEndpoint extends Endpoint
                 );
             }
 
-            $phases = [
-                'toEdit' => [],
-                'toAdd' => new PhaseContainer(),
-            ];
-
-            $phasesArray = $data['phase'] ?? [];
+            $phasesArray = $data['phases'] ?? [];
             foreach ($phasesArray as $key => &$arr) {
                 foreach ($arr as &$value) {
+                    $value['publicId'] = $value['id'];
+                    unset($value['id']);
+
                     sanitizeData($value);
 
                     $existingPhase = null;
                     // Phase to edit / cancel - fetch existing phase for date bounds
                     if ($key === 'toEdit' || $key === 'toCancel') {
-                        $existingPhase = PhaseModel::findById(UUID::fromString($value['id']));
+                        $existingPhase = PhaseModel::findById(UUID::fromString($value['publicId']));
                         if (!$existingPhase) {
                             throw new NotFoundException('Phase to edit not found.');
                         }
@@ -427,7 +457,6 @@ class ProjectEndpoint extends Endpoint
                         ? new DateTime($value['completionDateTime'])
                         : $existingPhase->getCompletionDateTime();
 
-                    // Validate date bounds for edits and additions
                     if ($key === 'toAdd' || $key === 'toEdit') {
                         $workValidator->validateDateBounds(
                             $startDateTime,
@@ -438,41 +467,28 @@ class ProjectEndpoint extends Endpoint
                         if ($workValidator->hasErrors()) {
                             throw new ValidationException('Phase Validation Failed.', $workValidator->getErrors());
                         }
+
+                        $value['status'] = WorkStatus::getStatusFromDates($startDateTime, $completionDateTime);
                     }
 
-                    if ($key === 'toEdit') {
-                        // Phase to edit
-                        $workValidator->validateMultiple([
-                            'description' => $value['description'],
-                            'startDateTime' => $startDateTime,
-                            'completionDateTime' => $completionDateTime
-                        ]);
-                        if ($workValidator->hasErrors()) {
-                            throw new ValidationException('Phase Validation Failed.', $workValidator->getErrors());
-                        }
-                        $phases['toEdit'][] = [
-                            'publicId' => UUID::fromString($value['id']),
-                            'description' => $value['description'],
-                            'startDateTime' => $startDateTime,
-                            'completionDateTime' => $completionDateTime,
-                            'status' => WorkStatus::getStatusFromDates($startDateTime, $completionDateTime)
-                        ];
-                    } elseif ($key === 'toAdd') {
-                        // New phase to add
-                        $phases['toAdd']->add(Phase::createPartial([
-                            'name' => $value['name'],
-                            'description' => $value['description'],
-                            'startDateTime' => $startDateTime,
-                            'completionDateTime' => $completionDateTime,
-                            'status' => WorkStatus::getStatusFromDates($startDateTime, $completionDateTime)
-                        ]));
-                    } else {
-                        // Phase to cancel
-                        $phases['toEdit'][] = [
-                            'publicId' => UUID::fromString($value['id']),
-                            'status' => WorkStatus::CANCELLED
-                        ];
+                    if ($key === 'toCancel') {
+                        $value['status'] = WorkStatus::CANCELLED;
                     }
+
+                    $projectData['phases'][$key][] = $value;
+                }
+            }
+
+            // TODO: Add validations here
+            $workersArray = $data['workers'] ?? [];
+            foreach ($workersArray as $key => $arr) {
+                foreach ($arr as $value) {
+                    $value['publicId'] = $value['id'];
+                    unset($value['id']);
+                    if ($key === 'toRemove') {
+                        $value['status'] = WorkerStatus::TERMINATED;
+                    }
+                    $projectData['workers'][$key][] = $value;
                 }
             }
 
@@ -483,13 +499,8 @@ class ProjectEndpoint extends Endpoint
                     throw new ValidationException('Project Validation Failed.', $workValidator->getErrors());
                 }
                 sanitizeData($projectData);
-                ProjectModel::save($projectData);
-            }
-            if ($phases['toAdd']->count() > 0) {
-                PhaseModel::createMultiple($project->getId(), $phases['toAdd']);
-            }
-            if (count($phases['toEdit']) > 0) {
-                PhaseModel::saveMultiple($phases['toEdit']);
+
+                ProjectService::save($projectData);
             }
 
             Response::success(['projectId' => UUID::toString($project->getPublicId())], 'Project edited successfully.');

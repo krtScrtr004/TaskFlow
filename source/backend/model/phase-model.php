@@ -562,74 +562,79 @@ class PhaseModel extends Model
 
         $instance = new self();
         try {
-            $instance->connection->beginTransaction();
-
             foreach ($phases as $data) {
-                if (!isset($data['id']) && !isset($data['publicId'])) {
-                    throw new InvalidArgumentException('Phase ID / Public ID is required for each phase in the array.');
-                }
-
                 if (isset($data['id']) && is_int($data['id']) && $data['id'] < 1) {
                     throw new InvalidArgumentException('Invalid phase ID provided.');
                 }
 
                 $phaseUpdateFields = [];
-                $params = [];
+                $projectPhaseParams = [];
                 if (isset($data['id'])) {
-                    $params[':id'] = $data['id'];
+                    $projectPhaseParams[':id'] = $data['id'];
                 } else {
-                    $params[':id'] = UUID::toBinary($data['publicId']);
+                    $projectPhaseParams[':id'] = $data['publicId'] instanceof UUID
+                    ? UUID::toBinary($data['publicId'])
+                    : UUID::toBinary(UUID::fromString($data['publicId']));
                 }
 
                 if (isset($data['name'])) {
                     $phaseUpdateFields[] = 'name = :name';
-                    $params[':name'] = trimOrNull($data['name']);
+                    $projectPhaseParams[':name'] = trimOrNull($data['name']);
                 }
 
                 if (isset($data['description'])) {
                     $phaseUpdateFields[] = 'description = :description';
-                    $params[':description'] = trimOrNull($data['description']);
+                    $projectPhaseParams[':description'] = trimOrNull($data['description']);
                 }
 
                 if (isset($data['status'])) {
                     $phaseUpdateFields[] = 'status = :status';
-                    $params[':status'] = $data['status']->value;
+                    $projectPhaseParams[':status'] = $data['status']->value;
                 }
 
                 if (isset($data['startDateTime'])) {
                     $phaseUpdateFields[] = 'start_date_time = :startDateTime';
-                    $params[':startDateTime'] = formatDateTime($data['startDateTime']);
+                    $projectPhaseParams[':startDateTime'] = formatDateTime($data['startDateTime']);
                 }
 
                 if (isset($data['completionDateTime'])) {
                     $phaseUpdateFields[] = 'completion_date_time = :completionDateTime';
-                    $params[':completionDateTime'] = formatDateTime($data['completionDateTime']);
+                    $projectPhaseParams[':completionDateTime'] = formatDateTime($data['completionDateTime']);
                 }
 
                 // Only execute update if there are fields to update
                 if (!empty($phaseUpdateFields)) {
-                    $query = "UPDATE `project_phase` SET " . implode(', ', $phaseUpdateFields) . " WHERE " . (isset($data['id']) ? 'id' : 'publicId') . " = :id";
+                    $query = "UPDATE `project_phase` SET " . implode(', ', $phaseUpdateFields) . " WHERE " . (isset($data['id']) ? 'id' : 'public_id') . " = :id";
                     $statement = $instance->connection->prepare($query);
-                    $statement->execute($params);
+                    $statement->execute($projectPhaseParams);
                 }
 
                 // Budget update 
 
                 $phaseBudgetUpdateFields = [];
+                $phaseBudgetParams = [];
+
+                if (isset($data['id'])) {
+                    $phaseBudgetParams[':id'] = $data['id'];
+                } else {
+                    $phaseBudgetParams[':id'] = $data['publicId'] instanceof UUID
+                        ? UUID::toBinary($data['publicId'])
+                        : UUID::toBinary(UUID::fromString($data['publicId']));
+                }
 
                 if (isset($data['budget'])) {
                     $phaseBudgetUpdateFields[] = 'budget = :budget';
-                    $params[':budget'] = $data['budget'];
+                    $phaseBudgetParams[':budget'] = $data['budget'];
                 }
 
                 if (isset($data['contingencyRate'])) {
                     $phaseBudgetUpdateFields[] = 'contingency_rate = :contingencyRate';
-                    $params[':contingencyRate'] = $data['contingencyRate'];
+                    $phaseBudgetParams[':contingencyRate'] = $data['contingencyRate'];
                 }
 
                 if (isset($data['budgetNote'])) {
                     $phaseBudgetUpdateFields[] = 'notes = :budgetNote';
-                    $params[':budgetNote'] = trimOrNull($data['budgetNote']);
+                    $phaseBudgetParams[':budgetNote'] = trimOrNull($data['budgetNote']);
                 }
 
                 if (!empty($phaseBudgetUpdateFields)) {
@@ -641,18 +646,15 @@ class PhaseModel extends Model
                         WHERE 
                             phase_id = " . (isset($data['id']) ? ':id' : '(SELECT id FROM `project_phase` WHERE public_id = :id)');
                     $budgetStatement = $instance->connection->prepare($budgetQuery);
-                    $budgetStatement->execute($params);
+                    $budgetStatement->execute($phaseBudgetParams);
                 }
             }
 
-            $instance->connection->commit();
             return true;
         } catch (PDOException $e) {
-            $instance->connection->rollBack();
             throw new DatabaseException($e->getMessage());
         }
     }
-
 
     /**
      * Retrieves all tasks associated with a specific phase.

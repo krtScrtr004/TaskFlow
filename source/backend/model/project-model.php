@@ -801,8 +801,6 @@ class ProjectModel extends Model
     {
         $instance = new self();
         try {
-            $instance->connection->beginTransaction();
-
             $updateFields = [];
             $params = [];
 
@@ -871,10 +869,8 @@ class ProjectModel extends Model
                 $statement->execute($params);
             }
 
-            $instance->connection->commit();
             return true;
         } catch (PDOException $e) {
-            $instance->connection->rollBack();
             throw new DatabaseException($e->getMessage());
         }
     }

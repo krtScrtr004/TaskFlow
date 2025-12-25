@@ -1009,6 +1009,24 @@ class ProjectWorkerModel extends Model
     }
 
     /**
+     * Creates a new ProjectWorker instance from the provided data.
+     *
+     * This method is intended to instantiate a ProjectWorker model using the given data.
+     * Currently, this method is not implemented as there is no use case for creating
+     * ProjectWorker instances directly from data arrays.
+     *
+     * @param mixed $data Data required to create a ProjectWorker instance. The expected
+     *      structure and type of this data is not defined as the method is not implemented.
+     *
+     * @return mixed Returns null as the method is not implemented.
+     */
+	public static function create(mixed $data): mixed
+	{
+        // Not implemented (No use case)
+		return null;
+	}
+
+    /**
      * Creates multiple project-worker assignments for a given project.
      *
      * This method inserts multiple worker assignments into the `project_worker` table for the specified project.
@@ -1072,25 +1090,6 @@ class ProjectWorkerModel extends Model
             throw new DatabaseException($e->getMessage());
         }
     }
-
-        /**
-     * Creates a new ProjectWorker instance from the provided data.
-     *
-     * This method is intended to instantiate a ProjectWorker model using the given data.
-     * Currently, this method is not implemented as there is no use case for creating
-     * ProjectWorker instances directly from data arrays.
-     *
-     * @param mixed $data Data required to create a ProjectWorker instance. The expected
-     *      structure and type of this data is not defined as the method is not implemented.
-     *
-     * @return mixed Returns null as the method is not implemented.
-     */
-	public static function create(mixed $data): mixed
-	{
-        // Not implemented (No use case)
-		return null;
-	}
-
 
     /**
      * Determines if a worker is currently assigned to a project and not terminated.
@@ -1161,97 +1160,121 @@ class ProjectWorkerModel extends Model
     }
 
     /**
-     * Updates a project-worker relationship record in the database.
+     * Persists a project-worker association.
      *
-     * This method updates fields of a project-worker association, identified either by its internal numeric ID,
-     * or by a combination of project_id and worker_id (which may be integers or UUIDs). Only fields present in the
-     * $data array will be updated. If no updatable fields are provided, the method is a no-op and returns true.
+     * Validates and normalizes the provided $data array, then inserts or updates
+     * the corresponding project-worker record in persistent storage. Handles
+     * required field checks, basic type coercion, timestamp management and
+     * conflict resolution (upsert behavior) as appropriate.
      *
-     * Transaction is used to ensure atomicity. If an error occurs, the transaction is rolled back and a
-     * DatabaseException is thrown.
+     * @param array $data Data required to create a ProjectWorker instance. The expected
+     *      structure and type of this data is not defined as the method is not implemented.
      *
-     * @param array $data Associative array containing update data with the following keys:
-     *      - id: int (optional) Internal projectWorker record ID. If not provided, both project_id and worker_id are required.
-     *      - projectId: int|UUID (optional) Project identifier (internal ID or UUID). Required if id is not provided.
-     *      - workerId: int|UUID (optional) Worker identifier (internal ID or UUID). Required if id is not provided.
-     *      - status: int|string|WorkerStatus (optional) New status for the project-worker relationship.
-     *
-     * @throws InvalidArgumentException If neither id nor both project_id and worker_id are provided.
-     * @throws DatabaseException If a database error occurs during the update.
-     *
-     * @return bool True on successful update or if nothing to update.
+     * @return bool Returns false as the method is not implemented.
      */
-	public static function save(array $data): bool
+    public static function save(array $data): bool 
+    {
+        return false;
+    }
+
+    /**
+     * Updates multiple project-worker records in the database.
+     *
+     * Iterates over the provided $workers array and updates each corresponding
+     * row in the `project_worker` table. Each worker entry must provide either
+     * an integer 'id' or a 'publicId' (UUID string). The method accepts a project
+     * identifier as either an integer primary key or a UUID; when a UUID is used
+     * the method resolves it to the internal id via a subquery and binds the
+     * binary UUID value to the prepared statement. Only supplied fields are
+     * updated — currently 'defaultRate' and 'status' are supported. If a worker
+     * item contains no updatable fields it is skipped.
+     *
+     * Validation performed:
+     *  - integer $projectId must be >= 1
+     *  - each worker must include 'id' or 'publicId'
+     *  - integer worker id must be >= 1
+     *
+     * The 'status' field may be provided as a WorkerStatus enum instance or as a
+     * scalar value; when an enum is provided its ->value is used.
+     *
+     * Database errors from PDO are wrapped and rethrown as DatabaseException.
+     *
+     * @param int|UUID $projectId Project identifier (integer ID or UUID)
+     * @param array $workers Array of associative arrays describing workers to update. Each item may contain:
+     *      - id: int Optional internal worker ID
+     *      - publicId: string|UUID Optional public UUID identifying the worker
+     *      - defaultRate: float|int Optional default rate to set
+     *      - status: WorkerStatus|int|string Optional status value or enum
+     *
+     * @return bool True if processing completed without database errors
+     *
+     * @throws InvalidArgumentException If $projectId or a worker id is invalid or a worker lacks an identifier
+     * @throws DatabaseException If a PDOException occurs while executing an update
+     */
+	public static function saveMultiple(int|UUID $projectId, array $workers): bool
 	{
+        if (is_int($projectId) && $projectId < 1) {
+            throw new InvalidArgumentException('Invalid project ID provided.');
+        }
+        
         $instance = new self();
         try {
-            $instance->connection->beginTransaction();
-
-            $updateFields = [];
-            $params = [];
-
-            // Determine identifier clause: prefer numeric/internal id when provided
-            if (isset($data['id'])) {
-                if (!is_int($data['id']) || $data['id'] < 1) {
-                    throw new InvalidArgumentException('Invalid Project Worker ID provided.');
-                }
-
-                $where = 'id = :id';
-                $params[':id'] = $data['id'];
-            } else {
-                // Require project_id and worker_id when id is not provided
-                if (!isset($data['projectId'])) {
-                    throw new InvalidArgumentException('Project ID is required.');
-                }
-
-                if (!isset($data['workerId'])) {
+            foreach ($workers as $data) {
+                if (!isset($data['id']) && !isset($data['publicId'])) {
                     throw new InvalidArgumentException('Worker ID is required.');
                 }
 
-                $whereParts = [];
-                // project_id may be int or UUID
-                if ($data['projectId'] instanceof UUID) {
-                    $whereParts[] = 'project_id = (SELECT id FROM `project` WHERE public_id = :projectPublicId)';
-                    $params[':projectPublicId'] = UUID::toBinary($data['projectId']);
-                } else {
-                    $whereParts[] = 'project_id = :projectId';
-                    $params[':projectId'] = $data['projectId'];
+                $id = $data['id'] 
+                    ? (int) $data['id']
+                    : UUID::fromString($data['publicId']);
+                if (is_int($id) && $id < 1) { 
+                    throw new InvalidArgumentException('Invalid worker ID provided.');                    
                 }
 
-                // worker_id may be int or UUID
-                if ($data['workerId'] instanceof UUID) {
-                    $whereParts[] = 'worker_id = (SELECT id FROM `user` WHERE public_id = :workerPublicId)';
-                    $params[':workerPublicId'] = UUID::toBinary($data['workerId']);
+                $updateFields = [];
+                $params = [];
+                $whereParts = [];
+
+                if (is_int($projectId)) {
+                    $whereParts[] = 'project_id = :projectId';
+                    $params[':projectId'] = $projectId;
                 } else {
-                    $whereParts[] = 'worker_id = :workerId';
-                    $params[':workerId'] = $data['workerId'];
+                    $whereParts[] = 'project_id = (SELECT id FROM `project` WHERE public_id = :projectId)';
+                    $params[':projectId'] = UUID::toBinary($projectId);
+                }
+
+                if (is_int($id)) {
+                    $whereParts[] = 'worker_id = :id';
+                    $params[':id'] = $id;
+                } else {
+                    $whereParts[] = 'worker_id = (SELECT id FROM `user` WHERE public_id = :id)';
+                    $params[':id'] = UUID::toBinary($id);
+                }
+
+                if (isset($data['defaultRate'])) {
+                    $updateFields[] = 'default_rate = :defaultRate';
+                    $params[':defaultRate'] = $data['defaultRate'];
+                }
+
+                if (isset($data['status'])) {
+                    $updateFields[] = 'status = :status';
+                    $params[':status'] = ($data['status'] instanceof WorkerStatus)
+                        ? $data['status']->value
+                        : $data['status'];
+                }
+
+                // Nothing to update
+                if (empty($updateFields)) {
+                    continue;
                 }
 
                 $where = implode(' AND ', $whereParts);
+                $query = 'UPDATE `project_worker` SET ' . implode(', ', $updateFields) . ' WHERE ' . $where;
+                $statement = $instance->connection->prepare($query);
+                $statement->execute($params);
             }
-
-            // Build update fields
-            if (isset($data['status'])) {
-                $updateFields[] = 'status = :status';
-                $params[':status'] = ($data['status'] instanceof WorkerStatus)
-                    ? $data['status']->value
-                    : $data['status'];
-            }
-
-            // Nothing to update
-            if (empty($updateFields)) {
-                $instance->connection->commit();
-                return true;
-            }
-
-            $query = 'UPDATE `project_worker` SET ' . implode(', ', $updateFields) . ' WHERE ' . $where;
-            $statement = $instance->connection->prepare($query);
-            $statement->execute($params);
-
-            $instance->connection->commit();
             return true;
         } catch (PDOException $e) {
-            $instance->connection->rollBack();
             throw new DatabaseException($e->getMessage());
         }
 	}
