@@ -436,7 +436,7 @@ class PhaseModel extends Model
      * ));
      * $phaseIds = PhaseModel::createMultiple(1, $container);
      */
-    public static function createMultiple(int $projectId, PhaseContainer $phases): void
+    public static function createMultiple(int $projectId, PhaseContainer $phases): bool
     {
         if ($projectId < 1) {
             throw new InvalidArgumentException('Invalid project ID provided.');
@@ -448,9 +448,7 @@ class PhaseModel extends Model
 
         $instance = new self();
         try {
-            $instance->connection->beginTransaction();
-
-            $phaseInsertQuery = 
+            $projectPhaseQuery = 
                 "INSERT INTO `project_phase` (
                     project_id,
                     public_id,
@@ -468,31 +466,20 @@ class PhaseModel extends Model
                     :completionDateTime,
                     :status
                 )";
-            $statement = $instance->connection->prepare($phaseInsertQuery);
-
-            $index = 0;
+            $phaseStatement = $instance->connection->prepare($projectPhaseQuery);                       
             foreach ($phases as $phase) {
-                if (!($phase instanceof Phase)) {
-                    throw new InvalidArgumentException("Item at index {$index} is not a Phase object.");
-                }
-
-                // Generate UUID if not provided
-                $publicId = $phase->getPublicId() ?? UUID::get();
-
-                // Prepare parameters
-                $params = [
+                $phaseStatement->execute([
                     ':projectId'            => $projectId,
-                    ':publicId'             => UUID::toBinary($publicId),
-                    ':name'                 => trimOrNull($phase->getName()),
-                    ':description'          => trimOrNull($phase->getDescription()),
+                    ':publicId'             => UUID::toBinary($phase->getPublicId()),
+                    ':name'                 => $phase->getName(),
+                    ':description'          => $phase->getDescription(),
                     ':startDateTime'        => formatDateTime($phase->getStartDateTime()),
                     ':completionDateTime'   => formatDateTime($phase->getCompletionDateTime()),
-                    ':status'               => $phase->getStatus() ? $phase->getStatus()->value : WorkStatus::PENDING->value
-                ];
-                $statement->execute($params);
+                    ':status'               => $phase->getStatus()->value,
+                ]);
 
-                $phaseBudgetInsertQuery = "
-                    INSERT INTO `project_phase_budget` (
+                $projectPhaseBudgetQuery = 
+                    "INSERT INTO `project_phase_budget` (
                         phase_id,
                         budget,
                         contingency_rate,
@@ -501,23 +488,21 @@ class PhaseModel extends Model
                         :phaseId,
                         :budget,
                         :contingencyRate,
-                        :budgetNote
+                        :notes
                     )";
-                $budgetStatement = $instance->connection->prepare($phaseBudgetInsertQuery);
-                $budgetParams = [
-                    ':phaseId'          => $instance->connection->lastInsertId(),
-                    ':budget'           => $phase->getBudget() ?? BUDGET_MIN,
-                    ':contingencyRate'  => $phase->getContingencyRate() ?? CONTINGENCY_RATE_MIN,
-                    ':budgetNote'       => trimOrNull($phase->getBudgetNote())
-                ];
-                $budgetStatement->execute($budgetParams);
 
-                $index++;
+                $phaseId = (int) $instance->connection->lastInsertId();
+                $budgetStatement = $instance->connection->prepare($projectPhaseBudgetQuery);
+                $budgetStatement->execute([
+                    ':phaseId'         => $phaseId,
+                    ':budget'          => $phase->getBudget() ?? 0.00,
+                    ':contingencyRate' => $phase->getContingencyRate() ?? 0.00,
+                    ':notes'           => $phase->getBudgetNote() ?? null,
+                ]);
             }
 
-            $instance->connection->commit();
+            return true;
         } catch (PDOException $e) {
-            $instance->connection->rollBack();
             throw new DatabaseException($e->getMessage());
         }
     }

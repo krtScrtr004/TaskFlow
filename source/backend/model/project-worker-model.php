@@ -1017,19 +1017,15 @@ class ProjectWorkerModel extends Model
      * The status for each assignment is set to WorkerStatus::ASSIGNED.
      *
      * @param int|UUID $projectId The public UUID or integer ID of the project to assign workers to.
-     * @param array $data Array of worker public UUIDs or binary IDs to be assigned to the project.
+     * @param WorkerContainer $workers Container of worker public UUIDs or binary IDs to be assigned to the project.
      *
      * @throws InvalidArgumentException If the data array is empty.
      * @throws DatabaseException If a database error occurs during the transaction.
      * 
      * @return void
      */
-    public static function createMultiple(int|UUID $projectId, array $data): void
+    public static function createMultiple(int|UUID $projectId, WorkerContainer $workers): bool
     {
-        if (empty($data)) {
-            throw new InvalidArgumentException('No data provided.');
-        }
-
         if (is_int($projectId) && $projectId < 1) {
             throw new InvalidArgumentException('Invalid project ID provided.');
         }
@@ -1040,13 +1036,12 @@ class ProjectWorkerModel extends Model
 
         $instance = new self();
         try {
-            $instance->connection->beginTransaction();
-
             $insertQuery = 
                 "INSERT INTO `project_worker` (
                     project_id, 
                     worker_id, 
-                    status
+                    status,
+                    default_rate
                 ) VALUES (
                     (
                         SELECT id 
@@ -1058,23 +1053,22 @@ class ProjectWorkerModel extends Model
                         FROM `user` 
                         WHERE public_id = :workerId
                     ),
-                    :status
+                    :status,
+                    :defaultRate
                 ) ON DUPLICATE KEY UPDATE 
                     status = VALUES(status)";
             $statement = $instance->connection->prepare($insertQuery);
-            foreach ($data as $id) {    
+            foreach ($workers as $worker) {    
                 $statement->execute([
                     ':projectId'    => $projectId,
-                    ':workerId'     => ($id instanceof UUID)
-                        ? UUID::toBinary($id)
-                        : $id,
-                    ':status'       => WorkerStatus::ASSIGNED->value
+                    ':workerId'     => UUID::toBinary($worker->getPublicId()),
+                    ':status'       => WorkerStatus::ASSIGNED->value,
+                    ':defaultRate'  => $worker->getDefaultRate()
                 ]);
             }
 
-            $instance->connection->commit();
+            return true;
         } catch (PDOException $e) {
-            $instance->connection->rollBack();
             throw new DatabaseException($e->getMessage());
         }
     }

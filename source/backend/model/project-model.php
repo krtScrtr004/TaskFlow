@@ -716,8 +716,6 @@ class ProjectModel extends Model
         $instance = new self();
 
         try {
-            $instance->connection->beginTransaction();
-
             $projectPublicId           =   $project->getPublicId() ?? UUID::get();
             $projectName               =   trimOrNull(string: $project->getName());
             $projectDescription        =   trimOrNull($project->getDescription());
@@ -726,8 +724,6 @@ class ProjectModel extends Model
             $projectStatus             =   $project->getStatus() ?? WorkStatus::PENDING;
             $projectStartDateTime      =   formatDateTime($project->getStartDateTime());
             $projectCompletionDateTime =   formatDateTime($project->getCompletionDateTime());
-            $projectPhases             =   $project->getPhases();
-            $projectWorkers            =   $project->getWorkers();
 
             $projectQuery = 
                 "INSERT INTO `project` (
@@ -765,146 +761,12 @@ class ProjectModel extends Model
             ]);
             $projectId = (int) $instance->connection->lastInsertId();
 
-            // Phase Insertion Query
-            if ($projectPhases && $projectPhases->count() > 0) {
-                $instance->insertPhases($projectId, $projectPhases);
-            }
-
-            if ($projectWorkers && $projectWorkers->count() > 0) {
-                $instance->insertWorkers($projectId, $projectWorkers);
-            }
-
-            $instance->connection->commit();
-
+            
             $project->setId($projectId);
             $project->setPublicId($projectPublicId);
             return $project;
         } catch (PDOException $e) {
-            $instance->connection->rollBack();
             throw new DatabaseException($e->getMessage());
-        }
-    }
-
-    /**
-     * Inserts multiple phase records for a given project into the `project_phase` table.
-     *
-     * This method prepares a single INSERT statement and reuses it while iterating over
-     * the provided PhaseContainer. For each phase it binds:
-     *  - project_id from $projectId
-     *  - public_id as binary via UUID::toBinary($phase->getPublicId() ?? UUID::get())
-     *  - name and description from the Phase object
-     *  - start_date_time and completion_date_time via formatDateTime()
-     *  - status from $phase->getStatus()->value
-     *
-     * Using a single prepared statement improves performance and ensures parameters are
-     * safely bound on each execute.
-     *
-     * @param int $projectId Database ID of the project to associate the phases with
-     * @param PhaseContainer $phases Iterable container of Phase objects to insert
-     *
-     * @return void
-     *
-     * @throws \PDOException If preparing or executing the insert statement fails
-     */
-    private function insertPhases(int $projectId, PhaseContainer $phases) {
-        // Phase Insertion Query
-        $projectPhaseQuery = 
-            "INSERT INTO `project_phase` (
-                project_id,
-                public_id,
-                name,
-                description,
-                start_date_time,
-                completion_date_time,
-                status
-            ) VALUES (
-                :projectId,
-                :publicId,
-                :name,
-                :description,
-                :startDateTime,
-                :completionDateTime,
-                :status
-            )";
-        $phaseStatement = $this->connection->prepare($projectPhaseQuery);                       
-        foreach ($phases as $phase) {
-            $phaseStatement->execute([
-                ':projectId'            => $projectId,
-                ':publicId'             => UUID::toBinary($phase->getPublicId()),
-                ':name'                 => $phase->getName(),
-                ':description'          => $phase->getDescription(),
-                ':startDateTime'        => formatDateTime($phase->getStartDateTime()),
-                ':completionDateTime'   => formatDateTime($phase->getCompletionDateTime()),
-                ':status'               => $phase->getStatus()->value,
-            ]);
-
-            $projectPhaseBudgetQuery = 
-                "INSERT INTO `project_phase_budget` (
-                    phase_id,
-                    budget,
-                    contingency_rate,
-                    notes
-                ) VALUES (
-                    :phaseId,
-                    :budget,
-                    :contingencyRate,
-                    :notes
-                )";
-
-            $phaseId = (int) $this->connection->lastInsertId();
-            $budgetStatement = $this->connection->prepare($projectPhaseBudgetQuery);
-            $budgetStatement->execute([
-                ':phaseId'         => $phaseId,
-                ':budget'          => $phase->getBudget() ?? 0.00,
-                ':contingencyRate' => $phase->getContingencyRate() ?? 0.00,
-                ':notes'           => $phase->getBudgetNote() ?? null,
-            ]);
-        }
-    }
-
-    /**
-     * Insert multiple workers for a project into the project_worker join table.
-     *
-     * Prepares a single INSERT statement and executes it once per Worker in the provided
-     * WorkerContainer. Each execution inserts a row with:
-     *  - project_id: the provided $projectId
-     *  - worker_id: resolved via subquery (SELECT id FROM `user` WHERE public_id = :workerId)
-     *  - status: set to WorkerStatus::ASSIGNED by default
-     *  - default_rate: taken from the Worker (falls back to 0.00 if null)
-     *
-     * The method converts worker public IDs to binary via UUID::toBinary() before binding
-     * and relies on the WorkerContainer being iterable yielding Worker objects that expose
-     * getPublicId() and getDefaultRate().
-     *
-     * @param int|string $projectId Project identifier used for the project_worker.project_id column
-     * @param WorkerContainer $workers Iterable container of Worker objects to associate with the project
-     *
-     * @return void
-     *
-     * @throws \PDOException If preparing or executing the statement fails
-     */
-    private function insertWorkers($projectId, WorkerContainer $workers) {
-        // Worker Insertion Query
-        $projectWorkerQuery = 
-            "INSERT INTO `project_worker` (
-                project_id,
-                worker_id,
-                status,
-                default_rate
-            ) VALUES (
-                :projectId,
-                (SELECT id FROM `user` WHERE public_id = :workerId),
-                :status,
-                :defaultRate
-            )";
-        $workerStatement = $this->connection->prepare($projectWorkerQuery);                       
-        foreach ($workers as $worker) {
-            $workerStatement->execute([
-                ':projectId'    => $projectId,
-                ':workerId'     => UUID::toBinary($worker->getPublicId()),
-                ':status'       => WorkerStatus::ASSIGNED->value,
-                ':defaultRate'  => $worker->getDefaultRate(),
-            ]);
         }
     }
 
