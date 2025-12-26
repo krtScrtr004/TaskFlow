@@ -2,8 +2,7 @@ import { addWorker } from '../../modal.js'
 import { Dialog } from '../../../../render/dialog.js'
 import { Http } from '../../../../utility/http.js'
 import { handleException } from '../../../../utility/handle-exception.js'
-import { fetchWorkers } from '../../fetch.js'
-import { createFullName } from '../../../../utility/utility.js'
+import { createFullName, die } from '../../../../utility/utility.js'
 
 let isLoading = false
 
@@ -13,10 +12,8 @@ const addTaskForm = document.querySelector('#add_task_form')
 const noAssignedWorkerWall = addTaskForm?.querySelector('.no-assigned-worker-wall')
 
 const thisProjectId = addTaskForm?.dataset.projectid
-if (!thisProjectId || thisProjectId.trim() === '') {
-    console.error('Project ID not found.')
-    Dialog.somethingWentWrong()
-}
+if (!thisProjectId || thisProjectId.trim() === '') 
+    die('Project ID not found')
 
 try {
     await addWorker(

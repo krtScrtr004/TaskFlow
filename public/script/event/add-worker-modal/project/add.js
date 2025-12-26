@@ -1,15 +1,14 @@
 import { addWorker } from '../modal.js' 
 import { Http } from '../../../utility/http.js' 
-import { Dialog } from '../../../render/dialog.js' 
 import { Notification } from '../../../render/notification.js' 
+import { die } from '../../../utility/utility.js'
 
 let isLoading = false // Flag to prevent duplicate requests
 
 const projectContainer = document.querySelector('.project-container') 
 const thisProjectId =  projectContainer?.dataset.projectid ?? null 
 if (!thisProjectId || thisProjectId.trim() === '') { // Check if project ID is missing or empty
-    console.error('Project ID not found.')
-    Dialog.somethingWentWrong() // Show error dialog if project ID is invalid
+    die('Project ID not found')
 }
 
 // Call addWorker function event handler

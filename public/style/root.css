@@ -250,6 +250,7 @@ textarea {
 	resize: none;
 	font-family: inherit;
 	font-size: 1rem;
+	line-height: 1.4rem;
 }
 
 @media (max-width: 992px) {

@@ -194,6 +194,7 @@ button:has(.text-w-icon):not(.unset-button) {
 	box-sizing: content-box;
 	padding: var(--space);
 	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+	border-radius: var(--border-radius);
 }
 
 .modal-wrapper hr {
@@ -712,22 +713,18 @@ button > .text-w-icon {
 
 .input-rules-container > .rules li {
 	font-size: 0.9rem;
-	font-weight: 300;
+	font-weight: 400;
 	color: var(--dark-white);
 	line-height: 1.3rem;
 }
 
 .input-rules-container > .rules li.valid {
 	color: var(--green);
-	opacity: 0.8;
 }
 
 .input-rules-container > .rules li.invalid {
 	color: var(--red);
-	opacity: 0.8;
 }
-
-
 
 @media (max-width: 768px) {
 	.content-section-block {

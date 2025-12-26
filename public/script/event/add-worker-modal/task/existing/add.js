@@ -1,8 +1,7 @@
 import { addWorker } from '../../modal.js'
 import { Http } from '../../../../utility/http.js'
-import { Dialog } from '../../../../render/dialog.js'
 import { Notification } from '../../../../render/notification.js'
-import { createFullName } from '../../../../utility/utility.js'
+import { createFullName, die } from '../../../../utility/utility.js'
 
 let isLoading = false
 
@@ -10,14 +9,13 @@ const viewTaskInfo = document.querySelector('.view-task-info')
 
 const thisProjectId = viewTaskInfo?.dataset.projectid
 if (!thisProjectId || thisProjectId.trim() === '') {
-    console.error('Project ID not found.')
-    Dialog.somethingWentWrong()
+    die('Project ID not found')
 }
 
 await addWorker(
     thisProjectId,
     async (projectId, workerIds) => await sendToBackend(projectId, workerIds),
-    () => { },
+    () => {},
     () => {
         const delay = 1500
         Notification.success('Workers added to task successfully.', delay)
@@ -54,28 +52,22 @@ async function sendToBackend(projectId, workerIds) {
         }
         isLoading = true
 
-        if (!projectId || projectId.trim() === '') {
+        if (!projectId || projectId.trim() === '')
             throw new Error('Project ID is required.')
-        }
 
         const phaseId = viewTaskInfo?.dataset.phaseid
-        if (!phaseId || phaseId.trim() === '') {
+        if (!phaseId || phaseId.trim() === '')
             throw new Error('Phase ID not found in the DOM.')
-        }
 
         const taskId = viewTaskInfo?.dataset.taskid
-        if (!taskId || taskId.trim() === '') {
+        if (!taskId || taskId.trim() === '')
             throw new Error('Task ID not found in the DOM.')
-        }
 
-        if (!workerIds || workerIds.length === 0) {
+        if (!workerIds || workerIds.length === 0)
             throw new Error('No worker IDs provided.')
-        }
 
         const response = await Http.POST(`projects/${projectId}/phases/${phaseId}/tasks/${taskId}/workers`, { workerIds })
-        if (!response) {
-            throw new Error('No response from server.')
-        }
+        if (!response) throw new Error('No response from server.')
 
         return response
     } catch (error) {
