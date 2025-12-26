@@ -30,28 +30,6 @@ class SingleFormController implements Controller
                 'single-form/change-password/submit'
             ]
         ],
-        'createProject' => [
-            'title' => 'Create New Project',
-            'description' => 'Fill in the details below to create a new project.',
-            'form' => 'createProject',
-            'script' => [
-                'single-form/project/open-phase',
-                'single-form/project/create/add-phase',
-                'single-form/project/create/cancel-phase',
-                'single-form/project/create/submit',
-            ]
-        ],
-        'editProject' => [
-            'title' => 'Edit Project Details',
-            'description' => 'Modify the details of your project below.',
-            'form' => 'editProject',
-            'script' => [
-                'single-form/project/open-phase',
-                'single-form/project/edit/cancel-phase',
-                'single-form/project/edit/add-phase',
-                'single-form/project/edit/submit',
-            ],
-        ],
         'addTask' => [
             'title' => '',
             'description' => 'Fill in the details below to add a new task.',
