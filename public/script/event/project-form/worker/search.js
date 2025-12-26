@@ -1,7 +1,7 @@
 import { createFullName, die } from '../../../utility/utility.js'
 import { Loader } from '../../../render/loader.js'
 import { debounceAsync } from '../../../utility/debounce.js'
-import { createWorkerFetcher } from './fetch.js'
+import { createWorkerFetcher, rebuildEndpointWithSearchTerm } from './fetch.js'
 import { addedWorkers } from '../record-changes.js'
 
 let endpoint = null
@@ -125,35 +125,6 @@ async function submit(e) {
     } finally {
         Loader.delete()
     }
-}
-
-/**
- * Rebuilds an endpoint URL by adding, updating, or removing the "key" query parameter.
- *
- * This function parses the query portion of baseEndpoint (if any), preserves all
- * existing query parameters, and then ensures the "key" parameter reflects the
- * provided term:
- *      - If term is a non-empty value, "key" is set to that value.
- *      - If term is falsy (undefined, null, empty string, etc.), the "key" parameter
- *        is removed from the query string.
- *
- * The function returns the base path followed by '?' and the serialized query string.
- * Note: if baseEndpoint contains a fragment (#) after the query string it will be
- * treated as part of the query and percent-encoded; if no query parameters remain,
- * the returned string will include a trailing '?'.
- *
- * @param {string} baseEndpoint The original endpoint URL (may include an existing query string)
- * @param {string} [term] Search term to set as the 'key' parameter; falsy values remove 'key'
- * @return {string} The reconstructed endpoint with the updated query string
- */
-function rebuildEndpointWithSearchTerm(baseEndpoint, term) {
-    const params = new URLSearchParams(baseEndpoint.split('?')[1] || '')
-    if (term) {
-        params.set('key', term)
-    } else {
-        params.delete('key')
-    }
-    return `${baseEndpoint.split('?')[0]}?${params.toString()}`
 }
 
 /**

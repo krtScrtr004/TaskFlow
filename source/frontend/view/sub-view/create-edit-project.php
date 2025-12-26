@@ -298,6 +298,7 @@ if ($project) {
                             <section class="worker-pool-listing">
                                 <ul class="list">
                                     <!-- List will dynamically display here -->
+                                    <div class="sentinel"></div>
                                 </ul>
 
                                 <div class="no-workers-wall no-content-wall flex-col">
