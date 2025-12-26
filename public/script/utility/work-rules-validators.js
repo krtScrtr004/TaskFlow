@@ -351,7 +351,7 @@ export function applyValidationToRules(
         li.classList.remove(validClass, invalidClass)
         li.classList.add(passed ? validClass : invalidClass)
     }
-    return !hasInvalid
+    return hasInvalid
 }
 
 // Pre-defined rule mappings for convenience
