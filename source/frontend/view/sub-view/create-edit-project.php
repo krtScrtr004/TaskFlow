@@ -298,8 +298,8 @@ if ($project) {
                             <section class="worker-pool-listing">
                                 <ul class="list">
                                     <!-- List will dynamically display here -->
-                                    <div class="sentinel"></div>
                                 </ul>
+                                <div class="sentinel"></div>
 
                                 <div class="no-workers-wall no-content-wall flex-col">
                                     <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No Workers Found

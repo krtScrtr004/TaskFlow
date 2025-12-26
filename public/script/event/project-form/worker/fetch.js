@@ -1,37 +1,40 @@
 import { Http } from '../../../utility/http.js'
 
 /**
- * Creates a worker fetcher function bound to a default endpoint and options.
+ * Creates a worker fetcher function bound to an optional default endpoint.
  *
- * The returned async function, fetchWorkers(overrideEndpoint), performs an HTTP GET
- * to the effective endpoint (overrideEndpoint || defaultEndpoint). If an offset
- * option is provided it is appended as an 'offset' query parameter via
- * rebuildEndpointWithSearchTerm. Concurrent calls are guarded by an internal
- * isLoading flag — subsequent calls while a request is in progress will be
- * ignored and a warning logged. On success the fetcher resolves with response.data.
- * Errors from the HTTP call or missing responses are propagated to the caller.
+ * The returned async function (fetchWorkers) requests worker data from an endpoint
+ * using Http.GET. It prevents concurrent requests via an internal isLoading guard
+ * (logs a warning and returns if a fetch is already in progress), optionally appends
+ * an offset query parameter using rebuildEndpointWithParams when offset > 1, and
+ * returns response.data from the server. If no endpoint is provided, the fetcher
+ * returns undefined. If the HTTP call yields no response, the fetcher throws an Error.
  *
- * @param {string|null} [defaultEndpoint=null] Default endpoint URL used when an override is not provided.
- * @param {Object} [options] Configuration options.
- * @param {number|string} [options.offset] Optional offset value to include as the 'offset' query parameter.
- * @returns {function(string=): Promise<any>} Async fetcher function that accepts an optional overrideEndpoint and returns the server response data.
- * @throws {Error} If no response is returned from the server or if the underlying HTTP request fails.
+ * @param {string|null} [defaultEndpoint=null] Default endpoint URL used when the returned
+ *        fetcher is invoked without an override endpoint.
+ *
+ * @returns {function(string=, {offset?: number}=): Promise<*>} Async fetcher function:
+ *      - @param {string} [overrideEndpoint] Optional endpoint to override the default.
+ *      - @param {object} [options] Optional options object.
+ *           - offset: number Optional page offset (if > 1, appended to endpoint query params).
+ *
+ * The returned Promise resolves with the server response's data (response.data),
+ * resolves with undefined if no endpoint is available or a request is already running,
+ * and rejects with an Error if the HTTP call fails or returns no response.
  */
-export function createWorkerFetcher(defaultEndpoint = null, { offset } = options) {
+export function createWorkerFetcher(defaultEndpoint = null) {
     let isLoading = false
     
-    return async function fetchWorkers(overrideEndpoint) {
+    return async function fetchWorkers(overrideEndpoint,  { offset } = {}) {
         if (isLoading) {
             console.warn('Search already in progress. Please wait.')
             return
         }       
-        endpoint = overrideEndpoint ?? defaultEndpoint ?? ''
+        let endpoint = overrideEndpoint ?? defaultEndpoint ?? ''
         if (!endpoint || endpoint === '') return
 
-        if (offset) {
-            const params = new URLSearchParams()
-            params.append('offset', offset)
-            endpoint = rebuildEndpointWithSearchTerm(endpoint, params)
+        if (!isNaN(offset) && offset > 1) {
+            endpoint = rebuildEndpointWithParams(endpoint, { offset: offset })
         }   
 
         try {
@@ -51,30 +54,23 @@ export function createWorkerFetcher(defaultEndpoint = null, { offset } = options
 }
 
 /**
- * Rebuilds an endpoint URL by adding, updating, or removing the "key" query parameter.
+ * Rebuilds an endpoint URL by appending the provided parameters to its query string.
  *
- * This function parses the query portion of baseEndpoint (if any), preserves all
- * existing query parameters, and then ensures the "key" parameter reflects the
- * provided term:
- *      - If term is a non-empty value, "key" is set to that value.
- *      - If term is falsy (undefined, null, empty string, etc.), the "key" parameter
- *        is removed from the query string.
+ * The function splits the given endpoint on '?', preserves and parses any existing query
+ * parameters, appends each key/value from `params` using URLSearchParams.append (so duplicate
+ * keys are allowed and encoded), and returns the path combined with the resulting encoded query.
  *
- * The function returns the base path followed by '?' and the serialized query string.
- * Note: if baseEndpoint contains a fragment (#) after the query string it will be
- * treated as part of the query and percent-encoded; if no query parameters remain,
- * the returned string will include a trailing '?'.
- *
- * @param {string} baseEndpoint The original endpoint URL (may include an existing query string)
- * @param {string} [term] Search term to set as the 'key' parameter; falsy values remove 'key'
- * @return {string} The reconstructed endpoint with the updated query string
+ * @param {string} endpoint The endpoint URL or path which may already contain a query string.
+ * @param {Record<string, string|number|boolean|null|undefined>} [params={}] An object whose own enumerable properties will be appended to the query string. Values are converted to strings by URLSearchParams.
+ * @returns {string} The rebuilt endpoint including the encoded query string (i.e. "path?key=val&..."). Note: if no query parameters exist after processing, a trailing '?' will still be present.
  */
-export function rebuildEndpointWithSearchTerm(baseEndpoint, term) {
-    const params = new URLSearchParams(baseEndpoint.split('?')[1] || '')
-    if (term) {
-        params.set('key', term)
-    } else {
-        params.delete('key')
+export function rebuildEndpointWithParams(endpoint, params = {}) {
+    const [path, query = ''] = endpoint.split('?')
+
+    const searchQuery = new URLSearchParams(query)
+    for (const [key, value] of Object.entries(params)) {
+        searchQuery.append(key, value)
     }
-    return `${baseEndpoint.split('?')[0]}?${params.toString()}`
+
+    return `${path}?${searchQuery.toString()}`
 }

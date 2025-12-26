@@ -1,8 +1,9 @@
 import { createFullName, die } from '../../../utility/utility.js'
 import { Loader } from '../../../render/loader.js'
 import { debounceAsync } from '../../../utility/debounce.js'
-import { createWorkerFetcher, rebuildEndpointWithSearchTerm } from './fetch.js'
+import { createWorkerFetcher, rebuildEndpointWithParams } from './fetch.js'
 import { addedWorkers } from '../record-changes.js'
+import { initializeInfiniteScroll } from './infinite-scroll.js'
 
 let endpoint = null
 
@@ -24,24 +25,16 @@ if (!workerList) {
     throw new Error('Worker list container not found in workers section.')
 }
 
+
 /**
- * Initializes search workers by configuring the search endpoint and wiring UI event handlers.
+ * Initializes the worker search functionality for the project form.
  *
- * This function assigns the provided endpoint to the module-level `endpoint` variable,
- * creates a debounced submit handler that rate-limits calls to `submit(e)` using
- * `debounceAsync` with a 300ms delay, and attaches that handler to the search form's
- * "submit" event and the search button's "click" event (if those elements exist).
- * Finally, it programmatically triggers an initial search by invoking `searchButton.click()`
- * when the search button is present.
+ * Sets up event listeners on the search form and button to handle search submissions
+ * with debounced asynchronous requests. Also initializes infinite scroll for search results.
+ * Triggers an initial search on load.
  *
- * The implementation uses optional chaining when registering listeners so it tolerates
- * missing DOM elements (no-op if `searchBarForm` or `searchButton` are undefined).
- *
- * @param {string} endpointParam The search API endpoint (required). Assigned to the module-level `endpoint`.
- *
- * @throws {Error} If `endpointParam` is falsy; an endpoint is required to initialize the search.
- *
- * @returns {void}
+ * @param {string} endpointParam - The API endpoint URL to use for searching workers.
+ * @throws {Error} If the endpoint parameter is not provided.
  */
 export function initializeSearch(endpointParam) {
     if (!endpointParam) {
@@ -52,6 +45,8 @@ export function initializeSearch(endpointParam) {
     const handler = e => debounceAsync(submit(e), 300)
     searchBarForm.addEventListener('submit', handler)
     searchButton.addEventListener('click', handler)
+
+    initializeInfiniteScroll(endpoint)
 
     searchButton?.click()
 }
@@ -73,7 +68,7 @@ export function initializeSearch(endpointParam) {
  * Errors thrown during validation or fetching are re-thrown so callers can handle them.
  *
  * Side effects:
- *  - Mutates `endpoint` by calling `rebuildEndpointWithSearchTerm(endpoint, searchTerm)`.
+ *  - Mutates `endpoint` by calling `rebuildEndpointWithParams(endpoint, { key: searchTerm })`.
  *  - Reads/writes DOM under `workersSection` and `searchBarForm`.
  *  - Shows/hides `noWorkersWall` and uses `Loader.full()` / `Loader.delete()`.
  *  - Uses `createWorkerFetcher()` to obtain the fetch function and `renderWorkerPoolCard()` to
@@ -100,7 +95,7 @@ async function submit(e) {
 
     // Append search term to endpoint
     const searchTerm = searchInput.value.trim()
-    endpoint = rebuildEndpointWithSearchTerm(endpoint, searchTerm)
+    endpoint = rebuildEndpointWithParams(endpoint, { key: searchTerm })
 
     try {
         Loader.full(workerList)
