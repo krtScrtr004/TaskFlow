@@ -24,14 +24,14 @@ use App\Dependent\Worker;
  *
  * @return string|bool HTML string of the table row on success, or false on failure
  */
-function selectedWorkerRow(Worker $worker): bool|string
+function selectedWorkerRowProjectForm(Worker $worker): bool|string
 {
     $id = htmlspecialchars(UUID::toString($worker->getPublicId()));
     $name = htmlspecialchars(createFullName($worker->getFirstName(), $worker->getMiddleName(), $worker->getLastName()));
     $defaultRate = $worker->getDefaultRate();
 
     ob_start();
-    ?>
+?>
 
     <!-- Selected workers will be added here dynamically -->
     <tr class="selected-worker-row" data-workerid="<?= $id ?>">
@@ -56,6 +56,54 @@ function selectedWorkerRow(Worker $worker): bool|string
         </td>
     </tr>
 
-    <?php
+<?php
+    return ob_get_clean();
+}
+
+/**
+ * Generates an HTML table row for a selected worker in the dashboard.
+ *
+ * This function creates a table row (<tr>) containing the worker's profile image,
+ * full name, editable default rate input, and a button to remove the worker.
+ * The row includes data attributes for the worker's public ID and uses
+ * sanitized output for all user-facing values.
+ *
+ * @param Worker $worker The Worker object containing profile and rate information
+ *
+ * @return bool|string The generated HTML string for the worker row, or false on failure
+ */
+function selectedWorkerRowDashboard(Worker $worker): bool|string
+{
+    $id = htmlspecialchars(UUID::toString($worker->getPublicId()));
+    $name = htmlspecialchars(createFullName($worker->getFirstName(), $worker->getMiddleName(), $worker->getLastName()));
+    $defaultRate = $worker->getDefaultRate();
+    $profileLink = $worker->getProfileLink()
+        ? htmlspecialchars($worker->getProfileLink())
+        : ICON_PATH . 'worker_w.svg';
+
+    ob_start();
+?>
+    <tr data-workerid="<?= $id ?>">
+        <td>
+            <div class="worker-profile-name flex-row flex-child-center-h">
+                <img class="fit-contain circle" src="<?= $profileLink ?>" alt="" height="40">
+                <p class="single-line-ellipsis"><?= $name ?></p>
+            </div>
+        </td>
+        <td>
+            <div class="input-w-prefix">
+                <span class="input-prefix">₱</span>
+                <input type="number" name="default_rate" id="default_rate" placeholder="<?= DEFAULT_RATE_MIN ?>" value="<?= $defaultRate ?>" required>
+            </div>
+        </td>
+        <td>
+            <span class="center-child">
+                <button class="remove-worker-button unset-button" type="button">
+                    <img src="<?= ICON_PATH . 'delete_r.svg' ?>" alt="Remove Worker" title="Remove Worker" height="24">
+                </button>
+            </span>
+        </td>
+    </tr>
+<?php
     return ob_get_clean();
 }

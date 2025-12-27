@@ -326,7 +326,7 @@ if ($project) {
                                 <tbody>
                                     <!-- Selected workers will be added here dynamically -->
                                     <?php foreach ($projectData['workers'] as $worker) {
-                                        echo selectedWorkerRow($worker);
+                                        echo selectedWorkerRowProjectForm($worker);
                                     } ?>
                                 </tbody>
                             </table>

@@ -5,7 +5,7 @@
 	--blue: #007bff;
 	--light-black: #242424;
 	--black: #1e1e1e;
-	--red: #ad3131;
+	--red: #c42838;
 	--green: #38ff5d;	
 	--yellow: #ffb61e;
 	--orange: #cb5835;
@@ -226,6 +226,7 @@ button {
 	border: 1px solid transparent;
 	font-weight: 800;
 	box-shadow: var(--box-shadow);
+	padding: 8px;
 }
 
 button:hover {

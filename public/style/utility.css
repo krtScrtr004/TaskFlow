@@ -45,6 +45,10 @@
 	background-color: var(--black);
 }
 
+.light-black-bg {
+	background-color: var(--light-black);
+}
+
 .blue-bg {
 	background-color: var(--blue);
 }

@@ -14,11 +14,15 @@
 	opacity: 0.9;
 }
 
+/*  */
+
 main.main-page {
 	display: flex;
 	flex-direction: column;
 	padding: var(--space);
 }
+
+/*  */
 
 .content-section-block {
 	background-color: var(--black);
@@ -30,6 +34,8 @@ main.main-page {
 .content-section-block > .heading-title {
 	margin-bottom: 1rem;
 }
+
+/*  */
 
 .unset-button {
 	all: unset; /* removes all default styles */
@@ -46,6 +52,8 @@ button:has(.text-w-icon):not(.unset-button) {
 	width: 20ch;
 }
 
+/*  */
+
 .line-divider > hr {
 	width: 100%;
 }
@@ -55,6 +63,12 @@ button:has(.text-w-icon):not(.unset-button) {
 	left: 50%;
 	transform: translate(-50%, 0);
 	padding: 5px;
+}
+
+/*  */
+
+.close-button p {
+	font-size: 1.2rem;
 }
 
 /* --------------- INPUT WITH PREFIX / SUFFIX --------------- */
@@ -724,6 +738,75 @@ button > .text-w-icon {
 
 .input-rules-container > .rules li.invalid {
 	color: var(--red);
+}
+
+/*  */
+
+#add_worker_table > .add-worker-table {
+	width: 38rem;
+	max-width: unset;
+	min-height: 25rem;
+	height: fit-content;
+	padding: 0;
+}
+
+#add_worker_table > .add-worker-table > * {
+	padding: 1.3rem;
+}
+
+#add_worker_table .heading {
+	border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+#add_worker_table .table-container {
+	flex: 1;
+	height: 100%;
+	max-height: 600px;
+	overflow-y: auto;
+	padding-top: 0;
+}
+
+#add_worker_table .buttons {
+	gap: 0.5rem;
+}
+
+#add_worker_table table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+#add_worker_table table th,
+#add_worker_table table td {
+	text-align: start;
+	padding: 0.8rem;
+}
+
+#add_worker_table table th:first-child,
+#add_worker_table table td:first-child, 
+#add_worker_table table td:first-child p {
+	width: 35ch;
+}
+
+#add_worker_table table th:last-child {
+	text-align: center;
+}
+
+#add_worker_table table tbody > tr {
+	border-radius: var(--input-color);
+	cursor: pointer;
+	transition: background-color 0.2ms ease-in-out;
+}
+
+#add_worker_table table tbody > tr:hover {
+	background-color: var(--black);
+}
+
+#add_worker_table table tbody .worker-profile-name {
+	gap: 0.5rem;
+}
+
+#add_worker_table #add_more_worker_button {
+	border: 1px dashed var(--white);
 }
 
 @media (max-width: 768px) {

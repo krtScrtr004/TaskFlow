@@ -28,6 +28,7 @@ $projectData = [
 
 require_once COMPONENT_PATH . 'template/user-info-card.php';
 require_once COMPONENT_PATH . 'template/add-worker-modal.php';
+require_once COMPONENT_PATH . 'template/add-worker-table.php';
 
 ?>
 <!-- Main Content -->
