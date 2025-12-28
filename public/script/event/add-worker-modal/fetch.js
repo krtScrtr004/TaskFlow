@@ -40,7 +40,7 @@ async function fetchFromDatabase(url, key = null, offset) {
         const endpoint = `${path}?${params.toString()}`
         const response = await Http.GET(endpoint)
         if (!response)
-            throw new Error('Workers data not found!')
+            throw new Error('No response from the server!')
 
         isFetchingWorkers = false
         return response.data

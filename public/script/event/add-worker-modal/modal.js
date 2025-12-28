@@ -50,42 +50,41 @@ export function cleanUp() {
 }
 
 /**
- * Sets up the add worker button event handler.
- * 
- * @param {string} projectId - The project ID
- * @param {Function} asyncFunction - The async function to execute when adding workers
- * @param {Function} action - Optional callback to execute with the result
- * @param {Function} onSuccess - Optional success callback
+ * Toggles the visibility of the "No Workers Wall" and the worker list in the Add Worker modal.
+ *
+ * This function shows or hides the "No Workers Wall" element and the worker list container
+ * based on the provided boolean flag. It manipulates CSS classes to control the display:
+ * - When `show` is true, the "No Workers Wall" is displayed and the worker list is hidden.
+ * - When `show` is false, the worker list is displayed and the "No Workers Wall" is hidden.
+ *
+ * @param {boolean} show Determines whether to show the "No Workers Wall" (`true`) or the worker list (`false`).
+ *
+ * @throws Will log an error to the console if the "No Workers Wall" or worker list container elements are not found.
  */
-export async function addWorker(
-    projectId,
-    asyncFunction,
-    action = () => { },
-    onSuccess = () => { }
-) {
-    if (!asyncFunction || typeof asyncFunction !== 'function') {
-        console.error('Invalid asyncFunction provided to addWorker.')
-        return
-    }
+export function toggleNoWorkerWall(show, container) {
+    const noWorkersWall = container.querySelector('.no-workers-wall')
+    const listContainer = container.querySelector('.worker-list > .list')
 
-    const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
-    if (!addWorkerModalTemplate) {
-        console.error('Add Worker Modal template not found.')
-        Dialog.somethingWentWrong()
-        return
-    }
+    if (show) {
+        noWorkersWall?.classList.add('flex-col')
+        noWorkersWall?.classList.remove('no-display')
 
-    const confirmAddWorkerButton = addWorkerModalTemplate.querySelector('#confirm_add_worker_button')
-    if (!confirmAddWorkerButton) {
-        console.error('Confirm Add Worker button not found.')
-        Dialog.somethingWentWrong()
-        return
-    }
+        listContainer?.classList.remove('flex-col')
+        listContainer?.classList.add('no-display')
+    } else {
+        noWorkersWall?.classList.add('no-display')
+        noWorkersWall?.classList.remove('flex-col')
 
-    confirmAddWorkerButton.addEventListener('click', e =>
-        debounceAsync(addWorkerButtonEvent(e, projectId, confirmAddWorkerButton, asyncFunction, action, onSuccess), 300)
-    )
+        listContainer?.classList.add('flex-col')
+        listContainer?.classList.remove('no-display')
+    }
 }
+
+/**
+ * ------------------------------------------------------------------------------------------------------|
+ * DEPRECATED - Will be removed soon                                                                     |
+ * ------------------------------------------------------------------------------------------------------|
+ */
 
 /**
  * Handles the add worker button click event.
@@ -142,32 +141,39 @@ async function addWorkerButtonEvent(e, projectId, confirmAddWorkerButton, asyncF
 }
 
 /**
- * Toggles the visibility of the "No Workers Wall" and the worker list in the Add Worker modal.
- *
- * This function shows or hides the "No Workers Wall" element and the worker list container
- * based on the provided boolean flag. It manipulates CSS classes to control the display:
- * - When `show` is true, the "No Workers Wall" is displayed and the worker list is hidden.
- * - When `show` is false, the worker list is displayed and the "No Workers Wall" is hidden.
- *
- * @param {boolean} show Determines whether to show the "No Workers Wall" (`true`) or the worker list (`false`).
- *
- * @throws Will log an error to the console if the "No Workers Wall" or worker list container elements are not found.
+ * Sets up the add worker button event handler.
+ * 
+ * @param {string} projectId - The project ID
+ * @param {Function} asyncFunction - The async function to execute when adding workers
+ * @param {Function} action - Optional callback to execute with the result
+ * @param {Function} onSuccess - Optional success callback
  */
-export function toggleNoWorkerWall(show, container) {
-    const noWorkersWall = container.querySelector('.no-workers-wall')
-    const listContainer = container.querySelector('.worker-list > .list')
-
-    if (show) {
-        noWorkersWall?.classList.add('flex-col')
-        noWorkersWall?.classList.remove('no-display')
-
-        listContainer?.classList.remove('flex-col')
-        listContainer?.classList.add('no-display')
-    } else {
-        noWorkersWall?.classList.add('no-display')
-        noWorkersWall?.classList.remove('flex-col')
-
-        listContainer?.classList.add('flex-col')
-        listContainer?.classList.remove('no-display')
+export async function addWorker(
+    projectId,
+    asyncFunction,
+    action = () => { },
+    onSuccess = () => { }
+) {
+    if (!asyncFunction || typeof asyncFunction !== 'function') {
+        console.error('Invalid asyncFunction provided to addWorker.')
+        return
     }
+
+    const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
+    if (!addWorkerModalTemplate) {
+        console.error('Add Worker Modal template not found.')
+        Dialog.somethingWentWrong()
+        return
+    }
+
+    const confirmAddWorkerButton = addWorkerModalTemplate.querySelector('#confirm_add_worker_button')
+    if (!confirmAddWorkerButton) {
+        console.error('Confirm Add Worker button not found.')
+        Dialog.somethingWentWrong()
+        return
+    }
+
+    confirmAddWorkerButton.addEventListener('click', e =>
+        debounceAsync(addWorkerButtonEvent(e, projectId, confirmAddWorkerButton, asyncFunction, action, onSuccess), 300)
+    )
 }
