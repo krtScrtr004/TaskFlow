@@ -1,20 +1,30 @@
 /**
- * Hides a modal dialog when any close or okay button inside the modal is clicked.
+ * Hides a modal when its close/okay buttons are clicked.
  *
- * This function attaches click event listeners to all elements matching
- * 'button.close-button' or 'button.okay-button' within the provided modal wrapper.
- * When any of these buttons are clicked, the modal's display style is set to 'none',
- * effectively hiding the modal from view.
+ * This function attaches click event listeners to any buttons within the provided
+ * modal wrapper that match the selector 'button.close-button, button.okay-button'.
+ * On click it prevents the default action, adds a 'fade-out' class to start an
+ * exit animation, and listens for the 'animationend' event (registered with
+ * { once: true }) to remove the 'fade-out', 'flex-col', and 'flex-row' classes
+ * and add the 'no-display' class. When the animation completes the optional
+ * callback is invoked.
  *
- * @param {HTMLElement} modalWrapper The DOM element representing the modal wrapper.
- *      Should contain buttons with classes 'close-button' or 'okay-button' to trigger hiding.
- *      - modalWrapper: HTMLElement The modal container to be hidden.
- *      - button.close-button: HTMLButtonElement Button to close the modal.
- *      - button.okay-button: HTMLButtonElement Button to confirm and close the modal.
+ * @param {Element} modalWrapper The modal wrapper element containing the buttons
+ * @param {Function|null} [callback=null] Optional callback invoked after the modal
+ *                                        has finished its hide animation
  *
- * @returns {void} Does not return a value.
+ * @throws {Error} If modalWrapper is not provided or not an instance of Element
+ * @throws {Error} If callback is provided but is not a function
+ *
+ * @return {void}
  */
-export function hideModal(modalWrapper) {
+export function hideModal(modalWrapper, callback = null) {
+    if (!modalWrapper || !(modalWrapper instanceof Element))
+        throw new Error('Modal wrapper must be a valid element')
+
+    if (callback && typeof callback !== 'function')
+        throw new Error('Callback must be a function')
+
     const buttons = modalWrapper.querySelectorAll('button.close-button, button.okay-button')
     buttons.forEach(button => {
         button.addEventListener('click', e => {
@@ -22,10 +32,14 @@ export function hideModal(modalWrapper) {
 
             modalWrapper.classList.add('fade-out')
             modalWrapper.addEventListener('animationend', () => {
-                if (modalWrapper.style.display !== 'none') {
-                    modalWrapper.style.display = 'none'
-                }
-                modalWrapper.classList.remove('fade-out')
+                modalWrapper.classList.remove(
+                    'fade-out', 
+                    'flex-col', 
+                    'flex-row',
+                )
+                modalWrapper.classList.add('no-display')
+
+                callback()
             }, { once: true })
         })
     })
