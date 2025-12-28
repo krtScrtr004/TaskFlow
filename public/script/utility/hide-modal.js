@@ -42,7 +42,7 @@ export function hideModal(modalWrapper) {
                     )
                     modalWrapper.classList.add('no-display')
 
-                    callback()
+                    if (callback) callback()
                 }, { once: true })
             })
 

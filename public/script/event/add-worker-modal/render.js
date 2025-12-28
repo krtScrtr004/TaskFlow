@@ -1,6 +1,11 @@
-import { createFullName } from '../../utility/utility.js'
+import { createFullName, getValidationConstraints } from '../../utility/utility.js'
+import { selectedUsers } from './select.js'
 
 const ICON_PATH = '/public/asset/image/icon/'
+
+const VALIDATION_CONSTRAINTS = await getValidationConstraints()
+if (!VALIDATION_CONSTRAINTS)
+    console.warn('Failed to load validation constraints')
 
 /**
  * Creates and appends a worker card to the worker list.
@@ -24,6 +29,7 @@ export function createWorkerListCard(worker, workerListContainer = null) {
     checkbox.type = 'checkbox'
     checkbox.name = worker.id
     checkbox.id = worker.id
+    checkbox.checked = selectedUsers.has(worker.id)
     workerCheckbox.appendChild(checkbox)
 
     // Create label
@@ -91,4 +97,82 @@ export function createWorkerListCard(worker, workerListContainer = null) {
     workerCheckbox.appendChild(label)
 
     workerList.appendChild(workerCheckbox)
+}
+
+export function renderSelectedWorkerRow(worker) {
+    const id = worker.id || ''
+    const name = createFullName(worker.firstName, worker.middleName, worker.lastName) || ''
+    const defaultRate = worker.defaultRate ?? ''
+    const profileLink = worker.profileLink || ICON_PATH + 'worker_w.svg'
+
+    const tr = document.createElement('tr')
+    tr.dataset.workerid = id
+
+    // First cell: profile + name
+    const tdProfile = document.createElement('td')
+    const profileWrap = document.createElement('div')
+    profileWrap.className = 'worker-profile-name flex-row flex-child-center-h'
+
+    const img = document.createElement('img')
+    img.className = 'fit-contain circle'
+    img.src = profileLink
+    img.alt = ''
+    img.height = 40
+
+    const nameP = document.createElement('p')
+    nameP.className = 'single-line-ellipsis'
+    nameP.textContent = name
+
+    profileWrap.appendChild(img)
+    profileWrap.appendChild(nameP)
+    tdProfile.appendChild(profileWrap)
+
+    // Second cell: default rate input with prefix
+    const tdRate = document.createElement('td')
+    const rateWrap = document.createElement('div')
+    rateWrap.className = 'input-w-prefix'
+
+    const prefix = document.createElement('span')
+    prefix.className = 'input-prefix'
+    prefix.textContent = '₱'
+
+    const input = document.createElement('input')
+    input.type = 'number'
+    input.name = 'default_rate'
+    input.id = 'default_rate'
+    input.placeholder = VALIDATION_CONSTRAINTS.DEFAULT_RATE_MIN ?? 0.00
+    input.value = defaultRate
+    input.step = 0.01
+    input.min = VALIDATION_CONSTRAINTS.DEFAULT_RATE_MIN
+    input.max = VALIDATION_CONSTRAINTS.DEFAULT_RATE_MAX
+    input.required = true
+
+    rateWrap.appendChild(prefix)
+    rateWrap.appendChild(input)
+    tdRate.appendChild(rateWrap)
+
+    // Third cell: remove button
+    const tdRemove = document.createElement('td')
+    const spanCenter = document.createElement('span')
+    spanCenter.className = 'center-child'
+
+    const button = document.createElement('button')
+    button.className = 'remove-worker-button unset-button'
+    button.type = 'button'
+
+    const delImg = document.createElement('img')
+    delImg.src = ICON_PATH + 'delete_r.svg'
+    delImg.alt = 'Remove Worker'
+    delImg.title = 'Remove Worker'
+    delImg.height = 24
+
+    button.appendChild(delImg)
+    spanCenter.appendChild(button)
+    tdRemove.appendChild(spanCenter)
+
+    tr.appendChild(tdProfile)
+    tr.appendChild(tdRate)
+    tr.appendChild(tdRemove)
+
+    return tr
 }

@@ -2,6 +2,8 @@ import { addWorker } from '../modal.js'
 import { Http } from '../../../utility/http.js' 
 import { Notification } from '../../../render/notification.js' 
 import { die } from '../../../utility/utility.js'
+import { openTableModal } from '../table.js'
+import { selectedUsers } from '../select.js'
 
 let isLoading = false // Flag to prevent duplicate requests
 
@@ -12,15 +14,22 @@ if (!thisProjectId || thisProjectId.trim() === '') { // Check if project ID is m
 }
 
 // Call addWorker function event handler
-await addWorker(
-    thisProjectId, 
-    async (projectId, workerIds) => await sendToBackend(projectId, workerIds), // Callback to send data workers to add to a project
-    () => {
-        const delay = 1500
-        setTimeout(() => window.location.reload(), delay)
-        Notification.success('Workers added to project successfully.', delay)
-    }
-)
+// await addWorer(
+//     thisProjectId, 
+//     async (projectId, workerIds) => await sendToBackend(projectId, workerIds), // Callback to send data workers to add to a project
+//     () => {
+//         const delay = 1500
+//         setTimeout(() => window.location.reload(), delay)
+//         Notification.success('Workers added to project successfully.', delay)
+//     }
+// )
+
+const params = new URLSearchParams()
+params.append('status', 'unassigned')
+params.append('role', 'worker')
+const endpoint = `users?${params.toString()}`
+
+openTableModal(endpoint, [...selectedUsers])
 
 /**
  * Sends a list of worker IDs to the backend to associate them with a specific project.

@@ -742,7 +742,7 @@ button > .text-w-icon {
 
 /*  */
 
-#add_worker_table > .add-worker-table {
+#add_worker_table_template > .add-worker-table {
 	width: 38rem;
 	max-width: unset;
 	min-height: 25rem;
@@ -750,15 +750,15 @@ button > .text-w-icon {
 	padding: 0;
 }
 
-#add_worker_table > .add-worker-table > * {
+#add_worker_table_template > .add-worker-table > * {
 	padding: 1.3rem;
 }
 
-#add_worker_table .heading {
+#add_worker_table_template .heading {
 	border-radius: var(--border-radius) var(--border-radius) 0 0;
 }
 
-#add_worker_table .table-container {
+#add_worker_table_template .table-container {
 	flex: 1;
 	height: 100%;
 	max-height: 600px;
@@ -766,46 +766,45 @@ button > .text-w-icon {
 	padding-top: 0;
 }
 
-#add_worker_table .buttons {
+#add_worker_table_template .buttons {
 	gap: 0.5rem;
 }
 
-#add_worker_table table {
+#add_worker_table_template table {
 	width: 100%;
 	border-collapse: collapse;
 }
 
-#add_worker_table table th,
-#add_worker_table table td {
+#add_worker_table_template table th,
+#add_worker_table_template table td {
 	text-align: start;
 	padding: 0.8rem;
 }
 
-#add_worker_table table th:first-child,
-#add_worker_table table td:first-child, 
-#add_worker_table table td:first-child p {
+#add_worker_table_template table th:first-child,
+#add_worker_table_template table td:first-child {
 	width: 35ch;
 }
 
-#add_worker_table table th:last-child {
+#add_worker_table_template table th:last-child {
 	text-align: center;
 }
 
-#add_worker_table table tbody > tr {
+#add_worker_table_template table tbody > tr {
 	border-radius: var(--input-color);
 	cursor: pointer;
 	transition: background-color 0.2ms ease-in-out;
 }
 
-#add_worker_table table tbody > tr:hover {
+#add_worker_table_template table tbody > tr:hover {
 	background-color: var(--black);
 }
 
-#add_worker_table table tbody .worker-profile-name {
+#add_worker_table_template table tbody .worker-profile-name {
 	gap: 0.5rem;
 }
 
-#add_worker_table #add_more_worker_button {
+#add_worker_table_template #add_more_worker_button {
 	border: 1px dashed var(--white);
 }
 

@@ -266,7 +266,7 @@ class ProjectWorkerEndpoint extends Endpoint
             foreach ($workerIds as $workerId) {
                 $ids[] = UUID::fromString($workerId);
             }
-            ProjectWorkerModel::createMultiple($project->getId(), $ids);
+            ProjectWorkerModel::createMultiple($project->getId(), $ids); 
 
             Response::success([], 'Workers added successfully.');
         } catch (Throwable $e) {

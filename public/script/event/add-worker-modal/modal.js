@@ -6,6 +6,7 @@ import { handleException } from '../../utility/handle-exception.js'
 import { searchWorkerEvent } from './search.js'
 import { infiniteScrollWorkers } from './infinite-scroll.js'
 import { selectedUsers } from './select.js'
+import { hideModal } from '../../utility/hide-modal.js'
 
 const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
 
@@ -20,30 +21,32 @@ export function initializeAddWorkerModal(projectId, endpoint, workerListContaine
     searchWorkerEvent(projectId, endpoint, { workerListContainer: workerListContainer })
     infiniteScrollWorkers(projectId, endpoint, '', { workerListContainer: workerListContainer })
     cancelAddWorkerModal()
+
+    hideModal(addWorkerModalTemplate).create(addWorkerModalTemplate.querySelector('#confirm_add_worker_button'))
 }
 
 /**
  * Handles the cancel button click event to close the modal and reset state.
  */
 export function cancelAddWorkerModal() {
-    const workerContainer = addWorkerModalTemplate?.querySelector('.worker-list > .list')
-    const cancelButton = addWorkerModalTemplate?.querySelector('#cancel_add_worker_button')
+    hideModal(addWorkerModalTemplate).create(
+        addWorkerModalTemplate.querySelector('#cancel_add_worker_button'),
+        () => { cleanUp() }
+    )
+}
 
-    if (!cancelButton) {
-        console.error('Cancel button not found.')
-        return
-    }
+/**
+ * Clean up the "add worker" modal UI and state.
+ *
+ * @returns {void}
+ */
+export function cleanUp() {
+    const workerContainer = addWorkerModalTemplate.querySelector('.worker-list > .list')
+    if (workerContainer) workerContainer.textContent = ''
+    selectedUsers.clear()
 
-    cancelButton.addEventListener('click', () => {
-        addWorkerModalTemplate.classList.remove('flex-col')
-        addWorkerModalTemplate.classList.add('no-display')
-
-        if (workerContainer) workerContainer.textContent = ''
-        selectedUsers.clear()
-
-        const searchBarForm = addWorkerModalTemplate?.querySelector('form.search-bar')
-        searchBarForm.reset()
-    })
+    const searchBarForm = addWorkerModalTemplate.querySelector('form.search-bar')
+    searchBarForm.reset()
 }
 
 /**

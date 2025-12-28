@@ -28,7 +28,9 @@ function selectedWorkerRowProjectForm(Worker $worker): bool|string
 {
     $id = htmlspecialchars(UUID::toString($worker->getPublicId()));
     $name = htmlspecialchars(createFullName($worker->getFirstName(), $worker->getMiddleName(), $worker->getLastName()));
-    $defaultRate = $worker->getDefaultRate();
+    $defaultRate = $worker->getDefaultRate() !== 0.00
+        ? $worker->getDefaultRate()
+        : '';
 
     ob_start();
 ?>
@@ -76,7 +78,9 @@ function selectedWorkerRowDashboard(Worker $worker): bool|string
 {
     $id = htmlspecialchars(UUID::toString($worker->getPublicId()));
     $name = htmlspecialchars(createFullName($worker->getFirstName(), $worker->getMiddleName(), $worker->getLastName()));
-    $defaultRate = $worker->getDefaultRate();
+    $defaultRate = $worker->getDefaultRate() !== 0.00
+        ? $worker->getDefaultRate()
+        : '';
     $profileLink = $worker->getProfileLink()
         ? htmlspecialchars($worker->getProfileLink())
         : ICON_PATH . 'worker_w.svg';
@@ -93,7 +97,7 @@ function selectedWorkerRowDashboard(Worker $worker): bool|string
         <td>
             <div class="input-w-prefix">
                 <span class="input-prefix">₱</span>
-                <input type="number" name="default_rate" id="default_rate" placeholder="<?= DEFAULT_RATE_MIN ?>" value="<?= $defaultRate ?>" required>
+                <input type="number" name="default_rate" id="default_rate" placeholder="<?= DEFAULT_RATE_MIN ?>" value="<?= $defaultRate ?>" step="0.01" min="<?= DEFAULT_RATE_MIN ?>" max="<?= DEFAULT_RATE_MAX ?>" required>
             </div>
         </td>
         <td>

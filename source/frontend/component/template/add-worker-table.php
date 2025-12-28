@@ -1,6 +1,6 @@
 <?php use App\Dependent\Worker; ?>
 
-<section id="add_worker_table" class="modal-wrapper no-display">
+<section id="add_worker_table_template" class="modal-wrapper no-display">
 
     <div class="add-worker-table modal flex-col light-black-bg">
         <section class="heading flex-row flex-space-between">
@@ -27,11 +27,12 @@
 
                 <!-- Body -->
                 <tbody>
+                    <!--  -->
                 </tbody>
 
             </table>
 
-            <div class="no-worker-wall no-content-wall flex-col full-body-content">
+            <div class="no-workers-wall no-content-wall flex-col full-body-content">
                 <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No Workers Selected" title="No Workers Selected" height="75">
                 <span>
                     <h3>No Workers Selected</h3>
