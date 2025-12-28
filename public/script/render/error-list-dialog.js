@@ -44,5 +44,5 @@ export function errorListDialog(
     parent.insertAdjacentHTML('afterbegin', HTML)
 
     const modalWrapper = document.querySelector('#error-list-dialog-wrapper')
-    hideModal(modalWrapper)
+    hideModal(modalWrapper).create(modalWrapper.querySelector('.close-button'))
 }

@@ -55,7 +55,7 @@ function render(
     option.parent.insertAdjacentHTML('afterbegin', html)
 
     const modalWrapper = document.querySelector(`#${id}_wrapper`)
-    hideModal(modalWrapper)
+    hideModal(modalWrapper).create(modalWrapper.querySelector('.okay-button'))
 }
 
 /**
