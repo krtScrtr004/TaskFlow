@@ -5,7 +5,9 @@ namespace App\Endpoint;
 use App\Abstract\Endpoint;
 use App\Auth\HttpAuth;
 use App\Auth\SessionAuth;
+use App\Container\WorkerContainer;
 use App\Core\UUID;
+use App\Dependent\Worker;
 use App\Exception\ForbiddenException;
 use App\Exception\ValidationException;
 use App\Middleware\Response;
@@ -257,16 +259,19 @@ class ProjectWorkerEndpoint extends Endpoint
                 throw new NotFoundException('Project not found.');
             }
 
-            $workerIds = $data['workerIds'] ?? null;
-            if (!isset($data['workerIds']) || !is_array($data['workerIds']) || count($data['workerIds']) < 1) {
-                throw new ForbiddenException('Worker IDs are required.');
+            $workers = $data['workers'] ?? null;
+            if (!isset($data['workers']) || !is_array($data['workers']) || count($data['workers']) < 1) {
+                throw new ForbiddenException('Workers are required.');
             }
 
-            $ids = [];
-            foreach ($workerIds as $workerId) {
-                $ids[] = UUID::fromString($workerId);
+            $workerContainer = new WorkerContainer();
+            foreach ($workers as $worker) {
+                $workerContainer->add(Worker::createPartial([
+                    'publicId'      => $worker['id'],
+                    'defaultRate'   => $worker['defaultRate']
+                ]));
             }
-            ProjectWorkerModel::createMultiple($project->getId(), $ids); 
+            ProjectWorkerModel::createMultiple($project->getId(), $workerContainer); 
 
             Response::success([], 'Workers added successfully.');
         } catch (Throwable $e) {

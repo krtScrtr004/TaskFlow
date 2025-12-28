@@ -71,7 +71,7 @@ async function saveAddWorkerButtonEvent(e, endpoint) {
 
     Loader.patch(saveAddWorkerButton.querySelector('.text-w-icon'))
     try {
-        const rowData = new Map()
+        const rowData = []
 
         const selectedWorkerRows = tableBodySection.querySelectorAll('tr')
         selectedWorkerRows.forEach(row => {
@@ -81,10 +81,10 @@ async function saveAddWorkerButtonEvent(e, endpoint) {
             const defaultRate = row.querySelector('#default_rate').value
             if (!defaultRate) throw new Error('Worker default rate is required')
 
-            rowData.set(id, defaultRate)
+                rowData.push({id, defaultRate})
         })
 
-        await sendToBackend(endpoint, Object.fromEntries(rowData))
+        await sendToBackend(endpoint, rowData)
 
         Dialog.operationSuccess('Workers Added', 'Worker(s) have been added successfully')
         setTimeout(() => window.location.reload(), 3000)
@@ -121,7 +121,7 @@ async function sendToBackend(endpoint, data) {
     isLoading = true
 
     try {
-        const response = await Http.POST(endpoint, data)
+        const response = await Http.POST(endpoint, { workers: data })
         if (!response)
             throw new Error('No response from the server')
     } catch (error) {
