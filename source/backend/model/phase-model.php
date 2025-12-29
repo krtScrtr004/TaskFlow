@@ -82,6 +82,7 @@ class PhaseModel extends Model
 
             $phases = new PhaseContainer();
             foreach ($result as $item) {
+                $item['budgetNote'] = $item['notes'];
                 $phases->add(Phase::createPartial($item));
             }
             return $phases;
@@ -334,6 +335,8 @@ class PhaseModel extends Model
                         }
                     }
                 }
+
+                $item['budgetNote'] = $item['notes'];
                 $item['tasks'] = null; // Clear raw tasks data
                 $phase = Phase::createPartial($item);
                 if ($includeTasks && $taskContainer->count() > 0) {
