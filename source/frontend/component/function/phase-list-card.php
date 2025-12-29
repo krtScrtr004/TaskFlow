@@ -1,5 +1,6 @@
 <?php
 
+use App\Core\UUID;
 use App\Dependent\Phase;
 use App\Enumeration\WorkStatus;
 
@@ -44,64 +45,91 @@ function phaseListCard(Phase $phase): string
 {
     $ICON_PATH = ICON_PATH;
 
-    $name               = htmlspecialchars($phase->getName());
-    $description        = htmlspecialchars($phase->getDescription());
-    $startDateTime      = htmlspecialchars(
-        dateToWords($phase->getStartDateTime())
+    $id                         = htmlspecialchars(UUID::toString($phase->getPublicId()));
+    $name                       = htmlspecialchars($phase->getName());
+    $description                = htmlspecialchars($phase->getDescription());
+    $budget                     = htmlspecialchars(formatNumber($phase->getBudget()));
+    $contingencyRate            = htmlspecialchars(
+        formatNumber($phase->getContingencyRate()) . '%'
     );
-    $completionDateTime = htmlspecialchars(
-        dateToWords($phase->getCompletionDateTime())
+    $budgetNote                 = $phase->getBudgetNote() ? htmlspecialchars($phase->getBudgetNote()) : null;
+    $startDateTime              = htmlspecialchars(
+        formatDateTime($phase->getStartDateTime(), 'd-m-Y')
     );
-    $status             = $phase->getStatus();
+    $completionDateTime         = htmlspecialchars(
+        formatDateTime($phase->getCompletionDateTime(), 'd-m-Y')
+    );
+    $actualCompletionDateTime  = htmlspecialchars(
+        $phase->getActualCompletionDateTime()
+            ? formatDateTime($phase->getActualCompletionDateTime(), 'd-m-Y')
+            : 'N/A'
+    );
+    $status                     = $phase->getStatus();
 
-    $statusBadge = WorkStatus::badge($status);
+    $statusBadge                = WorkStatus::badge($status);
 
-    return <<<HTML
-    <hr>
-
+    ob_start();
+?>
     <!-- Phase Card -->
-    <div class="phase-list-card flex-row flex-space-between flex-child-center-h">
-        <!-- Phase Info -->
-        <div class="flex-col">
-            <!-- Phase Name -->
-            <h3 class="phase-name">$name</h3>
+    <div class="phase-list-card flex-col black-bg">
+        <section class="flex-col ">
+            <div class="flex-row flex-space-between flex-child-center-h">
+                <!-- Phase Name -->
+                <h3 class="name"><?= $name ?></h3>
 
-            <div>
-                <!-- Project Description -->
-                <p class="phase-description wrap-text">$description</p>
 
-                <!-- Project Schedule -->
-                <div class="project-schedule flex-row flex-wrap">
-                    <div class="text-w-icon">
-                        <!-- Start Date -->
-                        <img
-                            src="{$ICON_PATH}start_w.svg"
-                            alt="Phase Schedule"
-                            title="Phase Schedule"
-                            height="14">
-
-                        <p class="phase-dates">$startDateTime</p>
-                    </div>
-                    
-                    <div class="text-w-icon">
-                        <!-- Completion Date -->
-                        <img
-                            src="{$ICON_PATH}complete_w.svg"
-                            alt="Phase Schedule"
-                            title="Phase Schedule"
-                            height="14">
-
-                        <p class="phase-dates">$completionDateTime</p>
-                    </div>
-                    </span>
+                <!-- Phase Status -->
+                <div class="center-child">
+                    <?= $statusBadge ?>
                 </div>
             </div>
-        </div>
 
-        <!-- Phase Status -->
-        <div class="center-child">
-            $statusBadge
-        </div>
+            <p class="id dark-white-text light-text"><?= $id ?></p>
+        </section>
+
+        <section class="">
+            <!-- Project Description -->
+            <p class="description dark-white-text light-text wrap-text"><?= $description ?></p>
+        </section>
+
+        <section class="secondary-info flex-col">
+            <section class="upper-side flex-row flex-space-between">
+                <div class="secondary-info-card">
+                    <p class="dark-white-text light-text">STARTED</p>
+                    <p><?= $startDateTime ?></p>
+                </div>
+
+                <div class="secondary-info-card">
+                    <p class="dark-white-text light-text">EXPECTED COMPLETION</p>
+                    <p><?= $completionDateTime ?></p>
+                </div>
+
+                <div class="secondary-info-card">
+                    <p class="dark-white-text light-text">COMPLETED</p>
+                    <p><?= $completionDateTime ?></p>
+                </div>
+
+                <div class="secondary-info-card">
+                    <p class="dark-white-text light-text">BUDGET</p>
+                    <p><?= $budget ?></p>
+                </div>
+
+                <div class="secondary-info-card">
+                    <p class="dark-white-text light-text">CONTINGENCY</p>
+                    <p class="orange-text"><?= $contingencyRate ?> APPLIED</p>
+                </div>
+            </section>
+
+            <?php if ($budgetNote) : ?>
+                <div class="budget-note-container">
+                    <div class="text-w-icon">
+                        <img src="<?= ICON_PATH . 'about_o.svg' ?>" alt="<?= $budgetNote ?>" title="<?= $budgetNote ?>" height="12">
+                        <p class="orange-text"><?= $budgetNote ?></p>
+                    </div>
+                </div>
+            <?php endif; ?>
+        </section>
     </div>
-    HTML;
+<?php
+    return ob_get_clean();
 }
