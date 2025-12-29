@@ -39,44 +39,48 @@ class WorkerContainer extends Container
     }
 
     /**
-     * Adds a worker to the container.
+     * Adds a Worker instance to the container.
      *
-     * Validates that the provided object represents a worker using Role::isWorker().
-     * On success the worker is stored in the container's main items collection and
-     * placed into a status-specific collection according to the worker's current status:
-     * - WorkerStatus::UNASSIGNED  => stored in $this->unassigned
-     * - WorkerStatus::ASSIGNED    => stored in $this->assigned
-     * - WorkerStatus::TERMINATED  => stored in $this->terminated
+     * This method enforces that the provided argument is a Worker instance with the 'worker' role,
+     * obtains the worker's identifier via getId(), and adds the worker to the appropriate status-specific
+     * registry as well as the main items storage.
      *
-     * The worker is keyed by the identifier returned from getId(). If an entry with
-     * the same id already exists it will be overwritten.
+     * Behavior and side effects:
+     * - Validates input is a Worker instance with the 'worker' role and throws if not.
+     * - Retrieves the worker ID using $item->getId().
+     * - Adds the worker to the $this->items array indexed by the worker ID.
+     * - Depending on the worker's status (UNASSIGNED, ASSIGNED, or TERMINATED), adds the worker
+     *   to the corresponding status-specific array ($this->unassigned or $this->assigned).
+     * - If the worker's status is TERMINATED, it is added to the $this->assigned array.
+     * - This method does not perform additional actions beyond updating the container's internal
+     *   structures.
      *
-     * @param object $worker Worker object expected to provide:
-     *      - getId(): int|string   Unique worker identifier used as array key
-     *      - getStatus(): string|WorkerStatus  Current status used to select status array
+     * @param mixed $item Worker instance to add to the container
      *
-     * @throws InvalidArgumentException If the provided object is not a worker (Role::isWorker returns false)
+     * @throws InvalidArgumentException If the provided $item is not a Worker instance with the 'worker' role
      *
      * @return void
      */
-    public function add($worker): void
+    public function add($item): void
     {
-        if (!Role::isWorker($worker)) {
+        if (!Role::isWorker($item)) {
             throw new InvalidArgumentException("Only users with the 'worker' role can be added as project workers.");
         }
-        
-        $workerId = $worker->getId();
-        $this->items[$workerId] = $worker;
-        
-        // Store in status-specific array based on worker status
-        $status = $worker->getStatus();
-        if ($status === WorkerStatus::UNASSIGNED) {
-            $this->unassigned[$workerId] = $worker;
-        } elseif ($status === WorkerStatus::ASSIGNED) {
-            $this->assigned[$workerId] = $worker;
-        } elseif ($status === WorkerStatus::TERMINATED) {
-            $this->terminated[$workerId] = $worker;
+
+        $id = $item->getId();
+        $status = $item->getStatus();
+        switch ($status) {
+            case WorkerStatus::UNASSIGNED:
+                $this->unassigned[$id] = $item;
+                break;
+            case WorkerStatus::ASSIGNED:
+                $this->assigned[$id] = $item;
+                break;
+            case WorkerStatus::TERMINATED:
+                $this->assigned[$id] = $item;
+                break;
         }
+        $this->items[$id] = $item;
     }
 
     /**
@@ -107,64 +111,66 @@ class WorkerContainer extends Container
         if (!$item instanceof Worker) {
             throw new InvalidArgumentException('Only Worker instances can be removed from WorkerContainer.');
         }
-        
-        $workerId = $item->getId();
-        unset($this->items[$workerId]);
-        
-        // Remove from status-specific arrays
-        unset($this->unassigned[$workerId]);
-        unset($this->assigned[$workerId]);
-        unset($this->terminated[$workerId]);
+
+        $id = $item->getId();
+        $status = $item->getStatus();
+        switch ($status) {
+            case WorkerStatus::UNASSIGNED:
+                unset($this->unassigned[$id]);
+                break;
+            case WorkerStatus::ASSIGNED:
+                unset($this->assigned[$id]);
+                break;
+            case WorkerStatus::TERMINATED:
+                unset($this->assigned[$id]);
+                break;
+        }
+        unset($this->items[$id]);
     }
 
     /**
-     * Determines whether a given Worker instance is present in this container.
+     * Checks if a Worker instance is present in the container.
      *
-     * This method enforces the expected type and then checks membership across
-     * the container's internal collections:
-     * - Validates that the provided item is a Worker instance
-     * - Uses the Worker's identifier (getId()) to check presence in:
-     *   - $this->unassigned (workers not yet assigned)
-     *   - $this->assigned (workers currently assigned)
-     *   - $this->terminated (workers that have been terminated)
+     * This method verifies whether the provided Worker instance exists in the container's
+     * internal structures, based on its ID and status. The container maintains separate
+     * registries for workers based on their statuses: unassigned, assigned, and terminated.
      *
-     * @param Worker $item Worker instance to check for membership (must implement getId())
+     * Behavior and checks:
+     * - Validates that the input is an instance of Worker and throws an exception if not.
+     * - Retrieves the worker ID using $item->getId().
+     * - Checks if the worker ID exists in the main items storage ($this->items).
+     * - Depending on the worker's status (retrieved via $item->getStatus()), checks the
+     *   corresponding status-specific registry ($this->unassigned, $this->assigned, or
+     *   $this->terminated) to confirm the worker's presence.
+     * - Returns true if the worker is found in both the main items storage and the
+     *   appropriate status-specific registry; otherwise, returns false.
+     *
+     * @param mixed $item Worker instance to check for presence in the container
      *
      * @throws InvalidArgumentException If the provided $item is not an instance of Worker
      *
-     * @return bool True if a worker with the same id exists in any of the internal collections, false otherwise
+     * @return bool True if the Worker instance is present in the container, false otherwise
      */
     public function contains($item): bool
     {
         if (!$item instanceof Worker) {
             throw new InvalidArgumentException('Only Worker instances can be checked in WorkerContainer.');
         }
-        return isset($this->unassigned[$item->getId()]) 
-            || isset($this->assigned[$item->getId()]) 
-            || isset($this->terminated[$item->getId()]);
-    }
 
-    /**
-     * Returns the first Worker from the container across all internal lists.
-     *
-     * This method merges the container's internal collections and returns the first element
-     * in the merged sequence, preserving the merge order:
-     * - unassigned workers are searched first
-     * - then assigned workers
-     * - then terminated workers
-     *
-     * Behavior notes:
-     * - If one or more internal arrays are empty they are skipped.
-     * - The method operates on a merged copy and does not modify the original arrays.
-     * - If no workers are present in any list the method returns null.
-     * - The method expects each list to contain Worker instances; behavior is undefined for other types.
-     *
-     * @return Worker|null The first Worker found in the merged lists, or null if none exists.
-     */
-    public function first(): ?Worker
-    {
-        $allItems = array_merge($this->unassigned, $this->assigned, $this->terminated);
-        return reset($allItems) ?: null;
+        $id = $item->getId();
+        $isPresentInAll = isset($this->items[$id]);
+
+        $status = $item->getStatus();
+        switch ($status) {
+            case WorkerStatus::UNASSIGNED:
+                return isset($this->unassigned[$id]) && $isPresentInAll;
+            case WorkerStatus::ASSIGNED:
+                return isset($this->assigned[$id]) && $isPresentInAll;
+            case WorkerStatus::TERMINATED:
+                return isset($this->terminated[$id]) && $isPresentInAll;
+            default:
+                return false;
+        }
     }
 
     /**
@@ -233,6 +239,7 @@ class WorkerContainer extends Container
      * - WorkerStatus::UNASSIGNED => unassigned workers
      * - WorkerStatus::ASSIGNED => assigned workers
      * - WorkerStatus::TERMINATED => terminated workers
+     * - If an unrecognized status is provided, an empty array is returned.
      *
      * @param WorkerStatus $status The status to filter workers by. Expected values:
      *      - WorkerStatus::UNASSIGNED
@@ -243,73 +250,66 @@ class WorkerContainer extends Container
      */
     public function getByStatus(WorkerStatus $status): array
     {
-        return match($status) {
+        return match ($status) {
             WorkerStatus::UNASSIGNED => $this->unassigned,
             WorkerStatus::ASSIGNED => $this->assigned,
             WorkerStatus::TERMINATED => $this->terminated,
+            default => []
         };
     }
 
     /**
-     * Retrieves a Worker instance by key from the internal worker containers.
+     * Counts the number of unassigned workers in the container.
      *
-     * This method checks the internal containers in the following order and returns
-     * the first matching Worker it finds:
-     * - unassigned: Workers that have not yet been assigned
-     * - assigned: Workers that are currently assigned to tasks
-     * - terminated: Workers that have been terminated
+     * This method calculates the total number of workers that are currently
+     * unassigned by returning the count of the $this->unassigned array.
      *
-     * The method does not modify any container or change the worker's state.
+     * Behavior and side effects:
+     * - Returns the count of elements in the $this->unassigned array.
+     * - Assumes $this->unassigned is an array and does not perform additional
+     *   validation or checks on its contents.
      *
-     * @param int|string $key The key used to look up the Worker. This should match the array key type
-     *                        used in the internal containers (int or string).
-     *
-     * @return Worker|null The Worker instance if found in any container; otherwise null.
+     * @return int The number of unassigned workers in the container.
      */
-    public function get(int|string $key): ?Worker
+    public function countUnassigned(): int
     {
-        return $this->unassigned[$key] ?? 
-            $this->assigned[$key] ?? 
-            $this->terminated[$key] ?? 
-            null;
+        return count($this->unassigned);
     }
 
     /**
-     * Retrieves all items assigned to or terminated by the worker.
+     * Counts the number of workers currently assigned in the container.
      *
-     * This method combines the assigned and terminated items into a single array:
-     * - Merges the $assigned array containing currently assigned items
-     * - Merges the $terminated array containing items that have been terminated
+     * This method calculates the total number of workers that have been marked as assigned
+     * by returning the count of the `$this->assigned` array.
      *
-     * @return array Combined array of assigned and terminated items
+     * Behavior and side effects:
+     * - Returns the total number of elements in the `$this->assigned` array.
+     * - If the `$this->assigned` array is empty, the method returns 0.
+     * - This method does not modify the state of the container or its properties.
+     *
+     * @return int The number of assigned workers in the container
      */
-    public function getItems(): array|Worker
+    public function countAssigned(): int
     {
-        return array_merge($this->unassigned, $this->assigned, $this->terminated);
-    }
-
-    public function getIterator(): Traversable
-    {  
-        return new ArrayIterator($this->getItems());
+        return count($this->assigned);
     }
 
     /**
-     * Converts all workers in the container to an array representation.
+     * Counts the number of terminated workers in the container.
      *
-     * This method iterates over all workers and converts each to an array:
-     * - Calls toArray() on each Worker instance
-     * - Preserves the original order of workers
+     * This method calculates the total number of workers that have been marked as terminated
+     * by counting the entries in the $this->terminated array.
      *
-     * @param bool $useSnakeCase Whether to use snake_case keys (true) or camelCase keys (false, default)
-     * @return array<int, array<string, mixed>> Array of workers where each worker is represented as an associative array
+     * Behavior and side effects:
+     * - Returns the count of elements in the $this->terminated array.
+     * - If the $this->terminated array is empty, the method will return 0.
+     * - This method does not modify the state of the container or its properties.
+     *
+     * @return int The total number of terminated workers in the container
      */
-    public function toArray(bool $useSnakeCase = false): array
+    public function countTerminated(): int
     {
-        $workersArray = [];
-        foreach ($this->getItems() as $worker) {
-            $workersArray[] = $worker->toArray($useSnakeCase);
-        }
-        return $workersArray;
+        return count($this->terminated);
     }
 
     /**
@@ -357,6 +357,25 @@ class WorkerContainer extends Container
     public function reverseTerminated(): array
     {
         return $this->terminated = array_reverse($this->terminated, true);
+    }
+
+    /**
+     * Converts all workers in the container to an array representation.
+     *
+     * This method iterates over all workers and converts each to an array:
+     * - Calls toArray() on each Worker instance
+     * - Preserves the original order of workers
+     *
+     * @param bool $useSnakeCase Whether to use snake_case keys (true) or camelCase keys (false, default)
+     * @return array<int, array<string, mixed>> Array of workers where each worker is represented as an associative array
+     */
+    public function toArray(bool $useSnakeCase = false): array
+    {
+        $workersArray = [];
+        foreach ($this->items as $worker) {
+            $workersArray[] = $worker->toArray($useSnakeCase);
+        }
+        return $workersArray;
     }
 
     /**
