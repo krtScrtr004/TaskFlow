@@ -1,7 +1,9 @@
 <?php
 
 use App\Core\UUID;
+use App\Dependent\Worker;
 use App\Entity\User;
+use App\Enumeration\Role;
 
 /**
  * Renders a compact user list card and returns it as an HTML string.
@@ -25,8 +27,8 @@ use App\Entity\User;
  *
  * @return string HTML markup for a user list card (escaped and ready for output)
  */
-function userListCard(User $user): string
-{
+function userListCard(User|Worker $user): string
+{   
     $name           = htmlspecialchars(createFullName($user->getFirstName(), $user->getMiddleName(), $user->getLastName()));
     $id             = htmlspecialchars(UUID::toString($user->getPublicId()));
     $jobTitles      = $user->getJobTitles();
@@ -38,25 +40,38 @@ function userListCard(User $user): string
     ?>
     <!-- user List Card -->
     <button class="user-list-card unset-button" data-id="<?= $id ?>">
-        <img class="circle fit-cover" src="<?= $profileLink ?>" alt="<?= $name ?>" title="<?= $name ?>" loading="lazy" height="40">
+        <img class="fit-cover" src="<?= $profileLink ?>" alt="<?= $name ?>" title="<?= $name ?>" loading="lazy" height="40">
 
         <div class="flex-col">
 
             <!-- Name and ID -->
             <div>
                 <h4 class="name wrap-text single-line-ellipsis" title="<?= $name ?>"><?= $name ?></h4>
-                <p><em class="id"><?= $id ?></em></p>
+                <p><em class="id dark-white-text light-text"><?= $id ?></em></p>
             </div>
 
             <div class="job-titles flex-row flex-wrap">
                 <!-- Job Titles -->
                 <?php foreach ($jobTitles as $jobTitle): ?>
                     <span class="job-title-chip">
-                        <?= htmlspecialchars($jobTitle) ?>
+                        <p class="dark-white-text light-font">
+                            <?= htmlspecialchars($jobTitle) ?>
+                        </p>
                     </span>
                 <?php endforeach; ?>
             </div>
         </div>
+
+        <?php 
+            if (Role::isWorker($user)): 
+                $defaultRate    = $user instanceof Worker && $user->getDefaultRate()
+                    ? htmlspecialchars(formatNumber($user->getDefaultRate()))
+                    : DEFAULT_RATE_MIN;
+        ?>
+            <div class="default-rate badge absolute">
+                <p class="green-text bold-text">₱ <?= $defaultRate ?></p>
+            </div>
+        <?php endif; ?>
     </button>
     <?php
     return ob_get_clean();

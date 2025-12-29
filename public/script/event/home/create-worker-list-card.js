@@ -34,10 +34,11 @@ export function createWorkerListCard(worker) {
 
     // Create profile image
     const img = document.createElement('img')
-    img.className = 'circle fit-cover'
+    img.className = 'fit-cover'
     img.src = profileLink
     img.alt = name
     img.title = name
+    img.loading = 'lazy'
     img.height = 40
 
     // Create info container
@@ -48,12 +49,14 @@ export function createWorkerListCard(worker) {
     const nameIdSection = document.createElement('div')
 
     const nameHeader = document.createElement('h4')
-    nameHeader.className = 'wrap-text'
+    nameHeader.className = 'name wrap-text single-line-ellipsis'
+    nameHeader.title = name
     nameHeader.textContent = name
     nameIdSection.appendChild(nameHeader)
 
     const idPara = document.createElement('p')
     const idEm = document.createElement('em')
+    idEm.className = 'id dark-white-text light-text'
     idEm.textContent = id
     idPara.appendChild(idEm)
     nameIdSection.appendChild(idPara)
@@ -66,7 +69,12 @@ export function createWorkerListCard(worker) {
         jobTitles.forEach(jobTitle => {
             const span = document.createElement('span')
             span.className = 'job-title-chip'
-            span.textContent = jobTitle
+
+            const p = document.createElement('p')
+            p.className = 'dark-white-text light-font'
+            p.textContent = jobTitle
+
+            span.appendChild(p)
             jobTitlesDiv.appendChild(span)
         })
     }
@@ -77,6 +85,27 @@ export function createWorkerListCard(worker) {
 
     button.appendChild(img)
     button.appendChild(infoContainer)
+
+    // Optional default rate badge (server renders this in PHP when present)
+    const defaultRateValue = worker.defaultRate || worker.default_rate || worker.default_rate_value
+    if (defaultRateValue) {
+        const rateDiv = document.createElement('div')
+        rateDiv.className = 'default-rate badge absolute'
+
+        const p = document.createElement('p')
+        p.className = 'green-text bold-text'
+
+        const num = typeof defaultRateValue === 'number'
+            ? defaultRateValue
+            : Number(String(defaultRateValue).replace(/[^0-9.-]+/g, ''))
+        const formatted = Number.isFinite(num)
+            ? new Intl.NumberFormat('en-PH').format(num)
+            : defaultRateValue
+
+        p.textContent = `₱ ${formatted}`
+        rateDiv.appendChild(p)
+        button.appendChild(rateDiv)
+    }
 
     const workerList = document.querySelector('.project-workers > .worker-list > .list')
     if (!workerList) {
