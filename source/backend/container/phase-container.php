@@ -15,12 +15,15 @@ class PhaseContainer extends Container
     private array $delayed = [];
     private array $cancelled = [];
 
+    private float $totalBudget = 0.0;
+
     /**
      * Constructs a PhaseContainer initialized with an optional array of Phase objects.
      *
      * This constructor iterates over the provided array and registers each entry into the container:
      * - Validates that each element is an instance of Phase.
      * - Throws InvalidArgumentException when a non-Phase element is encountered.
+     * - Initializes the total budget to BUDGET_MIN.
      * - Adds each validated Phase to the container by calling $this->add($phase).
      *
      * @param Phase[] $phases Optional indexed array of Phase instances to seed the container (default: []).
@@ -29,6 +32,7 @@ class PhaseContainer extends Container
      */
     public function __construct(array $phases = [])
     {
+        $this->totalBudget = BUDGET_MIN;
         foreach ($phases as $phase) {
             if (!$phase instanceof Phase) {
                 throw new InvalidArgumentException('All elements of phases array must be instances of Phase.');
@@ -51,6 +55,7 @@ class PhaseContainer extends Container
      * - Stores the phase in $this->items indexed by the phase ID.
      * - Stores the phase in one of the status-specific arrays ($this->pending, $this->ongoing,
      *   $this->completed, $this->delayed, $this->cancelled) based on its status.
+     * - Updates the total budget by adding the budget of the added phase.
      * - Overwrites any existing entry with the same ID in both the main items storage and the
      *   status-specific registry.
      *
@@ -86,9 +91,9 @@ class PhaseContainer extends Container
                 break;
         }
         $this->items[$id] = $item;
+        $this->totalBudget += $item->getBudget();
     }
 
-   
     /**
      * Removes a Phase instance from the container.
      *
@@ -96,19 +101,20 @@ class PhaseContainer extends Container
      * identifier via getId(), and removes the phase entry from the main items storage as well
      * as from any status-specific registries managed by the container.
      *
-     * Behavior and side effects:
-     * - Validates that the input is an instance of Phase and throws an exception if not.
+     * Behavior and side effects:nstance of Phase and throws an exception if not.
      * - Retrieves the phase ID using $item->getId().
      * - Unsets the phase entry from $this->items indexed by the phase ID.
      * - Unsets the phase entry from status-specific arrays: $this->pending, $this->ongoing,
      *   $this->completed, $this->delayed, and $this->cancelled.
      * - Unsetting non-existent keys is a no-op (no error is thrown if the phase ID is not present).
+     * - Updates the total budget by subtracting the budget of the removed phase.
      * - This method does not perform additional cleanup beyond removing references from the
      *   container's internal structures.
      *
      * @param mixed $item Phase instance to remove from the container
      *
-     * @throws InvalidArgumentException If the provided $item is not an instance of Phase
+     * @throws InvalidArgumentException If the prov
+     * - Validates that the input is an iided $item is not an instance of Phase
      *
      * @return void
      */
@@ -138,6 +144,7 @@ class PhaseContainer extends Container
                 break;
         }
         unset($this->items[$id]);
+        $this->totalBudget -= $item->getBudget();
     }
 
     /**
@@ -316,6 +323,25 @@ class PhaseContainer extends Container
             WorkStatus::CANCELLED => $this->cancelled,
             default => [],
         };
+    }
+
+    /**
+     * Retrieves the total budget of all phases in the container.
+     *
+     * This method returns the cumulative budget of all Phase instances currently
+     * stored in the container. The total budget is calculated by summing the
+     * individual budgets of each Phase when they are added or removed from the container.
+     *
+     * Behavior and side effects:
+     * - Returns the value of the $totalBudget property, which is a float.
+     * - The total budget is updated whenever a Phase is added or removed from the container.
+     * - This method does not modify the state of the container.
+     *
+     * @return float The total budget of all phases in the container
+     */
+    public function getTotalBudget(): float
+    {
+        return $this->totalBudget;
     }
 
     /**

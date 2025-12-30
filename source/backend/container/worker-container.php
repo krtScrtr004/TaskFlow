@@ -16,13 +16,16 @@ class WorkerContainer extends Container
     private array $assigned = [];
     private array $terminated = [];
 
+    private float $totalDefaultRate = 0.0;
+
     /**
      * Constructs the container and populates it with Worker instances.
      *
      * This constructor accepts an array of workers and adds each element to the container
      * via the add() method. It validates that every element is an instance of Worker
      * and will throw an InvalidArgumentException when an invalid element is encountered.
-     *
+     * The total default rate is initialized to DEFAULT_RATE_MIN.
+     * 
      * @param array|Worker[] $workers Array of Worker instances to register in the container.
      *      - Each element MUST be an instance of Worker.
      *
@@ -30,6 +33,7 @@ class WorkerContainer extends Container
      */
     public function __construct(array $workers = [])
     {
+        $this->totalDefaultRate = DEFAULT_RATE_MIN;
         foreach ($workers as $worker) {
             if (!($worker instanceof Worker)) {
                 throw new InvalidArgumentException("All elements of workers array must be instances of Worker.");
@@ -52,6 +56,7 @@ class WorkerContainer extends Container
      * - Depending on the worker's status (UNASSIGNED, ASSIGNED, or TERMINATED), adds the worker
      *   to the corresponding status-specific array ($this->unassigned or $this->assigned).
      * - If the worker's status is TERMINATED, it is added to the $this->assigned array.
+     * - Updates the total default rate by adding the default rate of the added worker.
      * - This method does not perform additional actions beyond updating the container's internal
      *   structures.
      *
@@ -81,6 +86,7 @@ class WorkerContainer extends Container
                 break;
         }
         $this->items[$id] = $item;
+        $this->totalDefaultRate += $item->getDefaultRate();
     }
 
     /**
@@ -97,6 +103,7 @@ class WorkerContainer extends Container
      * - Unsets the worker entry from status-specific arrays: $this->unassigned, $this->assigned,
      *   and $this->terminated.
      * - Unsetting non-existent keys is a no-op (no error is thrown if the worker ID is not present).
+     * - Updates the total default rate by subtracting the default rate of the removed worker.
      * - This method does not perform additional cleanup (e.g., terminating running tasks or freeing
      *   external resources) beyond removing references from the container's internal structures.
      *
@@ -126,6 +133,7 @@ class WorkerContainer extends Container
                 break;
         }
         unset($this->items[$id]);
+        $this->totalDefaultRate -= $item->getDefaultRate();
     }
 
     /**
@@ -256,6 +264,24 @@ class WorkerContainer extends Container
             WorkerStatus::TERMINATED => $this->terminated,
             default => []
         };
+    }
+
+    /**
+     * Retrieves the total default rate of all workers in the container.
+     *
+     * This method returns the cumulative default rate calculated from all
+     * Worker instances currently stored in the container.
+     *
+     * Behavior and side effects:
+     * - Returns the pre-calculated total default rate stored in $this->totalDefaultRate.
+     * - The value reflects the sum of default rates of all workers added to the container.
+     * - This method does not modify any internal state or properties of the container.
+     *
+     * @return float The total default rate of all workers in the container.
+     */
+    public function getTotalDefaultRate(): float
+    {
+        return $this->totalDefaultRate;
     }
 
     /**
