@@ -10,18 +10,15 @@ use InvalidArgumentException;
 
 class TaskContainer extends Container
 {
-    private array $taskCountByStatus = [
-        WorkStatus::PENDING->value => 0,
-        WorkStatus::ON_GOING->value => 0,
-        WorkStatus::COMPLETED->value => 0,
-        WorkStatus::DELAYED->value => 0,
-        WorkStatus::CANCELLED->value => 0,
-    ];
-    private array $taskCountByPriority = [
-        TaskPriority::LOW->value => 0,
-        TaskPriority::MEDIUM->value => 0,
-        TaskPriority::HIGH->value => 0,
-    ];
+    private array $pending = [];
+    private array $onGoing = [];
+    private array $completed = [];
+    private array $delayed = [];
+    private array $cancelled = [];
+
+    private array $low = [];
+    private array $medium = [];
+    private array $high = [];
 
     /**
      * Initializes the container with an array of Task instances.
@@ -48,42 +45,90 @@ class TaskContainer extends Container
     }
 
     /**
-     * Adds a Task instance to the container.
+     * Adds a Task instance to the TaskContainer.
      *
-     * Validates that the provided value is a Task instance and throws an
-     * InvalidArgumentException otherwise. On success, it updates internal
-     * bookkeeping by calling increaseTaskCount($task) and stores the Task
-     * in the container's items array using the Task's ID as the key
-     * (retrieved via $task->getId()).
+     * This method ensures that only valid Task instances are added to the container. It categorizes
+     * the task based on its status and priority, storing it in the appropriate internal arrays for
+     * efficient management and retrieval.
      *
-     * Note: If a Task with the same ID already exists in the container, it
-     * will be overwritten.
+     * Behavior and side effects:
+     * - Validates that the provided argument is an instance of Task and throws an exception if not.
+     * - Retrieves the task's ID, status, and priority using the respective getter methods.
+     * - Stores the task in status-specific arrays: $this->pending, $this->onGoing, $this->completed,
+     *   $this->delayed, or $this->cancelled, based on the task's status.
+     * - Stores the task in priority-specific arrays: $this->low, $this->medium, or $this->high,
+     *   based on the task's priority.
+     * - Adds the task to the main $this->items array indexed by its ID.
+     * - If a task with the same ID already exists, it will be overwritten in all relevant arrays.
      *
-     * @param Task $task The Task instance to add to the container
-     * @throws InvalidArgumentException If the provided argument is not a Task
+     * @param mixed $item Task instance to add to the container
+     *
+     * @throws InvalidArgumentException If the provided $item is not an instance of Task
+     *
      * @return void
      */
-    public function add($task): void
+    public function add($item): void
     {
-        if (!$task instanceof Task) {
+        if (!$item instanceof Task) {
             throw new InvalidArgumentException("Only Task instances can be added to TaskContainer.");
         }
-        $this->increaseTaskCount($task);
-        $this->items[$task->getId()] = $task;
+
+        $id = $item->getId();
+        $status = $item->getStatus();
+        $priority = $item->getPriority();
+        switch ($status) {
+            case WorkStatus::PENDING:
+                $this->pending[$id] = $item;
+                break;
+            case WorkStatus::ON_GOING:
+                $this->onGoing[$id] = $item;
+                break;
+            case WorkStatus::COMPLETED:
+                $this->completed[$id] = $item;
+                break;
+            case WorkStatus::DELAYED:
+                $this->delayed[$id] = $item;
+                break;
+            case WorkStatus::CANCELLED:
+                $this->cancelled[$id] = $item;
+                break;
+        }
+
+        switch ($priority) {
+            case TaskPriority::LOW:
+                $this->low[$id] = $item;
+                break;
+            case TaskPriority::MEDIUM:
+                $this->medium[$id] = $item;
+                break;
+            case TaskPriority::HIGH:
+                $this->high[$id] = $item;
+                break;
+        }
+
+        $this->items[$id] = $item;
     }
 
     /**
-     * Removes a Task instance from the container.
+     * Removes a Task instance from the TaskContainer.
      *
-     * This method ensures the provided item is a Task instance and performs necessary
-     * housekeeping before removing it from the internal storage:
-     * - Validates that $item is an instance of Task and throws InvalidArgumentException otherwise
-     * - Calls decreaseTaskCount($item) to update internal counters/state related to task tracking
-     * - Removes the task from $this->items using $item->getId() as the key
+     * This method ensures that only valid Task instances are removed from the container. It
+     * identifies the task by its ID and removes it from all relevant internal arrays based
+     * on its status and priority.
      *
-     * @param Task $item Task instance to remove from the container
+     * Behavior and side effects:
+     * - Validates that the provided argument is an instance of Task and throws an exception if not.
+     * - Retrieves the task's ID, status, and priority using the respective getter methods.
+     * - Removes the task from status-specific arrays: $this->pending, $this->onGoing, $this->completed,
+     *   $this->delayed, or $this->cancelled, based on the task's status.
+     * - Removes the task from priority-specific arrays: $this->low, $this->medium, or $this->high,
+     *   based on the task's priority.
+     * - Removes the task from the main $this->items array indexed by its ID.
+     * - If the task does not exist in any of the arrays, no action is taken.
      *
-     * @throws InvalidArgumentException If $item is not an instance of Task
+     * @param mixed $item Task instance to remove from the container
+     *
+     * @throws InvalidArgumentException If the provided $item is not an instance of Task
      *
      * @return void
      */
@@ -93,161 +138,198 @@ class TaskContainer extends Container
             throw new InvalidArgumentException('Only Task instances can be removed from TaskContainer.');
         }
 
-        $this->decreaseTaskCount($item);
-        unset($this->items[$item->getId()]);
+        $id = $item->getId();
+        $status = $item->getStatus();
+        $priority = $item->getPriority();
+
+        switch ($status) {
+            case WorkStatus::PENDING:
+                unset($this->pending[$id]);
+                break;
+            case WorkStatus::ON_GOING:
+                unset($this->onGoing[$id]);
+                break;
+            case WorkStatus::COMPLETED:
+                unset($this->completed[$id]);
+                break;
+            case WorkStatus::DELAYED:
+                unset($this->delayed[$id]);
+                break;
+            case WorkStatus::CANCELLED:
+                unset($this->cancelled[$id]);
+                break;
+        }
+
+        switch ($priority) {
+            case TaskPriority::LOW:
+                unset($this->low[$id]);
+                break;
+            case TaskPriority::MEDIUM:
+                unset($this->medium[$id]);
+                break;
+            case TaskPriority::HIGH:
+                unset($this->high[$id]);
+                break;
+        }
+
+        unset($this->items[$id]);
     }
 
     /**
-     * Determines whether the container contains the given Task.
+     * Checks if a Task instance exists in the TaskContainer.
      *
-     * This method enforces that the provided item is a Task instance and then
-     * checks for existence by looking up the Task's identifier in the
-     * container's internal storage using isset (which provides an efficient
-     * membership test).
+     * This method verifies the presence of a Task in the container by checking its ID,
+     * status, and priority across all relevant internal arrays.
      *
-     * - Validates that $item is an instance of Task
-     * - Uses $item->getId() to identify the Task in the container
-     * - Uses isset on the internal items array for the membership check
+     * Behavior and side effects:
+     * - Validates that the provided argument is an instance of Task and throws an exception if not.
+     * - Retrieves the task's ID, status, and priority using the respective getter methods.
+     * - Checks for the task's existence in the main $this->items array indexed by its ID.
+     * - Checks for the task's existence in status-specific arrays: $this->pending, $this->onGoing,
+     *   $this->completed, $this->delayed, or $this->cancelled, based on the task's status.
+     * - Checks for the task's existence in priority-specific arrays: $this->low, $this->medium,
+     *   or $this->high, based on the task's priority.
+     * - Returns true only if the task is found in all relevant arrays; otherwise returns false.
      *
-     * @param mixed $item The value to check for membership (must be a Task)
-     *
-     * @return bool True if a Task with the same id exists in the container, false otherwise
+     * @param mixed $item Task instance to check for existence in the container
      *
      * @throws InvalidArgumentException If the provided $item is not an instance of Task
+     *
+     * @return bool True if the Task exists in the container; false otherwise
      */
     public function contains($item): bool
     {
         if (!$item instanceof Task) {
             throw new InvalidArgumentException('Only Task instances can be checked in TaskContainer.');
         }
-        return isset($this->items[$item->getId()]);
+        $id = $item->getId();
+        $status = $item->getStatus();
+        $priority = $item->getPriority();
+
+        $isPresentAll = isset($this->items[$id]);
+
+        $isPresentStatus = false;
+        switch ($status) {
+            case WorkStatus::PENDING:
+                $isPresentStatus = isset($this->pending[$id]);
+                break;
+            case WorkStatus::ON_GOING:
+                $isPresentStatus = isset($this->onGoing[$id]);
+                break;
+            case WorkStatus::COMPLETED:
+                $isPresentStatus = isset($this->completed[$id]);
+                break;
+            case WorkStatus::DELAYED:
+                $isPresentStatus = isset($this->delayed[$id]);
+                break;
+            case WorkStatus::CANCELLED:
+                $isPresentStatus = isset($this->cancelled[$id]);
+                break;
+        }
+
+        $isPresentPriority = false;
+        switch ($priority) {
+            case TaskPriority::LOW:
+                $isPresentPriority = isset($this->low[$id]);
+                break;
+            case TaskPriority::MEDIUM:
+                $isPresentPriority = isset($this->medium[$id]);
+                break;
+            case TaskPriority::HIGH:
+                $isPresentPriority = isset($this->high[$id]);
+                break;
+        }
+
+        return $isPresentAll && $isPresentStatus && $isPresentPriority;
     }
 
     /**
-     * Increments internal task counters based on the provided Task instance.
+     * Gets the count of tasks by their work status.
      *
-     * This method performs the following actions:
-     * - Retrieves the status scalar from the Task's Status enum via $task->getStatus()->value and, if that key exists in $this->taskCountByStatus, increments its count.
-     * - Retrieves the priority scalar from the Task's Priority enum via $task->getPriority()->value and, if that key exists in $this->taskCountByPriority, increments its count.
+     * This method retrieves the number of tasks in the container that match the specified
+     * work status. It uses the internal arrays that categorize tasks by their status to
+     * efficiently return the count.
      *
-     * Important details:
-     * - Keys are only incremented when they already exist in the respective arrays; no new keys are created.
-     * - Updates are performed in-place on $this->taskCountByStatus and $this->taskCountByPriority.
+     * @param WorkStatus $status The work status to count tasks for
      *
-     * @param Task $task Task instance providing status and priority enums
-     * @return void
-     */
-    private function increaseTaskCount(Task $task): void
-    {
-        $status = $task->getStatus()->value;
-        if (array_key_exists($status, $this->taskCountByStatus)) {
-            $this->taskCountByStatus[$status]++;
-        }
-
-        $priority = $task->getPriority()->value;
-        if (array_key_exists($priority, $this->taskCountByPriority)) {
-            $this->taskCountByPriority[$priority]++;
-        }
-    }
-
-    /**
-     * Decrements internal counters for the given Task's status and priority.
-     *
-     * This method obtains the Task's status and priority via $task->getStatus()->value
-     * and $task->getPriority()->value and reduces the corresponding counts stored
-     * in $this->taskCountByStatus and $this->taskCountByPriority.
-     *
-     * Behavior details:
-     * - If a status (or priority) key exists in the respective array and its value is
-     *   greater than zero, it is decremented by one.
-     * - If the key does not exist or the current count is zero or less, no change is made.
-     * - This ensures counters never become negative.
-     *
-     * Expected internal array shape:
-     * - $this->taskCountByStatus: array<string|int, int> mapping status values to counts
-     * - $this->taskCountByPriority: array<string|int, int> mapping priority values to counts
-     *
-     * Side effects:
-     * - Mutates $this->taskCountByStatus and/or $this->taskCountByPriority when applicable.
-     *
-     * @param Task $task Task whose status and priority counts should be decreased
-     *
-     * @return void
-     */
-    private function decreaseTaskCount(Task $task): void
-    {
-        $status = $task->getStatus()->value;
-        if (array_key_exists($status, $this->taskCountByStatus) && $this->taskCountByStatus[$status] > 0) {
-            $this->taskCountByStatus[$status]--;
-        }
-
-        $priority = $task->getPriority()->value;
-        if (array_key_exists($priority, $this->taskCountByPriority) && $this->taskCountByPriority[$priority] > 0) {
-            $this->taskCountByPriority[$priority]--;
-        }
-    }
-
-    /**
-     * Returns the number of tasks registered for the given work status.
-     *
-     * This method:
-     * - Accepts a WorkStatus enum instance and uses its scalar value as the lookup key.
-     * - Looks up the count in the internal $taskCountByStatus associative array.
-     * - Returns 0 when no entry exists for the provided status.
-     *
-     * @param WorkStatus $status WorkStatus enum instance whose scalar value is used as the array key.
-     *
-     * @return int Number of tasks for the specified status, or 0 if none are recorded.
+     * @return int The count of tasks with the specified work status
      */
     public function getTaskCountByStatus(WorkStatus $status): int
     {
-        $statusValue = $status->value;
-        return $this->taskCountByStatus[$statusValue] ?? 0;
+        switch ($status) {
+            case WorkStatus::PENDING:
+                return count($this->pending) ?? 0;
+            case WorkStatus::ON_GOING:
+                return count($this->onGoing) ?? 0;
+            case WorkStatus::COMPLETED:
+                return count($this->completed) ?? 0;
+            case WorkStatus::DELAYED:
+                return count($this->delayed) ?? 0;
+            case WorkStatus::CANCELLED:
+                return count($this->cancelled) ?? 0;
+            default:
+                return 0;
+        }
     }
 
     /**
-     * Returns the container's counts of tasks grouped by their status.
+     * Returns counts of all tasks grouped by their work status.
      *
-     * This method provides an associative array where each key is a task status
-     * identifier (string) and each value is the number of tasks currently in that
-     * status (int). The returned array is a snapshot of the container's stored
-     * counts and can be safely read or iterated by callers.
+     * This method provides an associative array representing a snapshot of task counts
+     * organized by work status. It is intended to give callers an easy way to inspect
+     * how many tasks exist for each status:
+     * - Keys are status identifiers (e.g. string names like "pending", "onGoing", etc.
+     *   or numeric status IDs depending on the application's convention)
+     * - Values are integers representing the number of tasks for that status
      *
-     * @return array<string,int> Associative array mapping task status to task count.
-     *      Example structure:
-     *      - 'pending' => 5
-     *      - 'in_progress' => 3
-     *      - 'completed' => 12
+     * The returned array may include statuses with a count of 0. Consumers should
+     * treat the array as read-only and not rely on its contents being updated after
+     * retrieval (call this method again to obtain an updated snapshot).
+     *
+     * @return array<string,int> Associative array mapping status identifiers to task counts
      */
     public function getAllTaskCountByStatus(): array
     {
-        return $this->taskCountByStatus;
+        return [
+            WorkStatus::PENDING->value      => count($this->pending),
+            WorkStatus::ON_GOING->value     => count($this->onGoing),
+            WorkStatus::COMPLETED->value    => count($this->completed),
+            WorkStatus::DELAYED->value      => count($this->delayed),
+            WorkStatus::CANCELLED->value    => count($this->cancelled),
+        ];
     }
 
     /**
-     * Returns the number of tasks that have the specified priority.
+     * Gets the count of tasks by their priority.
      *
-     * This method retrieves the integer value of the provided TaskPriority enum
-     * and uses it as a key into the internal task count map:
-     * - Uses $priority->value as the lookup key in $this->taskCountByPriority
-     * - If no entry exists for the given priority value, returns 0
+     * This method retrieves the number of tasks in the container that match the specified
+     * priority. It uses the internal arrays that categorize tasks by their priority to
+     * efficiently return the count.
      *
-     * @param TaskPriority $priority The priority enum to query.
+     * @param TaskPriority $priority The priority to count tasks for
      *
-     * @return int The count of tasks for the given priority (0 when none exist).
+     * @return int The count of tasks with the specified priority
      */
     public function getTaskCountByPriority(TaskPriority $priority): int
     {
-        $priorityValue = $priority->value;
-        return $this->taskCountByPriority[$priorityValue] ?? 0;
+        switch ($priority) {
+            case TaskPriority::LOW:
+                return count($this->low) ?? 0;
+            case TaskPriority::MEDIUM:
+                return count($this->medium) ?? 0;
+            case TaskPriority::HIGH:
+                return count($this->high) ?? 0;
+            default:
+                return 0;
+        }
     }
 
     /**
-     * Returns counts of all tasks grouped by priority.
+     * Returns counts of all tasks grouped by their priority.
      *
      * This method provides an associative array representing a snapshot of task counts
      * organized by priority. It is intended to give callers an easy way to inspect
-     * how many tasks exist for each priority level:
+     * how many tasks exist for each priority:
      * - Keys are priority identifiers (e.g. string names like "low", "medium", "high"
      *   or numeric priority IDs depending on the application's convention)
      * - Values are integers representing the number of tasks for that priority
@@ -260,7 +342,11 @@ class TaskContainer extends Container
      */
     public function getAllTaskCountByPriority(): array
     {
-        return $this->taskCountByPriority;
+        return [
+            TaskPriority::LOW->value      => count($this->low),
+            TaskPriority::MEDIUM->value   => count($this->medium),
+            TaskPriority::HIGH->value     => count($this->high),
+        ];
     }
 
     /**
