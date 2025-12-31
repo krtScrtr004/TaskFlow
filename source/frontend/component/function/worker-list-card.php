@@ -28,16 +28,16 @@ use App\Enumeration\Role;
  * @return string HTML markup for a user list card (escaped and ready for output)
  */
 function userListCard(User|Worker $user): string
-{   
+{
     $name           = htmlspecialchars(createFullName($user->getFirstName(), $user->getMiddleName(), $user->getLastName()));
     $id             = htmlspecialchars(UUID::toString($user->getPublicId()));
-    $jobTitles      = $user->getJobTitles();
+    $jobTitles      = jobTitlePreview($user->getJobTitles(), 2, 24);
     $profileLink    =
         htmlspecialchars($user->getProfileLink()) ?:
         ICON_PATH . 'profile_w.svg';
 
     ob_start();
-    ?>
+?>
     <!-- user List Card -->
     <button class="user-list-card unset-button" data-id="<?= $id ?>">
         <img class="fit-cover" src="<?= $profileLink ?>" alt="<?= $name ?>" title="<?= $name ?>" loading="lazy" height="40">
@@ -52,27 +52,21 @@ function userListCard(User|Worker $user): string
 
             <div class="job-titles flex-row flex-wrap">
                 <!-- Job Titles -->
-                <?php foreach ($jobTitles as $jobTitle): ?>
-                    <span class="job-title-chip">
-                        <p class="dark-white-text light-font">
-                            <?= htmlspecialchars($jobTitle) ?>
-                        </p>
-                    </span>
-                <?php endforeach; ?>
+                <?= $jobTitles ?>
             </div>
         </div>
 
-        <?php 
-            if (Role::isWorker($user)): 
-                $defaultRate    = $user instanceof Worker && $user->getDefaultRate()
-                    ? htmlspecialchars(formatNumber($user->getDefaultRate()))
-                    : DEFAULT_RATE_MIN;
+        <?php
+        if (Role::isWorker($user)):
+            $defaultRate    = $user instanceof Worker && $user->getDefaultRate()
+                ? htmlspecialchars(formatNumber($user->getDefaultRate()))
+                : DEFAULT_RATE_MIN;
         ?>
             <div class="default-rate badge green absolute">
                 <h4 class="bold-text">₱ <?= $defaultRate ?></h4>
             </div>
         <?php endif; ?>
     </button>
-    <?php
+<?php
     return ob_get_clean();
 }
