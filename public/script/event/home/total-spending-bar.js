@@ -5,16 +5,16 @@ if (!leftSide)
 
 const totalSpending = leftSide?.querySelector('.total-spending')
 const totalSpendingBar = leftSide?.querySelector('#project_total_spending_bar')
-if (totalSpending || totalSpendingBar) {
-    const projectBudget = parseFloat(totalSpending.dataset.projectbudget ?? 0)
-    const totalSpending = parseFloat(totalSpending.dataset.totalspending ?? 0)
+if (totalSpending && totalSpendingBar) {
+    const projectBudgetValue = parseFloat(totalSpending.dataset.projectbudget ?? 0)
+    const totalSpendingValue = parseFloat(totalSpending.dataset.totalspending ?? 0)
 
     const projectTotalSpendingBar = leftSide.querySelector('#project_total_spending_bar')
-    if (projectTotalSpendingBar && totalSpending > 0) {
-        const spendingPercentage = Math.min((totalSpending / projectBudget) * 100, 100)
+    if (projectTotalSpendingBar && totalSpendingValue > 0) {
+        const spendingPercentage = Math.min((totalSpendingValue / projectBudgetValue) * 100, 100)
         // Set total spending bar width dynamically
         projectTotalSpendingBar.style.width = spendingPercentage + '%'
     }
 } else {
-
+    console.warn('Total spending elements not found')
 }

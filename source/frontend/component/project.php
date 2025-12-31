@@ -121,7 +121,7 @@ require_once COMPONENT_PATH . 'template/add-worker-table.php';
                     <section class="upper-statistics flex-row flex-space-between">
                         <div class="individual-statistic">
                             <div class="text-w-icon">
-                                <img src="<?= ICON_PATH . 'start_dw.svg' ?>" alt="Start Date" title="Start Date" height="16">
+                                <img src="<?= ICON_PATH . 'start_dw.svg' ?>" alt="Start Date" title="Start Date" height="14">
 
                                 <p class="dark-white-text">Start Date</p>
                             </div>
@@ -134,7 +134,7 @@ require_once COMPONENT_PATH . 'template/add-worker-table.php';
                         <div class="individual-statistic">
                             <div class="text-w-icon">
                                 <img src="<?= ICON_PATH . 'deadline_dw.svg' ?>" alt="Completion Date" title="Completion Date"
-                                    height="16">
+                                    height="14">
 
                                 <p class="dark-white-text">Completion Date</p>
                             </div>
@@ -146,7 +146,7 @@ require_once COMPONENT_PATH . 'template/add-worker-table.php';
                         <div class="individual-statistic">
                             <div class="text-w-icon">
                                 <img src="<?= ICON_PATH . 'complete_dw.svg' ?>" alt="Completed At" title="Completed At"
-                                    height="16">
+                                    height="15">
 
                                 <p class="dark-white-text">Completed At</p>
                             </div>
@@ -168,7 +168,7 @@ require_once COMPONENT_PATH . 'template/add-worker-table.php';
                         <section class="total-spending-text flex-row flex-space-between">
                             <div class="text-w-icon">
                                 <img src="<?= ICON_PATH . 'budget_dw.svg' ?>" alt="Total Spending" title="Total Spending"
-                                    height="16">
+                                    height="14">
 
                                 <p class="dark-white-text">Total Spending</p>
                             </div>
