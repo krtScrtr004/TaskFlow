@@ -55,7 +55,8 @@ use App\Middleware\Csrf;
     <?php if (isset($project)): ?>
         <script src="<?= PUBLIC_PATH . 'chart.umd.min.js' ?>"></script>
 
-        <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'progress-bar.js' ?>" defer></script>
+        <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'task-status-chart.js' ?>" defer></script>
+        <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'total-spending-bar.js' ?>" defer></script>
         <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'task-chart.js' ?>" defer></script>
         <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'create-worker-card.js' ?>" defer></script>
         <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'search-worker.js' ?>" defer></script>

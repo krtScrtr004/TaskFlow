@@ -18,6 +18,7 @@ use App\Entity\Task;
 use App\Dependent\Worker;
 use App\Core\Me;
 use App\Dependent\ProjectReport;
+use App\Enumeration\Role;
 use App\Enumeration\WorkerStatus;
 use App\Exception\DatabaseException;
 use InvalidArgumentException;
@@ -113,6 +114,7 @@ class ProjectModel extends Model
                     'middle_name'   => $row['middle_name'],
                     'last_name'     => $row['last_name'],
                     'gender'        => $row['gender'],
+                    'role'          => Role::PROJECT_MANAGER,
                     'email'         => $row['email'],
                     'profile_link'  => $row['profile_link'],
                 ]);
@@ -339,6 +341,7 @@ class ProjectModel extends Model
 
             $managerData = json_decode($result['project_manager'], true);
             $managerData['publicId'] = UUID::fromHex($managerData['public_id']);
+            $managerData['role'] = Role::PROJECT_MANAGER;
             $result['manager'] = User::createPartial($managerData);
 
             $project = Project::createPartial($result);

@@ -1,10 +1,10 @@
 <?php
 
+use App\Container\TaskContainer;
 use App\Core\Me;
 use App\Core\UUID;
 use App\Enumeration\Role;
 use App\Enumeration\WorkStatus;
-use App\Enumeration\TaskPriority;
 use App\Utility\ProjectProgressCalculator;
 
 if (!$project) {
@@ -12,19 +12,52 @@ if (!$project) {
 }
 
 $projectData = [
-    'id'                    => htmlspecialchars(UUID::toString($project->getPublicId())),
-    'name'                  => htmlspecialchars($project->getName()),
-    'description'           => htmlspecialchars($project->getDescription()),
-    'budget'                => htmlspecialchars(formatNumber($project->getBudget())),
-    'manager'               => $project->getManager(),
-    'startDateTime'         => htmlspecialchars(dateToWords($project->getStartDateTime())),
-    'completionDateTime'    => htmlspecialchars(dateToWords($project->getCompletionDateTime())),
-    'status'                => $project->getStatus(),
-    'tasks'                 => $project->getTasks(),
-    'phases'                => $project->getPhases(),
-    'workers'               => $project->getWorkers()->getAssigned(),
-    'progress'              => $projectProgress ?? ProjectProgressCalculator::calculate($project->getTasks())
+    'id'                        => htmlspecialchars(UUID::toString($project->getPublicId())),
+    'name'                      => htmlspecialchars($project->getName()),
+    'description'               => htmlspecialchars($project->getDescription()),
+    'budget'                    => htmlspecialchars($project->getBudget()),
+    'manager'                   => $project->getManager(),
+    'startDateTime'             => htmlspecialchars(dateToWords($project->getStartDateTime())),
+    'completionDateTime'        => htmlspecialchars(dateToWords($project->getCompletionDateTime())),
+    'actualCompletionDateTime'  => $project->getActualCompletionDateTime()
+        ? htmlspecialchars(dateToWords($project->getActualCompletionDateTime()))
+        : '—',
+    'status'                    => $project->getStatus(),
+    'tasks'                     => $project->getTasks(),
+    'phases'                    => $project->getPhases(),
+    'workers'                   => $project->getWorkers()->getAssigned(),
+    'progress'                  => $projectProgress ?? ProjectProgressCalculator::calculate($project->getTasks())
 ];
+
+$phaseData = [
+    'totalBudget'       => htmlspecialchars($projectData['phases']->getTotalBudget()),
+    'maxCount'          => $projectData['phases']->count(),
+    'onGoingPlace'      => $projectData['phases']->countByStatus(WorkStatus::COMPLETED)
+        ? $projectData['phases']->countByStatus(WorkStatus::COMPLETED) + 1
+        : $projectData['phases']->countByStatus(WorkStatus::COMPLETED),
+];
+
+$phaseData['allTasks'] = new TaskContainer();
+foreach ($projectData['phases'] as $phase) {
+    foreach ($phase->getTasks() as $task) {
+        $phaseData['allTasks']->add($task);
+    }
+}
+
+$taskData = [
+    'recentTasks'       => $project->getAdditionalInfo('recentTasks') ?? new TaskContainer(),
+    'pendingCount'      => $phaseData['allTasks']->countByStatus(WorkStatus::PENDING),
+    'onGoingCount'      => $phaseData['allTasks']->countByStatus(WorkStatus::ON_GOING),
+    'completedCount'    => $phaseData['allTasks']->countByStatus(WorkStatus::COMPLETED),
+    'delayedCount'      => $phaseData['allTasks']->countByStatus(WorkStatus::DELAYED),
+    'cancelledCount'    => $phaseData['allTasks']->countByStatus(WorkStatus::CANCELLED),
+];
+
+$workerData = [
+    'totalDefaultRate'  => htmlspecialchars($project->getWorkers()->getTotalDefaultRate()),
+];
+
+$projectData['totalSpending'] = $phaseData['totalBudget'] + $workerData['totalDefaultRate'];
 
 require_once COMPONENT_PATH . 'template/user-info-card.php';
 require_once COMPONENT_PATH . 'template/add-worker-modal.php';
@@ -40,8 +73,9 @@ require_once COMPONENT_PATH . 'template/add-worker-table.php';
             <div class="flex-row flex-space-between">
 
                 <!-- Project Name and Status -->
-                <div class="first-col text-w-icon"> <img src="<?= ICON_PATH . 'project_w.svg' ?>"
-                    alt="<?= $projectData['name'] ?>" title="<?= $projectData['name'] ?>" height="24">
+                <div class="first-col text-w-icon">
+                    <img src="<?= ICON_PATH . 'project_bl.svg' ?>"
+                        alt="<?= $projectData['name'] ?>" title="<?= $projectData['name'] ?>" height="32">
 
 
                     <div class="name-and-status flex-row">
@@ -57,18 +91,18 @@ require_once COMPONENT_PATH . 'template/add-worker-table.php';
                     <div class="edit-project-container flex-row-reverse">
                         <!-- Edit Project -->
                         <a class="edit-project" href="<?= REDIRECT_PATH . 'edit-project/' . $projectData['id'] ?>">
-                            <img src="<?= ICON_PATH . 'edit_w.svg' ?>" alt="Edit Project" title="Edit Project" height="24">
+                            <img src="<?= ICON_PATH . 'edit_dw.svg' ?>" alt="Edit Project" title="Edit Project" height="20">
                         </a>
                     </div>
                 <?php endif; ?>
             </div>
 
-            <p class="project-id"><em>
+            <p class="project-id"><em class="dark-white-text">
                     <?= $projectData['id'] ?>
                 </em></p>
         </div>
 
-        <p class="project-description start-text"><?= $projectData['description'] ?></p>
+        <p class="project-description dark-white-text start-text"><?= $projectData['description'] ?></p>
     </section>
 
     <!-- Secondary Info -->
@@ -78,129 +112,199 @@ require_once COMPONENT_PATH . 'template/add-worker-table.php';
         <div class="main-sub-content flex-col">
 
             <!-- Project Statistics -->
-            <section class="project-statistics content-section-block flex-row flex-child-center-h">
+            <section class="project-statistics flex-row flex-child-center-h">
 
                 <!-- Left Side -->
-                <div class="left grid">
+                <div class="left content-section-block flex-col">
 
-                    <div class="first-col text-w-icon">
-                        <img src="<?= ICON_PATH . 'start_w.svg' ?>" alt="Start Date" title="Start Date" height="20">
+                    <!-- Upper Side -->
+                    <section class="upper-statistics flex-row flex-space-between">
+                        <div class="individual-statistic">
+                            <div class="text-w-icon">
+                                <img src="<?= ICON_PATH . 'start_dw.svg' ?>" alt="Start Date" title="Start Date" height="16">
 
-                        <h3>Start Date</h3>
-                    </div>
-                    <p class="second-col">
-                        <?= $projectData['startDateTime'] ?>
-                    </p>
+                                <p class="dark-white-text">Start Date</p>
+                            </div>
+                            <p class="">
+                                <?= $projectData['startDateTime'] ?>
+                            </p>
 
-                    <div class="first-col text-w-icon">
-                        <img src="<?= ICON_PATH . 'deadline_w.svg' ?>" alt="Completion Date" title="Completion Date"
-                            height="20">
-
-                        <h3>Completion Date</h3>
-                    </div>
-                    <p class="second-col"><?= $projectData['completionDateTime'] ?></p>
-
-                    <?php
-                    if ($projectData['status'] === WorkStatus::COMPLETED):
-                        $actualCompletionDate = htmlspecialchars(dateToWords($project->getActualCompletionDateTime()));
-                        ?>
-                        <div class="first-col text-w-icon">
-                            <img src="<?= ICON_PATH . 'complete_w.svg' ?>" alt="Completed At" title="Completed At"
-                                height="20">
-
-                            <h3>Completed At</h3>
                         </div>
-                        <p class="second-col">
-                            <?= $actualCompletionDate ?>
-                        </p>
-                    <?php endif; ?>
 
-                    <div class="first-col text-w-icon">
-                        <img src="<?= ICON_PATH . 'budget_w.svg' ?>" alt="Budget" title="Budget" height="20">
+                        <div class="individual-statistic">
+                            <div class="text-w-icon">
+                                <img src="<?= ICON_PATH . 'deadline_dw.svg' ?>" alt="Completion Date" title="Completion Date"
+                                    height="16">
 
-                        <h3>Budget</h3>
-                    </div>
-                    <p class="second-col">
-                        <?= PESO_SIGN . ' ' . $projectData['budget'] ?>
-                    </p>
+                                <p class="dark-white-text">Completion Date</p>
+                            </div>
+                            <p class="">
+                                <?= $projectData['completionDateTime'] ?>
+                            </p>
+                        </div>
+
+                        <div class="individual-statistic">
+                            <div class="text-w-icon">
+                                <img src="<?= ICON_PATH . 'complete_dw.svg' ?>" alt="Completed At" title="Completed At"
+                                    height="16">
+
+                                <p class="dark-white-text">Completed At</p>
+                            </div>
+                            <p class="">
+                                <?= $projectData['actualCompletionDateTime'] ?>
+                            </p>
+
+                        </div>
+
+                    </section>
+
+                    <!-- Lower Side -->
+                    <section>
+                        <span class="total-spending no-display"
+                            data-projectbudget="<?= $projectData['budget'] ?>"
+                            data-totalspending="<?= $projectData['totalSpending'] ?>">
+                        </span>
+
+                        <section class="total-spending-text flex-row flex-space-between">
+                            <div class="text-w-icon">
+                                <img src="<?= ICON_PATH . 'budget_dw.svg' ?>" alt="Total Spending" title="Total Spending"
+                                    height="16">
+
+                                <p class="dark-white-text">Total Spending</p>
+                            </div>
+
+                            <p class="blue-text">
+                                <?= '₱' . formatNumber($projectData['totalSpending'] ?? 0) ?> /
+                                <?= '₱' . formatNumber($projectData['budget'] ?? 0) ?>
+                            </p>
+                        </section>
+
+                        <div class="total-spending-bar-container">
+                            <div id="project_total_spending_bar" class="total-spending-bar white-text"></div>
+                        </div>
+                    </section>
+
                 </div>
 
                 <!-- Right Side -->
-                <div class="right">
+                <div class="right content-section-block flex-col">
                     <?php $progressPercentage = htmlspecialchars(formatNumber($projectData['progress']['progressPercentage'] ?? 0.0)); ?>
 
-                    <div class="text-w-icon">
-                        <img src="<?= ICON_PATH . 'progress_w.svg' ?>" alt="Project Progress" title="Project Progress"
-                            height="20">
+                    <section class="flex-row flex-space-between">
+                        <div class="text-w-icon">
+                            <img src="<?= ICON_PATH . 'progress_dw.svg' ?>" alt="Project Progress" title="Project Progress"
+                                height="16">
 
-                        <h3>Project Progress</h3>
-                    </div>
+                            <p class="dark-white-text">Project Progress</p>
+                        </div>
 
-                    <p class="progress-percentage" data-projectPercentage="<?= $progressPercentage ?>">
-                        <?= $progressPercentage ?>%
-                    </p>
+                        <p class="progress-percentage" data-projectPercentage="<?= $progressPercentage ?>">
+                            <?= $progressPercentage ?> <span class="percentage-symbol light-text">%</span>
+                        </p>
+                    </section>
 
-                    <div class="progress-container">
+                    <section class="progress-container">
                         <div class="progress-bar white-text" id="project_progress_bar"></div>
-                    </div>
+                    </section>
+
+                    <section class="flex-row flex-space-between">
+                        <p class="dark-white-text light-text">PHASE <?= $phaseData['onGoingPlace'] ?> OUT OF <?= $phaseData['maxCount'] ?></p>
+                    </section>
                 </div>
             </section>
 
             <!-- Task Statistics -->
             <section class="task-statistics content-section-block flex-col">
-                <div class="see-all-tasks">
-                    <a class="blue-text float-right" href="<?= REDIRECT_PATH . 'project' . DS . $projectData['id'] . DS . 'task' ?>">See All</a>
+                <div class="heading-title text-w-icon">
+                    <img src="<?= ICON_PATH . 'task_w.svg' ?>" alt="Project Manager" title="Project Manager"
+                        height="20">
+
+                    <h3>TASK ANALYTICS</h3>
                 </div>
 
-                <!-- Task Statistics Chart -->
-                <section class="task-statistics-chart center-child">
+                <div class="flex-row">
+                    <!-- Task Statistics Chart -->
+                    <section class="task-statistics-chart flex-col">
+                        <span class="task-data no-display"
+                            data-pendingcount="<?= $taskData['pendingCount'] ?>"
+                            data-ongoingcount="<?= $taskData['onGoingCount'] ?>"
+                            data-completedcount="<?= $taskData['completedCount'] ?>"
+                            data-delayedcount="<?= $taskData['delayedCount'] ?>"
+                            data-cancelledcount="<?= $taskData['cancelledCount'] ?>"></span>
 
-                    <!-- Task Status Chart -->
-                    <div class="task-status-chart chart-container">
-                        <?php $statusBreakdown = $projectData['progress']['statusBreakdown']; ?>
-                        <div class="status-statistics">
-                            <?php 
-                            foreach (WorkStatus::cases() as $status): 
-                                $percentage = $statusBreakdown[$status->value]['percentage'] ?? 0;
-                                $count = $statusBreakdown[$status->value]['count'] ?? 0;
-                            ?>
-                                <span data-percentage="<?= $percentage ?>" data-count="<?= $count ?>"></span>
-                            <?php endforeach; ?>
+                        <div class="task-status-count-chart-container">
+                            <canvas id="task_statistics_chart" width="400" height="250"></canvas>
                         </div>
 
-                        <div class="first-col text-w-icon">
-                            <img src="<?= ICON_PATH . 'status_w.svg' ?>" alt="Task Status Distribution"
-                                title="Task Status Distribution" height="20">
+                        <section class="task-status-count-card-container flex-row">
+                            <div class="task-status-count-card black-bg flex-col">
+                                <h3 class="yellow-text center-text"><?= $taskData['pendingCount'] ?></h3>
+                                <p class="dark-white-text light-text center-text">PENDING</p>
+                            </div>
 
-                            <h3>Task Status Distribution</h3>
+                            <div class="task-status-count-card black-bg flex-col">
+                                <h3 class="green-text center-text"><?= $taskData['onGoingCount'] ?></h3>
+                                <p class="dark-white-text light-text center-text">ONGOING</p>
+                            </div>
+
+                            <div class="task-status-count-card black-bg flex-col">
+                                <h3 class="blue-text center-text"><?= $taskData['completedCount'] ?></h3>
+                                <p class="dark-white-text light-text center-text">COMPLETED</p>
+                            </div>
+
+                            <div class="task-status-count-card black-bg flex-col">
+                                <h3 class="orange-text center-text"><?= $taskData['delayedCount'] ?></h3>
+                                <p class="dark-white-text light-text center-text">DELAYED</p>
+                            </div>
+
+                            <div class="task-status-count-card black-bg flex-col">
+                                <h3 class="red-text center-text"><?= $taskData['cancelledCount'] ?></h3>
+                                <p class="dark-white-text light-text center-text">CANCELLED</p>
+                            </div>
+                        </section>
+                    </section>
+
+                    <!-- Recent Tasks -->
+                    <section class="recent-tasks-container flex-col">
+                        <div class="see-all-tasks end-text">
+                            <a class="blue-text float-right" href="<?= REDIRECT_PATH . 'project' . DS . $projectData['id'] . DS . 'task' ?>">See All</a>
                         </div>
-                        <canvas id="task_status_chart" width="400" height="200"></canvas>
-                    </div>
 
-                    <!-- Task Priority Chart -->
-                    <div class="task-priority-chart chart-container">
-                        <?php $priorityBreakdown = $projectData['progress']['priorityBreakdown']; ?>
-                        <div class="priority-statistics">
-                            <?php 
-                            foreach (TaskPriority::cases() as $status): 
-                                $percentage = $priorityBreakdown[$status->value]['percentage'] ?? 0;
-                                $count = $priorityBreakdown[$status->value]['count'] ?? 0;
-                            ?>
-                                <span data-percentage="<?= $percentage ?>" data-count="<?= $count ?>"></span>
-                            <?php endforeach; ?>
-                        </div>
+                        <p class="dark-white-text light-text">Recent Tasks</p>
 
-                        <div class="first-col text-w-icon">
-                            <img src="<?= ICON_PATH . 'priority_w.svg' ?>" alt="Task Priority Distribution"
-                                title="Task Priority Distribution" height="20">
+                        <?php if ($taskData['recentTasks']->count() > 0): ?>
+                            <!-- Recent Tasks Cards -->
+                            <section>
+                                <?php foreach ($taskData['recentTasks'] as $task): ?>
+                                    <a class="recent-task-card black-bg flex-row flex-child-center-h"
+                                        href="<?= REDIRECT_PATH . 'project' . DS . $projectData['id'] . DS . 'task' . DS . UUID::toString($task->getPublicId()) ?>">
+                                        <section class="flex-col">
+                                            <div class="flex-row">
+                                                <h3 class="name single-line-ellipsis">
+                                                    <?= htmlspecialchars($task->getName()) ?>
+                                                </h3>
+                                                <p class="priority dark-white-text light-text">
+                                                    <?= $task->getPriority()->getDisplayName() ?>
+                                                </p>
+                                            </div>
 
-                            <h3>Task Priority Distribution</h3>
-                        </div>
+                                            <p class="start-date-time dark-white-text light-text">
+                                                <?= formatDateTime($task->getStartDateTime(), 'd-m-Y') ?>
+                                            </p>
+                                        </section>
+                                    <?php endforeach; ?>
+                            </section>
+                        <?php else: ?>
+                            <!-- No Recent Tasks -->
+                            <div class="no-tasks-wall no-content-wall full-body-content flex-col">
+                                <img src="<?= ICON_PATH . 'empty_dw.svg' ?>" alt="No recent tasks found" title="No recent tasks found"
+                                    height="50">
+                                <p class="center-text dark-white-text">No recent task(s) found</p>
+                            </div>
+                        <?php endif; ?>
+                    </section>
 
-                        <canvas id="task_priority_chart" width="400" height="200"></canvas>
-                    </div>
-
-                </section>
+                </div>
             </section>
 
             <!-- Project Phases -->
@@ -208,7 +312,7 @@ require_once COMPONENT_PATH . 'template/add-worker-table.php';
                 <div class="heading-title text-w-icon">
                     <img src="<?= ICON_PATH . 'phase_w.svg' ?>" alt="Project Phases" title="Project Phases" height="20">
 
-                    <h3>Project Phases</h3>
+                    <h3>PHASES</h3>
                 </div>
 
                 <!-- Phases List -->
@@ -217,8 +321,6 @@ require_once COMPONENT_PATH . 'template/add-worker-table.php';
                         // Phase List Card
                         echo phaseListCard($phase);
                     } ?>
-
-                    <hr>
                 </div>
             </section>
 
@@ -226,21 +328,28 @@ require_once COMPONENT_PATH . 'template/add-worker-table.php';
             <section class="project-actions content-section-block">
                 <div class="heading-title text-w-icon">
                     <img src="<?= ICON_PATH . 'action_w.svg' ?>" alt="Project Actions" title="Project Actions"
-                        height="20">
+                        height="16">
 
-                    <h3>Actions</h3>
+                    <h3>ACTIONS</h3>
                 </div>
 
-                <hr>
-
-                <div class="action-buttons flex-col">
+                <div class="action-buttons flex-row">
                     <a class="green-text inline" href="<?= REDIRECT_PATH . 'project' . DS . $projectData['id'] . DS . 'report' ?>">
-                        View Reports And Statistics
+                        <div class="text-w-icon">
+                            <img src="<?= ICON_PATH . 'progress_g.svg' ?>" alt="View Reports And Statistics"
+                                title="View Reports And Statistics" height="12">
+
+                            <p class="green-text">View Reports And Statistics</p>
+                        </div>
                     </a>
 
                     <?php if (Role::isProjectManager(Me::getInstance()) && $projectData['status'] !== WorkStatus::COMPLETED && $projectData['status'] !== WorkStatus::CANCELLED): ?>
                         <button id="cancel_project_button" type="button" class="unset-button" href="">
-                            Cancel This Project
+                            <div class="text-w-icon">
+                                <img src="<?= ICON_PATH . 'close_r.svg' ?>" alt="Cancel Project" title="Cancel Project" height="12">
+
+                                <p class="red-text">Cancel Project</p>
+                            </div>
                         </button>
                     <?php endif; ?>
                 </div>
@@ -251,9 +360,9 @@ require_once COMPONENT_PATH . 'template/add-worker-table.php';
             <section class="project-manager content-section-block flex-col">
                 <div class="heading-title text-w-icon">
                     <img src="<?= ICON_PATH . 'manager_w.svg' ?>" alt="Project Manager" title="Project Manager"
-                        height="20">
+                        height="16">
 
-                    <h3>Project Manager</h3>
+                    <h3>PROJECT MANAGER</h3>
                 </div>
 
                 <?= userListCard($projectData['manager']) ?>
@@ -266,7 +375,7 @@ require_once COMPONENT_PATH . 'template/add-worker-table.php';
                     <img src="<?= ICON_PATH . 'worker_w.svg' ?>" alt="Assigned Workers" title="Assigned Workers"
                         height="20">
 
-                    <h3>Assigned Workers</h3>
+                    <h3>ASSIGNED WORKERS</h3>
                 </div>
 
                 <!-- Search Bar -->
@@ -274,7 +383,7 @@ require_once COMPONENT_PATH . 'template/add-worker-table.php';
 
                 <!-- Worker List -->
                 <div class="worker-list">
-                    <section class="list">
+                    <section class="list flex-col">
                         <?php foreach ($projectData['workers'] as $worker) {
                             // Worker List Card
                             echo userListCard($worker);
@@ -293,9 +402,11 @@ require_once COMPONENT_PATH . 'template/add-worker-table.php';
                 </div>
 
                 <!-- Add Worker Button -->
-                <?php if (Role::isProjectManager(Me::getInstance()) && 
-                            $projectData['status'] !== WorkStatus::COMPLETED && 
-                            $projectData['status'] !== WorkStatus::CANCELLED): ?>
+                <?php if (
+                    Role::isProjectManager(Me::getInstance()) &&
+                    $projectData['status'] !== WorkStatus::COMPLETED &&
+                    $projectData['status'] !== WorkStatus::CANCELLED
+                ): ?>
                     <div class="">
                         <button id="add_worker_button" type="button" class="float-right blue-bg">
                             <div class="heading-title text-w-icon center-child">

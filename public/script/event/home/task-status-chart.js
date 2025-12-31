@@ -9,6 +9,30 @@ const taskStatisticsChart = taskStatistics.querySelector('#task_statistics_chart
 if (!taskStatisticsChart)
     die('Task statistics chart element not found')
 
+/**
+ * Retrieves task statistics data from the DOM and returns it as an object.
+ *
+ * This function queries the DOM for an element with the class `task-data` inside the
+ * `taskStatistics` container. It extracts task counts (pending, ongoing, completed,
+ * delayed, and cancelled) from the element's `data-*` attributes and returns them
+ * as an object with integer values.
+ *
+ * Behavior and side effects:
+ * - Throws an error if the `.task-data` element is not found within `taskStatistics`.
+ * - Reads the `data-pendingcount`, `data-ongoingcount`, `data-completedcount`,
+ *   `data-delayedcount`, and `data-cancelledcount` attributes from the `.task-data` element.
+ * - Defaults to `0` for any missing or undefined data attributes.
+ * - Converts the extracted values to integers before returning them.
+ *
+ * @throws Error If the `.task-data` element is not found in the DOM.
+ *
+ * @return {Object} An object containing task statistics:
+ * - `pending` {number} The count of pending tasks.
+ * - `ongoing` {number} The count of ongoing tasks.
+ * - `completed` {number} The count of completed tasks.
+ * - `delayed` {number} The count of delayed tasks.
+ * - `cancelled` {number} The count of cancelled tasks.
+ */
 function getData() {
     const taskData = taskStatistics.querySelector('.task-data')
     if (!taskData)
@@ -29,6 +53,28 @@ function getData() {
     }
 }
 
+/**
+ * Creates a dataset for a chart based on task statuses.
+ *
+ * This function takes an object containing counts of tasks in various statuses
+ * (pending, ongoing, completed, delayed, and cancelled) and returns an array
+ * formatted for use as a dataset in a chart. Each status is associated with a
+ * specific color for visualization.
+ *
+ * Behavior and side effects:
+ * - Extracts the counts of tasks for each status from the input object.
+ * - Constructs a dataset object with labels, data, and background colors.
+ * - Returns the dataset as an array containing a single object.
+ *
+ * @param {Object} data An object containing task status counts.
+ * @param {number} data.pending The count of pending tasks.
+ * @param {number} data.ongoing The count of ongoing tasks.
+ * @param {number} data.completed The count of completed tasks.
+ * @param {number} data.delayed The count of delayed tasks.
+ * @param {number} data.cancelled The count of cancelled tasks.
+ *
+ * @returns {Array<Object>} An array containing a single dataset object for the chart.
+ */
 function createDataset(data) {
     const {
         pending,
@@ -79,14 +125,26 @@ const config = {
             }
         },
         responsive: true,
+        maintainAspectRatio: false,
         scales: {
             x: {
                 stacked: true,
+                ticks: {
+                    font: {
+                        size: 12
+                    }
+                }
             },
             y: {
-                stacked: false
+                stacked: false,
+                ticks: {
+                    font: {
+                        size: 12
+                    },
+                }
             }
-        }
+        },
+
     }
 }
 

@@ -7,7 +7,7 @@
 .project-name {
 	max-width: 70ch;
 	margin-right: 1rem;
-	font-size: 1.5rem;
+	font-size: 1.8rem;
 	overflow: hidden;
 	white-space: normal !important;
 }
@@ -26,14 +26,17 @@
 }
 
 .project-id {
+	font-size: 0.8rem;
 	font-weight: 300;
-	margin-top: 0.5rem;
+	margin-top: 0.3rem;
 }
 
 .project-description {
-	margin: 1rem 0;
+	font-size: 0.9rem;
+	margin-top: 0.8rem;
 	font-weight: 300;
 	white-space: pre-wrap !important;
+	line-height: 1.3rem;
 }
 
 .main-sub-content {
@@ -41,33 +44,59 @@
 	width: 100%;
 }
 
+.project-statistics {
+	gap: var(--space);
+}
+
 .project-statistics > * {
-	flex: 1;
+	height: 100%;
 }
 
 .project-statistics > .left {
+	width: 60%;
 	grid-template-columns: 1fr 1fr;
-	gap: 0.5rem;
+	gap: 0.8rem;
 	overflow: hidden;
 }
 
+.project-statistics > .right {
+	flex: 1;
+	gap: 0.5rem;
+}
+
+.project-statistics .upper-statistics {
+	gap: 0.8rem;
+}
+
+.project-statistics .individual-statistic > div:first-child {
+	margin-bottom: 0.3rem;
+}
+
+.project-statistics .total-spending-text {
+	margin-bottom: 0.5rem;
+}
+
 .progress-percentage {
-	font-size: 2rem;
+	font-size: 1.5rem;
 	font-weight: 800;
 	margin-bottom: 0.3rem;
 }
 
+.progress-percentage .percentage-symbol {
+	font-size: 1.2rem;
+}
+
+.total-spending-bar-container,
 .progress-container {
-	width: 80%;
-	max-width: 400px;
 	background: #e0e0e0;
 	border-radius: 5rem;
 	overflow: hidden;
 	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
+.total-spending-bar-container > .total-spending-bar, 
 .progress-container > .progress-bar {
-	height: 30px;
+	height: 20px;
 	width: 0%;
 	background: linear-gradient(90deg, #4caf50, #81c784);
 	text-align: center;
@@ -77,18 +106,101 @@
 	transition: width 0.8s ease;
 }
 
-.task-statistics > .see-all-tasks {
+.project-statistics > .right > section:last-child > p {
+	font-size: 0.8rem;
+}
+
+.task-statistics {
+	gap: var(--space);
+}
+
+.task-statistics .see-all-tasks {
 	width: 100%;
 	margin-bottom: var(--space);
 	gap: 0.8rem;
 }
 
-.task-statistics > .see-all-tasks > a:hover {
+.task-statistics .see-all-tasks > a:hover {
 	text-decoration: underline;
 }
 
-.task-statistics-chart {
-	gap: var(--space);
+.task-status-count-chart-container {
+	margin-bottom: 1rem;
+}
+
+.task-status-count-card-container {
+	width: 100%;
+	gap: 1rem;
+}
+
+.task-status-count-card {
+	flex: 1;
+	width: 13ch;
+	padding: 1rem;
+	border: 1px solid var(--border-color);
+	border-radius: var(--input-border-radius);
+}
+
+.task-status-count-card > h3 {
+	font-size: 1.3rem;
+	margin-bottom: 0.3rem;
+}
+
+.task-status-count-card > p {
+	font-size: 0.8rem;
+}
+
+.recent-tasks-container {
+	width: 100%;
+}
+
+.recent-tasks-container > p {
+	font-size: 0.9rem;
+	margin-bottom: 0.3rem;
+}
+
+.recent-task-card {
+	width: 100%;
+	padding: 1rem;
+	border-radius: var(--input-border-radius);
+	border: 1px solid var(--border-color);
+}
+
+.recent-task-card:not(:last-child) {
+	margin-bottom: 0.8rem;
+}
+
+.recent-task-card:hover {
+	border-color: var(--opacity-blue);
+}
+
+.recent-task-card .name {
+	max-width: 15ch;
+	font-size: 0.9rem;
+	margin-right: 0.3rem;
+}
+
+.recent-task-card .id {
+	font-size: 0.8rem;
+	margin-top: 0.2rem;
+}
+
+.recent-task-card .priority {
+	font-size: 0.9rem;
+}
+
+.recent-task-card .start-date-time {
+	font-size: 0.8rem;
+	margin-top: 0.2rem;
+}
+
+.recent-task-card .status-badge-container {
+	flex: 1;
+}
+
+.recent-task-card .status-badge-container > div {
+	float: right;
+	width: fit-content;
 }
 
 .chart-container {
@@ -140,28 +252,50 @@
 	gap: 1rem;
 }
 
-.phase-list-card {
-	gap: 0.5rem;
+.phase-list-card {	
+	gap: 1rem;
+	padding: var(--space);
+	border: 1px solid var(--border-color);
+	border-radius: var(--input-border-radius);
+	transition: color var(--transition-dur) ease;
 }
 
-.phase-list-card .phase-description {
+.phase-list-card:hover .name {
+	color: var(--blue);
+}
+
+.phase-list-card .id {
+	font-size: 0.8rem;
+	margin-top: 0.3rem;
+}
+
+.phase-list-card .description {
 	font-size: 0.9rem;
-	font-weight: 300;
-	max-width: 90ch;
 	margin-top: 0.3rem;
 	margin-bottom: 0.5rem;
-	line-height: 1.6rem;
+	line-height: 1.3rem;
 	white-space: pre-wrap !important;
 }
 
-.phase-list-card .phase-dates {
+.phase-list-card .secondary-info-card > p:first-child {
 	font-size: 0.8rem;
-	font-weight: 200;
+	margin-bottom: 0.3rem;	
 }
 
-.phase-list-card .project-schedule {
-	gap: 0.5rem;
-	margin-top: 0.2rem;
+.phase-list-card .secondary-info-card > p:nth-child(2) {
+	font-size: 0.9rem;
+}
+
+.phase-list-card .budget-note-container {
+	padding: 0.5rem;
+	background-color: var(--opacity-orange);
+	margin-top: 0.5rem;
+	border: 1px solid var(--orange);
+	border-radius: var(--input-border-radius);
+}
+
+.phase-list-card .budget-note-container p {
+	font-size: 0.9rem;
 }
 
 .phase-list-card .text-w-icon > img {
@@ -169,8 +303,8 @@
 }
 
 .project-actions > .action-buttons {
-	padding-top: 0.5rem;
-	gap: 0.5rem;
+	font-size: 0.9rem;
+	gap: 0.8rem;
 }
 
 .project-actions > .action-buttons > *:hover {
@@ -180,6 +314,15 @@
 
 .project-actions > .action-buttons > * {
 	width: fit-content;
+}
+
+.project-actions > .action-buttons > *:not(:last-child) {
+	padding-right: 0.8rem;
+	border-right: 1px solid var(--dark-white);
+}
+
+.project-actions > .action-buttons .text-w-icon > img {
+	margin-right: 0.3rem;
 }
 
 #cancel_project_button {
@@ -246,7 +389,7 @@
 		overflow: unset;
 	}
 
-	.project-statistics > .left  h3 {
+	.project-statistics > .left h3 {
 		font-size: 1rem !important;
 	}
 
@@ -331,5 +474,4 @@
 		line-height: 1.2rem;
 		font-size: 0.7rem !important;
 	}
-
 }

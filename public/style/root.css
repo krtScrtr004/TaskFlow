@@ -8,13 +8,22 @@
 	--red: #c42838;
 	--green: #38ff5d;	
 	--yellow: #ffb61e;
-	--orange: #cb5835;
+	--orange: #cb5835;	
 
-	--input-color: #353637;
+	--opacity-white: rgba(255, 254, 254, 0.3);
+	--opacity-black: rgba(30, 30, 30, 0.3);
+	--opacity-blue: rgba(0, 123, 255, 0.3);
+	--opacity-red: rgba(196, 40, 56, 0.3);
+	--opacity-green: rgba(56, 255, 93, 0.3);
+	--opacity-yellow: rgba(255, 182, 30, 0.3);
+	--opacity-orange: rgba(203, 88, 53, 0.3);
+
+	--input-color: #252525;
 	--input-border-radius: 8px;
 
-	--space: 2rem;
+	--space: 1.5rem;
 
+	--border-color: #3d3d3d;
 	--border-radius: 15px;
 
 	--content-side-padding: 10rem;
@@ -25,7 +34,7 @@
 	--card-width: 230px;
 	--card-height: 300px;
 
-	--box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+	--box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);;
 	--box-shadow-hover: 0 4px 8px rgba(0, 0, 0, 0.3);
 
 	--transition-dur: 0.2s;
@@ -119,7 +128,7 @@ aside {
 }
 
 main {
-	background-color: var(--light-black);
+	background-color: var(--black);
 	flex: 1;
 	position: relative;
 	width: 100%;
@@ -266,7 +275,7 @@ textarea {
 @media (max-width: 768px) {
 	:root {
 		--content-side-padding: 2rem;
-		--space: 1.8rem;
+		--space: 1.3rem;
 	}
 
 	h1 {
