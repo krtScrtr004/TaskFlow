@@ -68,8 +68,8 @@ function userListCard(User|Worker $user): string
                     ? htmlspecialchars(formatNumber($user->getDefaultRate()))
                     : DEFAULT_RATE_MIN;
         ?>
-            <div class="default-rate badge absolute">
-                <p class="green-text bold-text">₱ <?= $defaultRate ?></p>
+            <div class="default-rate badge green absolute">
+                <h4 class="bold-text">₱ <?= $defaultRate ?></h4>
             </div>
         <?php endif; ?>
     </button>

@@ -49,10 +49,17 @@ enum WorkerStatus: string {
      * @return string HTML <span> element representing the status badge
      */
     public static function badge(self $status): string {
-        return match($status) {
-            self::ASSIGNED => '<span class="worker-badge badge blue-bg white-text">Assigned</span>',
-            self::UNASSIGNED => '<span class="worker-badge badge yellow-bg black-text">Unassigned</span>',
-            self::TERMINATED => '<span class="worker-badge badge red-bg white-text">Terminated</span>'
+        $statusName = $status->getDisplayName();
+        $class = match ($status) {
+            self::ASSIGNED => 'blue',
+            self::UNASSIGNED => 'yellow',
+            self::TERMINATED => 'red'
         };
+
+        return <<<HTML
+        <div class="worker-badge badge center-child $class">
+            <p class="center-text">$statusName</p>
+        </div>
+        HTML;
     }
 }

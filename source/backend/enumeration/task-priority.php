@@ -53,19 +53,15 @@ enum TaskPriority: string {
      */
     public static function badge(TaskPriority $priority): string {
         $priorityName = $priority->getDisplayName();
-        $backgroundColor = match ($priority) {
-            self::LOW => 'green-bg',
-            self::MEDIUM => 'yellow-bg',
-            self::HIGH => 'red-bg',
-        };
-        $textColor = match ($priority) {
-            self::LOW, self::MEDIUM => 'black-text',
-            self::HIGH => 'white-text'
+        $class = match ($priority) {
+            self::LOW => 'green',
+            self::MEDIUM => 'yellow',
+            self::HIGH => 'red',
         };
 
         return <<<HTML
-        <div class="priority-badge badge center-child $backgroundColor">
-            <p class="center-text $textColor">$priorityName</p>
+        <div class="priority-badge badge center-child $class">
+            <p class="center-text">$priorityName</p>
         </div>
         HTML;
     }

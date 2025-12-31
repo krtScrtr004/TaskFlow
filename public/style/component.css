@@ -385,8 +385,70 @@ button > .text-w-icon {
 	border-radius: 5rem;
 }
 
-.badge p {
+.badge p,
+.badge h3,
+.badge h4 {
 	font-size: 0.8rem;
+}
+
+.badge.green {
+	background-color: var(--opacity-green);
+	color: var(--green);
+	border: 1px solid var(--green);
+}
+
+.badge.green p,
+.badge.green h3,
+.badge.green h4 {
+	color: var(--green);
+}
+
+.badge.blue {
+	background-color: var(--opacity-blue);
+	border: 1px solid var(--blue);
+	color: var(--blue);
+}
+
+.badge.blue p,
+.badge.blue h3,
+.badge.blue h4 {
+	color: var(--blue);
+}
+
+.badge.yellow {
+	background-color: var(--opacity-yellow);
+	border: 1px solid var(--yellow);
+	color: var(--yellow);
+}
+
+.badge.yellow p,
+.badge.yellow h3,
+.badge.yellow h4 {
+	color: var(--yellow);
+}
+
+.badge.orange {
+	background-color: var(--opacity-orange);
+	border: 1px solid var(--orange);
+	color: var(--orange);
+}
+
+.badge.orange p,
+.badge.orange h3,
+.badge.orange h4 {
+	color: var(--orange);
+}
+
+.badge.red {
+	background-color: var(--opacity-red);
+	border: 1px solid var(--red);
+	color: var(--red);
+}
+
+.badge.red p,
+.badge.red h3,
+.badge.red h4 {
+	color: var(--red);
 }
 
 /* ---------------- INPUT LABEL CONTAINER ---------------- */
@@ -650,8 +712,6 @@ button > .text-w-icon {
 .user-list-card .default-rate {
 	bottom: -8px;
 	right: 10px;
-	background-color: var(--opacity-green);
-	border: 1px solid var(--green);
 }
 
 /* ---------------- ADD WORKER MODAL ---------------- */

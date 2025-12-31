@@ -103,21 +103,17 @@ enum WorkStatus: string
     public static function badge(WorkStatus $status): string
     {
         $statusName = $status->getDisplayName();
-        $backgroundColor = match ($status) {
-            self::PENDING => 'yellow-bg',
-            self::ON_GOING => 'green-bg',
-            self::COMPLETED => 'blue-bg',
-            self::DELAYED => 'orange-bg',
-            self::CANCELLED => 'red-bg'
-        };
-        $textColor = match ($status) {
-            self::ON_GOING, self::PENDING => 'black-text',
-            self::COMPLETED, self::DELAYED, self::CANCELLED => 'white-text'
+        $class = match ($status) {
+            self::PENDING => 'yellow',
+            self::ON_GOING => 'green',
+            self::COMPLETED => 'blue',
+            self::DELAYED => 'orange',
+            self::CANCELLED => 'red'
         };
 
         return <<<HTML
-        <div class="status-badge badge center-child $backgroundColor">
-            <p class="center-text $textColor">$statusName</p>
+        <div class="status-badge badge center-child $class">
+            <p class="center-text">$statusName</p>
         </div>
         HTML;
     }
