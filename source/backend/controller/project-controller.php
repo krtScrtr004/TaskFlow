@@ -14,6 +14,7 @@ use App\Exception\NotFoundException;
 use App\Interface\Controller;
 use App\Model\PhaseModel;
 use App\Model\ProjectModel;
+use App\Model\TaskModel;
 use App\Utility\ProjectProgressCalculator;
 use App\Validator\UuidValidator;
 use DateTime;
@@ -307,14 +308,20 @@ class ProjectController implements Controller
     }
 
     /**
-     * Retrieves detailed information about a project by its UUID.
+     * Retrieves full project information including optional related entities.
      *
-     * This method fetches a project along with its related data, including phases, tasks, and workers.
-     * If the provided project ID is null, the method returns null.
+     * This private method fetches a Project by its public ID and can include related
+     * entities such as phases, workers, and tasks based on the provided options.
+     * Additionally, it retrieves the three most recent tasks associated with the project
+     * and adds them as additional info to the Project object.
      *
-     * @param UUID|null $projectId The unique identifier of the project to retrieve, or null.
-     * 
-     * @return Project|null The Project instance with full details (phases, tasks, workers), or null if no ID is provided.
+     * @param UUID|null $projectId The UUID of the project to retrieve.
+     * @param array $options Optional associative array to specify related entities to include:
+     *      - 'phases' => bool Whether to include phases (default: false)
+     *      - 'workers' => bool Whether to include workers (default: false)
+     *      - 'tasks' => bool Whether to include tasks (default: false)
+     *
+     * @return Project|null The Project instance with requested related entities, or null if not found.
      */
     private function getProjectInfo(
         UUID|null $projectId,
@@ -332,11 +339,28 @@ class ProjectController implements Controller
         $includePhases = $options['phases'] ?? false;
         $includeWorkers = $options['workers'] ?? false;
 
-        return ProjectModel::findFull($projectId, [
+        $project = ProjectModel::findFull($projectId, [
             'phases' => $includePhases,
             'tasks' => $includeTasks,
             'workers' => $includeWorkers
         ]);
+
+        $recentTasks = TaskModel::search(
+            '',
+            null,
+            null,
+            $projectId,
+            null,
+            [
+                'limit'  => 3,
+                'offset' => 0
+            ]
+        );
+        if ($recentTasks) {
+            $project->addAdditionalInfo('recentTasks', $recentTasks->toArray());
+        }
+
+        return $project;
     }
 
     /**
