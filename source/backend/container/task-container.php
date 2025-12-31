@@ -254,7 +254,7 @@ class TaskContainer extends Container
      *
      * @return int The count of tasks with the specified work status
      */
-    public function getTaskCountByStatus(WorkStatus $status): int
+    public function countByStatus(WorkStatus $status): int
     {
         switch ($status) {
             case WorkStatus::PENDING:
@@ -288,7 +288,7 @@ class TaskContainer extends Container
      *
      * @return array<string,int> Associative array mapping status identifiers to task counts
      */
-    public function getAllTaskCountByStatus(): array
+    public function countAllByStatus(): array
     {
         return [
             WorkStatus::PENDING->value      => count($this->pending),
@@ -310,7 +310,7 @@ class TaskContainer extends Container
      *
      * @return int The count of tasks with the specified priority
      */
-    public function getTaskCountByPriority(TaskPriority $priority): int
+    public function countByPriority(TaskPriority $priority): int
     {
         switch ($priority) {
             case TaskPriority::LOW:
@@ -340,7 +340,7 @@ class TaskContainer extends Container
      *
      * @return array<string,int> Associative array mapping priority identifiers to task counts
      */
-    public function getAllTaskCountByPriority(): array
+    public function countAllByPriority(): array
     {
         return [
             TaskPriority::LOW->value      => count($this->low),

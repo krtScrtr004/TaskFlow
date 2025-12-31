@@ -4,6 +4,7 @@ namespace App\Container;
 
 use App\Abstract\Container;
 use App\Dependent\Phase;
+use App\Enumeration\TaskPriority;
 use App\Enumeration\WorkStatus;
 use InvalidArgumentException;
 
@@ -345,93 +346,53 @@ class PhaseContainer extends Container
     }
 
     /**
-     * Counts the number of pending items in the container.
+     * Returns counts of all phases grouped by their status.
      *
-     * This method calculates the total number of items currently marked as pending
-     * by counting the elements in the $this->pending array.
+     * This method provides an associative array representing a snapshot of phase counts
+     * organized by work status. It is intended to give callers an easy way to inspect
+     * how many phases exist for each status:
+     * - Keys are status identifiers (e.g. string names like "pending", "on_going", etc.)
+     * - Values are integers representing the number of phases for that status
      *
-     * Behavior and side effects:
-     * - Returns the count of elements in the $this->pending array.
-     * - Assumes $this->pending is an array and does not perform additional validation.
-     * - If $this->pending is empty, the method returns 0.
-     *
-     * @return int The number of pending items in the container
+     * @return array<string,int> Associative array mapping status identifiers to phase counts
      */
-    public function countPending(): int
+    public function countAll(): array
     {
-        return count($this->pending);
+        return [
+            WorkStatus::PENDING->value     => count($this->pending),
+            WorkStatus::ON_GOING->value    => count($this->ongoing),
+            WorkStatus::COMPLETED->value   => count($this->completed),
+            WorkStatus::DELAYED->value     => count($this->delayed),
+            WorkStatus::CANCELLED->value   => count($this->cancelled),
+        ];
     }
 
     /**
-     * Counts the number of ongoing items in the container.
+     * Retrieves the count of phases for a specific work status.
      *
-     * This method calculates the total number of items currently marked as ongoing
-     * by returning the count of the `$this->ongoing` array.
-     *
-     * Behavior and side effects:
-     * - Returns the count of elements in the `$this->ongoing` array.
-     * - Assumes `$this->ongoing` is an array and does not perform additional validation.
-     * - If `$this->ongoing` is empty, the method returns 0.
-     *
-     * @return int The number of ongoing items in the container
-     */
-    public function countOnGoing(): int
-    {
-        return count($this->ongoing);
-    }
-
-    /**
-     * Counts the number of completed items in the container.
-     *
-     * This method calculates the total number of completed items by returning the count
-     * of the `$this->completed` array, which is expected to store the completed items.
+     * This method uses a match expression to return the count of phases
+     * corresponding to the provided WorkStatus enum value. It checks the
+     * relevant internal array and returns its count.
      *
      * Behavior and side effects:
-     * - Returns the count of elements in the `$this->completed` array.
-     * - Assumes that `$this->completed` is an array and is properly maintained elsewhere in the class.
-     * - Does not modify the state of the object or perform any additional operations.
+     * - Matches the provided WorkStatus against predefined cases: PENDING, ON_GOING,
+     *   COMPLETED, DELAYED, and CANCELLED.
+     * - Returns the count of items in the corresponding array property
+     *   ($this->pending, $this->ongoing, etc.) based on the matched status.
      *
-     * @return int The total number of completed items in the container.
+     * @param WorkStatus $status The work status to get the phase count for
+     *
+     * @return int The count of phases corresponding to the given work status
      */
-    public function countCompleted(): int
+    public function countByStatus(WorkStatus $status): int
     {
-        return count($this->completed);
-    }
-
-    /**
-     * Counts the number of delayed items in the container.
-     *
-     * This method calculates the total number of items currently stored in the
-     * delayed queue of the container.
-     *
-     * Behavior and side effects:
-     * - Returns the count of elements in the $this->delayed array.
-     * - If the delayed queue is empty, the method returns 0.
-     * - This method does not modify the state of the container or its delayed queue.
-     *
-     * @return int The total number of delayed items in the container
-     */
-    public function countDelayed(): int
-    {
-        return count($this->delayed);
-    }
-
-    /**
-     * Counts the number of cancelled items in the container.
-     *
-     * This method calculates the total number of items marked as cancelled
-     * by counting the elements in the $this->cancelled array.
-     *
-     * Behavior and side effects:
-     * - Returns the count of elements in the $this->cancelled array.
-     * - Assumes $this->cancelled is an array and does not perform additional validation.
-     * - If $this->cancelled is empty, the method returns 0.
-     *
-     * @return int The total number of cancelled items.
-     */
-    public function countCancelled(): int
-    {
-        return count($this->cancelled);
+        return match ($status) {
+            WorkStatus::PENDING     => count($this->pending),
+            WorkStatus::ON_GOING    => count($this->ongoing),
+            WorkStatus::COMPLETED   => count($this->completed),
+            WorkStatus::DELAYED     => count($this->delayed),
+            WorkStatus::CANCELLED   => count($this->cancelled),
+        };
     }
 
     /**

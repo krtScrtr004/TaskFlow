@@ -285,57 +285,47 @@ class WorkerContainer extends Container
     }
 
     /**
-     * Counts the number of unassigned workers in the container.
+     * Returns counts of all workers grouped by their status.
      *
-     * This method calculates the total number of workers that are currently
-     * unassigned by returning the count of the $this->unassigned array.
+     * This method provides an associative array representing a snapshot of worker counts
+     * organized by status. It is intended to give callers an easy way to inspect
+     * how many workers exist for each status:
+     * - Keys are status identifiers (e.g. string names like "unassigned", "assigned", "terminated"
+     *   or numeric status IDs depending on the application's convention)
+     * - Values are integers representing the number of workers for that status
      *
-     * Behavior and side effects:
-     * - Returns the count of elements in the $this->unassigned array.
-     * - Assumes $this->unassigned is an array and does not perform additional
-     *   validation or checks on its contents.
-     *
-     * @return int The number of unassigned workers in the container.
+     * @return array<string,int> Associative array mapping status identifiers to worker counts
      */
-    public function countUnassigned(): int
+    public function countAll(): array
     {
-        return count($this->unassigned);
+        return [
+            WorkerStatus::UNASSIGNED->value    => count($this->unassigned),
+            WorkerStatus::ASSIGNED->value      => count($this->assigned),
+            WorkerStatus::TERMINATED->value    => count($this->terminated),
+        ];
     }
 
     /**
-     * Counts the number of workers currently assigned in the container.
+     * Returns the count of workers for a specific status.
      *
-     * This method calculates the total number of workers that have been marked as assigned
-     * by returning the count of the `$this->assigned` array.
+     * This method retrieves the number of workers that match the provided WorkerStatus.
+     * It checks the corresponding internal array based on the status and returns
+     * the count of workers in that category.
      *
-     * Behavior and side effects:
-     * - Returns the total number of elements in the `$this->assigned` array.
-     * - If the `$this->assigned` array is empty, the method returns 0.
-     * - This method does not modify the state of the container or its properties.
+     * @param WorkerStatus $status The status to count workers for. Expected values:
+     *      - WorkerStatus::UNASSIGNED
+     *      - WorkerStatus::ASSIGNED
+     *      - WorkerStatus::TERMINATED
      *
-     * @return int The number of assigned workers in the container
+     * @return int The count of workers with the specified status.
      */
-    public function countAssigned(): int
+    public function countByStatus(WorkerStatus $status): int
     {
-        return count($this->assigned);
-    }
-
-    /**
-     * Counts the number of terminated workers in the container.
-     *
-     * This method calculates the total number of workers that have been marked as terminated
-     * by counting the entries in the $this->terminated array.
-     *
-     * Behavior and side effects:
-     * - Returns the count of elements in the $this->terminated array.
-     * - If the $this->terminated array is empty, the method will return 0.
-     * - This method does not modify the state of the container or its properties.
-     *
-     * @return int The total number of terminated workers in the container
-     */
-    public function countTerminated(): int
-    {
-        return count($this->terminated);
+        return match ($status) {
+            WorkerStatus::UNASSIGNED    => count($this->unassigned),
+            WorkerStatus::ASSIGNED      => count($this->assigned),
+            WorkerStatus::TERMINATED    => count($this->terminated),
+        };
     }
 
     /**
