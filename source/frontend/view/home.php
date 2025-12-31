@@ -57,7 +57,6 @@ use App\Middleware\Csrf;
 
         <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'task-status-chart.js' ?>" defer></script>
         <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'total-spending-bar.js' ?>" defer></script>
-        <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'task-chart.js' ?>" defer></script>
         <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'create-worker-card.js' ?>" defer></script>
         <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'search-worker.js' ?>" defer></script>
         <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'infinite-scroll-workers.js' ?>" defer></script>
