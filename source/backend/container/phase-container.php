@@ -78,7 +78,7 @@ class PhaseContainer extends Container
             case WorkStatus::PENDING:
                 $this->pending[$id] = $item;
                 break;
-            case WorkStatus::ON_GOING:
+            case WorkStatus::ONGOING:
                 $this->ongoing[$id] = $item;
                 break;
             case WorkStatus::COMPLETED:
@@ -131,7 +131,7 @@ class PhaseContainer extends Container
             case WorkStatus::PENDING:
                 unset($this->pending[$id]);
                 break;
-            case WorkStatus::ON_GOING:
+            case WorkStatus::ONGOING:
                 unset($this->ongoing[$id]);
                 break;
             case WorkStatus::COMPLETED:
@@ -161,7 +161,7 @@ class PhaseContainer extends Container
      * - Depending on the Phase's status (retrieved via $item->getStatus()), checks if the
      *   Phase ID exists in the corresponding status-specific array:
      *   - $this->pending for WorkStatus::PENDING
-     *   - $this->ongoing for WorkStatus::ON_GOING
+     *   - $this->ongoing for WorkStatus::ONGOING
      *   - $this->completed for WorkStatus::COMPLETED
      *   - $this->delayed for WorkStatus::DELAYED
      *   - $this->cancelled for WorkStatus::CANCELLED
@@ -187,7 +187,7 @@ class PhaseContainer extends Container
         switch ($status) {
             case WorkStatus::PENDING:
                 return isset($this->pending[$id]) && $isPresentInAll;
-            case WorkStatus::ON_GOING:
+            case WorkStatus::ONGOING:
                 return isset($this->ongoing[$id]) && $isPresentInAll;
             case WorkStatus::COMPLETED:
                 return isset($this->completed[$id]) && $isPresentInAll;
@@ -304,7 +304,7 @@ class PhaseContainer extends Container
      * of the predefined cases, an empty array is returned by default.
      *
      * Behavior and side effects:
-     * - Matches the provided WorkStatus against predefined cases: PENDING, ON_GOING,
+     * - Matches the provided WorkStatus against predefined cases: PENDING, ONGOING,
      *   COMPLETED, DELAYED, and CANCELLED.
      * - Returns the corresponding array property ($this->pending, $this->ongoing, etc.)
      *   based on the matched status.
@@ -318,7 +318,7 @@ class PhaseContainer extends Container
     {
         return match ($status) {
             WorkStatus::PENDING => $this->pending,
-            WorkStatus::ON_GOING => $this->ongoing,
+            WorkStatus::ONGOING => $this->ongoing,
             WorkStatus::COMPLETED => $this->completed,
             WorkStatus::DELAYED => $this->delayed,
             WorkStatus::CANCELLED => $this->cancelled,
@@ -351,7 +351,7 @@ class PhaseContainer extends Container
      * This method provides an associative array representing a snapshot of phase counts
      * organized by work status. It is intended to give callers an easy way to inspect
      * how many phases exist for each status:
-     * - Keys are status identifiers (e.g. string names like "pending", "on_going", etc.)
+     * - Keys are status identifiers (e.g. string names like "pending", "ONGOING", etc.)
      * - Values are integers representing the number of phases for that status
      *
      * @return array<string,int> Associative array mapping status identifiers to phase counts
@@ -360,7 +360,7 @@ class PhaseContainer extends Container
     {
         return [
             WorkStatus::PENDING->value     => count($this->pending),
-            WorkStatus::ON_GOING->value    => count($this->ongoing),
+            WorkStatus::ONGOING->value    => count($this->ongoing),
             WorkStatus::COMPLETED->value   => count($this->completed),
             WorkStatus::DELAYED->value     => count($this->delayed),
             WorkStatus::CANCELLED->value   => count($this->cancelled),
@@ -375,7 +375,7 @@ class PhaseContainer extends Container
      * relevant internal array and returns its count.
      *
      * Behavior and side effects:
-     * - Matches the provided WorkStatus against predefined cases: PENDING, ON_GOING,
+     * - Matches the provided WorkStatus against predefined cases: PENDING, ONGOING,
      *   COMPLETED, DELAYED, and CANCELLED.
      * - Returns the count of items in the corresponding array property
      *   ($this->pending, $this->ongoing, etc.) based on the matched status.
@@ -388,7 +388,7 @@ class PhaseContainer extends Container
     {
         return match ($status) {
             WorkStatus::PENDING     => count($this->pending),
-            WorkStatus::ON_GOING    => count($this->ongoing),
+            WorkStatus::ONGOING    => count($this->ongoing),
             WorkStatus::COMPLETED   => count($this->completed),
             WorkStatus::DELAYED     => count($this->delayed),
             WorkStatus::CANCELLED   => count($this->cancelled),

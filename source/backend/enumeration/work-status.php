@@ -8,7 +8,7 @@ use Exception;
 enum WorkStatus: string
 {
     case PENDING = 'pending';
-    case ON_GOING = 'onGoing';
+    case ONGOING = 'ongoing';
     case COMPLETED = 'completed';
     case DELAYED = 'delayed';
     case CANCELLED = 'cancelled';
@@ -23,7 +23,7 @@ enum WorkStatus: string
      *
      * Typical output mapping for the enum cases:
      * - self::PENDING   => "Pending"
-     * - self::ON_GOING  => "On Going"
+     * - self::ONGOING  => "Ongoing"
      * - self::COMPLETED => "Completed"
      * - self::DELAYED   => "Delayed"
      * - self::CANCELLED => "Cancelled"
@@ -34,7 +34,7 @@ enum WorkStatus: string
     {
         return match ($this) {
             self::PENDING => ucwords(camelToSentenceCase(self::PENDING->value)),
-            self::ON_GOING => ucwords(camelToSentenceCase(self::ON_GOING->value)),
+            self::ONGOING => ucwords(camelToSentenceCase(self::ONGOING->value)),
             self::COMPLETED => ucwords(camelToSentenceCase(self::COMPLETED->value)),
             self::DELAYED => ucwords(camelToSentenceCase(self::DELAYED->value)),
             self::CANCELLED => ucwords(camelToSentenceCase(self::CANCELLED->value))
@@ -47,7 +47,7 @@ enum WorkStatus: string
      * This method compares the current time (created via new DateTime()) against the given dates
      * and returns one of the WorkStatus enum values according to these rules:
      * - If now < $startDate: returns self::PENDING
-     * - If now >= $startDate and now <= $completionDate: returns self::ON_GOING
+     * - If now >= $startDate and now <= $completionDate: returns self::ONGOING
      * - If now > $completionDate: returns self::COMPLETED
      *
      * Notes:
@@ -60,7 +60,7 @@ enum WorkStatus: string
      * @param DateTime $startDate      Start date/time of the work period
      * @param DateTime $completionDate Expected completion/end date/time of the work period
      *
-     * @return WorkStatus Returns one of: self::PENDING, self::ON_GOING, self::COMPLETED
+     * @return WorkStatus Returns one of: self::PENDING, self::ONGOING, self::COMPLETED
      *
      * @throws Exception If the status cannot be determined from the provided dates
      */
@@ -71,7 +71,7 @@ enum WorkStatus: string
         if ($now < $startDate) {
             return self::PENDING;
         } elseif ($now >= $startDate && $now <= $completionDate) {
-            return self::ON_GOING;
+            return self::ONGOING;
         } elseif ($now > $completionDate) {
             return self::COMPLETED;
         } else {
@@ -86,12 +86,12 @@ enum WorkStatus: string
      * - Retrieves the display name from the provided WorkStatus instance
      * - Maps the WorkStatus to a background CSS class:
      *      - self::PENDING => 'yellow-bg'
-     *      - self::ON_GOING => 'green-bg'
+     *      - self::ONGOING => 'green-bg'
      *      - self::COMPLETED => 'blue-bg'
      *      - self::DELAYED => 'orange-bg'
      *      - self::CANCELLED => 'red-bg'
      * - Determines the text color CSS class:
-     *      - self::ON_GOING, self::PENDING => 'black-text'
+     *      - self::ONGOING, self::PENDING => 'black-text'
      *      - self::COMPLETED, self::DELAYED, self::CANCELLED => 'white-text'
      * - Returns an HTML snippet containing a wrapper div and a paragraph with the status name,
      *   using the resolved background and text color classes.
@@ -105,7 +105,7 @@ enum WorkStatus: string
         $statusName = $status->getDisplayName();
         $class = match ($status) {
             self::PENDING => 'yellow',
-            self::ON_GOING => 'green',
+            self::ONGOING => 'green',
             self::COMPLETED => 'blue',
             self::DELAYED => 'orange',
             self::CANCELLED => 'red'

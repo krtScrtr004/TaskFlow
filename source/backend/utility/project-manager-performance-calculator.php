@@ -17,7 +17,7 @@ class ProjectManagerPerformanceCalculator
     // Project status weights - higher weight for successful completion
     private const PROJECT_STATUS_WEIGHTS = [
         WorkStatus::COMPLETED->value => 1.0,    // Full credit
-        WorkStatus::ON_GOING->value => 0.6,     // Partial credit for in-progress
+        WorkStatus::ONGOING->value => 0.6,     // Partial credit for in-progress
         WorkStatus::DELAYED->value => 0.3,      // Reduced credit for delays
         WorkStatus::PENDING->value => 0.2,      // Minimal credit for pending
         WorkStatus::CANCELLED->value => -0.5    // Penalty for cancellations

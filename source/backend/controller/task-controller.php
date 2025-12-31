@@ -222,14 +222,14 @@ class TaskController implements Controller
 
             // Check if the task is already ongoing
             if ($startDateTime && compareDates($startDateTime, $currentDateTime) <= 0 && $status === WorkStatus::PENDING) {
-                $task->setStatus(WorkStatus::ON_GOING);
+                $task->setStatus(WorkStatus::ONGOING);
                 TaskModel::save([
                     'id' => $task->getId(),
-                    'status' => WorkStatus::ON_GOING
+                    'status' => WorkStatus::ONGOING
                 ]);
             } elseif (
                 $completionDateTime && compareDates($completionDateTime, $currentDateTime) < 0 &&
-                ($status === WorkStatus::PENDING || $status === WorkStatus::ON_GOING)
+                ($status === WorkStatus::PENDING || $status === WorkStatus::ONGOING)
             ) {
                 TaskModel::save([
                     'id' => $task->getId(),

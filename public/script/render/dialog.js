@@ -1,7 +1,7 @@
 import { hideModal } from '../utility/hide-modal.js'
 
 const ICON_PATH = '/public/asset/image/icon/'
-const icons = ['confirm.svg', 'reject.svg']
+const icons = ['complete_g.svg', 'close_r.svg']
 
 /**
  * Renders a modal dialog with a status icon, title, message, and an OKAY button.

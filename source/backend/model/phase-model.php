@@ -136,7 +136,7 @@ class PhaseModel extends Model
     /**
      * Finds the ongoing Phase for a given Project ID.
      *
-     * This method retrieves the first Phase instance with an "ON_GOING" status
+     * This method retrieves the first Phase instance with an "ONGOING" status
      * associated with the specified project. It supports both integer and UUID
      * project identifiers:
      * - If an integer is provided, it is used directly as the project ID.
@@ -169,7 +169,7 @@ class PhaseModel extends Model
                 'projectId' => is_int($projectId) 
                     ? $projectId 
                     : UUID::toBinary($projectId),
-                'status' => WorkStatus::ON_GOING->value
+                'status' => WorkStatus::ONGOING->value
             ];
 
             $options = [

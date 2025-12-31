@@ -32,7 +32,7 @@ $projectData = [
 $phaseData = [
     'totalBudget'       => htmlspecialchars($projectData['phases']->getTotalBudget()),
     'maxCount'          => $projectData['phases']->count(),
-    'onGoingPlace'      => $projectData['phases']->countByStatus(WorkStatus::COMPLETED)
+    'ongoingPlace'      => $projectData['phases']->countByStatus(WorkStatus::COMPLETED)
         ? $projectData['phases']->countByStatus(WorkStatus::COMPLETED) + 1
         : $projectData['phases']->countByStatus(WorkStatus::COMPLETED),
 ];
@@ -47,7 +47,7 @@ foreach ($projectData['phases'] as $phase) {
 $taskData = [
     'recentTasks'       => $project->getAdditionalInfo('recentTasks') ?? new TaskContainer(),
     'pendingCount'      => $phaseData['allTasks']->countByStatus(WorkStatus::PENDING),
-    'onGoingCount'      => $phaseData['allTasks']->countByStatus(WorkStatus::ON_GOING),
+    'ongoingCount'      => $phaseData['allTasks']->countByStatus(WorkStatus::ONGOING),
     'completedCount'    => $phaseData['allTasks']->countByStatus(WorkStatus::COMPLETED),
     'delayedCount'      => $phaseData['allTasks']->countByStatus(WorkStatus::DELAYED),
     'cancelledCount'    => $phaseData['allTasks']->countByStatus(WorkStatus::CANCELLED),
@@ -208,7 +208,7 @@ require_once COMPONENT_PATH . 'template/add-worker-table.php';
                     </section>
 
                     <section class="flex-row flex-space-between">
-                        <p class="dark-white-text light-text">PHASE <?= $phaseData['onGoingPlace'] ?> OUT OF <?= $phaseData['maxCount'] ?></p>
+                        <p class="dark-white-text light-text">PHASE <?= $phaseData['ongoingPlace'] ?> OUT OF <?= $phaseData['maxCount'] ?></p>
                     </section>
                 </div>
             </section>
@@ -227,7 +227,7 @@ require_once COMPONENT_PATH . 'template/add-worker-table.php';
                     <section class="task-statistics-chart flex-col">
                         <span class="task-data no-display"
                             data-pendingcount="<?= $taskData['pendingCount'] ?>"
-                            data-ongoingcount="<?= $taskData['onGoingCount'] ?>"
+                            data-ongoingcount="<?= $taskData['ongoingCount'] ?>"
                             data-completedcount="<?= $taskData['completedCount'] ?>"
                             data-delayedcount="<?= $taskData['delayedCount'] ?>"
                             data-cancelledcount="<?= $taskData['cancelledCount'] ?>"></span>
@@ -243,7 +243,7 @@ require_once COMPONENT_PATH . 'template/add-worker-table.php';
                             </div>
 
                             <div class="task-status-count-card black-bg flex-col">
-                                <h3 class="green-text center-text"><?= $taskData['onGoingCount'] ?></h3>
+                                <h3 class="green-text center-text"><?= $taskData['ongoingCount'] ?></h3>
                                 <p class="dark-white-text light-text center-text">ONGOING</p>
                             </div>
 

@@ -11,7 +11,7 @@ class ProjectContainer extends Container
 {
     private array $projectCountByStatus = [
         WorkStatus::PENDING->value => 0,
-        WorkStatus::ON_GOING->value => 0,
+        WorkStatus::ONGOING->value => 0,
         WorkStatus::COMPLETED->value => 0,
         WorkStatus::DELAYED->value => 0,
         WorkStatus::CANCELLED->value => 0,

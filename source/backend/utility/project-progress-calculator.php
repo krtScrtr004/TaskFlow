@@ -32,7 +32,7 @@ class ProjectProgressCalculator
     // Completion percentage for each status
     private const STATUS_COMPLETION = [
         WorkStatus::PENDING->value => 0.0,
-        WorkStatus::ON_GOING->value => 50.0,
+        WorkStatus::ONGOING->value => 50.0,
         WorkStatus::COMPLETED->value => 100.0,
         WorkStatus::DELAYED->value => 25.0,  // Partial progress assumed
         WorkStatus::CANCELLED->value => 0.0  // No progress counted
@@ -406,7 +406,7 @@ class ProjectProgressCalculator
     {
         $recommendations = [];
         
-        $ongoingTasks = $statusCounts[WorkStatus::ON_GOING->value] ?? 0;
+        $ongoingTasks = $statusCounts[WorkStatus::ONGOING->value] ?? 0;
         $pendingTasks = $statusCounts[WorkStatus::PENDING->value] ?? 0;
         $delayedTasks = $statusCounts[WorkStatus::DELAYED->value] ?? 0;
         $highPriorityTasks = $priorityCounts[TaskPriority::HIGH->value] ?? 0;

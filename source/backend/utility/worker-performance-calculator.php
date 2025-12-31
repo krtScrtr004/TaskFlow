@@ -27,7 +27,7 @@ class WorkerPerformanceCalculator
     // Status multipliers (how much each status contributes to performance)
     private const STATUS_MULTIPLIERS = [
         WorkStatus::COMPLETED->value => 1.0,  // Full credit
-        WorkStatus::ON_GOING->value => 0.5,   // Partial credit
+        WorkStatus::ONGOING->value => 0.5,   // Partial credit
         WorkStatus::DELAYED->value => 0.3,    // Reduced credit due to delay
         WorkStatus::PENDING->value => 0.0,    // No credit yet
         WorkStatus::CANCELLED->value => 0.0   // No credit
@@ -233,7 +233,7 @@ class WorkerPerformanceCalculator
                 $insights[] = "Contributed to {$completedProjects} completed projects ({$completionPercentage}% of total).";
             }
 
-            $ongoingProjects = $projectMetrics['projectsByStatus'][WorkStatus::ON_GOING->value] ?? 0;
+            $ongoingProjects = $projectMetrics['projectsByStatus'][WorkStatus::ONGOING->value] ?? 0;
             if ($ongoingProjects > 0) {
                 $insights[] = "Currently active in {$ongoingProjects} ongoing project(s).";
             }
@@ -333,7 +333,7 @@ class WorkerPerformanceCalculator
 
         // Ongoing projects insights
         if (!empty($projectMetrics['projectsByStatus'])) {
-            $ongoingProjects = $projectMetrics['projectsByStatus'][WorkStatus::ON_GOING->value] ?? 0;
+            $ongoingProjects = $projectMetrics['projectsByStatus'][WorkStatus::ONGOING->value] ?? 0;
             $completedProjects = $projectMetrics['projectsByStatus'][WorkStatus::COMPLETED->value] ?? 0;
 
             if ($ongoingProjects > 5 && $completedProjects < 2) {

@@ -171,7 +171,7 @@ function domCreator(project) {
 
 /**
  * Creates a status badge element
- * @param {string} status - The work status ('pending', 'onGoing', 'completed', 'delayed', 'cancelled')
+ * @param {string} status - The work status ('pending', 'ongoing', 'completed', 'delayed', 'cancelled')
  * @returns {HTMLElement} The status badge element
  */
 function createStatusBadge(status) {
@@ -188,7 +188,6 @@ function createStatusBadge(status) {
             statusText.textContent = 'Pending'
             break
         case 'ongoing':
-        case 'onGoing':
             badge.classList.add('green-bg')
             statusText.classList.add('white-text')
             statusText.textContent = 'On Going'

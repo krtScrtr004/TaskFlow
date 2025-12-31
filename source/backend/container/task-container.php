@@ -11,7 +11,7 @@ use InvalidArgumentException;
 class TaskContainer extends Container
 {
     private array $pending = [];
-    private array $onGoing = [];
+    private array $ongoing = [];
     private array $completed = [];
     private array $delayed = [];
     private array $cancelled = [];
@@ -54,7 +54,7 @@ class TaskContainer extends Container
      * Behavior and side effects:
      * - Validates that the provided argument is an instance of Task and throws an exception if not.
      * - Retrieves the task's ID, status, and priority using the respective getter methods.
-     * - Stores the task in status-specific arrays: $this->pending, $this->onGoing, $this->completed,
+     * - Stores the task in status-specific arrays: $this->pending, $this->ongoing, $this->completed,
      *   $this->delayed, or $this->cancelled, based on the task's status.
      * - Stores the task in priority-specific arrays: $this->low, $this->medium, or $this->high,
      *   based on the task's priority.
@@ -80,8 +80,8 @@ class TaskContainer extends Container
             case WorkStatus::PENDING:
                 $this->pending[$id] = $item;
                 break;
-            case WorkStatus::ON_GOING:
-                $this->onGoing[$id] = $item;
+            case WorkStatus::ONGOING:
+                $this->ongoing[$id] = $item;
                 break;
             case WorkStatus::COMPLETED:
                 $this->completed[$id] = $item;
@@ -119,7 +119,7 @@ class TaskContainer extends Container
      * Behavior and side effects:
      * - Validates that the provided argument is an instance of Task and throws an exception if not.
      * - Retrieves the task's ID, status, and priority using the respective getter methods.
-     * - Removes the task from status-specific arrays: $this->pending, $this->onGoing, $this->completed,
+     * - Removes the task from status-specific arrays: $this->pending, $this->ongoing, $this->completed,
      *   $this->delayed, or $this->cancelled, based on the task's status.
      * - Removes the task from priority-specific arrays: $this->low, $this->medium, or $this->high,
      *   based on the task's priority.
@@ -146,8 +146,8 @@ class TaskContainer extends Container
             case WorkStatus::PENDING:
                 unset($this->pending[$id]);
                 break;
-            case WorkStatus::ON_GOING:
-                unset($this->onGoing[$id]);
+            case WorkStatus::ONGOING:
+                unset($this->ongoing[$id]);
                 break;
             case WorkStatus::COMPLETED:
                 unset($this->completed[$id]);
@@ -185,7 +185,7 @@ class TaskContainer extends Container
      * - Validates that the provided argument is an instance of Task and throws an exception if not.
      * - Retrieves the task's ID, status, and priority using the respective getter methods.
      * - Checks for the task's existence in the main $this->items array indexed by its ID.
-     * - Checks for the task's existence in status-specific arrays: $this->pending, $this->onGoing,
+     * - Checks for the task's existence in status-specific arrays: $this->pending, $this->ongoing,
      *   $this->completed, $this->delayed, or $this->cancelled, based on the task's status.
      * - Checks for the task's existence in priority-specific arrays: $this->low, $this->medium,
      *   or $this->high, based on the task's priority.
@@ -213,8 +213,8 @@ class TaskContainer extends Container
             case WorkStatus::PENDING:
                 $isPresentStatus = isset($this->pending[$id]);
                 break;
-            case WorkStatus::ON_GOING:
-                $isPresentStatus = isset($this->onGoing[$id]);
+            case WorkStatus::ONGOING:
+                $isPresentStatus = isset($this->ongoing[$id]);
                 break;
             case WorkStatus::COMPLETED:
                 $isPresentStatus = isset($this->completed[$id]);
@@ -259,8 +259,8 @@ class TaskContainer extends Container
         switch ($status) {
             case WorkStatus::PENDING:
                 return count($this->pending) ?? 0;
-            case WorkStatus::ON_GOING:
-                return count($this->onGoing) ?? 0;
+            case WorkStatus::ONGOING:
+                return count($this->ongoing) ?? 0;
             case WorkStatus::COMPLETED:
                 return count($this->completed) ?? 0;
             case WorkStatus::DELAYED:
@@ -278,7 +278,7 @@ class TaskContainer extends Container
      * This method provides an associative array representing a snapshot of task counts
      * organized by work status. It is intended to give callers an easy way to inspect
      * how many tasks exist for each status:
-     * - Keys are status identifiers (e.g. string names like "pending", "onGoing", etc.
+     * - Keys are status identifiers (e.g. string names like "pending", "ongoing", etc.
      *   or numeric status IDs depending on the application's convention)
      * - Values are integers representing the number of tasks for that status
      *
@@ -292,7 +292,7 @@ class TaskContainer extends Container
     {
         return [
             WorkStatus::PENDING->value      => count($this->pending),
-            WorkStatus::ON_GOING->value     => count($this->onGoing),
+            WorkStatus::ONGOING->value     => count($this->ongoing),
             WorkStatus::COMPLETED->value    => count($this->completed),
             WorkStatus::DELAYED->value      => count($this->delayed),
             WorkStatus::CANCELLED->value    => count($this->cancelled),

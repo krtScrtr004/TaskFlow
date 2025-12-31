@@ -108,10 +108,10 @@ class ProjectController implements Controller
      *   - Normalizes dates using formatDateTime(..., 'Y-m-d') and compares them to the current date.
      *   - Adds the phase and its tasks into the provided Project object.
      *   - Applies status transitions using WorkStatus constants:
-     *     - PENDING → ON_GOING when the phase start date is on or before today.
-     *     - ON_GOING or DELAYED → COMPLETED when the phase completion date has passed and
+     *     - PENDING → ONGOING when the phase start date is on or before today.
+     *     - ONGOING or DELAYED → COMPLETED when the phase completion date has passed and
      *       the phase simpleProgress is >= 100.0.
-     *     - ON_GOING or DELAYED → DELAYED when the phase completion date has passed and
+     *     - ONGOING or DELAYED → DELAYED when the phase completion date has passed and
      *       the phase simpleProgress is < 100.0.
      *   - Collects phases that require a persistent status update in a container suitable
      *     for PhaseModel::saveMultiple.
@@ -162,17 +162,17 @@ class ProjectController implements Controller
             }
 
             // Update phase status based on dates and progress
-            // Transition: PENDING → ON_GOING (when start date has passed)
+            // Transition: PENDING → ONGOING (when start date has passed)
             if ($status === WorkStatus::PENDING && compareDates($startDateTime, $now) <= 0) {
-                $reference->setStatus(WorkStatus::ON_GOING);
+                $reference->setStatus(WorkStatus::ONGOING);
                 $phasesToUpdate[] = [
                     'id' => (int) $key,
-                    'status' => WorkStatus::ON_GOING
+                    'status' => WorkStatus::ONGOING
                 ];
             }
-            // Transition: ON_GOING → COMPLETED or DELAYED (when completion date has passed)
+            // Transition: ONGOING → COMPLETED or DELAYED (when completion date has passed)
             elseif (
-                ($status === WorkStatus::ON_GOING
+                ($status === WorkStatus::ONGOING
                     || $status === WorkStatus::DELAYED)
                 && compareDates($completionDateTime, $now) < 0
             ) {
@@ -368,8 +368,8 @@ class ProjectController implements Controller
      *
      * This method performs the following actions:
      * - Checks if a project is provided.
-     * - If the project start date has passed and the status is PENDING, updates the status to ON_GOING.
-     * - If the completion date has passed and the status is PENDING or ON_GOING:
+     * - If the project start date has passed and the status is PENDING, updates the status to ONGOING.
+     * - If the completion date has passed and the status is PENDING or ONGOING:
      *      - Checks if there are any tasks not completed or cancelled.
      *      - If there are pending tasks, updates the project status to DELAYED.
      *      - If all tasks are completed or cancelled, updates the project status to COMPLETED.
@@ -408,14 +408,14 @@ class ProjectController implements Controller
 
             if ($startDateTime && compareDates($currentDateTime, $startDateTime) >= 0 && $status === WorkStatus::PENDING) {
                 // Check if the project is already ongoing
-                $project->setStatus(WorkStatus::ON_GOING);
+                $project->setStatus(WorkStatus::ONGOING);
                 ProjectModel::save([
                     'id' => $project->getId(),
-                    'status' => WorkStatus::ON_GOING
+                    'status' => WorkStatus::ONGOING
                 ]);
             } elseif (
                 $completionDateTime && compareDates($completionDateTime, $currentDateTime) < 0 &&
-                ($status === WorkStatus::PENDING || $status === WorkStatus::ON_GOING || $status === WorkStatus::DELAYED)
+                ($status === WorkStatus::PENDING || $status === WorkStatus::ONGOING || $status === WorkStatus::DELAYED)
             ) {
                 if ($projectProgress['progressPercentage'] < 100.0) {
                     $project->setStatus(WorkStatus::DELAYED);
