@@ -32,9 +32,9 @@ $projectData = [
 $phaseData = [
     'totalBudget'       => htmlspecialchars($projectData['phases']->getTotalBudget()),
     'maxCount'          => $projectData['phases']->count(),
-    'ongoingPlace'      => $projectData['phases']->countByStatus(WorkStatus::COMPLETED)
-        ? $projectData['phases']->countByStatus(WorkStatus::COMPLETED) + 1
-        : $projectData['phases']->countByStatus(WorkStatus::COMPLETED),
+    'ongoingPlace'      => $projectData['phases']->countByStatus(WorkStatus::ONGOING) < $projectData['phases']->countByStatus(WorkStatus::COMPLETED)
+        ? $projectData['phases']->countByStatus(WorkStatus::ONGOING) + 1
+        : $projectData['phases']->countByStatus(WorkStatus::ONGOING),
 ];
 
 $phaseData['allTasks'] = new TaskContainer();
