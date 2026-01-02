@@ -1,5 +1,5 @@
 import { Loader } from './loader.js'
-import { createFullName } from '../utility/utility.js'
+import { createFullName, formatNumber, toggleElemDisplay } from '../utility/utility.js'
 
 /**
  * Renders and populates the User Info Card for a given user.
@@ -29,13 +29,11 @@ export async function userInfoCard(userId, asyncFunction) {
     }
 
     const userInfoCardTemplate = document.querySelector('#user_info_card_template')
-    if (!userInfoCardTemplate) { 
+    if (!userInfoCardTemplate) {
         throw new Error('User Info Card template not found!')
     }
 
-    userInfoCardTemplate.classList.add('flex-col')
-    userInfoCardTemplate.classList.remove('no-display')
-
+    toggleElemDisplay(userInfoCardTemplate, true, ['flex-col'])
     userInfoCardTemplate.setAttribute('data-userid', userId)
 
     Loader.full(userInfoCardTemplate.querySelector('.user-info-card'))
@@ -43,9 +41,7 @@ export async function userInfoCard(userId, asyncFunction) {
     try {
         const user = await asyncFunction(userId)
         if (!user) {
-            userInfoCardTemplate.classList.remove('flex-col')
-            userInfoCardTemplate.classList.add('no-display')
-
+            toggleElemDisplay(userInfoCardTemplate, false, ['flex-col'])
             throw error
         }
         addInfoToCard(userInfoCardTemplate, user[0])
@@ -91,7 +87,7 @@ function addInfoToCard(card, user) {
     const {
         userProfilePicture, userName, userId, userBio,
         userTotalStatistics, userCompletedStatistics, userPerformance,
-        userEmail, userContact, userJobTitles
+        userDefaultRate, userEmail, userContact, userJobTitles
     } = domElements
 
     // Check page context to determine which statistics to show
@@ -106,7 +102,7 @@ function addInfoToCard(card, user) {
         `<span class="job-title-chip">${title}</span>`
     ).join('')
     userBio.textContent = user.bio ?? 'No bio available'
-    
+
     // Get both project and task statistic elements
     const projectElements = {
         total: card.querySelector('.user-total-projects'),
@@ -120,7 +116,7 @@ function addInfoToCard(card, user) {
         totalValue: card.querySelector('.user-total-tasks h4'),
         completedValue: card.querySelector('.user-completed-tasks h4')
     }
-    
+
     // Display statistics based on page context and user role
     const shouldShowProjects = isUsersPage || (isProjectPage && user.role === 'projectManager')
 
@@ -130,29 +126,35 @@ function addInfoToCard(card, user) {
     const rootUrl = seeWorkerTaskRedirect?.dataset.rooturl
     const redirectLink = seeWorkerTaskRedirect?.querySelector('a')
 
+    const defaultRateContainer = userDefaultRate.parentElement
     if (user.role === 'projectManager') {
-        removeWorkerButton?.classList.add('no-display')
-        terminateWorkerButton?.classList.add('no-display')
+        toggleElemDisplay(defaultRateContainer, false, ['show'], ['hide'])
+        userDefaultRate.textContent = ''
 
-        seeWorkerTaskRedirect?.classList.remove('center-child');
-        seeWorkerTaskRedirect?.classList.add('no-display');
+        toggleElemDisplay(removeWorkerButton, false, [])
+        toggleElemDisplay(terminateWorkerButton, false, [])
+        toggleElemDisplay(seeWorkerTaskRedirect, false, ['center-child'])
 
         redirectLink
             ? redirectLink.href = '#'
             : null
     } else {
-        removeWorkerButton?.classList.remove('no-display')
-        terminateWorkerButton?.classList.remove('no-display')
+        // Show default rate if available
+        if (user.defaultRate !== null && typeof user.defaultRate !== 'undefined') {
+            toggleElemDisplay(defaultRateContainer, true, ['show'], ['hide'])
+            userDefaultRate.textContent = `₱ ${formatNumber(user.defaultRate) ?? 0}`
+        }
 
-        seeWorkerTaskRedirect?.classList.remove('no-display');
-        seeWorkerTaskRedirect?.classList.add('center-child');
+        toggleElemDisplay(removeWorkerButton, true, [])
+        toggleElemDisplay(terminateWorkerButton, true, [])
+        toggleElemDisplay(seeWorkerTaskRedirect, true, ['center-child'])
 
         redirectLink
             ? redirectLink.href = rootUrl + user.id
             : null
     }
-    
-    if (shouldShowProjects) {        
+
+    if (shouldShowProjects) {
         // Show project statistics
         projectElements.total.classList.remove('no-display')
         projectElements.total.classList.add('flex-col', 'flex-child-center-h')
@@ -163,7 +165,7 @@ function addInfoToCard(card, user) {
         taskElements.total.classList.remove('flex-col', 'flex-child-center-h')
         taskElements.completed.classList.add('no-display')
         taskElements.completed.classList.remove('flex-col', 'flex-child-center-h')
-        
+
         projectElements.totalValue.textContent = user.additionalInfo.totalProjects ?? 0
         projectElements.completedValue.textContent = user.additionalInfo.completedProjects ?? 0
     } else {
@@ -177,11 +179,12 @@ function addInfoToCard(card, user) {
         taskElements.total.classList.add('flex-col', 'flex-child-center-h')
         taskElements.completed.classList.remove('no-display')
         taskElements.completed.classList.add('flex-col', 'flex-child-center-h')
-        
+
         taskElements.totalValue.textContent = user.additionalInfo.totalTasks ?? 0
         taskElements.completedValue.textContent = user.additionalInfo.completedTasks ?? 0
     }
-    
+
+
     userPerformance.textContent = (user.additionalInfo.performance ?? 0) + '%'
     userEmail.textContent = user.email ?? 'N/A'
     userContact.textContent = user.contactNumber ?? 'N/A'
@@ -196,7 +199,7 @@ function addInfoToCard(card, user) {
  * - Finds the close button within the provided card element.
  * - Adds a click event listener to the close button.
  * - When clicked, hides the card by adding the 'no-display' class and removing the 'flex-col' class.
- * - Clears all user information fields within the card, including profile picture, name, ID, bio, statistics, performance, email, and contact.
+ * - Clears all user information fields within the card, including profile picture, name, ID, bio, statistics, performance, default rate, email, and contact.
  *
  * @param {HTMLElement} card The DOM element representing the user info card. Must contain:
  *      - A close button with id 'user_info_card_close_button'
@@ -208,6 +211,7 @@ function addInfoToCard(card, user) {
  *          - userTotalStatistics: HTMLElement
  *          - userCompletedStatistics: HTMLElement
  *          - userPerformance: HTMLElement
+ *          - userDefaultRate: HTMLElement
  *          - userEmail: HTMLElement
  *          - userContact: HTMLElement
  *
@@ -223,7 +227,7 @@ function closeUserInfoCard(card) {
         const {
             userProfilePicture, userName, userId, userBio,
             userTotalStatistics, userCompletedStatistics, userPerformance,
-            userEmail, userContact
+            userDefaultRate, userEmail, userContact
         } = domElements
         // Remove recent user info
         userProfilePicture.src = ''
@@ -233,6 +237,7 @@ function closeUserInfoCard(card) {
         userTotalStatistics.textContent = ''
         userCompletedStatistics.textContent = ''
         userPerformance.textContent = ''
+        userDefaultRate.textContent = ''
         userEmail.textContent = ''
         userContact.textContent = ''
     })
@@ -255,6 +260,7 @@ function closeUserInfoCard(card) {
  *      - .user-total-statistics h4: Element displaying total statistics
  *      - .user-completed-statistics h4: Element displaying completed statistics
  *      - .user-performance h4: Element displaying performance statistics
+ *      - .user-default-rate: Element displaying the user's default rate
  *      - .user-email: Element displaying the user's email address
  *      - .user-contact: Element displaying the user's contact information
  *
@@ -267,6 +273,7 @@ function closeUserInfoCard(card) {
  *      - userTotalStatistics: HTMLElement|null
  *      - userCompletedStatistics: HTMLElement|null
  *      - userPerformance: HTMLElement|null
+ *      - userDefaultRate: HTMLElement|null
  *      - userEmail: HTMLElement|null
  *      - userContact: HTMLElement|null
  */
@@ -280,8 +287,8 @@ function getCardDomElements(card) {
         userTotalStatistics: card.querySelector('.user-total-statistics h4'),
         userCompletedStatistics: card.querySelector('.user-completed-statistics h4'),
         userPerformance: card.querySelector('.user-performance h4'),
+        userDefaultRate: card.querySelector('.user-default-rate'),
         userEmail: card.querySelector('.user-email'),
         userContact: card.querySelector('.user-contact')
     }
 }
-

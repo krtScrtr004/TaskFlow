@@ -318,11 +318,13 @@ class Worker extends User
      * @return array Associative array containing all worker data including:
      *      - All base user properties from the parent class
      *      - role: string The role identifier set to 'worker'
+     *      - defaultRate: float The worker's default hourly rate
      */
     public function toArray(bool $useSnakeCase = false): array
     {
         $worker = parent::toArray($useSnakeCase);
         $worker['role'] = Role::WORKER->value;
+        $worker['defaultRate'] = $this->defaultRate;
 
         return $worker;
     }

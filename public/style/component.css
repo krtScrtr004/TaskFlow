@@ -598,8 +598,8 @@ button > .text-w-icon {
 .user-info-card .user-profile-picture {
 	height: 5rem;
 	width: 5rem;
-	margin-right: 1rem;
 	border-radius: var(--input-border-radius);
+	margin-right: 0.5rem;
 }
 
 .user-info-card .user-name {
@@ -671,13 +671,13 @@ button > .text-w-icon {
 	color: var(--white);
 }
 
-.user-info-card > .contact-info {
+.user-info-card > .secondary-info {
 	gap: 0.8rem;
 	padding: 1rem;
 	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.user-info-card > .contact-info > div {
+.user-info-card > .secondary-info > div {
 	padding: 0.8rem;
 	background: rgba(255, 255, 255, 0.03);
 	border-radius: calc(var(--input-border-radius) - 2px);
@@ -685,15 +685,29 @@ button > .text-w-icon {
 	transition: all 0.2s ease;
 }
 
-.user-info-card > .contact-info > div:hover {
+.user-info-card > .secondary-info > div:hover {
 	background: rgba(255, 255, 255, 0.06);
 	border-color: rgba(255, 255, 255, 0.15);
 }
 
-.user-info-card > .contact-info p {
+.user-info-card > .secondary-info p {
 	white-space: pre-wrap;
 	margin: 0;
 	font-size: 0.9rem;
+}
+
+.user-info-card .user-default-rate-container.hide {
+	display: none !important;
+}
+
+.user-info-card .user-default-rate-container.show {
+	display: flex !important;
+}
+
+.user-info-card .user-default-rate-container span {
+	font-size: 0.8rem;
+	margin-left: 0.3rem;
+	letter-spacing: 0.1rem;
 }
 
 .user-info-card > #terminate_worker_button {

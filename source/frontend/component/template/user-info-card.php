@@ -81,17 +81,25 @@ use App\Enumeration\WorkStatus;
         </section>
 
         <!-- Contact Information -->
-        <section class="contact-info flex-col">
+        <section class="secondary-info flex-col">
+
+            <!-- Default Rate -->
+            <div class="user-default-rate-container no-display text-w-icon">
+                <img src="<?= ICON_PATH . 'budget_w.svg' ?>" alt="Default Rate" title="Default Rate" height="24">
+
+                <p class="user-default-rate wrap-text"></p> 
+                <span class="dark-white-text"> /hr</span>
+            </div>
 
             <!-- Email -->
-            <div class="text-w-icon">
+            <div class="user-email-container text-w-icon">
                 <img src="<?= ICON_PATH . 'email_w.svg' ?>" alt="Email" title="Email" height="24">
 
                 <p class="user-email wrap-text"></p>
             </div>
 
             <!-- Contact Number -->
-            <div class="text-w-icon">
+            <div class="user-contact-container text-w-icon">
                 <img src="<?= ICON_PATH . 'contact_w.svg' ?>" alt="Contact" title="Contact" height="24">
 
                 <p class="user-contact wrap-text"></p>
