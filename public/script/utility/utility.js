@@ -205,28 +205,15 @@ export function die(error, { showDialog = true } = {}) {
 }
 
 /**
- * Toggles the display of an element by adding/removing CSS classes.
+ * Toggles CSS classes on a given element.
  *
- * @param {HTMLElement} elem - The element to show or hide.
- * @param {boolean} show - True to show the element, false to hide it.
- * @param {string[]} [displayClasses=['flex-col', 'flex-row', 'block']] - CSS classes to add when showing the element.
- * @param {string[]} [hideClasses=['no-display']] - CSS classes to add when hiding the element.
+ * @param {HTMLElement} elem - The element to modify.
+ * @param {string[]} [addClasses=[]] - CSS classes to add to the element.
+ * @param {string[]} [removeClasses=[]] - CSS classes to remove from the element.
  */
-export function toggleElemDisplay(elem, show, 
-    displayClasses = [
-        'flex-col', 
-        'flex-row', 
-        'block'
-    ], hideClasses = [
-        'no-display'
-]) {
-    if (show) {
-        elem.classList.remove(...hideClasses) 
-        elem.classList.add(...displayClasses)
-    } else {
-        elem.classList.add(...hideClasses)
-        elem.classList.remove(...displayClasses)
-    }
+export function toggleElementClass(elem, addClasses = [], removeClasses = []) {
+    elem.classList.add(...addClasses)
+    elem.classList.remove(...removeClasses)
 }
 
 /**

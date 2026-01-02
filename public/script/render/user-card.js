@@ -1,5 +1,5 @@
 import { Loader } from './loader.js'
-import { createFullName, formatNumber, toggleElemDisplay } from '../utility/utility.js'
+import { createFullName, formatNumber, toggleElementClass } from '../utility/utility.js'
 
 /**
  * Renders and populates the User Info Card for a given user.
@@ -33,7 +33,7 @@ export async function userInfoCard(userId, asyncFunction) {
         throw new Error('User Info Card template not found!')
     }
 
-    toggleElemDisplay(userInfoCardTemplate, true, ['flex-col'])
+    toggleElementClass(userInfoCardTemplate, ['flex-col'])
     userInfoCardTemplate.setAttribute('data-userid', userId)
 
     Loader.full(userInfoCardTemplate.querySelector('.user-info-card'))
@@ -128,12 +128,12 @@ function addInfoToCard(card, user) {
 
     const defaultRateContainer = userDefaultRate.parentElement
     if (user.role === 'projectManager') {
-        toggleElemDisplay(defaultRateContainer, false, ['show'], ['hide'])
+        toggleElementClass(defaultRateContainer, ['hide'], ['show'])
         userDefaultRate.textContent = ''
 
-        toggleElemDisplay(removeWorkerButton, false, [])
-        toggleElemDisplay(terminateWorkerButton, false, [])
-        toggleElemDisplay(seeWorkerTaskRedirect, false, ['center-child'])
+        toggleElementClass(removeWorkerButton, ['no-display'])
+        toggleElementClass(terminateWorkerButton, ['no-display'])
+        toggleElementClass(seeWorkerTaskRedirect, ['no-display'], ['center-child'])
 
         redirectLink
             ? redirectLink.href = '#'
@@ -141,13 +141,13 @@ function addInfoToCard(card, user) {
     } else {
         // Show default rate if available
         if (user.defaultRate !== null && typeof user.defaultRate !== 'undefined') {
-            toggleElemDisplay(defaultRateContainer, true, ['show'], ['hide'])
+            toggleElementClass(defaultRateContainer, ['show'], ['hide'])
             userDefaultRate.textContent = `₱ ${formatNumber(user.defaultRate) ?? 0}`
         }
 
-        toggleElemDisplay(removeWorkerButton, true, [])
-        toggleElemDisplay(terminateWorkerButton, true, [])
-        toggleElemDisplay(seeWorkerTaskRedirect, true, ['center-child'])
+        toggleElementClass(removeWorkerButton, [], ['no-display'])
+        toggleElementClass(terminateWorkerButton, [], ['no-display'])
+        toggleElementClass(seeWorkerTaskRedirect, ['center-child'], ['no-display'])
 
         redirectLink
             ? redirectLink.href = rootUrl + user.id
