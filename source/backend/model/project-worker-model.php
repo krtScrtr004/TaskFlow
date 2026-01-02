@@ -3,7 +3,6 @@
 namespace App\Model;
 
 use App\Abstract\Model;
-use App\Container\JobTitleContainer;
 use App\Container\ProjectContainer;
 use App\Container\TaskContainer;
 use App\Container\WorkerContainer;
@@ -12,9 +11,7 @@ use App\Dependent\Phase;
 use App\Dependent\Worker;
 use App\Entity\Project;
 use App\Entity\Task;
-use App\Enumeration\Gender;
 use App\Enumeration\Role;
-use App\Enumeration\TaskPriority;
 use App\Enumeration\WorkerStatus;
 use App\Enumeration\WorkStatus;
 use App\Exception\DatabaseException;
@@ -487,10 +484,11 @@ class ProjectWorkerModel extends Model
                     u.email,
                     u.contact_number,
                     u.profile_link,
-                    -- pw.status,
                     u.created_at,
                     u.confirmed_at,
                     u.deleted_at,
+                    pw.default_rate,
+                    pw.status,
                     GROUP_CONCAT(DISTINCT ujt.title) AS job_titles,
                     (
                         SELECT 
@@ -774,6 +772,8 @@ class ProjectWorkerModel extends Model
                     u.created_at,
                     u.confirmed_at,
                     u.deleted_at,
+                    pw.default_rate,
+                    pw.status,
                     GROUP_CONCAT(DISTINCT ujt.title) AS job_titles,
                     (
                         SELECT 
