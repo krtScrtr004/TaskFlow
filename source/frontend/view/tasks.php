@@ -55,7 +55,7 @@ if (!isset($tasks)) {
             <?= searchBar([
                 'Status' => [
                     WorkStatus::PENDING->getDisplayName(),
-                    WorkStatus::ON_GOING->getDisplayName(),
+                    WorkStatus::ONGOING->getDisplayName(),
                     WorkStatus::COMPLETED->getDisplayName(),
                     WorkStatus::DELAYED->getDisplayName(),
                     WorkStatus::CANCELLED->getDisplayName()

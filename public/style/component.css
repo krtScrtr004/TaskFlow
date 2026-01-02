@@ -536,6 +536,9 @@ button > .text-w-icon {
 	justify-content: center;
 	align-items: center;
 	min-height: 10rem;
+	background-color: var(--black);
+	border: 1px dashed var(--border-color);
+	border-radius: var(--input-border-radius);
 }
 
 .no-content-wall > img {

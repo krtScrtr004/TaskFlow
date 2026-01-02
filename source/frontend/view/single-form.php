@@ -37,7 +37,7 @@ if (!$component) {
 
                 <!-- Back button -->
                 <button type="button" class="back-button unset-button">
-                    <img src="<?= ICON_PATH . 'back.svg' ?>" alt="Back" title="Back" height="24" width="24">
+                    <img src="<?= ICON_PATH . 'back_w.svg' ?>" alt="Back" title="Back" height="24" width="24">
                 </button>
             </div>
 
