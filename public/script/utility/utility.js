@@ -203,3 +203,79 @@ export function die(error, { showDialog = true } = {}) {
 
     throw err
 }
+
+/**
+ * Toggles the display of an element by adding/removing CSS classes.
+ *
+ * @param {HTMLElement} elem - The element to show or hide.
+ * @param {boolean} show - True to show the element, false to hide it.
+ * @param {string[]} [displayClasses=['flex-col', 'flex-row', 'block']] - CSS classes to add when showing the element.
+ * @param {string[]} [hideClasses=['no-display']] - CSS classes to add when hiding the element.
+ */
+export function toggleElemDisplay(elem, show, 
+    displayClasses = [
+        'flex-col', 
+        'flex-row', 
+        'block'
+    ], hideClasses = [
+        'no-display'
+]) {
+    if (show) {
+        elem.classList.remove(...hideClasses) 
+        elem.classList.add(...displayClasses)
+    } else {
+        elem.classList.add(...hideClasses)
+        elem.classList.remove(...displayClasses)
+    }
+}
+
+/**
+ * Formats a number with commas as thousand separators.
+ *
+ * This function takes a number and returns a string representation
+ * with commas inserted at every thousandth place for better readability.
+ * It also handles decimal numbers by preserving up to two decimal places.
+ *
+ * @param {number} number - The number to format.
+ * @returns {string} The formatted number as a string with commas.
+ */
+export function formatNumber(number) {
+    let stringNumber = String(number);
+    
+    if (stringNumber.length < 4) {
+        return stringNumber;
+    }
+    
+    // Search whether the param is float
+    const decimalIndex = stringNumber.indexOf('.');
+    let decimal = null;
+    
+    if (decimalIndex !== -1) {
+        // Extract the decimal part
+        decimal = Math.round((number - Math.floor(number)) * 100) / 100;
+        // Remove the decimal part
+        stringNumber = stringNumber.substring(0, decimalIndex);
+    }
+    
+    // Apply comma on string number
+    let formatted = '';
+    for (let i = stringNumber.length; i > 0; ) {
+        for (let j = 0; j < 3; j++) {
+            if (i > 0) {
+                formatted = stringNumber[--i] + formatted;
+            }
+        }
+        // Check if there is/are more number(s) upfront to apply comma
+        // Second condition is to check if there is a negative sign
+        if (i > 0 && !isNaN(stringNumber[i - 1])) {
+            formatted = ',' + formatted;
+        }
+    }
+    
+    if (decimal) {
+        // Offset to 1 to remove the leading zero of the decimal part
+        formatted += String(decimal).substring(1, 4);
+    }
+    
+    return formatted;
+}

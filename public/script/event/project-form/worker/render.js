@@ -1,3 +1,5 @@
+import { formatNumber } from "../../../utility/utility"
+
 /**
  * Renders a table row for a selected worker.
  *
@@ -55,7 +57,7 @@ export function render(worker) {
     const input = document.createElement('input')
     input.type = 'number'
     input.className = 'default-rate-input'
-    input.value = (typeof worker.rate !== 'undefined') ? Number(worker.defaultRate).toFixed(2) : '0.00'
+    input.value = (typeof worker.rate !== 'undefined') ? formatNumber(worker.defaultRate) : '0.00'
     input.min = '0'
     if (typeof BUDGET_MAX !== 'undefined') input.max = String(BUDGET_MAX)
     input.step = '0.01'

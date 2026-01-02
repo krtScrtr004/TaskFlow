@@ -318,12 +318,6 @@ if (!submitProjectButton) {
     console.warn('Submit Project button not found in the form')
 }
 function updateSubmitProjectButtonState(id, hasInvalid) {
-    /**
-     * Update yung map
-     * Tignan kung may isang error sa map
-     * - Kung meron disable ang button
-     * - Enable kung wala
-     */
     if (!submitProjectButton) return
 
     errorsMap[id] = hasInvalid
