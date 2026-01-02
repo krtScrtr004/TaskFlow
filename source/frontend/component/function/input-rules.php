@@ -174,7 +174,7 @@ function workBudgetNoteRules(): bool|string
  * Modes:
  *  - 0 (project): basic rules (valid date, within allowed year range).
  *  - 1 (phase): includes project timeline constraint in addition to basic rules.
- *  - 2 (task): includes task timeline constraint and a rule to avoid conflicts with other phases.
+ *  - 2 (task): includes task timeline constraint.
  *
  * @param int $mode Context mode (0 = project, 1 = phase, 2 = task)
  *
@@ -192,7 +192,7 @@ function workStartDateTimeRules(int $mode = 0): bool|string
             <?php if ($mode === 1 || $mode === 2): ?>
                 <li>Must be within the timeline of <?php echo $mode === 1 ? 'Project' : 'Task' ?>.</li>
             <?php endif; ?>
-            <?php if ($mode === 2): ?>
+            <?php if ($mode === 1): ?>
                 <li>Must not conflict with other Phases.</li>
             <?php endif; ?>
         </ul>
@@ -211,8 +211,8 @@ function workStartDateTimeRules(int $mode = 0): bool|string
  *
  * @param int $mode Mode selector controlling additional rules:
  *      - 0: Default — basic rules (valid date, between YEAR_CURRENT and YEAR_MAX, after start date).
- *      - 1: Adds "Must be within the timeline of Project".
- *      - 2: Adds "Must be within the timeline of Task" and "Must not conflict with other Phases".
+ *      - 1: Adds "Must be within the timeline of Project" and "Must not conflict with other Phases".
+ *      - 2: Adds "Must be within the timeline of Task".
  *
  * @return string|bool HTML fragment containing the rules on success, or false on failure.
  */
@@ -228,7 +228,7 @@ function workCompletionDateTimeRules(int $mode = 0): bool|string
             <?php if ($mode === 1 || $mode === 2): ?>
                 <li>Must be within the timeline of <?php echo $mode === 1 ? 'Project' : 'Task' ?>.</li>
             <?php endif; ?>
-            <?php if ($mode === 2): ?>
+            <?php if ($mode === 1): ?>
                 <li>Must not conflict with other Phases.</li>
             <?php endif; ?>
         </ul>
