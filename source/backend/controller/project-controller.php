@@ -496,7 +496,7 @@ class ProjectController implements Controller
                 ])
                 : null;
 
-            require_once SUB_VIEW_PATH . 'create-edit-project.php';
+            require_once SUB_VIEW_PATH . 'form' . DS . 'project.php';
         } catch (NotFoundException $e) {
             ErrorController::notFound();
         } catch (ForbiddenException $e) {
