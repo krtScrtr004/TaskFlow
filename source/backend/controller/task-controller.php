@@ -244,4 +244,17 @@ class TaskController implements Controller
         }
     }
 
+    public static function viewTaskForm(): void
+    {
+        try {
+            // if (!SessionAuth::hasAuthorizedSession()) {
+            //     header('Location: ' . REDIRECT_PATH . 'login');
+            //     exit();
+            // }
+
+            require_once SUB_VIEW_PATH . 'form' . DS . 'task.php';
+        } catch (ForbiddenException $e) {
+            ErrorController::forbidden();
+        }
+    }
 }
