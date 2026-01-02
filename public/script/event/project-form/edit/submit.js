@@ -12,6 +12,7 @@ import { Http } from '../../../utility/http.js'
 import { debounceAsync } from '../../../utility/debounce.js'
 import { Loader } from '../../../render/loader.js'
 import { die } from '../../../utility/utility.js'
+import { Dialog } from '../../../render/dialog.js'
 
 let isLoading = false
 
@@ -59,7 +60,7 @@ async function submit(e) {
         const formattedData = formatData(projectInfo, phasesInfo, workersInfo)
         await sendToBackend(formattedData)
 
-        setTimeout(() => window.location.href = `/home`, 1500)
+        // setTimeout(() => window.location.href = `/home`, 1500)
         Dialog.operationSuccess('Project Edited.', 'The project has been successfully edited.')
     } catch (error) {
         handleException(error, `Error preparing project data: ${error.message}`)

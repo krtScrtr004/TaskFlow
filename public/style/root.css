@@ -18,7 +18,6 @@
 	--opacity-yellow: rgba(255, 182, 30, 0.3);
 	--opacity-orange: rgba(203, 88, 53, 0.3);
 
-	--input-color: #252525;
 	--input-border-radius: 8px;
 
 	--space: 1.5rem;
@@ -181,6 +180,15 @@ textarea:active {
 	opacity: 0.9;
 }
 
+input:focus,
+input:active,
+textarea:focus,
+textarea:active,
+button:focus,
+button:active {
+	outline: 1px solid var(--light-blue);
+}
+
 input:disabled,
 textarea:disabled,
 button:disabled {
@@ -199,8 +207,8 @@ textarea {
 	font-weight: 300;
 	background-color: transparent;
 	color: var(--white);
-	border: 1px solid var(--dark-white);
-	background-color: var(--input-color);
+	border: 1px solid var(--border-color);
+	background-color: transparent;
 }
 
 input[type="date"]::-webkit-calendar-picker-indicator {

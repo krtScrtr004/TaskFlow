@@ -93,7 +93,7 @@ if ($project) {
     <main class="project-form flex-col flex-child-center-h main-page">
         <section class="flex-col relative">
             <!-- Header -->
-            <header class="flex-row flex-space-between flex-child-center-h sticky black-bg">
+            <header class="flex-row flex-space-between flex-child-center-h sticky light-black-bg">
                 <div class="flex-row">
                     <a class="text-w-icon" href="#info_section">
                         <img src="<?= ICON_PATH . 'project_w.svg' ?>" alt="Info" title="Info" height="30">
@@ -123,7 +123,7 @@ if ($project) {
             <form id="project_form" class="flex-col" method="POST" action="" data-projectid="<?= $projectData['id'] ?>">
 
                 <!-- Info -->
-                <fieldset id="info_section" class="flex-col content-section-block">
+                <fieldset id="info_section" class="content-section-block flex-col">
                     <div class="fieldset-title text-w-icon start">
                         <img src="<?= ICON_PATH . 'project_w.svg' ?>" alt="Info" title="Info" height="28">
                         <span class="flex-col flex-child-start-h">
@@ -241,7 +241,7 @@ if ($project) {
                 </fieldset>
 
                 <!-- Phases -->
-                <fieldset id="phase_section" class="flex-col content-section-block">
+                <fieldset id="phase_section" class="content-section-block no-display">
                     <div class="fieldset-title text-w-icon start">
                         <img src="<?= ICON_PATH . 'phase_w.svg' ?>" alt="Phases" title="Phases" height="28">
                         <span class="flex-col flex-child-start-h">
@@ -256,7 +256,7 @@ if ($project) {
                     } ?>
 
                     <div class="no-phases-wall no-content-wall <?= $uiState['noPhaseWall'] ?>">
-                        <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No Phases Found" title="No Phases Found"
+                        <img src="<?= ICON_PATH . 'empty_dw.svg' ?>" alt="No Phases Found" title="No Phases Found"
                             height="100">
                         <span>
                             <h3>No Phases Added</h3>
@@ -273,7 +273,7 @@ if ($project) {
                 </fieldset>
 
                 <!-- Workers -->
-                <fieldset id="workers_section" class="flex-col content-section-block">
+                <fieldset id="workers_section" class="content-section-block no-display">
                     <div class="fieldset-title text-w-icon start">
                         <img src="<?= ICON_PATH . 'worker_w.svg' ?>" alt="Workers" title="Workers" height="28">
                         <span class="flex-col flex-child-start-h">
@@ -302,7 +302,7 @@ if ($project) {
                                 <div class="sentinel"></div>
 
                                 <div class="no-workers-wall no-content-wall flex-col">
-                                    <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No Workers Found
+                                    <img src="<?= ICON_PATH . 'empty_dw.svg' ?>" alt="No Workers Found
                                     title=" No Workers Found" height="80">
                                     <span>
                                         <h3>No Workers Found</h3>
@@ -332,7 +332,7 @@ if ($project) {
                             </table>
 
                             <div class="no-workers-wall no-content-wall <?= $uiState['noWorkerWall'] ?>">
-                                <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No Workers Selected"
+                                <img src="<?= ICON_PATH . 'empty_dw.svg' ?>" alt="No Workers Selected"
                                     title="No Workers Selected" height="80">
                                 <span>
                                     <h3>No Workers Selected</h3>
@@ -350,7 +350,7 @@ if ($project) {
 
     </main>
 
-    <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'scroll-navigation.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'toggle-sections.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'create-phase-form-card.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'record-changes.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'validate-forms.js' ?>" defer></script>

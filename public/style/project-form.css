@@ -24,15 +24,15 @@
 	box-shadow: var(--box-shadow);
 }
 
-.project-form header.moved {
-	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-}
-
 .project-form header a {
-	background-color: var(--black);
-	padding: 1rem 1.5rem;
+	background-color: var(--light-black);
+	padding: 1rem var(--space);
 	border-bottom: 1px solid transparent;
 	transition: background-color var(--transition-dur) ease;
+}
+
+.project-form header button {
+	margin-right: 1rem;
 }
 
 .project-form header a:first-child {
@@ -88,7 +88,8 @@
 }
 
 #project_form .phase-form-card {
-	border: 1px solid var(--black);
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius);
 }
 
 #project_form .phase-form-card > * {
@@ -130,6 +131,10 @@
 	border-radius: var(--border-radius);
 }
 
+#workers_section .worker-pool {
+
+}
+
 #workers_section .worker-pool > .heading,
 #workers_section .worker-pool .list {
 	padding: 1.2rem;
@@ -140,7 +145,7 @@
 }
 
 #workers_section .worker-pool > .heading {
-	background-color: var(--light-black);
+	background-color: var(--black);
 	border-radius: var(--input-border-radius) var(--input-border-radius) 0 0;
 	padding-bottom: 0.8rem;
 }
@@ -218,7 +223,7 @@
 }
 
 #workers_section .selected-workers-table thead {
-	background-color: var(--light-black);
+	background-color: var(--black);
 	border-radius: var(--input-border-radius) var(--input-border-radius) 0 0;
 }
 
@@ -254,6 +259,10 @@
 	padding: 0.75rem 1rem;
 	text-align: left;
 	border-bottom: 1px solid #343435;
+}
+
+#workers_section .selected-workers-table th:last-child {
+	text-align: center;
 }
 
 #workers_section .selected-workers-table td .name {

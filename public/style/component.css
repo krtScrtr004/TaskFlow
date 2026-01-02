@@ -3,7 +3,7 @@
 }
 
 .grid-card {
-	background-color: var(--black);
+	background-color: var(--light-black);
 	aspect-ratio: 1 / 1;
 	box-shadow: var(--box-shadow);
 	border-radius: var(--border-radius);
@@ -78,8 +78,7 @@ button:has(.text-w-icon):not(.unset-button) {
 .input-w-suffix {
 	display: flex;
 	align-items: center;
-	background-color: #353637;
-	border: 1px solid var(--dark-white);
+	border: 1px solid var(--border-color);
 	border-radius: 8px;
 	overflow: hidden;
 }
@@ -96,16 +95,20 @@ button:has(.text-w-icon):not(.unset-button) {
 	outline: none;
 }
 
+.input-w-prefix:focus-within,
+.input-w-suffix:focus-within {
+	outline: 1px solid var(--light-blue);
+}
+
 .input-prefix,
 .input-suffix {
 	padding: 8px 12px;
-	background-color: rgba(255, 255, 255, 0.05);
 	font-weight: 600;
 	color: var(--dark-white);
 }
 
 .input-prefix {
-	border-right: 1px solid var(--dark-white);
+	border-right: 1px solid var(--border-color);
 }
 
 .input-suffix {
@@ -470,7 +473,7 @@ button > .text-w-icon {
 	position: sticky;
 	top: calc(var(--space) * -1);
 	z-index: 30;
-	background-color: var(--light-black);
+	background-color: var(--black);
 	padding: 0.5rem 0;
 }
 
@@ -510,7 +513,7 @@ button > .text-w-icon {
 .search-bar #search_bar_button {
 	width: fit-content;
 	padding: 0.5rem 1rem;
-	border-left: 1px solid var(--dark-white);
+	border-left: 1px solid var(--border-color);
 	border-radius: 0 var(--input-border-radius) var(--input-border-radius) 0;
 	background-color: transparent;
 }
@@ -525,7 +528,7 @@ button > .text-w-icon {
 	width: 13ch;
 	background-color: transparent;
 	border: none;
-	margin-right: 0.5rem;
+	margin: 0 0.5rem;
 }
 
 /* ---------------- NO CONTENT WALL ---------------- */
@@ -536,7 +539,7 @@ button > .text-w-icon {
 }
 
 .no-content-wall > img {
-	margin-bottom: 0.5rem;
+	margin-bottom: 0.8rem;
 }
 
 .no-content-wall > span {
@@ -553,9 +556,10 @@ button > .text-w-icon {
 
 .no-content-wall p {
 	color: var(--dark-white);
+	font-size: 0.9rem;
 	font-weight: 300;
 	text-align: center;
-	margin-top: 0.5rem;
+	margin-top: 0.3rem;
 }
 
 /* ---------------- JOB TITLE CHIP ---------------- */
