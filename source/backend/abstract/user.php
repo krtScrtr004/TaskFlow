@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Entity;
+namespace App\Abstract;
 
 use App\Core\UUID;
 use App\Interface\Entity;
@@ -18,7 +18,7 @@ use Exception;
 
 require_once ENUM_PATH . 'role.php';
 
-class User implements Entity
+abstract class User implements Entity
 {
     private ?int $id;
     private ?UUID $publicId;
@@ -743,7 +743,7 @@ class User implements Entity
         }
 
         // Create instance bypassing full constructor validation
-        $instance = new self(
+        $instance = new static(
             id: $defaults['id'],
             publicId: $defaults['publicId'],
             firstName: $defaults['firstName'],
@@ -932,7 +932,7 @@ class User implements Entity
             ? new DateTime(trimOrNull($data['deletedAt']))
             : ($data['deletedAt'] ?? null);
 
-        return new User(
+        return new static(
             id: $data['id'],
             publicId: $publicId,
             firstName: trimOrNull($data['firstName']),

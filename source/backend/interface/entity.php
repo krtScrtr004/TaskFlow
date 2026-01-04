@@ -15,6 +15,12 @@ interface Entity extends JsonSerializable {
      */
     public function toArray(bool $useSnakeCase = false): array;
 
+    /**
+     * Creates an entity instance from an associative array.
+     *
+     * @param array $data The data to create the entity from
+     * @return self The created entity instance
+     */
     public static function fromArray(array $data): self;
 }
 
