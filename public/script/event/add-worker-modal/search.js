@@ -2,7 +2,7 @@ import { Loader } from '../../render/loader.js'
 import { Dialog } from '../../render/dialog.js'
 import { debounceAsync } from '../../utility/debounce.js'
 import { fetchWorkers } from './fetch.js'
-import { createWorkerListCard } from './render.js'
+import { createWorkerListCard } from './project/render.js'
 import { toggleNoWorkerWall } from './modal.js'
 import { infiniteScrollWorkers, disconnectInfiniteScroll } from './infinite-scroll.js'
 

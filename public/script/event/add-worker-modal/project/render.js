@@ -1,5 +1,5 @@
-import { createFullName, getValidationConstraints } from '../../utility/utility.js'
-import { selectedUsers } from './select.js'
+import { createFullName, getValidationConstraints } from '../../../utility/utility.js'
+import { selectedUsers } from '../select.js'
 
 const ICON_PATH = '/public/asset/image/icon/'
 

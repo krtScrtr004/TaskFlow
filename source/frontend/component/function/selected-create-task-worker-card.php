@@ -2,22 +2,22 @@
 
 use App\Dependent\Worker;
 
-function selectedCreateTaskWorkerCard(Worker $worker): bool|string
+function selectedCreateTaskWorkerCard(): bool|string
 {
-    $id = $worker->getPublicId();
-    $fullName = htmlspecialchars(
-        createFullName(
-            $worker->getFirstName(),
-            $worker->getMiddleName(),
-            $worker->getLastName()
-        )
-    );
+    // $id = $worker->getPublicId();
+    // $fullName = htmlspecialchars(
+    //     createFullName(
+    //         $worker->getFirstName(),
+    //         $worker->getMiddleName(),
+    //         $worker->getLastName()
+    //     )
+    // );
     // $unitRate = 
     // $estimatedHoursAssigned = 
 
     ob_start()
 ?>
-    <div class="selected-task-worker-form black-bg flex-col">
+    <div class="selected-task-worker-form-card light-black-bg flex-col">
         <!-- Full Name -->
         <div class="input-label-container">
             <label for="">
@@ -47,12 +47,12 @@ function selectedCreateTaskWorkerCard(Worker $worker): bool|string
             <div class="estimated-hours input-label-container">
                 <label for="">
                     <div class="text-w-icon">
-                        <img src="<?= ICON_PATH . 'clock_w.svg' ?>" alt="Estimated Hours Assigned" title="Estimated Hours Assigned" height="16">
-                        <p class="">Estimated Hours Assigned</p>
+                        <img src="<?= ICON_PATH . 'clock_w.svg' ?>" alt="Hours Assigned" title="Hours Assigned" height="16">
+                        <p class="">Hours Assigned</p>
                     </div>
                 </label>
 
-                <input type="number" id="" name="" step="0.01" value="" placeholder="Estimated Hours Assigned" required>
+                <input type="number" id="" name="" step="0.01" value="" placeholder="Hours Assigned" required>
             </div>
         </div>
 

@@ -1,7 +1,7 @@
 import { die } from '../../../utility/utility.js'
-import { openTableModal } from '../table.js'
+import { openTableModal } from './table.js'
 import { selectedUsers } from '../select.js'
-import { saveAddWorkers } from '../save.js'
+import { saveAddWorkers } from './save.js'
 import { handleException } from '../../../utility/handle-exception.js'
 
 const projectContainer = document.querySelector('.project-container')

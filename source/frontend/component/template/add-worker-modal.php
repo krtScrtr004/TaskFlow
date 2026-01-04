@@ -28,7 +28,7 @@
 
         <!-- No Workers Wall -->
         <div class="no-workers-wall no-content-wall no-display">
-            <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No workers assigned" title="No workers assigned"
+            <img src="<?= ICON_PATH . 'empty_dw.svg' ?>" alt="No workers assigned" title="No workers assigned"
                 height="70">
             <h3 class="center-text">No workers found.</h3>
         </div>

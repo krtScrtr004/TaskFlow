@@ -1,7 +1,7 @@
 import { Loader } from '../../../../render/loader.js'
 import { handleException } from '../../../../utility/handle-exception.js'
 import { fetchWorkers } from '../../fetch.js'
-import { createWorkerListCard } from '../../render.js'
+import { createWorkerListCard } from '../../project/render.js'
 import { selectWorker } from '../../select.js'
 import { toggleNoWorkerWall } from '../../modal.js'
 import { initializeAddWorkerModal } from '../../modal.js'

@@ -22,8 +22,8 @@ use App\Enumeration\TaskPriority;
 </head>
 
 <body>
-    <main class="task-creation-form main-page center-child">
-        <form id="create_task_form" class="content-section-block flex-row" action="" method="POST">
+    <main class="task-form main-page center-child">
+        <form id="task_form" class="content-section-block flex-row" action="" method="POST">
             <!-- Task Info -->
             <fieldset id="task_info">
                 <!-- Back Button -->
@@ -178,7 +178,7 @@ use App\Enumeration\TaskPriority;
             </fieldset>
 
             <!-- WWorker Info -->
-            <fieldset id="worker_info" class="light-black-bg">
+            <fieldset id="worker_info" class="black-bg">
                 <!-- Heading -->
                 <section class="heading">
                     <div class="text-w-icon">
@@ -192,9 +192,10 @@ use App\Enumeration\TaskPriority;
 
                 <section class="selected-worker-list flex-col no-display">
                     <!-- Selected Workers Will Appear Here -->
+                     <?= selectedCreateTaskWorkerCard() ?>
                 </section>
 
-                <div class="no-workers-wall no-content-wall flex-col">
+                <div class="no-workers-wall no-content-wall light-black-bg flex-col">
                     <img src="<?= ICON_PATH . 'empty_dw.svg' ?>" alt="No Workers Assigned" title="No Workers Assigned" height="64">
                     <p class="dark-white">No Workers Assigned</p>
                 </div>
@@ -211,6 +212,7 @@ use App\Enumeration\TaskPriority;
 
         </form>
     </main>
+
 </body>
 
 </html>

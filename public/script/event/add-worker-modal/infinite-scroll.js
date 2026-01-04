@@ -1,7 +1,7 @@
 import { Dialog } from '../../render/dialog.js'
 import { Loader } from '../../render/loader.js'
 import { fetchWorkers } from './fetch.js'
-import { createWorkerListCard } from './render.js'
+import { createWorkerListCard } from './project/render.js'
 import { selectedUsers } from './select.js'
 
 // Map to store observers per container to support multiple simultaneous instances

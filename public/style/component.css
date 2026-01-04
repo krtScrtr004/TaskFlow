@@ -541,6 +541,10 @@ button > .text-w-icon {
 	border-radius: var(--input-border-radius);
 }
 
+.no-content-wall.light-black-bg {
+	background-color: var(--light-black);
+}
+
 .no-content-wall > img {
 	margin-bottom: 0.8rem;
 }

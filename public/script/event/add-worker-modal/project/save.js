@@ -1,9 +1,9 @@
-import { Dialog } from '../../render/dialog.js'
-import { Loader } from '../../render/loader.js'
-import { debounceAsync } from '../../utility/debounce.js'
-import { handleException } from '../../utility/handle-exception.js'
-import { Http } from '../../utility/http.js'
-import { die } from '../../utility/utility.js'
+import { Dialog } from '../../../render/dialog.js'
+import { Loader } from '../../../render/loader.js'
+import { debounceAsync } from '../../../utility/debounce.js'
+import { handleException } from '../../../utility/handle-exception.js'
+import { Http } from '../../../utility/http.js'
+import { die } from '../../../utility/utility.js'
 
 let isLoading = false
 
