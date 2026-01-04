@@ -6,7 +6,9 @@ use App\Core\UUID;
 use App\Enumeration\Gender;
 use App\Enumeration\Role;
 use App\Container\JobTitleContainer;
-use App\Entity\User;
+use App\Abstract\User;
+use App\Dependent\ProjectManager;
+use App\Dependent\Worker;
 use DateTime;
 
 class Me extends User
@@ -14,42 +16,32 @@ class Me extends User
     private static ?Me $me = null;
 
     /**
-     * Instantiates or re-instantiates the singleton Me instance from a User object or an associative array.
+     * Constructs a Me instance.
      *
-     * This method accepts either a populated User domain object or a raw associative array and normalizes
-     * values to the types expected by the Me instance:
-     *  - When given a User object, values are copied from its getters.
-     *  - When given an array, the following conversions are applied:
-     *      - publicId: converted to a UUID via UUID::fromString()
-     *      - gender: converted to a Gender enum via Gender::from()
-     *      - birthDate: string converted to DateTime (nullable)
-     *      - role: converted to a Role enum via Role::from()
-     *      - jobTitles: comma-separated string is split and wrapped in a JobTitleContainer
-     *      - createdAt: string converted to DateTime
+     * This constructor initializes a Me object by calling the parent User constructor.
      *
-     * @param User|array $data User domain object or associative array containing user data with keys:
-     *      - id: int User ID
-     *      - publicId: string|UUID Public identifier
-     *      - firstName: string User's first name
-     *      - middleName: string|null User's middle name
-     *      - lastName: string User's last name
-     *      - gender: string|Gender User's gender
-     *      - birthDate: string|DateTime|null User's birth date
-     *      - role: string|Role User's role
-     *      - jobTitles: string|array|JobTitleContainer Comma-separated string or container of job titles
-     *      - contactNumber: string|null User's contact number
-     *      - email: string User's email address
-     *      - bio: string|null User's biography
-     *      - profileLink: string|null User's profile link
-     *      - createdAt: string|DateTime Timestamp when the user was created
-     *      - additionalInfo: mixed|null Optional additional information
-     *
-     * @return void Sets the internal Me instance (self::$me); does not return a value.
+     * @param int $id User ID
+     * @param UUID $publicId Public identifier
+     * @param string $firstName User's first name
+     * @param string|null $middleName User's middle name
+     * @param string $lastName User's last name
+     * @param Gender $gender User
+     * @param DateTime $birthDate User's birth date
+     * @param JobTitleContainer $jobTitles Container of job titles
+     * @param Role $role User's role
+     * @param string $contactNumber User's contact number
+     * @param string $email User's email address
+     * @param string|null $bio User's biography
+     * @param string|null $profileLink User's profile link
+     * @param DateTime $createdAt Timestamp when the user was created
+     * @param array $additionalInfo Optional additional information (default: empty array)
+     * 
+     * @return void
      */
-    public static function instantiate(User|array $data): void
+    public static function instantiate(ProjectManager|Worker|array $data): void
     {
         // Allow re-instantiation to update the Me instance with new data
-        if ($data instanceof User) {
+        if ($data instanceof ProjectManager) {
             self::$me = new self(
                 id: $data->getId(),
                 publicId: $data->getPublicId(),
@@ -58,8 +50,8 @@ class Me extends User
                 lastName: $data->getLastName(),
                 gender: $data->getGender(),
                 birthDate: $data->getBirthDate(),
-                role: $data->getRole(),
                 jobTitles: $data->getJobTitles(),
+                role: $data->getRole(),
                 contactNumber: $data->getContactNumber(),
                 email: $data->getEmail(),
                 bio: $data->getBio(),
