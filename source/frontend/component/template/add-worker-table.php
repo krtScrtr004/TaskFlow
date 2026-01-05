@@ -1,5 +1,3 @@
-<?php use App\Dependent\Worker; ?>
-
 <section id="add_worker_table_template" class="modal-wrapper no-display">
 
     <div class="add-worker-table modal flex-col light-black-bg">

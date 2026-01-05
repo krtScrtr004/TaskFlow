@@ -1,8 +1,8 @@
 <?php
 
 use App\Core\UUID;
+use App\Dependent\ProjectManager;
 use App\Dependent\Worker;
-use App\Entity\User;
 use App\Enumeration\Role;
 
 /**
@@ -17,7 +17,7 @@ use App\Enumeration\Role;
  * - Wraps the markup in a <button> with a data-id attribute and includes a lazy-loaded <img>.
  * - Buffers output with output buffering (ob_start / ob_get_clean) and returns the generated markup.
  *
- * @param User $user User domain object providing the following accessors:
+ * @param ProjectManager|Worker $user User domain object providing the following accessors:
  *      - getFirstName(): string
  *      - getMiddleName(): string|null
  *      - getLastName(): string
@@ -27,7 +27,7 @@ use App\Enumeration\Role;
  *
  * @return string HTML markup for a user list card (escaped and ready for output)
  */
-function userListCard(User|Worker $user): string
+function userListCard(ProjectManager|Worker $user): string
 {
     $name           = htmlspecialchars(createFullName($user->getFirstName(), $user->getMiddleName(), $user->getLastName()));
     $id             = htmlspecialchars(UUID::toString($user->getPublicId()));
@@ -58,7 +58,7 @@ function userListCard(User|Worker $user): string
 
         <?php
         if (Role::isWorker($user->getRole())):
-            $defaultRate    = $user instanceof Worker && $user->getDefaultRate()
+            $defaultRate    = $user->getDefaultRate()
                 ? htmlspecialchars(formatNumber($user->getDefaultRate()))
                 : DEFAULT_RATE_MIN;
         ?>

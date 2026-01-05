@@ -1,8 +1,9 @@
 <?php
 
-use App\Entity\User;
 use App\Core\UUID;
+use App\Dependent\ProjectManager;
 use App\Dependent\Worker;
+use App\Enumeration\Role;
 use App\Enumeration\WorkerStatus;
 
 /**
@@ -12,11 +13,11 @@ use App\Enumeration\WorkerStatus;
  * It performs necessary escaping and fallbacks, and conditionally renders
  * information for display in a table format.
  *
- * @param User|Worker $user The User or Worker object to render.
+ * @param ProjectManager|Worker $user The ProjectManager or Worker entity object to render.
  *
  * @return string Rendered HTML for the user table row (escaped and safe for direct output).
  */
-function userTableRow(User|Worker $user): string
+function userTableRow(ProjectManager|Worker $user): string
 {
     $name           = htmlspecialchars(createFullName($user->getFirstName(), $user->getMiddleName(), $user->getLastName()));
     $id             = htmlspecialchars(UUID::toString($user->getPublicId()));
@@ -66,7 +67,7 @@ function userTableRow(User|Worker $user): string
             <span class="user-completed-tasks"><?= $completedTask ?></span>
         </td>
 
-        <?php if ($user instanceof Worker): ?>
+        <?php if (Role::isWorker($user->getRole())): ?>
             <!-- Worker Status -->
             <td>
                 <?= WorkerStatus::badge($user->getStatus()) ?>

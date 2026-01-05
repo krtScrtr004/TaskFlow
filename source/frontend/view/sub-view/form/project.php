@@ -1,9 +1,7 @@
 <?php
 // TODO: Fix table width on smaller screens
 
-use App\Container\WorkerContainer;
 use App\Core\UUID;
-use App\Entity\User;
 use App\Middleware\Csrf;
 
 $projectData = [

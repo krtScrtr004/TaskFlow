@@ -302,25 +302,7 @@ class UserEndpoint extends Endpoint
                 Me::instantiate(UserModel::findById($myId));
                 if (Session::has('userData')) {
                     $updatedUser = Me::getInstance();
-                    Session::set('userData', [
-                        'id'                => $updatedUser->getId(),
-                        'publicId'          => UUID::toString($updatedUser->getPublicId()),
-                        'firstName'         => $updatedUser->getFirstName(),
-                        'middleName'        => $updatedUser->getMiddleName(),
-                        'lastName'          => $updatedUser->getLastName(),
-                        'gender'            => $updatedUser->getGender()->value,
-                        'birthDate'         => $updatedUser->getBirthDate()?->format('Y-m-d'),
-                        'role'              => $updatedUser->getRole()->value,
-                        'jobTitles'         => implode(',', $updatedUser->getJobTitles()->toArray()),
-                        'contactNumber'     => $updatedUser->getContactNumber(),
-                        'email'             => $updatedUser->getEmail(),
-                        'bio'               => $updatedUser->getBio(),
-                        'profileLink'       => $updatedUser->getProfileLink(),
-                        'createdAt'         => $updatedUser->getCreatedAt()->format('Y-m-d H:i:s'),
-                        'confirmedAt'       => $updatedUser->getConfirmedAt()?->format('Y-m-d H:i:s'),
-                        'deletedAt'         => $updatedUser->getDeletedAt()?->format('Y-m-d H:i:s'),
-                        'additionalInfo'    => $updatedUser->getAdditionalInfo()
-                    ]);
+                    Session::set('userData', $updatedUser->toArray());
                 }
             }
             Response::success([], 'User edited successfully.');

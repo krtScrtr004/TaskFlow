@@ -73,7 +73,7 @@ enum Role: string {
      * against the PROJECT_MANAGER constant of this enumeration and returns
      * a boolean indicating the match.
      *
-     * @param User $user User instance whose role will be evaluated. The role returned by getRole() may be a string or Role enum.
+     * @param Role $role Role enum value to be evaluated.
      *
      * @return bool True if the user's role equals self::PROJECT_MANAGER, false otherwise.
      */
@@ -87,7 +87,7 @@ enum Role: string {
      * This method retrieves the role from the provided User instance via getRole()
      * and performs a strict comparison against this enumeration's WORKER constant.
      *
-     * @param User $user The user to check.
+     * @param Role $role Role enum value to be evaluated.
      *
      * @return bool True if the user's role is equal to self::WORKER, false otherwise.
      */

@@ -2,9 +2,10 @@
 
 use App\Entity\User;
 use App\Core\UUID;
+use App\Dependent\ProjectManager;
 use App\Dependent\Worker;
+use App\Enumeration\Role;
 use App\Enumeration\WorkerStatus;
-use App\Model\ProjectModel;
 
 /**
  * Renders a user/worker "grid card" as an HTML string.
@@ -32,7 +33,7 @@ use App\Model\ProjectModel;
  * - Uses external helpers/constants/classes: createFullName(), UUID, ICON_PATH, WorkerStatus.
  * - The returned string is a complete HTML fragment (<button>...</button>) ready for output.
  *
- * @param User|Worker $user The User or Worker object to render. Expected methods used:
+ * @param ProjectManager|Worker $user The ProjectManager or Worker entity object to render. Expected methods used:
  *      - getFirstName(): string
  *      - getMiddleName(): string
  *      - getLastName(): string
@@ -46,7 +47,7 @@ use App\Model\ProjectModel;
  *
  * @return string Rendered HTML for the user grid card (escaped and safe for direct output).
  */
-function userGridCard(User|Worker $user): string
+function userGridCard(ProjectManager|Worker $user): string
 {
     $name           = htmlspecialchars(createFullName($user->getFirstName(), $user->getMiddleName(), $user->getLastName()));
     $id             = htmlspecialchars(UUID::toString($user->getPublicId()));
@@ -135,7 +136,7 @@ function userGridCard(User|Worker $user): string
             </div>
         </section>
 
-        <?php if ($user instanceof Worker): ?>
+        <?php if (Role::isWorker($user->getRole())): ?>
             <!-- Worker Status -->
             <section class="user-status flex-col flex-child-end-h flex-child-end-v">
                 <div><?= WorkerStatus::badge($user->getStatus()) ?></div>
