@@ -2,11 +2,12 @@
 
 namespace App\Model;
 
+use App\Abstract\User;
 use App\Abstract\Model;
 use App\Container\JobTitleContainer;
 use App\Core\UUID;
-use App\Entity\User;
-use App\Enumeration\Gender;
+use App\Dependent\ProjectManager;
+use App\Dependent\Worker;
 use App\Enumeration\Role;
 use App\Enumeration\WorkerStatus;
 use App\Enumeration\WorkStatus;
@@ -19,6 +20,14 @@ use PDOException;
 
 class UserModel extends Model
 {
+    public static function hydrateByRole(array $data): ProjectManager|Worker
+    {
+        return match ($data['role']) {
+            'projectManager' => ProjectManager::fromArray($data),
+            'worker' => Worker::fromArray($data),
+            default => throw new InvalidArgumentException('Invalid role specified for user hydration.')
+        };
+    }
 
     /**
      * Finds and retrieves user records from the database with aggregated project statistics.
@@ -58,7 +67,7 @@ class UserModel extends Model
         try {
             Csrf::protect();
 
-            $queryString = 
+            $queryString =
                 "SELECT 
                     u.*,
                     GROUP_CONCAT(ujt.title) AS job_titles,
@@ -126,7 +135,8 @@ class UserModel extends Model
                     u.id = ujt.user_id";
             $query = $instance->appendOptionsToFindQuery(
                 $instance->appendWhereClause($queryString, $whereClause),
-            $paramOptions);
+                $paramOptions
+            );
 
             $params[':completedStatus'] = WorkStatus::COMPLETED->value;
             $params[':cancelledStatus'] = WorkStatus::CANCELLED->value;
@@ -149,7 +159,7 @@ class UserModel extends Model
                     'cancelledProjectCount'     => (int) $row['cancelled_project_count'] ?? 0,
                     'terminatedProjectCount'    => (int) $row['terminated_project_count'] ?? 0
                 ];
-                $users[] = User::createPartial($row);
+                $users[] = $instance->hydrateByRole($row);
             }
             return $users;
         } catch (PDOException $e) {
@@ -157,7 +167,7 @@ class UserModel extends Model
         }
     }
 
-    
+
     /**
      * Locate and return a User by numeric ID or public UUID.
      *
@@ -177,8 +187,7 @@ class UserModel extends Model
      *
      * @param int|UUID $userId Numeric user ID or public UUID identifying the user.
      *
-     * @return User|null Returns an instance of User (concrete type will be ProjectManagerModel
-     *                   or ProjectWorkerModel) when a matching user is found, or null if not found.
+     * @return ProjectManager|Worker|null The located User subtype instance, or null if not found.
      *
      * @throws InvalidArgumentException If an integer $userId is less than 1.
      * @throws Exception For database-related errors or any exceptions thrown by delegated loaders.
@@ -186,7 +195,7 @@ class UserModel extends Model
      * @see ProjectManagerModel::findById()
      * @see ProjectWorkerModel::findById()
      */
-    public static function findById(int|UUID $userId): ?User
+    public static function findById(int|UUID $userId): ProjectManager|Worker|null
     {
         if (is_int($userId) && $userId < 1) {
             throw new InvalidArgumentException('Invalid user ID provided.');
@@ -194,7 +203,7 @@ class UserModel extends Model
 
         $instance = new self();
         try {
-            $searchRole = 
+            $searchRole =
                 "SELECT 
                     id, 
                     role 
@@ -226,10 +235,12 @@ class UserModel extends Model
      * If no user is found with the given email, null is returned.
      *
      * @param string $email The email address to search for
-     * @return User|null User if found, null otherwise
+     * 
+     * @return ProjectManager|Worker|null The User instance if found, or null if not found
+     * 
      * @throws DatabaseException If a database error occurs during the operation
      */
-    public static function findByEmail(string $email): ?User
+    public static function findByEmail(string $email): ProjectManager|Worker|null
     {
         try {
             $result = self::find('email = :email AND deleted_at IS NULL', [':email' => $email], ['limit' => 1]);
@@ -293,15 +304,15 @@ class UserModel extends Model
             }
 
             if ($excludeUserId) {
-                $whereConditions[] = is_int($excludeUserId) 
-                    ? "id != :excludeUserId" 
+                $whereConditions[] = is_int($excludeUserId)
+                    ? "id != :excludeUserId"
                     : "public_id != :excludeUserId";
-                $params[':excludeUserId'] = is_int($excludeUserId) 
-                    ? $excludeUserId 
+                $params[':excludeUserId'] = is_int($excludeUserId)
+                    ? $excludeUserId
                     : UUID::toBinary($excludeUserId);
             }
 
-            $query = 
+            $query =
                 "SELECT 
                     (CASE WHEN " . ($email ? "email = :email1" : "0") . " THEN 1 ELSE 0 END) as email_duplicate,
                     (CASE WHEN " . ($contactNumber ? "contact_number = :contactNumber1" : "0") . " THEN 1 ELSE 0 END) as contact_duplicate
@@ -403,8 +414,8 @@ class UserModel extends Model
 
             'limit' => 10,
             'offset' => 0,
-        ]): ?array
-    {
+        ]
+    ): ?array {
         $paramOptions = [
             'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
             'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
@@ -428,7 +439,7 @@ class UserModel extends Model
             if ($status) {
                 // Special case: UNASSIGNED means no active work as manager OR worker
                 if ($status === WorkerStatus::UNASSIGNED) {
-                    $where[] = 
+                    $where[] =
                         "NOT EXISTS (
                             SELECT 1
                             FROM 
@@ -473,7 +484,7 @@ class UserModel extends Model
                     $params[':completedStatusUnassigned3'] = WorkStatus::COMPLETED->value;
                     $params[':cancelledStatusUnassigned3'] = WorkStatus::CANCELLED->value;
                 } else {
-                    $where[] = 
+                    $where[] =
                         "((EXISTS (
                             SELECT 1
                             FROM 
@@ -510,7 +521,7 @@ class UserModel extends Model
             }
 
             if ($options['excludeProjectTerminated'] && $options['projectReferenceId'] !== null) {
-                $where[] = 
+                $where[] =
                     "NOT EXISTS (
                         SELECT 1
                         FROM
@@ -518,14 +529,14 @@ class UserModel extends Model
                         WHERE
                             pw.worker_id = u.id
                         AND 
-                            pw.project_id = " . ($options['projectReferenceId'] instanceof UUID 
-                                ? '(SELECT 
+                            pw.project_id = " . ($options['projectReferenceId'] instanceof UUID
+                        ? '(SELECT 
                                         id
                                     FROM 
                                         `project`
                                     WHERE 
                                         public_id = :projectReferenceId)'
-                                : ':projectReferenceId') . "
+                        : ':projectReferenceId') . "
                         AND
                             pw.status != :terminatedStatus
                     )";
@@ -560,16 +571,16 @@ class UserModel extends Model
      * (both user record and job titles) or none at all in case of failure.
      *
      * @param mixed $user The User object to be created in the database
-     * @throws InvalidArgumentException If the parameter is not a User instance
+     * @throws InvalidArgumentException If the parameter is not a ProjectManager or Worker instance
      * @throws DatabaseException If any database operation fails
      * @return User
      */
-    public static function create(mixed $user): User
+    public static function create(mixed $user): ProjectManager|Worker|null
     {
         $instance = new self();
         try {
-            if (!($user instanceof User)) {
-                throw new InvalidArgumentException('Expected instance of User');
+            if (!$user instanceof ProjectManager && !$user instanceof Worker) {
+                throw new InvalidArgumentException('Expected instance of ProjectManager or Worker');
             }
 
             $uuid               =   $user->getPublicId() ?? UUID::get();
@@ -577,7 +588,7 @@ class UserModel extends Model
             $middleName         =   trimOrNull($user->getMiddleName());
             $lastName           =   trimOrNull($user->getLastName());
             $gender             =   $user->getGender()->value;
-            $birthDate          =   $user->getBirthDate(); 
+            $birthDate          =   $user->getBirthDate();
             $role               =   $user->getRole()->value;
             $jobTitles          =   $user->getJobTitles()?->toArray();
             $contactNumber      =   trimOrNull($user->getContactNumber());
@@ -585,11 +596,11 @@ class UserModel extends Model
             $bio                =   trimOrNull($user->getBio());
             $profileLink        =   trimOrNull($user->getProfileLink());
             $password           =   $user->getPassword();
-            
+
             $instance->connection->beginTransaction();
 
             // Insert User Data
-            $userQuery = 
+            $userQuery =
                 "INSERT INTO `user` (
                     public_id, 
                     first_name, 
@@ -636,7 +647,7 @@ class UserModel extends Model
 
             // Insert Job Titles, if any
             if (!empty($jobTitles)) {
-                $jobTitleQuery = 
+                $jobTitleQuery =
                     "INSERT INTO `user_job_title` (
                     user_id, 
                     title
@@ -746,7 +757,7 @@ class UserModel extends Model
                 $updateFields[] = 'birth_date = :birthDate';
                 $params[':birthDate'] = formatDateTime($data['birthDate']);
             }
-            
+
             if (isset($data['contactNumber'])) {
                 $updateFields[] = 'contact_number = :contactNumber';
                 $params[':contactNumber'] = trimOrNull($data['contactNumber']);
@@ -824,9 +835,9 @@ class UserModel extends Model
         }
 
         $instance = new self();
-        try {        
+        try {
             if (count($jobTitlesToDelete) > 0) {
-                $deleteQuery = 
+                $deleteQuery =
                     "DELETE FROM 
                         `user_job_title`
                     WHERE 
@@ -844,7 +855,7 @@ class UserModel extends Model
             }
 
             if (count($jobTitlesToAdd) > 0) {
-                $insertQuery = 
+                $insertQuery =
                     "INSERT INTO
                         `user_job_title` (user_id, title)
                     VALUES (
@@ -860,7 +871,6 @@ class UserModel extends Model
                     ]);
                 }
             }
-
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
@@ -879,13 +889,14 @@ class UserModel extends Model
      * 
      * @return bool Returns true if the deletion was successful.
      * 
-     * @throws InvalidArgumentException If $data is not an instance of User.
+     * @throws InvalidArgumentException If $data is not an instance of ProjectManager or Worker
+     * .
      * @throws Exception If an error occurs during the deletion process.
      */
     public static function delete(mixed $data): bool
     {
-        if (!$data instanceof User) {
-            throw new InvalidArgumentException('Expected instance of User');
+        if (!$data instanceof ProjectManager && !$data instanceof Worker) {
+            throw new InvalidArgumentException('Expected instance of ProjectManager or Worker');
         }
 
         try {
@@ -909,14 +920,14 @@ class UserModel extends Model
      *
      * @param mixed $data Instance of User to be deleted.
      * 
-     * @throws InvalidArgumentException If $data is not an instance of User.
+     * @throws InvalidArgumentException If $data is not an instance of ProjectManager or Worker.
      * @throws DatabaseException If a database error occurs during deletion.
      * 
      * @return bool Returns true if the deletion was successful.
      */
     public static function hardDelete(mixed $data): bool
     {
-        if (!$data instanceof User) {
+        if (!$data instanceof ProjectManager && !$data instanceof Worker) {
             throw new InvalidArgumentException('Expected instance of User');
         }
 

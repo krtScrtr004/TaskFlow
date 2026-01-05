@@ -41,8 +41,8 @@ class Me extends User
     public static function instantiate(ProjectManager|Worker|array $data): void
     {
         // Allow re-instantiation to update the Me instance with new data
-        if ($data instanceof ProjectManager) {
-            self::$me = new self(
+        self::$me =  ($data instanceof ProjectManager)
+            ? new self(
                 id: $data->getId(),
                 publicId: $data->getPublicId(),
                 firstName: $data->getFirstName(),
@@ -58,9 +58,8 @@ class Me extends User
                 profileLink: $data->getProfileLink(),
                 createdAt: $data->getCreatedAt(),
                 additionalInfo: $data->getAdditionalInfo()
-            );
-        } else {
-            self::$me = new self(
+            )
+            : self::$me = new self(
                 id: $data['id'],
                 publicId: UUID::fromString($data['publicId']),
                 firstName: $data['firstName'],
@@ -77,7 +76,6 @@ class Me extends User
                 createdAt: new DateTime($data['createdAt']),
                 additionalInfo: $data['additionalInfo'] ?? null
             );
-        }
     }
 
     /**

@@ -9,6 +9,7 @@ use App\Container\ProjectContainer;
 use App\Container\TaskContainer;
 use App\Core\UUID;
 use App\Dependent\Phase;
+use App\Dependent\ProjectManager;
 use App\Entity\Project;
 use App\Entity\Task;
 use App\Entity\User;
@@ -69,8 +70,11 @@ class ProjectManagerModel extends Model
      *
      * @throws DatabaseException If a database error occurs during the query execution.
      */
-    public static function findById(int|UUID $managerId, int|UUID|null $projectId = null, bool $includeHistory = false): ?User
-    {
+    public static function findById(
+        int|UUID $managerId, 
+        int|UUID|null $projectId = null, 
+        bool $includeHistory = false
+    ): ?ProjectManager {
         $instance = new self();
         try {
             $projectHistory = $includeHistory
@@ -224,7 +228,7 @@ class ProjectManagerModel extends Model
                 'totalProjects' => (int)$result['total_projects'],
                 'completedProjects' => (int)$result['completed_projects'],
             ];
-            $user = User::createPartial($result);
+            $projectManager = ProjectManager::createPartial($result);
 
                         // Process project history if included
             if ($includeHistory) {
@@ -257,10 +261,10 @@ class ProjectManagerModel extends Model
                     $projectContainer->add(Project::createPartial($project));
                 }
                 
-                $user->addAdditionalInfo('projectHistory', $projectContainer);
+                $projectManager->addAdditionalInfo('projectHistory', $projectContainer);
             }
 
-            return $user;
+            return $projectManager;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }

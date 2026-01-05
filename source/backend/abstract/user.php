@@ -673,9 +673,11 @@ abstract class User implements Entity
      *      - password: string|null User's password
      *      - additionalInfo: array Additional user information
      * 
-     * @return self New User instance created from provided data with defaults for missing values
+     * @return static New User instance created from provided data
+     * 
+     * @throws Exception If any data conversion fails
      */
-    public static function createPartial(array $data): self
+    public static function createPartial(array $data): static
     {
         // Normalize input keys to camelCase to support both snake_case and camelCase input
         $data = normalizeArrayKeysToCamelCase($data);
@@ -889,9 +891,9 @@ abstract class User implements Entity
      *      - additionalInfo: array (optional) Additional user information
      *      - password: string|null (optional) User's password
      * 
-     * @return self New User instance created from provided data
+     * @return static New User instance created from provided data
      */
-    public static function fromArray(array $data): self
+    public static function fromArray(array $data): static
     {
         // Normalize input keys to camelCase to support both snake_case and camelCase input
         $data = normalizeArrayKeysToCamelCase($data);

@@ -2,14 +2,13 @@
 
 namespace App\Dependent;
 
-use App\Entity\User;
+use App\Abstract\User;
 use App\Enumeration\Gender;
 use App\Enumeration\WorkerStatus;
 use App\Enumeration\Role;
 use App\Container\JobTitleContainer;
 use App\Core\UUID;
 use App\Exception\ValidationException;
-use App\Validator\UserValidator;
 use InvalidArgumentException;
 use DateTime;
 
@@ -232,80 +231,6 @@ class Worker extends User
             $partial->setStatus(WorkerStatus::UNASSIGNED);
         }
         return $partial;
-    }
-    
-    /**
-     * Converts a Worker instance to a User object.
-     *
-     * This method creates a new User object using the properties
-     * of the provided Worker instance. The resulting User object
-     * retains all relevant information from the Worker.
-     *
-     * @param Worker $worker The Worker instance to convert
-     * @return User A new User instance created from the provided Worker
-     */
-    public static function toUser(Worker $worker): User
-    {
-        return new User(
-            id: $worker->getId(),
-            publicId: $worker->getPublicId(),
-            firstName: $worker->getFirstName(),
-            middleName: $worker->getMiddleName(),
-            lastName: $worker->getLastName(),
-            gender: $worker->getGender(),
-            birthDate: $worker->getBirthDate(),
-            role: Role::WORKER,
-            jobTitles: $worker->getJobTitles(),
-            contactNumber: $worker->getContactNumber(),
-            email: $worker->getEmail(),
-            bio: $worker->getBio(),
-            profileLink: $worker->getProfileLink(),
-            createdAt: $worker->getCreatedAt(),
-            confirmedAt: $worker->getConfirmedAt(),
-            deletedAt: $worker->getDeletedAt(),
-            password: $worker->getPassword(),
-            additionalInfo: $worker->getAdditionalInfo()
-        );
-    }
-
-    /**
-     * Creates a Worker instance from a User object.
-     *
-     * This method converts a User object to a Worker object after verifying
-     * that the user has the Worker role. The resulting Worker instance
-     * inherits most properties from the User object but initializes with
-     * a predefined DEFAULT_RATE_MIN default rate and WorkerStatus.ASSIGNED status.
-     *
-     * @param User $user The User object to convert to a Worker
-     * @throws InvalidArgumentException If the User does not have the Worker role
-     * @return Worker A new Worker instance created from the provided User
-     */
-    public static function fromUser(User $user): Worker
-    {
-        if (!Role::isWorker($user)) {
-            throw new InvalidArgumentException('User must have the Worker role to be converted to Worker.');
-        }
-
-        return new Worker(
-            id: $user->getId(),
-            publicId: $user->getPublicId(),
-            firstName: $user->getFirstName(),
-            middleName: $user->getMiddleName(),
-            lastName: $user->getLastName(),
-            gender: $user->getGender(),
-            birthDate: $user->getBirthDate(),
-            jobTitles: $user->getJobTitles(),
-            contactNumber: $user->getContactNumber(),
-            email: $user->getEmail(),
-            bio: $user->getBio(),
-            profileLink: $user->getProfileLink(),
-            defaultRate: DEFAULT_RATE_MIN,
-            status: WorkerStatus::ASSIGNED,
-            createdAt: $user->getCreatedAt(),
-            confirmedAt: $user->getConfirmedAt(),
-            deletedAt: $user->getDeletedAt(),
-            additionalInfo: $user->getAdditionalInfo()
-        );
     }
 
     /**
