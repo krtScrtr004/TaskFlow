@@ -4,7 +4,7 @@ namespace App\Endpoint;
 
 use App\Abstract\Endpoint;
 use App\Core\Session;
-use App\Entity\User;
+use App\Dependent\Worker;
 use App\Enumeration\Role;
 use App\Exception\DatabaseException;
 use App\Middleware\Csrf;
@@ -15,6 +15,7 @@ use App\Enumeration\Gender;
 use App\Auth\SessionAuth;
 use App\Container\JobTitleContainer;
 use App\Core\Me;
+use App\Dependent\ProjectManager;
 use App\Exception\ForbiddenException;
 use App\Exception\NotFoundException;
 use App\Exception\ValidationException;
@@ -78,12 +79,14 @@ class AuthEndpoint extends Endpoint
 
             // Verify credentials
             $user = UserModel::findByEmail($email);
+            // Check if user exists and password is correct and account is not deleted
             if (!$user || !password_verify($password, $user->getPassword()) || $user->getDeletedAt() !== null) {
                 throw new ValidationException('Login Failed.', [
                     'Invalid email or password.'
                 ]);
             }
 
+            // Check if account's email is confirmed
             if ($user->getConfirmedAt() === null) {
                 throw new ForbiddenException('Please verify your email before logging in.');
             }
@@ -142,17 +145,17 @@ class AuthEndpoint extends Endpoint
             }
 
             // Extract Data
-            $agreedToTerms = isset($data['agreedToTerms']) ? filter_var($data['agreedToTerms'], FILTER_VALIDATE_BOOLEAN) : false;
-            $firstName = trimOrNull($data['firstName']);
-            $middleName = trimOrNull($data['middleName']);
-            $lastName = trimOrNull($data['lastName']);
-            $contactNumber = trimOrNull($data['contactNumber']);
-            $birthDate = isset($data['birthDate']) ? new DateTime(trimOrNull($data['birthDate'])) : null;
-            $email = trimOrNull($data['email']);
-            $password = trimOrNull($data['password']);
-            $gender = (trimOrNull($data['gender']) ? Gender::tryFrom(trimOrNull($data['gender'])) : null);
-            $role = (trimOrNull($data['role']) ? Role::tryFrom(trimOrNull($data['role'])) : null);
-            $jobTitles = null;
+            $agreedToTerms  = isset($data['agreedToTerms']) ? filter_var($data['agreedToTerms'], FILTER_VALIDATE_BOOLEAN) : false;
+            $firstName      = trimOrNull($data['firstName']);
+            $middleName     = trimOrNull($data['middleName']);
+            $lastName       = trimOrNull($data['lastName']);
+            $contactNumber  = trimOrNull($data['contactNumber']);
+            $birthDate      = isset($data['birthDate']) ? new DateTime(trimOrNull($data['birthDate'])) : null;
+            $email          = trimOrNull($data['email']);
+            $password       = trimOrNull($data['password']);
+            $gender         = (trimOrNull($data['gender']) ? Gender::tryFrom(trimOrNull($data['gender'])) : null);
+            $role           = (trimOrNull($data['role']) ? Role::tryFrom(trimOrNull($data['role'])) : null);
+            $jobTitles      = null;
             if (isset($data['jobTitles'])) {
                 $jobTitles = new JobTitleContainer(
                     array_filter(
@@ -206,19 +209,33 @@ class AuthEndpoint extends Endpoint
             }
 
             // Create user
-            $partialUser = User::createPartial([
-                'firstName' => $firstName,
-                'middleName' => $middleName,
-                'lastName' => $lastName,
-                'gender' => $gender,
-                'birthDate' => $birthDate,
-                'role' => $role,
-                'jobTitles' => $jobTitles,
-                'contactNumber' => $contactNumber,
-                'email' => $email,
-                'password' => $password,
-                'createdAt' => new DateTime()
-            ]);
+            $partialUser = $role === Role::PROJECT_MANAGER
+                ? ProjectManager::createPartial([
+                    'firstName'     => $firstName,
+                    'middleName'    => $middleName,
+                    'lastName'      => $lastName,
+                    'gender'        => $gender,
+                    'birthDate'     => $birthDate,
+                    'role'          => $role,
+                    'jobTitles'     => $jobTitles,
+                    'contactNumber' => $contactNumber,
+                    'email'         => $email,
+                    'password'      => $password,
+                    'createdAt'     => new DateTime()
+                ])
+                : Worker::createPartial([
+                    'firstName'     => $firstName,
+                    'middleName'    => $middleName,
+                    'lastName'      => $lastName,
+                    'gender'        => $gender,
+                    'birthDate'     => $birthDate,
+                    'role'          => $role,
+                    'jobTitles'     => $jobTitles,
+                    'contactNumber' => $contactNumber,
+                    'email'         => $email,
+                    'password'      => $password,
+                    'createdAt'     => new DateTime()
+                ]);
             UserModel::create($partialUser);
 
             $token = bin2hex(random_bytes(16));
@@ -325,8 +342,8 @@ class AuthEndpoint extends Endpoint
 
             // Confirm user's email
             UserModel::save([
-                'id' => $user->getId(),
-                'confirm' => true
+                'id'        => $user->getId(),
+                'confirm'   => true
             ]);
             TemporaryLinkModel::delete($token);
 
@@ -480,8 +497,8 @@ class AuthEndpoint extends Endpoint
 
             // Update password
             UserModel::save([
-                'id' => $user->getId(),
-                'password' => $newPassword
+                'id'        => $user->getId(),
+                'password'  => $newPassword
             ]);
 
             // Delete temporary link token in the database

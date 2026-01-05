@@ -20,12 +20,20 @@ use PDOException;
 
 class UserModel extends Model
 {
+    /**
+     * Hydrates and returns a User instance (ProjectManager or Worker) based on role.
+     *
+     * @param array $data Associative array of user data including 'role' key
+     * @return ProjectManager|Worker The hydrated User instance
+     *
+     * @throws InvalidArgumentException If the role is invalid
+     */
     public static function hydrateByRole(array $data): ProjectManager|Worker
     {
         return match ($data['role']) {
-            'projectManager' => ProjectManager::fromArray($data),
-            'worker' => Worker::fromArray($data),
-            default => throw new InvalidArgumentException('Invalid role specified for user hydration.')
+            'projectManager'    => ProjectManager::fromArray($data),
+            'worker'            => Worker::fromArray($data),
+            default             => throw new InvalidArgumentException('Invalid role specified for user hydration.')
         };
     }
 
