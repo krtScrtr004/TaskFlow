@@ -25,15 +25,15 @@ $uiState = [
 if ($project) {
     $uiState['pageName'] = 'Edit Project';
 
-    $projectData['id'] = htmlspecialchars(UUID::toString($project->getPublicId()));
-    $projectData['name'] = htmlspecialchars($project->getName());
-    $projectData['description'] = htmlspecialchars($project->getDescription());
-    $projectData['budget'] = $project->getBudget();
-    $projectData['maxWorkers'] = $project->getMaxWorkers();
-    $projectData['workers'] = $project->getWorkers()?->getItems();
-    $projectData['phases'] = $project->getPhases();
-    $projectData['startDateTime'] = formatDateTime($project->getStartDateTime(), 'Y-m-d');
-    $projectData['completionDateTime'] = formatDateTime($project->getCompletionDateTime(), 'Y-m-d');
+    $projectData['id']                      = htmlspecialchars(UUID::toString($project->getPublicId()));
+    $projectData['name']                    = htmlspecialchars($project->getName());
+    $projectData['description']             = htmlspecialchars($project->getDescription());
+    $projectData['budget']                  = $project->getBudget();
+    $projectData['maxWorkers']              = $project->getMaxWorkers();
+    $projectData['workers']                 = $project->getWorkers()?->getItems();
+    $projectData['phases']                  = $project->getPhases();
+    $projectData['startDateTime']           = formatDateTime($project->getStartDateTime(), 'Y-m-d');
+    $projectData['completionDateTime']      = formatDateTime($project->getCompletionDateTime(), 'Y-m-d');
     $projectData['actualCompletionDateTime'] = $project->getActualCompletionDateTime()
         ? formatDateTime($project->getActualCompletionDateTime(), 'Y-m-d')
         : null;
@@ -42,19 +42,19 @@ if ($project) {
         'edit' . DS . 'submit.js',
     ];
 
-    $uiState['submitButtonId'] = 'edit_project_button';
-    $uiState['submitButtonText'] = 'Save Changes';
+    $uiState['submitButtonId']      = 'edit_project_button';
+    $uiState['submitButtonText']    = 'Save Changes';
 
-    $uiState['noPhaseWall'] = count($projectData['phases'] ?? []) > 0 ? 'no-display' : 'flex-col';
-    $uiState['noWorkerWall'] = count($projectData['workers'] ?? []) > 0 ? 'no-display' : 'flex-col';
+    $uiState['noPhaseWall']     = count($projectData['phases'] ?? []) > 0 ? 'no-display' : 'flex-col';
+    $uiState['noWorkerWall']    = count($projectData['workers'] ?? []) > 0 ? 'no-display' : 'flex-col';
 } else {
     $projectData['scripts'] = [
         'create' . DS . 'search-workers.js',
         'create' . DS . 'submit.js',
     ];
 
-    $uiState['submitButtonId'] = 'create_project_button';
-    $uiState['submitButtonText'] = 'Create Project';
+    $uiState['submitButtonId']      = 'create_project_button';
+    $uiState['submitButtonText']    = 'Create Project';
 
     $uiState['pageName'] = 'Create Project';}
 ?>

@@ -49,30 +49,32 @@ class ProjectManager extends User
         ?string $bio, 
         ?string $profileLink, 
         DateTime $createdAt, 
-        ?DateTime $confirmedAt = 
-        null, ?DateTime $deletedAt = null, 
+
+        // Optional parameters
         ?string $password = null, 
-        array $additionalInfo = []
+        ?DateTime $confirmedAt = null, 
+        ?DateTime $deletedAt = null, 
+        array $additionalInfo = [],
     ) {
+        $this->role = Role::PROJECT_MANAGER;
         return parent::__construct(
-            $id, 
-            $publicId, 
-            $firstName, 
-            $middleName, 
-            $lastName, 
-            $gender, 
-            $birthDate, 
-            Role::PROJECT_MANAGER, 
-            $jobTitles, 
-            $contactNumber, 
-            $email, 
-            $bio, 
-            $profileLink, 
-            $createdAt, 
-            $confirmedAt, 
-            $deletedAt, 
-            $password, 
-            $additionalInfo
+            id: $id, 
+            publicId: $publicId, 
+            firstName: $firstName, 
+            middleName: $middleName, 
+            lastName: $lastName, 
+            gender: $gender, 
+            birthDate: $birthDate, 
+            jobTitles: $jobTitles, 
+            contactNumber: $contactNumber, 
+            email: $email, 
+            bio: $bio, 
+            profileLink: $profileLink, 
+            createdAt: $createdAt, 
+            confirmedAt: $confirmedAt, 
+            deletedAt: $deletedAt, 
+            password: $password, 
+            additionalInfo: $additionalInfo
         );
     }
 }

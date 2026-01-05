@@ -18,30 +18,33 @@ class Worker extends User
     private WorkerStatus $status;
 
     /**
-     * Constructor for the Worker class.
+     * Constructs a Worker instance.
      *
-     * Creates a new Worker instance with the specified attributes.
-     * Workers extend the base User class with additional worker-specific properties
-     * such as worker status.
+     * This constructor initializes a Worker object by calling the parent User constructor
+     * and setting Worker-specific properties such as defaultRate and status.
+     * It also validates the defaultRate and status using UserValidator.
      *
-     * @param int|null $id The internal database identifier
-     * @param UUID|null $publicId The public UUID identifier
-     * @param string $firstName Worker's first name
-     * @param string $middleName Worker's middle name
-     * @param string $lastName Worker's last name
-     * @param Gender $gender Worker's gender (enum)
-     * @param DateTime $birthDate Worker's date of birth
-     * @param JobTitleContainer $jobTitles Container for worker's job titles
-     * @param string $contactNumber Worker's contact phone number
-     * @param string $email Worker's email address
-     * @param string|null $bio Worker's biography or description
-     * @param string|null $profileLink Link to worker's profile
-     * @param float $defaultRate Default hourly rate for the worker
-     * @param WorkerStatus $status Current status of the worker (enum)
-     * @param DateTime $createdAt Timestamp when the worker was created
-     * @param DateTime|null $confirmedAt Timestamp when the worker was confirmed, or null if not confirmed
-     * @param DateTime|null $deletedAt Timestamp when the worker was deleted, or null
-     * @param array $additionalInfo Optional array of additional information
+     * @param int|null $id User ID
+     * @param UUID|null $publicId Public identifier
+     * @param string $firstName User's first name
+     * @param string|null $middleName User's middle name
+     * @param string $lastName User's last name 
+     * @param Gender $gender User's gender                  
+     * @param DateTime $birthDate User's birth date
+     * @param JobTitleContainer $jobTitles Container of job titles
+     * @param string $contactNumber User's contact number
+     * @param string $email User's email address
+     * @param string|null $bio User's biography
+     * @param string|null $profileLink User's profile link
+     * @param DateTime $createdAt Timestamp when the user was created
+     * @param float $defaultRate Worker's default hourly rate
+     * @param WorkerStatus $status Worker's current status
+     * @param string|null $password User's password (optional)
+     * @param DateTime|null $confirmedAt Timestamp when the user was confirmed (optional)
+     * @param DateTime|null $deletedAt Timestamp when the user was deleted (optional)
+     * @param array $additionalInfo Optional additional information (default: empty array)
+     * @throws ValidationException If validation of defaultRate or status fails
+     * @return void
      */
     public function __construct(
         ?int $id,
@@ -56,14 +59,19 @@ class Worker extends User
         string $email,
         ?string $bio,
         ?string $profileLink,
-        float $defaultRate,
-        WorkerStatus $status,
         DateTime $createdAt,
+
+        // Worker-specific properties
+        float $defaultRate = DEFAULT_RATE_MIN,
+        WorkerStatus $status = WorkerStatus::UNASSIGNED,
+
+        // Optional properties
+        ?string $password = null,
         ?DateTime $confirmedAt = null,
         ?DateTime $deletedAt = null,
-        array $additionalInfo = []
+        array $additionalInfo = [],
     ) {
-+        parent::__construct(
+        parent::__construct(
             id: $id,
             publicId: $publicId,
             firstName: $firstName,
@@ -71,7 +79,6 @@ class Worker extends User
             lastName: $lastName,
             gender: $gender,
             birthDate: $birthDate,
-            role: Role::WORKER,
             jobTitles: $jobTitles,
             contactNumber: $contactNumber,
             email: $email,
@@ -80,14 +87,16 @@ class Worker extends User
             createdAt: $createdAt,
             confirmedAt: $confirmedAt,
             deletedAt: $deletedAt,
-            password: null,
+            password: $password,
             additionalInfo: $additionalInfo
         );
-        
+
         $this->userValidator->validateDefaultRate($defaultRate);
         if ($this->userValidator->hasErrors()) {
             throw new ValidationException("Worker Validation Failed", $this->userValidator->getErrors());
         }
+        // Set role-based properties
+        $this->role = Role::WORKER;
         $this->defaultRate = $defaultRate;
         $this->status = $status;
     }
@@ -206,19 +215,19 @@ class Worker extends User
      *      - deletedAt: string|DateTime|null When the worker was deleted (optional)
      *      - additionalInfo: array (optional) Additional worker information
      * 
-     * @return self New Worker instance created from provided data
+     * @return static New Worker instance created from provided data
      */
-    public static function createPartial(array $data): Worker
+    public static function createPartial(array $data): static
     {
         // Normalize input keys to camelCase to support both snake_case and camelCase input
         $data = normalizeArrayKeysToCamelCase($data);
 
-        $partial = User::createPartial($data)->toWorker();
+        $partial = parent::createPartial($data);
 
         if (isset($data['defaultRate'])) {
             $partial->setDefaultRate($data['defaultRate']);
         } else {
-            $partial->setDefaultRate(0.00);
+            $partial->setDefaultRate(DEFAULT_RATE_MIN);
         }
 
         if (isset($data['status'])) {
@@ -280,9 +289,9 @@ class Worker extends User
      *      - deletedAt: string|DateTime|null When the worker was deleted (optional)
      *      - additionalInfo: array (optional) Additional worker information
      * 
-     * @return self New Worker instance created from provided data
+     * @return static New Worker instance created from provided data
      */
-    public static function fromArray(array $data): self
+    public static function fromArray(array $data): static
     {
         // Normalize input keys to camelCase to support both snake_case and camelCase input
         $data = normalizeArrayKeysToCamelCase($data);

@@ -3,7 +3,6 @@
 namespace App\Model;
 
 use App\Abstract\Model;
-use App\Container\JobTitleContainer;
 use App\Container\PhaseContainer;
 use App\Container\TaskContainer;
 use App\Dependent\Phase;
@@ -13,10 +12,10 @@ use App\Enumeration\WorkStatus;
 use App\Container\ProjectContainer;
 use App\Container\WorkerContainer;
 use App\Entity\Project;
-use App\Entity\User;
 use App\Entity\Task;
 use App\Dependent\Worker;
 use App\Core\Me;
+use App\Dependent\ProjectManager;
 use App\Dependent\ProjectReport;
 use App\Enumeration\Role;
 use App\Enumeration\WorkerStatus;
@@ -107,17 +106,24 @@ class ProjectModel extends Model
 
             $projects = new ProjectContainer();
             foreach ($result as $row) {
-                $row['manager'] = User::createPartial([
-                    'id'            => $row['u_id'],
-                    'public_id'     => $row['u_public_id'],
-                    'first_name'    => $row['first_name'],
-                    'middle_name'   => $row['middle_name'],
-                    'last_name'     => $row['last_name'],
-                    'gender'        => $row['gender'],
-                    'role'          => Role::PROJECT_MANAGER,
-                    'email'         => $row['email'],
-                    'profile_link'  => $row['profile_link'],
-                ]);
+                $row['manager'] = $row['role'] === Role::PROJECT_MANAGER->value
+                    ? ProjectManager::createPartial([
+                        'id'            => $row['u_id'],
+                        'public_id'     => $row['u_public_id'],
+                        'first_name'    => $row['first_name'],
+                        'middle_name'   => $row['middle_name'],
+                        'last_name'     => $row['last_name'],
+                        'gender'        => $row['gender'],
+                        'email'         => $row['email'],
+                        'profile_link'  => $row['profile_link'],
+                    ])
+                    : Worker::createPartial([
+                        'id'            => $row['u_id'],
+                        'public_id'     => $row['u_public_id'],
+                        'first_name'    => $row['first_name'],
+                        'middle_name'   => $row['middle_name'],
+                        'last_name'     => $row['last_name'],
+                    ]);
 
                 $projects->add(Project::createPartial($row));
             }
@@ -342,7 +348,7 @@ class ProjectModel extends Model
             $managerData = json_decode($result['project_manager'], true);
             $managerData['publicId'] = UUID::fromHex($managerData['public_id']);
             $managerData['role'] = Role::PROJECT_MANAGER;
-            $result['manager'] = User::createPartial($managerData);
+            $result['manager'] = ProjectManager::createPartial($managerData);
 
             $project = Project::createPartial($result);
 
@@ -530,7 +536,7 @@ class ProjectModel extends Model
             }
 
             // Build manager object
-            $result['manager'] = User::createPartial([
+            $result['manager'] = ProjectManager::createPartial([
                 'id'            => $result['u_id'],
                 'publicId'      => UUID::fromBinary($result['u_public_id']),
                 'firstName'     => $result['first_name'],

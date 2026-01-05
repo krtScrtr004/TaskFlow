@@ -41,7 +41,7 @@ class Me extends User
     public static function instantiate(ProjectManager|Worker|array $data): void
     {
         // Allow re-instantiation to update the Me instance with new data
-        self::$me =  ($data instanceof ProjectManager)
+        self::$me =  ($data instanceof ProjectManager || $data instanceof Worker)
             ? new self(
                 id: $data->getId(),
                 publicId: $data->getPublicId(),
@@ -57,6 +57,8 @@ class Me extends User
                 bio: $data->getBio(),
                 profileLink: $data->getProfileLink(),
                 createdAt: $data->getCreatedAt(),
+                confirmedAt: $data->getConfirmedAt(),
+                deletedAt: $data->getDeletedAt(),
                 additionalInfo: $data->getAdditionalInfo()
             )
             : self::$me = new self(
@@ -68,12 +70,28 @@ class Me extends User
                 gender: Gender::from($data['gender']),
                 birthDate: isset($data['birthDate']) ? new DateTime($data['birthDate']) : null,
                 role: Role::from($data['role']),
-                jobTitles: new JobTitleContainer(explode(',', $data['jobTitles'] ?? '')),
+                jobTitles: new JobTitleContainer(
+                    is_array($data['jobTitles'])
+                        ? $data['jobTitles']
+                        : explode(',', $data['jobTitles'] ?? '')
+                ),
                 contactNumber: $data['contactNumber'],
                 email: $data['email'],
                 bio: $data['bio'] ?? null,
                 profileLink: $data['profileLink'] ?? null,
-                createdAt: new DateTime($data['createdAt']),
+                createdAt: $data['createdAt'] instanceof DateTime
+                    ? $data['createdAt']
+                    : new DateTime($data['createdAt']),
+                confirmedAt: isset($data['confirmedAt'])
+                    ? ($data['confirmedAt'] instanceof DateTime
+                        ? $data['confirmedAt']
+                        : new DateTime($data['confirmedAt']))
+                    : null,
+                deletedAt: isset($data['deletedAt'])
+                    ? ($data['deletedAt'] instanceof DateTime
+                        ? $data['deletedAt']
+                        : new DateTime($data['deletedAt']))
+                    : null,
                 additionalInfo: $data['additionalInfo'] ?? null
             );
     }

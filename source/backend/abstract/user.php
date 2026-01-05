@@ -76,13 +76,13 @@ abstract class User implements Entity
         string $lastName,
         Gender $gender,
         DateTime $birthDate,
-        Role $role,
         JobTitleContainer $jobTitles,
         string $contactNumber,
         string $email,
         ?string $bio,
         ?string $profileLink,
         DateTime $createdAt,
+        ?Role $role = null,
         ?DateTime $confirmedAt = null,
         ?DateTime $deletedAt = null,
         ?string $password = null,
@@ -753,7 +753,6 @@ abstract class User implements Entity
             lastName: $defaults['lastName'],
             gender: $defaults['gender'],
             birthDate: $defaults['birthDate'],
-            role: $defaults['role'],
             jobTitles: $defaults['jobTitles'],
             contactNumber: $defaults['contactNumber'],
             email: $defaults['email'],
@@ -767,42 +766,6 @@ abstract class User implements Entity
         );
 
         return $instance;
-    }
-
-    /**
-     * Converts the User entity to a Worker entity.
-     *
-     * This method creates a new Worker instance using the current User's data.
-     * The Worker is created with:
-     * - All personal information from the User (names, gender, birth date, etc.)
-     * - Status automatically set to WorkerStatus::ASSIGNED
-     * - createdAt set to current DateTime
-     * - All other properties transferred directly from the User
-     *
-     * @return Worker New Worker instance with data from this User and status set to ASSIGNED
-     */
-    public function toWorker(): Worker
-    {
-        return new Worker(
-            id: $this->id,
-            publicId: $this->publicId,
-            firstName: $this->firstName,
-            middleName: $this->middleName,
-            lastName: $this->lastName,
-            gender: $this->gender,
-            birthDate: $this->birthDate,
-            jobTitles: $this->jobTitles,
-            contactNumber: $this->contactNumber,
-            email: $this->email,
-            bio: $this->bio,
-            profileLink: $this->profileLink,
-            defaultRate: DEFAULT_RATE_MIN,
-            status: WorkerStatus::ASSIGNED,
-            createdAt: new DateTime(),
-            confirmedAt: $this->confirmedAt,
-            deletedAt: $this->deletedAt,
-            additionalInfo: $this->additionalInfo
-        );
     }
 
     /**
@@ -899,9 +862,7 @@ abstract class User implements Entity
         $data = normalizeArrayKeysToCamelCase($data);
 
         $publicId = null;
-        if ($data['publicId'] instanceof UUID) {
-            $publicId = $data['publicId'];
-        } else if (is_string($data['publicId'])) {
+        if (isset(($data['publicId'])) && !($data['publicId'] instanceof UUID)) {
             $publicId = UUID::tryFromString(trimOrNull($data['publicId']));
         }
 
@@ -920,6 +881,8 @@ abstract class User implements Entity
         $jobTitles =  $data['jobTitles'];
         if (is_array($data['jobTitles']) && !empty($data['jobTitles'])) {
             $jobTitles = JobTitleContainer::fromArray($data['jobTitles']);
+        } elseif (is_string($data['jobTitles'])) {
+            $jobTitles = new JobTitleContainer(explode(',', $data['jobTitles']));
         }
 
         $createdAt = (is_string($data['createdAt']))
