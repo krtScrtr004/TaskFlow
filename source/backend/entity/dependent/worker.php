@@ -63,7 +63,7 @@ class Worker extends User
 
         // Worker-specific properties
         float $defaultRate = DEFAULT_RATE_MIN,
-        WorkerStatus $status = WorkerStatus::UNASSIGNED,
+        ?WorkerStatus $status = WorkerStatus::UNASSIGNED,
 
         // Optional properties
         ?string $password = null,
@@ -98,7 +98,7 @@ class Worker extends User
         // Set role-based properties
         $this->role = Role::WORKER;
         $this->defaultRate = $defaultRate;
-        $this->status = $status;
+        $this->status = $status ?? WorkerStatus::UNASSIGNED;
     }
 
     // GETTERS 
@@ -296,7 +296,7 @@ class Worker extends User
         // Normalize input keys to camelCase to support both snake_case and camelCase input
         $data = normalizeArrayKeysToCamelCase($data);
 
-        $user = User::fromArray($data);
+        $user = parent::createPartial($data);
 
         $defaultRate = $data['defaultRate'] ?? DEFAULT_RATE_MIN;
 

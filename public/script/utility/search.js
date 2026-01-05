@@ -68,9 +68,10 @@ function submit(e, searchBarForm) {
     }
 
     const searchFilter = searchBarForm?.querySelector('select.search-filter')
-    if (searchFilter) {
-        params.append('filter', searchFilter.value.trim())
-    }
+    const selectedOption = searchFilter.options[searchFilter.selectedIndex]
+    const optgroup = selectedOption ? selectedOption.closest('optgroup') : null
+    if (searchFilter && optgroup) 
+        params.append(optgroup.dataset.filterkey || 'filter', searchFilter.value.trim())
 
     params.append('offset', 0)
 

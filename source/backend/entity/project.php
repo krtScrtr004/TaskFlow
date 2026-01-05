@@ -671,10 +671,8 @@ class Project implements Entity
         }
 
         // Handle Project Manager conversion
-        if (isset($data['manager'])) {
-            $defaults['manager'] = is_array($data['manager'])
-                ? ProjectManager::createPartial($data['manager'])
-                : ProjectManager::createPartial([]);
+        if (isset($data['manager']) && is_array($data['manager'])) {
+            $defaults['manager'] = ProjectManager::createPartial($data['manager']);
         }
 
         // Handle TaskContainer conversion

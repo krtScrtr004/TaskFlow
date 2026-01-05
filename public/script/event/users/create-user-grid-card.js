@@ -16,9 +16,9 @@ export function createUserGridCard(user) {
     // Check if we're on the users page
     const isUsersPage = window.location.pathname.includes('users')
     
-    // Create card button
-    const card = document.createElement('button')
-    card.className = 'user-grid-card unset-button'
+    // Create card div
+    const card = document.createElement('div')
+    card.className = 'user-grid-card grid-card'
     card.dataset.userid = id
     
     // User Primary Info Section
@@ -26,18 +26,19 @@ export function createUserGridCard(user) {
     primaryInfo.className = 'user-primary-info flex-row flex-child-center-h'
     
     const profileImg = document.createElement('img')
-    profileImg.className = 'user-profile circle fit-cover'
+    profileImg.className = 'user-profile fit-cover'
     profileImg.src = profileLink
     profileImg.alt = name
     profileImg.title = name
     profileImg.loading = 'lazy'
-    profileImg.height = 40
+    profileImg.height = 42
     
     const nameContainer = document.createElement('div')
     nameContainer.className = 'flex-col'
     
     const userName = document.createElement('h3')
-    userName.className = 'user-name start-text'
+    userName.className = 'user-name start-text single-line-ellipsis'
+    userName.title = name
     userName.textContent = name
     
     const userId = document.createElement('p')

@@ -67,7 +67,7 @@ function userGridCard(ProjectManager|Worker $user): string
         <!-- User Primary Info -->
         <section class="user-primary-info flex-row flex-child-center-h">
             <!-- User Profile Picture -->
-            <img class="user-profile circle fit-cover" src="<?= $profileLink ?>" alt="<?= $name ?>" title="<?= $name ?>" loading="lazy" height="42">
+            <img class="user-profile fit-cover" src="<?= $profileLink ?>" alt="<?= $name ?>" title="<?= $name ?>" loading="lazy" height="42">
 
             <div class="flex-col">
                 <!-- Worker Name -->
@@ -135,13 +135,6 @@ function userGridCard(ProjectManager|Worker $user): string
                 <p class="single-line-ellipsis" title="<?= $contact ?>">Contact: <?= $contact ?></p>
             </div>
         </section>
-
-        <?php if (Role::isWorker($user->getRole())): ?>
-            <!-- Worker Status -->
-            <section class="user-status flex-col flex-child-end-h flex-child-end-v">
-                <div><?= WorkerStatus::badge($user->getStatus()) ?></div>
-            </section>
-        <?php endif; ?>
 
     </div>
     <?php

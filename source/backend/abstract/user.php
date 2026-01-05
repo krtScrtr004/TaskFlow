@@ -5,9 +5,7 @@ namespace App\Abstract;
 use App\Core\UUID;
 use App\Interface\Entity;
 use App\Enumeration\Gender;
-use App\Enumeration\WorkerStatus;
 use App\Enumeration\Role;
-use App\Dependent\Worker;
 use App\Container\JobTitleContainer;
 use App\Exception\ValidationException;
 use App\Validator\UserValidator;
@@ -91,19 +89,19 @@ abstract class User implements Entity
         try {
             $this->userValidator = new UserValidator();
             $this->userValidator->validateMultiple([
-                'firstName' => $firstName,
-                'middleName' => $middleName,
-                'lastName' => $lastName,
-                'gender' => $gender,
-                'birthDate' => $birthDate,
-                'role' => $role,
-                'jobTitles' => $jobTitles,
-                'contactNumber' => $contactNumber,
-                'email' => $email,
-                'bio' => $bio,
-                'profileLink' => $profileLink,
-                'createdAt' => $createdAt,
-                'additionalInfo' => $additionalInfo
+                'firstName'         => $firstName,
+                'middleName'        => $middleName,
+                'lastName'          => $lastName,
+                'gender'            => $gender,
+                'birthDate'         => $birthDate,
+                'role'              => $role,
+                'jobTitles'         => $jobTitles,
+                'contactNumber'     => $contactNumber,
+                'email'             => $email,
+                'bio'               => $bio,
+                'profileLink'       => $profileLink,
+                'createdAt'         => $createdAt,
+                'additionalInfo'    => $additionalInfo
             ]);
 
             if ($this->userValidator->hasErrors()) {
@@ -113,24 +111,25 @@ abstract class User implements Entity
             throw $th;
         }
 
-        $this->id = $id;
-        $this->publicId = $publicId;
-        $this->firstName = trimOrNull($firstName);
-        $this->middleName = trimOrNull($middleName);
-        $this->lastName = trimOrNull($lastName);
-        $this->gender = $gender;
-        $this->birthDate = $birthDate;
-        $this->role = $role;
-        $this->jobTitles = $jobTitles;
-        $this->contactNumber = trimOrNull($contactNumber);
-        $this->email = trimOrNull($email);
-        $this->bio = trimOrNull($bio);
-        $this->profileLink = trimOrNull($profileLink);
-        $this->createdAt = $createdAt;
-        $this->confirmedAt = $confirmedAt;
-        $this->deletedAt = $deletedAt;
-        $this->password = $password;
-        $this->additionalInfo = $additionalInfo;
+        $this->id               = $id;
+        $this->publicId         = $publicId;
+        $this->firstName        = trimOrNull($firstName);
+        $this->middleName       = trimOrNull($middleName);
+        $this->lastName         = trimOrNull($lastName);
+        $this->gender           = $gender;
+        $this->birthDate        = $birthDate;
+        $this->jobTitles        = $jobTitles;
+        $this->contactNumber    = trimOrNull($contactNumber);
+        $this->email            = trimOrNull($email);
+        $this->bio              = trimOrNull($bio);
+        $this->profileLink      = trimOrNull($profileLink);
+        $this->createdAt        = $createdAt;
+        $this->confirmedAt      = $confirmedAt;
+        $this->deletedAt        = $deletedAt;
+        $this->password         = $password;
+        $this->additionalInfo   = $additionalInfo;
+
+        if ($role !== null) $this->role = $role;  // Prevent overwriting role defined in the caller if not provided
     }
 
     // GETTERS
@@ -905,7 +904,6 @@ abstract class User implements Entity
             lastName: trimOrNull($data['lastName']),
             gender: $gender,
             birthDate: $birthDate,
-            role: $role,
             jobTitles: $jobTitles,
             contactNumber: trimOrNull($data['contactNumber']),
             email: trimOrNull($data['email']),

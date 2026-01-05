@@ -557,6 +557,7 @@ button > .text-w-icon {
 }
 
 .no-content-wall h3 {
+	color: var(--dark-white);
 	font-weight: 600;
 	text-align: center;
 }
@@ -610,7 +611,7 @@ button > .text-w-icon {
 	height: 5rem;
 	width: 5rem;
 	border-radius: var(--input-border-radius);
-	margin-right: 0.5rem;
+	margin-right: 1rem;
 }
 
 .user-info-card .user-name {

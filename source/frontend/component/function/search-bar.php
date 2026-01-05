@@ -47,7 +47,7 @@ function searchBar(
     }
 
     $searchKey = isset($_GET['key']) ? htmlspecialchars($_GET['key']) : '';
-    $searchFilter = htmlspecialchars($_GET['filter'] ?? 'all');
+    $searchFilter = htmlspecialchars($_GET['status'] ?? $_GET['role'] ?? $_GET['filter'] ?? 'all');
 
     ob_start();
     ?>
@@ -67,7 +67,7 @@ function searchBar(
                 <option value="all" <?= $searchFilter === 'all' ? 'selected' : '' ?>>All</option>
 
                 <?php foreach ($filterOptions as $group => $groups) { ?>
-                    <optgroup label="<?= ucwords(camelToSentenceCase($group)) ?>">
+                    <optgroup label="<?= ucwords(camelToSentenceCase($group)) ?>" data-filterkey="<?= sentenceToCamelCase($group) ?>">
                         <?php foreach ($groups as $value) { ?>
                             <option value="<?= sentenceToCamelCase($value) ?>" <?= $searchFilter === sentenceToCamelCase($value) ? 'selected' : '' ?>>
                                 <?= $value ?>

@@ -201,8 +201,8 @@ if (isset($projects)) {
 
             <div
                 class="no-projects-wall no-content-wall <?= $projects?->count() < 1 ? 'flex-col' : 'no-display' ?>">
-                <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No projects available" title="No projects available"
-                    height="70">
+                <img src="<?= ICON_PATH . 'empty_dw.svg' ?>" alt="No projects available" title="No projects available"
+                    height="80">
                 <h3 class="center-text">No projects found.</h3>
             </div>
         </section>

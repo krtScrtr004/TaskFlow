@@ -17,6 +17,7 @@ use App\Model\ProjectModel;
 use App\Model\UserModel;
 use App\Enumeration\Role;
 use App\Enumeration\Gender;
+use App\Enumeration\WorkerStatus;
 use App\Exception\NotFoundException;
 use App\Utility\PictureUpload;
 use App\Utility\ProjectManagerPerformanceCalculator;
@@ -126,7 +127,7 @@ class UserEndpoint extends Endpoint
             }
 
             $status = isset($_GET['status']) 
-                ? Role::tryFrom(trim($_GET['status'])) 
+                ? WorkerStatus::tryFrom(trim($_GET['status'])) 
                 : null;
             $role = isset($_GET['role']) 
                 ? Role::tryFrom(trim($_GET['role'])) 
@@ -134,8 +135,8 @@ class UserEndpoint extends Endpoint
 
             $users = UserModel::search(
                 isset($_GET['key']) ? trim($_GET['key']) : '',
-                $role instanceof Role ? $role : null,
-                $status instanceof Role ? $status : null,
+                $role,
+                $status,
                 [
                     'excludeProjectTerminated' => isset($_GET['excludeProjectTerminated']) 
                         ? filter_var($_GET['excludeProjectTerminated'], FILTER_VALIDATE_BOOLEAN) 

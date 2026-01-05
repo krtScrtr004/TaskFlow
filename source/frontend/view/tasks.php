@@ -73,7 +73,7 @@ if (!isset($tasks)) {
             <?php if ($tasks->count() === 0 && !$isAddable): ?>
                 <div
                     class="no-tasks-wall no-content-wall <?= $tasks->count() > 0 ? 'no-display' : 'flex-col' ?>">
-                    <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No tasks available" title="No tasks available"
+                    <img src="<?= ICON_PATH . 'empty_dw.svg' ?>" alt="No tasks available" title="No tasks available"
                         height="70">
                     <h3 class="center-text">No tasks available for this project.</h3>
                 </div>

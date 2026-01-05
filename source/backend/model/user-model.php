@@ -75,10 +75,45 @@ class UserModel extends Model
         try {
             Csrf::protect();
 
+
             $queryString =
                 "SELECT 
                     u.*,
                     GROUP_CONCAT(ujt.title) AS job_titles,
+                    (
+                        CASE 
+                            WHEN u.role = :projectManagerRole 
+                            THEN ( 
+                                CASE 
+                                    WHEN ( 
+                                        EXISTS( 
+                                            SELECT 1 
+                                            FROM 
+                                                `project` AS p 
+                                            WHERE 
+                                                p.manager_id = u.id 
+                                            AND 
+                                                (
+                                                    p.status = :pendingStatus 
+                                                    OR p.status = :ongoingStatus
+                                                    OR p.status = :delayedStatus
+                                                ) 
+                                        )  
+                                    ) 
+                                    THEN 'assigned'
+                                END 
+                            ) 
+                            WHEN u.role = :workerRole
+                            THEN ( 
+                                SELECT 
+                                    pw.status 
+                                FROM 
+                                    `project_worker` AS pw
+                                WHERE 
+                                pw.worker_id = u.id 
+                            ) 
+                        END
+                    ) AS status,
                     (
                         SELECT 
                             COUNT(DISTINCT p.id)
@@ -146,10 +181,15 @@ class UserModel extends Model
                 $paramOptions
             );
 
-            $params[':completedStatus'] = WorkStatus::COMPLETED->value;
-            $params[':cancelledStatus'] = WorkStatus::CANCELLED->value;
-            $params[':terminatedStatus1'] = WorkerStatus::TERMINATED->value;
-            $params[':terminatedStatus2'] = WorkerStatus::TERMINATED->value;
+            $params[':projectManagerRole']  = Role::PROJECT_MANAGER->value;
+            $params[':workerRole']          = Role::WORKER->value;
+            $params[':pendingStatus']       = WorkStatus::PENDING->value;
+            $params[':ongoingStatus']       = WorkStatus::ONGOING->value;
+            $params[':delayedStatus']       = WorkStatus::DELAYED->value;
+            $params[':completedStatus']     = WorkStatus::COMPLETED->value;
+            $params[':cancelledStatus']     = WorkStatus::CANCELLED->value;
+            $params[':terminatedStatus1']   = WorkerStatus::TERMINATED->value;
+            $params[':terminatedStatus2']   = WorkerStatus::TERMINATED->value;
 
             $statement = $instance->connection->prepare($query);
             $statement->execute($params);

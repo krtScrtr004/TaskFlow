@@ -87,7 +87,6 @@ class ProjectController implements Controller
                 $instance->updatePhaseStatus($fullProjectInfo);
             }
 
-
             $instance->renderDashboard($fullProjectInfo);
         } catch (NotFoundException $e) {
             ErrorController::notFound();

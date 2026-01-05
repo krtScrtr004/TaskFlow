@@ -395,9 +395,9 @@ require_once COMPONENT_PATH . 'template/add-worker-table.php';
                     <!-- No Workers Wall -->
                     <div
                         class="no-workers-wall no-content-wall <?= count($projectData['workers']) > 0 ? 'no-display' : 'flex-col' ?>">
-                        <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No workers assigned" title="No workers assigned"
-                            height="70">
-                        <h3 class="center-text">No worker(s) found.</h3>
+                        <img src="<?= ICON_PATH . 'empty_dw.svg' ?>" alt="No workers assigned" title="No workers assigned"
+                            height="50">
+                        <p class="center-text dark-white-text">No worker(s) found.</p>
                     </div>
                 </div>
 

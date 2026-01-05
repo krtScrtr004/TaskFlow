@@ -558,7 +558,7 @@ class ProjectWorkerModel extends Model
                     `project_worker` AS pw
                 ON
                     u.id = pw.worker_id
-                INNER JOIN
+                LEFT JOIN
                     `project` AS p
                 ON
                     pw.project_id = p.id
@@ -569,7 +569,7 @@ class ProjectWorkerModel extends Model
                 WHERE
                     $where
                 GROUP BY
-                    u.id, p.id
+                    u.id, p.id, pw.status, pw.default_rate
                 LIMIT 1 ";
             $statement = $instance->connection->prepare($query);
             $statement->execute($params);

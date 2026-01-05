@@ -44,19 +44,13 @@ class UserController implements Controller
                 exit();
             }
 
-            $filter = null;
-            if (isset($_GET['filter']) && trim($_GET['filter']) !== '' && strcasecmp($_GET['filter'], 'all') !== 0) {
-                try {
-                    $filter = Role::from($_GET['filter']);
-                } catch (ValueError $e) {
-                    $filter = WorkerStatus::from($_GET['filter']);
-                }
-            }
+            $role = isset($_GET['role']) ? Role::tryFrom($_GET['role']) : null;
+            $status = isset($_GET['status']) ? WorkerStatus::tryFrom($_GET['status']) : null;
 
             $users = UserModel::search(
                 isset($_GET['key']) ? trim($_GET['key']) : '',
-                $filter instanceof Role ? $filter : null,
-                $filter instanceof WorkerStatus ? $filter : null,
+                $role,
+                $status,
                 [
                     'limit'     => isset($_GET['limit']) ? (int)$_GET['limit'] : 10,
                     'offset'    => isset($_GET['offset']) ? (int)$_GET['offset'] : 0

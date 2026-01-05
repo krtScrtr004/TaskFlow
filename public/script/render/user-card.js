@@ -131,9 +131,11 @@ function addInfoToCard(card, user) {
         toggleElementClass(defaultRateContainer, ['hide'], ['show'])
         userDefaultRate.textContent = ''
 
-        toggleElementClass(removeWorkerButton, ['no-display'])
-        toggleElementClass(terminateWorkerButton, ['no-display'])
-        toggleElementClass(seeWorkerTaskRedirect, ['no-display'], ['center-child'])
+        if (isProjectPage) {
+            toggleElementClass(removeWorkerButton, ['no-display'])
+            toggleElementClass(terminateWorkerButton, ['no-display'])
+            toggleElementClass(seeWorkerTaskRedirect, ['no-display'], ['center-child'])
+        }
 
         redirectLink
             ? redirectLink.href = '#'
@@ -145,9 +147,11 @@ function addInfoToCard(card, user) {
             userDefaultRate.textContent = `₱ ${formatNumber(user.defaultRate) ?? 0}`
         }
 
-        toggleElementClass(removeWorkerButton, [], ['no-display'])
-        toggleElementClass(terminateWorkerButton, [], ['no-display'])
-        toggleElementClass(seeWorkerTaskRedirect, ['center-child'], ['no-display'])
+        if (isProjectPage) {
+            toggleElementClass(removeWorkerButton, [], ['no-display'])
+            toggleElementClass(terminateWorkerButton, [], ['no-display'])
+            toggleElementClass(seeWorkerTaskRedirect, ['center-child'], ['no-display'])
+        }
 
         redirectLink
             ? redirectLink.href = rootUrl + user.id
@@ -156,29 +160,21 @@ function addInfoToCard(card, user) {
 
     if (shouldShowProjects) {
         // Show project statistics
-        projectElements.total.classList.remove('no-display')
-        projectElements.total.classList.add('flex-col', 'flex-child-center-h')
-        projectElements.completed.classList.remove('no-display')
-        projectElements.completed.classList.add('flex-col', 'flex-child-center-h')
+        toggleElementClass(projectElements.total, ['flex-col', 'flex-child-center-h'], ['no-display'])
+        toggleElementClass(projectElements.completed, ['flex-col', 'flex-child-center-h'], ['no-display'])
 
-        taskElements.total.classList.add('no-display')
-        taskElements.total.classList.remove('flex-col', 'flex-child-center-h')
-        taskElements.completed.classList.add('no-display')
-        taskElements.completed.classList.remove('flex-col', 'flex-child-center-h')
+        toggleElementClass(taskElements.total, ['no-display'], ['flex-col', 'flex-child-center-h'])
+        toggleElementClass(taskElements.completed, ['no-display'], ['flex-col', 'flex-child-center-h'])
 
         projectElements.totalValue.textContent = user.additionalInfo.totalProjects ?? 0
         projectElements.completedValue.textContent = user.additionalInfo.completedProjects ?? 0
     } else {
         // Show task statistics
-        projectElements.total.classList.remove('flex-col', 'flex-child-center-h')
-        projectElements.total.classList.add('no-display')
-        projectElements.completed.classList.remove('flex-col', 'flex-child-center-h')
-        projectElements.completed.classList.add('no-display')
+        toggleElementClass(projectElements.total, ['no-display'], ['flex-col', 'flex-child-center-h'])
+        toggleElementClass(projectElements.completed, ['no-display'], ['flex-col', 'flex-child-center-h'])
 
-        taskElements.total.classList.remove('no-display')
-        taskElements.total.classList.add('flex-col', 'flex-child-center-h')
-        taskElements.completed.classList.remove('no-display')
-        taskElements.completed.classList.add('flex-col', 'flex-child-center-h')
+        toggleElementClass(taskElements.total, ['flex-col', 'flex-child-center-h'], ['no-display'])
+        toggleElementClass(taskElements.completed, ['flex-col', 'flex-child-center-h'], ['no-display'])
 
         taskElements.totalValue.textContent = user.additionalInfo.totalTasks ?? 0
         taskElements.completedValue.textContent = user.additionalInfo.completedTasks ?? 0
