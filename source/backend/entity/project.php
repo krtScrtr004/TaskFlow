@@ -11,6 +11,7 @@ use App\Container\WorkerContainer;
 use App\Container\PhaseContainer;
 use App\Entity\User;
 use App\Core\UUID;
+use App\Dependent\ProjectManager;
 use App\Enumeration\Role;
 use App\Exception\ValidationException;
 use App\Validator\UuidValidator;
@@ -23,7 +24,7 @@ class Project implements Entity
     private UUID $publicId;
     private string $name;
     private ?string $description;
-    private User $manager;
+    private ProjectManager $manager;
     private float $budget;
     private int $maxWorkers;
     private ?TaskContainer $tasks;
@@ -48,7 +49,7 @@ class Project implements Entity
      * @param UUID $publicId The public identifier for the project
      * @param string $name Project name (3-255 characters)
      * @param string|null $description Project description (5-500 characters) (optional)
-     * @param User $manager The project manager (User object)
+     * @param ProjectManager $manager The project manager (ProjectManager object)
      * @param float $budget Project budget (0-1,000,000)
      * @param TaskContainer|null $tasks Container of tasks associated with the project (optional)
      * @param WorkerContainer $workers Container of workers assigned to the project
@@ -67,7 +68,7 @@ class Project implements Entity
         UUID $publicId,
         string $name,
         string $description,
-        User $manager,
+        ProjectManager $manager,
         float $budget,
         int $maxWorkers,
         ?TaskContainer $tasks,
@@ -191,9 +192,9 @@ class Project implements Entity
     /**
      * Gets the project manager.
      *
-     * @return User The User object representing the project manager
+     * @return ProjectManager The ProjectManager object representing the project manager
      */
-    public function getManager(): User
+    public function getManager(): ProjectManager
     {
         return $this->manager;
     }
@@ -367,14 +368,11 @@ class Project implements Entity
     /**
      * Sets the project manager.
      *
-     * @param User $manager The User object representing the project manager
+     * @param ProjectManager $manager The ProjectManager object representing the project manager
      * @return void
      */
-    public function setManager(User $manager): void
+    public function setManager(ProjectManager $manager): void
     {
-        if (!Role::isProjectManager($manager)) {
-            throw new ValidationException("User does not have Project Manager role");
-        }
         $this->manager = $manager;
     }
 
@@ -628,7 +626,7 @@ class Project implements Entity
      *      - publicId: string|UUID|null Public identifier
      *      - name: string Project name
      *      - description: string|null Project description
-     *      - manager: array|User|null Project manager information
+     *      - manager: array|ProjectManager|null Project manager information
      *      - maxWorkers: int|null Maximum number of workers
      *      - budget: float|int|null Project budget
      *      - tasks: array|TaskContainer|null Project tasks
@@ -653,7 +651,7 @@ class Project implements Entity
             'publicId'                      => $data['publicId'] ?? UUID::get(),
             'name'                          => $data['name'] ?? 'Untitled Project',
             'description'                   => $data['description'] ?? 'No description provided',
-            'manager'                       => $data['manager'] ?? User::createPartial([]),
+            'manager'                       => $data['manager'] ?? ProjectManager::createPartial([]),
             'maxWorkers'                    => $data['maxWorkers'] ?? WORKER_COUNT_MIN,
             'budget'                        => $data['budget'] ?? BUDGET_MIN,
             'tasks'                         => $data['tasks'] ?? null,
@@ -672,11 +670,11 @@ class Project implements Entity
             $defaults['publicId'] = UUID::tryFromString(trimOrNull($data['publicId']));
         }
 
-        // Handle User/Manager conversion
-        if (isset($data['manager']) && !($data['manager'] instanceof User)) {
+        // Handle Project Manager conversion
+        if (isset($data['manager'])) {
             $defaults['manager'] = is_array($data['manager'])
-                ? User::createPartial($data['manager'])
-                : User::createPartial([]);
+                ? ProjectManager::createPartial($data['manager'])
+                : ProjectManager::createPartial([]);
         }
 
         // Handle TaskContainer conversion
@@ -852,8 +850,8 @@ class Project implements Entity
             ? (int) $data['maxWorkers']
             : $data['maxWorkers'];
 
-        $manager = (!($data['manager'] instanceof User))
-            ? User::fromArray($data['manager'])
+        $manager = (!($data['manager'] instanceof ProjectManager))
+            ? ProjectManager::fromArray($data['manager'])
             : $data['manager'];
 
         $tasks = (!($data['tasks'] instanceof TaskContainer))
@@ -893,7 +891,7 @@ class Project implements Entity
             publicId: $publicId,
             name: trimOrNull($data['name']),
             description: trimOrNull($data['description']),
-            manager: User::fromArray($data['manager']),
+            manager: $manager,
             maxWorkers: $maxWorkers,
             budget: $data['budget'],
             tasks: $tasks,

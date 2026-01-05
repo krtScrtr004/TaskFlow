@@ -5,6 +5,12 @@ namespace App\Interface;
 use JsonSerializable;
 
 interface Entity extends JsonSerializable {
+    
+    /**
+     * Specifies data which should be serialized to JSON.
+     *
+     * @return array The data to be serialized
+     */
     public function jsonSerialize(): array;
 
     /**
