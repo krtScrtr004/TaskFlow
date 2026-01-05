@@ -70,7 +70,7 @@ class ProjectController implements Controller
             $instance = new self();
 
             $fullProjectInfo = null;
-            $activeProject = (Role::isProjectManager(Me::getInstance()))
+            $activeProject = (Role::isProjectManager(Me::getInstance()->getRole()))
                 ? ProjectModel::findManagerActiveProjectByManagerId(Me::getInstance()->getId())
                 : ProjectModel::findWorkerActiveProjectByWorkerId(Me::getInstance()->getId());
 

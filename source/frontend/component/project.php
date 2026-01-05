@@ -87,7 +87,7 @@ require_once COMPONENT_PATH . 'template/add-worker-table.php';
                     </div>
                 </div>
 
-                <?php if (Role::isProjectManager(Me::getInstance())): ?>
+                <?php if (Role::isProjectManager(Me::getInstance()->getRole())): ?>
                     <div class="edit-project-container flex-row-reverse">
                         <!-- Edit Project -->
                         <a class="edit-project" href="<?= REDIRECT_PATH . 'edit-project/' . $projectData['id'] ?>">
@@ -343,7 +343,7 @@ require_once COMPONENT_PATH . 'template/add-worker-table.php';
                         </div>
                     </a>
 
-                    <?php if (Role::isProjectManager(Me::getInstance()) && $projectData['status'] !== WorkStatus::COMPLETED && $projectData['status'] !== WorkStatus::CANCELLED): ?>
+                    <?php if (Role::isProjectManager(Me::getInstance()->getRole()) && $projectData['status'] !== WorkStatus::COMPLETED && $projectData['status'] !== WorkStatus::CANCELLED): ?>
                         <button id="cancel_project_button" type="button" class="unset-button" href="">
                             <div class="text-w-icon">
                                 <img src="<?= ICON_PATH . 'close_r.svg' ?>" alt="Cancel Project" title="Cancel Project" height="12">
@@ -403,7 +403,7 @@ require_once COMPONENT_PATH . 'template/add-worker-table.php';
 
                 <!-- Add Worker Button -->
                 <?php if (
-                    Role::isProjectManager(Me::getInstance()) &&
+                    Role::isProjectManager(Me::getInstance()->getRole()) &&
                     $projectData['status'] !== WorkStatus::COMPLETED &&
                     $projectData['status'] !== WorkStatus::CANCELLED
                 ): ?>

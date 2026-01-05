@@ -68,7 +68,7 @@ class WorkerContainer extends Container
      */
     public function add($item): void
     {
-        if (!Role::isWorker($item)) {
+        if (!Role::isWorker($item->getRole())) {
             throw new InvalidArgumentException("Only users with the 'worker' role can be added as project workers.");
         }
 

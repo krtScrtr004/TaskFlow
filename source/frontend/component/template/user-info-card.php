@@ -111,7 +111,7 @@ use App\Enumeration\WorkStatus;
         $workStatus = $projectData['status'] ?? $taskData['status'] ?? null;
         if (
             !$isUsersPage &&
-            Role::isProjectManager(Me::getInstance()) &&
+            Role::isProjectManager(Me::getInstance()->getRole()) &&
             $workStatus !== WorkStatus::COMPLETED &&
             $workStatus !== WorkStatus::CANCELLED
         ):

@@ -34,7 +34,7 @@ use App\Middleware\Csrf;
         if (!isset($project)) {
             $createProject = '';
 
-            if (Role::isProjectManager(Me::getInstance())) {
+            if (Role::isProjectManager(Me::getInstance()->getRole())) {
                 // Only project managers can create projects
                 $createProject = '<a href="' . REDIRECT_PATH . 'create-project" class="blue-text">Create Project</a>';
             }
@@ -60,7 +60,7 @@ use App\Middleware\Csrf;
         <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'create-worker-card.js' ?>" defer></script>
         <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'search-worker.js' ?>" defer></script>
         <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'infinite-scroll-workers.js' ?>" defer></script>
-        <?php if (Role::isProjectManager(Me::getInstance())): ?>
+        <?php if (Role::isProjectManager(Me::getInstance()->getRole())): ?>
             <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'remove-terminate-worker.js' ?>" defer></script>
             <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'cancel.js' ?>" defer></script>
             <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'project' . DS . 'open.js' ?>" defer></script>

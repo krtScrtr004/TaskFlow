@@ -16,7 +16,7 @@ $projectData = [
     'status'    => $project->getStatus()
 ];
 
-$isAddable = Role::isProjectManager(Me::getInstance()) && 
+$isAddable = Role::isProjectManager(Me::getInstance()->getRole()) && 
             $projectData['status'] !== WorkStatus::COMPLETED && 
             $projectData['status'] !== WorkStatus::CANCELLED;
 

@@ -17,7 +17,6 @@ use App\Model\ProjectModel;
 use App\Model\UserModel;
 use App\Enumeration\Role;
 use App\Enumeration\Gender;
-use App\Enumeration\WorkStatus;
 use App\Exception\NotFoundException;
 use App\Utility\PictureUpload;
 use App\Utility\ProjectManagerPerformanceCalculator;
@@ -71,11 +70,11 @@ class UserEndpoint extends Endpoint
 
             $user = UserModel::findById($userId);
             if (!$user) {
-                Response::error('User not found.', [], 404);
+                throw new NotFoundException('User not found.');
             } else {
                 $projectHistory = $user->getAdditionalInfo('projectHistory');
                 if (count($projectHistory?->getItems() ?? []) > 0) {
-                    $performance = (Role::isProjectManager($user))  
+                    $performance = (Role::isProjectManager($user->getRole()))  
                         ? ProjectManagerPerformanceCalculator::calculate($projectHistory)
                         : WorkerPerformanceCalculator::calculate($projectHistory);
                     $user->addAdditionalInfo('performance', $performance['overallScore']);
@@ -376,7 +375,7 @@ class UserEndpoint extends Endpoint
             }
 
             // Check if user is assigned to any active projects
-            $hasActiveProject = Role::isProjectManager($user)
+            $hasActiveProject = Role::isProjectManager($user->getRole())
                 ? ProjectModel::findManagerActiveProjectByManagerId($user->getId())
                 : ProjectModel::findWorkerActiveProjectByWorkerId($user->getId());
             if ($hasActiveProject) {

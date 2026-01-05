@@ -77,8 +77,8 @@ enum Role: string {
      *
      * @return bool True if the user's role equals self::PROJECT_MANAGER, false otherwise.
      */
-    public static function isProjectManager(User $user): bool {
-        return $user->getRole() === self::PROJECT_MANAGER;
+    public static function isProjectManager(self $role): bool {
+        return $role === self::PROJECT_MANAGER;
     }
 
     /**
@@ -91,7 +91,7 @@ enum Role: string {
      *
      * @return bool True if the user's role is equal to self::WORKER, false otherwise.
      */
-    public static function isWorker(User $user): bool {
-        return $user->getRole() === self::WORKER;
+    public static function isWorker(self $role): bool {
+        return $role === self::WORKER;
     }
 }

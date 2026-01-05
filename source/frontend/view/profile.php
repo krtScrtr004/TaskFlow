@@ -79,7 +79,7 @@ $myData = [
                     <!-- Role Chip -->
                     <div class="role-chip flex-col white-bg">
                         <div class="text-w-icon">
-                            <?php if (Role::isProjectManager($me)): ?>
+                            <?php if (Role::isProjectManager($me->getRole())): ?>
                                 <img src="<?= ICON_PATH . 'manager_b.svg' ?>" alt="Project Manager" title="Project Manager"
                                     height="20">
                             <?php else: ?>

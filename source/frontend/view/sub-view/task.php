@@ -172,7 +172,7 @@ $worksOn = TaskWorkerModel::worksOn($task->getId(), Me::getInstance()->getId(), 
                         </button>
                     <?php endif; ?>
 
-                    <?php if (Role::isProjectManager(Me::getInstance())): ?>
+                    <?php if (Role::isProjectManager(Me::getInstance()->getRole())): ?>
                         <!-- Edit Task Button -->
                         <button id="edit_task_button" type="button" class="blue-bg">
                             <div class="text-w-icon">
@@ -227,7 +227,7 @@ $worksOn = TaskWorkerModel::worksOn($task->getId(), Me::getInstance()->getId(), 
                 </table>
             </div>
 
-            <?php if (Role::isProjectManager(Me::getInstance()) && $isTaskEditable): ?>
+            <?php if (Role::isProjectManager(Me::getInstance()->getRole()) && $isTaskEditable): ?>
                 <!-- Add Worker Button -->
                 <button id="add_worker_button" type="button" class="transparent-bg">
                     <div class="text-w-icon">

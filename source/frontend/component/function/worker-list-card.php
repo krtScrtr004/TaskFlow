@@ -57,7 +57,7 @@ function userListCard(User|Worker $user): string
         </div>
 
         <?php
-        if (Role::isWorker($user)):
+        if (Role::isWorker($user->getRole())):
             $defaultRate    = $user instanceof Worker && $user->getDefaultRate()
                 ? htmlspecialchars(formatNumber($user->getDefaultRate()))
                 : DEFAULT_RATE_MIN;

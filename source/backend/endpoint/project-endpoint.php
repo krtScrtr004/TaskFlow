@@ -188,7 +188,7 @@ class ProjectEndpoint extends Endpoint
             }
             Csrf::protect();
 
-            if (!Role::isProjectManager(Me::getInstance())) {
+            if (!Role::isProjectManager(Me::getInstance()->getRole())) {
                 throw new ForbiddenException('Only Project Managers can create projects.');
             }
 
@@ -387,7 +387,7 @@ class ProjectEndpoint extends Endpoint
             }
             Csrf::protect();
 
-            if (!Role::isProjectManager(Me::getInstance())) {
+            if (!Role::isProjectManager(Me::getInstance()->getRole())) {
                 throw new ForbiddenException('Only Project Managers can edit projects.');
             }
 

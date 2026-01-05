@@ -26,7 +26,7 @@ $statisticsData = [
 
 if (isset($projects)) {
     $userInfo = UserModel::findById(Me::getInstance()->getId());
-    $calculateStatistics = Role::isProjectManager(Me::getInstance())
+    $calculateStatistics = Role::isProjectManager(Me::getInstance()->getRole())
         ? ProjectManagerPerformanceCalculator::calculate($userInfo->getAdditionalInfo('projectHistory'))
         : WorkerPerformanceCalculator::calculate($userInfo->getAdditionalInfo('projectHistory'));
     $statisticsData['performance'] = htmlspecialchars(formatNumber($calculateStatistics['overallScore']));
@@ -120,7 +120,7 @@ if (isset($projects)) {
                     </div>
                 </div>
 
-                <?php if (Role::isWorker(Me::getInstance())): ?>
+                <?php if (Role::isWorker(Me::getInstance()->getRole())): ?>
                     <!-- Terminated -->
                     <div class="cancel-terminate orange-bg flex-col flex-child-center-v">
                         <h3 class="start-text">Terminated</h3>

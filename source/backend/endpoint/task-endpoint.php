@@ -286,7 +286,7 @@ class TaskEndpoint extends Endpoint
             }
             Csrf::protect();
 
-            if (!Role::isProjectManager(Me::getInstance())) {
+            if (!Role::isProjectManager(Me::getInstance()->getRole())) {
                 throw new ForbiddenException('Only Project Managers are allowed to add tasks.');
             }
 
@@ -414,7 +414,7 @@ class TaskEndpoint extends Endpoint
 
             $projectManagerOnly = ['name', 'description', 'priority', 'startDateTime', 'completionDateTime'];
             foreach ($projectManagerOnly as $field) {
-                if (isset($data[$field]) && !Role::isProjectManager(Me::getInstance())) {
+                if (isset($data[$field]) && !Role::isProjectManager(Me::getInstance()->getRole())) {
                     throw new ForbiddenException("Only Project Managers are allowed to edit {$field} field.");
                 }
             }
