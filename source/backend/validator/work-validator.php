@@ -3,7 +3,9 @@
 namespace App\Validator;
 
 use App\Abstract\Validator;
+use App\Exception\ValidationException;
 use DateTime;
+use InvalidArgumentException;
 
 class WorkValidator extends Validator
 {
@@ -19,19 +21,13 @@ class WorkValidator extends Validator
      * - "Name must be between {NAME_MIN} and {NAME_MAX} characters long." when the length check fails or name is null/empty.
      * - "Name contains three or more consecutive special characters." when the consecutive-special-character check fails.
      *
-     * @param string|null $name The name to validate. May be null.
+     * @param string $name The name to validate.
      *
      * @return void
      */
-    public function validateName(?string $name): void
+    public function validateName(string $name): void
     {
-        if ($name === null || strlen(trim($name)) < NAME_MIN || strlen(trim($name)) > NAME_MAX) {
-            $this->errors[] = 'Name must be between ' . NAME_MIN . ' and ' . NAME_MAX . ' characters long.';
-        }
-
-        if ($this->hasConsecutiveSpecialChars($name)) {
-            $this->errors[] = 'Name contains three or more consecutive special characters.';
-        }
+        $this->iValidateName($name);
     }
 
     /**
@@ -41,7 +37,7 @@ class WorkValidator extends Validator
      * - Trims surrounding whitespace and ensures the resulting length is between LONG_TEXT_MIN and LONG_TEXT_MAX.
      * - Verifies the description does not contain three or more consecutive special characters by delegating to hasConsecutiveSpecialChars().
      *
-     * @param string|null $description The description to validate; pass null to skip validation.
+     * @param string $description The description to validate.
      *
      * @return void
      *
@@ -56,15 +52,9 @@ class WorkValidator extends Validator
      * - LONG_TEXT_MIN and LONG_TEXT_MAX are expected to be defined constants.
      * - hasConsecutiveSpecialChars() is a class helper used to detect consecutive special characters.
      */
-    public function validateDescription(?string $description): void
+    public function validateDescription(string $description): void
     {
-        if ($description !== null && (strlen(trim($description)) < LONG_TEXT_MIN || strlen(trim($description)) > LONG_TEXT_MAX)) {
-            $this->errors[] = 'Description must be between ' . LONG_TEXT_MIN . ' and ' . LONG_TEXT_MAX . ' characters long.';
-        }
-
-        if ($description !== null && $this->hasConsecutiveSpecialChars($description)) {
-            $this->errors[] = 'Description contains three or more consecutive special characters.';
-        }
+        $this->iValidateLongMessage($description, ['fieldLabel' => 'Description']);
     }
 
     /**
@@ -80,9 +70,8 @@ class WorkValidator extends Validator
      */
     public function validateMaxWorkers(int $workersCount): void
     {
-        if ($workersCount < WORKER_COUNT_MIN || $workersCount > WORKER_COUNT_MAX) {
+        if ($workersCount < WORKER_COUNT_MIN || $workersCount > WORKER_COUNT_MAX) 
             $this->errors[] = 'Maximum number of workers must be between ' . WORKER_COUNT_MIN . ' and ' . WORKER_COUNT_MAX . '.';
-        }
     }
 
     /**
@@ -92,15 +81,14 @@ class WorkValidator extends Validator
      * within the acceptable range defined by BUDGET_MIN and BUDGET_MAX constants.
      * If validation fails, an error message is added to the errors array.
      *
-     * @param mixed $budget The budget value to validate
+     * @param float $budget The budget value to validate
      *
      * @return void
      */
-    public function validateBudget($budget): void
+    public function validateBudget(float $budget): void
     {
-        if ($budget === null || !is_numeric($budget) || $budget < BUDGET_MIN || $budget > BUDGET_MAX) {
+        if ($budget < BUDGET_MIN || $budget > BUDGET_MAX) 
             $this->errors[] = 'Budget must be a number between ' . BUDGET_MIN . ' and ' . BUDGET_MAX . '.';
-        }
     }
 
     /**
@@ -116,9 +104,8 @@ class WorkValidator extends Validator
      */
     public function validateContingencyRate(float $contingencyRate): void
     {
-        if ($contingencyRate < CONTINGENCY_RATE_MIN || $contingencyRate > CONTINGENCY_RATE_MAX) {
+        if ($contingencyRate < CONTINGENCY_RATE_MIN || $contingencyRate > CONTINGENCY_RATE_MAX)
             $this->errors[] = 'Contingency rate must be between ' . CONTINGENCY_RATE_MIN . '% and ' . CONTINGENCY_RATE_MAX . '%.';
-        }
     }
 
     /**
@@ -135,17 +122,7 @@ class WorkValidator extends Validator
      */
     public function validateBudgetNote(?string $budgetNote): void
     {
-        if ($budgetNote === null || empty(trim($budgetNote))) {
-            return;
-        }
-
-        if ((strlen(trim($budgetNote)) < LONG_TEXT_MIN || strlen(trim($budgetNote)) > LONG_TEXT_MAX)) {
-            $this->errors[] = 'Budget note must be between ' . LONG_TEXT_MIN . ' and ' . LONG_TEXT_MAX . ' characters long.';
-        }
-
-        if ($this->hasConsecutiveSpecialChars($budgetNote)) {
-            $this->errors[] = 'Budget note contains three or more consecutive special characters.';
-        }
+        $this->iValidateLongMessage($budgetNote, ['fieldLabel' => 'Budget note']);
     }
 
     /**
@@ -159,27 +136,23 @@ class WorkValidator extends Validator
      *
      * Note: Errors are collected as plain strings in $this->errors and no exception is thrown by this method.
      *
-     * @param DateTime|null $startDateTime DateTime instance representing the start date/time, or null if not provided
+     * @param DateTime $startDateTime DateTime instance representing the start date/time
      * @return void
      */
-    public function validateStartDateTime(?DateTime $startDateTime): void
+    public function validateStartDateTime(DateTime $startDateTime): void
     {
-        if ($startDateTime === null) {
-            $this->errors[] = 'Invalid start date and time.';
-            return;
-        }
-
-        if (checkdate((int) $startDateTime->format('m'), (int) $startDateTime->format('d'), (int) $startDateTime->format('Y')) === false) {
+        
+        if (checkdate((int) $startDateTime->format('m'), (int) $startDateTime->format('d'), (int) $startDateTime->format('Y')) === false)
             $this->errors[] = 'Start date is not a valid date.';
-        }
 
-        if (!self::isValidYear((int) $startDateTime->format('Y'))) {
+        if (!self::isValidYear((int) $startDateTime->format('Y')))
             $this->errors[] = 'Start date year is not valid.';
-        }
 
-        if ((int) $startDateTime->format('Y') < YEAR_MIN || (int) $startDateTime->format('Y') > YEAR_MAX) {
-            $this->errors[] = 'Start date year must be between ' . YEAR_MIN . ' and ' . YEAR_MAX . '.';
-        }
+        $yearFormat = (int) $startDateTime->format('Y');
+        $min = YEAR_MIN;
+        $max = YEAR_MAX;
+        if ($yearFormat < $min || $yearFormat > $max)
+            $this->errors[] = "Start date year must be between {$min} and {$max}.";
     }
 
     /**
@@ -198,34 +171,29 @@ class WorkValidator extends Validator
      *  - 'Completion date year is not valid.'        when self::isValidYear(...) returns false
      *  - 'Completion date must be after the start date.' when $completionDateTime <= $startDateTime
      *
-     * @param \DateTime|null $completionDateTime The completion date/time to validate.
-     * @param \DateTime|null $startDateTime Optional start date/time to compare against; if provided,
+     * @param DateTime $completionDateTime The completion date/time to validate.
+     * @param DateTime|null $startDateTime Optional start date/time to compare against; if provided,
      *                                      the completion date/time must be strictly after this value.
      *
      * @return void
      */
-    public function validateCompletionDateTime(?DateTime $completionDateTime, ?DateTime $startDateTime = null): void
+    public function validateCompletionDateTime(DateTime $completionDateTime, ?DateTime $startDateTime = null): void
     {
-        if ($completionDateTime === null) {
-            $this->errors[] = 'Invalid completion date and time.';
-            return;
-        }
-
-        if (checkdate((int) $completionDateTime->format('m'), (int) $completionDateTime->format('d'), (int) $completionDateTime->format('Y')) === false) {
+        if (checkdate((int) $completionDateTime->format('m'), (int) $completionDateTime->format('d'), (int) $completionDateTime->format('Y')) === false) 
             $this->errors[] = 'Completion date is not a valid date.';
-        }
 
-        if (!self::isValidYear((int) $completionDateTime->format('Y'))) {
+        $yearFormat = (int) $completionDateTime->format('Y');
+        $min = YEAR_MIN;
+        $max = YEAR_MAX;
+
+        if (!self::isValidYear($yearFormat))
             $this->errors[] = 'Completion date year is not valid.';
-        }
 
-        if ($startDateTime !== null && $completionDateTime <= $startDateTime) {
+        if ($startDateTime !== null && $completionDateTime <= $startDateTime)
             $this->errors[] = 'Completion date must be after the start date.';
-        }
 
-        if ((int) $completionDateTime->format('Y') < YEAR_MIN || (int) $completionDateTime->format('Y') > YEAR_MAX) {
-            $this->errors[] = 'Completion date year must be between ' . YEAR_MIN . ' and ' . YEAR_MAX . '.';
-        }
+        if ($yearFormat < $min || $yearFormat > $max)
+            $this->errors[] = "Completion date year must be between {$min} and {$max}.";
     }
 
     /**
@@ -250,15 +218,13 @@ class WorkValidator extends Validator
         return [
             'addBudget' => function (float $budget) use (&$currentBudget, $totalBudget) {
                 $currentBudget += $budget;
-                if ($currentBudget > $totalBudget) {
+                if ($currentBudget > $totalBudget)
                     $this->errors[] = 'Total budget of ₱' . formatNumber($currentBudget) . ' exceeds the allowed budget of ₱' . formatNumber($totalBudget) . '.';
-                }                
             },
 
             'validateTotal' => function () use (&$currentBudget, $totalBudget) {
-                if ($currentBudget > $totalBudget) {
+                if ($currentBudget > $totalBudget)
                     $this->errors[] = 'Total budget of ₱' . formatNumber($currentBudget) . ' exceeds the allowed budget of ₱' . formatNumber($totalBudget) . '.';
-                }
             }
         ];
     }
@@ -303,17 +269,14 @@ class WorkValidator extends Validator
             return;
         }
 
-        if ($startDateTime < $boundStartDateTime) {
+        if ($startDateTime < $boundStartDateTime)
             $this->errors[] = 'Start date cannot be before ' . $context . ' start date (' . formatDateTime($boundStartDateTime, 'Y-m-d') . ').';
-        }
 
-        if ($startDateTime > $boundCompletionDateTime) {
+        if ($startDateTime > $boundCompletionDateTime)
             $this->errors[] = 'Start date cannot be after ' . $context . ' completion date (' . formatDateTime($boundCompletionDateTime, 'Y-m-d') . ').';
-        }
 
-        if ($completionDateTime > $boundCompletionDateTime) {
+        if ($completionDateTime > $boundCompletionDateTime)
             $this->errors[] = 'Completion date cannot be after ' . $context . ' completion date (' . formatDateTime($boundCompletionDateTime, 'Y-m-d') . ').';
-        }
     }
 
     // ------------------------------------------------------------------------------------------------------------------------------ //
@@ -342,39 +305,32 @@ class WorkValidator extends Validator
      *      - startDateTime: string|\DateTime|null Start date/time of the work
      *      - completionDateTime: string|\DateTime|null Completion date/time of the work (may be compared to startDateTime)
      *
-     * @throws \InvalidArgumentException If any provided field fails validation
+     * @throws ValidationException If any provided field fails validation
      *
      * @return void
      */
     public function validateMultiple(array $data): void
     {
-        if (isset($data['name'])) {
+        if (isset($data['name']))
             $this->validateName(trim($data['name']) ?? null);
-        }
 
-        if (isset($data['description'])) {
+        if (isset($data['description']))
             $this->validateDescription(trim($data['description']) ?? null);
-        }
 
-        if (isset($data['maxWorkers'])) {
+        if (isset($data['maxWorkers']))
             $this->validateMaxWorkers((int) $data['maxWorkers']);
-        }
 
-        if (isset($data['budget'])) {
+        if (isset($data['budget']))
             $this->validateBudget($data['budget'] ?? null);
-        }
 
-        if (isset($data['contingencyRate'])) {
+        if (isset($data['contingencyRate']))
             $this->validateContingencyRate((float) $data['contingencyRate']);
-        }
 
-        if (isset($data['budgetNote'])) {
+        if (isset($data['budgetNote']))
             $this->validateBudgetNote(trim($data['budgetNote']) ?? null);
-        }
 
-        if (isset($data['startDateTime'])) {
+        if (isset($data['startDateTime']))
             $this->validateStartDateTime($data['startDateTime'] ?? null);
-        }
 
         if (isset($data['completionDateTime'])) {
             $this->validateCompletionDateTime(

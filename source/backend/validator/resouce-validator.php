@@ -13,21 +13,13 @@ class ResourceValidator extends Validator
      * constraints and does not contain consecutive special characters. If the name
      * is invalid, appropriate error messages are added to the errors array.
      * 
-     * @param string|null $name The name of the resource.
+     * @param string $name The name of the resource.
      * 
      * @return void
      */
-    public function validateName(?string $name): void
+    public function validateName(string $name): void
     {
-        $name = trim($name);
-        $min = NAME_MIN;
-        $max = NAME_MAX;
-
-        if (!$name || strlen($name) < $min || strlen($name) > $max)
-            $this->errors[] = "Resource name must be between {$min} and {$max} characters.";
-
-        if ($this->hasConsecutiveSpecialChars($name))
-            $this->errors[] = "Resource name must not contain consecutive special characters.";
+        $this->iValidateName($name);
     }
 
     /**
@@ -37,21 +29,13 @@ class ResourceValidator extends Validator
      * constraints and does not contain consecutive special characters. If the description
      * is invalid, appropriate error messages are added to the errors array.
      * 
-     * @param string|null $description The description of the resource.
+     * @param string $description The description of the resource.
      * 
      * @return void
      */
-    public function validateDescription(?string $description): void
+    public function validateDescription(string $description): void
     {
-        $description = trim($description);
-        $min = LONG_TEXT_MIN;
-        $max = LONG_TEXT_MAX;
-
-        if (!$description || strlen($description) < $min || strlen($description) > $max)
-            $this->errors[] = "Resource description must be between {$min} and {$max} characters.";
-
-        if ($this->hasConsecutiveSpecialChars($description))
-            $this->errors[] = "Resource description must not contain consecutive special characters.";
+        $this->iValidateLongMessage($description, ['fieldLabel' => 'Description']);
     }
 
     /**
@@ -61,11 +45,11 @@ class ResourceValidator extends Validator
      * constraints and does not contain consecutive special characters. If the category
      * is invalid, appropriate error messages are added to the errors array.
      * 
-     * @param string|null $category The category of the resource.
+     * @param string $category The category of the resource.
      * 
      * @return void
      */
-    public function validateCategory(?string $category): void
+    public function validateCategory(string $category): void
     {
         $category = trim($category);
         $min = NAME_MIN;
@@ -85,11 +69,11 @@ class ResourceValidator extends Validator
      * constraints and does not contain consecutive special characters. If the unit
      * is invalid, appropriate error messages are added to the errors array.
      * 
-     * @param string|null $unit The unit of the resource.
+     * @param string $unit The unit of the resource.
      * 
      * @return void
      */
-    public function validateUnit(?string $unit): void
+    public function validateUnit(string $unit): void
     {
         $unit = trim($unit);
         $min = UNIT_NAME_MIN;
@@ -115,11 +99,7 @@ class ResourceValidator extends Validator
      */
     public function validateDefaultRate(float $defaultRate): void
     {
-        $min = DEFAULT_RATE_MIN;
-        $max = DEFAULT_RATE_MAX;
-
-        if ($defaultRate < $min || $defaultRate > $max)
-            $this->errors[] = "Default rate must be between {$min} and {$max}.";
+        $this->iValidateDefaultRate($defaultRate);
     }
 
     /**
@@ -143,6 +123,28 @@ class ResourceValidator extends Validator
         }
     }
 
+    /**
+     * Validates the quantity of a resource.
+     * 
+     * This method checks if the provided resource quantity falls within the acceptable
+     * range defined by RESOURCE_QUANTITY_MIN and RESOURCE_QUANTITY_MAX constants.
+     * If the value is outside this range, an error message is added to the errors array.
+     * 
+     * @param int $quantity The quantity of the resource.
+     * 
+     * @return void
+     */
+    public function validateQuantity(int $quantity): void
+    {
+        $min = RESOURCE_QUANTITY_MIN;
+        $max = RESOURCE_QUANTITY_MAX;
+
+        if ($quantity < $min || $quantity > $max)
+            $this->errors[] = "Resource quantity must be between {$min} and {$max}.";
+
+        // TODO: Check the price per unit and see if the total cost exceeds some phase budget limit
+    }
+
     // ------------------------------------------------------------------------------------------------------------------------------ //
 
     /**
@@ -154,12 +156,13 @@ class ResourceValidator extends Validator
      * 
      * 
      * @param array $data An associative array containing resource attributes to validate.
-     *  - name: string|null The name of the resource.
-     *  - description: string|null The description of the resource.
-     *  - category: string|null The category of the resource.
-     *  - unit: string|null The unit of the resource.
+     *  - name: string The name of the resource.
+     *  - description: string The description of the resource.
+     *  - category: string The category of the resource.
+     *  - unit: string The unit of the resource.
      *  - defaultRate: float The default rate of the resource.
      *  - hoursAssigned: float The number of hours assigned.
+     *  - quantity: int The quantity of the resource.
      * 
      * @return void
      */
@@ -182,5 +185,8 @@ class ResourceValidator extends Validator
 
         if (isset($data['hoursAssigned']))
             $this->validateHoursAssigned((float) $data['hoursAssigned']);
+
+        if (isset($data['quantity']))
+            $this->validateQuantity((int) $data['quantity']);
     }
 }

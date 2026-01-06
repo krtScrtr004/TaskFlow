@@ -19,23 +19,16 @@ class UrlValidator extends Validator
      * - Errors are appended to $this->errors[]; the method does not throw exceptions.
      * - Length checks use multibyte-safe mb_strlen.
      *
-     * @param string|null $url The URL to validate; may be null
+     * @param string $url The URL to validate; may be null
      *
      * @return void
      */
-    public function validateUrl(?string $url): void
+    public function validateUrl(string $url): void
     {
-        if ($url === null || trim($url) === '') {
-            $this->errors[] = 'URL cannot be empty.';
-            return;
-        }
-
-        if (mb_strlen($url) < URI_MIN || mb_strlen($url) > URI_MAX) {
+        if (mb_strlen($url) < URI_MIN || mb_strlen($url) > URI_MAX)
             $this->errors[] = 'URL must be between ' . URI_MIN . ' and ' . URI_MAX . ' characters long.';
-        }
 
-        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+        if (!filter_var($url, FILTER_VALIDATE_URL))
             $this->errors[] = 'Invalid URL format.';
-        }
     }
 }

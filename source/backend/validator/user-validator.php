@@ -25,23 +25,13 @@ class UserValidator extends Validator
      * - "First name contains invalid characters." when the name contains disallowed characters.
      * - "First name contains three or more consecutive special characters." when the consecutive-special-character check fails.
      *
-     * @param string|null $firstName The first name to validate. May be null.
+     * @param string $firstName The first name to validate. May be null.
      *
      * @return void
      */
-    public function validateFirstName(?string $firstName): void
+    public function validateFirstName(string $firstName): void
     {
-        if ($firstName === null || trim($firstName) === '' || strlen($firstName) < NAME_MIN || strlen($firstName) > NAME_MAX) {
-            $this->errors[] = 'First name must be between ' . NAME_MIN . ' and ' . NAME_MAX . ' characters long.';
-        }
-
-        if (!preg_match("/^[a-zA-Z\s'\-.]{" . NAME_MIN . "," . NAME_MAX . "}$/", $firstName)) {
-            $this->errors[] = 'First name contains invalid characters.';
-        }
-
-        if ($this->hasConsecutiveSpecialChars($firstName)) {
-            $this->errors[] = 'First name contains three or more consecutive special characters.';
-        }
+        $this->iValidateName($firstName, ['fieldLabel' => 'First name']);
     }
 
     /**
@@ -64,21 +54,9 @@ class UserValidator extends Validator
      */
     public function validateMiddleName(?string $middleName): void
     {
-        if (!$middleName || trim($middleName) === '') {
-            return;
-        }
+        if (!$middleName || trim($middleName) === '') return;
 
-        if (strlen($middleName) < NAME_MIN || strlen($middleName) > NAME_MAX) {
-            $this->errors[] = 'Middle name must be between ' . NAME_MIN . ' and ' . NAME_MAX . ' characters long.';
-        }
-
-        if (!preg_match("/^[a-zA-Z\s'\-.]{" . NAME_MIN . "," . NAME_MAX . "}$/", $middleName)) {
-            $this->errors[] = 'Middle name contains invalid characters.';
-        }
-
-        if ($this->hasConsecutiveSpecialChars($middleName)) {
-            $this->errors[] = 'Middle name contains three or more consecutive special characters.';
-        }
+        $this->iValidateName($middleName, ['fieldLabel' => 'Middle name']);
     }
 
     /**
@@ -95,23 +73,13 @@ class UserValidator extends Validator
      * - "Last name contains invalid characters." when the name contains disallowed characters.
      * - "Last name contains three or more consecutive special characters." when the consecutive-special-character check fails.
      *
-     * @param string|null $lastName The last name to validate. May be null.
+     * @param string $lastName The last name to validate.
      *
      * @return void
      */
-    public function validateLastName(?string $lastName): void
+    public function validateLastName(string $lastName): void
     {
-        if ($lastName === null || trim($lastName) === '' || strlen($lastName) < NAME_MIN || strlen($lastName) > NAME_MAX) {
-            $this->errors[] = 'Last name must be between ' . NAME_MIN . ' and ' . NAME_MAX . ' characters long.';
-        }
-
-        if (!preg_match("/^[a-zA-Z\s'\-.]{" . NAME_MIN . "," . NAME_MAX . "}$/", $lastName)) {
-            $this->errors[] = 'Last name contains invalid characters.';
-        }
-
-        if ($this->hasConsecutiveSpecialChars($lastName)) {
-            $this->errors[] = 'Last name contains three or more consecutive special characters.';
-        }
+        $this->iValidateName($lastName, ['fieldLabel' => 'Last name']);
     }
 
     /**
@@ -133,24 +101,16 @@ class UserValidator extends Validator
      * Note: The length and regex checks reference the constants FULL_NAME_MIN and FULL_NAME_MAX.
      *
      * @param string|null $fullName The full name to validate.
+     * 
      * @return void
-     * @uses FULL_NAME_MIN
-     * @uses FULL_NAME_MAX
-     * @see hasConsecutiveSpecialChars()
      */
-    public function validateFullName(?string $fullName): void
+    public function validateFullName(string $fullName): void
     {
-        if ($fullName === null || trim($fullName) === '' || strlen($fullName) < FULL_NAME_MIN || strlen($fullName) > FULL_NAME_MAX) {
-            $this->errors[] = 'Full name must be between ' . FULL_NAME_MIN . ' and ' . FULL_NAME_MAX . ' characters long.';
-        }
-
-        if (!preg_match("/^[a-zA-Z\s'\-.]{" . FULL_NAME_MIN . "," . FULL_NAME_MAX . "}$/", $fullName)) {
-            $this->errors[] = 'Full name contains invalid characters.';
-        }
-
-        if ($this->hasConsecutiveSpecialChars($fullName)) {
-            $this->errors[] = 'Full name contains three or more consecutive special characters.';
-        }
+        $this->iValidateName($fullName, [
+            'min' => FULL_NAME_MIN,
+            'max' => FULL_NAME_MAX,
+            'fieldLabel' => 'Full name'
+        ]);
     }
 
     /**
@@ -177,46 +137,11 @@ class UserValidator extends Validator
      */
     public function validateBio(?string $bio): void
     {
-        if ($bio !== null && (strlen(trim($bio)) < LONG_TEXT_MIN || strlen(trim($bio)) > LONG_TEXT_MAX)) {
-            $this->errors[] = 'Bio must be between ' . LONG_TEXT_MIN . ' and ' . LONG_TEXT_MAX . ' characters long.';
-        }
+        if ($bio === null) return;
 
-        if ($bio !== null && $this->hasConsecutiveSpecialChars($bio)) {
-            $this->errors[] = 'Bio contains three or more consecutive special characters.';
-        }
+        $this->iValidateLongMessage($bio, ['fieldLabel' => 'Bio']);
     }
 
-    /**
-     * Validate a user-provided message and record any validation errors.
-     *
-     * This method performs the following validations when a non-null message is supplied:
-     * - Trims surrounding whitespace and ensures the resulting string length is between
-     *   LONG_TEXT_MIN and LONG_TEXT_MAX characters (inclusive). If not, an error is
-     *   appended to $this->errors describing the required length range.
-     * - Checks for three or more consecutive special characters using hasConsecutiveSpecialChars().
-     *   If such a sequence is found, an error is appended to $this->errors indicating the issue.
-     *
-     * Notes:
-     * - If $message is null, no validations are performed and no errors are added.
-     * - The method does not throw exceptions; it reports problems by appending messages to
-     *   $this->errors.
-     * - Length checks operate on the trimmed message.
-     *
-     * @param string|null $message The message to validate; may be null to indicate absence.
-     * @return void
-     *
-     * @see self::hasConsecutiveSpecialChars()
-     */
-    public function validateMessage(?string $message): void
-    {
-        if ($message !== null && (strlen(trim($message)) < LONG_TEXT_MIN || strlen(trim($message)) > LONG_TEXT_MAX)) {
-            $this->errors[] = 'Message must be between ' . LONG_TEXT_MIN . ' and ' . LONG_TEXT_MAX . ' characters long.';
-        }
-
-        if ($message !== null && $this->hasConsecutiveSpecialChars($message)) {
-            $this->errors[] = 'Message contains three or more consecutive special characters.';
-        }
-    }
 
     /**
      * Validates a gender enumeration value and appends any validation error messages to $this->errors.
@@ -227,15 +152,14 @@ class UserValidator extends Validator
      *
      * On failure, the error message "Please select a valid gender." is added to $this->errors.
      *
-     * @param Gender|null $gender The gender enumeration value to validate. May be null.
+     * @param Gender $gender The gender enumeration value to validate.
      *
      * @return void
      */
-    public function validateGender(?Gender $gender): void
+    public function validateGender(Gender $gender): void
     {
-        if ($gender === null || !in_array($gender, [Gender::MALE, Gender::FEMALE])) {
+        if (!in_array($gender, [Gender::MALE, Gender::FEMALE])) 
             $this->errors[] = 'Please select a valid gender.';
-        }
     }
 
     /**
@@ -255,35 +179,26 @@ class UserValidator extends Validator
      * - 'Date of birth year is not valid.' when self::isValidYear() returns false.
      * - 'You must be at least 18 years old to register.' when calculated age is less than 18.
      *
-     * @param DateTime|null $birthDate DateTime instance representing the date of birth, or null if not provided.
+     * @param DateTime $birthDate DateTime instance representing the date of birth.
      *
      * @return void
      */
-    public function validateBirthDate(?DateTime $birthDate): void
+    public function validateBirthDate(DateTime $birthDate): void
     {
-        if ($birthDate === null) {
-            $this->errors[] = 'Date of birth is required.';
-            return;
-        }
-
         $now = new DateTime();
-        if ($birthDate >= $now) {
+        if ($birthDate >= $now) 
             $this->errors[] = 'Date of birth must be in the past.';
-        }
 
-        if (checkdate((int) $birthDate->format('m'), (int) $birthDate->format('d'), (int) $birthDate->format('Y')) === false) {
+        if (checkdate((int) $birthDate->format('m'), (int) $birthDate->format('d'), (int) $birthDate->format('Y')) === false) 
             $this->errors[] = 'Date of birth is not a valid date.';
-        }
 
-        if (!self::isValidYear((int) $birthDate->format('Y'))) {
+        if (!self::isValidYear((int) $birthDate->format('Y'))) 
             $this->errors[] = 'Date of birth year is not valid.';
-        }
 
         // Calculate age
         $age = $now->diff($birthDate)->y;
-        if ($age < 18) {
+        if ($age < 18) 
             $this->errors[] = 'You must be at least 18 years old to register.';
-        }
     }
 
     /**
@@ -291,19 +206,18 @@ class UserValidator extends Validator
      *
      * This method performs the following checks:
      * - Ensures the value is not null.
-     * - Verifies the role is one of the valid Role enumeration values (Role::PROJECT_MANAGER or Role::WORKER).
+     * - Verifies the role is one of the valid Role enumeration values (Role::PROJECT_MANAGER, Role::WORKER, or Role::TASK_WORKER).
      *
      * On failure, the error message "Please select a valid role." is added to $this->errors.
      *
-     * @param Role|null $role The role enumeration value to validate. May be null.
+     * @param Role $role The role enumeration value to validate.
      *
      * @return void
      */
-    public function validateRole(?Role $role): void
+    public function validateRole(Role $role): void
     {
-        if ($role === null || !in_array($role, [Role::PROJECT_MANAGER, Role::WORKER])) {
+        if (!in_array($role, [Role::PROJECT_MANAGER, Role::WORKER, Role::TASK_WORKER]))
             $this->errors[] = 'Please select a valid role.';
-        }
     }
 
     /**
@@ -318,15 +232,13 @@ class UserValidator extends Validator
      * - 'Each job title must be between 1 and 100 characters long.' when any title's length is invalid (breaks after first occurrence).
      * - 'Job title "{title}" contains invalid characters.' when any title contains disallowed characters (breaks after first occurrence).
      *
-     * @param JobTitleContainer|null $jobTitles The collection of job titles to validate. May be null.
+     * @param JobTitleContainer $jobTitles The collection of job titles to validate.
      *
      * @return void
      */
-    public function validateJobTitles(?JobTitleContainer $jobTitles): void
+    public function validateJobTitles(JobTitleContainer $jobTitles): void
     {
-        if (!$jobTitles || $jobTitles === null || $jobTitles->count() < 1) {
-            return;
-        }
+        if ($jobTitles->count() < 1) return;
 
         foreach ($jobTitles as $jobTitle) {
             if (strlen(trim($jobTitle)) < 1 || strlen(trim($jobTitle)) > 100) {
@@ -353,19 +265,17 @@ class UserValidator extends Validator
      * - 'Contact number must be between {CONTACT_NUMBER_MIN} and {CONTACT_NUMBER_MAX} characters long.' when the length check fails or value is null/empty.
      * - 'Contact number contains invalid characters.' when the number contains disallowed characters.
      *
-     * @param string|null $contactNumber The contact number to validate. May be null.
+     * @param string $contactNumber The contact number to validate.
      *
      * @return void
      */
-    public function validateContactNumber(?string $contactNumber): void
+    public function validateContactNumber(string $contactNumber): void
     {
-        if ($contactNumber === null || trim($contactNumber) === '' || strlen($contactNumber) < CONTACT_NUMBER_MIN || strlen($contactNumber) > CONTACT_NUMBER_MAX) {
+        if (trim($contactNumber) === '' || strlen($contactNumber) < CONTACT_NUMBER_MIN || strlen($contactNumber) > CONTACT_NUMBER_MAX) 
             $this->errors[] = 'Contact number must be between ' . CONTACT_NUMBER_MIN . ' and ' . CONTACT_NUMBER_MAX . ' characters long.';
-        }
 
-        if (!preg_match('/^\+?[\d\s\-\(\)]{' . CONTACT_NUMBER_MIN . ',' . CONTACT_NUMBER_MAX . '}$/', $contactNumber)) {
+        if (!preg_match('/^\+?[\d\s\-\(\)]{' . CONTACT_NUMBER_MIN . ',' . CONTACT_NUMBER_MAX . '}$/', $contactNumber)) 
             $this->errors[] = 'Contact number contains invalid characters.';
-        }
     }
 
     /**
@@ -379,19 +289,14 @@ class UserValidator extends Validator
      * - 'Default rate must be provided.' when the value is null.
      * - 'Default rate must be between {DEFAULT_RATE_MIN} and {DEFAULT_RATE_MAX}.' when the rate is out of range.
      *
-     * @param float|null $defaultRate The default rate to validate. May be null.
+     * @param float $defaultRate The default rate to validate.
      *
      * @return void
      */
-    public function validateDefaultRate(?float $defaultRate): void
+    public function validateDefaultRate(float $defaultRate): void
     {
-        if ($defaultRate === null) {
-            $this->errors[] = 'Default rate must be provided.';
-        }
-
-        if ($defaultRate < DEFAULT_RATE_MIN || $defaultRate > DEFAULT_RATE_MAX) {
+        if ($defaultRate < DEFAULT_RATE_MIN || $defaultRate > DEFAULT_RATE_MAX) 
             $this->errors[] = 'Default rate must be between ' . DEFAULT_RATE_MIN . ' and ' . DEFAULT_RATE_MAX . '.';
-        }
     }
 
     /**
@@ -403,15 +308,14 @@ class UserValidator extends Validator
      *
      * On failure, the error message "Please select a valid worker status." is added to $this->errors.
      *
-     * @param WorkerStatus|null $status The worker status enumeration value to validate. May be null.
+     * @param WorkerStatus $status The worker status enumeration value to validate. May be null.
      *
      * @return void
      */
-    public function validateStatus(?WorkerStatus $status): void
+    public function validateStatus(WorkerStatus $status): void
     {
-        if ($status === null || !in_array($status, [WorkerStatus::ASSIGNED, WorkerStatus::UNASSIGNED, WorkerStatus::TERMINATED])) {
+        if (!in_array($status, [WorkerStatus::ASSIGNED, WorkerStatus::UNASSIGNED, WorkerStatus::TERMINATED])) 
             $this->errors[] = 'Please select a valid worker status.';
-        }
     }
 
     /**
@@ -426,19 +330,17 @@ class UserValidator extends Validator
      * - 'Email must be between {URI_MIN} and {URI_MAX} characters long.' when the length check fails or value is null.
      * - 'Invalid email address.' when the email format validation fails.
      *
-     * @param string|null $email The email address to validate. May be null.
+     * @param string $email The email address to validate.
      *
      * @return void
      */
-    public function validateEmail(?string $email): void
+    public function validateEmail(string $email): void
     {
-        if ($email === null || strlen(trim($email)) < URI_MIN || strlen(trim($email)) > URI_MAX) {
+        if (strlen(trim($email)) < URI_MIN || strlen(trim($email)) > URI_MAX) 
             $this->errors[] = 'Email must be between ' . URI_MIN . ' and ' . URI_MAX . ' characters long.';
-        }
 
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL))
             $this->errors[] = 'Invalid email address.';
-        }
     }
 
     /**
@@ -456,30 +358,26 @@ class UserValidator extends Validator
      * - 'Password must contain at least one uppercase letter.' when no uppercase letters are found.
      * - 'Password contains invalid special characters. Only _!@\'.- are allowed.' when disallowed characters are detected.
      *
-     * @param string|null $password The password to validate. May be null.
+     * @param string $password The password to validate.
      *
      * @return void
      */
-    public function validatePassword(?string $password): void
+    public function validatePassword(string $password): void
     {
-        if ($password === null || strlen($password) < PASSWORD_MIN || strlen($password) > PASSWORD_MAX) {
+        if (strlen($password) < PASSWORD_MIN || strlen($password) > PASSWORD_MAX) 
             $this->errors[] = 'Password must be between ' . PASSWORD_MIN . ' and ' . PASSWORD_MAX . ' characters long.';
-        }
 
         // Check for at least one lowercase letter
-        if (!preg_match('/[a-z]/', $password)) {
+        if (!preg_match('/[a-z]/', $password))
             $this->errors[] = 'Password must contain at least one lowercase letter.';
-        }
 
         // Check for at least one uppercase letter
-        if (!preg_match('/[A-Z]/', $password)) {
+        if (!preg_match('/[A-Z]/', $password))
             $this->errors[] = 'Password must contain at least one uppercase letter.';
-        }
 
         // Check for special characters (should NOT contain special characters except _!@'.- which are allowed)
-        if (preg_match('/[^a-zA-Z0-9_!@\'\.\-]/', $password)) {
+        if (preg_match('/[^a-zA-Z0-9_!@\'\.\-]/', $password))
             $this->errors[] = 'Password contains invalid special characters. Only _!@\'.- are allowed.';
-        }
     }
 
     // ------------------------------------------------------------------------------------------------------------------------------ //
@@ -500,7 +398,6 @@ class UserValidator extends Validator
      * - contactNumber: Validates using validateContactNumber().
      * - email: Validates using validateEmail().
      * - bio: Validates using validateBio().
-     * - message: Validates using validateMessage().
      * - defaultRate: Validates using validateDefaultRate().
      * - profileLink: Validates using UrlValidator's validateUrl().
      * - createdAt: Ensures the DateTime value is not in the future.
@@ -509,8 +406,22 @@ class UserValidator extends Validator
      * validators are collected in $this->errors.
      *
      * @param array $data Associative array containing user data fields. Expected keys include:
-     *                    firstName, middleName, lastName, gender, birthDate, role, jobTitles,
-     *                    password, contactNumber, email, bio, profileLink, createdAt.
+     * - firstName: string User's first name 
+     * - middleName: string User's middle name
+     * - lastName: string User's last name
+     * - fullName: string User's full name
+     * - gender: Gender User's gender
+     * - birthDate: DateTime User's date of birth
+     * - role: Role User's role
+     * - jobTitles: JobTitleContainer Collection of user's job titles
+     * - password: string User's password
+     * - contactNumber: string User's contact number
+     * - email: string User's email address
+     * - bio: string User's biography
+     * - profileLink: string User's profile URL
+     * - createdAt: DateTime Account creation date
+     * - defaultRate: float User's default rate
+     * - role: Role User's role
      *
      * @return void
      */
@@ -518,72 +429,52 @@ class UserValidator extends Validator
     {
         $urlValidator = new UrlValidator();
 
-        if ($data['firstName'] !== null) {
+        if (isset($data['firstName']))
             $this->validateFirstName(trim($data['firstName']) ?? null);
-        }
 
-        if ($data['middleName'] !== null) {
+        if (isset($data['middleName']))
             $this->validateMiddleName(trim($data['middleName']) ?? null);
-        }
 
-        if ($data['lastName'] !== null) {
+        if (isset($data['lastName'])) 
             $this->validateLastName(trim($data['lastName']) ?? null);
-        }
 
-        if ($data['fullName'] !== null) {
+        if (isset($data['fullName'])) 
             $this->validateFullName(trim($data['fullName']) ?? null);
-        }
 
-        if ($data['gender'] !== null) {
+        if (isset($data['gender'])) 
             $this->validateGender($data['gender'] ?? null);
-        }
 
-        if ($data['birthDate'] !== null) {
+        if (isset($data['birthDate'])) 
             $this->validateBirthDate($data['birthDate'] ?? null);
-        }
 
-        if ($data['role'] !== null) {
+        if (isset($data['role'])) 
             $this->validateRole($data['role'] ?? null);
-        }
 
-        if ($data['jobTitles'] !== null) {
+        if (isset($data['jobTitles'])) 
             $this->validateJobTitles($data['jobTitles'] ?? null);
-        }
 
-        if ($data['password'] !== null) {
+        if (isset($data['password'])) 
             $this->validatePassword(trim($data['password']) ?? null);
-        }
 
-        if ($data['contactNumber'] !== null) {
+        if (isset($data['contactNumber'])) 
             $this->validateContactNumber(trim($data['contactNumber']) ?? null);
-        }
 
-        if ($data['email'] !== null) {
+        if (isset($data['email'])) 
             $this->validateEmail(trim($data['email']) ?? null);
-        }
 
-        if ($data['bio'] !== null) {
+        if (isset($data['bio'])) 
             $this->validateBio(trim($data['bio']));
-        }
 
-        if ($data['message'] !== null) {
-            $this->validateMessage(trim($data['message']));
-        }
-
-        if ($data['profileLink'] !== null) {
+        if (isset($data['profileLink'])) 
             $urlValidator->validateUrl(trim($data['profileLink']) ?? null);
-        }
 
-        if ($data['createdAt'] > new DateTime()) {
+        if ($data['createdAt'] > new DateTime()) 
             $this->addError("createdAt", "Created At date cannot be in the future.");
-        }
 
-        if ($data['defaultRate'] !== null) {
+        if (isset($data['defaultRate'])) 
             $this->validateDefaultRate($data['defaultRate'] ?? null);
-        }
 
-        if ($data['role'] !== null) {
+        if (isset($data['role'])) 
             $this->validateRole($data['role'] ?? null);
-        }
     }
 }
