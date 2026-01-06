@@ -3,10 +3,6 @@
 namespace App\Validator;
 
 use App\Abstract\Validator;
-use App\Container\PhaseContainer;
-use App\Container\TaskContainer;
-use App\Dependent\Phase;
-use App\Entity\Project;
 use DateTime;
 
 class WorkValidator extends Validator
@@ -149,25 +145,6 @@ class WorkValidator extends Validator
 
         if ($this->hasConsecutiveSpecialChars($budgetNote)) {
             $this->errors[] = 'Budget note contains three or more consecutive special characters.';
-        }
-    }
-
-
-    /**
-     * Validates the hours assigned to a worker.
-     *
-     * This method checks if the provided hours assigned value falls within the acceptable
-     * range defined by WORKER_HOURS_MIN and WORKER_HOURS_MAX constants.
-     * If the value is outside this range, an error message is added to the errors array.
-     *
-     * @param float $hoursAssigned The number of hours assigned to validate
-     *
-     * @return void
-     */
-    public function validateHoursAssigned(float $hoursAssigned): void
-    {
-        if ($hoursAssigned < WORKER_HOURS_MIN || $hoursAssigned > WORKER_HOURS_MAX) {
-            $this->errors[] = 'Hours assigned must be between ' . WORKER_HOURS_MIN . ' and ' . WORKER_HOURS_MAX . ' hours.';
         }
     }
 
@@ -348,6 +325,9 @@ class WorkValidator extends Validator
      * - Trims and validates the 'name' when present.
      * - Trims and validates the 'description' when present.
      * - Validates the 'budget' when present (expects a numeric/parsable amount).
+     * - Validates the 'maxWorkers' when present (expects an integer).
+     * - Validates the 'contingencyRate' when present (expects a float percentage).
+     * - Trims and validates the 'budgetNote' when present.
      * - Validates the 'startDateTime' when present (expects a date/time string or DateTime-like value).
      * - Validates the 'completionDateTime' when present and, if startDateTime is provided, validates that the
      *   completion date/time is consistent relative to the start date/time.
@@ -390,10 +370,6 @@ class WorkValidator extends Validator
 
         if (isset($data['budgetNote'])) {
             $this->validateBudgetNote(trim($data['budgetNote']) ?? null);
-        }
-
-        if (isset($data['hoursAssigned'])) {
-            $this->validateHoursAssigned((float) $data['hoursAssigned']);
         }
 
         if (isset($data['startDateTime'])) {
