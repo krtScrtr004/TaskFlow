@@ -15,7 +15,7 @@ use DateTime;
 class Worker extends User
 {
     private float $defaultRate;
-    private WorkerStatus $status;
+    protected WorkerStatus $status;
 
     /**
      * Constructs a Worker instance.
@@ -24,24 +24,24 @@ class Worker extends User
      * and setting Worker-specific properties such as defaultRate and status.
      * It also validates the defaultRate and status using UserValidator.
      *
-     * @param int|null $id User ID
+     * @param int|null $id Worker's ID
      * @param UUID|null $publicId Public identifier
-     * @param string $firstName User's first name
-     * @param string|null $middleName User's middle name
-     * @param string $lastName User's last name 
-     * @param Gender $gender User's gender                  
-     * @param DateTime $birthDate User's birth date
-     * @param JobTitleContainer $jobTitles Container of job titles
-     * @param string $contactNumber User's contact number
-     * @param string $email User's email address
-     * @param string|null $bio User's biography
-     * @param string|null $profileLink User's profile link
-     * @param DateTime $createdAt Timestamp when the user was created
+     * @param string $firstName Worker's first name
+     * @param string|null $middleName Worker's middle name
+     * @param string $lastName Worker's last name 
+     * @param Gender $gender Worker's gender                  
+     * @param DateTime $birthDate Worker's birth date
+     * @param JobTitleContainer $jobTitles Worker's job titles
+     * @param string $contactNumber Worker's contact number
+     * @param string $email Worker's email address
+     * @param string|null $bio Worker's biography
+     * @param string|null $profileLink Worker's profile link
+     * @param DateTime $createdAt Timestamp when the worker was created
      * @param float $defaultRate Worker's default hourly rate
      * @param WorkerStatus $status Worker's current status
-     * @param string|null $password User's password (optional)
-     * @param DateTime|null $confirmedAt Timestamp when the user was confirmed (optional)
-     * @param DateTime|null $deletedAt Timestamp when the user was deleted (optional)
+     * @param string|null $password Worker's password (optional)
+     * @param DateTime|null $confirmedAt Timestamp when the worker was confirmed (optional)
+     * @param DateTime|null $deletedAt Timestamp when the worker was deleted (optional)
      * @param array $additionalInfo Optional additional information (default: empty array)
      * @throws ValidationException If validation of defaultRate or status fails
      * @return void
@@ -93,7 +93,10 @@ class Worker extends User
 
         $this->userValidator->validateDefaultRate($defaultRate);
         if ($this->userValidator->hasErrors()) {
-            throw new ValidationException("Worker Validation Failed", $this->userValidator->getErrors());
+            throw new ValidationException(
+                "Worker Validation Failed", 
+                $this->userValidator->getErrors()
+            );
         }
         // Set role-based properties
         $this->role = Role::WORKER;
@@ -160,7 +163,10 @@ class Worker extends User
     {
         $this->userValidator->validateDefaultRate($defaultRate);
         if ($this->userValidator->hasErrors()) {
-            throw new ValidationException("Invalid Default Rate", $this->userValidator->getErrors());
+            throw new ValidationException(
+                "Invalid Default Rate", 
+                $this->userValidator->getErrors()
+            );
         }
         $this->defaultRate = $defaultRate;
     }
@@ -181,7 +187,10 @@ class Worker extends User
     {
         $this->userValidator->validateStatus($status);
         if ($this->userValidator->hasErrors()) {
-            throw new ValidationException("Invalid Status", $this->userValidator->getErrors());
+            throw new ValidationException(
+                "Invalid Status", 
+                $this->userValidator->getErrors()
+            );
         }
         $this->status = $status;
     }
@@ -222,13 +231,10 @@ class Worker extends User
         // Normalize input keys to camelCase to support both snake_case and camelCase input
         $data = normalizeArrayKeysToCamelCase($data);
 
+        /** @var static $partial */ // tell IDE this is the called class (silences false positive)
         $partial = parent::createPartial($data);
 
-        if (isset($data['defaultRate'])) {
-            $partial->setDefaultRate($data['defaultRate']);
-        } else {
-            $partial->setDefaultRate(DEFAULT_RATE_MIN);
-        }
+        $partial->setDefaultRate($data['defaultRate'] ?? DEFAULT_RATE_MIN);
 
         if (isset($data['status'])) {
             $partial->setStatus(
@@ -239,6 +245,7 @@ class Worker extends User
         } else {
             $partial->setStatus(WorkerStatus::UNASSIGNED);
         }
+
         return $partial;
     }
 
@@ -256,11 +263,12 @@ class Worker extends User
      */
     public function toArray(bool $useSnakeCase = false): array
     {
-        $worker = parent::toArray($useSnakeCase);
-        $worker['role'] = Role::WORKER->value;
-        $worker['defaultRate'] = $this->defaultRate;
-
-        return $worker;
+        $parentArray = parent::toArray($useSnakeCase);
+        $workerArray = [
+            'role'          => Role::WORKER->value,
+            'defaultRate'   => $this->defaultRate,
+        ];
+        return array_merge($parentArray, $workerArray);
     }
 
     /**
