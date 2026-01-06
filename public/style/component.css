@@ -862,8 +862,12 @@ button > .text-w-icon {
 	margin-bottom: 0 !important;
 }
 
-.add-worker-modal .worker-list-card h4,
-.add-worker-modal .worker-list-card p {
+.add-worker-modal .user-list-card {
+	width: 100%;
+}
+
+.add-worker-modal .user-list-card h4,
+.add-worker-modal .user-list-card p {
 	max-width: 23ch;
 }
 
@@ -871,7 +875,7 @@ button > .text-w-icon {
 	width: 100%;
 }
 
-.add-worker-modal .worker-list-card h4 {
+.add-worker-modal .user-list-card h4 {
 	font-size: 1.1rem;
 }
 

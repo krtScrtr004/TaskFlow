@@ -13,24 +13,24 @@ require_once __DIR__ . DS . 'env.php';
 spl_autoload_register(function ($class) {
     // Map namespace folders to actual paths
     static $pathMap = [
-        'abstract' => ABSTRACT_PATH,
-        'auth' => AUTH_PATH,
-        'config' => CONFIG_PATH,
-        'container' => CONTAINER_PATH,
-        'controller' => CONTROLLER_PATH,
-        'core' => CORE_PATH,
-        'dependent' => DEPENDENT_PATH,
-        'dump' => DUMP_PATH,
-        'endpoint' => ENDPOINT_PATH,
-        'entity' => ENTITY_PATH,
-        'enumeration' => ENUM_PATH,
-        'exception' => EXCEPTION_PATH,
-        'interface' => INTERFACE_PATH,
-        'router' => ROUTER_PATH,
-        'middleware' => MIDDLEWARE_PATH,
-        'model' => MODEL_PATH,
-        'service' => SERVICE_PATH,
-        'validator' => VALIDATOR_PATH,
+        'abstract'      => ABSTRACT_PATH,
+        'auth'          => AUTH_PATH,
+        'config'        => CONFIG_PATH,
+        'container'     => CONTAINER_PATH,
+        'controller'    => CONTROLLER_PATH,
+        'core'          => CORE_PATH,
+        'dependent'     => DEPENDENT_PATH,
+        'dump'          => DUMP_PATH,
+        'endpoint'      => ENDPOINT_PATH,
+        'entity'        => ENTITY_PATH,
+        'enumeration'   => ENUM_PATH,
+        'exception'     => EXCEPTION_PATH,
+        'interface'     => INTERFACE_PATH,
+        'router'        => ROUTER_PATH,
+        'middleware'    => MIDDLEWARE_PATH,
+        'model'         => MODEL_PATH,
+        'service'       => SERVICE_PATH,
+        'validator'     => VALIDATOR_PATH,
     ];
 
     $prefix = 'App\\';
@@ -126,6 +126,9 @@ define('URI_MAX', 255);
 
 define('WORKER_COUNT_MIN', 1);
 define('WORKER_COUNT_MAX', 1000);
+
+define('WORKER_HOURS_MIN', 0.5);
+define('WORKER_HOURS_MAX', 1000);
 
 define('YEAR_MIN', 1900);
 define('YEAR_CURRENT', 2025);

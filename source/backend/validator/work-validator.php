@@ -152,6 +152,25 @@ class WorkValidator extends Validator
         }
     }
 
+
+    /**
+     * Validates the hours assigned to a worker.
+     *
+     * This method checks if the provided hours assigned value falls within the acceptable
+     * range defined by WORKER_HOURS_MIN and WORKER_HOURS_MAX constants.
+     * If the value is outside this range, an error message is added to the errors array.
+     *
+     * @param float $hoursAssigned The number of hours assigned to validate
+     *
+     * @return void
+     */
+    public function validateHoursAssigned(float $hoursAssigned): void
+    {
+        if ($hoursAssigned < WORKER_HOURS_MIN || $hoursAssigned > WORKER_HOURS_MAX) {
+            $this->errors[] = 'Hours assigned must be between ' . WORKER_HOURS_MIN . ' and ' . WORKER_HOURS_MAX . ' hours.';
+        }
+    }
+
     /**
      * Validates a start date/time and appends any validation errors to $this->errors.
      *
@@ -371,6 +390,10 @@ class WorkValidator extends Validator
 
         if (isset($data['budgetNote'])) {
             $this->validateBudgetNote(trim($data['budgetNote']) ?? null);
+        }
+
+        if (isset($data['hoursAssigned'])) {
+            $this->validateHoursAssigned((float) $data['hoursAssigned']);
         }
 
         if (isset($data['startDateTime'])) {
