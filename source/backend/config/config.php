@@ -121,6 +121,9 @@ define('NAME_MAX', 50);
 define('PASSWORD_MIN', 8);
 define('PASSWORD_MAX', 255);
 
+define('UNIT_NAME_MIN', 1);
+define('UNIT_NAME_MAX', 20);
+
 define('URI_MIN', 3);
 define('URI_MAX', 255);
 
