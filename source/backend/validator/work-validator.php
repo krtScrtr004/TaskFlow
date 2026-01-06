@@ -311,28 +311,28 @@ class WorkValidator extends Validator
      */
     public function validateMultiple(array $data): void
     {
-        if (isset($data['name']))
+        if (isset($data['name']) && $data['name'] !== null && $data['name'] !== '')
             $this->validateName(trim($data['name']) ?? null);
 
-        if (isset($data['description']))
+        if (isset($data['description']) && $data['description'] !== null && $data['description'] !== '')
             $this->validateDescription(trim($data['description']) ?? null);
 
-        if (isset($data['maxWorkers']))
+        if (isset($data['maxWorkers']) && $data['maxWorkers'] !== null)
             $this->validateMaxWorkers((int) $data['maxWorkers']);
 
-        if (isset($data['budget']))
+        if (isset($data['budget']) && $data['budget'] !== null)
             $this->validateBudget($data['budget'] ?? null);
 
-        if (isset($data['contingencyRate']))
+        if (isset($data['contingencyRate']) && $data['contingencyRate'] !== null)
             $this->validateContingencyRate((float) $data['contingencyRate']);
 
-        if (isset($data['budgetNote']))
+        if (isset($data['budgetNote']) && $data['budgetNote'] !== null && $data['budgetNote'] !== '')
             $this->validateBudgetNote(trim($data['budgetNote']) ?? null);
 
-        if (isset($data['startDateTime']))
+        if (isset($data['startDateTime']) && $data['startDateTime'] !== null)
             $this->validateStartDateTime($data['startDateTime'] ?? null);
 
-        if (isset($data['completionDateTime'])) {
+        if (isset($data['completionDateTime']) && $data['completionDateTime'] !== null) {
             $this->validateCompletionDateTime(
                 $data['completionDateTime'] ?? null,
                 $data['startDateTime'] ?? null

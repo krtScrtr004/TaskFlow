@@ -141,8 +141,45 @@ class ResourceValidator extends Validator
 
         if ($quantity < $min || $quantity > $max)
             $this->errors[] = "Resource quantity must be between {$min} and {$max}.";
+    }
 
+    /**
+     * Validates the unit rate of a resource.
+     * 
+     * This method checks if the provided unit rate falls within the acceptable
+     * range defined by DEFAULT_RATE_MIN and DEFAULT_RATE_MAX constants.
+     * If the value is outside this range, an error message is added to the errors array.
+     * 
+     * @param float $unitRate The unit rate of the resource.
+     * 
+     * @return void
+     */
+    public function validateUnitRate(float $unitRate): void
+    {
+        $this->iValidateDefaultRate($unitRate, ['fieldLabel' => 'Unit rate']);
+    }
+
+    public function validateEstimatedUnit(float $estimatedUnit): void
+    {
         // TODO: Check the price per unit and see if the total cost exceeds some phase budget limit
+    }
+
+    /**
+     * Validates the note of a resource.
+     * 
+     * This method checks if the provided resource note meets the defined length
+     * constraints and does not contain consecutive special characters. If the note
+     * is invalid, appropriate error messages are added to the errors array.
+     * 
+     * @param string|null $note The note of the resource.
+     * 
+     * @return void
+     */
+    public function validateNote(?string $note): void
+    {
+        if ($note === null || $note === '') return;
+
+        $this->iValidateLongMessage($note, ['fieldLabel' => 'Note']);
     }
 
     // ------------------------------------------------------------------------------------------------------------------------------ //
@@ -163,30 +200,42 @@ class ResourceValidator extends Validator
      *  - defaultRate: float The default rate of the resource.
      *  - hoursAssigned: float The number of hours assigned.
      *  - quantity: int The quantity of the resource.
+     *  - unitRate: float The unit rate of the resource.
+     *  - estimatedUnit: float The estimated unit of the resource.
+     *  - note: string|null The note of the resource.
      * 
      * @return void
      */
     public function validateMultiple(array $data): void
     {
-        if (isset($data['name']))
+        if (isset($data['name']) && $data['name'] !== null && $data['name'] !== '')
             $this->validateName((string) $data['name']);
 
-        if (isset($data['description']))
+        if (isset($data['description']) && $data['description'] !== null && $data['description'] !== '' )
             $this->validateDescription((string) $data['description']);
 
-        if (isset($data['category']))
+        if (isset($data['category']) && $data['category'] !== null && $data['category'] !== '')
             $this->validateCategory((string) $data['category']);
 
-        if (isset($data['unit']))
+        if (isset($data['unit']) && $data['unit'] !== null && $data['unit'] !== '')
             $this->validateUnit((string) $data['unit']);
 
-        if (isset($data['defaultRate']))
+        if (isset($data['defaultRate']) && $data['defaultRate'] !== null)
             $this->validateDefaultRate((float) $data['defaultRate']);
 
-        if (isset($data['hoursAssigned']))
+        if (isset($data['hoursAssigned']) && $data['hoursAssigned'] !== null)
             $this->validateHoursAssigned((float) $data['hoursAssigned']);
 
-        if (isset($data['quantity']))
+        if (isset($data['quantity']) && $data['quantity'] !== null)
             $this->validateQuantity((int) $data['quantity']);
+
+        if (isset($data['unitRate']) && $data['unitRate'] !== null)
+            $this->validateUnitRate((float) $data['unitRate']);
+
+        if (isset($data['estimatedUnit']) && $data['estimatedUnit'] !== null)
+            $this->validateEstimatedUnit((float) $data['estimatedUnit']);
+
+        if (isset($data['note']) && $data['note'] !== null && $data['note'] !== '')
+            $this->validateNote((string) $data['note']);
     }
 }

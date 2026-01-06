@@ -54,12 +54,12 @@ abstract class Validator
             'additionalChecks' => []
         ]
     ): void {
-        $min = $options['min'];
-        $max = $options['max'];
-        $fieldLabel = $options['fieldLabel'];
+        $min = $options['min'] ?? NAME_MIN;
+        $max = $options['max'] ?? NAME_MAX;
+        $fieldLabel = $options['fieldLabel'] ?? 'Name';
 
         $name = trim($name);
-        if (!$name || strlen($name) < $min || strlen($name) > $max)
+        if (strlen($name) < $min || strlen($name) > $max)
             $this->errors[] = "{$fieldLabel} must be between {$min} and {$max} characters.";
 
         if ($this->hasConsecutiveSpecialChars($name))
@@ -117,9 +117,9 @@ abstract class Validator
         ]
     ): void {
         $note = trim($note);
-        $min = $options['min'];
-        $max = $options['max'];
-        $fieldLabel = $options['fieldLabel'];
+        $min = $options['min'] ?? LONG_TEXT_MIN;
+        $max = $options['max'] ?? LONG_TEXT_MAX;
+        $fieldLabel = $options['fieldLabel'] ?? 'Note';
 
         if (!$note) return;
 
@@ -187,9 +187,9 @@ abstract class Validator
             'additionalChecks' => []
         ]
     ): void {
-        $min = $options['min'];
-        $max = $options['max'];
-        $fieldLabel = $options['fieldLabel'];
+        $min = $options['min'] ?? DEFAULT_RATE_MIN;
+        $max = $options['max'] ?? DEFAULT_RATE_MAX;
+        $fieldLabel = $options['fieldLabel'] ?? 'Default rate';
 
         if ($rate < $min || $rate > $max)
             $this->errors[] = "{$fieldLabel} must be between {$min} and {$max}.";

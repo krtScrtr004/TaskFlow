@@ -400,7 +400,6 @@ class UserValidator extends Validator
      * - bio: Validates using validateBio().
      * - defaultRate: Validates using validateDefaultRate().
      * - profileLink: Validates using UrlValidator's validateUrl().
-     * - createdAt: Ensures the DateTime value is not in the future.
      *
      * Each field is trimmed before validation where applicable. All validation errors from individual
      * validators are collected in $this->errors.
@@ -419,7 +418,6 @@ class UserValidator extends Validator
      * - email: string User's email address
      * - bio: string User's biography
      * - profileLink: string User's profile URL
-     * - createdAt: DateTime Account creation date
      * - defaultRate: float User's default rate
      * - role: Role User's role
      *
@@ -429,52 +427,49 @@ class UserValidator extends Validator
     {
         $urlValidator = new UrlValidator();
 
-        if (isset($data['firstName']))
+        if (isset($data['firstName']) && $data['firstName'] !== null && $data['firstName'] !== '')
             $this->validateFirstName(trim($data['firstName']) ?? null);
 
-        if (isset($data['middleName']))
+        if (isset($data['middleName']) && $data['middleName'] !== null && $data['middleName'] !== '')
             $this->validateMiddleName(trim($data['middleName']) ?? null);
 
-        if (isset($data['lastName'])) 
+        if (isset($data['lastName']) && $data['lastName'] !== null && $data['lastName'] !== '') 
             $this->validateLastName(trim($data['lastName']) ?? null);
 
-        if (isset($data['fullName'])) 
+        if (isset($data['fullName']) && $data['fullName'] !== null && $data['fullName'] !== '') 
             $this->validateFullName(trim($data['fullName']) ?? null);
 
-        if (isset($data['gender'])) 
+        if (isset($data['gender']) && $data['gender'] !== null) 
             $this->validateGender($data['gender'] ?? null);
 
-        if (isset($data['birthDate'])) 
+        if (isset($data['birthDate']) && $data['birthDate'] !== null) 
             $this->validateBirthDate($data['birthDate'] ?? null);
 
-        if (isset($data['role'])) 
+        if (isset($data['role']) && $data['role'] !== null) 
             $this->validateRole($data['role'] ?? null);
 
-        if (isset($data['jobTitles'])) 
+        if (isset($data['jobTitles']) && $data['jobTitles'] !== null) 
             $this->validateJobTitles($data['jobTitles'] ?? null);
 
-        if (isset($data['password'])) 
+        if (isset($data['password']) && $data['password'] !== null && $data['password'] !== '') 
             $this->validatePassword(trim($data['password']) ?? null);
 
-        if (isset($data['contactNumber'])) 
+        if (isset($data['contactNumber']) && $data['contactNumber'] !== null && $data['contactNumber'] !== '') 
             $this->validateContactNumber(trim($data['contactNumber']) ?? null);
 
-        if (isset($data['email'])) 
+        if (isset($data['email']) && $data['email'] !== null && $data['email'] !== '') 
             $this->validateEmail(trim($data['email']) ?? null);
 
-        if (isset($data['bio'])) 
+        if (isset($data['bio']) && $data['bio'] !== null && $data['bio'] !== '') 
             $this->validateBio(trim($data['bio']));
 
-        if (isset($data['profileLink'])) 
+        if (isset($data['profileLink']) && $data['profileLink'] !== null && $data['profileLink'] !== '') 
             $urlValidator->validateUrl(trim($data['profileLink']) ?? null);
 
-        if ($data['createdAt'] > new DateTime()) 
-            $this->addError("createdAt", "Created At date cannot be in the future.");
-
-        if (isset($data['defaultRate'])) 
+        if (isset($data['defaultRate']) && $data['defaultRate'] !== null) 
             $this->validateDefaultRate($data['defaultRate'] ?? null);
 
-        if (isset($data['role'])) 
+        if (isset($data['role']) && $data['role'] !== null) 
             $this->validateRole($data['role'] ?? null);
     }
 }
