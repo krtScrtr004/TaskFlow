@@ -1,30 +1,25 @@
 import { Dialog } from '../../render/dialog.js'
 import { Loader } from '../../render/loader.js'
 import { fetchWorkers } from './fetch.js'
-import { createWorkerListCard } from './project/render.js'
+import { createWorkerListCard } from './render.js'
 import { selectedUsers } from './select.js'
 
 // Map to store observers per container to support multiple simultaneous instances
 const observerMap = new WeakMap()
 
 export function infiniteScrollWorkers(projectId, localEndpoint, searchKey = '', options = {}) {
-    if (!localEndpoint || localEndpoint.trim() === '') {
+    if (!localEndpoint || localEndpoint.trim() === '')
         throw new Error('Invalid endpoint provided to infiniteScrollWorkers.')
-    }
-    
+
     const container = options.workerListContainer || document.querySelector('#add_worker_modal_template')
-    if (!container) {
-        throw new Error('Worker List element not found.')
-    }
+    if (!container) throw new Error('Worker List element not found.')
 
     // Disconnect any existing observer for this specific container
     disconnectInfiniteScroll(container)
 
     const sentinel = container.querySelector('.sentinel') || container.parentElement?.querySelector('.sentinel')
 
-    if (!sentinel) {
-        throw new Error('Sentinel element not found.')
-    }
+    if (!sentinel) throw new Error('Sentinel element not found.')
 
     try {
         // Create a new observer with a closure that captures all context
@@ -76,16 +71,11 @@ function createInfiniteScrollObserver(container, sentinel, projectId, endpoint, 
 
                 try {
                     const workers = await fetchWorkers(endpoint, searchKey, offset)
-                    
-                    // Check again after async operation
-                    if (!isObserverActive) {
-                        return // Observer was disconnected during fetch
-                    }
 
-                    if (workers === false) {
-                        // Fetch was already in progress; skip this cycle
-                        continue
-                    }
+                    // Check again after async operation
+                    if (!isObserverActive) return // Observer was disconnected during fetch
+
+                    if (workers === false) continue // Fetch was already in progress; skip this cycle
 
                     // No more workers to load; stop observing
                     if (!workers || workers.length === 0) {
@@ -108,7 +98,7 @@ function createInfiniteScrollObserver(container, sentinel, projectId, endpoint, 
     })
 
     observer.observe(sentinel)
-    
+
     // Return both observer and a cleanup function
     return {
         observer,
@@ -135,7 +125,7 @@ function createInfiniteScrollObserver(container, sentinel, projectId, endpoint, 
  */
 export function disconnectInfiniteScroll(container) {
     if (!container) return
-    
+
     const observerContext = observerMap.get(container)
     if (observerContext) {
         observerContext.cleanup()

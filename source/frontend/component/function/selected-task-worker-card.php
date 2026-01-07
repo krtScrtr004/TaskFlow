@@ -23,7 +23,7 @@ use App\Dependent\TaskWorker;
  *
  * @return bool|string Returns the generated HTML string on success, or false if output buffering fails
  */
-function selectedCreateTaskWorkerCard(TaskWorker $worker): bool|string
+function selectedTaskWorkerCard(TaskWorker $worker): bool|string
 {
     $id = htmlspecialchars(UUID::toString($worker->getPublicId()));
     $fullName = htmlspecialchars(
@@ -33,7 +33,7 @@ function selectedCreateTaskWorkerCard(TaskWorker $worker): bool|string
             $worker->getLastName()
         )
     );
-    $unitRate = $worker->getUnitRate();
+    $unitRate = $worker->getUnitRate() ?? $worker->getDefaultRate();
     $estimatedHoursAssigned = $worker->getEstimatedHours();
 
     ob_start()
@@ -44,11 +44,11 @@ function selectedCreateTaskWorkerCard(TaskWorker $worker): bool|string
             <label for="">
                 <div class="text-w-icon">
                     <img src="<?= ICON_PATH . 'name_w.svg' ?>" alt="Full Name" title="Full Name" height="16">
-                    <p class=""><?= $fullName ?></p>
+                    <p class="">Full Name</p>
                 </div>
             </label>
 
-            <input type="text" id="" name="" placeholder="Full Name" value="" disabled>
+            <input type="text" id="" name="" placeholder="Full Name" value="<?= $fullName ?>" disabled>
         </div>
 
         <div class="multiple-input-row">
@@ -57,11 +57,11 @@ function selectedCreateTaskWorkerCard(TaskWorker $worker): bool|string
                 <label for="">
                     <div class="text-w-icon">
                         <img src="<?= ICON_PATH . 'rate_w.svg' ?>" alt="Unit Rate" title="Unit Rate" height="16">
-                        <p class=""><?= $unitRate ?></p>
+                        <p class="">Unit Rate</p>
                     </div>
                 </label>
 
-                <input type="number" id="" name="" step="0.01" value="" placeholder="Unit Rate" required>
+                <input type="number" id="" name="" step="0.01" value="<?= $unitRate ?>" placeholder="Unit Rate" required>
             </div>
 
             <!-- Estimated Hours Assigned -->
@@ -69,11 +69,11 @@ function selectedCreateTaskWorkerCard(TaskWorker $worker): bool|string
                 <label for="">
                     <div class="text-w-icon">
                         <img src="<?= ICON_PATH . 'clock_w.svg' ?>" alt="Hours Assigned" title="Hours Assigned" height="16">
-                        <p class=""><?= $estimatedHoursAssigned ?></p>
+                        <p class="">Hours Assigned</p>
                     </div>
                 </label>
 
-                <input type="number" id="" name="" step="0.01" value="" placeholder="Hours Assigned" required>
+                <input type="number" id="" name="" step="0.01" value="<?= $estimatedHoursAssigned ?>" placeholder="Hours Assigned" required>
             </div>
         </div>
 

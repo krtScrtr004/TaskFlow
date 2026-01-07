@@ -836,7 +836,7 @@ class ProjectWorkerModel extends Model
                         AND 
                             pw3.status != '" . WorkerStatus::TERMINATED->value . "'
                     ) AS completed_projects,
-                    COALESCE($projectHistory, JSON_ARRAY()) AS project_history
+                    " . ($projectHistory ? "($projectHistory) AS project_history" : "JSON_ARRAY() AS project_history") . "
                 FROM
                     `user` AS u
                 LEFT JOIN

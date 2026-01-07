@@ -2,7 +2,7 @@ import { Loader } from '../../render/loader.js'
 import { Dialog } from '../../render/dialog.js'
 import { debounceAsync } from '../../utility/debounce.js'
 import { fetchWorkers } from './fetch.js'
-import { createWorkerListCard } from './project/render.js'
+import { createWorkerListCard } from './render.js'
 import { toggleNoWorkerWall } from './modal.js'
 import { infiniteScrollWorkers, disconnectInfiniteScroll } from './infinite-scroll.js'
 
@@ -23,9 +23,8 @@ import { infiniteScrollWorkers, disconnectInfiniteScroll } from './infinite-scro
  * searchWorkerEvent(123, '/api/workers/search');
  */
 export function searchWorkerEvent(projectId, localEndpoint, options = {}) {
-    if (!localEndpoint || localEndpoint.trim() === '') {
+    if (!localEndpoint || localEndpoint.trim() === '')
         throw new Error('Invalid endpoint provided to searchWorkerEvent.')
-    }
     
     const container = options.workerListContainer || document.querySelector('#add_worker_modal_template')
 

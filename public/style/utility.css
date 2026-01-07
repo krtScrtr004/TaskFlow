@@ -223,6 +223,11 @@
 	text-align: end;
 }
 
+.minified-text {
+	font-weight: 300;
+	font-size: 0.75rem;
+}
+
 .wrap-text {
 	white-space: normal; 
 	word-break: normal; 

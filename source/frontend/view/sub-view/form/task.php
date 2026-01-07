@@ -1,6 +1,9 @@
 <?php
-
+use App\Core\UUID;
 use App\Enumeration\TaskPriority;
+
+if (!$project) throw new Exception('Project data is required to render this page');
+$projectData = [ 'id'    => htmlspecialchars(UUID::toString($project->getPublicId())) ]
 ?>
 
 <!DOCTYPE html>
@@ -22,7 +25,9 @@ use App\Enumeration\TaskPriority;
 </head>
 
 <body>
-    <main class="task-form main-page center-child">
+    <?php include_once COMPONENT_PATH . 'template' . DS . 'add-worker-modal.php' ?>
+
+    <main class="task-form main-page center-child" data-projectid="<?= $projectData['id'] ?>">
         <form id="task_form" class="content-section-block flex-row" action="" method="POST">
             <!-- Task Info -->
             <fieldset id="task_info">
@@ -60,7 +65,7 @@ use App\Enumeration\TaskPriority;
                                             <p class="">Name</p>
                                         </div>
                                     </label>
-                                    <input type="text" id="name" name="name" placeholder="Name" required>
+                                    <input type="text" id="name" name="name" placeholder="(eg. Requirement Gathering and Analysis)" required>
                                 </div>
 
                                 <?= workNameRules() ?>
@@ -104,11 +109,11 @@ use App\Enumeration\TaskPriority;
                                 <label for="description">
                                     <div class="text-w-icon">
                                         <img src="<?= ICON_PATH . 'description_w.svg' ?>" alt="Description" title="Description" height="18">
-                                        <p class="">Description</p>
+                                        <p class="">Description <span class="minified-text dark-white-text">(Optional)</span></p>
                                     </div>
                                 </label>
 
-                                <textarea name="description" id="description" placeholder="Description" rows="8"></textarea>
+                                <textarea name="description" id="description" placeholder="Describe the task in detail (e.g., Gather requirements from stakeholders, analyze feasibility)" rows="8"></textarea>
                             </div>
 
                             <?= workDescriptionRules() ?>
@@ -141,7 +146,7 @@ use App\Enumeration\TaskPriority;
                                         </div>
                                     </label>
 
-                                    <input type="number" step="0.01" min="0" name="estimated_cost" id="estimated_cost" placeholder="Estimated Cost">
+                                    <input type="number" step="0.01" min="0" name="estimated_cost" id="estimated_cost" placeholder="Estimate the cost (e.g., 1500.00)" required>
                                 </div>
 
                                 <?= workBudgetRules(2) ?>
@@ -154,11 +159,11 @@ use App\Enumeration\TaskPriority;
                                 <label for="budget_note">
                                     <div class="text-w-icon">
                                         <img src="<?= ICON_PATH . 'description_w.svg' ?>" alt="Budget Note" title="Budget Note" height="18">
-                                        <p class="">Budget Note</p>
+                                        <p class="">Budget Note  <span class="minified-text dark-white-text">(Optional)</span></p>
                                     </div>
                                 </label>
 
-                                <textarea name="budget_note" id="budget_note" placeholder="Budget Note" rows="3"></textarea>
+                                <textarea name="budget_note" id="budget_note" placeholder="Add any notes about the budget (e.g., include additional costs or considerations)" rows="3"></textarea>
                             </div>
 
                             <?= workDescriptionRules() ?>
@@ -192,7 +197,6 @@ use App\Enumeration\TaskPriority;
 
                 <section class="selected-worker-list flex-col no-display">
                     <!-- Selected Workers Will Appear Here -->
-                     <?= selectedCreateTaskWorkerCard() ?>
                 </section>
 
                 <div class="no-workers-wall no-content-wall light-black-bg flex-col">
@@ -213,6 +217,8 @@ use App\Enumeration\TaskPriority;
         </form>
     </main>
 
+    <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'new' . DS . 'open.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'new' . DS . 'add.js' ?>" defer></script>
 </body>
 
 </html>

@@ -29,7 +29,7 @@ export async function confirmationDialog(
         const HTML = `
             <section id="${id}" class="modal-wrapper flex-col">
                 <div class="confirmation-dialog dialog black-bg flex-col flex-child-center-h">
-                    <img src="${ICON_PATH}info_w.svg" alt="Confirm" title="Confirm" height="69" width="69">
+                    <img src="${ICON_PATH}about_w.svg" alt="Confirm" title="Confirm" height="69" width="69">
 
                     <div>
                         <h1 class="center-text">${title}</h1>

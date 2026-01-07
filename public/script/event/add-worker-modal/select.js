@@ -28,13 +28,11 @@ export function selectWorker() {
             // Update selectedUsers based on the new checked state
             const checkbox = e.target
             const workerId = checkbox.id
-            if (checkbox.checked) {
-                if (!selectedUsers.has(workerId)) {
-                    selectedUsers.add(workerId)
-                }
-            } else {
+            if (checkbox.checked) 
+                if (!selectedUsers.has(workerId)) selectedUsers.add(workerId)
+            else 
                 selectedUsers.delete(workerId)
-            }
+
             return
         }
 
@@ -47,13 +45,10 @@ export function selectWorker() {
         checkbox.checked = !checkbox.checked
         const workerId = checkbox.id
         
-        if (checkbox.checked) {
-            if (!selectedUsers.has(workerId)) {
-                selectedUsers.add(workerId)
-            }
-        } else {
+        if (checkbox.checked)
+            if (!selectedUsers.has(workerId)) selectedUsers.add(workerId)
+        else
             selectedUsers.delete(workerId)
-        }
     })
 
     // Mark that the event listener has been initialized

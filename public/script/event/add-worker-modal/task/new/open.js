@@ -1,25 +1,22 @@
 import { Loader } from '../../../../render/loader.js'
 import { handleException } from '../../../../utility/handle-exception.js'
 import { fetchWorkers } from '../../fetch.js'
-import { createWorkerListCard } from '../../project/render.js'
+import { createWorkerListCard } from '../../render.js'
 import { selectWorker } from '../../select.js'
 import { toggleNoWorkerWall } from '../../modal.js'
 import { initializeAddWorkerModal } from '../../modal.js'
 import { die } from '../../../../utility/utility.js'
 
-const addTaskForm = document.querySelector('#add_task_form')
+const taskForm = document.querySelector('#task_form')
 
 const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
-if (!addWorkerModalTemplate)
-    die('Add worker modal template not found')
+if (!addWorkerModalTemplate) die('Add worker modal template not found')
 
-const projectId = addTaskForm.dataset.projectid
-if (!projectId || projectId.trim() === '')
-    die('Project ID not found')
+const projectId = taskForm?.parentElement.dataset.projectid
+if (!projectId || projectId.trim() === '') die('Project ID not found')
 
-const addWorkerButton = addTaskForm.querySelector('#add_worker_button')
-if (!addWorkerButton)
-    die('Add worker button not found')
+const addWorkerButton = taskForm?.querySelector('#add_worker_button')
+if (!addWorkerButton) die('Add worker button not found')
 
 addWorkerButton.addEventListener('click', async () => {
     // Prepare query parameters to fetch only unassigned workers
