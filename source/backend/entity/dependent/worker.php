@@ -14,7 +14,7 @@ use DateTime;
 
 class Worker extends User
 {
-    private float $defaultRate;
+    protected float $defaultRate;
     protected WorkerStatus $status;
 
     /**

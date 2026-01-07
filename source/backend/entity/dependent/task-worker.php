@@ -15,6 +15,7 @@ class TaskWorker extends Worker
 {
     private float $estimatedHours;
     private float $actualHours;
+    private Resource $resource;
 
     private ResourceValidator $resourceValidator;
 
@@ -25,20 +26,21 @@ class TaskWorker extends Worker
      * It validates the estimated and actual hours using the ResourceValidator.
      * If validation fails, a ValidationException is thrown with the relevant error messages.
      *
-     * @param int|null $id Worker's ID.
-     * @param UUID|null $publicId Public identifier.
+     * @param int $id Worker's ID.
+     * @param UUID $publicId Public identifier.
      * @param string $firstName Worker's first name.
-     * @param string|null $middleName Worker's middle name.
+     * @param string|null $middleName Worker's middle name (optional).
      * @param string $lastName Worker's last name.
      * @param Gender $gender Worker's gender.
      * @param DateTime $birthDate Worker's birth date.
      * @param JobTitleContainer $jobTitles Worker's job titles.
      * @param string $contactNumber Worker's contact number.
      * @param string $email Worker's email address.
-     * @param string|null $bio Worker's biography.
-     * @param string|null $profileLink Worker's profile link.
+     * @param string|null $bio Worker's biography (optional).
+     * @param string|null $profileLink Worker's profile link (optional).
      * @param DateTime $createdAt Worker's creation timestamp.
-     * @param WorkerStatus|null $status Worker's worker status (default is UNASSIGNED).
+     * @param float $defaultRate Worker's default rate (default is DEFAULT_RATE_MIN).
+     * @param WorkerStatus $status Worker's worker status (default is UNASSIGNED).
      * @param float $estimatedHours Worker's estimated hours assigned (default is WORKER_HOURS_MIN).
      * @param float $actualHours Worker's actual hours worked (default is 0.0).
      * @param string|null $password Worker's password (optional).
@@ -49,31 +51,32 @@ class TaskWorker extends Worker
      * @throws ValidationException If validation of hours fails.
      */ 
     public function __construct(
-        ?int $id,
-        ?UUID $publicId,
+        int $id,
+        UUID $publicId,
         string $firstName,
-        ?string $middleName,
         string $lastName,
         Gender $gender,
         DateTime $birthDate,
         JobTitleContainer $jobTitles,
         string $contactNumber,
         string $email,
-        ?string $bio,
-        ?string $profileLink,
         DateTime $createdAt,
 
         // Task worker-specific properties
-        ?WorkerStatus $status = WorkerStatus::UNASSIGNED,
+        Resource $resource,
+        float $defaultRate = DEFAULT_RATE_MIN,
+        WorkerStatus $status = WorkerStatus::UNASSIGNED,
         float $estimatedHours = WORKER_HOURS_MIN,
         float $actualHours = 0.0,
 
         // Optional properties
+        ?string $middleName = null,
+        ?string $bio = null,
+        ?string $profileLink = null,
         ?string $password = null,
         ?DateTime $confirmedAt = null,
         ?DateTime $deletedAt = null,
         array $additionalInfo = [],
-
     ) {
         parent::__construct(
             id: $id,
@@ -89,6 +92,7 @@ class TaskWorker extends Worker
             bio: $bio,
             profileLink: $profileLink,
             createdAt: $createdAt,
+            defaultRate: $defaultRate,
             status: $status,
             password: $password,
             confirmedAt: $confirmedAt,
@@ -107,12 +111,45 @@ class TaskWorker extends Worker
             );
         }
 
+        $this->resource = $resource;
+        $this->resource->setQuantity(1); // TaskWorker always has quantity of 1
+
         $this->estimatedHours = $estimatedHours || WORKER_HOURS_MIN;
         $this->actualHours = $actualHours;
         $this->role = Role::TASK_WORKER;
     }
 
     // GETTERS
+
+    /**
+     * Gets the resource assigned to the task worker.
+     *
+     * @return Resource The assigned resource.
+     */
+    public function getResource(): Resource
+    {
+        return $this->resource;
+    }
+
+    /**
+     * Gets the unit rate of the assigned resource.
+     *
+     * @return float The unit rate.
+     */
+    public function getUnitRate(): float
+    {
+        return $this->resource->getUnitRate();
+    }
+
+    /**
+     * Gets the estimated unit of the assigned resource.
+     *
+     * @return float The estimated unit.
+     */
+    public function getEstimatedUnit(): float
+    {
+        return $this->resource->getEstimatedUnit();
+    }
 
     /**
      * Gets the estimated hours assigned to the task worker.
@@ -135,6 +172,26 @@ class TaskWorker extends Worker
     }
 
     // SETTERS
+
+    /**
+     * Sets the resource assigned to the task worker.
+     *
+     * @param Resource $resource The resource to assign.
+     */
+    public function setResource(Resource $resource): void
+    {
+        $this->resource = $resource;
+    }
+    
+    /**
+     * Sets the unit rate of the assigned resource.
+     *
+     * @param float $rate The unit rate to set.
+     */
+    public function setUnitRate(float $rate): void
+    {
+        $this->resource->setUnitRate($rate);
+    }
 
     /**
      * Gets the actual hours worked by the task worker.
@@ -191,12 +248,16 @@ class TaskWorker extends Worker
      *      - jobTitles: JobTitleContainer Job titles.
      *      - contactNumber: string Contact number.
      *      - email: string Email address.
+     *      - password: string|null Password.
      *      - bio: string|null Biography.
      *      - profileLink: string|null Profile link.
+     *      - defaultRate: float Worker's default rate.
+     *      - status: WorkerStatus|null Worker's status.
      *      - createdAt: DateTime Creation timestamp.
      *      - confirmedAt: DateTime|null Confirmation timestamp.
      *      - deletedAt: DateTime|null Deletion timestamp.
      *      - additionalInfo: array Additional information.
+     *      - resource: Resource Assigned resource.
      *      - estimatedHours: float Estimated hours assigned.
      *      - actualHours: float Actual hours worked.
      * 
@@ -209,6 +270,7 @@ class TaskWorker extends Worker
         /** @var static $partial */ // tell IDE this is the called class (silences false positive)
         $partial = parent::createPartial($data);
 
+        $partial->setResource(Resource::fromArray($data['resource']));
         $partial->setEstimatedHours((float) ($data['estimatedHours'] ?? WORKER_HOURS_MIN));
         if (isset($data['actualHours'])) {
             $partial->setActualHours((float) $data['actualHours']);
@@ -227,6 +289,7 @@ class TaskWorker extends Worker
      * 
      * @return array The associative array representation of the TaskWorker.
      *      - All base worker properties from parent::toArray()
+     *      - resource: The resource assigned to the task worker.
      *      - estimatedHours: The estimated hours assigned to the task worker.
      *      - actualHours: The actual hours worked by the task worker.
      */
@@ -234,6 +297,7 @@ class TaskWorker extends Worker
     {
         $parentArray = parent::toArray($useSnakeCase);
         $taskWorkerArray = [
+            'resource' => $this->resource->toArray($useSnakeCase),
             'estimatedHours' => $this->estimatedHours,
             'actualHours' => $this->actualHours,
         ];
@@ -269,12 +333,16 @@ class TaskWorker extends Worker
             jobTitles: $worker->getJobTitles(),
             contactNumber: $worker->getContactNumber(),
             email: $worker->getEmail(),
+            password: $worker->getPassword(),
             bio: $worker->getBio(),
             profileLink: $worker->getProfileLink(),
+            defaultRate: $worker->getDefaultRate(),
+            status: $worker->getStatus(),
             createdAt: $worker->getCreatedAt(),
             confirmedAt: $worker->getConfirmedAt(),
             deletedAt: $worker->getDeletedAt(),
             additionalInfo: $worker->getAdditionalInfo(),
+            resource: Resource::fromArray($data['resource']),
             estimatedHours: $data['estimatedHours'] ?? 0.0,
             actualHours: $data['actualHours'] ?? 0.0,
         );

@@ -1,8 +1,11 @@
 <?php
 
+namespace App\Entity;
+
 use App\Exception\ValidationException;
 use App\Interface\Entity;
 use App\Validator\ResourceValidator;
+use DateTime;
 
 class ResourceType implements Entity {
     private int $id;

@@ -1,6 +1,8 @@
 <?php
 
-use App\Dependent;
+namespace App\Dependent;
+
+use App\Entity\ResourceType;
 use App\Exception\ValidationException;
 use App\Interface\Entity;
 use App\Validator\ResourceValidator;
@@ -14,7 +16,6 @@ class Resource implements Entity {
     private ?string $note;
 
     private ResourceValidator $resourceValidator;
-
 
     /**
      * Resource constructor.
@@ -172,6 +173,9 @@ class Resource implements Entity {
             );
         }
         $this->quantity = $quantity;
+
+        // Update estimated unit
+        $this->estimatedUnit = (float) $quantity * $this->unitRate;
     }
 
     /**
@@ -193,27 +197,9 @@ class Resource implements Entity {
             );
         }
         $this->unitRate = $unitRate;
-    }
 
-    /**
-     * Sets the estimated unit of the resource.
-     * 
-     * @param float $estimatedUnit The estimated unit of the resource.
-     * 
-     * @return void
-     * 
-     * @throws ValidationException If the estimated unit is invalid.
-     */
-    public function setEstimatedUnit(float $estimatedUnit): void
-    {
-        $this->resourceValidator->validateEstimatedUnit($estimatedUnit);
-        if ($this->resourceValidator->hasErrors()) {
-            throw new ValidationException(
-                'Invalid Resource Estimated Unit',
-                $this->resourceValidator->getErrors()
-            );
-        }
-        $this->estimatedUnit = $estimatedUnit;
+        // Update estimated unit
+        $this->estimatedUnit = (float) $this->quantity * $unitRate;
     }
 
     /**
