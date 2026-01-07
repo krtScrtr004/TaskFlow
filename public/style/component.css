@@ -541,6 +541,11 @@ button > .text-w-icon {
 	border-radius: var(--input-border-radius);
 }
 
+.no-content-wall.no-style {
+	border: none;
+	background-color: transparent;
+}
+
 .no-content-wall.light-black-bg {
 	background-color: var(--light-black);
 }

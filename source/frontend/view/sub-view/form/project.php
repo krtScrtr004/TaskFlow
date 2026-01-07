@@ -56,7 +56,8 @@ if ($project) {
     $uiState['submitButtonId']      = 'create_project_button';
     $uiState['submitButtonText']    = 'Create Project';
 
-    $uiState['pageName'] = 'Create Project';}
+    $uiState['pageName'] = 'Create Project';
+}
 ?>
 
 <!DOCTYPE html>
@@ -135,10 +136,12 @@ if ($project) {
                         <!-- NAME -->
                         <div class="input-rules-container">
                             <div class="input-label-container">
-                                <div class="text-w-icon">
-                                    <img src="<?= ICON_PATH . 'name_w.svg' ?>" alt="Name" title="Name" height="24">
-                                    <label for="name">Name</label>
-                                </div>
+                                <label for="name">
+                                    <div class="text-w-icon">
+                                        <img src="<?= ICON_PATH . 'name_w.svg' ?>" alt="Name" title="Name" height="24">
+                                        <p>Name</p>
+                                    </div>
+                                </label>
                                 <input type="text" name="name" id="name" placeholder="(eg. Project Management System)"
                                     value="<?= $projectData['name'] ?>" min="<?= NAME_MIN ?>" max="<?= NAME_MAX ?>"
                                     autocapitalize="on" autocomplete="on" required>
@@ -150,13 +153,15 @@ if ($project) {
                         <!-- DESCRIPTION -->
                         <div class="input-rules-container">
                             <div class="input-label-container">
-                                <div class="text-w-icon">
-                                    <img src="<?= ICON_PATH . 'description_w.svg' ?>" alt="Description"
-                                        title="Description" height="24">
-                                    <label for="description">Description</label>
-                                </div>
-                                <textarea name="description" id="description" rows="4"
-                                    placeholder="Describe what your project objectives, scope, and deliverables (optional)"
+                                <label for="description">
+                                    <div class="text-w-icon">
+                                        <img src="<?= ICON_PATH . 'description_w.svg' ?>" alt="Description"
+                                            title="Description" height="24">
+                                        <p>Description<span class="minified-text dark-white-text"> (Optional)</span></p>
+                                    </div>
+                                </label>
+                                <textarea name="description" id="description" rows="8"
+                                    placeholder="Describe what your project objectives, scope, and deliverables are (eg. Develop a web-based project management system to streamline task allocation, progress tracking, and team collaboration.)"
                                     min="<?= LONG_TEXT_MIN ?>" max="<?= LONG_TEXT_MAX ?>" autocapitalize="on"
                                     autocomplete="on" required><?= $projectData['description'] ?></textarea>
                             </div>
@@ -169,14 +174,16 @@ if ($project) {
                             <!-- BUDGET -->
                             <div class="input-rules-container">
                                 <div class="input-label-container">
-                                    <div class="text-w-icon">
-                                        <img src="<?= ICON_PATH . 'budget_w.svg' ?>" alt="Budget" title="Budget"
-                                            height="24">
-                                        <label for="budget">Budget</label>
-                                    </div>
+                                    <label for="budget">
+                                        <div class="text-w-icon">
+                                            <img src="<?= ICON_PATH . 'budget_w.svg' ?>" alt="Budget" title="Budget"
+                                                height="24">
+                                            <p>Budget</p>
+                                        </div>
+                                    </label>
                                     <div class="input-w-prefix">
                                         <span class="input-prefix">₱</span>
-                                        <input type="number" name="budget" id="budget" placeholder="0.00" value="<?= $projectData['budget'] ?>" required>
+                                        <input type="number" name="budget" id="budget" placeholder="Define the budget allocated (e.g., 50000.00)" value="<?= $projectData['budget'] ?>" required>
                                     </div>
                                 </div>
 
@@ -186,13 +193,15 @@ if ($project) {
                             <!-- MAX WORKERS -->
                             <div class="input-rules-container">
                                 <div class="input-label-container">
-                                    <div class="text-w-icon">
-                                        <img src="<?= ICON_PATH . 'worker_w.svg' ?>" alt="Max Workers"
-                                            title="Max Workers" height="24">
-                                        <label for="max_workers">Max Workers</label>
-                                    </div>
+                                    <label for="max_workers">
+                                        <div class="text-w-icon">
+                                            <img src="<?= ICON_PATH . 'worker_w.svg' ?>" alt="Max Workers"
+                                                title="Max Workers" height="24">
+                                            <p>Max Workers</p>
+                                        </div>
+                                    </label>
                                     <input type="number" name="max_workers" id="max_workers"
-                                        placeholder="Define the maximum number of workers (eg. 10)" value="<?= $projectData['maxWorkers'] ?>"
+                                        placeholder="Define the maximum number of workers (e.g., 10)" value="<?= $projectData['maxWorkers'] ?>"
                                         min="<?= WORKER_COUNT_MIN ?>" max="<?= WORKER_COUNT_MAX ?>"
                                         value="<?= WORKER_COUNT_MIN ?>" required>
                                 </div>
@@ -206,11 +215,13 @@ if ($project) {
                             <!-- START DATE -->
                             <div class="input-rules-container">
                                 <div class="input-label-container">
-                                    <div class="text-w-icon">
-                                        <img src="<?= ICON_PATH . 'start_w.svg' ?>" alt="Start Date" title="Start Date"
-                                            height="24">
-                                        <label for="start_date_time">Start Date</label>
-                                    </div>
+                                    <label for="start_date_time">
+                                        <div class="text-w-icon">
+                                            <img src="<?= ICON_PATH . 'start_w.svg' ?>" alt="Start Date" title="Start Date"
+                                                height="24">
+                                            <p>Start Date</p>
+                                        </div>
+                                    </label>
                                     <input type="date" name="start_date_time" id="start_date_time"
                                         value="<?= $projectData['startDateTime'] ?>"
                                         min="<?= formatDateTime(new DateTime(), 'Y-m-d') ?>" required>
@@ -222,11 +233,13 @@ if ($project) {
                             <!-- COMPLETION DATE -->
                             <div class="input-rules-container">
                                 <div class="input-label-container">
-                                    <div class="text-w-icon">
-                                        <img src="<?= ICON_PATH . 'complete_w.svg' ?>" alt="Completion Date"
-                                            title="Completion Date" height="24">
-                                        <label for="completion_date_time">End Date</label>
-                                    </div>
+                                    <label for="completion_date_time">
+                                        <div class="text-w-icon">
+                                            <img src="<?= ICON_PATH . 'complete_w.svg' ?>" alt="Completion Date"
+                                                title="Completion Date" height="24">
+                                            <p>Completion Date</p>
+                                        </div>
+                                    </label>
                                     <input type="date" name="completion_date_time" id="completion_date_time" value="<?= $projectData['completionDateTime'] ?>"
                                         min="<?= formatDateTime(new DateTime(), 'Y-m-d') ?>" required>
                                 </div>
@@ -299,7 +312,7 @@ if ($project) {
                                 </ul>
                                 <div class="sentinel"></div>
 
-                                <div class="no-workers-wall no-content-wall flex-col">
+                                <div class="no-workers-wall no-content-wall no-style flex-col">
                                     <img src="<?= ICON_PATH . 'empty_dw.svg' ?>" alt="No Workers Found
                                     title=" No Workers Found" height="80">
                                     <span>
@@ -329,7 +342,7 @@ if ($project) {
                                 </tbody>
                             </table>
 
-                            <div class="no-workers-wall no-content-wall <?= $uiState['noWorkerWall'] ?>">
+                            <div class="no-workers-wall no-content-wall no-style <?= $uiState['noWorkerWall'] ?>">
                                 <img src="<?= ICON_PATH . 'empty_dw.svg' ?>" alt="No Workers Selected"
                                     title="No Workers Selected" height="80">
                                 <span>

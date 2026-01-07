@@ -1,6 +1,6 @@
 import { Loader } from '../../../render/loader.js'
 import { fetchWorkers } from '../fetch.js'
-import { createWorkerListCard } from './render.js'
+import { createWorkerListCard } from '../render.js'
 import { selectWorker } from '../select.js'
 import { initializeAddWorkerModal } from '../modal.js'
 import { toggleNoWorkerWall } from '../modal.js'

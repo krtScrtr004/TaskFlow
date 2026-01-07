@@ -45,7 +45,7 @@ function phaseFormCard(?Phase $phase): bool|string
     }
 
     ob_start();
-    ?>
+?>
     <div class="phase-form-card flex-col fade-in" data-phaseid="<?= $phaseData['id'] ?>">
         <section class="heading flex-row flex-space-between black-bg">
             <div class="text-w-icon">
@@ -61,10 +61,12 @@ function phaseFormCard(?Phase $phase): bool|string
         <section class="inputs-section flex-col">
             <div class="input-rules-container">
                 <div class="input-label-container">
-                    <div class="text-w-icon">
-                        <img src="<?= ICON_PATH . 'name_w.svg' ?>" alt="Name" title="Name" height="24">
-                        <label for="name">Name</label>
-                    </div>
+                    <label for="name">
+                        <div class="text-w-icon">
+                            <img src="<?= ICON_PATH . 'name_w.svg' ?>" alt="Name" title="Name" height="24">
+                            <p>Name</p>
+                        </div>
+                    </label>
                     <input type="text" name="name" id="name" placeholder="(eg. Requirement Analysis)" min="<?= NAME_MIN ?>"
                         max="<?= NAME_MAX ?>" value="<?= $phaseData['name'] ?>" autocapitalize="on" autocomplete="on"
                         required>
@@ -75,12 +77,14 @@ function phaseFormCard(?Phase $phase): bool|string
 
             <div class="input-rules-container">
                 <div class="input-label-container">
-                    <div class="text-w-icon">
-                        <img src="<?= ICON_PATH . 'description_w.svg' ?>" alt="Description" title="Description" height="24">
-                        <label for="description">Description</label>
-                    </div>
-                    <textarea name="description" id="description" rows="4"
-                        placeholder="Describe the phase objectives, scope, and deliverables (optional)"
+                    <label for="description">
+                        <div class="text-w-icon">
+                            <img src="<?= ICON_PATH . 'description_w.svg' ?>" alt="Description" title="Description" height="24">
+                            <p>Description <span class="minified-text dark-white-text"> (Optional)</span></p>
+                        </div>
+                    </label>
+                    <textarea name="description" id="description" rows="8"
+                        placeholder="Describe the phase objectives, scope, and deliverables (eg. Gather and analyze project requirements from stakeholders to define project scope and objectives.)"
                         min="<?= LONG_TEXT_MIN ?>" max="<?= LONG_TEXT_MAX ?>" autocapitalize="on" autocomplete="on"
                         required><?= $phaseData['description'] ?></textarea>
                 </div>
@@ -91,14 +95,16 @@ function phaseFormCard(?Phase $phase): bool|string
             <section class="row-inputs flex-row">
                 <div class="input-rules-container">
                     <div class="input-label-container">
-                        <div class="text-w-icon">
-                            <img src="<?= ICON_PATH . 'budget_w.svg' ?>" alt="Budget" title="Budget" height="24">
-                            <label for="budget">Budget</label>
-                        </div>
+                        <label for="budget">
+                            <div class="text-w-icon">
+                                <img src="<?= ICON_PATH . 'budget_w.svg' ?>" alt="Budget" title="Budget" height="24">
+                                <p>Budget</p>
+                            </div>
+                        </label>
                         <div class="input-w-prefix">
                             <span class="input-prefix">₱</span>
                             <input type="number" name="budget" id="budget" value="<?= $phaseData['budget'] ?>"
-                                placeholder="0.00" required>
+                                placeholder="Enter the budget amount for this phase (e.g., 10000)" required>
                         </div>
                     </div>
 
@@ -107,13 +113,15 @@ function phaseFormCard(?Phase $phase): bool|string
 
                 <div class="input-rules-container">
                     <div class="input-label-container">
-                        <div class="text-w-icon">
-                            <img src="<?= ICON_PATH . 'safe_w.svg' ?>" alt="Contingency Rate" title="Contingency Rate"
-                                height="24">
-                            <label for="contingency_rate">Contingency Rate</label>
-                        </div>
+                        <label for="contingency_rate">
+                            <div class="text-w-icon">
+                                <img src="<?= ICON_PATH . 'safe_w.svg' ?>" alt="Contingency Rate" title="Contingency Rate"
+                                    height="24">
+                                <p>Contingency Rate</p>
+                            </div>
+                        </label>
                         <input type="number" name="contingency_rate" id="contingency_rate"
-                            value="<?= $phaseData['contingencyRate'] ?>" placeholder="0" min="<?= CONTINGENCY_RATE_MIN ?>"
+                            value="<?= $phaseData['contingencyRate'] ?>" placeholder="How much contingency rate to allocate (e.g., 10)" min="<?= CONTINGENCY_RATE_MIN ?>"
                             max="<?= CONTINGENCY_RATE_MAX ?>" required>
                     </div>
 
@@ -123,12 +131,14 @@ function phaseFormCard(?Phase $phase): bool|string
 
             <div class="input-rules-container">
                 <div class="input-label-container">
-                    <div class="text-w-icon">
-                        <img src="<?= ICON_PATH . 'description_w.svg' ?>" alt="Budget Note" title="Budget Note" height="24">
-                        <label for="budget_note">Budget Note</label>
-                    </div>
+                    <label for="budget_note">
+                        <div class="text-w-icon">
+                            <img src="<?= ICON_PATH . 'description_w.svg' ?>" alt="Budget Note" title="Budget Note" height="24">
+                            <p>Budget Note <span class="minified-text dark-white-text"> (Optional)</span></p>
+                        </div>
+                    </label>
                     <textarea name="budget_note" id="budget_note" rows="4"
-                        placeholder="Provide additional details about the budget allocation for this phase (optional)"
+                        placeholder="Provide additional details about the budget allocation for this phase (eg. Include costs for resources, tools, and contingency funds.)"
                         min="<?= LONG_TEXT_MIN ?>" max="<?= LONG_TEXT_MAX ?>" autocapitalize="on" autocomplete="on"
                         required><?= $phaseData['budgetNote'] ?></textarea>
                 </div>
@@ -140,10 +150,12 @@ function phaseFormCard(?Phase $phase): bool|string
 
                 <div class="input-rules-container">
                     <div class="input-label-container">
-                        <div class="text-w-icon">
-                            <img src="<?= ICON_PATH . 'start_w.svg' ?>" alt="Start Date" title="Start Date" height="24">
-                            <label for="start_date_time">Start Date</label>
-                        </div>
+                        <label for="start_date_time">
+                            <div class="text-w-icon">
+                                <img src="<?= ICON_PATH . 'start_w.svg' ?>" alt="Start Date" title="Start Date" height="24">
+                                <p>Start Date</p>
+                            </div>
+                        </label>
                         <input type="date" name="start_date_time" id="start_date_time"
                             min="<?= formatDateTime(new DateTime(), 'Y-m-d') ?>" value="<?= $phaseData['startDateTime'] ?>"
                             required>
@@ -154,11 +166,13 @@ function phaseFormCard(?Phase $phase): bool|string
 
                 <div class="input-rules-container">
                     <div class="input-label-container">
-                        <div class="text-w-icon">
-                            <img src="<?= ICON_PATH . 'complete_w.svg' ?>" alt="Completion Date" title="Completion Date"
-                                height="24">
-                            <label for="completion_date_time">End Date</label>
-                        </div>
+                        <label for="completion_date_time">
+                            <div class="text-w-icon">
+                                <img src="<?= ICON_PATH . 'complete_w.svg' ?>" alt="Completion Date" title="Completion Date"
+                                    height="24">
+                                <p>Completion Date</p>
+                            </div>
+                        </label>
                         <input type="date" name="completion_date_time" id="completion_date_time"
                             min="<?= formatDateTime(new DateTime(), 'Y-m-d') ?>"
                             value="<?= $phaseData['completionDateTime'] ?>" required>
@@ -168,6 +182,6 @@ function phaseFormCard(?Phase $phase): bool|string
                 </div>
             </section>
     </div>
-    <?php
+<?php
     return ob_get_clean();
 }

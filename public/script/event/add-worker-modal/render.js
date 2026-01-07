@@ -1,4 +1,3 @@
-import { workerIds } from './task/new/add.js'
 import { createFullName, getValidationConstraints, toggleElementClass } from '../../utility/utility.js'
 import { selectedUsers } from './select.js'
 
@@ -316,23 +315,20 @@ function createRemoveButton(workerId, cardElement) {
 
     btn.appendChild(removeImg)
 
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener('click', async (e) => {
         e.preventDefault()
+        const noWorkersWall = document.querySelector('#worker_info .no-workers-wall')
+
         toggleElementClass(cardElement, ['fade-out'], ['fade-in'])
         cardElement.addEventListener('animationend', () => {
             cardElement.remove()
-
-            const remainingCards = document.querySelectorAll('.selected-task-worker-form-card')
-            if (remainingCards.length === 0) {
-                const noWorkersWall = document.querySelector('#worker_info .no-workers-wall')
-                if (noWorkersWall)
-                    toggleElementClass(noWorkersWall, ['flex-col'], ['no-display'])
+            if (Object.keys(workerIds).length === 0 && noWorkersWall) {
+                toggleElementClass(noWorkersWall, ['flex-col'], ['no-display']);
             }
         })
-        try { delete workerIds[workerId] } catch (err) { }
-        if (Object.keys(workerIds).length === 0 && noAssignedWorkerWall) {
-            toggleElementClass(noAssignedWorkerWall, ['no-display'], ['flex-col'])
-        }
+
+        const { workerIds } = await import('./task/new/add.js');
+        delete workerIds[workerId];
     })
 
     return btn

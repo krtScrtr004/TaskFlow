@@ -1,9 +1,10 @@
 <?php
+
 use App\Core\UUID;
 use App\Enumeration\TaskPriority;
 
 if (!$project) throw new Exception('Project data is required to render this page');
-$projectData = [ 'id'    => htmlspecialchars(UUID::toString($project->getPublicId())) ]
+$projectData = ['id'    => htmlspecialchars(UUID::toString($project->getPublicId()))]
 ?>
 
 <!DOCTYPE html>
@@ -32,13 +33,13 @@ $projectData = [ 'id'    => htmlspecialchars(UUID::toString($project->getPublicI
             <!-- Task Info -->
             <fieldset id="task_info">
                 <!-- Back Button -->
-                <div class="back-container flex-row">
-                    <button class="back-button unset-button">
+                <button type="button" class="back-button unset-button">
+                    <div class="back-container flex-row">
                         <img src="<?= ICON_PATH . 'back_w.svg' ?>" alt="Back" title="Back" height="18">
-                    </button>
 
-                    <p class="">Back To Dashboard</p>
-                </div>
+                        <p class="">Back To Dashboard</p>
+                    </div>
+                </button>
 
                 <!-- Form Section -->
                 <section class="form-section flex-col">
@@ -159,7 +160,7 @@ $projectData = [ 'id'    => htmlspecialchars(UUID::toString($project->getPublicI
                                 <label for="budget_note">
                                     <div class="text-w-icon">
                                         <img src="<?= ICON_PATH . 'description_w.svg' ?>" alt="Budget Note" title="Budget Note" height="18">
-                                        <p class="">Budget Note  <span class="minified-text dark-white-text">(Optional)</span></p>
+                                        <p class="">Budget Note <span class="minified-text dark-white-text">(Optional)</span></p>
                                     </div>
                                 </label>
 
@@ -217,6 +218,7 @@ $projectData = [ 'id'    => htmlspecialchars(UUID::toString($project->getPublicI
         </form>
     </main>
 
+    <script type="module" src="<?= EVENT_PATH . 'back-button.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'new' . DS . 'open.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'new' . DS . 'add.js' ?>" defer></script>
 </body>

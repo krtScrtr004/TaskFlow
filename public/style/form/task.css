@@ -9,10 +9,14 @@
     padding: 0;
 }
 
+#task_form .back-button, 
+#task_form .back-container {
+    width: fit-content;
+}
+
 #task_form .back-container {
     gap: 0.5rem;
     opacity: 0.8;
-    margin-bottom: var(--space);
     cursor: pointer;
 }
 

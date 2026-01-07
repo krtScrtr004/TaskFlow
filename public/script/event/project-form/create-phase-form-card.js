@@ -112,6 +112,8 @@ function renderPhaseFormCard(phaseData = {}) {
         completionDateTime: '',
     }
     const data = { ...defaults, ...phaseData }
+    // Today's date in YYYY-MM-DD for date min attributes
+    const today = new Date().toISOString().slice(0, 10)
 
     // Main card container
     const card = document.createElement('div')
@@ -169,19 +171,20 @@ function renderPhaseFormCard(phaseData = {}) {
         rules: renderWorkNameRules(),
     }))
 
-    // Description textarea with rules
+    // Description textarea with rules (match PHP: rows = 8)
     inputsSection.appendChild(createTextareaWithRules({
         iconSrc: ICON_PATH + 'description_w.svg',
         iconAlt: 'Description',
         label: 'Description',
         inputName: 'description',
-        placeholder: 'Describe the phase objectives, scope, and deliverables (optional)',
+        placeholder: 'Describe the phase objectives, scope, and deliverables (eg. Gather and analyze project requirements from stakeholders to define project scope and objectives.)',
         value: data.description,
-        rows: 4,
+        rows: 8,
         min: VALIDATION_CONSTANTS.LONG_TEXT_MIN,
         max: VALIDATION_CONSTANTS.LONG_TEXT_MAX,
         required: true,
         rules: renderWorkDescriptionRules(),
+        optional: true,
     }))
 
     // Budget and Contingency Rate row
@@ -195,6 +198,9 @@ function renderPhaseFormCard(phaseData = {}) {
     const budgetContainer = document.createElement('div')
     budgetContainer.className = 'input-label-container'
 
+    const budgetLabel = document.createElement('label')
+    budgetLabel.htmlFor = 'budget'
+
     const budgetTextIcon = document.createElement('div')
     budgetTextIcon.className = 'text-w-icon'
 
@@ -204,12 +210,12 @@ function renderPhaseFormCard(phaseData = {}) {
     budgetIcon.title = 'Budget'
     budgetIcon.height = 24
 
-    const budgetLabel = document.createElement('label')
-    budgetLabel.htmlFor = 'budget'
-    budgetLabel.textContent = 'Budget'
+    const budgetLabelText = document.createElement('p')
+    budgetLabelText.textContent = 'Budget'
 
     budgetTextIcon.appendChild(budgetIcon)
-    budgetTextIcon.appendChild(budgetLabel)
+    budgetTextIcon.appendChild(budgetLabelText)
+    budgetLabel.appendChild(budgetTextIcon)
 
     const inputWithPrefix = document.createElement('div')
     inputWithPrefix.className = 'input-w-prefix'
@@ -223,13 +229,13 @@ function renderPhaseFormCard(phaseData = {}) {
     budgetInput.name = 'budget'
     budgetInput.id = 'budget'
     budgetInput.value = data.budget
-    budgetInput.placeholder = '0.00'
+    budgetInput.placeholder = 'Enter the budget amount for this phase (e.g., 10000)'
     budgetInput.required = true
 
     inputWithPrefix.appendChild(prefixSpan)
     inputWithPrefix.appendChild(budgetInput)
 
-    budgetContainer.appendChild(budgetTextIcon)
+    budgetContainer.appendChild(budgetLabel)
     budgetContainer.appendChild(inputWithPrefix)
 
     budgetRulesContainer.appendChild(budgetContainer)
@@ -244,7 +250,7 @@ function renderPhaseFormCard(phaseData = {}) {
         label: 'Contingency Rate',
         inputType: 'number',
         inputName: 'contingency_rate',
-        placeholder: '0',
+        placeholder: 'How much contingency rate to allocate (e.g., 10)',
         value: data.contingencyRate,
         min: VALIDATION_CONSTANTS.CONTINGENCY_RATE_MIN,
         max: VALIDATION_CONSTANTS.CONTINGENCY_RATE_MAX,
@@ -260,19 +266,21 @@ function renderPhaseFormCard(phaseData = {}) {
         iconAlt: 'Budget Note',
         label: 'Budget Note',
         inputName: 'budget_note',
-        placeholder: 'Provide additional details about the budget allocation for this phase (optional)',
+        placeholder: 'Provide additional details about the budget allocation for this phase (eg. Include costs for resources, tools, and contingency funds.)',
         value: data.budgetNote,
         rows: 4,
         min: VALIDATION_CONSTANTS.LONG_TEXT_MIN,
         max: VALIDATION_CONSTANTS.LONG_TEXT_MAX,
         required: true,
         rules: renderWorkBudgetNoteRules(),
+        optional: true,
     }))
 
     // Start and Completion Date row
     const dateRow = document.createElement('section')
     dateRow.className = 'row-inputs flex-row'
 
+    // Set min for dates to today to match PHP behavior
     dateRow.appendChild(createInputWithRules({
         iconSrc: ICON_PATH + 'start_w.svg',
         iconAlt: 'Start Date',
@@ -281,17 +289,19 @@ function renderPhaseFormCard(phaseData = {}) {
         inputName: 'start_date_time',
         value: data.startDateTime,
         required: true,
+        min: today,
         rules: renderWorkStartDateTimeRules(),
     }))
 
     dateRow.appendChild(createInputWithRules({
         iconSrc: ICON_PATH + 'complete_w.svg',
         iconAlt: 'Completion Date',
-        label: 'End Date',
+        label: 'Completion Date',
         inputType: 'date',
         inputName: 'completion_date_time',
         value: data.completionDateTime,
         required: true,
+        min: today,
         rules: renderWorkCompletionDateTimeRules(),
     }))
 
@@ -306,12 +316,15 @@ function renderPhaseFormCard(phaseData = {}) {
 /**
  * Helper function to create an input container with label, icon, and rules wrapped in input-rules-container.
  */
-function createInputWithRules({ iconSrc, iconAlt, label, inputType, inputName, placeholder = '', value = '', min, max, required = false, rules = null }) {
+function createInputWithRules({ iconSrc, iconAlt, label, inputType, inputName, placeholder = '', value = '', min, max, required = false, rules = null, optional = false }) {
     const rulesContainer = document.createElement('div')
     rulesContainer.className = 'input-rules-container'
 
     const container = document.createElement('div')
     container.className = 'input-label-container'
+
+    const labelEl = document.createElement('label')
+    labelEl.htmlFor = inputName
 
     const textIcon = document.createElement('div')
     textIcon.className = 'text-w-icon'
@@ -322,24 +335,35 @@ function createInputWithRules({ iconSrc, iconAlt, label, inputType, inputName, p
     icon.title = iconAlt
     icon.height = 24
 
-    const labelEl = document.createElement('label')
-    labelEl.htmlFor = inputName
-    labelEl.textContent = label
+    const labelText = document.createElement('p')
+    labelText.textContent = label
+    if (optional) {
+        const optionalSpan = document.createElement('span')
+        optionalSpan.className = 'minified-text dark-white-text'
+        optionalSpan.textContent = ' (Optional)'
+        labelText.appendChild(optionalSpan)
+    }
 
     textIcon.appendChild(icon)
-    textIcon.appendChild(labelEl)
+    textIcon.appendChild(labelText)
+    labelEl.appendChild(textIcon)
 
     const input = document.createElement('input')
     input.type = inputType
     input.name = inputName
     input.id = inputName
     input.value = value
+    // Enable autocapitalize and autocomplete for text inputs to match PHP attributes
+    if (inputType === 'text') {
+        input.autocapitalize = 'on'
+        input.autocomplete = 'on'
+    }
     if (placeholder) input.placeholder = placeholder
     if (min !== undefined) input.min = min
     if (max !== undefined) input.max = max
     if (required) input.required = true
 
-    container.appendChild(textIcon)
+    container.appendChild(labelEl)
     container.appendChild(input)
 
     rulesContainer.appendChild(container)
@@ -351,12 +375,15 @@ function createInputWithRules({ iconSrc, iconAlt, label, inputType, inputName, p
 /**
  * Helper function to create a textarea container with label, icon, and rules wrapped in input-rules-container.
  */
-function createTextareaWithRules({ iconSrc, iconAlt, label, inputName, placeholder = '', value = '', rows = 4, min, max, required = false, rules = null }) {
+function createTextareaWithRules({ iconSrc, iconAlt, label, inputName, placeholder = '', value = '', rows = 4, min, max, required = false, rules = null, optional = false }) {
     const rulesContainer = document.createElement('div')
     rulesContainer.className = 'input-rules-container'
 
     const container = document.createElement('div')
     container.className = 'input-label-container'
+
+    const labelEl = document.createElement('label')
+    labelEl.htmlFor = inputName
 
     const textIcon = document.createElement('div')
     textIcon.className = 'text-w-icon'
@@ -367,12 +394,18 @@ function createTextareaWithRules({ iconSrc, iconAlt, label, inputName, placehold
     icon.title = iconAlt
     icon.height = 24
 
-    const labelEl = document.createElement('label')
-    labelEl.htmlFor = inputName
-    labelEl.textContent = label
+    const labelText = document.createElement('p')
+    labelText.textContent = label
+    if (optional) {
+        const optionalSpan = document.createElement('span')
+        optionalSpan.className = 'minified-text dark-white-text'
+        optionalSpan.textContent = ' (Optional)'
+        labelText.appendChild(optionalSpan)
+    }
 
     textIcon.appendChild(icon)
-    textIcon.appendChild(labelEl)
+    textIcon.appendChild(labelText)
+    labelEl.appendChild(textIcon)
 
     const textarea = document.createElement('textarea')
     textarea.name = inputName
@@ -380,11 +413,14 @@ function createTextareaWithRules({ iconSrc, iconAlt, label, inputName, placehold
     textarea.rows = rows
     textarea.placeholder = placeholder
     textarea.textContent = value
+    // Match PHP: enable autocapitalize and autocomplete on textarea
+    textarea.autocapitalize = 'on'
+    textarea.autocomplete = 'on'
     if (min !== undefined) textarea.setAttribute('min', min)
     if (max !== undefined) textarea.setAttribute('max', max)
     if (required) textarea.required = true
 
-    container.appendChild(textIcon)
+    container.appendChild(labelEl)
     container.appendChild(textarea)
 
     rulesContainer.appendChild(container)

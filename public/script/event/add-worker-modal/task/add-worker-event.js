@@ -82,13 +82,13 @@ async function addWorkerButtonEvent(e, projectId, confirmAddWorkerButton, asyncF
         const result = await asyncFunction(projectId, Array.from(selectedUsers.values()))
         if (typeof action === 'function') action(result)
 
+        cleanup()
+
         if (typeof onSuccess === 'function') {
             (onSuccess.length > 0)
                 ? onSuccess(result)
                 : onSuccess()
         }
-
-        cleanup()
     } catch (error) {
         handleException(error, `Error adding workers: ${error.message}`)
     } finally {
