@@ -39,30 +39,6 @@ class ResourceValidator extends Validator
     }
 
     /**
-     * Validates the category of a resource.
-     * 
-     * This method checks if the provided resource category meets the defined length
-     * constraints and does not contain consecutive special characters. If the category
-     * is invalid, appropriate error messages are added to the errors array.
-     * 
-     * @param string $category The category of the resource.
-     * 
-     * @return void
-     */
-    public function validateCategory(string $category): void
-    {
-        $category = trim($category);
-        $min = NAME_MIN;
-        $max = NAME_MAX;
-
-        if (!$category || strlen($category) < $min || strlen($category) > $max)
-            $this->errors[] = "Resource category must be between {$min} and {$max} characters.";
-
-        if ($this->hasConsecutiveSpecialChars($category))
-            $this->errors[] = "Resource category must not contain consecutive special characters.";
-    }
-
-    /**
      * Validates the unit of a resource.
      * 
      * This method checks if the provided resource unit meets the defined length
@@ -195,7 +171,6 @@ class ResourceValidator extends Validator
      * @param array $data An associative array containing resource attributes to validate.
      *  - name: string The name of the resource.
      *  - description: string The description of the resource.
-     *  - category: string The category of the resource.
      *  - unit: string The unit of the resource.
      *  - defaultRate: float The default rate of the resource.
      *  - hoursAssigned: float The number of hours assigned.
@@ -213,9 +188,6 @@ class ResourceValidator extends Validator
 
         if (isset($data['description']) && $data['description'] !== null && $data['description'] !== '' )
             $this->validateDescription((string) $data['description']);
-
-        if (isset($data['category']) && $data['category'] !== null && $data['category'] !== '')
-            $this->validateCategory((string) $data['category']);
 
         if (isset($data['unit']) && $data['unit'] !== null && $data['unit'] !== '')
             $this->validateUnit((string) $data['unit']);

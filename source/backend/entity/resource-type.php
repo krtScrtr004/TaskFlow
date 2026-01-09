@@ -11,7 +11,6 @@ class ResourceType implements Entity {
     private int $id;
     private string $name;
     private string $description;
-    private string $category;
     private string $unit;
     private float $defaultRate;
     private DateTime $createdAt;
@@ -23,7 +22,6 @@ class ResourceType implements Entity {
         int $id,
         string $name,
         string $description,
-        string $category,
         string $unit,
         float $defaultRate,
         DateTime $createdAt,
@@ -33,7 +31,6 @@ class ResourceType implements Entity {
         $this->resourceValidator->validateMultiple([
             'name'          => trimOrNull($name),
             'description'   => trimOrNull($description),
-            'category'      => trimOrNull($category),
             'unit'          => trimOrNull($unit),
             'defaultRate'   => $defaultRate
         ]);
@@ -47,7 +44,6 @@ class ResourceType implements Entity {
         $this->id = $id;
         $this->name = $name;
         $this->description = $description;
-        $this->category = $category;
         $this->unit = $unit;
         $this->defaultRate = $defaultRate;
         $this->createdAt = $createdAt;
@@ -81,15 +77,6 @@ class ResourceType implements Entity {
      */
     public function getDescription(): string {
         return $this->description;
-    }
-
-    /**
-     * Gets the category of the Resource Type.
-     * 
-     * @return string The category of the Resource Type.
-     */
-    public function getCategory(): string {
-        return $this->category;
     }
 
     /**
@@ -181,24 +168,6 @@ class ResourceType implements Entity {
     }
 
     /**
-     * Sets the category of the Resource Type.
-     * 
-     * @param string $category The category to set.
-     * 
-     * @throws ValidationException If the category is invalid.
-     */
-    public function setCategory(string $category): void {
-        $this->resourceValidator->validateCategory(trimOrNull($category));
-        if ($this->resourceValidator->hasErrors()) {
-            throw new ValidationException(
-                'Invalid Resource Type Category',
-                $this->resourceValidator->getErrors()
-            );
-        }
-        $this->category = $category;
-    }
-
-    /**
      * Sets the unit of the Resource Type.
      * 
      * @param string $unit The unit to set.
@@ -287,14 +256,13 @@ class ResourceType implements Entity {
         ];
 
         return new ResourceType(
-            $defaults['id'],
-            $defaults['name'],
-            $defaults['description'],
-            $defaults['category'],
-            $defaults['unit'],
-            $defaults['defaultRate'],
-            $defaults['createdAt'],
-            $defaults['updatedAt']
+            id: $defaults['id'],
+            name: $defaults['name'],
+            description: $defaults['description'],
+            unit: $defaults['unit'],
+            defaultRate: $defaults['defaultRate'],
+            createdAt: $defaults['createdAt'],
+            updatedAt: $defaults['updatedAt']
         );
     }
 
@@ -321,7 +289,6 @@ class ResourceType implements Entity {
             $data['id'],
             $data['name'],
             $data['description'],
-            $data['category'],
             $data['unit'],
             $data['defaultRate'],
             new DateTime($data['createdAt']),
@@ -344,7 +311,6 @@ class ResourceType implements Entity {
             'id'            => $this->id,
             'name'          => $this->name,
             'description'   => $this->description,
-            'category'      => $this->category,
             'unit'          => $this->unit,
             'defaultRate'   => $this->defaultRate,
             'createdAt'     => $this->createdAt->format('c'),
