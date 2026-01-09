@@ -16,13 +16,26 @@ import { getValidationConstraints, die } from '../../utility/utility.js'
 const errorsMap = {} // Use to track errors
 
 const VALIDATION_CONSTANTS = await getValidationConstraints()
-if (!VALIDATION_CONSTANTS) {
+if (!VALIDATION_CONSTANTS)
     console.warn('Failed to load validation constants. Form validation will not work.')
-}
 
 const projectForm = document.querySelector('#project_form')
-if (!projectForm) {
-    die('Project form not found on the page')
+if (!projectForm) die('Project form not found on the page')
+
+/**
+ * Helper to validate an input and update submit button state
+ */
+function validateAndUpdate(
+    input,
+    validationResults,
+    ruleMapping,
+    postValidation = null,
+    customId = null
+) {
+    const rulesContainer = input.closest('.input-rules-container').querySelector('.rules ul')
+    const hasInvalid = applyValidationToRules(rulesContainer, validationResults, ruleMapping)
+    updateSubmitProjectButtonState(`${input.id || input.name}${customId || ''}`, hasInvalid)
+    postValidation?.()
 }
 
 /**
@@ -46,58 +59,60 @@ if (!projectNameInput || !projectDescriptionInput || !projectBudgetInput
 const projectSchedule = { 'start': projectStartDateTimeInput?.value || new Date(), 'completion': projectCompletionDateTimeInput?.value || new Date() }
 
 projectNameInput?.addEventListener('input', () => {
-    const results = validateName(projectNameInput.value)
-    const rulesContainer = projectNameInput.closest('.input-rules-container').querySelector('.rules ul')
-    updateSubmitProjectButtonState(projectNameInput.id,
-        applyValidationToRules(rulesContainer, results, RULE_MAPPINGS.workName)
+    validateAndUpdate(
+        projectNameInput,
+        validateName(projectNameInput.value),
+        RULE_MAPPINGS.workName
     )
 })
 
 projectDescriptionInput?.addEventListener('input', () => {
-    const results = validateDescription(projectDescriptionInput.value)
-    const rulesContainer = projectDescriptionInput.closest('.input-rules-container').querySelector('.rules ul')
-    updateSubmitProjectButtonState(projectDescriptionInput.id,
-        applyValidationToRules(rulesContainer, results, RULE_MAPPINGS.workDescription)
+    validateAndUpdate(
+        projectDescriptionInput,
+        validateDescription(projectDescriptionInput.value),
+        RULE_MAPPINGS.workDescription
     )
 })
 
-projectBudgetInput?.addEventListener('input', () => {
-    const results = validateBudget(projectBudgetInput.value)
-    const rulesContainer = projectBudgetInput.closest('.input-rules-container').querySelector('.rules ul')
-    updateSubmitProjectButtonState(projectBudgetInput.id,
-        applyValidationToRules(rulesContainer, results, RULE_MAPPINGS.workBudget)
+projectBudgetInput?.addEventListener('change', () => {
+    validateAndUpdate(
+        projectBudgetInput,
+        validateBudget(projectBudgetInput.value),
+        RULE_MAPPINGS.workBudget,
+        () => triggerBudgetEvents(projectBudgetInput)
     )
-    triggerBudgetEvents(projectBudgetInput)
 })
 
 projectMaxWorkersInput?.addEventListener('input', () => {
-    const results = validateWorkerCount(projectMaxWorkersInput.value)
-    const rulesContainer = projectMaxWorkersInput.closest('.input-rules-container').querySelector('.rules ul')
-    updateSubmitProjectButtonState(projectMaxWorkersInput.id,
-        applyValidationToRules(rulesContainer, results, RULE_MAPPINGS.workerCount)
+    validateAndUpdate(
+        projectMaxWorkersInput,
+        validateWorkerCount(projectMaxWorkersInput.value),
+        RULE_MAPPINGS.workerCount
     )
 })
 
 projectStartDateTimeInput?.addEventListener('input', () => {
-    const results = validateStartDateTime(projectStartDateTimeInput.value)
-    const rulesContainer = projectStartDateTimeInput.closest('.input-rules-container').querySelector('.rules ul')
-    updateSubmitProjectButtonState(projectStartDateTimeInput.id,
-        applyValidationToRules(rulesContainer, results, RULE_MAPPINGS.startDateTime)
+    validateAndUpdate(
+        projectStartDateTimeInput,
+        validateStartDateTime(projectStartDateTimeInput.value),
+        RULE_MAPPINGS.startDateTime,
+        () => {
+            projectSchedule.start = projectStartDateTimeInput.value
+            triggerScheduleEvents(projectStartDateTimeInput)
+        }
     )
-    projectSchedule.start = projectStartDateTimeInput.value
-
-    triggerScheduleEvents(projectStartDateTimeInput)
 })
 
 projectCompletionDateTimeInput?.addEventListener('input', () => {
-    const results = validateCompletionDateTime(projectCompletionDateTimeInput.value, projectStartDateTimeInput.value)
-    const rulesContainer = projectCompletionDateTimeInput.closest('.input-rules-container').querySelector('.rules ul')
-    updateSubmitProjectButtonState(projectCompletionDateTimeInput.id,
-        applyValidationToRules(rulesContainer, results, RULE_MAPPINGS.completionDateTime)
+    validateAndUpdate(
+        projectCompletionDateTimeInput,
+        validateCompletionDateTime(projectCompletionDateTimeInput.value, projectStartDateTimeInput.value),
+        RULE_MAPPINGS.completionDateTime,
+        () => {
+            projectSchedule.completion = projectCompletionDateTimeInput.value
+            triggerScheduleEvents(projectCompletionDateTimeInput)
+        }
     )
-    projectSchedule.completion = projectCompletionDateTimeInput.value
-
-    triggerScheduleEvents(projectCompletionDateTimeInput)
 })
 
 /**
@@ -132,95 +147,128 @@ phaseSection?.addEventListener('input', e => {
         return
     }
 
-    if (e.target === phaseNameInput) {
-        const results = validateName(phaseNameInput.value)
-        const rulesContainer = phaseNameInput.closest('.input-rules-container').querySelector('.rules ul')
-        updateSubmitProjectButtonState(`${phaseNameInput.id}${id}`,
-            applyValidationToRules(rulesContainer, results, RULE_MAPPINGS.workName)
+    const target = e.target
+
+    // Name validation
+    if (target === phaseNameInput) {
+        validateAndUpdate(
+            phaseNameInput,
+            validateName(phaseNameInput.value),
+            RULE_MAPPINGS.workName
         )
     }
 
-    if (e.target === phaseDescriptionInput) {
-        const results = validateDescription(phaseDescriptionInput.value)
-        const rulesContainer = phaseDescriptionInput.closest('.input-rules-container').querySelector('.rules ul')
-        updateSubmitProjectButtonState(`${phaseDescriptionInput}${id}`,
-            applyValidationToRules(rulesContainer, results, RULE_MAPPINGS.workDescription)
+    // Description validation
+    else if (target === phaseDescriptionInput) {
+        validateAndUpdate(
+            phaseDescriptionInput,
+            validateDescription(phaseDescriptionInput.value),
+            RULE_MAPPINGS.workDescription,
+            null,
+            id
         )
     }
 
-    if (e.target === phaseBudgetInput) {
-        const results = validateBudget(phaseBudgetInput.value, parseFloat(projectBudgetInput.value) || 0)
-        const rulesContainer = phaseBudgetInput.closest('.input-rules-container').querySelector('.rules ul')
-        updateSubmitProjectButtonState(`${phaseBudgetInput}${id}`,
-            applyValidationToRules(rulesContainer, results, RULE_MAPPINGS.workBudget)
-        )
-        triggerBudgetEvents(phaseBudgetInput)
-    }
-
-    if (e.target === phaseContingencyRateInput) {
-        const results = validateContingencyRate(phaseContingencyRateInput.value)
-        const rulesContainer = phaseContingencyRateInput.closest('.input-rules-container').querySelector('.rules ul')
-        updateSubmitProjectButtonState(`${phaseContingencyRateInput}${id}`,
-            applyValidationToRules(rulesContainer, results, RULE_MAPPINGS.contingencyRate)
+    // Contingency rate validation
+    else if (target === phaseContingencyRateInput) {
+        validateAndUpdate(
+            phaseContingencyRateInput,
+            validateContingencyRate(phaseContingencyRateInput.value),
+            RULE_MAPPINGS.contingencyRate,
+            null,
+            id
         )
     }
 
-    if (e.target === phaseBudgetNoteInput) {
-        const results = validateBudgetNote(phaseBudgetNoteInput.value)
-        const rulesContainer = phaseBudgetNoteInput.closest('.input-rules-container').querySelector('.rules ul')
-        updateSubmitProjectButtonState(`${phaseBudgetNoteInput}${id}`,
-            applyValidationToRules(rulesContainer, results, RULE_MAPPINGS.budgetNote)
+    // Budget note validation
+    else if (target === phaseBudgetNoteInput) {
+        validateAndUpdate(
+            phaseBudgetNoteInput,
+            validateBudgetNote(phaseBudgetNoteInput.value),
+            RULE_MAPPINGS.budgetNote,
+            null,
+            id
         )
     }
 
-    if (e.target === phaseStartDateTimeInput) {
+    // Start date validation
+    else if (target === phaseStartDateTimeInput) {
         const val = phaseStartDateTimeInput.value
-
         const results = validateStartDateTime(val, {
             'isBounded': true,
             'boundStart': projectSchedule.start,
             'boundCompletion': projectSchedule.completion,
-
             'hasConflict': true,
             'ownId': id,
             'phasesSchedule': phaseSchedules
         })
-        const rulesContainer = phaseStartDateTimeInput.closest('.input-rules-container').querySelector('.rules ul')
-        updateSubmitProjectButtonState(`${phaseStartDateTimeInput}${id}`,
-            applyValidationToRules(rulesContainer, results, RULE_MAPPINGS.startDateTime)
-        )
-        if (Object.values(results).includes(false)) {
-            phaseSchedules.delete(id)
-        } else {
-            phaseSchedules.set(id, { 'start': val, 'completion': phaseCompletionDateTimeInput.value })
-        }
 
-        triggerScheduleEvents(phaseStartDateTimeInput)
+        validateAndUpdate(
+            phaseStartDateTimeInput,
+            results,
+            RULE_MAPPINGS.startDateTime,
+            () => {
+                // Update phase schedules map
+                if (Object.values(results).includes(false)) {
+                    phaseSchedules.delete(id)
+                } else {
+                    phaseSchedules.set(id, { 'start': val, 'completion': phaseCompletionDateTimeInput.value })
+                }
+                triggerScheduleEvents(phaseStartDateTimeInput)
+            },
+            id
+        )
     }
 
-    if (e.target === phaseCompletionDateTimeInput) {
+    // Completion date validation
+    else if (target === phaseCompletionDateTimeInput) {
         const val = phaseCompletionDateTimeInput.value
-
         const results = validateCompletionDateTime(val, phaseStartDateTimeInput.value, {
             'isBounded': true,
             'boundStart': projectSchedule.start,
             'boundCompletion': projectSchedule.completion,
-
             'hasConflict': true,
             'ownId': id,
             'phasesSchedule': phaseSchedules
         })
-        const rulesContainer = phaseCompletionDateTimeInput.closest('.input-rules-container').querySelector('.rules ul')
-        updateSubmitProjectButtonState(`${phaseCompletionDateTimeInput}${id}`,
-            applyValidationToRules(rulesContainer, results, RULE_MAPPINGS.completionDateTime)
-        )
-        if (Object.values(results).includes(false)) {
-            phaseSchedules.delete(id)
-        } else {
-            phaseSchedules.set(id, { 'start': phaseStartDateTimeInput.value, 'completion': val })
-        }
 
-        triggerScheduleEvents(phaseCompletionDateTimeInput)
+        validateAndUpdate(
+            phaseCompletionDateTimeInput,
+            results,
+            RULE_MAPPINGS.completionDateTime,
+            () => {
+                // Update phase schedules map
+                if (Object.values(results).includes(false)) {
+                    phaseSchedules.delete(id)
+                } else {
+                    phaseSchedules.set(id, { 'start': phaseStartDateTimeInput.value, 'completion': val })
+                }
+                triggerScheduleEvents(phaseCompletionDateTimeInput)
+            },
+            id
+        )
+    }
+})
+
+// Budget validation - separate 'change' event
+phaseSection?.addEventListener('change', e => {
+    const card = e.target.closest('.phase-form-card')
+    if (!card) {
+        return
+    }
+    const id = card.dataset.phaseid || null
+
+    const phaseBudgetInput = card.querySelector('input[name="budget"]')
+    const target = e.target
+
+    if (target === phaseBudgetInput) {
+        validateAndUpdate(
+            phaseBudgetInput,
+            validateBudget(phaseBudgetInput.value, parseFloat(projectBudgetInput.value) || 0),
+            RULE_MAPPINGS.workBudget,
+            () => triggerBudgetEvents(phaseBudgetInput),
+            id
+        )
     }
 })
 
@@ -254,7 +302,7 @@ if (!selectedWorkersTableList) {
     console.warn('Selected workers table list not found in the form')
 }
 
-selectedWorkersTableList?.addEventListener('input', e => {
+selectedWorkersTableList?.addEventListener('change', e => {
     const row = e.target.closest('tr.selected-worker-row')
     if (!row) {
         return
@@ -338,7 +386,7 @@ function updateSubmitProjectButtonState(id, hasInvalid) {
  *  Event automatic triggers
  */
 
-const eventTrigger = new InputEvent('input', {
+const eventTrigger = new InputEvent('change', {
     bubbles: true,
     cancelable: true
 })
@@ -409,7 +457,7 @@ function triggerScheduleEvents(target) {
     phasesCards.forEach(card => {
         const startDateTimeInput = card.querySelector('input[name="start_date_time"]')
         if (startDateTimeInput && startDateTimeInput !== target) startDateTimeInput.dispatchEvent(eventTrigger)
-        
+
         const completionDateTimeInput = card.querySelector('input[name="completion_date_time"]')
         if (completionDateTimeInput && completionDateTimeInput !== target) completionDateTimeInput.dispatchEvent(eventTrigger)
     })
