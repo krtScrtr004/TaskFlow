@@ -247,10 +247,10 @@ class TaskController implements Controller
     public static function viewTaskForm(array $args = []): void
     {
         try {
-            // if (!SessionAuth::hasAuthorizedSession()) {
-            //     header('Location: ' . REDIRECT_PATH . 'login');
-            //     exit();
-            // }
+            if (!SessionAuth::hasAuthorizedSession()) {
+                header('Location: ' . REDIRECT_PATH . 'login');
+                exit();
+            }
 
             $projectId = isset($args['projectId'])
                 ? UUID::fromString($args['projectId'])
@@ -259,8 +259,10 @@ class TaskController implements Controller
                 throw new ForbiddenException('Project ID is required.');
 
             $project = ProjectModel::findById($projectId);
-            if (!$project)
-                throw new NotFoundException('Project not found.');
+            if (!$project) throw new NotFoundException('Project not found.');
+
+            $phase = PhaseModel::findOnGoingByProjectId($projectId);
+            if (!$phase) throw new NotFoundException('Active phase not found.');
 
             require_once SUB_VIEW_PATH . 'form' . DS . 'task.php';
         } catch (ForbiddenException $e) {

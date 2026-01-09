@@ -190,7 +190,7 @@ function workStartDateTimeRules(int $mode = 0): bool|string
             <li>Must be a valid date.</li>
             <li>Must be between <?= YEAR_CURRENT ?> and <?= YEAR_MAX ?>.</li>
             <?php if ($mode === 1 || $mode === 2): ?>
-                <li>Must be within the timeline of <?php echo $mode === 1 ? 'Project' : 'Task' ?>.</li>
+                <li>Must be within the timeline of <?php echo $mode === 1 ? 'Project' : 'Phase' ?>.</li>
             <?php endif; ?>
             <?php if ($mode === 1): ?>
                 <li>Must not conflict with other Phases.</li>
@@ -226,7 +226,7 @@ function workCompletionDateTimeRules(int $mode = 0): bool|string
             <li>Must be between <?= YEAR_CURRENT ?> and <?= YEAR_MAX ?>.</li>
             <li>Must be after the start date.</li>
             <?php if ($mode === 1 || $mode === 2): ?>
-                <li>Must be within the timeline of <?php echo $mode === 1 ? 'Project' : 'Task' ?>.</li>
+                <li>Must be within the timeline of <?php echo $mode === 1 ? 'Project' : 'Phase' ?>.</li>
             <?php endif; ?>
             <?php if ($mode === 1): ?>
                 <li>Must not conflict with other Phases.</li>

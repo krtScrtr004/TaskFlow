@@ -61,7 +61,7 @@ function selectedTaskWorkerCard(TaskWorker $worker): bool|string
                     </div>
                 </label>
 
-                <input type="number" id="" name="" step="0.01" value="<?= $unitRate ?>" placeholder="Unit Rate" required>
+                <input class="unit-rate-input" type="number" id="" name="" step="0.01" value="<?= $unitRate ?>" placeholder="Unit Rate" required>
             </div>
 
             <!-- Estimated Hours Assigned -->
@@ -73,7 +73,7 @@ function selectedTaskWorkerCard(TaskWorker $worker): bool|string
                     </div>
                 </label>
 
-                <input type="number" id="" name="" step="0.01" value="<?= $estimatedHoursAssigned ?>" placeholder="Hours Assigned" required>
+                <input class="hours-assigned-input" type="number" id="" name="" step="0.01" value="<?= $estimatedHoursAssigned ?>" placeholder="Hours Assigned" required>
             </div>
         </div>
 

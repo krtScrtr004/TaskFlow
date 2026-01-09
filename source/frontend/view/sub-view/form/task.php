@@ -4,7 +4,15 @@ use App\Core\UUID;
 use App\Enumeration\TaskPriority;
 
 if (!$project) throw new Exception('Project data is required to render this page');
-$projectData = ['id'    => htmlspecialchars(UUID::toString($project->getPublicId()))]
+$projectData = ['id'    => htmlspecialchars(UUID::toString($project->getPublicId()))];
+
+if (!$phase) throw new Exception('Active phase data is required to render this page');
+$phaseData = [
+    'name'                  => $phase->getName(),
+    'budget'                => $phase->getBudget(),
+    'startDateTime'         => $phase->getStartDateTime(),
+    'completionDateTime'    => $phase->getCompletionDateTime()
+];
 ?>
 
 <!DOCTYPE html>
@@ -30,6 +38,13 @@ $projectData = ['id'    => htmlspecialchars(UUID::toString($project->getPublicId
 
     <main class="task-form main-page center-child" data-projectid="<?= $projectData['id'] ?>">
         <form id="task_form" class="content-section-block flex-row" action="" method="POST">
+
+            <!-- Hidden phase data for FE validation -->
+            <span class="hidden-data no-display"
+                data-phasebudget="<?= $phaseData['budget'] ?>"
+                data-phasestartdatetime="<?= formatDateTime($phaseData['startDateTime'], 'Y-m-d') ?>"
+                data-phasecompletiondatetime="<?= formatDateTime($phaseData['completionDateTime'], 'Y-m-d') ?>"></span>
+
             <!-- Task Info -->
             <fieldset id="task_info">
                 <!-- Back Button -->
@@ -52,6 +67,27 @@ $projectData = ['id'    => htmlspecialchars(UUID::toString($project->getPublicId
                         <p class="dark-white-text light-text">
                             Fill in the details below to create a new task
                         </p>
+                    </section>
+
+                    <section class="phase-info content-section-block flex-col black-bg">
+                        <div class="phase-header flex-col">
+                            <p class="green-text minified-text">ACTIVE PHASE</p>
+                            <h2><?= htmlspecialchars($phaseData['name']) ?></h2>
+                        </div>
+
+                        <hr class="dark-white-text">
+
+                        <div class="phase-details flex-col">
+                            <div class="phase-detail-item flex-col">
+                                <p class="dark-white-text">Budget</p>
+                                <h3>₱<?= formatNumber($phaseData['budget']) ?></h3>
+                            </div>
+
+                            <div class="phase-detail-item flex-col">
+                                <p class="dark-white-text">Timeline</p>
+                                <h4><?= formatDateTime($phaseData['startDateTime'], 'M d, Y') ?> — <?= formatDateTime($phaseData['completionDateTime'], 'M d, Y') ?></h4>
+                            </div>
+                        </div>
                     </section>
 
                     <!-- Input Fields -->
@@ -175,7 +211,7 @@ $projectData = ['id'    => htmlspecialchars(UUID::toString($project->getPublicId
                 </section>
 
                 <!-- Create Button -->
-                <button class="blue-bg">
+                <button class="submit-task-button blue-bg">
                     <div class="text-w-icon">
                         <img src="<?= ICON_PATH . 'add_w.svg' ?>" alt="Create Task" title="Create Task" height="20">
                         <h3>Create Task</h3>
@@ -219,6 +255,8 @@ $projectData = ['id'    => htmlspecialchars(UUID::toString($project->getPublicId
     </main>
 
     <script type="module" src="<?= EVENT_PATH . 'back-button.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'validate-form.js' ?>" defer></script>
+
     <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'new' . DS . 'open.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'new' . DS . 'add.js' ?>" defer></script>
 </body>

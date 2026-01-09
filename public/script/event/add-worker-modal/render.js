@@ -205,9 +205,20 @@ function createRemoveCell() {
 /*-----------------------------------------------------------------------------------------------------------------------*/
 
 /**
- * Creates a selected task worker card element (split into smaller helpers).
+ * Creates a selected task worker card element for the create task form.
+ * 
+ * This function generates a styled card displaying worker information including their full name,
+ * unit rate, and estimated hours assigned. The card includes input fields for modifying
+ * the unit rate and hours assigned, as well as a button to remove the worker from the selection.
+ * 
+ * Behavior and side effects:
+ * - The generated card contains a data-workerid attribute for JavaScript interaction.
+ * - Input fields for unit rate and hours assigned are marked as required and have class names for targeting.
+ * - The full name input field is disabled (display only).
+ * - The remove button includes a click handler that removes the card with animation.
+ * 
  * @param {Object} taskWorker - The task worker object containing id, fullName, unitRate, estimatedHoursAssigned
- * @returns {HTMLElement}
+ * @returns {HTMLElement} The generated card element
  */
 export function renderSelectedTaskWorkerCard(taskWorker) {
     const iconPath = '/public/asset/image/icon/'
@@ -224,13 +235,13 @@ export function renderSelectedTaskWorkerCard(taskWorker) {
 /* Helper: card container */
 function createCardContainer(workerId) {
     const card = document.createElement('div')
-    card.className = 'selected-task-worker-form-card light-black-bg flex-col fade-in'
+    card.className = 'selected-task-worker-form-card light-black-bg flex-col'
     card.dataset.workerid = workerId
     return card
 }
 
 /* Helper: build labeled input container with icon */
-function createLabeledInput({ labelText, iconFile, iconAlt = '', inputType = 'text', inputAttrs = {}, containerClass = 'input-label-container' }, iconPath) {
+function createLabeledInput({ labelText, iconFile, iconAlt = '', inputType = 'text', inputAttrs = {}, inputClass = '', containerClass = 'input-label-container' }, iconPath) {
     const container = document.createElement('div')
     container.className = containerClass
 
@@ -253,6 +264,7 @@ function createLabeledInput({ labelText, iconFile, iconAlt = '', inputType = 'te
 
     const input = document.createElement('input')
     input.type = inputType
+    if (inputClass) input.className = inputClass
     Object.entries(inputAttrs).forEach(([k, v]) => {
         if (k === 'value') input.value = v
         else if (k === 'disabled' && v) input.disabled = true
@@ -285,14 +297,16 @@ function createMultipleInputsRow(unitRate, estimatedHoursAssigned, iconPath) {
         labelText: 'Unit Rate',
         iconFile: 'rate_w.svg',
         inputType: 'number',
-        inputAttrs: { step: '0.01', placeholder: 'Unit Rate', required: true, value: typeof unitRate !== 'undefined' ? String(unitRate) : '0' }
+        inputClass: 'unit-rate-input',
+        inputAttrs: { step: '0.01', placeholder: 'Unit Rate', required: true, value: unitRate ?? '' }
     }, iconPath)
 
     const hours = createLabeledInput({
         labelText: 'Hours Assigned',
         iconFile: 'clock_w.svg',
         inputType: 'number',
-        inputAttrs: { step: '0.01', placeholder: 'Hours Assigned', required: true, value: typeof estimatedHoursAssigned !== 'undefined' ? String(estimatedHoursAssigned) : '0' },
+        inputClass: 'hours-assigned-input',
+        inputAttrs: { step: '0.01', placeholder: 'Hours Assigned', required: true, value: estimatedHoursAssigned ?? '' },
         containerClass: 'estimated-hours input-label-container'
     }, iconPath)
 
@@ -301,7 +315,7 @@ function createMultipleInputsRow(unitRate, estimatedHoursAssigned, iconPath) {
     return row
 }
 
-/* Remove button with handler that updates workerIds and UI */
+/* Remove button */
 function createRemoveButton(workerId, cardElement) {
     const btn = document.createElement('button')
     btn.className = 'remove-worker-button unset-button'
@@ -314,22 +328,6 @@ function createRemoveButton(workerId, cardElement) {
     removeImg.height = 18
 
     btn.appendChild(removeImg)
-
-    btn.addEventListener('click', async (e) => {
-        e.preventDefault()
-        const noWorkersWall = document.querySelector('#worker_info .no-workers-wall')
-
-        toggleElementClass(cardElement, ['fade-out'], ['fade-in'])
-        cardElement.addEventListener('animationend', () => {
-            cardElement.remove()
-            if (Object.keys(workerIds).length === 0 && noWorkersWall) {
-                toggleElementClass(noWorkersWall, ['flex-col'], ['no-display']);
-            }
-        })
-
-        const { workerIds } = await import('./task/new/add.js');
-        delete workerIds[workerId];
-    })
 
     return btn
 }

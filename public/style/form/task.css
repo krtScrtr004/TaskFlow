@@ -1,5 +1,6 @@
 .task-form {
     height: fit-content;
+    gap: var(--space);
     /* padding: 2rem calc(var(--space) * 10) !important; */
 }
 
@@ -33,7 +34,6 @@
 
 #task_form  .heading > p {
     font-size: 0.9rem;
-    margin-top: 0.3rem;
 }
 
 #task_form .multiple-input-row {
@@ -48,6 +48,54 @@
 
 #task_info .heading {
     margin-bottom: var(--space);
+}
+
+#task_info .phase-info {
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    gap: 1rem !important;
+    box-shadow: 0 0 2px 3px var(--black);
+}
+
+#task_info .phase-header {
+    gap: 0.3rem;
+}
+
+#task_info .phase-header h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+#task_info .phase-header p {
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 1px;
+}
+
+#task_info .phase-info hr {
+    width: 100%;
+    margin: 0;
+}
+
+#task_info .phase-details {
+    gap: 1rem;
+}
+
+#task_info .phase-detail-item {
+    gap: 0.3rem;
+}
+
+#task_info .phase-detail-item p {
+    font-size: 0.85rem;
+    font-weight: 400;
+}
+
+#task_info .phase-detail-item h3,
+#task_info .phase-detail-item h4 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0;
 }
 
 #task_info #priority {
@@ -88,4 +136,9 @@
     border: 1px dashed var(--white);
     background-color: transparent;
     margin: 0 auto;
+}
+
+#worker_info .selected-task-worker-form-card .unit-rate-input.invalid,
+#worker_info .selected-task-worker-form-card .hours-assigned-input.invalid {
+    border-color: var(--red);
 }

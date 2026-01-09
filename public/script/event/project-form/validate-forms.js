@@ -11,7 +11,7 @@ import {
     validateContingencyRate
 } from '../../utility/work-rules-validators.js'
 import { Notification } from '../../render/notification.js'
-import { getValidationConstraints, die } from '../../utility/utility.js'
+import { getValidationConstraints, die, toggleElementClass } from '../../utility/utility.js'
 
 const errorsMap = {} // Use to track errors
 
@@ -42,9 +42,7 @@ function validateAndUpdate(
  * Project Info
  */
 const infoSection = projectForm.querySelector('#info_section')
-if (!infoSection) {
-    console.warn('Info section not found in the form')
-}
+if (!infoSection) console.warn('Info section not found in the form')
 
 const projectNameInput = infoSection?.querySelector('input[name="name"]')
 const projectDescriptionInput = infoSection?.querySelector('textarea[name="description"]')
@@ -53,9 +51,9 @@ const projectMaxWorkersInput = infoSection?.querySelector('input[name="max_worke
 const projectStartDateTimeInput = infoSection?.querySelector('input[name="start_date_time"]')
 const projectCompletionDateTimeInput = infoSection?.querySelector('input[name="completion_date_time"]')
 if (!projectNameInput || !projectDescriptionInput || !projectBudgetInput
-    || !projectMaxWorkersInput || !projectStartDateTimeInput || !projectCompletionDateTimeInput) {
+    || !projectMaxWorkersInput || !projectStartDateTimeInput || !projectCompletionDateTimeInput)
     console.warn('One or more project info inputs not found in the form')
-}
+
 const projectSchedule = { 'start': projectStartDateTimeInput?.value || new Date(), 'completion': projectCompletionDateTimeInput?.value || new Date() }
 
 projectNameInput?.addEventListener('input', () => {
@@ -122,16 +120,13 @@ projectCompletionDateTimeInput?.addEventListener('input', () => {
  */
 
 const phaseSection = projectForm.querySelector('#phase_section')
-if (!phaseSection) {
-    console.warn('Phases section not found in the form')
-}
+if (!phaseSection) console.warn('Phases section not found in the form')
 const phaseSchedules = new Map()
 
 phaseSection?.addEventListener('input', e => {
     const card = e.target.closest('.phase-form-card')
-    if (!card) {
-        return
-    }
+    if (!card) return
+
     const id = card.dataset.phaseid || null
 
     const phaseNameInput = card.querySelector('input[name="name"]')
@@ -209,11 +204,9 @@ phaseSection?.addEventListener('input', e => {
             RULE_MAPPINGS.startDateTime,
             () => {
                 // Update phase schedules map
-                if (Object.values(results).includes(false)) {
-                    phaseSchedules.delete(id)
-                } else {
-                    phaseSchedules.set(id, { 'start': val, 'completion': phaseCompletionDateTimeInput.value })
-                }
+                Object.values(results).includes(false)
+                    ? phaseSchedules.delete(id)
+                    : phaseSchedules.set(id, { 'start': val, 'completion': phaseCompletionDateTimeInput.value })
                 triggerScheduleEvents(phaseStartDateTimeInput)
             },
             id
@@ -238,11 +231,9 @@ phaseSection?.addEventListener('input', e => {
             RULE_MAPPINGS.completionDateTime,
             () => {
                 // Update phase schedules map
-                if (Object.values(results).includes(false)) {
-                    phaseSchedules.delete(id)
-                } else {
-                    phaseSchedules.set(id, { 'start': phaseStartDateTimeInput.value, 'completion': val })
-                }
+                Object.values(results).includes(false)
+                    ? phaseSchedules.delete(id)
+                    : phaseSchedules.set(id, { 'start': phaseStartDateTimeInput.value, 'completion': val })                
                 triggerScheduleEvents(phaseCompletionDateTimeInput)
             },
             id
@@ -253,9 +244,8 @@ phaseSection?.addEventListener('input', e => {
 // Budget validation - separate 'change' event
 phaseSection?.addEventListener('change', e => {
     const card = e.target.closest('.phase-form-card')
-    if (!card) {
-        return
-    }
+    if (!card) return
+
     const id = card.dataset.phaseid || null
 
     const phaseBudgetInput = card.querySelector('input[name="budget"]')
@@ -278,9 +268,8 @@ phaseCards.forEach(card => {
     const id = card.dataset.phaseid || null
     const phaseStartDateTimeInput = card.querySelector('input[name="start_date_time"]')
     const phaseCompletionDateTimeInput = card.querySelector('input[name="completion_date_time"]')
-    if (!phaseStartDateTimeInput || !phaseCompletionDateTimeInput) {
-        return
-    }
+    if (!phaseStartDateTimeInput || !phaseCompletionDateTimeInput) return
+
     const startVal = phaseStartDateTimeInput.value
     const completionVal = phaseCompletionDateTimeInput.value
     phaseSchedules.set(id, { 'start': startVal, 'completion': completionVal })
@@ -293,33 +282,26 @@ phaseCards.forEach(card => {
  */
 
 const workersSection = projectForm.querySelector('#workers_section')
-if (!workersSection) {
-    console.warn('Workers section not found in the form')
-}
+if (!workersSection) console.warn('Workers section not found in the form')
 
 const selectedWorkersTableList = workersSection?.querySelector('.selected-workers-table tbody')
-if (!selectedWorkersTableList) {
-    console.warn('Selected workers table list not found in the form')
-}
+if (!selectedWorkersTableList) console.warn('Selected workers table list not found in the form')
 
 selectedWorkersTableList?.addEventListener('change', e => {
     const row = e.target.closest('tr.selected-worker-row')
-    if (!row) {
-        return
-    }
+    if (!row) return
+
     const id = row.dataset.workerid
-    if (!id) {
-        console.warn('Worker ID not found')
-    }
+    if (!id) console.warn('Worker ID not found')
 
     const defaultRateInput = row.querySelector('input.default-rate-input')
     const value = defaultRateInput.value
 
     function invalidateDefaultRate() {
-        defaultRateInput.parentElement.classList.add('shake', 'invalid')
+        toggleElementClass(defaultRateInput.parentElement, ['shake', 'invalid'], [])
         defaultRateInput.parentElement.addEventListener('animationend', () => {
-            defaultRateInput.parentElement.classList.remove('shake')
-        })
+            toggleElementClass(defaultRateInput.parentElement, [], ['shake'])
+        }, { once: true })
     }
 
     // Check if default rates of all workers are within the bound of project budget
@@ -328,14 +310,12 @@ selectedWorkersTableList?.addEventListener('change', e => {
     allDefaultRateInputs.forEach(input => {
         if (input !== defaultRateInput) {
             const val = parseFloat(input.value)
-            if (!isNaN(val)) {
-                totalWithinProjectBudget += val
-            }
+            if (!isNaN(val)) totalWithinProjectBudget += val
         }
     })
     totalWithinProjectBudget += parseFloat(value) || 0
     if (totalWithinProjectBudget > parseFloat(projectBudgetInput.value || 0)) {
-        Notification.error('The total of all default rates exceeds the project budget.', 5000)
+        Notification.error('The total cost of all default rates exceeds the project budget.', 5000)
         updateSubmitProjectButtonState(`${defaultRateInput}${id}`, true)
     }
 
@@ -362,9 +342,8 @@ selectedWorkersTableList?.addEventListener('change', e => {
  */
 
 const submitProjectButton = document.querySelector('.submit-project-button')
-if (!submitProjectButton) {
-    console.warn('Submit Project button not found in the form')
-}
+if (!submitProjectButton) console.warn('Submit Project button not found in the form')
+
 function updateSubmitProjectButtonState(id, hasInvalid) {
     if (!submitProjectButton) return
 
@@ -464,4 +443,3 @@ function triggerScheduleEvents(target) {
 
     queueMicrotask(() => isScheduleEventTriggering = false)
 }
-
