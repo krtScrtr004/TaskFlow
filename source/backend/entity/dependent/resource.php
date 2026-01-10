@@ -7,12 +7,14 @@ use App\Exception\ValidationException;
 use App\Interface\Entity;
 use App\Validator\ResourceValidator;
 
-class Resource implements Entity {
+class Resource implements Entity 
+{
     private int $id;
     private ResourceType $type;
-    private int $quantity;
-    private float $unitRate;
-    private float $estimatedUnit;
+    private int $quantity; 
+    private float $unitRate; // Cost per unit
+    private float $estimatedUnit; // Estimate quantity 
+    private float $actualUnit; // Actual quantity used
     private ?string $note;
 
     private ResourceValidator $resourceValidator;
@@ -25,6 +27,7 @@ class Resource implements Entity {
      * @param int $quantity The quantity of the resource.
      * @param float $unitRate The unit rate of the resource.
      * @param float|null $estimatedUnit The estimated unit of the resource.
+     * @param float|null $actualUnit The actual unit of the resource.
      * @param string|null $note The note of the resource.
      * 
      * @throws ValidationException If any of the provided values are invalid.
@@ -35,16 +38,18 @@ class Resource implements Entity {
         int $quantity,
         float $unitRate,
         ?float $estimatedUnit = null,
-        ?string $note = null
+        ?float $actualUnit = null,
+        ?string $note = null,
+        ?int $taskWorkerId = null
     ) {
         $this->resourceValidator = new ResourceValidator();
         $this->resourceValidator->validateMultiple([
-            'quantity' => $quantity,
-            'unitRate' => $unitRate,
-            'note' => $note
+            'quantity'      => $quantity,
+            'unitRate'      => $unitRate,
+            'estimatedUnit' => $estimatedUnit,
+            'actualUnit'    => $actualUnit,
+            'note'          => $note
         ]);
-        if (isset($estimatedUnit)) 
-            $this->resourceValidator->validateEstimatedUnit($estimatedUnit);
         if ($this->resourceValidator->hasErrors()) {
             throw new ValidationException(
                 'Resource Validation Failed.',
@@ -56,9 +61,8 @@ class Resource implements Entity {
         $this->type = $type;
         $this->quantity = $quantity;
         $this->unitRate = $unitRate;
-        $this->estimatedUnit = isset($estimatedUnit)
-            ? $estimatedUnit
-            : (float) $quantity * $unitRate;
+        $this->estimatedUnit = $estimatedUnit;
+        $this->actualUnit = $actualUnit;
         $this->note = $note;
     }
 
@@ -112,6 +116,16 @@ class Resource implements Entity {
     public function getEstimatedUnit(): float
     {
         return $this->estimatedUnit;
+    }
+
+    /**
+     * Gets the actual unit of the resource.
+     * 
+     * @return float The actual unit of the resource.
+     */
+    public function getActualUnit(): float
+    {
+        return $this->actualUnit;
     }
 
     /**
@@ -173,9 +187,6 @@ class Resource implements Entity {
             );
         }
         $this->quantity = $quantity;
-
-        // Update estimated unit
-        $this->estimatedUnit = (float) $quantity * $this->unitRate;
     }
 
     /**
@@ -197,9 +208,48 @@ class Resource implements Entity {
             );
         }
         $this->unitRate = $unitRate;
+    }
 
-        // Update estimated unit
-        $this->estimatedUnit = (float) $this->quantity * $unitRate;
+    /**
+     * Sets the estimated unit of the resource.
+     * 
+     * @param float $estimatedUnit The estimated unit of the resource.
+     * 
+     * @return void
+     * 
+     * @throws ValidationException If the estimated unit is invalid.
+     */
+    public function setEstimatedUnit(float $estimatedUnit): void
+    {
+        $this->resourceValidator->validateEstimatedUnit($estimatedUnit);
+        if ($this->resourceValidator->hasErrors()) {
+            throw new ValidationException(
+                'Invalid Resource Estimated Unit',
+                $this->resourceValidator->getErrors()
+            );  
+        }
+        $this->estimatedUnit = $estimatedUnit;
+    }
+
+    /**
+     * Sets the actual unit of the resource.
+     * 
+     * @param float $actualUnit The actual unit of the resource.
+     * 
+     * @return void
+     * 
+     * @throws ValidationException If the actual unit is invalid.
+     */
+    public function setActualUnit(float $actualUnit): void
+    {
+        $this->resourceValidator->validateActualUnit($actualUnit);
+        if ($this->resourceValidator->hasErrors()) {
+            throw new ValidationException(
+                'Invalid Resource Actual Unit',
+                $this->resourceValidator->getErrors()
+            );  
+        }
+        $this->actualUnit = $actualUnit;
     }
 
     /**
