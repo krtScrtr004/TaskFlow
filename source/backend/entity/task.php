@@ -2,17 +2,18 @@
 
 namespace App\Entity;
 
+use App\Container\ResourceContainer;
 use App\Interface\Entity;
 use App\Enumeration\TaskPriority;
 use App\Enumeration\WorkStatus;
 use App\Container\WorkerContainer;
 use App\Dependent\Worker;
 use App\Core\UUID;
+use App\Dependent\Resource;
 use App\Exception\ValidationException;
 use App\Validator\UuidValidator;
 use App\Validator\WorkValidator;
 use DateTime;
-use Exception;
 
 class Task implements Entity
 {
@@ -20,7 +21,7 @@ class Task implements Entity
     private UUID $publicId;
     private string $name;
     private ?string $description;
-    private WorkerContainer $workers;
+    private ?ResourceContainer $resources;
     private DateTime $startDateTime;
     private DateTime $completionDateTime;
     private ?DateTime $actualCompletionDateTime;
@@ -32,38 +33,40 @@ class Task implements Entity
     protected WorkValidator $workValidator;
 
     /**
-     * Task constructor.
+     * Constructor for the Task entity.
+     *
+     * @param int $id The internal ID of the task
+     * @param UUID $publicId The public UUID of the task
+     * @param string $name The name of the task
+     * @param DateTime $startDateTime The start date and time of the task
+     * @param DateTime $completionDateTime The expected completion date and time of the task
+     * @param TaskPriority $priority The priority level of the task
+     * @param WorkStatus $status The current status of the task
+     * @param DateTime $createdAt The creation timestamp of the task
      * 
-     * Creates a new Task instance with the provided details.
-     * All parameters are validated through WorkValidator before assignment.
+     * @param string|null $description Optional description of the task
+     * @param WorkerContainer|null $workers Optional container of workers assigned to the task
+     * @param ResourceContainer|null $resources Optional container of resources associated with the task
+     * @param DateTime|null $actualCompletionDateTime Optional actual completion date and time of the task
+     * @param array $additionalInfo Optional additional information related to the task
      * 
-     * @param int $id The unique identifier for the task in the database
-     * @param UUID $publicId The public identifier for the task
-     * @param string $name Task name (3-255 characters)
-     * @param string|null $description Task description (5-500 characters) (optional)
-     * @param WorkerContainer $workers Container of workers assigned to the task
-     * @param DateTime $startDateTime Task start date and time (cannot be in the past)
-     * @param DateTime $completionDateTime Expected task completion date and time (must be after start date)
-     * @param DateTime|null $actualCompletionDateTime Actual completion date and time (null if not completed)
-     * @param TaskPriority $priority Task priority level (enum)
-     * @param WorkStatus $status Current status of the task (enum)
-     * @param DateTime $createdAt Timestamp when the task was created
-     * @param array $additionalInfo Additional information related to the task
-     * 
-     * @throws ValidationException If any of the provided data fails validation
+     * @throws ValidationException If any validation fails during property assignment
      */
     public function __construct(
         int $id,
         UUID $publicId,
         string $name,
-        ?string $description,
-        WorkerContainer $workers,
         DateTime $startDateTime,
         DateTime $completionDateTime,
-        ?DateTime $actualCompletionDateTime,
         TaskPriority $priority,
         WorkStatus $status,
         DateTime $createdAt,
+
+        // Optional parameters
+        ?string $description = null,
+        ?WorkerContainer $workers = null,
+        ?ResourceContainer $resources = null,
+        ?DateTime $actualCompletionDateTime = null,
         array $additionalInfo = []
     ) {
         try {
@@ -86,7 +89,6 @@ class Task implements Entity
         $this->publicId = $publicId;
         $this->name = trimOrNull($name);
         $this->description = trimOrNull($description);
-        $this->workers = $workers;
         $this->startDateTime = $startDateTime;
         $this->completionDateTime = $completionDateTime;
         $this->actualCompletionDateTime = $actualCompletionDateTime;
@@ -94,6 +96,21 @@ class Task implements Entity
         $this->status = $status;
         $this->createdAt = $createdAt;
         $this->additionalInfo = $additionalInfo;
+
+        $this->resources = $resources;
+        if ($workers || $resources) {
+            $this->resources = new ResourceContainer();
+            if ($workers) {
+                foreach ($workers as $worker) {
+                    $this->resources->add($worker);
+                }
+            }
+            if ($resources) {
+                foreach ($resources as $resource) {
+                    $this->resources->add($resource);
+                }
+            }
+        }
     }
 
     // Getters
@@ -131,9 +148,9 @@ class Task implements Entity
     /**
      * Gets the description of the task.
      *
-     * @return string The task's description
+     * @return string|null The task's description
      */
-    public function getDescription(): string
+    public function getDescription(): ?string
     {
         return $this->description;
     }
@@ -141,11 +158,21 @@ class Task implements Entity
     /**
      * Gets all workers assigned to the task.
      *
-     * @return WorkerContainer The container with the task's workers
+     * @return WorkerContainer|null The container with the task's workers
      */
-    public function getWorkers(): WorkerContainer
+    public function getWorkers(): ?WorkerContainer
     {
-        return $this->workers;
+        return $this->resources ? $this->resources->getWorkers() : null;
+    }
+
+    /**
+     * Gets all resources associated with the task.
+     *
+     * @return ResourceContainer The container with the task's resources
+     */
+    public function getResources(): ?ResourceContainer
+    {
+        return $this->resources;
     }
 
     /**
@@ -295,7 +322,23 @@ class Task implements Entity
      */
     public function setWorkers(WorkerContainer $workers): void
     {
-        $this->workers = $workers;
+        if (!$this->resources) {
+            $this->resources = new ResourceContainer();
+        }
+        foreach ($workers as $worker) {
+            $this->resources->add($worker);
+        }
+    }
+
+    /**
+     * Sets the task resources.
+     *
+     * @param ResourceContainer $resources Container of resources to associate with the task
+     * @return void
+     */
+    public function setResources(ResourceContainer $resources): void
+    {
+        $this->resources = $resources;
     }
 
     /**
@@ -398,10 +441,10 @@ class Task implements Entity
      */
     public function addWorker(Worker $worker): void
     {
-        if (!$this->workers) {
-            $this->workers = new WorkerContainer();
+        if (!$this->resources) {
+            $this->resources = new ResourceContainer();
         }
-        $this->workers->add($worker);
+        $this->resources->add($worker);
     }
 
 /**
@@ -418,6 +461,17 @@ class Task implements Entity
     public function addAdditionalInfo(string|int $key, mixed $value): void
     {
         $this->additionalInfo[$key] = $value;
+    }
+
+    /**
+     * Adds a resource to the task.
+     *
+     * @param Resource $resource The resource to add to the task
+     * @return void
+     */
+    public function addResource(Resource $resource): void
+    {
+        $this->resources->add($resource);
     }
 
     /**
@@ -440,7 +494,8 @@ class Task implements Entity
             'publicId'                  => $data['publicId'] ?? UUID::get(),
             'name'                      => $data['name'] ?? 'Untitled Task',
             'description'               => $data['description'] ?? null,
-            'workers'                   => $data['workers'] ?? new WorkerContainer(),
+            'workers'                   => $data['workers'] ?? null,
+            'resources'                 => $data['resources'] ?? null,
             'startDateTime'             => $data['startDateTime'] ?? new DateTime(),
             'completionDateTime'        => $data['completionDateTime'] ?? new DateTime('+7 days'),
             'actualCompletionDateTime'  => $data['actualCompletionDateTime'] ?? null,
@@ -500,6 +555,7 @@ class Task implements Entity
             name: $defaults['name'],
             description: $defaults['description'],
             workers: $defaults['workers'],
+            resources: $defaults['resources'],  
             startDateTime: $defaults['startDateTime'],
             completionDateTime: $defaults['completionDateTime'],
             actualCompletionDateTime: $defaults['actualCompletionDateTime'],
@@ -527,6 +583,7 @@ class Task implements Entity
      *      - name: string Task name
      *      - description: string Task description
      *      - workers: array Collection of workers as array
+     *      - resources: array Collection of resources as array
      *      - startDateTime: string Formatted task start date/time
      *      - completionDateTime: string Formatted expected completion date/time
      *      - actualCompletionDateTime: string|null Formatted actual completion date/time
@@ -539,21 +596,30 @@ class Task implements Entity
     public function toArray(bool $useSnakeCase = false): array
     {
         $data = [
-            'id' => UUID::toString($this->publicId),
-            'name' => $this->name,
-            'description' => $this->description,
-            'workers' => $this->workers->toArray($useSnakeCase),
-            'startDateTime' => formatDateTime($this->startDateTime, DateTime::ATOM),
-            'completionDateTime' => formatDateTime($this->completionDateTime, DateTime::ATOM),
-            'actualCompletionDateTime' => 
-                $this->actualCompletionDateTime 
-                    ? formatDateTime($this->actualCompletionDateTime, DateTime::ATOM) 
-                    : null,
-            'priority' => $this->priority->getDisplayName(),
-            'status' => $this->status->getDisplayName(),
-            'createdAt' => formatDateTime($this->createdAt, DateTime::ATOM),
-            'additionalInfo' => $this->additionalInfo
+            'id'                        => UUID::toString($this->publicId),
+            'name'                      => $this->name,
+            'description'               => $this->description,
+            'workers'                   => null,
+            'resources'                 => null,
+            'startDateTime'             => formatDateTime($this->startDateTime, DateTime::ATOM),
+            'completionDateTime'        => formatDateTime($this->completionDateTime, DateTime::ATOM),
+            'actualCompletionDateTime'  => $this->actualCompletionDateTime 
+                ? formatDateTime($this->actualCompletionDateTime, DateTime::ATOM) 
+                : null,
+            'priority'                  => $this->priority->getDisplayName(),
+            'status'                    => $this->status->getDisplayName(),
+            'createdAt'                 => formatDateTime($this->createdAt, DateTime::ATOM),
+            'additionalInfo'            => $this->additionalInfo
         ];
+
+        // Include workers and resources if present
+        if ($this->resources) {
+            $workers = $this->resources->getWorkers();
+            $data['workers'] = $workers?->toArray($useSnakeCase);
+
+            $resources = $this->resources->getResources();
+            $data['resources'] = $resources ?: null;
+        }
 
         return $useSnakeCase ? normalizeArrayKeysToSnakeCase($data) : $data;
     }
@@ -577,6 +643,7 @@ class Task implements Entity
      *      - name: string Task name
      *      - description: string Task description
      *      - workers: array|WorkerContainer Workers assigned to the task
+     *      - resources: array|ResourceContainer Resources assigned to the task
      *      - startDateTime: string|DateTime Task start date and time
      *      - completionDateTime: string|DateTime Expected task completion date and time
      *      - actualCompletionDateTime: string|DateTime Actual task completion date and time
@@ -599,9 +666,13 @@ class Task implements Entity
             $publicId = UUID::tryFromString(trimOrNull($data['publicId']));
         }
 
-        $workers = (!($data['workers'] instanceof WorkerContainer))
+        $workers = ($data['workers'] && !($data['workers'] instanceof WorkerContainer))
             ? WorkerContainer::fromArray($data['workers'])
             : $data['workers'];
+
+        $resources = ($data['resources'] && !($data['resources'] instanceof ResourceContainer))
+            ? ResourceContainer::fromArray($data['resources'])
+            : $data['resources'];
 
         $startDateTime = (is_string($data['startDateTime']))
             ? new DateTime(trimOrNull($data['startDateTime']))
@@ -633,6 +704,7 @@ class Task implements Entity
             name: $data['name'],
             description: $data['description'],
             workers: $workers,
+            resources: $resources,
             startDateTime: $startDateTime,
             completionDateTime: $completionDateTime,
             actualCompletionDateTime: $actualCompletionDateTime,
