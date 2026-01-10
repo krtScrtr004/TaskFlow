@@ -12,6 +12,9 @@ class ResourceContainer extends Container
     private const RESOURCE_SUFFIX = '_r';
     private const TASK_WORKER_SUFFIX = '_tw';
 
+    private WorkerContainer $workers;
+    private array $resources = [];
+
     /**
      * Constructs the resource container and optionally populates it with provided resources.
      *
@@ -44,7 +47,7 @@ class ResourceContainer extends Container
      * Adds a resource or task worker to the container.
      *
      * This method accepts either a Resource or TaskWorker instance and adds it to the container.
-     * The item is indexed using a unique identifier constructed from its ID and type suffix.
+     * The item is identified using a unique identifier constructed from its ID and type suffix.
      * If the item is not of the expected types, an InvalidArgumentException is thrown.
      *
      * @param mixed $item The Resource or TaskWorker instance to add
@@ -58,15 +61,20 @@ class ResourceContainer extends Container
         if (!$item instanceof Resource && !$item instanceof TaskWorker) 
             throw new InvalidArgumentException('Only Resource or TaskWorker instances can be added to ResourceContainer.');
 
+        if ($item instanceof Resource)
+            $this->resources[$this->buildId($item)] = $item;
+        else
+            $this->workers->add($item);
         $this->items[$this->buildId($item)] = $item;
     }
 
     /**
      * Removes a resource or task worker from the container.
      *
-     * This method accepts either a Resource or TaskWorker instance and removes it from the container.
-     * The item is identified using a unique identifier constructed from its ID and type suffix.
-     * If the item is not of the expected types, an InvalidArgumentException is thrown.
+     * This method accepts either a Resource or TaskWorker instance and removes it from the
+     * container. The item is identified using a unique identifier constructed from its ID
+     * and type suffix. If the item is not of the expected types, an InvalidArgumentException
+     * is thrown.
      *
      * @param mixed $item The Resource or TaskWorker instance to remove
      *
@@ -79,30 +87,77 @@ class ResourceContainer extends Container
         if (!$item instanceof Resource && !$item instanceof TaskWorker)
             throw new InvalidArgumentException('Only Resource or TaskWorker instances can be removed from ResourceContainer.');
 
+        if ($item instanceof Resource)
+            unset($this->resources[$this->buildId($item)]);
+        else
+            $this->workers->remove($item);
         unset($this->items[$this->buildId($item)]);
     }
 
     /**
-     * Checks if a resource or task worker exists in the container.
+     * Checks if a resource or task worker is present in the container.
      *
-     * This method accepts either a Resource or TaskWorker instance and checks if it is present
-     * in the container. The item is identified using a unique identifier constructed from its
-     * ID and type suffix. If the item is not of the expected types, an InvalidArgumentException
-     * is thrown.
+     * This method accepts either a Resource or TaskWorker instance and checks if it
+     * exists in the container. The item is identified using a unique identifier
+     * constructed from its ID and type suffix. If the item is not of the expected
+     * types, an InvalidArgumentException is thrown.
      *
      * @param mixed $item The Resource or TaskWorker instance to check
      *
      * @throws InvalidArgumentException If $item is not a Resource or TaskWorker instance
      *
-     * @return bool True if the item exists in the container, false otherwise
+     * @return bool True if the item is present in the container, false otherwise
      */
     public function contains(mixed $item): bool
     {
-        if (!$item instanceof Resource)
-            throw new InvalidArgumentException('Only Resource instances can be checked in ResourceContainer.');
+        if (!$item instanceof Resource && !$item instanceof TaskWorker)
+            throw new InvalidArgumentException('Only Resource or TaskWorker instances can be checked in ResourceContainer.');
 
         $id = $this->buildId($item);
-        return isset($this->items[$id]);
+        $isPresent = $item instanceof Resource
+            ? isset($this->resources[$id])
+            : $this->workers->contains($item);
+        return isset($this->items[$id]) && $isPresent;
+    }
+
+    /**
+     * Retrieves all resources stored in the container.
+     *
+     * @return array Array of Resource instances contained in the resource container
+     */
+    public function getResources(): array
+    {
+        return $this->resources;
+    }
+
+    /**
+     * Retrieves the worker container stored in the resource container.
+     *
+     * @return WorkerContainer The WorkerContainer instance contained in the resource container
+     */
+    public function getWorkers(): WorkerContainer
+    {
+        return $this->workers;
+    }
+
+    /**
+     * Counts the number of resources stored in the container.
+     *
+     * @return int The count of Resource instances in the container
+     */
+    public function countResources(): int
+    {
+        return count($this->resources);
+    }
+
+    /**
+     * Counts the number of task workers stored in the container.
+     *
+     * @return int The count of TaskWorker instances in the container
+     */
+    public function countWorkers(): int
+    {
+        return $this->workers->count();
     }
 
     /**
