@@ -3,18 +3,17 @@
 namespace App\Model;
 
 use App\Abstract\Model;
-use App\Container\JobTitleContainer;
 use App\Container\WorkerContainer;
 use App\Container\TaskContainer;
 use App\Core\UUID;
+use App\Dependent\ProjectManager;
+use App\Dependent\TaskWorker;
 use App\Dependent\Worker;
 use App\Entity\Project;
 use App\Exception\DatabaseException;
 use App\Enumeration\WorkStatus;
 use App\Enumeration\TaskPriority;
-use App\Entity\User;
 use App\Entity\Task;
-use App\Enumeration\Gender;
 use App\Enumeration\WorkerStatus;
 use DateTime;
 use Exception;
@@ -58,6 +57,98 @@ class TaskModel extends Model
 
         $instance = new self();
         try {
+            // $query = 
+            //     "SELECT 
+            //         pt.id AS id,
+            //         pt.public_id AS public_id,
+            //         pp.public_id AS phase_id,
+            //         pt.name AS name,
+            //         pt.description AS description,
+            //         pt.start_date_time AS start_date_time,
+            //         pt.completion_date_time AS completion_date_time,
+            //         pt.actual_completion_date_time AS actual_completion_date_time,
+            //         pt.priority AS priority,
+            //         pt.status AS status,
+            //         pt.created_at AS created_at,
+            //         COALESCE(
+            //             (
+            //                 SELECT CONCAT('[', GROUP_CONCAT(
+            //                     JSON_OBJECT(
+            //                         'id', u.id,
+            //                         'public_id', HEX(u.public_id),
+            //                         'first_name', u.first_name,
+            //                         'middle_name', u.middle_name,
+            //                         'last_name', u.last_name,
+            //                         'email', u.email,
+            //                         'contact_number', u.contact_number,
+            //                         'profile_link', u.profile_link,
+            //                         'gender', u.gender,
+            //                         'status', ptw.status,
+            //                         'created_at', u.created_at,
+            //                         'confirmed_at', u.confirmed_at,
+            //                         'deleted_at', u.deleted_at,
+            //                         'job_titles', COALESCE(
+            //                             (
+            //                                 SELECT 
+            //                                     CONCAT('[', GROUP_CONCAT(CONCAT('\"', wjt.title, '\"')), ']')
+            //                                 FROM 
+            //                                     `user_job_title` AS wjt
+            //                                 WHERE 
+            //                                     wjt.user_id = u.id
+            //                             ),
+            //                             '[]'
+            //                         ),
+            //                         'worker_total_tasks', (
+            //                             SELECT 
+            //                                 COUNT(*)
+            //                             FROM 
+            //                                 `phase_task_worker` AS ptw2
+            //                             WHERE 
+            //                                 ptw2.worker_id = u.id
+            //                         ),
+            //                         'worker_completed_tasks', (
+            //                             SELECT 
+            //                                 COUNT(*)
+            //                             FROM 
+            //                                 `phase_task_worker` AS ptw3
+            //                             INNER JOIN 
+            //                                 `phase_task` AS pt3 
+            //                             ON
+            //                                 ptw3.task_id = pt3.id
+            //                             WHERE 
+            //                                 ptw3.worker_id = u.id
+            //                             AND 
+            //                                 pt3.status = 'completed'
+            //                         )
+            //                     ) ORDER BY u.last_name ASC SEPARATOR ','
+            //                 ), ']')
+            //                 FROM 
+            //                     `phase_task_worker` AS ptw
+            //                 INNER JOIN 
+            //                     `user` AS u
+            //                 ON 
+            //                     ptw.worker_id = u.id
+            //                 WHERE 
+            //                     ptw.task_id = pt.id
+            //             ), '[]'
+            //         ) AS task_workers
+            //     FROM 
+            //         `phase_task` AS pt
+            //     INNER JOIN 
+            //         `project_phase` AS pp 
+            //     ON 
+            //         pt.phase_id = pp.id
+            //     INNER JOIN 
+            //         `project` AS p 
+            //     ON 
+            //         pp.project_id = p.id
+            //     LEFT JOIN 
+            //         `phase_task_worker` AS ptw 
+            //     ON 
+            //         pt.id = ptw.task_id
+            //     LEFT JOIN 
+            //         `user` AS u ON ptw.worker_id = u.id";
+
             $query = 
                 "SELECT 
                     pt.id AS id,
@@ -73,7 +164,7 @@ class TaskModel extends Model
                     pt.created_at AS created_at,
                     COALESCE(
                         (
-                            SELECT CONCAT('[', GROUP_CONCAT(
+                            JSON_ARRAYAGG(
                                 JSON_OBJECT(
                                     'id', u.id,
                                     'public_id', HEX(u.public_id),
@@ -91,13 +182,12 @@ class TaskModel extends Model
                                     'job_titles', COALESCE(
                                         (
                                             SELECT 
-                                                CONCAT('[', GROUP_CONCAT(CONCAT('\"', wjt.title, '\"')), ']')
-                                            FROM 
-                                                `user_job_title` AS wjt
+                                                JSON_ARRAYAGG(mjt.title)
+                                            FROM
+                                                `user_job_title` AS mjt
                                             WHERE 
-                                                wjt.user_id = u.id
-                                        ),
-                                        '[]'
+                                                mjt.user_id = u.id
+                                        ), JSON_ARRAY()
                                     ),
                                     'worker_total_tasks', (
                                         SELECT 
@@ -121,17 +211,9 @@ class TaskModel extends Model
                                         AND 
                                             pt3.status = 'completed'
                                     )
-                                ) ORDER BY u.last_name ASC SEPARATOR ','
-                            ), ']')
-                            FROM 
-                                `phase_task_worker` AS ptw
-                            INNER JOIN 
-                                `user` AS u
-                            ON 
-                                ptw.worker_id = u.id
-                            WHERE 
-                                ptw.task_id = pt.id
-                        ), '[]'
+                                )
+                            )
+                        ), JSON_ARRAY()
                     ) AS task_workers
                 FROM 
                     `phase_task` AS pt
@@ -149,6 +231,7 @@ class TaskModel extends Model
                     pt.id = ptw.task_id
                 LEFT JOIN 
                     `user` AS u ON ptw.worker_id = u.id";
+
             $projectTaskQuery = $instance->appendOptionsToFindQuery(
                 $instance->appendWhereClause($query, $whereClause),
                 $paramOptions);
@@ -163,47 +246,16 @@ class TaskModel extends Model
 
             $tasks = new TaskContainer();
             foreach ($results as $row) {
-                $task = Task::createPartial([
-                    'id'                        => $row['id'],
-                    'publicId'                  => $row['public_id'],
-                    'name'                      => $row['name'],
-                    'description'               => $row['description'],
-                    'workers'                   => new WorkerContainer(),
-                    'startDateTime'             => new DateTime($row['start_date_time']),
-                    'completionDateTime'        => new DateTime($row['completion_date_time']),
-                    'actualCompletionDateTime'  => $row['actual_completion_date_time']
-                        ? new DateTime($row['actual_completion_date_time'])
-                        : null,
-                    'priority'                  => TaskPriority::from($row['priority']),
-                    'status'                    => WorkStatus::from($row['status']),
-                    'createdAt'                 => new DateTime($row['created_at']),
-                    'additionalInfo'            => ['phaseId' => UUID::fromBinary($row['phase_id'])]
-                ]);
+                $row['additionalInfo'] = ['phaseId' => UUID::fromBinary($row['phase_id'])];
+                $task = Task::createPartial($row);
 
                 $workers = json_decode($row['task_workers'], true) ?? [];
                 foreach ($workers as $worker) {
-                    $task->addWorker(Worker::createPartial([
-                        'id'                => $worker['id'],
-                        'publicId'          => UUID::fromHex($worker['public_id']),
-                        'firstName'         => $worker['first_name'],
-                        'middleName'        => $worker['middle_name'],
-                        'lastName'          => $worker['last_name'],
-                        'email'             => $worker['email'],
-                        'contactNumber'     => $worker['contact_number'],
-                        'profileLink'       => $worker['profile_link'],
-                        'gender'            => Gender::from($worker['gender']),
-                        'status'            => WorkerStatus::from($worker['status']),
-                        'jobTitles'         => isset($worker['job_titles'])
-                            ? new JobTitleContainer(json_decode($worker['job_titles'], true))
-                            : new JobTitleContainer(),
-                        'createdAt'         => $worker['created_at'],
-                        'confirmedAt'       => $worker['confirmed_at'],
-                        'deletedAt'         => $worker['deleted_at'],
-                        'additionalInfo'    => [
-                            'totalTasks'        => (int)$worker['worker_total_tasks'],
-                            'completedTasks'    => (int)$worker['worker_completed_tasks']
-                        ]
-                    ]));
+                    $worker['additionalInfo'] = [
+                        'totalTasks'        => (int)$worker['worker_total_tasks'],
+                        'completedTasks'    => (int)$worker['worker_completed_tasks']
+                    ];
+                    $task->addWorker(Worker::createPartial($worker));
                 }
                 $tasks->add($task);
             }
@@ -601,7 +653,7 @@ class TaskModel extends Model
 
             $workers = new WorkerContainer();
             foreach ($result as $item) {
-                $workers->add(User::fromArray($item)->toWorker());
+                $workers->add(TaskWorker::createPartial($item));
             }
             return $workers;
         } catch (PDOException $e) {
@@ -906,7 +958,7 @@ class TaskModel extends Model
                 'completionDateTime'        => new DateTime($result['completion_date_time']),
                 'actualCompletionDateTime'  => new DateTime($result['actual_completion_date_time']),
                 'createdAt'                 => new DateTime($result['created_at']),
-                'manager'                   => User::createPartial([
+                'manager'                   => ProjectManager::createPartial([
                     'id'           => $result['id'],
                     'publicId'     => $result['public_id'],
                     'firstName'    => $result['first_name'],
