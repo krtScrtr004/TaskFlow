@@ -62,11 +62,11 @@ abstract class Validator
         if (strlen($name) < $min || strlen($name) > $max)
             $this->errors[] = "{$fieldLabel} must be between {$min} and {$max} characters.";
 
+        if (!preg_match('/^[\w\p{L}\s\'\-.]+$/u', $name))
+            $this->errors[] = "{$fieldLabel} must only contain letters, spaces, and common punctuation.";
+
         if ($this->hasConsecutiveSpecialChars($name))
             $this->errors[] = "{$fieldLabel} must not contain consecutive special characters.";
-
-        if (!preg_match("/^[a-zA-Z\s'\-.]{" . NAME_MIN . "," . NAME_MAX . "}$/", $name))
-            $this->errors[] = "{$fieldLabel} contains invalid characters.";
 
         // Run any additional custom checks provided in options
         foreach ($options['additionalChecks'] as $check) {
