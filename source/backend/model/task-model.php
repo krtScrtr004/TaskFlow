@@ -1013,35 +1013,18 @@ class TaskModel extends Model
     }
 
     /**
-     * Creates a new Task record in the database and populates the Task instance with persistence identifiers.
+     * Creates a new task in the database with the provided Task instance.
      *
-     * This method enforces that the provided argument is a Task instance, gathers required properties
-     * from the Task (including optional phase reference via additional info), prepares and executes an
-     * INSERT into the `phase_task` table, and updates the Task instance with the newly assigned
-     * numeric ID and the public ID used for storage.
+     * This method inserts a new task record into the `phase_task` table using the data from the provided Task instance.
+     * It also creates an associated budget record in the `phase_task_budget` table.
+     * The method handles UUID conversion and prepares SQL statements to prevent SQL injection.
      *
-     * Behavior and side effects:
-     * - Validates input is an instance of Task and throws InvalidArgumentException if not.
-     * - Retrieves a phase identifier from $task->getAdditionalInfo('phaseId'). If that value is an int
-     *   it is used directly; otherwise the query resolves the phase id via a subquery matching a phase
-     *   public_id.
-     * - Ensures the task has a public ID (generates one via UUID::get() if missing) and converts public
-     *   IDs to binary form with UUID::toBinary() for storage.
-     * - Normalizes textual fields (name, description) and extracts primitive values for priority and
-     *   status; formats start and completion datetimes via formatDateTime().
-     * - Executes a parameterized INSERT into `phase_task` and retrieves the auto-increment id via
-     *   lastInsertId().
-     * - Updates the provided Task instance by calling setId($taskId) and setPublicId($taskPublicId),
-     *   then returns that Task instance.
-     * - Reads workers via $task->getWorkers()->getItems(), but does not persist worker assignments here.
-     * - Wraps PDO exceptions in a DatabaseException.
+     * @param mixed $task The Task instance containing data for the new task.
      *
-     * @param mixed $task Task instance to persist (must be an instance of Task)
+     * @throws InvalidArgumentException If the provided task is not an instance of Task.
+     * @throws DatabaseException If a database error occurs during the creation process.
      *
-     * @throws InvalidArgumentException If the provided $task is not an instance of Task
-     * @throws DatabaseException If a PDO error occurs while inserting the record
-     *
-     * @return mixed The same Task instance passed in, updated with database id and public id
+     * @return mixed The created Task instance with updated ID and public ID.
      */
     public static function create(mixed $task): mixed
     {
@@ -1057,10 +1040,10 @@ class TaskModel extends Model
             $taskDescription    = trimOrNull($task->getDescription());
             $taskPriority       = $task->getPriority()->value;
             $taskStatus         = $task->getStatus()->value;
-            $taskWorkers        = $task->getWorkers()->getItems();
             $taskStartDateTime  = formatDateTime($task->getStartDateTime());
             $completionDateTime = formatDateTime($task->getCompletionDateTime());
 
+            // Insert task record
             $taskQuery =
                 "INSERT INTO `phase_task` (
                     public_id, 
@@ -1083,8 +1066,8 @@ class TaskModel extends Model
                     :startDateTime, 
                     :completionDateTime
                 )";
-            $statement = $instance->connection->prepare($taskQuery);
-            $statement->execute([
+            $taskQueryStatement = $instance->connection->prepare($taskQuery);
+            $taskQueryStatement->execute([
                 ':publicId'             => UUID::toBinary($taskPublicId),
                 ':phaseId'              => is_int($phaseId) ? $phaseId : UUID::toBinary($phaseId),
                 ':name'                 => $taskName,
@@ -1098,33 +1081,35 @@ class TaskModel extends Model
 
             $task->setId($taskId);
             $task->setPublicId($taskPublicId);
+
+            // Insert budget record
+            $budgetQuery = 
+                "INSERT INTO `phase_task_budget` (
+                    task_id,
+                    estimated_cost,
+                    actual_cost,
+                    note
+                ) VALUES (
+                    :taskId,
+                    :estimatedCost,
+                    :actualCost,
+                    :note
+                )";
+            $budgetQueryStatement = $instance->connection->prepare($budgetQuery);
+            $budgetQueryStatement->execute([
+                ':taskId'           => $taskId,
+                ':estimatedCost'    => $task->getEstimatedCost(),
+                ':actualCost'       => $task->getActualCost(),
+                ':note'             => trimOrNull($task->getBudgetNote())
+            ]);
+
             return $task;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
     }
 
-    /**
-     * Updates an existing task in the database with the provided data.
-     *
-     * This method updates the fields of a task record in the `projectTask` table based on the keys present in the input array.
-     * It also saves associated worker data if provided.
-     * The update is performed within a transaction to ensure data integrity.
-     *
-     * @param array $data Associative array containing task data with the following keys:
-     *      - id: int Task ID (required)
-     *      - name: string|null Task name (optional)
-     *      - description: string|null Task description (optional)
-     *      - status: TaskStatusEnum Task status enum (optional)
-     *      - startDateTime: string|DateTime Task start date and time (optional)
-     *      - completionDateTime: string|DateTime Task scheduled completion date and time (optional)
-     *      - actualCompletionDateTime: string|DateTime|null Actual completion date and time (optional)
-     *      - workers: WorkerContainer|null Container of worker objects associated with the task (optional)
-     *
-     * @throws InvalidArgumentException If the provided task ID is invalid.
-     * @throws DatabaseException If a database error occurs during the update process.
-     * @return bool True on successful update, false otherwise.
-     */
+    // TODO
     public static function save(array $data): bool
     {
         $instance = new self();
