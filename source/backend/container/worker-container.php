@@ -3,6 +3,7 @@
 namespace App\Container;
 
 use App\Abstract\Container;
+use App\Dependent\TaskWorker;
 use App\Dependent\Worker;
 use App\Enumeration\Role;
 use App\Enumeration\WorkerStatus;
@@ -62,14 +63,14 @@ class WorkerContainer extends Container
      *
      * @param mixed $item Worker instance to add to the container
      *
-     * @throws InvalidArgumentException If the provided $item is not a Worker instance with the 'worker' role
+     * @throws InvalidArgumentException If the provided $item is not a Worker instance with the 'worker' or 'task worker' role
      *
      * @return void
      */
     public function add($item): void
     {
-        if (!Role::isWorker($item->getRole())) {
-            throw new InvalidArgumentException("Only users with the 'worker' role can be added as project workers.");
+        if (!$item instanceof Worker && !$item instanceof TaskWorker) {
+            throw new InvalidArgumentException('Only Worker or TaskWorker instances can be added from WorkerContainer.');
         }
 
         $id = $item->getId();
@@ -115,8 +116,8 @@ class WorkerContainer extends Container
      */
     public function remove($item): void
     {
-        if (!$item instanceof Worker) {
-            throw new InvalidArgumentException('Only Worker instances can be removed from WorkerContainer.');
+        if (!$item instanceof Worker && !$item instanceof TaskWorker) {
+            throw new InvalidArgumentException('Only Worker or TaskWorker instances can be removed from WorkerContainer.');
         }
 
         $id = $item->getId();
@@ -161,8 +162,8 @@ class WorkerContainer extends Container
      */
     public function contains($item): bool
     {
-        if (!$item instanceof Worker) {
-            throw new InvalidArgumentException('Only Worker instances can be checked in WorkerContainer.');
+        if (!$item instanceof Worker && !$item instanceof TaskWorker) {
+            throw new InvalidArgumentException('Only Worker or TaskWorker instances can be checked from WorkerContainer.');
         }
 
         $id = $item->getId();
