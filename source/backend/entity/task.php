@@ -9,7 +9,7 @@ use App\Enumeration\WorkStatus;
 use App\Container\WorkerContainer;
 use App\Dependent\Worker;
 use App\Core\UUID;
-use App\Dependent\Resource;
+use App\Dependent\TaskResource;
 use App\Exception\ValidationException;
 use App\Validator\UuidValidator;
 use App\Validator\WorkValidator;
@@ -325,9 +325,7 @@ class Task implements Entity
         if (!$this->resources) {
             $this->resources = new ResourceContainer();
         }
-        foreach ($workers as $worker) {
-            $this->resources->add($worker);
-        }
+        $this->resources->setWorkers($workers);
     }
 
     /**
@@ -466,10 +464,10 @@ class Task implements Entity
     /**
      * Adds a resource to the task.
      *
-     * @param Resource $resource The resource to add to the task
+     * @param TaskResource $resource The resource to add to the task
      * @return void
      */
-    public function addResource(Resource $resource): void
+    public function addResource(TaskResource $resource): void
     {
         $this->resources->add($resource);
     }
