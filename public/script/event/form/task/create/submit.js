@@ -96,6 +96,7 @@ async function submit(e) {
  *   - {string|Date|undefined} startDateTime - The task start date and time
  *   - {string|Date|undefined} completionDateTime - The task completion date and time
  *   - {string|undefined} description - The task description
+ *   - {string|undefined} priority - The task priority
  *   - {number|string|undefined} estimatedCost - The estimated cost for the task
  *   - {string|undefined} budgetNote - Additional budget-related notes
  */
@@ -108,11 +109,15 @@ function getTaskInfo() {
     const estimatedCost = merged.get('estimatedCost')
     const budgetNote = merged.get('budgetNote')
 
+    // Directly access the priority from the form element
+    const priority = taskForm.querySelector('#priority')?.value || '' 
+
     return {
         name,
         startDateTime,
         completionDateTime,
         description,
+        priority,
         estimatedCost,
         budgetNote
     }

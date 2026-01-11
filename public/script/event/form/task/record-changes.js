@@ -17,6 +17,7 @@ const taskNameInput = taskInfo.querySelector('#name')
 const taskStartDateTimeInput = taskInfo.querySelector('#start_date_time')
 const taskCompletionDateTimeInput = taskInfo.querySelector('#completion_date_time')
 const taskDescriptionInput = taskInfo.querySelector('#description')
+const taskPriorityInput = taskInfo.querySelector('#priority')
 const taskEstimatedCostInput = taskInfo.querySelector('#estimated_cost')
 const taskBudgetNoteInput = taskInfo.querySelector('#budget_note')
 if (!taskNameInput || !taskStartDateTimeInput || !taskCompletionDateTimeInput
@@ -59,6 +60,7 @@ const oldTaskData = {
     startDateTime: taskStartDateTimeInput.value || '',
     completionDateTime: taskCompletionDateTimeInput.value || '',
     description: taskDescriptionInput.value || '',
+    priority: taskPriorityInput.value || '',
     estimatedCost: taskEstimatedCostInput.value || '',
     budgetNote: taskBudgetNoteInput.value || ''
 }
@@ -72,6 +74,8 @@ taskStartDateTimeInput.addEventListener('change', () => updateTaskInfoMaps('star
 taskCompletionDateTimeInput.addEventListener('change', () => updateTaskInfoMaps('completionDateTime', taskCompletionDateTimeInput))
 
 taskDescriptionInput.addEventListener('change', () => updateTaskInfoMaps('description', taskDescriptionInput))
+
+taskPriorityInput.addEventListener('change', () => updateTaskInfoMaps('priority', taskPriorityInput))
 
 taskEstimatedCostInput.addEventListener('change', () => updateTaskInfoMaps('estimatedCost', taskEstimatedCostInput))
 
