@@ -137,7 +137,7 @@ oldSelectedTaskWorkerFormCard.forEach(card => {
 
     oldWorkerInfo.set(id, {
         unitRate: unitRateInput.value || '',
-        hoursAssigned: hoursAssignedInput.value || ''
+        estimatedHour: hoursAssignedInput.value || ''
     })
 })
 
@@ -195,7 +195,7 @@ workerInfo.addEventListener('change', e => {
 
     if (e.target === unitRateInput) updateWorkerInfoMaps(id, 'unitRate', unitRateInput)
         
-    if (e.target === hoursAssignedInput) updateTaskInfoMaps(id, 'hoursAssigned', hoursAssignedInput)
+    if (e.target === hoursAssignedInput) updateWorkerInfoMaps(id, 'estimatedHour', hoursAssignedInput)
 })
 
 /**
