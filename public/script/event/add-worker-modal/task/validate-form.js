@@ -118,7 +118,11 @@ taskEstimatedCostInput?.addEventListener('change', () => {
     validateAndUpdate(
         taskEstimatedCostInput,
         validateBudget(taskEstimatedCostInput.value, phaseBudget),
-        RULE_MAPPINGS.workBudget
+        RULE_MAPPINGS.workBudget,
+        () => {
+            // Revalidate all workers when task budget changes
+            revalidateAllWorkers()
+        }
     )
 })
 
@@ -136,35 +140,64 @@ taskBudgetNoteInput?.addEventListener('input', () => {
  * Worker Info
  */
 
-let totalUnitRateSpending = 0 // Hold total spending across all workers for the task
-
 const workerInfo = taskForm.querySelector('#worker_info')
 if (!workerInfo) console.warn('Worker info element not found')
+
+/**
+ * Calculate total spending across all workers
+ */
+function calculateTotalWorkerSpending() {
+    const workerCards = workerInfo?.querySelectorAll('.selected-task-worker-form-card') || []
+    let total = 0
+
+    workerCards.forEach(card => {
+        const unitRate = parseFloat(card.querySelector('.unit-rate-input')?.value || 0)
+        const hours = parseFloat(card.querySelector('.hours-assigned-input')?.value || 0)
+        total += unitRate * hours
+    })
+
+    return total
+}
 
 /**
  * Helper function to validate worker input fields
  */
 function validateWorkerInput(input, value, id, fieldType) {
+    value = parseFloat(value)
+
     const isUnitRate = fieldType === 'unit-rate'
     const card = input.closest('.selected-task-worker-form-card')
     
     const unitRateInput = card.querySelector('.unit-rate-input')
     const hoursAssignedInput = card.querySelector('.hours-assigned-input')
     
-    const rateValue = isUnitRate ? value : unitRateInput.value
-    const hoursValue = isUnitRate ? hoursAssignedInput.value : value
-    const totalSpending = parseFloat(rateValue) * parseFloat(hoursValue || 0)
+    const rateValue = parseFloat(isUnitRate ? value : unitRateInput.value)
+    const hoursValue = parseFloat(isUnitRate ? hoursAssignedInput.value : value)
+    const totalSpending = rateValue * (hoursValue || 0)
 
-    totalUnitRateSpending += totalSpending
+    // Recalculate total from ALL worker cards
+    const totalUnitRateSpending = calculateTotalWorkerSpending()
 
     const isValidNumber = /^[-+]?\d*\.?\d+$/.test(value)
     const minValue = isUnitRate ? VALIDATION_CONSTANTS.DEFAULT_RATE_MIN : VALIDATION_CONSTANTS.WORKER_HOURS_MIN
     const maxValue = isUnitRate ? VALIDATION_CONSTANTS.DEFAULT_RATE_MAX : VALIDATION_CONSTANTS.WORKER_HOURS_MAX
     const withinRange = value >= minValue && value <= maxValue
-    const withinPhaseBudget = totalSpending <= parseFloat(phaseBudget || 0)
+    
+    // Check if TOTAL spending exceeds task budget
+    const taskEstimatedCost = parseFloat(taskEstimatedCostInput?.value || 0)
+    const withinTaskBudget = totalUnitRateSpending <= taskEstimatedCost
 
-    if (!isValidNumber || !withinRange || !withinPhaseBudget) {
-        Notification.error('The total cost assigned to workers must not exceed the phase budget.', 5000)
+    if (!isValidNumber || !withinRange || !withinTaskBudget) {
+        let errorMessage = ''
+        
+        if (!isValidNumber)
+            errorMessage = 'Please enter a valid number'
+        else if (!withinRange)
+            errorMessage = `Value must be between ${minValue} and ${maxValue}`
+        else if (!withinTaskBudget)
+            errorMessage = `Total worker cost (₱${totalUnitRateSpending.toFixed(2)}) exceeds task budget (₱${taskEstimatedCost.toFixed(2)})`
+
+        Notification.error(errorMessage, 5000)
 
         toggleElementClass(input, ['shake', 'invalid'], [])
         input.addEventListener('animationend', () => {
@@ -173,8 +206,28 @@ function validateWorkerInput(input, value, id, fieldType) {
 
         updateSubmitTaskButtonState(`${id}-${fieldType}`, true)
     } else {
+        toggleElementClass(input, [], ['shake', 'invalid'])
         updateSubmitTaskButtonState(`${id}-${fieldType}`, false)
     }
+}
+
+/**
+ * Revalidate all workers when task budget changes
+ */
+function revalidateAllWorkers() {
+    const workerCards = workerInfo?.querySelectorAll('.selected-task-worker-form-card') || []
+    workerCards.forEach(card => {
+        const unitRateInput = card.querySelector('.unit-rate-input')
+        const hoursAssignedInput = card.querySelector('.hours-assigned-input')
+        const id = card.dataset.workerid
+
+        if (unitRateInput?.value) {
+            validateWorkerInput(unitRateInput, unitRateInput.value, id, 'unit-rate')
+        }
+        if (hoursAssignedInput?.value) {
+            validateWorkerInput(hoursAssignedInput, hoursAssignedInput.value, id, 'hours-assigned')
+        }
+    })
 }
 
 workerInfo?.addEventListener('change', e => {
@@ -188,12 +241,11 @@ workerInfo?.addEventListener('change', e => {
         return
     }
 
-    if (e.target === unitRateInput) {
+    if (e.target === unitRateInput) 
         validateWorkerInput(unitRateInput, unitRateInput.value, id, 'unit-rate')
-    }
 })
 
-workerInfo?.addEventListener('input', e => {
+workerInfo?.addEventListener('change', e => {
     const card = e.target.closest('.selected-task-worker-form-card')
     if (!card) return
     const id = card.dataset.workerid
@@ -204,9 +256,8 @@ workerInfo?.addEventListener('input', e => {
         return
     }
 
-    if (e.target === hoursAssignedInput) {
+    if (e.target === hoursAssignedInput)
         validateWorkerInput(hoursAssignedInput, hoursAssignedInput.value, id, 'hours-assigned')
-    }
 })
 
 /**

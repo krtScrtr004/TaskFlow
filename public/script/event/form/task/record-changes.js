@@ -172,7 +172,7 @@ oldSelectedTaskWorkerFormCard.forEach(card => {
  */
 function updateWorkerInfoMaps(id, key, input) {
     const value = input.value
-    if (oldWorkerInfo.get(id)[key] === value) return
+    if (oldWorkerInfo.get(id)?.[key] === value) return
 
     let workerChanges = changedWorkerInfo.get(id) || addedWorkerInfo.get(id) || {}
     workerChanges[key] = value
@@ -193,7 +193,7 @@ workerInfo.addEventListener('change', e => {
     const id = card.dataset.workerid
     if (!id) return
 
-    if (e.target === unitRateInput) updateWorkerInfoMaps(id, 'name', unitRateInput)
+    if (e.target === unitRateInput) updateWorkerInfoMaps(id, 'unitRate', unitRateInput)
         
     if (e.target === hoursAssignedInput) updateTaskInfoMaps(id, 'hoursAssigned', hoursAssignedInput)
 })
