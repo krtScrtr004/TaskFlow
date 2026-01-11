@@ -4,7 +4,9 @@ namespace App\Dependent;
 
 use App\Container\JobTitleContainer;
 use App\Core\UUID;
+use App\Entity\ResourceType;
 use App\Enumeration\Gender;
+use App\Enumeration\ResourceTypeMapping;
 use App\Enumeration\Role;
 use App\Enumeration\WorkerStatus;
 use App\Exception\ValidationException;
@@ -13,9 +15,8 @@ use DateTime;
 
 class TaskWorker extends Worker
 {
-    private float $estimatedHours;
-    private float $actualHours;
-    private Resource $resource;
+    private float $estimatedHour;
+    private float $actualHour;
 
     private ResourceValidator $resourceValidator;
 
@@ -41,8 +42,8 @@ class TaskWorker extends Worker
      * @param DateTime $createdAt Worker's creation timestamp.
      * @param float $defaultRate Worker's default rate (default is DEFAULT_RATE_MIN).
      * @param WorkerStatus $status Worker's worker status (default is UNASSIGNED).
-     * @param float $estimatedHours Worker's estimated hours assigned (default is WORKER_HOURS_MIN).
-     * @param float $actualHours Worker's actual hours worked (default is 0.0).
+     * @param float $estimatedHour Worker's estimated hours assigned (default is WORKER_HOURS_MIN).
+     * @param float $actualHour Worker's actual hours worked (default is 0.0).
      * @param string|null $password Worker's password (optional).
      * @param DateTime|null $confirmedAt Worker's confirmation timestamp (optional).
      * @param DateTime|null $deletedAt Worker's deletion timestamp (optional).
@@ -63,11 +64,10 @@ class TaskWorker extends Worker
         DateTime $createdAt,
 
         // Task worker-specific properties
-        Resource $resource,
         float $defaultRate = DEFAULT_RATE_MIN,
         WorkerStatus $status = WorkerStatus::UNASSIGNED,
-        float $estimatedHours = WORKER_HOURS_MIN,
-        float $actualHours = 0.0,
+        float $estimatedHour = WORKER_HOURS_MIN,
+        float $actualHour = 0.0,
 
         // Optional properties
         ?string $middleName = null,
@@ -101,9 +101,9 @@ class TaskWorker extends Worker
         );
 
         $this->resourceValidator = new ResourceValidator();
-        $this->resourceValidator->validateHoursAssigned($estimatedHours);
-        if ($actualHours > 0) 
-            $this->resourceValidator->validateHoursAssigned($actualHours);
+        $this->resourceValidator->validateHoursAssigned($estimatedHour);
+        if ($actualHour > 0) 
+            $this->resourceValidator->validateHoursAssigned($actualHour);
         if ($this->resourceValidator->hasErrors()) {
             throw new ValidationException(
                 "Task Worker Validation Failed",
@@ -111,45 +111,12 @@ class TaskWorker extends Worker
             );
         }
 
-        $this->resource = $resource;
-        $this->resource->setQuantity(1); // TaskWorker always has quantity of 1
-
-        $this->estimatedHours = $estimatedHours || WORKER_HOURS_MIN;
-        $this->actualHours = $actualHours;
+        $this->estimatedHour = $estimatedHour || WORKER_HOURS_MIN;
+        $this->actualHour = $actualHour;
         $this->role = Role::TASK_WORKER;
     }
 
     // GETTERS
-
-    /**
-     * Gets the resource assigned to the task worker.
-     *
-     * @return Resource The assigned resource.
-     */
-    public function getResource(): Resource
-    {
-        return $this->resource;
-    }
-
-    /**
-     * Gets the unit rate of the assigned resource.
-     *
-     * @return float The unit rate.
-     */
-    public function getUnitRate(): float
-    {
-        return $this->resource->getUnitRate();
-    }
-
-    /**
-     * Gets the estimated unit of the assigned resource.
-     *
-     * @return float The estimated unit.
-     */
-    public function getEstimatedUnit(): float
-    {
-        return $this->resource->getEstimatedUnit();
-    }
 
     /**
      * Gets the estimated hours assigned to the task worker.
@@ -158,7 +125,7 @@ class TaskWorker extends Worker
      */
     public function getEstimatedHours(): float
     {
-        return $this->estimatedHours;
+        return $this->estimatedHour;
     }
 
     /**
@@ -168,30 +135,10 @@ class TaskWorker extends Worker
      */
     public function getActualHours(): float
     {
-        return $this->actualHours;
+        return $this->actualHour;
     }
 
     // SETTERS
-
-    /**
-     * Sets the resource assigned to the task worker.
-     *
-     * @param Resource $resource The resource to assign.
-     */
-    public function setResource(Resource $resource): void
-    {
-        $this->resource = $resource;
-    }
-    
-    /**
-     * Sets the unit rate of the assigned resource.
-     *
-     * @param float $rate The unit rate to set.
-     */
-    public function setUnitRate(float $rate): void
-    {
-        $this->resource->setUnitRate($rate);
-    }
 
     /**
      * Gets the actual hours worked by the task worker.
@@ -207,7 +154,7 @@ class TaskWorker extends Worker
                 $this->resourceValidator->getErrors()
             );
         }
-        $this->estimatedHours = $hours;
+        $this->estimatedHour = $hours;
     }
 
     /**
@@ -224,7 +171,7 @@ class TaskWorker extends Worker
                 $this->resourceValidator->getErrors()
             );
         }
-        $this->actualHours = $hours;
+        $this->actualHour = $hours;
     }
 
     // OTHER METHODS (UTILITY)
@@ -257,9 +204,8 @@ class TaskWorker extends Worker
      *      - confirmedAt: DateTime|null Confirmation timestamp.
      *      - deletedAt: DateTime|null Deletion timestamp.
      *      - additionalInfo: array Additional information.
-     *      - resource: Resource Assigned resource.
-     *      - estimatedHours: float Estimated hours assigned.
-     *      - actualHours: float Actual hours worked.
+     *      - estimatedHour: float Estimated hours assigned.
+     *      - actualHour: float Actual hours worked.
      * 
      * @return static The constructed partial TaskWorker object.
      */
@@ -270,10 +216,9 @@ class TaskWorker extends Worker
         /** @var static $partial */ // tell IDE this is the called class (silences false positive)
         $partial = parent::createPartial($data);
 
-        $partial->setResource(Resource::fromArray($data['resource']));
-        $partial->setEstimatedHours((float) ($data['estimatedHours'] ?? WORKER_HOURS_MIN));
-        if (isset($data['actualHours'])) {
-            $partial->setActualHours((float) $data['actualHours']);
+        $partial->setEstimatedHours((float) ($data['estimatedHour'] ?? WORKER_HOURS_MIN));
+        if (isset($data['actualHour'])) {
+            $partial->setActualHours((float) $data['actualHour']);
         }
 
         return $partial;
@@ -289,17 +234,15 @@ class TaskWorker extends Worker
      * 
      * @return array The associative array representation of the TaskWorker.
      *      - All base worker properties from parent::toArray()
-     *      - resource: The resource assigned to the task worker.
-     *      - estimatedHours: The estimated hours assigned to the task worker.
-     *      - actualHours: The actual hours worked by the task worker.
+     *      - estimatedHour: The estimated hours assigned to the task worker.
+     *      - actualHour: The actual hours worked by the task worker.
      */
     public function toArray(bool $useSnakeCase = false): array
     {
         $parentArray = parent::toArray($useSnakeCase);
         $taskWorkerArray = [
-            'resource' => $this->resource->toArray($useSnakeCase),
-            'estimatedHours' => $this->estimatedHours,
-            'actualHours' => $this->actualHours,
+            'estimatedHour' => $this->estimatedHour,
+            'actualHour' => $this->actualHour,
         ];
         return array_merge($parentArray, $taskWorkerArray);
     }
@@ -342,9 +285,8 @@ class TaskWorker extends Worker
             confirmedAt: $worker->getConfirmedAt(),
             deletedAt: $worker->getDeletedAt(),
             additionalInfo: $worker->getAdditionalInfo(),
-            resource: Resource::fromArray($data['resource']),
-            estimatedHours: $data['estimatedHours'] ?? 0.0,
-            actualHours: $data['actualHours'] ?? 0.0,
+            estimatedHour: $data['estimatedHour'] ?? 0.0,
+            actualHour: $data['actualHour'] ?? 0.0,
         );
     }
 }

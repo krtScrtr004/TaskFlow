@@ -2,12 +2,14 @@
 
 use App\Core\UUID;
 use App\Enumeration\TaskPriority;
+use App\Middleware\Csrf;
 
 if (!$project) throw new Exception('Project data is required to render this page');
 $projectData = ['id'    => htmlspecialchars(UUID::toString($project->getPublicId()))];
 
 if (!$phase) throw new Exception('Active phase data is required to render this page');
 $phaseData = [
+    'id'                    => UUID::toString($phase->getPublicId()),
     'name'                  => $phase->getName(),
     'budget'                => $phase->getBudget(),
     'startDateTime'         => $phase->getStartDateTime(),
@@ -21,6 +23,7 @@ $phaseData = [
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<?= Csrf::get() ?>">
     <title>Create A Task</title>
 
     <base href="<?= PUBLIC_PATH ?>">
@@ -36,7 +39,7 @@ $phaseData = [
 <body>
     <?php include_once COMPONENT_PATH . 'template' . DS . 'add-worker-modal.php' ?>
 
-    <main class="task-form main-page center-child" data-projectid="<?= $projectData['id'] ?>">
+    <main class="task-form main-page center-child" data-projectid="<?= $projectData['id'] ?>" data-phaseid="<?= $phaseData['id'] ?>">
         <form id="task_form" class="content-section-block flex-row" action="" method="POST">
 
             <!-- Hidden phase data for FE validation -->
@@ -210,7 +213,7 @@ $phaseData = [
 
                 </section>
 
-                <!-- Create Button -->
+                <!-- Submit Button -->
                 <button class="submit-task-button blue-bg">
                     <div class="text-w-icon">
                         <img src="<?= ICON_PATH . 'add_w.svg' ?>" alt="Create Task" title="Create Task" height="20">
@@ -255,8 +258,11 @@ $phaseData = [
     </main>
 
     <script type="module" src="<?= EVENT_PATH . 'back-button.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'validate-form.js' ?>" defer></script>
+                                    
+    <script type="module" src="<?= EVENT_PATH . 'form' . DS . 'task' . DS . 'record-changes.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'form' . DS . 'task' . DS . 'create' . DS . 'submit.js' ?>" defer></script>
 
+    <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'validate-form.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'new' . DS . 'open.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'new' . DS . 'add.js' ?>" defer></script>
 </body>
