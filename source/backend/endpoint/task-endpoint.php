@@ -5,8 +5,10 @@ namespace App\Endpoint;
 use App\Abstract\Endpoint;
 use App\Auth\HttpAuth;
 use App\Auth\SessionAuth;
+use App\Container\WorkerContainer;
 use App\Core\Me;
 use App\Core\UUID;
+use App\Dependent\TaskWorker;
 use App\Dependent\Worker;
 use App\Entity\Task;
 use App\Enumeration\Role;
@@ -21,6 +23,7 @@ use App\Model\PhaseModel;
 use App\Model\ProjectModel;
 use App\Model\ProjectWorkerModel;
 use App\Model\TaskModel;
+use App\Service\TaskService;
 use App\Utility\ResponseExceptionHandler;
 use App\Validator\WorkValidator;
 use DateTime;
@@ -241,39 +244,40 @@ class TaskEndpoint extends Endpoint
     }
 
     /**
-     * Adds a new task to a specified project phase.
+     * Adds a new Task to a Project Phase.
      *
-     * This method performs the following actions:
-     * - Checks if the user session is authorized.
-     * - Validates CSRF token.
-     * - Decodes input data from the request body.
-     * - Validates the presence and existence of project and phase IDs.
-     * - Ensures the phase belongs to the specified project or finds the ongoing phase.
-     * - Validates task date bounds against project dates.
-     * - Creates a partial Task instance with provided data.
-     * - Validates and adds worker(s) to the task.
-     * - Associates the task with the specified phase.
-     * - Persists the task in the database.
-     * - Returns the public ID of the created task on success.
-     * - Handles validation, authorization, and unexpected errors.
+     * Handles request-level concerns (rate limiting, session authorization, CSRF protection),
+     * authorizes that the current user is a Project Manager, decodes and validates input data,
+     * resolves the target Project and Phase (by explicit ID or schedule boundary), validates
+     * task date/budget boundaries against the Phase, constructs Worker and Task domain objects,
+     * performs domain validation, persists the Task via TaskService, and returns a success response
+     * containing the created Task's public identifier.
      *
-     * @param array $args Associative array containing:
-     *      - projectId: string|UUID Project identifier (required)
-     *      - phaseId: string|UUID Phase identifier (required)
-     * 
-     * Input data (decoded from request body) must include:
-     *      - name: string Task name
-     *      - description: string Task description
-     *      - startDateTime: string Task start date/time (ISO 8601)
-     *      - completionDateTime: string Task completion date/time (ISO 8601)
-     *      - priority: int Task priority
-     *      - workerIds: array List of worker public IDs (at least one required)
-     * 
-     * @throws ForbiddenException If session is unauthorized, project/phase/worker IDs are missing or invalid.
-     * @throws ValidationException If input data is invalid or fails validation.
-     * @throws NotFoundException If project or phase is not found.
-     * @throws Exception For unexpected errors.
-     * 
+     * Behavior and side effects:
+     * - Enforces rate limiting via self::formRateLimit().
+     * - Ensures an authorized session exists and CSRF protection passes.
+     * - Requires the current user to have a Project Manager role; otherwise throws ForbiddenException.
+     * - Decodes input payload (php://input) and throws ValidationException if decoding fails.
+     * - Extracts and validates 'projectId' and 'phaseId' from $args; missing IDs result in ForbiddenException.
+     * - Loads Project and Phase instances; missing resources result in NotFoundException.
+     * - If phaseId is not provided, resolves Phase by schedule boundary using start/completion date-times.
+     * - Validates task start/completion date-times against the Phase bounds.
+     * - Aggregates worker cost contributions into a budget boundary validator while converting worker data
+     *   (renaming 'id' => 'publicId') and creating TaskWorker partial objects stored in a WorkerContainer.
+     * - Normalizes priority and converts provided date/time strings into DateTime objects.
+     * - Constructs a partial Task, associates it with the resolved Phase via additional info,
+     *   and runs full validation; validation failures throw ValidationException with collected errors.
+     * - Persists the Task through TaskService::create() and emits a success Response with the new Task public ID.
+     * - Catches any Throwable and delegates handling to ResponseExceptionHandler.
+     *
+     * @param array $args Optional routing/context arguments; expects 'projectId' and optionally 'phaseId' as UUID strings.
+     *
+     * @throws ForbiddenException If the session is unauthorized, the user lacks Project Manager role,
+     *                            or required project/phase IDs are missing.
+     * @throws ValidationException If request decoding fails or task/domain validation fails.
+     * @throws NotFoundException If the referenced Project or Phase cannot be found.
+     * @throws Throwable For any other unexpected errors surfaced during processing (caught and handled by the caller).
+     *
      * @return void
      */
     public static function add(array $args = []): void
@@ -334,74 +338,42 @@ class TaskEndpoint extends Endpoint
                 $phase->getCompletionDateTime(),
                 'Phase'
             );
+
+            $budgetBoundaryValidator = $validator->createBudgetBoundaryValidator((float) $data['estimatedCost'] ?? DEFAULT_RATE_MIN);
+
+            $rawWorkers = $data['workers'];
+            $workers = new WorkerContainer();
+            foreach ($rawWorkers as $worker) {
+                $worker['publicId'] = $worker['id'];
+                unset($worker['id']);
+
+                // Add to budget boundary validator
+                $budgetBoundaryValidator['addBudget']((float) $worker['unitRate'] * (float) $worker['estimatedHour']);
+
+                $workers->add(TaskWorker::createPartial($worker));
+            }
+
+            $data['workers'] = $workers;
+            $data['priority'] = TaskPriority::from($data['priority'] ?? TaskPriority::LOW);
+            $data['startDateTime'] = new DateTime($data['startDateTime']);
+            $data['completionDateTime'] = new DateTime($data['completionDateTime']);
+
+            $task = Task::createPartial($data);
+            $task->addAdditionalInfo('phaseId', $phase->getId());
+
+            $validator->validateMultiple($data);
             if ($validator->hasErrors()) {
                 throw new ValidationException('Task Validation Failed.', $validator->getErrors());
             }
 
-            $task = Task::createPartial([
-                'name' => $data['name'] ?? null,
-                'description' => $data['description'] ?? null,
-                'startDateTime' => $data['startDateTime'],
-                'completionDateTime' => $data['completionDateTime'],
-                'priority' => $data['priority'],
-            ]);
-
-            $workerIds = $data['workerIds'] ?? null;
-            if (!isset($data['workerIds']) || !is_array($data['workerIds']) || count($data['workerIds']) < 1) {
-                throw new ForbiddenException('Worker IDs are required.');
-            }
-
-            $temporaryId = 0;
-            foreach ($workerIds as $workerId) {
-                $task->addWorker(Worker::createPartial([
-                    'id' => $temporaryId++,
-                    'publicId' => UUID::fromString($workerId)
-                ]));
-            }
-            $task->addAdditionalInfo('phaseId', $phaseId);
-
-            $createdTask = TaskModel::create($task);
-            $publicId = UUID::toString($createdTask->getPublicId());
-            Response::success(['id' => $publicId], 'Workers added successfully.');
+            $newTask = TaskService::create($task);
+            Response::success(['id' => UUID::toString($newTask->getPublicId())], 'Workers added successfully.');
         } catch (Throwable $e) {
             ResponseExceptionHandler::handle('Add Task Failed.', $e);
         }
     }
 
-    /**
-     * Edits an existing task within a project phase.
-     *
-     * This method performs the following operations:
-     * - Validates user session authorization and CSRF protection.
-     * - Validates and retrieves project, phase, and task identifiers.
-     * - Loads the corresponding phase, task, and project models.
-     * - Decodes input data and prepares task update payload.
-     * - Converts and validates fields such as name, description, start/completion dates, priority, and status.
-     * - Automatically determines status from dates if not provided.
-     * - Validates date bounds against project limits.
-     * - Saves the updated task if validation passes.
-     * - Returns a success response with the project public ID, or error responses for validation, not found, forbidden, or unexpected errors.
-     *
-     * @param array $args Associative array containing identifiers:
-     *      - projectId: string|UUID Project identifier
-     *      - phaseId: string|UUID Phase identifier
-     *      - taskId: string|UUID Task identifier
-     * 
-     * Input data (decoded from request body) may include:
-     *      - name: string Task name
-     *      - description: string Task description
-     *      - startDateTime: string|DateTime Task start date/time
-     *      - completionDateTime: string|DateTime Task completion date/time
-     *      - priority: string|TaskPriority Task priority
-     *      - status: string|WorkStatus Task status
-     *
-     * @throws ValidationException If input validation fails
-     * @throws NotFoundException If project, phase, or task is not found
-     * @throws ForbiddenException If user session is unauthorized
-     * @throws Exception For unexpected errors
-     *
-     * @return void
-     */
+    // TODO
     public static function edit(array $args = []): void
     {
         try {

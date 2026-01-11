@@ -3,8 +3,16 @@
 use App\Abstract\Endpoint;
 use App\Auth\HttpAuth;
 use App\Auth\SessionAuth;
+use App\Container\WorkerContainer;
 use App\Core\UUID;
+use App\Dependent\Resource;
+use App\Dependent\TaskWorker;
+use App\Entity\ResourceType;
+use App\Entity\Task;
+use App\Enumeration\ResourceTypeMapping;
+use App\Enumeration\TaskPriority;
 use App\Enumeration\WorkerStatus;
+use App\Enumeration\WorkStatus;
 use App\Exception\ForbiddenException;
 use App\Exception\NotFoundException;
 use App\Exception\ValidationException;
@@ -15,7 +23,11 @@ use App\Model\ProjectModel;
 use App\Model\ProjectWorkerModel;
 use App\Model\TaskModel;
 use App\Model\TaskWorkerModel;
+use App\Service\TaskService;
 use App\Utility\ResponseExceptionHandler;
+use App\Validator\ResourceValidator;
+use App\Validator\UserValidator;
+use App\Validator\WorkValidator;
 
 class TaskWorkerEndpoint extends Endpoint
 {
@@ -249,34 +261,29 @@ class TaskWorkerEndpoint extends Endpoint
     }
 
     /**
-     * Adds multiple workers to a specific task within a project phase.
+     * Updates the status of a worker assigned to a task within a project phase.
      *
-     * This method performs the following actions:
-     * - Checks if the user session is authorized.
-     * - Protects against CSRF attacks.
-     * - Decodes input data from the request.
-     * - Validates the existence of projectId, phaseId, and taskId in the arguments.
-     * - Ensures the referenced project, phase, and task exist.
-     * - Validates that workerIds are provided and are in the correct format.
-     * - Converts workerIds to UUID objects.
-     * - Associates the specified workers with the given task.
-     * - Returns a success response if workers are added successfully.
-     * - Handles validation, forbidden access, and unexpected errors with appropriate responses.
+     * This endpoint handler performs authorization and input validation, converts ID strings
+     * to UUID objects, verifies existence and relationships of the target resources, and
+     * updates the worker's status for the specified task:
+     * - Ensures an authorized session is present
+     * - Enforces CSRF protection
+     * - Converts projectId, phaseId, taskId, and workerId to UUID objects
+     * - Verifies the existence of the project, phase, task, and worker
+     * - Updates the worker's status using provided data
      *
-     * @param array $args Associative array containing:
-     *      - projectId: string|UUID Project identifier
-     *      - phaseId: string|UUID Phase identifier
-     *      - taskId: string|UUID Task identifier
-     * 
-     * Input data (decoded from request body) must include:
-     *      - workerIds: array List of worker identifiers (string|UUID)
+     * @param array $args Associative array containing request parameters with following keys:
+     *      - projectId: string|UUID Project public identifier (required)
+     *      - phaseId: string|UUID Phase public identifier (required)
+     *      - taskId: string|UUID Task public identifier (required)
+     *      - workerId: string|UUID Worker public identifier (required)
      *
-     * @throws ValidationException If input data is invalid or cannot be decoded.
-     * @throws ForbiddenException If session is unauthorized or required IDs are missing.
-     * @throws NotFoundException If project or phase does not exist.
-     * @throws Exception For unexpected errors.
+     * Behavior on error:
+     * - Missing or invalid IDs and unauthorized access will trigger ForbiddenException internally.
+     * - Non-existent resources (project, phase, task, worker) will trigger NotFoundException internally.
+     * - Any Throwable is caught and forwarded to ResponseExceptionHandler to produce an appropriate error response.
      *
-     * @return void
+     * @return void Sends a JSON success response on completion or delegates error handling to the response exception handler.
      */
     public static function add(array $args = []): void
     {
@@ -324,16 +331,31 @@ class TaskWorkerEndpoint extends Endpoint
                 throw new ForbiddenException('Task ID is required.');
             }
 
-            $workerIds = $data['workerIds'] ?? null;
-            if (!isset($data['workerIds']) || !is_array($data['workerIds']) || count($data['workerIds']) < 1) {
-                throw new ForbiddenException('Worker IDs are required.');
+            $task = TaskModel::findById($taskId, $phase->getId());  
+            if (!$task) {
+                throw new NotFoundException('Task not found.');
             }
 
-            $ids = [];
-            foreach ($workerIds as $workerId) {
-                $ids[] = UUID::fromString($workerId);
+            $workValidator = new WorkValidator();
+            $budgetBoundaryValidator = $workValidator->createBudgetBoundaryValidator($task->getEstimatedCost());
+
+            $workers = new WorkerContainer();
+            foreach ($data as $worker) {
+                $worker['publicId'] = $worker['id'];    
+                unset($worker['id']);
+
+                // Add to budget boundary validator
+                $budgetBoundaryValidator['addBudget']((float) $worker['unitRate'] * (float) $worker['estimatedHour']);
+
+                $workers->add(TaskWorker::createPartial($worker));
             }
-            TaskWorkerModel::createMultiple($taskId, $ids);
+            $task->setWorkers($workers);
+
+            if ($workValidator->hasErrors()) {
+                throw new ValidationException('Worker Validation Failed.', $workValidator->getErrors());
+            }
+
+            TaskService::create($task, [ 'worker' => true ]);
 
             Response::success([], 'Workers added successfully.');
         } catch (Throwable $e) {
@@ -341,33 +363,7 @@ class TaskWorkerEndpoint extends Endpoint
         }
     }
 
-    /**
-     * Edits the status of a worker assigned to a specific task within a project phase.
-     *
-     * This method performs the following actions:
-     * - Validates user session authorization and CSRF protection.
-     * - Ensures required identifiers (projectId, phaseId, taskId, workerId) are provided and valid UUIDs.
-     * - Retrieves the specified task and worker, throwing exceptions if not found.
-     * - Decodes input data and validates the worker status.
-     * - Updates the worker's status for the given task.
-     * - Returns a success response if the operation is successful, or appropriate error responses for validation, authorization, or unexpected errors.
-     *
-     * @param array $args Associative array containing required identifiers:
-     *      - projectId: string|UUID Project identifier
-     *      - phaseId: string|UUID Phase identifier
-     *      - taskId: string|UUID Task identifier
-     *      - workerId: string|UUID Worker identifier
-     * 
-     * Input data (decoded from request body):
-     *      - status: string|WorkerStatus New status for the worker
-     *
-     * @throws ForbiddenException If session is unauthorized or required identifiers are missing
-     * @throws NotFoundException If the specified task or worker is not found
-     * @throws ValidationException If input data is invalid or cannot be decoded
-     * @throws Exception For unexpected errors
-     *
-     * @return void
-     */
+    // TODO: 
     public static function edit(array $args = []): void
     {
         try {
