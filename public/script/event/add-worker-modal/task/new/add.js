@@ -3,6 +3,7 @@ import { addWorker } from '../add-worker-event.js'
 import { Http } from '../../../../utility/http.js'
 import { handleException } from '../../../../utility/handle-exception.js'
 import { createFullName, die, toggleElementClass } from '../../../../utility/utility.js'
+import { addedWorkerInfo, removedWorkerInfo } from '../../../form/task/record-changes.js'
 
 let isLoading = false
 
@@ -89,6 +90,13 @@ function action(workersData) {
 
         // Append the worker card to the task worker list
         selectedWorkerList.appendChild(card)
+
+        // Record worker info 
+        addedWorkerInfo.set(workerData.id, {
+            unitRate: workerData.defaultRate ?? 0.00,
+            hoursAssigned: workerData.estimatedHoursAssigned ?? 0.00
+        })
+        removedWorkerInfo.clear(workerData.id)
 
         // Hide the "no assigned worker" wall if it exists
         toggleElementClass(noAssignedWorkerWall, ['no-display'], ['flex-col'])

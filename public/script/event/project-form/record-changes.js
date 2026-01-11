@@ -1,110 +1,85 @@
 import { die } from '../../utility/utility.js'
 
 const projectForm = document.querySelector('#project_form')
-if (!projectForm) {
-    die('Project form not found on the page')
-}
+if (!projectForm) die('Project form not found on the page')
 
 /**
  * Project Info
  */
 
 const infoSection = projectForm.querySelector('#info_section')
-if (!infoSection) {
-    die('Info section not found in the form')
-}
+if (!infoSection) die('Info section not found in the form')
+
 export const addedProjectInfo = new Map()
 export const changedProjectInfo = new Map()
 
-const projectNameInput = infoSection?.querySelector('input[name="name"]')
-const projectDescriptionInput = infoSection?.querySelector('textarea[name="description"]')
-const projectBudgetInput = infoSection?.querySelector('input[name="budget"]')
-const projectMaxWorkersInput = infoSection?.querySelector('input[name="max_workers"]')
-const projectStartDateTimeInput = infoSection?.querySelector('input[name="start_date_time"]')
-const projectCompletionDateTimeInput = infoSection?.querySelector('input[name="completion_date_time"]')
+const projectNameInput = infoSection.querySelector('change[name="name"]')
+const projectDescriptionInput = infoSection.querySelector('textarea[name="description"]')
+const projectBudgetInput = infoSection.querySelector('change[name="budget"]')
+const projectMaxWorkersInput = infoSection.querySelector('change[name="max_workers"]')
+const projectStartDateTimeInput = infoSection.querySelector('change[name="start_date_time"]')
+const projectCompletionDateTimeInput = infoSection.querySelector('change[name="completion_date_time"]')
 if (!projectNameInput || !projectDescriptionInput || !projectBudgetInput
-    || !projectMaxWorkersInput || !projectStartDateTimeInput || !projectCompletionDateTimeInput) {
-    die('One or more project info inputs not found in the form')
+    || !projectMaxWorkersInput || !projectStartDateTimeInput || !projectCompletionDateTimeInput) 
+    die('One or more project info changes not found in the form')
+
+/**
+ * Update tracking maps for project information when an change's value changes.
+ *
+ * Compares the provided change's current value against the original value in oldProjectData.
+ * If the value is unchanged, the function returns early. If the key already exists in the
+ * addedProjectInfo map, its value is updated there; otherwise the key/value pair is recorded
+ * in the changedProjectInfo map.
+ *
+ * Behavior and side effects:
+ * - Reads oldProjectData[key] to determine if the value changed.
+ * - No-op (early return) when the new value strictly equals the old value.
+ * - If addedProjectInfo.has(key) is true, calls addedProjectInfo.set(key, value).
+ * - Otherwise calls changedProjectInfo.set(key, value).
+ * - Operates on external maps/objects: oldProjectData, addedProjectInfo, changedProjectInfo.
+ *
+ * @param {string} key Key identifying the project field being updated.
+ * @param {HTMLInputElement|{value: string}} change DOM change element or object with a `value` property.
+ *
+ * @throws {void} This function does not throw.
+ *
+ * @return {void}
+ *
+ * PHPDoc:
+ * @param string $key Key identifying the project field being updated
+ * @param mixed $change DOM change element or object with a `value` property
+ * @return void
+ */
+function updateProjectInfoMaps(key, change) {
+    const value = change.value
+
+    if (oldProjectData[key] === value) return
+    else if (addedProjectInfo.has(key)) addedProjectInfo.set(key, value)
+    else changedProjectInfo.set(key, value)
 }
 
 // Record old project data
 const oldProjectData = {
-    name: projectNameInput?.value || '',
-    description: projectDescriptionInput?.value || '',
-    budget: projectBudgetInput?.value || '',
-    maxWorkers: projectMaxWorkersInput?.value || '',
-    startDateTime: projectStartDateTimeInput?.value || '',
-    completionDateTime: projectCompletionDateTimeInput?.value || ''
+    name: projectNameInput.value || '',
+    description: projectDescriptionInput.value || '',
+    budget: projectBudgetInput.value || '',
+    maxWorkers: projectMaxWorkersInput.value || '',
+    startDateTime: projectStartDateTimeInput.value || '',
+    completionDateTime: projectCompletionDateTimeInput.value || ''
 }
 
 // Record any changes
-projectNameInput?.addEventListener('input', () => {
-    const value = projectNameInput.value
-    if (oldProjectData['name'] === value) {
-        return
-    } else if (addedProjectInfo.has('name')) {
-        addedProjectInfo.set('name', value)
-    } else {
-        changedProjectInfo.set('name', value)
-    }
+projectNameInput.addEventListener('change', () => updateProjectInfoMaps('name', projectNameInput))
 
-})
+projectDescriptionInput.addEventListener('change', () => updateProjectInfoMaps('description', projectDescriptionInput))
 
-projectDescriptionInput?.addEventListener('input', () => {
-    const value = projectDescriptionInput.value
-    if (oldProjectData['description'] === value) {
-        return
-    } else if (addedProjectInfo.has('description')) {
-        addedProjectInfo.set('description', value)
-    } else {
-        changedProjectInfo.set('description', value)
-    }
+projectBudgetInput.addEventListener('change', () => updateProjectInfoMaps('budget', projectBudgetInput))
 
-})
+projectMaxWorkersInput.addEventListener('change', () => updateProjectInfoMaps('maxWorkers', projectMaxWorkersInput))
 
-projectBudgetInput?.addEventListener('input', () => {
-    const value = projectBudgetInput.value
-    if (oldProjectData['budget'] === value) {
-        return
-    } else if (addedProjectInfo.has('budget')) {
-        addedProjectInfo.set('budget', value)
-    } else {
-        changedProjectInfo.set('budget', value)
-    }
-})
+projectStartDateTimeInput.addEventListener('change', () => updateProjectInfoMaps('startDateTime',  projectStartDateTimeInput))
 
-projectMaxWorkersInput?.addEventListener('input', () => {
-    const value = projectMaxWorkersInput.value
-    if (oldProjectData['maxWorkers'] === value) {
-        return
-    } else if (addedProjectInfo.has('maxWorkers')) {
-        addedProjectInfo.set('maxWorkers', value)
-    } else {
-        changedProjectInfo.set('maxWorkers', value)
-    }
-})
-
-projectStartDateTimeInput?.addEventListener('input', () => {
-    const value = projectStartDateTimeInput.value
-    if (oldProjectData['startDateTime'] === value) {
-        return
-    } else if (addedProjectInfo.has('startDateTime')) {
-        addedProjectInfo.set('startDateTime', value)
-    } else {
-        changedProjectInfo.set('startDateTime', value)
-    }
-})
-
-projectCompletionDateTimeInput?.addEventListener('input', () => {
-    const value = projectCompletionDateTimeInput.value
-    if (oldProjectData['completionDateTime'] === value) {
-        return
-    } else if (addedProjectInfo.has('completionDateTime')) {
-        addedProjectInfo.set('completionDateTime', value)
-    } else {
-        changedProjectInfo.set('completionDateTime', value)
-    }
-})
+projectCompletionDateTimeInput.addEventListener('change', () => updateProjectInfoMaps('completionDateTime', projectCompletionDateTimeInput))
 
 /**
  * Builds and returns a merged Map of project information from added and changed sources.
@@ -138,9 +113,7 @@ export function getMergedAddedAndChangedProjectsMap() {
  */
 
 const phaseSection = projectForm.querySelector('#phase_section')
-if (!phaseSection) {
-    die('Phases section not found in the form')
-}
+if (!phaseSection) die('Phases section not found in the form')
 
 export const addedPhases = new Map()
 export const changedPhases = new Map()
@@ -148,12 +121,10 @@ export const removedPhases = new Set()
 
 // Record old phase data
 const oldPhasesData = new Map()
-const phaseCards = phaseSection?.querySelectorAll('.phase-form-card') || []
+const phaseCards = phaseSection.querySelectorAll('.phase-form-card') || []
 phaseCards.forEach(card => {
     const id = card.dataset.phaseid || null
-    if (!id) {
-        return
-    }
+    if (!id) return
 
     const {
         phaseNameInput,
@@ -176,13 +147,56 @@ phaseCards.forEach(card => {
     })
 })
 
+/**
+ * Updates internal maps tracking added or changed phase information for a given phase ID.
+ *
+ * This function obtains the trimmed phase name value (from the provided change element or the
+ * module-scoped phaseNameInput), compares it to the stored original value in oldPhasesData for
+ * the given id/key, and if different records the change into either changedPhases or addedPhases.
+ *
+ * Behavior and side effects:
+ * - Reads the candidate value via change.value.trim() (implementation currently reads a
+ *   module-scoped phaseNameInput.value.trim()).
+ * - If the trimmed value equals oldPhasesData.get(id)[key], the function returns early (no-op).
+ * - Builds or reuses an object of changes for the given id and assigns the new value at the given key.
+ * - If the id is not present in oldPhasesData or is already present in addedPhases, the changes
+ *   object is stored in addedPhases; otherwise it is stored in changedPhases.
+ * - Mutates the global maps: changedPhases and addedPhases.
+ *
+ * @param {string|number} id - Identifier of the phase to update.
+ * @param {string} key - Field/key within the phase to update (e.g., 'name').
+ * @param {HTMLInputElement} change - Input element containing the new value for the phase field.
+ *
+ * @throws {void} This function does not throw; it performs no validation beyond value comparison.
+ *
+ * @return {void}
+ *
+ * PHPDoc:
+ * @param mixed $id Identifier of the phase to update
+ * @param string $key Field/key within the phase to update
+ * @param mixed $change Input element containing the new value for the phase field
+ * @return void
+ */
+function updatePhaseInfoMap(id, key, change) {
+    const value = phaseNameInput.value.trim()
+    if (oldPhasesData.get(id)[key] === value) return
+
+    let phaseChanges = changedPhases.get(id) || addedPhases.get(id) || {}
+    phaseChanges[key] = value
+
+    if (!oldPhasesData.has(id) || addedPhases.has(id))
+        addedPhases.set(id, phaseChanges)
+    else
+        changedPhases.set(id, phaseChanges)
+}
+
 // Record any changes
-phaseSection?.addEventListener('input', e => {
+phaseSection?.addEventListener('change', e => {
     const card = e.target.closest('.phase-form-card')
-    if (!card) {
-        return
-    }
+    if (!card) return
+
     const id = card.dataset.phaseid || null
+    if (!id) return
 
     const {
         phaseNameInput,
@@ -194,143 +208,52 @@ phaseSection?.addEventListener('input', e => {
         phaseCompletionDateTimeInput
     } = getPhaseDomParts(card) ?? {}
 
-    if (e.target === phaseNameInput) {
-        const value = phaseNameInput.value.trim()
-        if (oldPhasesData.get(id)?.name === value) {
-            return
-        }
+    if (e.target === phaseNameInput) updatePhaseInfoMap(id, 'name', phaseNameInput)
 
-        let phaseChanges = changedPhases.get(id) || addedPhases.get(id) || {}
-        phaseChanges['name'] = value
-        if (!oldPhasesData.has(id) || addedPhases.has(id)) {
-            addedPhases.set(id, phaseChanges)
-        } else {
-            changedPhases.set(id, phaseChanges)
-        }
-    }
+    if (e.target === phaseDescriptionInput) updatePhaseInfoMap(id, 'description', phaseDescriptionInput)
 
-    if (e.target === phaseDescriptionInput) {
-        const value = phaseDescriptionInput.value.trim()
-        if (oldPhasesData.get(id)?.['description'] === value) {
-            return
-        }
+    if (e.target === phaseBudgetInput) updatePhaseInfoMap(id, 'budget', phaseBudgetInput)
 
-        let phaseChanges = changedPhases.get(id) || addedPhases.get(id) || {}
-        phaseChanges['description'] = value
-        if (!oldPhasesData.has(id) || addedPhases.has(id)) {
-            addedPhases.set(id, phaseChanges)
-        } else {
-            changedPhases.set(id, phaseChanges)
-        }
-    }
+    if (e.target === phaseContingencyRateInput) updatePhaseInfoMap(id, 'contingencyRate', phaseContingencyRateInput)
 
-    if (e.target === phaseBudgetInput) {
-        const value = phaseBudgetInput.value.trim()
-        if (oldPhasesData.get(id)?.['budget'] === value) {
-            return
-        }
+    if (e.target === phaseBudgetNoteInput) updatePhaseInfoMap(id, 'budgetNote', phaseBudgetNoteInput)
 
-        let phaseChanges = changedPhases.get(id) || addedPhases.get(id) || {}
-        phaseChanges['budget'] = value
-        if (!oldPhasesData.has(id) || addedPhases.has(id)) {
-            addedPhases.set(id, phaseChanges)
-        } else {
-            changedPhases.set(id, phaseChanges)
-        }
-    }
+    if (e.target === phaseStartDateTimeInput) updatePhaseInfoMap(id, 'startDateTime', phaseStartDateTimeInput)
 
-    if (e.target === phaseContingencyRateInput) {
-        const value = phaseContingencyRateInput.value.trim()
-        if (oldPhasesData.get(id)?.['contingencyRate'] === value) {
-            return
-        }
-
-        let phaseChanges = changedPhases.get(id) || addedPhases.get(id) || {}
-        phaseChanges['contingencyRate'] = value
-        if (!oldPhasesData.has(id) || addedPhases.has(id)) {
-            addedPhases.set(id, phaseChanges)
-        } else {
-            changedPhases.set(id, phaseChanges)
-        }
-    }
-
-    if (e.target === phaseBudgetNoteInput) {
-        const value = phaseBudgetNoteInput.value.trim()
-        if (oldPhasesData.get(id)?.['budgetNote'] === value) {
-            return
-        }
-
-        let phaseChanges = changedPhases.get(id) || addedPhases.get(id) || {}
-        phaseChanges['budgetNote'] = value
-        if (!oldPhasesData.has(id) || addedPhases.has(id)) {
-            addedPhases.set(id, phaseChanges)
-        } else {
-            changedPhases.set(id, phaseChanges)
-        }
-    }
-
-    if (e.target === phaseStartDateTimeInput) {
-        const value = phaseStartDateTimeInput.value.trim()
-        if (oldPhasesData.get(id)?.['startDateTime'] === value) {
-            return
-        }
-
-        let phaseChanges = changedPhases.get(id) || addedPhases.get(id) || {}
-        phaseChanges['startDateTime'] = value
-        if (!oldPhasesData.has(id) || addedPhases.has(id)) {
-            addedPhases.set(id, phaseChanges)
-        } else {
-            changedPhases.set(id, phaseChanges)
-        }
-    }
-
-    if (e.target === phaseCompletionDateTimeInput) {
-        const value = phaseCompletionDateTimeInput.value.trim()
-        if (oldPhasesData.get(id)?.['completionDateTime'] === value) {
-            return
-        }
-
-        let phaseChanges = changedPhases.get(id) || addedPhases.get(id) || {}
-        phaseChanges['completionDateTime'] = value
-        if (!oldPhasesData.has(id) || addedPhases.has(id)) {
-            addedPhases.set(id, phaseChanges)
-        } else {
-            changedPhases.set(id, phaseChanges)
-        }
-    }
+    if (e.target === phaseCompletionDateTimeInput) updatePhaseInfoMap(id, 'completionDateTime', phaseCompletionDateTimeInput)
 })
 
 /**
- * Extracts and validates DOM input elements for a phase form card.
+ * Extracts and validates DOM change elements for a phase form card.
  *
- * This function queries the provided card element for the expected phase inputs:
+ * This function queries the provided card element for the expected phase changes:
  * name, description, budget, contingency_rate, budget_note, startDateTime and completionDateTime.
- * If any input is missing it logs a warning and returns null. Otherwise it returns an object
- * with named references to each input element for further manipulation or change detection.
+ * If any change is missing it logs a warning and returns null. Otherwise it returns an object
+ * with named references to each change element for further manipulation or change detection.
  *
  * @param {Element|HTMLElement} card The DOM element representing the phase form card.
  *
  * @returns {{phaseNameInput: HTMLInputElement, phaseDescriptionInput: HTMLTextAreaElement, phaseBudgetInput: HTMLInputElement, phaseContingencyRateInput: HTMLInputElement, phaseBudgetNoteInput: HTMLTextAreaElement, phaseStartDateTimeInput: HTMLInputElement, phaseCompletionDateTimeInput: HTMLInputElement}|null}
- *      An object containing the found input elements or null if one or more inputs are missing:
- *      - phaseNameInput: HTMLInputElement input[name="name"]
+ *      An object containing the found change elements or null if one or more changes are missing:
+ *      - phaseNameInput: HTMLInputElement change[name="name"]
  *      - phaseDescriptionInput: HTMLTextAreaElement textarea[name="description"]
- *      - phaseBudgetInput: HTMLInputElement input[name="budget"]
- *      - phaseContingencyRateInput: HTMLInputElement input[name="contingency_rate"]
+ *      - phaseBudgetInput: HTMLInputElement change[name="budget"]
+ *      - phaseContingencyRateInput: HTMLInputElement change[name="contingency_rate"]
  *      - phaseBudgetNoteInput: HTMLTextAreaElement textarea[name="budget_note"]
- *      - phaseStartDateTimeInput: HTMLInputElement input[name="startDateTime"]
- *      - phaseCompletionDateTimeInput: HTMLInputElement input[name="completionDateTime"]
+ *      - phaseStartDateTimeInput: HTMLInputElement change[name="startDateTime"]
+ *      - phaseCompletionDateTimeInput: HTMLInputElement change[name="completionDateTime"]
  */
 export function getPhaseDomParts(card) {
-    const phaseNameInput = card.querySelector('input[name="name"]')
+    const phaseNameInput = card.querySelector('change[name="name"]')
     const phaseDescriptionInput = card.querySelector('textarea[name="description"]')
-    const phaseBudgetInput = card.querySelector('input[name="budget"]')
-    const phaseContingencyRateInput = card.querySelector('input[name="contingency_rate"]')
+    const phaseBudgetInput = card.querySelector('change[name="budget"]')
+    const phaseContingencyRateInput = card.querySelector('change[name="contingency_rate"]')
     const phaseBudgetNoteInput = card.querySelector('textarea[name="budget_note"]')
-    const phaseStartDateTimeInput = card.querySelector('input[name="start_date_time"]')
-    const phaseCompletionDateTimeInput = card.querySelector('input[name="completion_date_time"]')
+    const phaseStartDateTimeInput = card.querySelector('change[name="start_date_time"]')
+    const phaseCompletionDateTimeInput = card.querySelector('change[name="completion_date_time"]')
     if (!phaseNameInput || !phaseDescriptionInput || !phaseBudgetInput || !phaseContingencyRateInput
         || !phaseBudgetNoteInput || !phaseStartDateTimeInput || !phaseCompletionDateTimeInput) {
-        console.warn('One or more phase inputs not found in the form card')
+        console.warn('One or more phase changes not found in the form card')
         return null
     }
 
@@ -383,14 +306,10 @@ export function getMergedAddedAndChangedPhasesMap() {
  */
 
 const workersSection = projectForm.querySelector('#workers_section')
-if (!workersSection) {
-    die('Workers section not found in the form')
-}
+if (!workersSection) die('Workers section not found in the form')
 
 const selectedWorkersTableList = workersSection?.querySelector('.selected-workers-table tbody')
-if (!selectedWorkersTableList) {
-    die('Selected workers table list not found in the form')
-}
+if (!selectedWorkersTableList) die('Selected workers table list not found in the form')
 
 export const addedWorkers = new Map()
 export const changedWorkers = new Map()
@@ -401,32 +320,24 @@ const oldWorkersData = new Map()
 const selectedWorkerRows = selectedWorkersTableList.querySelectorAll('tr.selected-worker-row')
 selectedWorkerRows.forEach(row => {
     const id = row.dataset.workerid
-    if (!id) {
-        die('Worker ID not found')
-    }
+    if (!id) die('Worker ID not found')
 
-    const defaultRateInput = row.querySelector('input.default-rate-input')
+    const defaultRateInput = row.querySelector('change.default-rate-change')
     oldWorkersData.set(id, defaultRateInput.value.trim())
 })
 
 // Record any changes
-selectedWorkersTableList?.addEventListener('input', e => {
+selectedWorkersTableList?.addEventListener('change', e => {
     const row = e.target.closest('tr.selected-worker-row')
-    if (!row) {
-        return
-    }
+    if (!row) return
 
     const id = row.dataset.workerid
-    if (!id) {
-        die('Worker ID not found')
-    }
+    if (!id) return
 
-    const defaultRateInput = row.querySelector('input.default-rate-input')
-    if (!oldWorkersData.has(id)) {
-        addedWorkers.set(id, defaultRateInput.value.trim())
-    } else {
-        changedWorkers.set(id, defaultRateInput.value.trim())
-    }
+    const defaultRateInput = row.querySelector('change.default-rate-change')
+    (!oldWorkersData.has(id))
+        ? addedWorkers.set(id, defaultRateInput.value.trim())
+        : changedWorkers.set(id, defaultRateInput.value.trim())
 })
 
 /**

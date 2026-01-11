@@ -85,12 +85,12 @@ async function submit(e) {
 function getProjectData() {
     const merged = getMergedAddedAndChangedProjectsMap()
 
-    const name = merged.get('name');
-    const description = merged.get('description');
-    const budget = merged.get('budget');
-    const maxWorkers = merged.get('maxWorkers');
-    const startDateTime = merged.get('startDateTime');
-    const completionDateTime = merged.get('completionDateTime');
+    const name = merged.get('name')
+    const description = merged.get('description')
+    const budget = merged.get('budget')
+    const maxWorkers = merged.get('maxWorkers')
+    const startDateTime = merged.get('startDateTime')
+    const completionDateTime = merged.get('completionDateTime')
 
     return {
         name,
