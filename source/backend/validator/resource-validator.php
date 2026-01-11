@@ -140,6 +140,11 @@ class ResourceValidator extends Validator
         // TODO: Check the price per unit and see if the total cost exceeds some phase budget limit
     }
 
+    public function validateActualUnit(float $actualUnit): void
+    {
+        // TODO: Check the price per unit and see if the total cost exceeds some phase budget limit
+    }
+
     /**
      * Validates the note of a resource.
      * 
@@ -177,6 +182,7 @@ class ResourceValidator extends Validator
      *  - quantity: int The quantity of the resource.
      *  - unitRate: float The unit rate of the resource.
      *  - estimatedUnit: float The estimated unit of the resource.
+     *  - actualUnit: float The actual unit of the resource.
      *  - note: string|null The note of the resource.
      * 
      * @return void
@@ -206,6 +212,9 @@ class ResourceValidator extends Validator
 
         if (isset($data['estimatedUnit']) && $data['estimatedUnit'] !== null)
             $this->validateEstimatedUnit((float) $data['estimatedUnit']);
+
+        if (isset($data['actualUnit']) && $data['actualUnit'] !== null)
+            $this->validateActualUnit((float) $data['actualUnit']);
 
         if (isset($data['note']) && $data['note'] !== null && $data['note'] !== '')
             $this->validateNote((string) $data['note']);
