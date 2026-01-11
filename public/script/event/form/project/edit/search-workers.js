@@ -1,4 +1,4 @@
-import { handleException } from '../../../utility/handle-exception.js'
+import { handleException } from '../../../../utility/handle-exception.js'
 import { initializeSearch } from '../worker/search.js'
 
 try {

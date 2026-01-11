@@ -1,4 +1,4 @@
-import { Http } from '../../../utility/http.js'
+import { Http } from '../../../../utility/http.js'
 
 /**
  * Creates a worker fetcher function bound to an optional default endpoint.

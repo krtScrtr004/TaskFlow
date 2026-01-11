@@ -1,4 +1,4 @@
-import { infiniteScroll } from '../../../utility/infinite-scroll.js'
+import { infiniteScroll } from '../../../../utility/infinite-scroll.js'
 import { createWorkerFetcher } from './fetch.js'
 import { render } from './render.js'
 

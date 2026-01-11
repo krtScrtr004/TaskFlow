@@ -1,4 +1,4 @@
-import { formatNumber } from '../../../utility/utility.js'
+import { formatNumber } from '../../../../utility/utility.js'
 
 /**
  * Renders a table row for a selected worker.

@@ -1,4 +1,4 @@
-import { die } from '../../utility/utility.js'
+import { die } from '../../../utility/utility.js'
 
 const projectForm = document.querySelector('#project_form')
 if (!projectForm) die('Project form not found on the page')

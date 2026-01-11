@@ -361,14 +361,14 @@ if ($project) {
 
     </main>
 
-    <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'toggle-sections.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'create-phase-form-card.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'record-changes.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'validate-forms.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . 'worker' . DS . 'add.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'form' . 'project' . DS . 'toggle-sections.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'form' . 'project' . DS . 'create-phase-form-card.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'form' . 'project' . DS . 'record-changes.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'form' . 'project' . DS . 'validate-forms.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'form' . 'project' . DS . 'worker' . DS . 'add.js' ?>" defer></script>
 
     <?php foreach ($projectData['scripts'] as $script) : ?>
-        <script type="module" src="<?= EVENT_PATH . 'project-form' . DS . $script ?>" defer></script>
+        <script type="module" src="<?= EVENT_PATH . 'form' . 'project' . DS . $script ?>" defer></script>
     <?php endforeach; ?>
 </body>
 

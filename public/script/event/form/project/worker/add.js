@@ -1,6 +1,6 @@
-import { Notification } from '../../../render/notification.js'
-import { handleException } from '../../../utility/handle-exception.js'
-import { die } from '../../../utility/utility.js'
+import { Notification } from '../../../../render/notification.js'
+import { handleException } from '../../../../utility/handle-exception.js'
+import { die } from '../../../../utility/utility.js'
 import { addedWorkers, removedWorkers } from '../record-changes.js'
 import { render } from './render.js'
 

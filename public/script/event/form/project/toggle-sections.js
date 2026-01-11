@@ -1,4 +1,4 @@
-import { toggleElementClass } from '../../utility/utility.js'
+import { toggleElementClass } from '../../../utility/utility.js'
 
 const header = document.querySelector('main.project-form header')
 const navLinks = document.querySelectorAll('main.project-form header a[href^="#"]')

@@ -1,5 +1,5 @@
-import { handleException } from '../../utility/handle-exception.js'
-import { getValidationConstraints, die } from '../../utility/utility.js'
+import { handleException } from '../../../utility/handle-exception.js'
+import { getValidationConstraints, die } from '../../../utility/utility.js'
 import { addedPhases, changedPhases, removedPhases } from './record-changes.js'
 import { getPhaseDomParts } from './record-changes.js'
 
