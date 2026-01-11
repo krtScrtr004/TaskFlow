@@ -149,7 +149,7 @@ class TaskModel extends Model
             //     LEFT JOIN 
             //         `user` AS u ON ptw.worker_id = u.id";
 
-            $query = 
+            $query =
                 "SELECT 
                     pt.id AS id,
                     pt.public_id AS public_id,
@@ -234,7 +234,8 @@ class TaskModel extends Model
 
             $projectTaskQuery = $instance->appendOptionsToFindQuery(
                 $instance->appendWhereClause($query, $whereClause),
-                $paramOptions);
+                $paramOptions
+            );
 
             $statement = $instance->connection->prepare($projectTaskQuery);
             $statement->execute($params);
@@ -286,7 +287,7 @@ class TaskModel extends Model
      * @throws InvalidArgumentException If an invalid ID is / are provided.
      * @throws Exception If an error occurs during the search operation.
      */
-    public static function search( 
+    public static function search(
         string $key = '',
         int|UUID|null $userId = null,
         int|UUID|null $phaseId = null,
@@ -325,7 +326,7 @@ class TaskModel extends Model
 
             // Filter by user role if provided
             if ($userId) {
-                $where[] = is_int($userId) 
+                $where[] = is_int($userId)
                     ? ' (p.manager_id = :userId1 OR ptw.worker_id = :userId2)'
                     : ' (ptw.worker_id IN (
                             SELECT 
@@ -343,17 +344,17 @@ class TaskModel extends Model
                                 WHERE 
                                     public_id = :userId2)
                         )';
-                $params[':userId1'] = is_int($userId) 
-                    ? $userId 
+                $params[':userId1'] = is_int($userId)
+                    ? $userId
                     : UUID::toBinary($userId);
-                $params[':userId2'] = is_int($userId) 
-                    ? $userId 
+                $params[':userId2'] = is_int($userId)
+                    ? $userId
                     : UUID::toBinary($userId);
             }
 
             // Narrow by phase if provided
             if ($phaseId !== null) {
-                $where[] = is_int($phaseId) 
+                $where[] = is_int($phaseId)
                     ? ' pt.phase_id = :phaseId'
                     : ' pt.phase_id IN (
                         SELECT 
@@ -362,17 +363,17 @@ class TaskModel extends Model
                             `project_phase` 
                         WHERE 
                             public_id = :phaseId)';
-                $params[':phaseId'] = is_int($phaseId) 
-                    ? $phaseId 
+                $params[':phaseId'] = is_int($phaseId)
+                    ? $phaseId
                     : UUID::toBinary($phaseId);
             }
 
             if ($projectId) {
-                $where[] = is_int($projectId) 
+                $where[] = is_int($projectId)
                     ? ' p.id = :projectId'
                     : ' p.public_id = :projectId';
-                $params[':projectId'] = is_int($projectId) 
-                    ? $projectId 
+                $params[':projectId'] = is_int($projectId)
+                    ? $projectId
                     : UUID::toBinary($projectId);
             }
 
@@ -409,8 +410,8 @@ class TaskModel extends Model
      * @return Task|null The found Task instance, or null if no matching task exists.
      */
     public static function findById(
-        int|UUID $taskId, 
-        int|UUID|null $phaseId = null, 
+        int|UUID $taskId,
+        int|UUID|null $phaseId = null,
         int|UUID|null $projectId = null
     ): ?Task {
         if (is_int($taskId) && $taskId < 1) {
@@ -422,12 +423,12 @@ class TaskModel extends Model
         }
 
         try {
-            $whereClause = is_int($taskId) 
-                ? 'pt.id = :taskId' 
+            $whereClause = is_int($taskId)
+                ? 'pt.id = :taskId'
                 : 'pt.public_id = :taskId';
             $params = [
-                ':taskId' => is_int($taskId) 
-                    ? $taskId 
+                ':taskId' => is_int($taskId)
+                    ? $taskId
                     : UUID::toBinary($taskId)
             ];
 
@@ -491,7 +492,7 @@ class TaskModel extends Model
         }
 
         try {
-            $whereClause = is_int($phaseId) 
+            $whereClause = is_int($phaseId)
                 ? 'pt.phase_id = :phaseId'
                 : 'pt.phase_id IN (
                     SELECT 
@@ -501,8 +502,8 @@ class TaskModel extends Model
                     WHERE 
                         public_id = :phaseId)';
             $params = [
-                ':phaseId' => is_int($phaseId) 
-                    ? $phaseId 
+                ':phaseId' => is_int($phaseId)
+                    ? $phaseId
                     : UUID::toBinary($phaseId)
             ];
 
@@ -523,7 +524,7 @@ class TaskModel extends Model
                 $params[':priority'] = $filter->value;
             }
 
-            return self::find($whereClause,$params, $options);
+            return self::find($whereClause, $params, $options);
         } catch (Exception $e) {
             throw $e;
         }
@@ -571,12 +572,12 @@ class TaskModel extends Model
         ];
 
         try {
-            $whereClause = is_int($workerId) 
+            $whereClause = is_int($workerId)
                 ? 'u.id = :workerId'
                 : 'u.public_id = :workerId';
             $params = [
-                ':workerId' => is_int($workerId) 
-                    ? $workerId 
+                ':workerId' => is_int($workerId)
+                    ? $workerId
                     : UUID::toBinary($workerId),
             ];
 
@@ -597,7 +598,7 @@ class TaskModel extends Model
                 $params[':priority'] = $filter->value;
             }
 
-            return self::find($whereClause,$params, $paramOptions);
+            return self::find($whereClause, $params, $paramOptions);
         } catch (Exception $e) {
             throw $e;
         }
@@ -625,7 +626,7 @@ class TaskModel extends Model
 
         $instance = new self();
         try {
-            $taskWorkerQuery = 
+            $taskWorkerQuery =
                 "SELECT 
                     u.id,
                     u.public_id,
@@ -686,8 +687,7 @@ class TaskModel extends Model
             'limit' => 10,
             'offset' => 0,
         ]
-    ): ?TaskContainer
-    {
+    ): ?TaskContainer {
         if ($phaseId && is_int($phaseId) && $phaseId < 1) {
             throw new InvalidArgumentException('Invalid phase ID provided.');
         }
@@ -745,8 +745,7 @@ class TaskModel extends Model
             'limit' => 10,
             'offset' => 0,
         ]
-    ): ?TaskContainer
-    {
+    ): ?TaskContainer {
         if ($phaseId && is_int($phaseId) && $phaseId < 1) {
             throw new InvalidArgumentException('Invalid phase ID provided.');
         }
@@ -799,7 +798,7 @@ class TaskModel extends Model
 
         $instance = new self();
         try {
-            $query = 
+            $query =
                 "SELECT 
                     pt.status AS task_status,
                     COUNT(*) AS task_count
@@ -854,7 +853,7 @@ class TaskModel extends Model
 
         $instance = new self();
         try {
-            $query = 
+            $query =
                 "SELECT 
                     pt.priority AS task_priority,
                     COUNT(*) AS task_count
@@ -881,7 +880,7 @@ class TaskModel extends Model
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
-    }   
+    }
 
     /**
      * Finds and returns the Project that owns a given Task (through its Phase).
@@ -905,7 +904,7 @@ class TaskModel extends Model
 
         $instance = new self();
         try {
-            $query = 
+            $query =
                 "SELECT 
                     p.*,
                     u.id AS id,
@@ -931,14 +930,14 @@ class TaskModel extends Model
                 ON
                     pp.id = pt.phase_id
                 WHERE 
-                    " . (is_int($taskId) 
-                        ? 'pt.id = :taskId' 
-                        : 'pt.public_id = :taskId') . "
+                    " . (is_int($taskId)
+                    ? 'pt.id = :taskId'
+                    : 'pt.public_id = :taskId') . "
                 LIMIT 1";
             $statement = $instance->connection->prepare($query);
             $statement->execute([
-                ':taskId' => is_int($taskId) 
-                    ? $taskId 
+                ':taskId' => is_int($taskId)
+                    ? $taskId
                     : UUID::toBinary($taskId)
             ]);
             $result = $statement->fetch();
@@ -1014,32 +1013,35 @@ class TaskModel extends Model
     }
 
     /**
-     * Inserts a new Task into the database and assigns workers to it.
+     * Creates a new Task record in the database and populates the Task instance with persistence identifiers.
      *
-     * This method performs the following operations within a transaction:
-     * - Validates that the provided object is an instance of Task.
-     * - Generates or retrieves the public_id for the task.
-     * - Extracts and formats task properties (name, description, priority, status, start and completion dates).
-     * - Inserts the task into the `projectTask` table.
-     * - Assigns workers to the task by inserting records into the `projectTaskWorker` table.
-     * - Commits the transaction if all operations succeed.
-     * - Rolls back the transaction and throws an exception if any error occurs.
+     * This method enforces that the provided argument is a Task instance, gathers required properties
+     * from the Task (including optional phase reference via additional info), prepares and executes an
+     * INSERT into the `phase_task` table, and updates the Task instance with the newly assigned
+     * numeric ID and the public ID used for storage.
      *
-     * @param Task $task The Task object to be inserted. Must provide:
-     *      - projectId: string|int Project identifier (from additional info)
-     *      - publicId: string|UUID|null Task public identifier (optional)
-     *      - name: string|null Task name
-     *      - description: string|null Task description
-     *      - priority: TaskPriority Task priority enum
-     *      - status: TaskStatus Task status enum
-     *      - workers: WorkerContainer Container of Worker objects assigned to the task
-     *      - startDateTime: DateTimeInterface|null Task start date and time
-     *      - completionDateTime: DateTimeInterface|null Task completion date and time
+     * Behavior and side effects:
+     * - Validates input is an instance of Task and throws InvalidArgumentException if not.
+     * - Retrieves a phase identifier from $task->getAdditionalInfo('phaseId'). If that value is an int
+     *   it is used directly; otherwise the query resolves the phase id via a subquery matching a phase
+     *   public_id.
+     * - Ensures the task has a public ID (generates one via UUID::get() if missing) and converts public
+     *   IDs to binary form with UUID::toBinary() for storage.
+     * - Normalizes textual fields (name, description) and extracts primitive values for priority and
+     *   status; formats start and completion datetimes via formatDateTime().
+     * - Executes a parameterized INSERT into `phase_task` and retrieves the auto-increment id via
+     *   lastInsertId().
+     * - Updates the provided Task instance by calling setId($taskId) and setPublicId($taskPublicId),
+     *   then returns that Task instance.
+     * - Reads workers via $task->getWorkers()->getItems(), but does not persist worker assignments here.
+     * - Wraps PDO exceptions in a DatabaseException.
      *
-     * @throws InvalidArgumentException If the provided object is not a Task instance.
-     * @throws DatabaseException If a PDOException occurs during database operations.
+     * @param mixed $task Task instance to persist (must be an instance of Task)
      *
-     * @return Task The Task object with updated id and public_id after successful insertion.
+     * @throws InvalidArgumentException If the provided $task is not an instance of Task
+     * @throws DatabaseException If a PDO error occurs while inserting the record
+     *
+     * @return mixed The same Task instance passed in, updated with database id and public id
      */
     public static function create(mixed $task): mixed
     {
@@ -1049,8 +1051,6 @@ class TaskModel extends Model
 
         $instance = new self();
         try {
-            $instance->connection->beginTransaction();
-
             $phaseId            = $task->getAdditionalInfo('phaseId');
             $taskPublicId       = $task->getPublicId() ?? UUID::get();
             $taskName           = trimOrNull($task->getName());
@@ -1061,7 +1061,7 @@ class TaskModel extends Model
             $taskStartDateTime  = formatDateTime($task->getStartDateTime());
             $completionDateTime = formatDateTime($task->getCompletionDateTime());
 
-            $taskQuery = 
+            $taskQuery =
                 "INSERT INTO `phase_task` (
                     public_id, 
                     phase_id,
@@ -1073,9 +1073,9 @@ class TaskModel extends Model
                     completion_date_time
                 ) VALUES (
                     :publicId, 
-                    " . (is_int($phaseId) 
-                        ? ':phaseId,' 
-                        : '(SELECT id FROM `project_phase` WHERE public_id = :phaseId),') . "
+                    " . (is_int($phaseId)
+                    ? ':phaseId,'
+                    : '(SELECT id FROM `project_phase` WHERE public_id = :phaseId),') . "
                     :name, 
                     :description, 
                     :priority, 
@@ -1096,34 +1096,10 @@ class TaskModel extends Model
             ]);
             $taskId = (int)$instance->connection->lastInsertId();
 
-            if ($taskWorkers && count($taskWorkers) > 0) {
-                $taskWorkerQuery = 
-                    "INSERT INTO `phase_task_worker` (
-                        task_id,
-                        worker_id,
-                        status
-                    ) SELECT :taskId, id, :status
-                    FROM
-                        `user`
-                    WHERE 
-                        public_id = :workerId";
-                $workerStatement = $instance->connection->prepare($taskWorkerQuery);
-                foreach ($taskWorkers as $worker) {
-                    $workerStatement->execute([
-                        ':taskId'   => $taskId instanceof UUID ? UUID::toBinary($taskId) : $taskId,
-                        ':workerId' => UUID::toBinary($worker->getPublicId()),
-                        ':status'   => WorkerStatus::ASSIGNED->value,
-                    ]);
-                }
-            }
-
-            $instance->connection->commit();
-
             $task->setId($taskId);
             $task->setPublicId($taskPublicId);
             return $task;
         } catch (PDOException $e) {
-            $instance->connection->rollBack();
             throw new DatabaseException($e->getMessage());
         }
     }
@@ -1201,8 +1177,8 @@ class TaskModel extends Model
 
             if (isset($data['actualCompletionDateTime'])) {
                 $updateFields[] = 'actual_completion_date_time = :actualCompletionDateTime';
-                $params[':actualCompletionDateTime'] = $data['actualCompletionDateTime'] !== null 
-                    ? formatDateTime($data['actualCompletionDateTime']) 
+                $params[':actualCompletionDateTime'] = $data['actualCompletionDateTime'] !== null
+                    ? formatDateTime($data['actualCompletionDateTime'])
                     : null;
             }
 

@@ -716,55 +716,52 @@ class TaskWorkerModel extends Model
         // Not implemented (No use case)
         return null;
     }
-
+    
     /**
-     * Creates multiple task-worker assignments for a given task.
+     * Creates multiple task-worker associations in the database.
      *
-     * This method inserts multiple worker assignments into the `projectTaskWorker` table for the specified task.
-     * It uses a transaction to ensure all assignments are created atomically. Each worker is referenced by their
-     * public UUID, which is converted to binary if necessary. The task is also referenced by its public UUID.
-     * The status for each assignment is set to WorkerStatus::ASSIGNED.
+     * This method accepts a task ID (either integer or UUID) and a WorkerContainer
+     * containing multiple Worker instances to be associated with the specified task.
+     * It performs bulk insertion into the phase_task_worker table, setting the status
+     * of each association to 'ASSIGNED'. If an association already exists, it updates
+     * the status accordingly.
      *
-     * The query uses a CROSS JOIN with WHERE filters to match the task and worker by their public UUIDs,
-     * then extracts their internal IDs for insertion. If a duplicate taskId-workerId pair exists,
-     * the status is updated to the new value (upsert behavior).
+     * @param int|UUID $taskId The unique identifier of the task (integer or UUID).
+     * @param WorkerContainer $taskWorkers A container of Worker instances to associate with the task.
      *
-     * @param int|UUID $taskId The public UUID or integer ID of the task to assign workers to.
-     * @param array $data Array of worker public UUIDs or binary IDs to be assigned to the task.
+     * @throws InvalidArgumentException If an invalid task ID is provided or if no workers are given.
+     * @throws DatabaseException If a database error occurs during insertion.
      *
-     * @throws InvalidArgumentException If the data array is empty.
-     * @throws DatabaseException If a database error occurs during the transaction.
-     * 
-     * @return void
+     * @return WorkerContainer The same WorkerContainer with updated IDs from the database.
      */
-    public static function createMultiple(int|UUID $taskId, array $data): void
+    public static function createMultiple(int|UUID $taskId, WorkerContainer $taskWorkers): WorkerContainer
     {
-        if (is_int($taskId) && $taskId < 1) {
+        if (is_int($taskId) && $taskId < 1)
             throw new InvalidArgumentException('Invalid task ID provided.');
-        }
 
-        if (empty($data)) {
+        if ($taskWorkers->count() === 0)
             throw new InvalidArgumentException('No data provided.');
-        }
 
         $instance = new self();
         try {
-            $instance->connection->beginTransaction();
-
             $isTaskInt = is_int($taskId);
-            $isWorkerInt = is_int($data[0]);
+            $isWorkerInt = $taskWorkers->first()->getId() !== 0; // 0 means task worker entity is created with partial data (public id only)
             
             $insertQuery = 
-                "INSERT INTO 
-                    `phase_task_worker` (task_id, worker_id, status)
-                VALUES (
+                "INSERT INTO `phase_task_worker` (
+                    task_id, 
+                    worker_id, 
+                    status,
+                    estimated_hour
+                ) VALUES (
                     " . ($isTaskInt 
-                        ? ":task_id" 
+                        ? ":taskId" 
                         : "(SELECT id FROM `phase_task` WHERE public_id = :taskId)") . ",
                     " . ($isWorkerInt 
-                        ? ":worker_id" 
+                        ? ":workerId" 
                         : "(SELECT id FROM `user` WHERE public_id = :workerId)") . ",
-                    :status
+                    :status,
+                    :estimatedHour
                 )
                 ON DUPLICATE KEY UPDATE 
                     status = VALUES(status)";
@@ -772,18 +769,21 @@ class TaskWorkerModel extends Model
             $statement = $instance->connection->prepare($insertQuery);
             
             $taskIdParam = ($taskId instanceof UUID) ? UUID::toBinary($taskId) : $taskId;
-            
-            foreach ($data as $id) {    
+            foreach ($taskWorkers as $worker) {    
                 $statement->execute([
-                    ':taskId'   => $taskIdParam,
-                    ':workerId' => ($id instanceof UUID) ? UUID::toBinary($id) : $id,
-                    ':status'   => WorkerStatus::ASSIGNED->value
+                    ':taskId'           => $taskIdParam,
+                    ':workerId'         => ($worker->getId() !== 0) 
+                        ? $worker->getId() 
+                        : UUID::toBinary($worker->getPublicId()),
+                    ':status'           => WorkerStatus::ASSIGNED->value,
+                    ':estimatedHour'   => $worker->getEstimatedHours(),
                 ]);
-            }
 
-            $instance->connection->commit();
+                // Set ID given by the DB
+                $worker->setId($instance->connection->lastInsertId());
+            }
+            return $taskWorkers;
         } catch (PDOException $e) {
-            $instance->connection->rollBack();
             throw new DatabaseException($e->getMessage());
         }
     }
