@@ -3,7 +3,7 @@
 namespace App\Container;
 
 use App\Abstract\Container;
-use App\Dependent\Resource;
+use App\Dependent\TaskResource;
 use App\Dependent\TaskWorker;
 use InvalidArgumentException;
 
@@ -38,6 +38,7 @@ class ResourceContainer extends Container
      */
     public function __construct(array $resources = [])
     {
+        $this->workers = new WorkerContainer();
         foreach ($resources as $resource) {
             $this->add($resource);
         }
@@ -46,22 +47,23 @@ class ResourceContainer extends Container
     /**
      * Adds a resource or task worker to the container.
      *
-     * This method accepts either a Resource or TaskWorker instance and adds it to the container.
-     * The item is identified using a unique identifier constructed from its ID and type suffix.
-     * If the item is not of the expected types, an InvalidArgumentException is thrown.
+     * This method accepts either a TaskResource or TaskWorker instance and adds it to the
+     * container. The item is identified using a unique identifier constructed from its ID
+     * and type suffix. If the item is not of the expected types, an InvalidArgumentException
+     * is thrown.
      *
-     * @param mixed $item The Resource or TaskWorker instance to add
+     * @param mixed $item The TaskResource or TaskWorker instance to add
      *
-     * @throws InvalidArgumentException If $item is not a Resource or TaskWorker instance
+     * @throws InvalidArgumentException If $item is not a TaskResource or TaskWorker instance
      *
      * @return void
      */
     public function add(mixed $item): void
     {
-        if (!$item instanceof Resource && !$item instanceof TaskWorker) 
-            throw new InvalidArgumentException('Only Resource or TaskWorker instances can be added to ResourceContainer.');
+        if (!$item instanceof TaskResource && !$item instanceof TaskWorker) 
+            throw new InvalidArgumentException('Only TaskResource or TaskWorker instances can be added to ResourceContainer.');
 
-        if ($item instanceof Resource)
+        if ($item instanceof TaskResource)
             $this->resources[$this->buildId($item)] = $item;
         else
             $this->workers->add($item);
@@ -71,23 +73,23 @@ class ResourceContainer extends Container
     /**
      * Removes a resource or task worker from the container.
      *
-     * This method accepts either a Resource or TaskWorker instance and removes it from the
-     * container. The item is identified using a unique identifier constructed from its ID
-     * and type suffix. If the item is not of the expected types, an InvalidArgumentException
+     * This method accepts either a TaskResource or TaskWorker instance and removes it from
+     * the container. The item is identified using a unique identifier constructed from its
+     * ID and type suffix. If the item is not of the expected types, an InvalidArgumentException
      * is thrown.
      *
-     * @param mixed $item The Resource or TaskWorker instance to remove
+     * @param mixed $item The TaskResource or TaskWorker instance to remove
      *
-     * @throws InvalidArgumentException If $item is not a Resource or TaskWorker instance
+     * @throws InvalidArgumentException If $item is not a TaskResource or TaskWorker instance
      *
      * @return void
      */
     public function remove(mixed $item): void
     {
-        if (!$item instanceof Resource && !$item instanceof TaskWorker)
-            throw new InvalidArgumentException('Only Resource or TaskWorker instances can be removed from ResourceContainer.');
+        if (!$item instanceof TaskResource && !$item instanceof TaskWorker)
+            throw new InvalidArgumentException('Only TaskResource or TaskWorker instances can be removed from ResourceContainer.');
 
-        if ($item instanceof Resource)
+        if ($item instanceof TaskResource)
             unset($this->resources[$this->buildId($item)]);
         else
             $this->workers->remove($item);
@@ -97,37 +99,43 @@ class ResourceContainer extends Container
     /**
      * Checks if a resource or task worker is present in the container.
      *
-     * This method accepts either a Resource or TaskWorker instance and checks if it
-     * exists in the container. The item is identified using a unique identifier
-     * constructed from its ID and type suffix. If the item is not of the expected
-     * types, an InvalidArgumentException is thrown.
+     * This method accepts either a TaskResource or TaskWorker instance and checks if it
+     * exists in the container. The item is identified using a unique identifier constructed
+     * from its ID and type suffix. If the item is not of the expected types, an
+     * InvalidArgumentException is thrown.
      *
-     * @param mixed $item The Resource or TaskWorker instance to check
+     * @param mixed $item The TaskResource or TaskWorker instance to check
      *
-     * @throws InvalidArgumentException If $item is not a Resource or TaskWorker instance
+     * @throws InvalidArgumentException If $item is not a TaskResource or TaskWorker instance
      *
      * @return bool True if the item is present in the container, false otherwise
      */
     public function contains(mixed $item): bool
     {
-        if (!$item instanceof Resource && !$item instanceof TaskWorker)
-            throw new InvalidArgumentException('Only Resource or TaskWorker instances can be checked in ResourceContainer.');
+        if (!$item instanceof TaskResource && !$item instanceof TaskWorker)
+            throw new InvalidArgumentException('Only TaskResource or TaskWorker instances can be checked in ResourceContainer.');
 
         $id = $this->buildId($item);
-        $isPresent = $item instanceof Resource
+        $isPresent = $item instanceof TaskResource
             ? isset($this->resources[$id])
             : $this->workers->contains($item);
         return isset($this->items[$id]) && $isPresent;
     }
 
     /**
-     * Retrieves all resources stored in the container.
+     * Retrieves the resources stored in the resource container.
      *
-     * @return array Array of Resource instances contained in the resource container
+     * This method returns the resources contained in the ResourceContainer. The caller
+     * can specify whether to receive the resources as a ResourceContainer instance or
+     * as a plain array of TaskResource instances.
+     *
+     * @param bool $useArray If true, returns an array of TaskResource instances; if false, returns a ResourceContainer
+     *
+     * @return ResourceContainer|array The resources in the specified format
      */
-    public function getResources(): array
+    public function getResources(bool $useArray = false): ResourceContainer|array
     {
-        return $this->resources;
+        return $useArray ? $this->resources : self::fromArray($this->resources);
     }
 
     /**
@@ -138,6 +146,32 @@ class ResourceContainer extends Container
     public function getWorkers(): WorkerContainer
     {
         return $this->workers;
+    }
+
+    /**
+     * Sets the worker container for the resource container.
+     *
+     * @param WorkerContainer $workers The WorkerContainer instance to set
+     *
+     * @return void
+     */
+    public function setWorkers(WorkerContainer $workers): void
+    {
+        $this->workers = $workers;
+    }
+
+    /**
+     * Sets the resources for the resource container.
+     *
+     * @param ResourceContainer|array $resources The resources to set, either as a ResourceContainer or an array of TaskResource instances
+     * 
+     * @return void
+     */
+    public function setResources(ResourceContainer|array $resources): void
+    {
+        $this->resources = $resources instanceof ResourceContainer
+            ? $resources->getResources()
+            : $resources;
     }
 
     /**
@@ -182,25 +216,25 @@ class ResourceContainer extends Container
     }
 
     /**
-     * Creates a ResourceContainer from an array of resource data.
+     * Creates a ResourceContainer from an array of resources.
      *
-     * This static method accepts an array of resource data, where each element is either
-     * a Resource instance or an associative array representing a resource. It constructs
-     * a ResourceContainer by adding each resource to it. If an element is an array, it
-     * is converted to a Resource instance using Resource::fromArray().
+     * This static method accepts an array of resources, which can be either TaskResource
+     * or TaskWorker instances, or associative arrays representing their data. It constructs
+     * a ResourceContainer by converting each element to the appropriate object type and
+     * adding it to the container.
      *
-     * @param array $data Array of resource data (Resource instances or associative arrays)
+     * @param array $data Array of resources (TaskResource, TaskWorker, or associative arrays)
      *
-     * @return ResourceContainer The constructed ResourceContainer
+     * @return ResourceContainer The constructed ResourceContainer instance
      */
     public static function fromArray(array $data): mixed
     {
         $container = new self();
         foreach ($data as $resourceData) {
-            if ($resourceData instanceof Resource)
+            if ($resourceData instanceof TaskResource || $resourceData instanceof TaskWorker)
                 $container->add($resourceData);
             elseif (is_array($resourceData))
-                $container->add(Resource::fromArray($resourceData));
+                $container->add(TaskResource::fromArray($resourceData));
         }
         return $container;
     }
@@ -210,21 +244,21 @@ class ResourceContainer extends Container
      *
      * This private method constructs a unique identifier string for the given item
      * by appending a type-specific suffix to its ID. The suffix is determined based
-     * on whether the item is a Resource or TaskWorker instance.
+     * on whether the item is a TaskResource or TaskWorker instance.
      *
-     * @param mixed $item The Resource or TaskWorker instance
+     * @param mixed $item The TaskResource or TaskWorker instance
      *
-     * @throws InvalidArgumentException If $item is not a Resource or TaskWorker instance
+     * @throws InvalidArgumentException If $item is not a TaskResource or TaskWorker instance
      *
      * @return string The unique identifier string
      */
     private function buildId(mixed $item): string
     {
-        if ($item instanceof Resource)
+        if ($item instanceof TaskResource)
             return (string) $item->getId() . self::RESOURCE_SUFFIX;
         elseif ($item instanceof TaskWorker)
             return (string) $item->getId() . self::TASK_WORKER_SUFFIX;
         else
-            throw new InvalidArgumentException('Item must be an instance of Resource or TaskWorker.');
+            throw new InvalidArgumentException('Item must be an instance of TaskResource or TaskWorker.');
     }
 }
