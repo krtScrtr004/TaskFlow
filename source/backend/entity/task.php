@@ -11,6 +11,7 @@ use App\Dependent\Worker;
 use App\Core\UUID;
 use App\Dependent\TaskResource;
 use App\Exception\ValidationException;
+use App\Validator\ResourceValidator;
 use App\Validator\UuidValidator;
 use App\Validator\WorkValidator;
 use DateTime;
@@ -29,8 +30,12 @@ class Task implements Entity
     private WorkStatus $status;
     private DateTime $createdAt;
     private array $additionalInfo;
+    private float $estimatedCost;
+    private float $actualCost;
+    private ?string $budgetNote;
 
     protected WorkValidator $workValidator;
+    protected ResourceValidator $resourceValidator; 
 
     /**
      * Constructor for the Task entity.
@@ -47,6 +52,9 @@ class Task implements Entity
      * @param string|null $description Optional description of the task
      * @param WorkerContainer|null $workers Optional container of workers assigned to the task
      * @param ResourceContainer|null $resources Optional container of resources associated with the task
+     * @param float $estimatedCost Optional estimated cost of the task
+     * @param float $actualCost Optional actual cost of the task
+     * @param string|null $budgetNote Optional budget note for the task
      * @param DateTime|null $actualCompletionDateTime Optional actual completion date and time of the task
      * @param array $additionalInfo Optional additional information related to the task
      * 
@@ -66,18 +74,22 @@ class Task implements Entity
         ?string $description = null,
         ?WorkerContainer $workers = null,
         ?ResourceContainer $resources = null,
+        float $estimatedCost = DEFAULT_RATE_MIN,
+        float $actualCost = DEFAULT_RATE_MIN,
+        ?string $budgetNote = null,
         ?DateTime $actualCompletionDateTime = null,
-        array $additionalInfo = []
+        array $additionalInfo = [],
     ) {
         try {
             $this->workValidator = new WorkValidator();
             $this->workValidator->validateMultiple([
-                'name' => $name,
-                'description' => $description,
-                'startDateTime' => $startDateTime,
-                'completionDateTime' => $completionDateTime
+                'name'                  => $name,
+                'description'           => $description,
+                'estimatedUnit'         => $estimatedCost,
+                'actualUnit'            => $actualCost,
+                'startDateTime'         => $startDateTime,
+                'completionDateTime'    => $completionDateTime
             ]);
-            
             if ($this->workValidator->hasErrors()) {
                 throw new ValidationException("Task validation failed", $this->workValidator->getErrors());
             }
@@ -96,6 +108,9 @@ class Task implements Entity
         $this->status = $status;
         $this->createdAt = $createdAt;
         $this->additionalInfo = $additionalInfo;
+        $this->estimatedCost = $estimatedCost;
+        $this->actualCost = $actualCost;
+        $this->budgetNote = $budgetNote;
 
         $this->resources = $resources;
         if ($workers || $resources) {
@@ -226,6 +241,36 @@ class Task implements Entity
     }
 
     /**
+     * Gets the estimated cost of the task.
+     *
+     * @return float The estimated cost value
+     */
+    public function getEstimatedCost(): float
+    {
+        return $this->estimatedCost;
+    }
+
+    /**
+     * Gets the actual cost of the task.
+     *
+     * @return float The actual cost value
+     */
+    public function getActualCost(): float
+    {
+        return $this->actualCost;
+    }
+
+    /**
+     * Gets the budget note associated with the task.
+     *
+     * @return string|null The budget note, or null if none
+     */
+    public function getBudgetNote(): ?string
+    {
+        return $this->budgetNote;
+    }
+
+    /**
      * Gets the creation timestamp of the task.
      *
      * @return DateTime The DateTime object representing when the task was created
@@ -337,6 +382,54 @@ class Task implements Entity
     public function setResources(ResourceContainer $resources): void
     {
         $this->resources = $resources;
+    }
+
+    /**
+     * Sets the estimated cost of the task.
+     *
+     * @param float $estimatedCost The estimated cost to set
+     * @throws ValidationException If the estimated cost is invalid
+     * @return void
+     */
+    public function setEstimatedCost(float $estimatedCost): void
+    {
+        $this->resourceValidator->validateEstimatedUnit($estimatedCost);
+        if ($this->resourceValidator->hasErrors()) {
+            throw new ValidationException("Invalid estimated cost", $this->resourceValidator->getErrors());
+        }
+        $this->estimatedCost = $estimatedCost;
+    }
+
+    /**
+     * Sets the actual cost of the task.
+     *
+     * @param float $actualCost The actual cost to set
+     * @throws ValidationException If the actual cost is invalid
+     * @return void
+     */
+    public function setActualCost(float $actualCost): void
+    {
+        $this->resourceValidator->validateActualUnit($actualCost);
+        if ($this->resourceValidator->hasErrors()) {
+            throw new ValidationException("Invalid actual cost", $this->resourceValidator->getErrors());
+        }
+        $this->actualCost = $actualCost;
+    }
+
+    /**
+     * Sets the budget note for the task.
+     *
+     * @param string|null $budgetNote The budget note to set (optional)
+     * @throws ValidationException If the budget note is invalid
+     * @return void
+     */
+    public function setBudgetNote(?string $budgetNote): void
+    {
+        $this->workValidator->validateBudgetNote($budgetNote);
+        if ($this->workValidator->hasErrors()) {
+            throw new ValidationException("Invalid budget note", $this->workValidator->getErrors());
+        }
+        $this->budgetNote = $budgetNote;
     }
 
     /**
@@ -499,6 +592,9 @@ class Task implements Entity
             'actualCompletionDateTime'  => $data['actualCompletionDateTime'] ?? null,
             'priority'                  => $data['priority'] ?? TaskPriority::MEDIUM,
             'status'                    => $data['status'] ?? WorkStatus::PENDING,
+            'estimatedCost'             => $data['estimatedCost'] ?? DEFAULT_RATE_MIN,
+            'actualCost'                => $data['actualCost'] ?? DEFAULT_RATE_MIN,
+            'budgetNote'                => $data['budgetNote'] ?? null,
             'createdAt'                 => $data['createdAt'] ?? new DateTime(),
             'additionalInfo'            => $data['additionalInfo'] ?? []
         ];
@@ -545,6 +641,11 @@ class Task implements Entity
             } catch (\Throwable $e) {
                 $defaults['status'] = WorkStatus::PENDING;
             }
+        } else {
+            $defaults['status'] = WorkStatus::getStatusFromDates(
+                $defaults['startDateTime'],
+                $defaults['completionDateTime']
+            );
         }
 
         return new self(
@@ -559,6 +660,9 @@ class Task implements Entity
             actualCompletionDateTime: $defaults['actualCompletionDateTime'],
             priority: $defaults['priority'],
             status: $defaults['status'],
+            estimatedCost: $defaults['estimatedCost'],
+            actualCost: $defaults['actualCost'],
+            budgetNote: $defaults['budgetNote'],
             createdAt: $defaults['createdAt'],
             additionalInfo: $defaults['additionalInfo']
         );
@@ -587,6 +691,9 @@ class Task implements Entity
      *      - actualCompletionDateTime: string|null Formatted actual completion date/time
      *      - priority: string Display name of the task priority
      *      - status: string Display name of the task status
+     *      - estimatedCost: float Estimated cost of the task
+     *      - actualCost: float Actual cost of the task
+     *      - budgetNote: string|null Budget note for the task
      *      - createdAt: string Formatted creation date/time
      *      - additionalInfo: array Additional information related to the task
      * @param bool $useSnakeCase Whether to use snake_case keys (true) or camelCase keys (false, default)
@@ -606,6 +713,9 @@ class Task implements Entity
                 : null,
             'priority'                  => $this->priority->getDisplayName(),
             'status'                    => $this->status->getDisplayName(),
+            'estimatedCost'             => $this->estimatedCost,
+            'actualCost'                => $this->actualCost,
+            'budgetNote'                => $this->budgetNote,
             'createdAt'                 => formatDateTime($this->createdAt, DateTime::ATOM),
             'additionalInfo'            => $this->additionalInfo
         ];
@@ -647,6 +757,9 @@ class Task implements Entity
      *      - actualCompletionDateTime: string|DateTime Actual task completion date and time
      *      - priority: string|TaskPriority Task priority level
      *      - status: string|WorkStatus Current task status
+     *      - estimatedCost: float Estimated cost of the task
+     *      - actualCost: float Actual cost of the task
+     *      - budgetNote: string Budget note for the task
      *      - createdAt: string|DateTime Task creation timestamp
      *      - additionalInfo: array Additional information related to the task
      * 
@@ -708,6 +821,9 @@ class Task implements Entity
             actualCompletionDateTime: $actualCompletionDateTime,
             priority: $priority,
             status: $status,
+            estimatedCost: $data['estimatedCost'] ?? DEFAULT_RATE_MIN,
+            actualCost: $data['actualCost'] ?? DEFAULT_RATE_MIN,
+            budgetNote: $data['budgetNote'] ?? null,
             createdAt: $createdAt,
             additionalInfo: $data['additionalInfo'] ?? []
         );
