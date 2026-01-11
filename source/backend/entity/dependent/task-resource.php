@@ -7,10 +7,11 @@ use App\Exception\ValidationException;
 use App\Interface\Entity;
 use App\Validator\ResourceValidator;
 
-class Resource implements Entity 
+class TaskResource implements Entity 
 {
     private int $id;
     private ResourceType $type;
+    private ?int $taskWorkerId; // Optional - links to phase_task_worker for labor resources
     private int $quantity; 
     private float $unitRate; // Cost per unit
     private float $estimatedUnit; // Estimate quantity 
@@ -20,15 +21,16 @@ class Resource implements Entity
     private ResourceValidator $resourceValidator;
 
     /**
-     * Resource constructor.
+     * TaskResource constructor.
      * 
-     * @param int $id The ID of the resource.
+     * @param int $id The ID of the task resource.
      * @param ResourceType $type The type of the resource.
      * @param int $quantity The quantity of the resource.
      * @param float $unitRate The unit rate of the resource.
      * @param float|null $estimatedUnit The estimated unit of the resource.
      * @param float|null $actualUnit The actual unit of the resource.
      * @param string|null $note The note of the resource.
+     * @param int|null $taskWorkerId Optional link to phase_task_worker (for labor resources).
      * 
      * @throws ValidationException If any of the provided values are invalid.
      */
@@ -59,6 +61,7 @@ class Resource implements Entity
 
         $this->id = $id;
         $this->type = $type;
+        $this->taskWorkerId = $taskWorkerId;
         $this->quantity = $quantity;
         $this->unitRate = $unitRate;
         $this->estimatedUnit = $estimatedUnit;
@@ -136,6 +139,16 @@ class Resource implements Entity
     public function getNote(): ?string
     {
         return $this->note;
+    }
+
+    /**
+     * Gets the task worker ID (for labor resources).
+     * 
+     * @return int|null The task worker ID.
+     */
+    public function getTaskWorkerId(): ?int
+    {
+        return $this->taskWorkerId;
     }
 
     // SETTERS
@@ -273,86 +286,105 @@ class Resource implements Entity
         $this->note = $note;
     }
 
+    /**
+     * Sets the task worker ID.
+     * 
+     * @param int|null $taskWorkerId The task worker ID.
+     * 
+     * @return void
+     */
+    public function setTaskWorkerId(?int $taskWorkerId): void
+    {
+        $this->taskWorkerId = $taskWorkerId;
+    }
+
     // OTHER METHODS (UTILITIES)
 
     /**
-     * Creates a partial Resource instance from the provided data.
+     * Creates a partial TaskResource instance from the provided data.
      * 
-     * This method allows for the creation of a Resource object using only
+     * This method allows for the creation of a TaskResource object using only
      * a subset of its properties. Missing properties are filled with existing
      * values from the current instance or default values.
      * 
      * @param array $data An associative array containing the properties to set.
      * 
-     * @return Resource A new Resource instance with the specified properties.
+     * @return TaskResource A new TaskResource instance with the specified properties.
      */
-    public function createPartial(array $data): Resource
+    public static function createPartial(array $data): TaskResource
     {
         $data = normalizeArrayKeysToCamelCase($data);
         
-        
         $defaults = [
-            'id'            => $this->id ?? 0,
-            'type'          => $this->type ?? ResourceType::createPartial([]),
-            'quantity'      => $this->quantity ?? 0,
-            'unitRate'      => $this->unitRate ?? 0.0,
-            'estimatedUnit' => $this->estimatedUnit ?? 0.0,
-            'note'          => $this->note ?? null
+            'id'            => $data['id'] ?? 0,
+            'type'          => $data['type'] ?? ResourceType::createPartial([]),
+            'quantity'      => $data['quantity'] ?? 0,
+            'unitRate'      => $data['unitRate'] ?? 0.0,
+            'estimatedUnit' => $data['estimatedUnit'] ?? 0.0,
+            'actualUnit'    => $data['actualUnit'] ?? 0.0,
+            'note'          => $data['note'] ?? null,
+            'taskWorkerId'  => $data['taskWorkerId'] ?? null
         ];
 
-        return new Resource(
+        return new TaskResource(
             $defaults['id'],
             $defaults['type'],
             $defaults['quantity'],
             $defaults['unitRate'],
             $defaults['estimatedUnit'],
-            $defaults['note']
+            $defaults['actualUnit'],
+            $defaults['note'],
+            $defaults['taskWorkerId']
         );
     }
 
     /**
-     * Creates a Resource instance from an associative array.
+     * Creates a TaskResource instance from an associative array.
      * 
-     * This static method constructs a Resource object using the provided
+     * This static method constructs a TaskResource object using the provided
      * associative array, mapping the array keys to the corresponding
-     * properties of the Resource class.
+     * properties of the TaskResource class.
      * 
      * @param array $data An associative array containing the resource data.
      * 
-     * @return Resource A new Resource instance created from the array data.
+     * @return TaskResource A new TaskResource instance created from the array data.
      */
-    public static function fromArray(array $data): Resource
+    public static function fromArray(array $data): TaskResource
     {
         $data = normalizeArrayKeysToCamelCase($data);
 
-        return new Resource(
+        return new TaskResource(
             $data['id'],
             ResourceType::fromArray($data['type']),
             $data['quantity'],
             $data['unitRate'],
             $data['estimatedUnit'] ?? null,
-            $data['note'] ?? null
+            $data['actualUnit'] ?? null,
+            $data['note'] ?? null,
+            $data['taskWorkerId'] ?? null
         );
     }
 
     /**
-     * Converts the Resource instance to an associative array.
+     * Converts the TaskResource instance to an associative array.
      * 
-     * This method serializes the Resource object into an associative array,
+     * This method serializes the TaskResource object into an associative array,
      * with an option to format the keys in snake_case.
      * 
      * @param bool $useSnakeCase Whether to use snake_case for the array keys.
      * 
-     * @return array An associative array representation of the Resource instance.
+     * @return array An associative array representation of the TaskResource instance.
      */
     public function toArray(bool $useSnakeCase = false): array
     {
         $data = [
             'id'            => $this->id,
             'type'          => $this->type->toArray(),
+            'taskWorkerId'  => $this->taskWorkerId,
             'quantity'      => $this->quantity,
             'unitRate'      => $this->unitRate,
             'estimatedUnit' => $this->estimatedUnit,
+            'actualUnit'    => $this->actualUnit,
             'note'          => $this->note
         ];
 

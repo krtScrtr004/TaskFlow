@@ -243,10 +243,10 @@ class ResourceType implements Entity {
         $defaults = [
             'id'            => $data['id'] ?? 0,
             'name'          => $data['name'] ?? 'Unknown Resource Type',
-            'description'   => $data['description'] ?? null,
+            'description'   => $data['description'] ?? '',
             'category'      => $data['category'] ?? 'General',
             'unit'          => $data['unit'] ?? 'unit',
-            'defaultRate'   => $data['defaultRate'] ?? 0.0,
+            'defaultRate'   => $data['defaultRate'] ?? DEFAULT_RATE_MIN,
             'createdAt'     => isset($data['createdAt']) 
                                 ? new DateTime($data['createdAt']) 
                                 : new DateTime(),
