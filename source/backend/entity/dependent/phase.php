@@ -6,6 +6,7 @@ use App\Interface\Entity;
 use App\Enumeration\WorkStatus;
 use App\Container\TaskContainer;
 use App\Core\UUID;
+use App\Entity\Task;
 use App\Exception\ValidationException;
 use App\Validator\WorkValidator;
 use DateTime;
@@ -25,43 +26,47 @@ class Phase implements Entity
     private float $budget;
     private float $contingencyRate;
     private ?string $budgetNote;
+    private ?DateTime $createdAt;
+
 
     protected WorkValidator $workValidator;
 
     /**
      * Phase constructor.
+     *
+     * @param int $id The internal ID of the phase
+     * @param UUID $publicId The public UUID of the phase
+     * @param string $name The name of the phase
+     * @param DateTime $startDateTime The start date and time of the phase
+     * @param DateTime $completionDateTime The expected completion date and time of the phase
+     * @param WorkStatus $status The current status of the phase
      * 
-     * Creates a new Phase instance with the provided details.
-     * All parameters are validated through WorkValidator before assignment.
-     * 
-     * @param int $id The unique identifier for the phase in the database
-     * @param UUID $publicId The public identifier for the phase
-     * @param string $name Phase name (3-255 characters)
-     * @param string|null $description Phase description (5-500 characters) (optional)
-     * @param DateTime $startDateTime Phase start date and time (cannot be in the past)
-     * @param DateTime $completionDateTime Expected phase completion date and time (must be after start date)
-     * @param DateTime|null $actualCompletionDateTime Actual phase completion date and time (optional)
-     * @param WorkStatus $status Current status of the phase (enum)
-     * @param TaskContainer $tasks Container of tasks associated with the phase
-     * @param float $budget Budget amount allocated for the phase
-     * @param float $contingencyRate Contingency rate percentage for the phase budget
+     * OPTIONAL / WITH DEFAULT VALUES:
+     * @param string|null $description The description of the phase (optional)
+     * @param float $budget The budget allocated for the phase (default: BUDGET_MIN)
+     * @param float $contingencyRate The contingency rate for the phase budget (default: CONTINGENCY_RATE_MIN)
+     * @param DateTime|null $actualCompletionDateTime The actual completion date and time of the phase (optional)
+     * @param TaskContainer|null $tasks Container of tasks assigned to the phase (optional)
      * @param string|null $budgetNote Notes regarding the phase budget (optional)
+     * @param DateTime|null $createdAt The creation timestamp of the phase (optional)
      * 
-     * @throws ValidationException If any of the provided data fails validation
+     * @throws ValidationException If any validation rules are violated
      */
     public function __construct(
         int $id,
         UUID $publicId,
         string $name,
-        ?string $description,
         DateTime $startDateTime,
         DateTime $completionDateTime,
-        ?DateTime $actualCompletionDateTime,
         WorkStatus $status,
-        ?TaskContainer $tasks,
-        float $budget,
-        float $contingencyRate,
-        ?string $budgetNote
+
+        ?string $description,
+        float $budget = BUDGET_MIN,
+        float $contingencyRate = CONTINGENCY_RATE_MIN,
+        ?DateTime $actualCompletionDateTime = null,
+        ?TaskContainer $tasks = null,
+        ?string $budgetNote = null,
+        ?DateTime $createdAt = null
     ) {
         try {
             $this->workValidator = new WorkValidator();
@@ -94,6 +99,7 @@ class Phase implements Entity
         $this->budget = $budget;
         $this->contingencyRate = $contingencyRate;
         $this->budgetNote = trimOrNull($budgetNote);
+        $this->createdAt = $createdAt;
     }
 
     // Getters
@@ -213,6 +219,16 @@ class Phase implements Entity
         return $this->budgetNote;
     }
 
+    /**
+     * Gets the creation timestamp of the phase.
+     *
+     * @return DateTime|null The creation timestamp or null if not set
+     */
+    public function getCreatedAt(): ?DateTime
+    {
+        return $this->createdAt;
+    }
+
     // Setters
 
     /**
@@ -260,12 +276,17 @@ class Phase implements Entity
     /**
      * Sets the phase's description.
      *
-     * @param string $description The description to set (5-500 characters, optional)
+     * @param string|null $description The description to set, or null to unset
      * @throws ValidationException If the description is invalid
      * @return void
      */
-    public function setDescription(string $description): void
+    public function setDescription(?string $description): void
     {
+        if (!$description) {
+            $this->description = null;
+            return;
+        }
+
         $this->workValidator->validateDescription(trim($description));
         if ($this->workValidator->hasErrors()) {
             throw new ValidationException("Invalid phase description", $this->workValidator->getErrors());
@@ -305,6 +326,12 @@ class Phase implements Entity
         $this->completionDateTime = $completionDateTime;
     }
 
+    /**
+     * Sets the actual completion date and time.
+     *
+     * @param DateTime|null $actualCompletionDateTime The actual completion date and time to set, or null to unset
+     * @return void
+     */
     public function setActualCompletionDateTime(?DateTime $actualCompletionDateTime): void
     {
         $this->actualCompletionDateTime = $actualCompletionDateTime;
@@ -324,10 +351,10 @@ class Phase implements Entity
     /**
      * Sets the phase's tasks container.
      *
-     * @param TaskContainer $tasks Container of tasks to assign to this phase
+     * @param TaskContainer|null $tasks Container of tasks to assign to this phase, or null to unset
      * @return void
      */
-    public function setTasks(TaskContainer $tasks): void
+    public function setTasks(?TaskContainer $tasks): void
     {
         $this->tasks = $tasks;
     }
@@ -367,12 +394,17 @@ class Phase implements Entity
     /**
      * Sets the budget notes for the phase.
      *
-     * @param string $budgetNote The notes regarding the phase budget
+     * @param string|null $budgetNote The notes regarding the phase budget, or null to unset
      * @throws ValidationException If the budget note is invalid
      * @return void
      */
-    public function setBudgetNote(string $budgetNote): void
+    public function setBudgetNote(?string $budgetNote): void
     {
+        if (!$budgetNote) {
+            $this->budgetNote = null;
+            return;
+        }
+
         $this->workValidator->validateBudgetNote(trimOrNull($budgetNote));
         if ($this->workValidator->hasErrors()) {
             throw new ValidationException("Invalid budget note", $this->workValidator->getErrors());
@@ -383,10 +415,10 @@ class Phase implements Entity
     /**
      * Adds a task to the phase's task collection.
      *
-     * @param \App\Entity\Task $task The task instance to be added to this phase
+     * @param Task $task The task instance to be added to this phase
      * @return void
      */
-    public function addTask($task): void
+    public function addTask(Task $task): void
     {
         if (!$this->tasks) {
             $this->tasks = new TaskContainer();
@@ -440,31 +472,16 @@ class Phase implements Entity
             'tasks'                     => $data['tasks'] ?? null,
             'budget'                    => $data['budget'] ?? BUDGET_MIN,
             'contingencyRate'           => $data['contingencyRate'] ?? CONTINGENCY_RATE_MIN,
-            'budgetNote'                => $data['budgetNote'] ?? ''
+            'budgetNote'                => $data['budgetNote'] ?? '',
+            'createdAt'                 => $data['createdAt'] ?? null
         ];
 
         // Handle UUID conversion
-        if (isset($data['publicId']) && !($data['publicId'] instanceof UUID)) {
+        if (isset($data['publicId']) && !$data['publicId'] instanceof UUID) {
             $defaults['publicId'] = UUID::tryFromString(trimOrNull($data['publicId']));
         }
 
-        // Handle DateTime conversions
-        if (isset($data['startDateTime']) && !($data['startDateTime'] instanceof DateTime)) {
-            $defaults['startDateTime'] = new DateTime(trimOrNull($data['startDateTime']));
-        }
-
-        if (isset($data['completionDateTime']) && !($data['completionDateTime'] instanceof DateTime)) {
-            $defaults['completionDateTime'] = new DateTime(trimOrNull($data['completionDateTime']));
-        }
-
-        if (isset($data['actualCompletionDateTime']) && !($data['actualCompletionDateTime'] instanceof DateTime)) {
-            $defaults['actualCompletionDateTime'] = is_string($data['actualCompletionDateTime'])
-                ? new DateTime(trimOrNull($data['actualCompletionDateTime']))
-                : null;
-        }
-
-        // Handle enum conversion
-        if (isset($data['status']) && !($data['status'] instanceof WorkStatus)) {
+        if (isset($data['status']) && !$data['status'] instanceof WorkStatus) {
             $defaults['status'] = WorkStatus::from(trimOrNull($data['status']));
         }
 
@@ -476,6 +493,33 @@ class Phase implements Entity
             $defaults['contingencyRate'] = (float) $data['contingencyRate'];
         }
 
+        if (isset($data['budgetNote'])) {
+            $defaults['budgetNote'] = trimOrNull($data['budgetNote']);
+        }
+
+        if (isset($data['tasks']) && !$data['tasks'] instanceof TaskContainer) {
+            $defaults['tasks'] = TaskContainer::fromArray($data['tasks']);
+        }
+
+        if (isset($data['startDateTime']) && !$data['startDateTime'] instanceof DateTime) {
+            $defaults['startDateTime'] = new DateTime(trimOrNull($data['startDateTime']));
+        }
+
+        if (isset($data['completionDateTime']) && !$data['completionDateTime'] instanceof DateTime) {
+            $defaults['completionDateTime'] = new DateTime(trimOrNull($data['completionDateTime']));
+        }
+
+        if (isset($data['actualCompletionDateTime']) && !$data['actualCompletionDateTime'] instanceof DateTime) {
+            $defaults['actualCompletionDateTime'] = is_string($data['actualCompletionDateTime'])
+                ? new DateTime(trimOrNull($data['actualCompletionDateTime']))
+                : null;
+        }
+
+        if (isset($data['createdAt']) && !$data['createdAt'] instanceof DateTime) {
+            $defaults['createdAt'] = is_string($data['createdAt'])
+                ? new DateTime(trimOrNull($data['createdAt']))
+                : null;
+        }
 
         // Create instance with default values
         $instance = new self(
@@ -487,10 +531,11 @@ class Phase implements Entity
             completionDateTime: $defaults['completionDateTime'],
             actualCompletionDateTime: $defaults['actualCompletionDateTime'],
             status: $defaults['status'],
-            tasks: $defaults['tasks'] ?? null,
+            tasks: $defaults['tasks'],
             budget: $defaults['budget'],
             contingencyRate: $defaults['contingencyRate'],
-            budgetNote: $defaults['budgetNote']
+            budgetNote: $defaults['budgetNote'],
+            createdAt: $defaults['createdAt']
         );
 
         return $instance;
@@ -516,6 +561,7 @@ class Phase implements Entity
      *      - budget: float Budget amount allocated for the phase
      *      - contingencyRate: float Contingency rate percentage for the phase budget
      *      - budgetNote: string Notes regarding the phase budget
+     *      - createdAt: string|null Formatted creation timestamp
      * @param bool $useSnakeCase Whether to use snake_case keys (true) or camelCase keys (false, default)
      */
     public function toArray(bool $useSnakeCase = false): array
@@ -524,16 +570,19 @@ class Phase implements Entity
             'id'                        => UUID::toString($this->publicId),
             'name'                      => $this->name,
             'description'               => $this->description,
-            'startDateTime'             => formatDateTime($this->startDateTime, DateTime::ATOM),
-            'completionDateTime'        => formatDateTime($this->completionDateTime, DateTime::ATOM),
+            'startDateTime'             => formatDateTime($this->startDateTime),
+            'completionDateTime'        => formatDateTime($this->completionDateTime),
             'actualCompletionDateTime'  => $this->actualCompletionDateTime
-                ? formatDateTime($this->actualCompletionDateTime, DateTime::ATOM)
+                ? formatDateTime($this->actualCompletionDateTime)
                 : null,
             'status'                    => $this->status->value,
             'tasks'                     => $this->tasks?->toArray($useSnakeCase) ?? [],
             'budget'                    => $this->budget,
             'contingencyRate'           => $this->contingencyRate,
-            'budgetNote'                => $this->budgetNote
+            'budgetNote'                => $this->budgetNote,
+            'createdAt'                 => $this->createdAt
+                ? formatDateTime($this->createdAt)
+                : null
         ];
 
         return $useSnakeCase ? normalizeArrayKeysToSnakeCase($data) : $data;
@@ -562,6 +611,7 @@ class Phase implements Entity
      *      - budget: float|int Budget amount allocated for the phase
      *      - contingencyRate: float|int Contingency rate percentage for the phase budget
      *      - budgetNote: string Notes regarding the phase budget
+     *      - createdAt: string|null Formatted creation timestamp
      * 
      * @return self New Phase instance created from provided data
      */
@@ -597,11 +647,15 @@ class Phase implements Entity
             ? TaskContainer::fromArray($data['tasks'])
             : $data['tasks'];
 
+        $createdAt = (is_string($data['createdAt']))
+            ? new DateTime(trimOrNull($data['createdAt']))
+            : $data['createdAt'];
+
         return new self(
             id: $data['id'],
             publicId: $publicId,
             name: trimOrNull($data['name']),
-            description: trimOrNull($data['description']),
+            description: trimOrNull($data['description'] ?? ''),
             startDateTime: $startDateTime,
             completionDateTime: $completionDateTime,
             actualCompletionDateTime: $actualCompletionDateTime,
@@ -609,7 +663,8 @@ class Phase implements Entity
             tasks: $tasks,
             budget: (float) $data['budget'],
             contingencyRate: (float) $data['contingencyRate'],
-            budgetNote: trimOrNull($data['budgetNote'])
+            budgetNote: trimOrNull($data['budgetNote'] ?? ''),
+            createdAt: $createdAt
         );
     }
 

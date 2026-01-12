@@ -40,46 +40,65 @@ abstract class User implements Entity
     protected UserValidator $userValidator;
 
     /**
-     * User constructor.
-     * 
-     * Creates a new User instance with the provided details.
-     * All parameters are validated through UserValidator before assignment.
-     * 
-     * @param int $id The unique identifier for the user in the database
-     * @param UUID $publicId The public identifier for the user
-     * @param string $firstName User's first name
-     * @param string|null $middleName User's middle name (optional)
-     * @param string $lastName User's last name
-     * @param Gender $gender User's gender (enum)
-     * @param DateTime $birthDate User's date of birth
-     * @param Role $role User's role in the system (enum)
-     * @param JobTitleContainer $jobTitles Container for user's job titles
-     * @param string $contactNumber User's contact phone number
-     * @param string $email User's email address
-     * @param string|null$bio User's biography or description (optional)
-     * @param string|null $profileLink Link to user's profile (optional)
-     * @param DateTime $createdAt Timestamp when the user was created
-     * @param DateTime|null $confirmedAt Timestamp when the user was confirmed (optional)
-     * @param DateTime|null $deletedAt Timestamp when the user was deleted (optional)
-     * @param string|null $password User's password (optional)
-     * @param array $additionalInfo Additional information about the user (optional)
-     * 
-     * @throws ValidationException If any of the provided data fails validation
+     * Constructs a User domain object and initializes its properties after validation.
+     *
+     * This constructor validates the provided data using a UserValidator instance, assigns
+     * validated and normalized values to the object's properties, and preserves any existing
+     * role on the object if no role is supplied. Optional fields may be null and are trimmed
+     * where applicable via the trimOrNull helper.
+     *
+     * Behavior and side effects:
+     * - Instantiates UserValidator and validates multiple fields; on validation errors a
+     *   ValidationException is thrown containing the validator errors.
+     * - Trims string inputs (firstName, middleName, lastName, contactNumber, email, bio,
+     *   profileLink) using trimOrNull, converting empty strings to null where applicable.
+     * - Assigns typed values (id, publicId, gender, birthDate, jobTitles, createdAt,
+     *   confirmedAt, deletedAt, password, additionalInfo) directly to the object's properties.
+     * - Only sets $this->role when a non-null $role is provided, avoiding overwriting any
+     *   pre-existing role on the object if null is passed.
+     * - Stores the provided password as-is (no hashing performed by this constructor).
+     * - No other external side effects occur (no persistence, no external I/O).
+     *
+     * @param int                 $id            Internal numeric identifier.
+     * @param UUID                $publicId      Public UUID identifier.
+     * @param string              $firstName     First name (required; trimmed).
+     * @param string              $lastName      Last name (required; trimmed).
+     * @param Gender              $gender        Gender value object.
+     * @param DateTime            $birthDate     Birth date value object.
+     * @param JobTitleContainer   $jobTitles     Container of job titles.
+     * @param string              $contactNumber Contact phone number (required; trimmed).
+     * @param string              $email         Email address (required; trimmed).
+     *
+     * @param string|null         $middleName    Optional middle name (trimmed or null).
+     * @param string|null         $bio           Optional biography (trimmed or null).
+     * @param string|null         $profileLink   Optional profile link (trimmed or null).
+     * @param DateTime|null       $createdAt     Optional creation timestamp.
+     * @param Role|null           $role          Optional role; only applied if non-null.
+     * @param DateTime|null       $confirmedAt   Optional confirmation timestamp.
+     * @param DateTime|null       $deletedAt     Optional deletion timestamp.
+     * @param string|null         $password      Optional password (stored as provided).
+     * @param array               $additionalInfo Optional associative array of extra info.
+     *
+     * @throws ValidationException If validation fails (contains validator error details).
+     *
+     * @return void
      */
     public function __construct(
         int $id,
         UUID $publicId,
         string $firstName,
-        ?string $middleName,
         string $lastName,
         Gender $gender,
         DateTime $birthDate,
         JobTitleContainer $jobTitles,
         string $contactNumber,
         string $email,
-        ?string $bio,
-        ?string $profileLink,
-        DateTime $createdAt,
+
+        // Optional
+        ?string $middleName = null,
+        ?string $bio = null,
+        ?string $profileLink = null,
+        ?DateTime $createdAt = null,
         ?Role $role = null,
         ?DateTime $confirmedAt = null,
         ?DateTime $deletedAt = null,
@@ -282,9 +301,9 @@ abstract class User implements Entity
     /**
      * Gets the creation timestamp of the user account.
      *
-     * @return DateTime The DateTime object representing when the user was created
+     * @return DateTime|null The DateTime object representing when the user was created, or null if not defined
      */
-    public function getCreatedAt(): DateTime
+    public function getCreatedAt(): ?DateTime
     {
         return $this->createdAt;
     }
@@ -376,12 +395,17 @@ abstract class User implements Entity
     /**
      * Sets the user's middle name.
      *
-     * @param string $middleName The middle name to set (will be trimmed)
+     * @param string|null $middleName The middle name to set (will be trimmed), or null to unset
      * @throws ValidationException If the middle name is invalid
      * @return void
      */
-    public function setMiddleName(string $middleName): void
+    public function setMiddleName(?string $middleName): void
     {
+        if (!$middleName) {
+            $this->middleName = null;
+            return;
+        }
+
         $this->userValidator->validateMiddleName(trimOrNull($middleName));
         if ($this->userValidator->hasErrors()) {
             throw new ValidationException("Invalid Middle Name", $this->userValidator->getErrors());
@@ -453,7 +477,6 @@ abstract class User implements Entity
         $this->role = $role;
     }
 
-
     /**
      * Sets the user's job titles.
      *
@@ -506,13 +529,13 @@ abstract class User implements Entity
     /**
      * Sets the user's password.
      *
-     * @param string $password The password to set
+     * @param string|null $password The password to set, or null to unset
      * @throws ValidationException If the password is invalid
      * @return void
      */
     public function setPassword(?string $password): void
     {
-        if ($password === null) {
+        if (!$password) {
             $this->password = null;
             return;
         }
@@ -527,12 +550,17 @@ abstract class User implements Entity
     /**
      * Sets the user's biography.
      *
-     * @param string $bio The biography to set (will be trimmed)
+     * @param string|null $bio The biography to set (will be trimmed), or null to unset
      * @throws ValidationException If the bio is invalid
      * @return void
      */
-    public function setBio(string $bio): void
+    public function setBio(?string $bio): void
     {
+        if (!$bio) {
+            $this->bio = null;
+            return;
+        }
+
         $this->userValidator->validateBio(trimOrNull($bio));
         if ($this->userValidator->hasErrors()) {
             throw new ValidationException("Invalid Bio", $this->userValidator->getErrors());
@@ -543,19 +571,23 @@ abstract class User implements Entity
     /**
      * Sets the user's profile link.
      *
-     * @param string $profileLink The profile link to set (will be trimmed)
+     * @param string|null $profileLink The profile link to set (will be trimmed), or null to unset
      * @throws ValidationException If the profile link is not a valid URL
      * @return void
      */
-    public function setProfileLink(string $profileLink): void
+    public function setProfileLink(?string $profileLink): void
     {
-        $validator = new UrlValidator();
+        if (!$profileLink) {
+            $this->profileLink = null;
+            return;
+        }
 
+        $validator = new UrlValidator();
         $validator->validateUrl(trimOrNull($profileLink));
         if ($validator->hasErrors()) {
             throw new ValidationException("Invalid Profile Link", $validator->getErrors());
         }
-        $this->profileLink = $profileLink;
+        $this->profileLink = trimOrNull($profileLink);
     }
 
     /**
@@ -572,13 +604,13 @@ abstract class User implements Entity
     /**
      * Sets the user creation timestamp.
      *
-     * @param DateTime $createdAt The creation timestamp to set
+     * @param DateTime|null $createdAt The creation timestamp to set, or null if not set
      * @throws ValidationException If the creation date is in the future
      * @return void
      */
-    public function setCreatedAt(DateTime $createdAt): void
+    public function setCreatedAt(?DateTime $createdAt): void
     {
-        if ($createdAt > new DateTime()) {
+        if ($createdAt && $createdAt > new DateTime()) {
             throw new ValidationException("Invalid Created At Date");
         }
         $this->createdAt = $createdAt;
@@ -593,7 +625,7 @@ abstract class User implements Entity
      */
     public function setConfirmedAt(?DateTime $confirmedAt): void
     {
-        if ($confirmedAt !== null && $confirmedAt > new DateTime()) {
+        if ($confirmedAt && $confirmedAt > new DateTime()) {
             throw new ValidationException("Invalid Confirmed At Date");
         }
         $this->confirmedAt = $confirmedAt;
@@ -608,7 +640,7 @@ abstract class User implements Entity
      */
     public function setDeletedAt(?DateTime $deletedAt): void
     {
-        if ($deletedAt !== null && $deletedAt > new DateTime()) {
+        if ($deletedAt && $deletedAt > new DateTime()) {
             throw new ValidationException("Invalid Deleted At Date");
         }
         $this->deletedAt = $deletedAt;
@@ -696,7 +728,7 @@ abstract class User implements Entity
             'email'                     => $data['email'] ?? 'unknown@user.com',
             'bio'                       => $data['bio'] ?? null,
             'profileLink'               => $data['profileLink'] ?? null,
-            'createdAt'                 => $data['createdAt'] ?? new DateTime(),
+            'createdAt'                 => $data['createdAt'] ?? null,
             'confirmedAt'               => $data['confirmedAt'] ?? null,
             'deletedAt'                 => $data['deletedAt'] ?? null,
             'password'                  => $data['password'] ?? null,
@@ -813,9 +845,15 @@ abstract class User implements Entity
             'email'             => $this->email,
             'bio'               => $this->bio,
             'profileLink'       => $this->profileLink,
-            'createdAt'         => $this->createdAt->format('Y-m-d H:i:s'),
-            'confirmedAt'       => $this->confirmedAt ? $this->confirmedAt->format('Y-m-d H:i:s') : null,
-            'deletedAt'         => $this->deletedAt ? $this->deletedAt->format('Y-m-d H:i:s') : null,
+            'createdAt'         => $this->createdAt 
+                ? $this->createdAt->format('Y-m-d H:i:s') 
+                : null,
+            'confirmedAt'       => $this->confirmedAt 
+                ? $this->confirmedAt->format('Y-m-d H:i:s') 
+                : null,
+            'deletedAt'         => $this->deletedAt 
+                ? $this->deletedAt->format('Y-m-d H:i:s') 
+                : null,
             'additionalInfo'    => $this->additionalInfo
         ];
 
@@ -884,7 +922,7 @@ abstract class User implements Entity
             $jobTitles = new JobTitleContainer(explode(',', $data['jobTitles']));
         }
 
-        $createdAt = (is_string($data['createdAt']))
+        $createdAt = (isset($data['createdAt']) && is_string($data['createdAt']))
             ? new DateTime(trimOrNull($data['createdAt']))
             : $data['createdAt'];
 

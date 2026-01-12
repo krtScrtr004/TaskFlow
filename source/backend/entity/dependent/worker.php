@@ -18,55 +18,68 @@ class Worker extends User
     protected WorkerStatus $status;
 
     /**
-     * Constructs a Worker instance.
+     * Construct a Worker entity.
      *
-     * This constructor initializes a Worker object by calling the parent User constructor
-     * and setting Worker-specific properties such as defaultRate and status.
-     * It also validates the defaultRate and status using UserValidator.
+     * Initializes a Worker by delegating common user initialization to the parent constructor,
+     * validating worker-specific properties, and setting role-specific fields.
      *
-     * @param int|null $id Worker's ID
-     * @param UUID|null $publicId Public identifier
-     * @param string $firstName Worker's first name
-     * @param string|null $middleName Worker's middle name
-     * @param string $lastName Worker's last name 
-     * @param Gender $gender Worker's gender                  
-     * @param DateTime $birthDate Worker's birth date
-     * @param JobTitleContainer $jobTitles Worker's job titles
-     * @param string $contactNumber Worker's contact number
-     * @param string $email Worker's email address
-     * @param string|null $bio Worker's biography
-     * @param string|null $profileLink Worker's profile link
-     * @param DateTime $createdAt Timestamp when the worker was created
-     * @param float $defaultRate Worker's default hourly rate
-     * @param WorkerStatus $status Worker's current status
-     * @param string|null $password Worker's password (optional)
-     * @param DateTime|null $confirmedAt Timestamp when the worker was confirmed (optional)
-     * @param DateTime|null $deletedAt Timestamp when the worker was deleted (optional)
-     * @param array $additionalInfo Optional additional information (default: empty array)
-     * @throws ValidationException If validation of defaultRate or status fails
+     * Behavior and side effects:
+     * - Calls parent::__construct(...) to initialize shared user properties.
+     * - Validates the provided $defaultRate using $this->userValidator->validateDefaultRate().
+     * - If validation yields errors, throws a ValidationException containing those errors.
+     * - Sets the instance role to Role::WORKER and assigns $this->defaultRate and $this->status.
+     * - Uses $status ?? WorkerStatus::UNASSIGNED to ensure a non-null status.
+     * - Mutates the object's state; does not perform external side effects beyond in-object initialization.
+     *
+     * @param int                 $id             Internal numeric identifier.
+     * @param UUID                $publicId       Public UUID identifier.
+     * @param string              $firstName      Given name of the worker.
+     * @param string              $lastName       Family name of the worker.
+     * @param Gender              $gender         Gender value object/enum for the worker.
+     * @param DateTime            $birthDate      Birth date of the worker.
+     * @param JobTitleContainer   $jobTitles      Container of one or more job titles for the worker.
+     * @param string              $contactNumber  Primary contact phone number.
+     * @param string              $email          Contact email address.
+     *
+     * // Worker-specific properties
+     * @param float               $defaultRate    Hourly/default rate for the worker (defaults to DEFAULT_RATE_MIN).
+     * @param WorkerStatus|null   $status         Worker status (nullable; defaults to WorkerStatus::UNASSIGNED).
+     *
+     * // Optional properties
+     * @param string|null         $middleName     Optional middle name (nullable).
+     * @param string|null         $bio            Optional biography or description (nullable).
+     * @param string|null         $profileLink    Optional URL to profile (nullable).
+     * @param string|null         $password       Optional hashed password (nullable).
+     * @param DateTime|null       $createdAt      Optional creation timestamp (nullable).
+     * @param DateTime|null       $confirmedAt    Optional confirmation timestamp (nullable).
+     * @param DateTime|null       $deletedAt      Optional deletion timestamp (nullable).
+     * @param array               $additionalInfo Arbitrary additional metadata (defaults to empty array).
+     *
+     * @throws ValidationException If the worker-specific validation (e.g., default rate) fails.
+     *
      * @return void
      */
     public function __construct(
-        ?int $id,
-        ?UUID $publicId,
+        int $id,
+        UUID $publicId,
         string $firstName,
-        ?string $middleName,
         string $lastName,
         Gender $gender,
         DateTime $birthDate,
         JobTitleContainer $jobTitles,
         string $contactNumber,
         string $email,
-        ?string $bio,
-        ?string $profileLink,
-        DateTime $createdAt,
 
         // Worker-specific properties
         float $defaultRate = DEFAULT_RATE_MIN,
         ?WorkerStatus $status = WorkerStatus::UNASSIGNED,
 
         // Optional properties
+        ?string $middleName = null,
+        ?string $bio = null,
+        ?string $profileLink = null,
         ?string $password = null,
+        ?DateTime $createdAt = null,
         ?DateTime $confirmedAt = null,
         ?DateTime $deletedAt = null,
         array $additionalInfo = [],

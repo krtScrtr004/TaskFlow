@@ -37,17 +37,21 @@ class TaskWorker extends Worker
      * @param JobTitleContainer $jobTitles Worker's job titles.
      * @param string $contactNumber Worker's contact number.
      * @param string $email Worker's email address.
+     * 
+     * TASK WORKER SPECIFIC:
      * @param string|null $bio Worker's biography (optional).
      * @param string|null $profileLink Worker's profile link (optional).
-     * @param DateTime $createdAt Worker's creation timestamp.
      * @param float $defaultRate Worker's default rate (default is DEFAULT_RATE_MIN).
      * @param WorkerStatus $status Worker's worker status (default is UNASSIGNED).
      * @param float $estimatedHour Worker's estimated hours assigned (default is WORKER_HOURS_MIN).
      * @param float $actualHour Worker's actual hours worked (default is 0.0).
+     * 
+     * OPTIONAL / WITH DEFAULT VALUES:
      * @param string|null $password Worker's password (optional).
      * @param DateTime|null $confirmedAt Worker's confirmation timestamp (optional).
      * @param DateTime|null $deletedAt Worker's deletion timestamp (optional).
      * @param array $additionalInfo Additional information (optional).
+     * @param DateTime|null $createdAt Worker's creation timestamp (optional).
      * 
      * @throws ValidationException If validation of hours fails.
      */ 
@@ -61,7 +65,6 @@ class TaskWorker extends Worker
         JobTitleContainer $jobTitles,
         string $contactNumber,
         string $email,
-        DateTime $createdAt,
 
         // Task worker-specific properties
         float $defaultRate = DEFAULT_RATE_MIN,
@@ -69,7 +72,7 @@ class TaskWorker extends Worker
         float $estimatedHour = WORKER_HOURS_MIN,
         float $actualHour = 0.0,
 
-        // Optional properties
+        // Optional
         ?string $middleName = null,
         ?string $bio = null,
         ?string $profileLink = null,
@@ -77,6 +80,7 @@ class TaskWorker extends Worker
         ?DateTime $confirmedAt = null,
         ?DateTime $deletedAt = null,
         array $additionalInfo = [],
+        ?DateTime $createdAt = null,
     ) {
         parent::__construct(
             id: $id,

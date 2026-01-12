@@ -15,6 +15,7 @@ use App\Validator\ResourceValidator;
 use App\Validator\UuidValidator;
 use App\Validator\WorkValidator;
 use DateTime;
+use Throwable;
 
 class Task implements Entity
 {
@@ -27,8 +28,8 @@ class Task implements Entity
     private DateTime $completionDateTime;
     private ?DateTime $actualCompletionDateTime;
     private TaskPriority $priority;
-    private WorkStatus $status;
-    private DateTime $createdAt;
+    private ?WorkStatus $status;
+    private ?DateTime $createdAt;
     private array $additionalInfo;
     private float $estimatedCost;
     private float $actualCost;
@@ -47,7 +48,6 @@ class Task implements Entity
      * @param DateTime $completionDateTime The expected completion date and time of the task
      * @param TaskPriority $priority The priority level of the task
      * @param WorkStatus $status The current status of the task
-     * @param DateTime $createdAt The creation timestamp of the task
      * 
      * @param string|null $description Optional description of the task
      * @param WorkerContainer|null $workers Optional container of workers assigned to the task
@@ -57,6 +57,7 @@ class Task implements Entity
      * @param string|null $budgetNote Optional budget note for the task
      * @param DateTime|null $actualCompletionDateTime Optional actual completion date and time of the task
      * @param array $additionalInfo Optional additional information related to the task
+     * @param DateTime|null $createdAt The creation timestamp of the task
      * 
      * @throws ValidationException If any validation fails during property assignment
      */
@@ -68,9 +69,8 @@ class Task implements Entity
         DateTime $completionDateTime,
         TaskPriority $priority,
         WorkStatus $status,
-        DateTime $createdAt,
 
-        // Optional parameters
+        // Optional
         ?string $description = null,
         ?WorkerContainer $workers = null,
         ?ResourceContainer $resources = null,
@@ -79,6 +79,7 @@ class Task implements Entity
         ?string $budgetNote = null,
         ?DateTime $actualCompletionDateTime = null,
         array $additionalInfo = [],
+        ?DateTime $createdAt = null,
     ) {
         try {
             $this->workValidator = new WorkValidator();
@@ -177,7 +178,7 @@ class Task implements Entity
      */
     public function getWorkers(): ?WorkerContainer
     {
-        return $this->resources ? $this->resources->getWorkers() : null;
+        return $this->resources?->getWorkers();
     }
 
     /**
@@ -273,7 +274,7 @@ class Task implements Entity
     /**
      * Gets the creation timestamp of the task.
      *
-     * @return DateTime The DateTime object representing when the task was created
+     * @return DateTime|null The DateTime object representing when the task was created, or null if not set
      */
     public function getCreatedAt(): DateTime
     {
@@ -346,12 +347,17 @@ class Task implements Entity
     /**
      * Sets the task's description.
      *
-     * @param string $description The description to set (5-500 characters, optional)
+     * @param string|null $description The description to set, or null to unset
      * @throws ValidationException If the description is invalid
      * @return void
      */
-    public function setDescription(string $description): void
+    public function setDescription(?string $description): void
     {
+        if (!$description) {
+            $this->description = null;
+            return;
+        }
+
         $this->workValidator->validateDescription(trim($description));
         if ($this->workValidator->hasErrors()) {
             throw new ValidationException("Invalid task description", $this->workValidator->getErrors());
@@ -362,11 +368,16 @@ class Task implements Entity
     /**
      * Sets the task workers.
      *
-     * @param WorkerContainer $workers Container of workers to assign to the task
+     * @param WorkerContainer|null $workers Container of workers to assign to the task, or null to clear
      * @return void
      */
-    public function setWorkers(WorkerContainer $workers): void
+    public function setWorkers(?WorkerContainer $workers): void
     {
+        if (!$workers) {
+            $this->resources?->clearWorkers();
+            return;
+        }
+
         if (!$this->resources) {
             $this->resources = new ResourceContainer();
         }
@@ -376,11 +387,19 @@ class Task implements Entity
     /**
      * Sets the task resources.
      *
-     * @param ResourceContainer $resources Container of resources to associate with the task
+     * @param ResourceContainer|null $resources Container of resources to associate with the task, or null to clear
      * @return void
      */
-    public function setResources(ResourceContainer $resources): void
+    public function setResources(?ResourceContainer $resources): void
     {
+        if (!$resources) {
+            $this->resources?->clearResources();
+            return;
+        }
+
+        if (!$this->resources) {
+            $this->resources = new ResourceContainer();
+        }
         $this->resources = $resources;
     }
 
@@ -425,6 +444,11 @@ class Task implements Entity
      */
     public function setBudgetNote(?string $budgetNote): void
     {
+        if (!$budgetNote) {
+            $this->budgetNote = null;
+            return;
+        }
+
         $this->workValidator->validateBudgetNote($budgetNote);
         if ($this->workValidator->hasErrors()) {
             throw new ValidationException("Invalid budget note", $this->workValidator->getErrors());
@@ -500,13 +524,13 @@ class Task implements Entity
     /**
      * Sets the task creation timestamp.
      *
-     * @param DateTime $createdAt The creation timestamp to set
+     * @param DateTime|null $createdAt The creation timestamp to set, or null to unset
      * @throws ValidationException If the creation date is in the future
      * @return void
      */
     public function setCreatedAt(DateTime $createdAt): void
     {
-        if ($createdAt > new DateTime()) {
+        if ($createdAt && $createdAt > new DateTime()) {
             throw new ValidationException("Invalid creation date");
         }
         $this->createdAt = $createdAt;
@@ -595,7 +619,7 @@ class Task implements Entity
             'estimatedCost'             => $data['estimatedCost'] ?? DEFAULT_RATE_MIN,
             'actualCost'                => $data['actualCost'] ?? DEFAULT_RATE_MIN,
             'budgetNote'                => $data['budgetNote'] ?? null,
-            'createdAt'                 => $data['createdAt'] ?? new DateTime(),
+            'createdAt'                 => $data['createdAt'] ?? null,
             'additionalInfo'            => $data['additionalInfo'] ?? []
         ];
 
@@ -638,7 +662,7 @@ class Task implements Entity
         if (isset($data['status']) && !($data['status'] instanceof WorkStatus)) {
             try {
                 $defaults['status'] = WorkStatus::fromString(trimOrNull($data['status']));
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $defaults['status'] = WorkStatus::PENDING;
             }
         } else {
@@ -706,17 +730,19 @@ class Task implements Entity
             'description'               => $this->description,
             'workers'                   => null,
             'resources'                 => null,
-            'startDateTime'             => formatDateTime($this->startDateTime, DateTime::ATOM),
-            'completionDateTime'        => formatDateTime($this->completionDateTime, DateTime::ATOM),
+            'startDateTime'             => formatDateTime($this->startDateTime),
+            'completionDateTime'        => formatDateTime($this->completionDateTime),
             'actualCompletionDateTime'  => $this->actualCompletionDateTime 
-                ? formatDateTime($this->actualCompletionDateTime, DateTime::ATOM) 
+                ? formatDateTime($this->actualCompletionDateTime) 
                 : null,
             'priority'                  => $this->priority->getDisplayName(),
             'status'                    => $this->status->getDisplayName(),
             'estimatedCost'             => $this->estimatedCost,
             'actualCost'                => $this->actualCost,
             'budgetNote'                => $this->budgetNote,
-            'createdAt'                 => formatDateTime($this->createdAt, DateTime::ATOM),
+            'createdAt'                 => $this->createdAt
+                ? formatDateTime($this->createdAt)
+                : null,
             'additionalInfo'            => $this->additionalInfo
         ];
 

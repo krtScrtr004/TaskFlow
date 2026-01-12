@@ -9,10 +9,8 @@ use App\Enumeration\WorkStatus;
 use App\Container\TaskContainer;
 use App\Container\WorkerContainer;
 use App\Container\PhaseContainer;
-use App\Entity\User;
 use App\Core\UUID;
 use App\Dependent\ProjectManager;
-use App\Enumeration\Role;
 use App\Exception\ValidationException;
 use App\Validator\UuidValidator;
 use App\Validator\WorkValidator;
@@ -28,57 +26,76 @@ class Project implements Entity
     private float $budget;
     private int $maxWorkers;
     private ?TaskContainer $tasks;
-    private WorkerContainer $workers;
+    private ?WorkerContainer $workers;
     private ?PhaseContainer $phases;
     private DateTime $startDateTime;
     private DateTime $completionDateTime;
     private ?DateTime $actualCompletionDateTime;
     private WorkStatus $status;
-    private DateTime $createdAt;
+    private ?DateTime $createdAt;
     private array $additionalInfo;
 
     protected WorkValidator $workValidator;
 
     /**
-     * Project constructor.
-     * 
-     * Creates a new Project instance with the provided details.
-     * All parameters are validated through WorkValidator before assignment.
-     * 
-     * @param int $id The unique identifier for the project in the database
-     * @param UUID $publicId The public identifier for the project
-     * @param string $name Project name (3-255 characters)
-     * @param string|null $description Project description (5-500 characters) (optional)
-     * @param ProjectManager $manager The project manager (ProjectManager object)
-     * @param float $budget Project budget (0-1,000,000)
-     * @param TaskContainer|null $tasks Container of tasks associated with the project (optional)
-     * @param WorkerContainer $workers Container of workers assigned to the project
-     * @param PhaseContainer|null $phases Container of project phases (optional)
-     * @param DateTime $startDateTime Project start date and time (cannot be in the past)
-     * @param DateTime $completionDateTime Expected project completion date and time (must be after start date)
-     * @param DateTime|null $actualCompletionDateTime Actual completion date and time (null if not completed)
-     * @param WorkStatus $status Current status of the project (enum)
-     * @param DateTime $createdAt Timestamp when the project was created
-     * @param array $additionalInfo Additional information related to the project (optional)
-     * 
-     * @throws ValidationException If any of the provided data fails validation
+     * Constructs a Project entity.
+     *
+     * This constructor validates core project fields, initializes an internal WorkValidator,
+     * normalizes certain inputs (e.g. trimming name/description), and assigns all provided
+     * parameters to the instance properties.
+     *
+     * Behavior and side effects:
+     * - Instantiates a WorkValidator and calls validateMultiple() with the fields:
+     *   'name', 'description', 'budget', 'maxWorkers', 'startDateTime', 'completionDateTime'.
+     * - If validation errors are present, a ValidationException is thrown containing the validator's errors.
+     * - Normalizes textual fields using trimOrNull() for $name and $description.
+     * - Assigns provided container arguments ($tasks, $workers, $phases) and date/time arguments
+     *   directly to the instance without performing persistence, cloning, or deep validation of
+     *   the container contents.
+     * - Does not perform side effects such as database operations, external I/O, or automatic
+     *   lifecycle transitions for tasks/workers; it merely sets internal properties.
+     *
+     * @param int $id Internal numeric identifier for the project.
+     * @param UUID $publicId Publicly visible unique identifier for the project.
+     * @param string $name Human-readable project name (will be trimmed; cannot be empty per validation).
+     * @param ProjectManager $manager Manager responsible for the project.
+     * @param DateTime $startDateTime Scheduled start date/time of the project.
+     * @param DateTime $completionDateTime Scheduled completion date/time of the project.
+     * @param WorkStatus $status Current work status of the project.
+     *
+     * // Optional parameters
+     * @param string|null $description Optional detailed description (trimmed or set to null).
+     * @param float $budget Project budget; defaults to BUDGET_MIN if not provided.
+     * @param int $maxWorkers Maximum allowed workers for the project; defaults to WORKER_COUNT_MIN.
+     * @param TaskContainer|null $tasks Optional container of Task instances associated with the project.
+     * @param WorkerContainer|null $workers Optional container of Worker instances associated with the project.
+     * @param PhaseContainer|null $phases Optional container of Phase instances associated with the project.
+     * @param DateTime|null $actualCompletionDateTime Actual completion timestamp, if the project has finished.
+     * @param DateTime|null $createdAt Creation timestamp for the project entity (may be null).
+     * @param array $additionalInfo Arbitrary associative array for extra metadata about the project.
+     *
+     * @throws ValidationException If validation via WorkValidator fails (contains validation error details).
+     *
+     * @return void
      */
     public function __construct(
         int $id,
         UUID $publicId,
         string $name,
-        string $description,
         ProjectManager $manager,
-        float $budget,
-        int $maxWorkers,
-        ?TaskContainer $tasks,
-        WorkerContainer $workers,
-        ?PhaseContainer $phases,
         DateTime $startDateTime,
         DateTime $completionDateTime,
-        ?DateTime $actualCompletionDateTime,
         WorkStatus $status,
-        DateTime $createdAt,
+
+        // Optional
+        ?string $description = null,
+        float $budget = BUDGET_MIN,
+        int $maxWorkers = WORKER_COUNT_MIN,
+        ?TaskContainer $tasks = null,
+        ?WorkerContainer $workers = null,
+        ?PhaseContainer $phases = null,
+        ?DateTime $actualCompletionDateTime = null,
+        ?DateTime $createdAt = null,
         array $additionalInfo = []
     ) {
         try {
@@ -172,9 +189,9 @@ class Project implements Entity
     /**
      * Gets all workers assigned to the project.
      *
-     * @return WorkerContainer The container with the project's workers
+     * @return WorkerContainer|null The container with the project's workers or null if not set
      */
-    public function getWorkers(): WorkerContainer
+    public function getWorkers(): ?WorkerContainer
     {
         return $this->workers;
     }
@@ -352,12 +369,17 @@ class Project implements Entity
     /**
      * Sets the project's description.
      *
-     * @param string $description The description to set (5-500 characters, optional)
+     * @param string|null $description The description to set, or null to unset
      * @throws ValidationException If the description is invalid
      * @return void
      */
-    public function setDescription(string $description): void
+    public function setDescription(?string $description): void
     {
+        if (!$description) {
+            $this->description = null;
+            return;
+        }
+
         $this->workValidator->validateDescription(trim($description));
         if ($this->workValidator->hasErrors()) {
             throw new ValidationException("Invalid project description", $this->workValidator->getErrors());
@@ -422,10 +444,10 @@ class Project implements Entity
     /**
      * Sets the project workers.
      *
-     * @param WorkerContainer $workers Container of workers to assign to the project
+     * @param WorkerContainer|null $workers Container of workers to assign to the project, or null to clear workers
      * @return void
      */
-    public function setWorkers(WorkerContainer $workers): void
+    public function setWorkers(?WorkerContainer $workers): void
     {
         $this->workers = $workers;
     }
@@ -498,13 +520,13 @@ class Project implements Entity
     /**
      * Sets the project creation timestamp.
      *
-     * @param DateTime $createdAt The creation timestamp to set
+     * @param DateTime|null $createdAt The creation timestamp to set, or null to unset
      * @throws ValidationException If the creation date is in the future
      * @return void
      */
-    public function setCreatedAt(DateTime $createdAt): void
+    public function setCreatedAt(?DateTime $createdAt): void
     {
-        if ($createdAt > new DateTime()) {
+        if ($createdAt && $createdAt > new DateTime()) {
             throw new ValidationException("Invalid creation date");
         }
         $this->createdAt = $createdAt;
@@ -655,14 +677,14 @@ class Project implements Entity
             'maxWorkers'                    => $data['maxWorkers'] ?? WORKER_COUNT_MIN,
             'budget'                        => $data['budget'] ?? BUDGET_MIN,
             'tasks'                         => $data['tasks'] ?? null,
-            'workers'                       => $data['workers'] ?? new WorkerContainer(),
+            'workers'                       => $data['workers'] ?? null,
             'phases'                        => $data['phases'] ?? null,
             'startDateTime'                 => $data['startDateTime'] ?? new DateTime(),
             'completionDateTime'            => $data['completionDateTime'] ?? new DateTime('+30 days'),
             'actualCompletionDateTime'      => $data['actualCompletionDateTime'] ?? null,
             'status'                        => $data['status'] ?? WorkStatus::PENDING,
             'additionalInfo'                => $data['additionalInfo'] ?? [],
-            'createdAt'                     => $data['createdAt'] ?? new DateTime()
+            'createdAt'                     => $data['createdAt'] ?? null
         ];
 
         // Handle UUID conversion
@@ -790,7 +812,9 @@ class Project implements Entity
                 ? formatDateTime($this->actualCompletionDateTime, DateTime::ATOM)
                 : null,
             'status'                    => $this->status->getDisplayName(),
-            'createdAt'                 => formatDateTime($this->createdAt),
+            'createdAt'                 => $this->createdAt
+                ? formatDateTime($this->createdAt)
+                : null,
             'additionalInfo'            => $this->additionalInfo
         ];
 
@@ -848,19 +872,19 @@ class Project implements Entity
             ? (int) $data['maxWorkers']
             : $data['maxWorkers'];
 
-        $manager = (!($data['manager'] instanceof ProjectManager))
+        $manager = (!$data['manager'] instanceof ProjectManager)
             ? ProjectManager::fromArray($data['manager'])
             : $data['manager'];
 
-        $tasks = (!($data['tasks'] instanceof TaskContainer))
+        $tasks = (!$data['tasks'] instanceof TaskContainer)
             ? TaskContainer::fromArray($data['tasks'])
             : $data['tasks'];
 
-        $workers = (!($data['workers'] instanceof WorkerContainer))
+        $workers = (!$data['workers'] instanceof WorkerContainer)
             ? WorkerContainer::fromArray($data['workers'])
             : $data['workers'];
 
-        $phases = (!($data['phases'] instanceof PhaseContainer))
+        $phases = (!$data['phases'] instanceof PhaseContainer)
             ? PhaseContainer::fromArray($data['phases'])
             : $data['phases'];
 

@@ -11,47 +11,60 @@ use App\Container\JobTitleContainer;
 
 class ProjectManager extends User
 {
+
     /**
-     * Constructs a ProjectManager instance.
+     * Constructs a ProjectManager dependent entity.
      *
-     * This constructor initializes a ProjectManager by calling the parent User constructor
-     * with the Role set to Role::PROJECT_MANAGER.
+     * This constructor sets the dependent role to Role::PROJECT_MANAGER and delegates the
+     * remainder of initialization to the parent constructor, forwarding all provided identity,
+     * contact, job and metadata parameters.
      *
-     * @param int $id User ID
-     * @param UUID $publicId Public identifier
-     * @param string $firstName User's first name
-     * @param string|null $middleName User's middle name
-     * @param string $lastName User's last name
-     * @param Gender $gender User's gender  
-     * @param DateTime $birthDate User's birth date
-     * @param JobTitleContainer $jobTitles Container of job titles
-     * @param string $contactNumber User's contact number
-     * @param string $email User's email address
-     * @param string|null $bio User's biography
-     * @param string|null $profileLink User's profile link
-     * @param DateTime $createdAt Timestamp when the user was created
-     * @param DateTime|null $confirmedAt Timestamp when the user was confirmed (optional)
-     * @param DateTime|null $deletedAt Timestamp when the user was deleted (optional)
-     * @param string|null $password User's password (optional)
-     * @param array $additionalInfo Optional additional information (default: empty array)
+     * Behavior and side effects:
+     * - Sets $this->role to Role::PROJECT_MANAGER.
+     * - Calls parent::__construct(...) with the provided arguments to perform field assignment,
+     *   validation and any additional initialization implemented in the parent.
+     * - Any exceptions thrown by the parent constructor (e.g., validation failures) are propagated.
+     * - Does not perform further side effects beyond setting the role and delegating to parent.
+     *
+     * @param int $id Internal integer identifier
+     * @param UUID $publicId Public UUID identifier
+     * @param string $firstName First name of the project manager
+     * @param string $lastName Last name of the project manager
+     * @param Gender $gender Gender value for the project manager
+     * @param DateTime $birthDate Date of birth
+     * @param JobTitleContainer $jobTitles Container of job titles/roles
+     * @param string $contactNumber Primary contact phone number
+     * @param string $email Primary email address
+     *
+     * OPTIONAL / WITH DEFAULT VALUES:
+     * @param string|null $middleName Optional middle name (nullable)
+     * @param string|null $bio Optional biography or description (nullable)
+     * @param string|null $profileLink Optional URL to a profile (nullable)
+     * @param string|null $password Optional hashed password (nullable)
+     * @param DateTime|null $createdAt Optional creation timestamp (nullable)
+     * @param DateTime|null $confirmedAt Optional confirmation timestamp (nullable)
+     * @param DateTime|null $deletedAt Optional deletion timestamp (nullable)
+     * @param array $additionalInfo Optional associative array of additional metadata (default: [])
+     *
+     * @return void
      */
     public function __construct(
         int $id, 
         UUID $publicId, 
         string $firstName, 
-        ?string $middleName, 
         string $lastName, 
         Gender $gender, 
         DateTime $birthDate, 
         JobTitleContainer $jobTitles, 
         string $contactNumber, 
         string $email, 
-        ?string $bio, 
-        ?string $profileLink, 
-        DateTime $createdAt, 
 
-        // Optional parameters
+        // Optional
+        ?string $middleName = null, 
+        ?string $bio = null, 
+        ?string $profileLink = null, 
         ?string $password = null, 
+        ?DateTime $createdAt, 
         ?DateTime $confirmedAt = null, 
         ?DateTime $deletedAt = null, 
         array $additionalInfo = [],

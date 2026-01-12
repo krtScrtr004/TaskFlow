@@ -6,6 +6,7 @@ use App\Entity\ResourceType;
 use App\Exception\ValidationException;
 use App\Interface\Entity;
 use App\Validator\ResourceValidator;
+use DateTime;
 
 class TaskResource implements Entity 
 {
@@ -17,6 +18,7 @@ class TaskResource implements Entity
     private float $estimatedUnit; // Estimate quantity 
     private float $actualUnit; // Actual quantity used
     private ?string $note;
+    private ?DateTime $createdAt;
 
     private ResourceValidator $resourceValidator;
 
@@ -25,24 +27,29 @@ class TaskResource implements Entity
      * 
      * @param int $id The ID of the task resource.
      * @param ResourceType $type The type of the resource.
+     * 
+     * OPTIONAL / WITH DEFAULT VALUES:
      * @param int $quantity The quantity of the resource.
      * @param float $unitRate The unit rate of the resource.
      * @param float|null $estimatedUnit The estimated unit of the resource.
      * @param float|null $actualUnit The actual unit of the resource.
      * @param string|null $note The note of the resource.
      * @param int|null $taskWorkerId Optional link to phase_task_worker (for labor resources).
+     * @param DateTime|null $createdAt Optional creation timestamp (nullable).
      * 
      * @throws ValidationException If any of the provided values are invalid.
      */
     public function __construct(
         int $id,
         ResourceType $type,
-        int $quantity,
-        float $unitRate,
+
+        int $quantity = RESOURCE_QUANTITY_MIN,
+        float $unitRate = DEFAULT_RATE_MIN,
         ?float $estimatedUnit = null,
         ?float $actualUnit = null,
         ?string $note = null,
-        ?int $taskWorkerId = null
+        ?int $taskWorkerId = null,
+        ?DateTime $createdAt = null
     ) {
         $this->resourceValidator = new ResourceValidator();
         $this->resourceValidator->validateMultiple([
@@ -67,6 +74,7 @@ class TaskResource implements Entity
         $this->estimatedUnit = $estimatedUnit;
         $this->actualUnit = $actualUnit;
         $this->note = $note;
+        $this->createdAt = $createdAt ?? new DateTime();
     }
 
     // GETTERS
@@ -149,6 +157,16 @@ class TaskResource implements Entity
     public function getTaskWorkerId(): ?int
     {
         return $this->taskWorkerId;
+    }
+
+    /**
+     * Gets the creation timestamp of the resource.
+     * 
+     * @return DateTime|null The creation timestamp.
+     */
+    public function getCreatedAt(): ?DateTime
+    {
+        return $this->createdAt;
     }
 
     // SETTERS
@@ -296,6 +314,18 @@ class TaskResource implements Entity
     public function setTaskWorkerId(?int $taskWorkerId): void
     {
         $this->taskWorkerId = $taskWorkerId;
+    }
+
+    /**
+     * Sets the creation timestamp of the resource.
+     * 
+     * @param DateTime|null $createdAt The creation timestamp.
+     * 
+     * @return void
+     */
+    public function setCreatedAt(?DateTime $createdAt): void
+    {
+        $this->createdAt = $createdAt;
     }
 
     // OTHER METHODS (UTILITIES)
