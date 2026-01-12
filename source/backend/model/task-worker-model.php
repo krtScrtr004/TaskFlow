@@ -62,6 +62,8 @@ class TaskWorkerModel extends Model
                     u.email,
                     u.contact_number,
                     u.profile_link,
+                    ptw.estimated_hour,
+                    ptw.actual_hour,
                     ptw.status,
                     u.created_at,
                     u.confirmed_at,
@@ -298,43 +300,7 @@ class TaskWorkerModel extends Model
             throw $e;
         }
     }
-
-    /**
-     * Finds a WorkerContainer instance by the given task ID.
-     *
-     * This method supports searching by either an integer task ID or a UUID. It constructs
-     * the appropriate SQL WHERE clause and parameter binding based on the type of $taskId:
-     * - If $taskId is an integer, it uses the internal numeric task ID.
-     * - If $taskId is a UUID, it uses the public_id field and converts the UUID to binary.
-     *
-     * Throws an InvalidArgumentException if an invalid integer task ID is provided.
-     * Any exceptions during the find operation are rethrown.
-     *
-     * @param int|UUID $taskId The task identifier, either as an integer (internal ID) or UUID (public ID).
-     *
-     * @return WorkerContainer|null The found WorkerContainer instance, or null if not found.
-     *
-     * @throws InvalidArgumentException If an invalid integer task ID is provided.
-     * @throws Exception If an error occurs during the find operation.
-     */
-    public static function findByTaskId(int|UUID $taskId): ?WorkerContainer
-    {
-        if (is_int($taskId) && $taskId < 1) {
-            throw new InvalidArgumentException('Invalid task ID provided.');
-        }
-
-        try {
-            $whereClause = is_int($taskId)
-                ? 'ptw.task_id = :taskId'
-                : 'pt.public_id = :taskId';
-            $params = [':taskId' => is_int($taskId) ? $taskId : UUID::toBinary($taskId)];
-
-            return self::find($whereClause, $params);
-        } catch (Exception $e) {
-            throw $e;
-        }
-    }
-
+    
     /**
      * Searches for workers based on various criteria such as key, task, project, and status.
      *
@@ -459,6 +425,8 @@ class TaskWorkerModel extends Model
                         u.gender,
                         u.email,
                         u.contact_number,
+                        ptw.estimated_hour,
+                        ptw.actual_hour,
                         ptw.status,
                         u.created_at,
                         u.confirmed_at,
