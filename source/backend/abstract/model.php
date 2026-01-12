@@ -2,6 +2,7 @@
 
 namespace App\Abstract;
 
+use InvalidArgumentException;
 use PDO;
 use App\Core\Connection;
 
@@ -108,53 +109,53 @@ abstract class Model
     }
 
     /**
-     * Appends SQL result-modifying clauses (GROUP BY, ORDER BY, LIMIT, OFFSET) to a base query.
+     * Appends SQL GROUP BY, ORDER BY, LIMIT and OFFSET clauses to a base query string
+     * according to provided options.
      *
-     * This method inspects the provided $options array and conditionally appends SQL clauses:
-     * - Appends "GROUP BY <value>" when 'groupBy' is present (or when legacy ':options' is present).
-     * - Appends "ORDER BY <value>" when 'orderBy' is present (or when legacy ':options' is present).
-     * - Determines LIMIT from 'limit' or ':limit' (fallback default 10) and appends "LIMIT <n>" only if the option exists and is numeric.
-     * - Determines OFFSET from 'offset' or ':offset' (fallback default 0) and appends "OFFSET <n>" only if the option exists and is numeric.
-     * - Numeric limit/offset values are cast to integers before being appended.
+     * This method inspects the $options array for ordering, grouping and paging
+     * instructions and appends the corresponding SQL fragments (with leading spaces)
+     * to the given $query. Keys are checked in both plain and namespaced forms
+     * (e.g. 'groupBy' and ':groupBy').
      *
-     * Notes:
-     * - GROUP BY and ORDER BY clauses use the literal value provided in 'groupBy' and 'orderBy' respectively.
-     * - Presence of the legacy ':options' flag triggers adding GROUP BY / ORDER BY only if the corresponding explicit key exists for its value.
-     * - LIMIT and OFFSET are only added when their respective keys exist and contain numeric values; otherwise defaults are only used for internal calculation.
+     * Behavior and side effects:
+     * - Determines GROUP BY from trimOrNull($options['groupBy']) or trimOrNull($options[':groupBy'])
+     *   and appends " GROUP BY <value>" only if a non-null value is returned.
+     * - Determines ORDER BY from trimOrNull($options['orderBy']) or trimOrNull($options[':orderBy'])
+     *   and appends " ORDER BY <value>" only if a non-null value is returned.
+     * - Determines LIMIT from (int)$options['limit'] or (int)$options[':limit'], defaulting to 10.
+     *   The value is cast to int; if the resulting limit is less than 1 an InvalidArgumentException is thrown.
+     * - Determines OFFSET from $options['offset'] or $options[':offset'], defaulting to 0.
+     *   The value is cast to int; if the resulting offset is less than 1 an InvalidArgumentException is thrown.
+     * - Appends " LIMIT <limit>" and " OFFSET <offset>" using the integer values.
+     * - This method does NOT perform SQL value escaping or validation of the GROUP BY / ORDER BY
+     *   expressions — callers must ensure values are safe to interpolate into SQL to avoid injection.
      *
-     * @param string $query   Base SQL query string to which clauses will be appended (e.g. "SELECT * FROM table").
-     * @param array  $options Associative array of options with following possible keys:
-     *      - groupBy: string SQL fragment for GROUP BY (e.g. "column1, column2")
-     *      - orderBy: string SQL fragment for ORDER BY (e.g. "created_at DESC")
-     *      - :options: mixed Legacy flag that influences whether GROUP BY / ORDER BY may be considered
-     *      - limit: int|string Maximum number of records to return (appended only if present and numeric)
-     *      - :limit: int|string Legacy alternative for limit
-     *      - offset: int|string Number of records to skip (appended only if present and numeric)
-     *      - :offset: int|string Legacy alternative for offset
+     * @param string $query   Base SQL query to which clauses will be appended.
+     * @param array  $options Associative array of options. Recognized keys:
+     *                        - 'groupBy' or ':groupBy' => string|null
+     *                        - 'orderBy' or ':orderBy' => string|null
+     *                        - 'limit'   or ':limit'   => int (default 10)
+     *                        - 'offset'  or ':offset'  => int (default 0)
      *
-     * @return string Modified SQL query with appended GROUP BY, ORDER BY, LIMIT and OFFSET clauses as applicable.
+     * @throws InvalidArgumentException If the resolved limit or offset is less than 1.
+     *
+     * @return string The query string with appended clauses.
      */
     protected function appendOptionsToFindQuery(string $query, array $options): string
     {
-        if (isset($options['groupBy']) || isset($options[':options'])) {
-            $query .= " GROUP BY " . $options['groupBy'];
-        }
+        $groupBy = trimOrNull($options['groupBy']) ?? trimOrNull($options[':groupBy']);        
+        if (isset($groupBy) && $groupBy !== '') $query .= " GROUP BY " . $groupBy;
 
-        if (isset($options['orderBy']) || isset($options[':options'])) {
-            $query .= " ORDER BY " . $options['orderBy'];
-        }
+        $orderBy = trimOrNull($options['orderBy']) ?? trimOrNull($options[':orderBy']);
+        if (isset($orderBy) && $orderBy !== '') $query .= " ORDER BY " . $orderBy;
 
-        $limit = $options['limit'] ?? $options[':limit'] ?? 10;
-        if ((isset($options['limit']) && is_numeric($options['limit'])) || 
-            (isset($options[':limit']) && is_numeric($options[':limit']))) {
-            $query .= " LIMIT " . (is_int($limit) ? $limit : intval($limit));
-        }
+        $limit = (int) $options['limit'] ?? (int) $options[':limit'] ?? 10;
+        if ($limit < 1) throw new InvalidArgumentException('Invalid limit value.');
+        $query .= " LIMIT " . $limit;
 
         $offset = $options['offset'] ?? $options[':offset'] ?? 0;
-        if ((isset($options['offset']) && is_numeric($options['offset'])) ||
-            (isset($options[':offset']) && is_numeric($options[':offset']))) {
-            $query .= " OFFSET " . (is_int($offset) ? $offset : intval($offset));
-        }
+        if ($offset < 1) throw new InvalidArgumentException('Invalid offset value.');
+        $query .= " OFFSET " . $offset;
 
         return $query;
     }
