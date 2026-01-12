@@ -356,7 +356,7 @@ class ProjectController implements Controller
             ]
         );
         if ($recentTasks) {
-            $project->addAdditionalInfo('recentTasks', $recentTasks->toArray());
+            $project->addAdditionalInfo('recentTasks', $recentTasks);
         }
 
         return $project;

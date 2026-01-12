@@ -26,6 +26,10 @@ class TaskService
         $this->connection = Connection::getInstance();
     }
 
+    public static function find() {
+        
+    }
+
     /**
      * Creates a new Task along with its associated TaskWorkers and TaskResources.
      * 

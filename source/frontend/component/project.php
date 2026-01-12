@@ -292,7 +292,8 @@ require_once COMPONENT_PATH . 'template/add-worker-table.php';
                                                 <?= formatDateTime($task->getStartDateTime(), 'd-m-Y') ?>
                                             </p>
                                         </section>
-                                    <?php endforeach; ?>
+                                    </a>
+                                <?php endforeach; ?>
                             </section>
                         <?php else: ?>
                             <!-- No Recent Tasks -->

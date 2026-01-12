@@ -9,7 +9,6 @@ use App\Core\UUID;
 use App\Enumeration\WorkStatus;
 use App\Dependent\Phase;
 use App\Entity\Task;
-use App\Enumeration\TaskPriority;
 use App\Exception\DatabaseException;
 use DateTime;
 use Exception;
@@ -204,7 +203,7 @@ class PhaseModel extends Model
         int|UUID $projectId,
         ?DateTime $startDateTime,
         ?DateTime $completionDateTime,
-    ) {
+    ): ?PhaseContainer {
         if (is_int($projectId) && $projectId < 1) {
             throw new InvalidArgumentException('Invalid project ID provided.');
         }
@@ -213,7 +212,6 @@ class PhaseModel extends Model
             throw new InvalidArgumentException('At least one of start date or completion date must be provided.');
         }
 
-        $instance = new self();
         try {
             $where = [];
             $params = [];
@@ -276,6 +274,9 @@ class PhaseModel extends Model
                                 'description', pt.description,
                                 'status', pt.status,
                                 'priority', pt.priority,
+                                'estimated_cost', ptb.estimated_cost,
+                                'actual_cost', ptb.actual_cost,
+                                'budget_not', ptb.note,
                                 'start_date_time', pt.start_date_time,
                                 'completion_date_time', pt.completion_date_time,
                                 'created_at', pt.created_at,
@@ -284,6 +285,10 @@ class PhaseModel extends Model
                         )
                     FROM
                         `phase_task` AS pt
+                    INNER JOIN
+                        `phase_task_budget` AS ptb
+                    ON
+                        ptb.task_id = pt.id
                     WHERE 
                         pt.phase_id = pp.id";
             }
@@ -319,7 +324,7 @@ class PhaseModel extends Model
             ]);
             $result = $statement->fetchAll();
 
-                if (!$instance->hasData($result)) {
+            if (!$instance->hasData($result)) {
                 return null;
             }
 
@@ -329,10 +334,8 @@ class PhaseModel extends Model
                 $taskContainer = new TaskContainer();
                 if ($includeTasks) {
                     $tasks = json_decode($item['tasks'], true);
-                    if (!empty($tasks)) {
-                        foreach ($tasks as $taskData) {
-                            $tasks->add(Task::createPartial($taskData));
-                        }
+                    foreach ($tasks as $taskData) {
+                        $taskContainer->add(Task::createPartial($taskData));
                     }
                 }
 

@@ -137,7 +137,7 @@ abstract class Model
      *                        - 'limit'   or ':limit'   => int (default 10)
      *                        - 'offset'  or ':offset'  => int (default 0)
      *
-     * @throws InvalidArgumentException If the resolved limit or offset is less than 1.
+     * @throws InvalidArgumentException If the resolved limit is less than 1 or offset is less than 0.
      *
      * @return string The query string with appended clauses.
      */
@@ -154,7 +154,7 @@ abstract class Model
         $query .= " LIMIT " . $limit;
 
         $offset = $options['offset'] ?? $options[':offset'] ?? 0;
-        if ($offset < 1) throw new InvalidArgumentException('Invalid offset value.');
+        if ($offset < 0) throw new InvalidArgumentException('Invalid offset value.');
         $query .= " OFFSET " . $offset;
 
         return $query;
