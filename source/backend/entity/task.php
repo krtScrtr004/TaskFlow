@@ -7,9 +7,9 @@ use App\Interface\Entity;
 use App\Enumeration\TaskPriority;
 use App\Enumeration\WorkStatus;
 use App\Container\WorkerContainer;
-use App\Dependent\Worker;
 use App\Core\UUID;
 use App\Dependent\TaskResource;
+use App\Dependent\TaskWorker;
 use App\Exception\ValidationException;
 use App\Validator\ResourceValidator;
 use App\Validator\UuidValidator;
@@ -527,10 +527,10 @@ class Task implements Entity
     /**
      * Adds a worker to the task.
      *
-     * @param Worker $worker The worker to add to the task
+     * @param TaskWorker $worker The worker to add to the task
      * @return void
      */
-    public function addWorker(Worker $worker): void
+    public function addWorker(TaskWorker $worker): void
     {
         if (!$this->resources) {
             $this->resources = new ResourceContainer();

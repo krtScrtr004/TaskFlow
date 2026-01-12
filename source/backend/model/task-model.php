@@ -7,14 +7,13 @@ use App\Container\WorkerContainer;
 use App\Container\TaskContainer;
 use App\Core\UUID;
 use App\Dependent\ProjectManager;
+use App\Dependent\TaskResource;
 use App\Dependent\TaskWorker;
-use App\Dependent\Worker;
 use App\Entity\Project;
 use App\Exception\DatabaseException;
 use App\Enumeration\WorkStatus;
 use App\Enumeration\TaskPriority;
 use App\Entity\Task;
-use App\Enumeration\WorkerStatus;
 use DateTime;
 use Exception;
 use InvalidArgumentException;
@@ -57,98 +56,6 @@ class TaskModel extends Model
 
         $instance = new self();
         try {
-            // $query = 
-            //     "SELECT 
-            //         pt.id AS id,
-            //         pt.public_id AS public_id,
-            //         pp.public_id AS phase_id,
-            //         pt.name AS name,
-            //         pt.description AS description,
-            //         pt.start_date_time AS start_date_time,
-            //         pt.completion_date_time AS completion_date_time,
-            //         pt.actual_completion_date_time AS actual_completion_date_time,
-            //         pt.priority AS priority,
-            //         pt.status AS status,
-            //         pt.created_at AS created_at,
-            //         COALESCE(
-            //             (
-            //                 SELECT CONCAT('[', GROUP_CONCAT(
-            //                     JSON_OBJECT(
-            //                         'id', u.id,
-            //                         'public_id', HEX(u.public_id),
-            //                         'first_name', u.first_name,
-            //                         'middle_name', u.middle_name,
-            //                         'last_name', u.last_name,
-            //                         'email', u.email,
-            //                         'contact_number', u.contact_number,
-            //                         'profile_link', u.profile_link,
-            //                         'gender', u.gender,
-            //                         'status', ptw.status,
-            //                         'created_at', u.created_at,
-            //                         'confirmed_at', u.confirmed_at,
-            //                         'deleted_at', u.deleted_at,
-            //                         'job_titles', COALESCE(
-            //                             (
-            //                                 SELECT 
-            //                                     CONCAT('[', GROUP_CONCAT(CONCAT('\"', wjt.title, '\"')), ']')
-            //                                 FROM 
-            //                                     `user_job_title` AS wjt
-            //                                 WHERE 
-            //                                     wjt.user_id = u.id
-            //                             ),
-            //                             '[]'
-            //                         ),
-            //                         'worker_total_tasks', (
-            //                             SELECT 
-            //                                 COUNT(*)
-            //                             FROM 
-            //                                 `phase_task_worker` AS ptw2
-            //                             WHERE 
-            //                                 ptw2.worker_id = u.id
-            //                         ),
-            //                         'worker_completed_tasks', (
-            //                             SELECT 
-            //                                 COUNT(*)
-            //                             FROM 
-            //                                 `phase_task_worker` AS ptw3
-            //                             INNER JOIN 
-            //                                 `phase_task` AS pt3 
-            //                             ON
-            //                                 ptw3.task_id = pt3.id
-            //                             WHERE 
-            //                                 ptw3.worker_id = u.id
-            //                             AND 
-            //                                 pt3.status = 'completed'
-            //                         )
-            //                     ) ORDER BY u.last_name ASC SEPARATOR ','
-            //                 ), ']')
-            //                 FROM 
-            //                     `phase_task_worker` AS ptw
-            //                 INNER JOIN 
-            //                     `user` AS u
-            //                 ON 
-            //                     ptw.worker_id = u.id
-            //                 WHERE 
-            //                     ptw.task_id = pt.id
-            //             ), '[]'
-            //         ) AS task_workers
-            //     FROM 
-            //         `phase_task` AS pt
-            //     INNER JOIN 
-            //         `project_phase` AS pp 
-            //     ON 
-            //         pt.phase_id = pp.id
-            //     INNER JOIN 
-            //         `project` AS p 
-            //     ON 
-            //         pp.project_id = p.id
-            //     LEFT JOIN 
-            //         `phase_task_worker` AS ptw 
-            //     ON 
-            //         pt.id = ptw.task_id
-            //     LEFT JOIN 
-            //         `user` AS u ON ptw.worker_id = u.id";
-
             $query =
                 "SELECT 
                     pt.id AS id,
@@ -160,6 +67,9 @@ class TaskModel extends Model
                     pt.completion_date_time AS completion_date_time,
                     pt.actual_completion_date_time AS actual_completion_date_time,
                     pt.priority AS priority,
+                    ptb.estimated_cost AS estimated_cost,
+                    ptb.actual_cost AS actual_cost,
+                    ptb.note AS budget_note,
                     pt.status AS status,
                     pt.created_at AS created_at,
                     COALESCE(
@@ -214,9 +124,46 @@ class TaskModel extends Model
                                 )
                             )
                         ), JSON_ARRAY()
-                    ) AS task_workers
+                    ) AS task_workers,
+                    COALESCE(
+                        (
+                            SELECT JSON_ARRAYAGG(
+                                JSON_OBJECT(
+                                    'id', ptr.id,
+                                    'quantity', ptr.quantity,
+                                    'unit_rate', ptr.unit_rate,
+                                    'estimated_unit', ptr.estimated_unit,
+                                    'actual_unit', ptr.actual_unit,
+                                    'note', ptr.note,
+                                    'type', (
+                                        SELECT JSON_OBJECT(
+                                            'id', rt.id,
+                                            'name', rt.name,
+                                            'description', rt.description,
+                                            'unit', rt.unit,
+                                            'default_rate', rt.default_rate
+                                        )
+                                        FROM 
+                                            `resource_type` AS rt
+                                        WHERE 
+                                            rt.id = ptr.resource_type_id
+                                        LIMIT 1
+                                    )
+                                )
+                            ) FROM 
+                                `task_resource` AS ptr
+                            WHERE 
+                                ptr.task_id = pt.id
+                            AND 
+                                ptr.task_worker_id IS NULL
+                        ), JSON_ARRAY()
+                    ) AS task_resources
                 FROM 
                     `phase_task` AS pt
+                INNER JOIN 
+                    `phase_task_budget` AS ptb
+                ON
+                    pt.id = ptb.task_id
                 INNER JOIN 
                     `project_phase` AS pp 
                 ON 
@@ -250,14 +197,22 @@ class TaskModel extends Model
                 $row['additionalInfo'] = ['phaseId' => UUID::fromBinary($row['phase_id'])];
                 $task = Task::createPartial($row);
 
+                // Build worker instances
                 $workers = json_decode($row['task_workers'], true) ?? [];
                 foreach ($workers as $worker) {
                     $worker['additionalInfo'] = [
-                        'totalTasks'        => (int)$worker['worker_total_tasks'],
-                        'completedTasks'    => (int)$worker['worker_completed_tasks']
+                        'totalTasks'        => (int) $worker['worker_total_tasks'],
+                        'completedTasks'    => (int) $worker['worker_completed_tasks']
                     ];
-                    $task->addWorker(Worker::createPartial($worker));
+                    $task->addWorker(TaskWorker::createPartial($worker));
                 }
+
+                // 
+                $resources = json_decode($row['task_resources'], true);
+                foreach ($resources as $resource) {
+                    $task->addResource(TaskResource::createPartial($resource));
+                }
+
                 $tasks->add($task);
             }
             return $tasks;
@@ -605,284 +560,6 @@ class TaskModel extends Model
     }
 
     /**
-     * Retrieves all workers assigned to a specific task.
-     * 
-     * This method queries the database to find all users who are assigned as workers to a particular task
-     * identified by the given task ID. It joins the 'user' and 'projectTaskWorker' tables to retrieve
-     * worker details.
-     * 
-     * @param int $taskId The ID of the task to find workers for
-     * 
-     * @return WorkerContainer|null A container with all workers assigned to the task, or null if no workers are found
-     * 
-     * @throws InvalidArgumentException If the task ID is less than 1
-     * @throws DatabaseException If a database error occurs during the query
-     */
-    public static function findWorkersByTaskId(int $taskId): ?WorkerContainer
-    {
-        if ($taskId < 1) {
-            throw new InvalidArgumentException('Invalid task ID.');
-        }
-
-        $instance = new self();
-        try {
-            $taskWorkerQuery =
-                "SELECT 
-                    u.id,
-                    u.public_id,
-                    u.first_name,
-                    u.middle_name,
-                    u.last_name,
-                    u.profile_link
-                FROM 
-                    `user` AS u
-                INNER JOIN 
-                    `projectTaskWorker` AS tw 
-                ON 
-                    u.id = tw.worker_id
-                WHERE 
-                    tw.task_id = :taskId
-                ORDER BY 
-                    u.last_name ASC";
-            $statement = $instance->connection->prepare($taskWorkerQuery);
-            $statement->execute([':taskId' => $taskId]);
-            $result = $statement->fetchAll();
-
-            if (!$instance->hasData($result)) {
-                return null;
-            }
-
-            $workers = new WorkerContainer();
-            foreach ($result as $item) {
-                $workers->add(TaskWorker::createPartial($item));
-            }
-            return $workers;
-        } catch (PDOException $e) {
-            throw new DatabaseException($e->getMessage());
-        }
-    }
-
-    /**
-     * Finds tasks by their work status, optionally filtered by phase.
-     *
-     * This method retrieves a collection of tasks that match the specified work status.
-     * Optionally, tasks can be filtered by a specific phase, identified by either an integer ID or a UUID.
-     * The method supports pagination through the 'limit' and 'offset' options.
-     *
-     * @param WorkStatus $status The work status to filter tasks by.
-     * @param int|UUID|null $phaseId (optional) The phase identifier. Can be an integer ID, a UUID, or null to include all phases.
-     * @param array $options (optional) Query options:
-     *      - limit: int (default 10) Maximum number of tasks to return.
-     *      - offset: int (default 0) Number of tasks to skip before starting to collect the result set.
-     *
-     * @throws InvalidArgumentException If an invalid phase ID is provided.
-     * @throws Exception If an error occurs during the query.
-     *
-     * @return TaskContainer|null A container of tasks matching the criteria, or null if none found.
-     */
-    public static function findByStatus(
-        WorkStatus $status,
-        int|UUID|null $phaseId = null,
-        array $options = [
-            'limit' => 10,
-            'offset' => 0,
-        ]
-    ): ?TaskContainer {
-        if ($phaseId && is_int($phaseId) && $phaseId < 1) {
-            throw new InvalidArgumentException('Invalid phase ID provided.');
-        }
-
-        $paramOptions = [
-            'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
-            'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
-        ];
-
-        try {
-            $whereClause = 'pt.status = :status';
-            $params = [':status' => $status->value];
-
-            if ($phaseId) {
-                $whereClause .= is_int($phaseId)
-                    ? ' AND pp.id = :phaseId'
-                    : ' AND pp.public_id = :phaseId';
-                $params[':phaseId'] = is_int($phaseId)
-                    ? $phaseId
-                    : UUID::toBinary($phaseId);
-            }
-
-            return self::find($whereClause, $params, $paramOptions);
-        } catch (Exception $e) {
-            throw $e;
-        }
-    }
-
-    /**
-     * Finds tasks by their priority, optionally filtered by project.
-     *
-     * This method retrieves a collection of tasks that match the specified priority.
-     * If a project ID is provided, the search is limited to tasks within that project.
-     * The project ID can be either an integer (internal ID) or a UUID (public ID).
-     * Additional options such as limit and offset can be specified for pagination.
-     *
-     * @param TaskPriority $priority The priority level to filter tasks by.
-     * @param int|UUID|null $projectId (optional) The project identifier. Accepts:
-     *      - int: Internal project ID
-     *      - UUID: Public project UUID
-     *      - null: No project filter applied
-     * @param array $options (optional) Query options:
-     *      - limit: int Maximum number of tasks to return (default: 10)
-     *      - offset: int Number of tasks to skip (default: 0)
-     *
-     * @throws InvalidArgumentException If an invalid project ID is provided.
-     * @throws Exception If an error occurs during the query.
-     *
-     * @return TaskContainer|null A container of found tasks, or null if none found.
-     */
-    public static function findByPriority(
-        TaskPriority $priority,
-        int|UUID|null $phaseId = null,
-        array $options = [
-            'limit' => 10,
-            'offset' => 0,
-        ]
-    ): ?TaskContainer {
-        if ($phaseId && is_int($phaseId) && $phaseId < 1) {
-            throw new InvalidArgumentException('Invalid phase ID provided.');
-        }
-
-        $paramOptions = [
-            'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
-            'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
-        ];
-
-        try {
-            $whereClause = 'pt.priority = :priority';
-            $params = [':priority' => $priority->value];
-
-            if ($phaseId) {
-                $whereClause .= is_int($phaseId)
-                    ? ' AND pp.id = :phaseId'
-                    : ' AND pp.public_id = :phaseId';
-                $params[':phaseId'] = is_int($phaseId)
-                    ? $phaseId
-                    : UUID::toBinary($phaseId);
-            }
-
-            return self::find($whereClause, $params, $paramOptions);
-        } catch (Exception $e) {
-            throw $e;
-        }
-    }
-
-    /**
-     * Finds and returns the count of tasks grouped by status for a specific phase.
-     *
-     * This method queries the database to retrieve task counts grouped by their status
-     * for a given phase ID. It validates the input and handles database exceptions.
-     *
-     * @param int $phaseId The unique identifier of the phase to query tasks for
-     * 
-     * @return array|null Array of status counts where each element contains:
-     *      - status: string The status of the tasks
-     *      - count: int The number of tasks with that status
-     *      Returns null if no tasks are found for the phase
-     * 
-     * @throws InvalidArgumentException If the provided phase ID is less than 1
-     * @throws DatabaseException If a database error occurs during query execution
-     */
-    public static function findStatusCountByPhaseId(int $phaseId): ?array
-    {
-        if ($phaseId < 1) {
-            throw new InvalidArgumentException('Invalid phase ID provided.');
-        }
-
-        $instance = new self();
-        try {
-            $query =
-                "SELECT 
-                    pt.status AS task_status,
-                    COUNT(*) AS task_count
-                FROM 
-                    `phase_task` AS pt
-                WHERE 
-                    pt.phase_id = :phaseId
-                GROUP BY 
-                    pt.status";
-            $statement = $instance->connection->prepare($query);
-            $statement->execute([':phaseId' => $phaseId]);
-            $results = $statement->fetchAll();
-
-            if (empty($results)) {
-                return null;
-            }
-
-            $statusCounts = [];
-            foreach ($results as $row) {
-                $statusCounts[$row['task_status']] = (int)$row['task_count'];
-            }
-
-            return $statusCounts;
-        } catch (PDOException $e) {
-            throw new DatabaseException($e->getMessage());
-        }
-    }
-
-    /**
-     * Finds and returns the count of tasks grouped by priority for a specific phase.
-     *
-     * This method retrieves task distribution statistics by querying the database
-     * for all tasks associated with the given phase ID and groups them by their
-     * priority level. The results include the priority value and the number of
-     * tasks for each priority.
-     *
-     * @param int $phaseId The unique identifier of the phase to query
-     * 
-     * @return array|null Array of associative arrays containing priority counts, or null if no tasks found.
-     *      Each array element contains:
-     *      - priority: string The priority level of the tasks
-     *      - count: int The number of tasks with this priority
-     * 
-     * @throws InvalidArgumentException If the provided phase ID is less than 1
-     * @throws DatabaseException If a database error occurs during query execution
-     */
-    public static function findPriorityCountByPhaseId(int $phaseId): ?array
-    {
-        if ($phaseId < 1) {
-            throw new InvalidArgumentException('Invalid phase ID provided.');
-        }
-
-        $instance = new self();
-        try {
-            $query =
-                "SELECT 
-                    pt.priority AS task_priority,
-                    COUNT(*) AS task_count
-                FROM 
-                    `phase_task` AS pt
-                WHERE 
-                    pt.phase_id = :phaseId
-                GROUP BY 
-                    pt.priority";
-            $statement = $instance->connection->prepare($query);
-            $statement->execute([':phaseId' => $phaseId]);
-            $results = $statement->fetchAll();
-
-            if (empty($results)) {
-                return null;
-            }
-
-            $priorityCounts = [];
-            foreach ($results as $row) {
-                $priorityCounts[$row['task_priority']] = (int)$row['task_count'];
-            }
-
-            return $priorityCounts;
-        } catch (PDOException $e) {
-            throw new DatabaseException($e->getMessage());
-        }
-    }
-
-    /**
      * Finds and returns the Project that owns a given Task (through its Phase).
      *
      * This method retrieves the project associated with the specified task ID (either integer or UUID).
@@ -907,8 +584,8 @@ class TaskModel extends Model
             $query =
                 "SELECT 
                     p.*,
-                    u.id AS id,
-                    u.public_id AS public_id,
+                    u.id AS u_id,
+                    u.public_id AS u_public_id,
                     u.first_name AS first_name,
                     u.middle_name AS middle_name,
                     u.last_name AS last_name,
@@ -946,28 +623,18 @@ class TaskModel extends Model
                 return null;
             }
 
-            $project = Project::createPartial([
-                'id'                        => $result['id'],
-                'publicId'                  => $result['public_id'],
-                'name'                      => $result['name'],
-                'description'               => $result['description'],
-                'budget'                    => $result['budget'],
-                'status'                    => $result['status'],
-                'startDateTime'             => new DateTime($result['start_date_time']),
-                'completionDateTime'        => new DateTime($result['completion_date_time']),
-                'actualCompletionDateTime'  => new DateTime($result['actual_completion_date_time']),
-                'createdAt'                 => new DateTime($result['created_at']),
-                'manager'                   => ProjectManager::createPartial([
-                    'id'           => $result['id'],
-                    'publicId'     => $result['public_id'],
-                    'firstName'    => $result['first_name'],
-                    'middleName'   => $result['middle_name'],
-                    'lastName'     => $result['last_name'],
-                    'gender'       => $result['gender'],
-                    'email'        => $result['email'],
-                    'profileLink'  => $result['profile_link'],
-                ]),
+            $result['manager'] = ProjectManager::createPartial([
+                'id'           => $result['u_id'],
+                'publicId'     => $result['u_public_id'],
+                'firstName'    => $result['first_name'],
+                'middleName'   => $result['middle_name'],
+                'lastName'     => $result['last_name'],
+                'gender'       => $result['gender'],
+                'email'        => $result['email'],
+                'profileLink'  => $result['profile_link'],
             ]);
+            $project = Project::createPartial($result);
+
             return $project;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());

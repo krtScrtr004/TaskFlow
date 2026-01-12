@@ -326,6 +326,10 @@ class TaskResource implements Entity
             'taskWorkerId'  => $data['taskWorkerId'] ?? null
         ];
 
+        // Build ResourceType instance from array
+        if (isset($data['type']) && is_array($data['type'])) 
+            $defaults['type'] = ResourceType::fromArray($data['type']);
+
         return new TaskResource(
             $defaults['id'],
             $defaults['type'],
