@@ -6,6 +6,7 @@ use App\Abstract\Model;
 use App\Container\WorkerContainer;
 use App\Container\TaskContainer;
 use App\Core\UUID;
+use App\Dependent\Phase;
 use App\Dependent\ProjectManager;
 use App\Dependent\TaskResource;
 use App\Dependent\TaskWorker;
@@ -636,6 +637,69 @@ class TaskModel extends Model
             $project = Project::createPartial($result);
 
             return $project;
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
+        }
+    }
+
+    /**
+     * Finds and returns the Phase that owns a given Task.
+     *
+     * This method retrieves the project phase associated with the specified task ID (either integer or UUID).
+     * It joins through phase_task -> project_phase tables to fetch phase details along with its budget information.
+     * Returns a partial Phase instance, or null if not found.
+     *
+     * @param int|UUID $taskId The ID or public UUID of the task whose owning phase is to be found.
+     *
+     * @throws InvalidArgumentException If the provided task ID is invalid.
+     * @throws DatabaseException If a database error occurs during the query.
+     *
+     * @return Phase|null The owning Phase instance, or null if no phase is found for the given task.
+     */
+    public static function findOwningPhase(int|UUID $taskId)
+    {
+        if (is_int($taskId) && $taskId < 1) {
+            throw new InvalidArgumentException('Invalid task ID provided.');
+        }
+
+        $instance = new self();
+        try {
+            $query = 
+                "SELECT
+                    pp.*,
+                    ppb.budget,
+                    ppb.contingency_rate,
+                    ppb.note AS budget_note
+                FROM
+                    `project_phase` AS pp
+                INNER JOIN
+                    `project_phase_budget` AS ppb
+                ON
+                    pp.id = ppb.phase_id
+                WHERE
+                    pp.id = (
+                                SELECT 
+                                    phase_id
+                                FROM
+                                    `phase_task`
+                                WHERE 
+                                    " . (is_int($taskId) 
+                                                ? 'id = :taskId'
+                                                : 'public_id = :taskId') . "
+                            )";
+            $statement = $instance->connection->prepare($query);
+            $statement->execute([
+                ':taskId' => is_int($taskId)
+                    ? $taskId
+                    : UUID::toBinary($taskId)
+            ]);
+            $result = $statement->fetch();
+            if (!$instance->hasData($result)) {
+                return null;
+            }
+
+            $phase = Phase::createPartial($result);
+            return $phase;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
