@@ -4,6 +4,7 @@ use App\Container\TaskContainer;
 use App\Core\Me;
 use App\Core\UUID;
 use App\Enumeration\Role;
+use App\Enumeration\WorkerStatus;
 use App\Enumeration\WorkStatus;
 use App\Utility\ProjectProgressCalculator;
 
@@ -25,7 +26,7 @@ $projectData = [
     'status'                    => $project->getStatus(),
     'tasks'                     => $project->getTasks(),
     'phases'                    => $project->getPhases(),
-    'workers'                   => $project->getWorkers()->getAssigned(),
+    'workers'                   => $project->getWorkers()->getByStatus(WorkerStatus::ASSIGNED),
     'progress'                  => $projectProgress ?? ProjectProgressCalculator::calculate($project->getTasks())
 ];
 

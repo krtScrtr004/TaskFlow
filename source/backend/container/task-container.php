@@ -84,6 +84,9 @@ class TaskContainer extends Container
 
         // Add to priority array
         $this->byPriority[$priority->value][$id] = $item;
+
+        // Keep base container items map in sync
+        $this->items[$id] = $item;
     }
 
     /**
@@ -124,6 +127,9 @@ class TaskContainer extends Container
 
         // Remove from priority array
         unset($this->byPriority[$priority->value][$id]);
+
+        // Keep base container items map in sync
+        unset($this->items[$id]);
     }
 
     /**
@@ -152,11 +158,8 @@ class TaskContainer extends Container
         if (!$item instanceof Task) {
             throw new InvalidArgumentException('Only Task instances can be checked in TaskContainer.');
         }
-        
         $id = $item->getId();
-        $status = $item->getStatus();
-
-        return isset($this->byStatus[$status->value][$id]);
+        return isset($this->items[$id]);
     }
 
     /**
@@ -244,91 +247,61 @@ class TaskContainer extends Container
     }
 
     /**
-     * Clears all tasks with PENDING status from the container.
-     * Also removes these tasks from their respective priority arrays.
+     * Get tasks indexed by id for a given status.
      *
-     * @return void
+     * @param WorkStatus $status
+     * @return Task[] associative array [id => Task]
      */
-    public function clearPending(): void
+    public function getByStatus(WorkStatus $status): array
     {
-        $this->clearByStatus(WorkStatus::PENDING);
+        return $this->byStatus[$status->value] ?? [];
     }
 
     /**
-     * Clears all tasks with ONGOING status from the container.
-     * Also removes these tasks from their respective priority arrays.
+     * Get tasks indexed by id for a given priority.
      *
-     * @return void
+     * @param TaskPriority $priority
+     * @return Task[] associative array [id => Task]
      */
-    public function clearOngoing(): void
+    public function getByPriority(TaskPriority $priority): array
     {
-        $this->clearByStatus(WorkStatus::ONGOING);
+        return $this->byPriority[$priority->value] ?? [];
     }
 
     /**
-     * Clears all tasks with COMPLETED status from the container.
-     * Also removes these tasks from their respective priority arrays.
+     * Set tasks for a given status (replaces existing tasks with provided list).
+     * Provided tasks should have matching status values.
      *
+     * @param WorkStatus $status
+     * @param Task[] $tasks
      * @return void
      */
-    public function clearCompleted(): void
+    public function setByStatus(WorkStatus $status, array $tasks): void
     {
-        $this->clearByStatus(WorkStatus::COMPLETED);
+        // clear existing tasks for status
+        $this->clearByStatus($status);
+
+        foreach ($tasks as $task) {
+            $this->add($task);
+        }
     }
 
     /**
-     * Clears all tasks with DELAYED status from the container.
-     * Also removes these tasks from their respective priority arrays.
+     * Set tasks for a given priority (replaces existing tasks with provided list).
+     * Provided tasks should have matching priority values.
      *
+     * @param TaskPriority $priority
+     * @param Task[] $tasks
      * @return void
      */
-    public function clearDelayed(): void
+    public function setByPriority(TaskPriority $priority, array $tasks): void
     {
-        $this->clearByStatus(WorkStatus::DELAYED);
-    }
+        // clear existing tasks for priority
+        $this->clearByPriority($priority);
 
-    /**
-     * Clears all tasks with CANCELLED status from the container.
-     * Also removes these tasks from their respective priority arrays.
-     *
-     * @return void
-     */
-    public function clearCancelled(): void
-    {
-        $this->clearByStatus(WorkStatus::CANCELLED);
-    }
-
-    /**
-     * Clears all tasks with LOW priority from the container.
-     * Also removes these tasks from their respective status arrays.
-     *
-     * @return void
-     */
-    public function clearLow(): void
-    {
-        $this->clearByPriority(TaskPriority::LOW);
-    }
-
-    /**
-     * Clears all tasks with MEDIUM priority from the container.
-     * Also removes these tasks from their respective status arrays.
-     *
-     * @return void
-     */
-    public function clearMedium(): void
-    {
-        $this->clearByPriority(TaskPriority::MEDIUM);
-    }
-
-    /**
-     * Clears all tasks with HIGH priority from the container.
-     * Also removes these tasks from their respective status arrays.
-     *
-     * @return void
-     */
-    public function clearHigh(): void
-    {
-        $this->clearByPriority(TaskPriority::HIGH);
+        foreach ($tasks as $task) {
+            $this->add($task);
+        }
     }
 
     /**
@@ -339,7 +312,7 @@ class TaskContainer extends Container
      *
      * @return void
      */
-    private function clearByStatus(WorkStatus $status): void
+    public function clearByStatus(WorkStatus $status): void
     {
         if (!isset($this->byStatus[$status->value])) {
             return;
@@ -367,7 +340,7 @@ class TaskContainer extends Container
      *
      * @return void
      */
-    private function clearByPriority(TaskPriority $priority): void
+    public function clearByPriority(TaskPriority $priority): void
     {
         if (!isset($this->byPriority[$priority->value])) {
             return;

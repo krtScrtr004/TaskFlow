@@ -10,11 +10,11 @@ use InvalidArgumentException;
 
 class PhaseContainer extends Container
 {
-    private array $pending = [];
-    private array $ongoing = [];
-    private array $completed = [];
-    private array $delayed = [];
-    private array $cancelled = [];
+    /**
+     * Phases indexed by status value then id
+     * @var array<string, array>
+     */
+    private array $byStatus = [];
 
     private float $totalBudget = 0.0;
 
@@ -74,23 +74,10 @@ class PhaseContainer extends Container
 
         $id = $item->getId();
         $status = $item->getStatus();
-        switch ($status) {
-            case WorkStatus::PENDING:
-                $this->pending[$id] = $item;
-                break;
-            case WorkStatus::ONGOING:
-                $this->ongoing[$id] = $item;
-                break;
-            case WorkStatus::COMPLETED:
-                $this->completed[$id] = $item;
-                break;
-            case WorkStatus::DELAYED:
-                $this->delayed[$id] = $item;
-                break;
-            case WorkStatus::CANCELLED:
-                $this->cancelled[$id] = $item;
-                break;
-        }
+
+        $this->byStatus[$status->value][$id] = $item;
+        $this->items[$id] = $item;
+
         $this->totalBudget += $item->getBudget();
     }
 
@@ -126,23 +113,10 @@ class PhaseContainer extends Container
 
         $id = $item->getId();
         $status = $item->getStatus();
-        switch ($status) {
-            case WorkStatus::PENDING:
-                unset($this->pending[$id]);
-                break;
-            case WorkStatus::ONGOING:
-                unset($this->ongoing[$id]);
-                break;
-            case WorkStatus::COMPLETED:
-                unset($this->completed[$id]);
-                break;
-            case WorkStatus::DELAYED:
-                unset($this->delayed[$id]);
-                break;
-            case WorkStatus::CANCELLED:
-                unset($this->cancelled[$id]);
-                break;
-        }
+
+        unset($this->byStatus[$status->value][$id]);
+        unset($this->items[$id]);
+
         $this->totalBudget -= $item->getBudget();
     }
 
@@ -179,118 +153,7 @@ class PhaseContainer extends Container
         }
 
         $id = $item->getId();
-
-        $status = $item->getStatus();
-        switch ($status) {
-            case WorkStatus::PENDING:
-                return isset($this->pending[$id]);
-            case WorkStatus::ONGOING:
-                return isset($this->ongoing[$id]);
-            case WorkStatus::COMPLETED:
-                return isset($this->completed[$id]);
-            case WorkStatus::DELAYED:
-                return isset($this->delayed[$id]);
-            case WorkStatus::CANCELLED:
-                return isset($this->cancelled[$id]);
-            default:
-                return false;
-        }
-    }
-
-    /**
-     * Retrieves the list of pending items from the container.
-     *
-     * This method provides access to the internal `$pending` property, which is expected
-     * to contain an array of items that are currently marked as pending within the container.
-     *
-     * Behavior and side effects:
-     * - Returns the current state of the `$pending` property.
-     * - The returned array is a direct representation of the internal state and may be empty
-     *   if no items are marked as pending.
-     * - This method does not modify the internal state of the container.
-     *
-     * @return array The array of pending items.
-     */
-    public function getPending(): array
-    {
-        return $this->pending;
-    }
-
-    /**
-     * Retrieves the ongoing phases from the container.
-     *
-     * This method returns an array containing the ongoing phases currently stored
-     * in the container. The ongoing phases represent the phases that are actively
-     * being processed or are in progress.
-     *
-     * Behavior and side effects:
-     * - Returns the value of the $ongoing property, which is expected to be an array.
-     * - The method does not modify the state of the container or the $ongoing property.
-     * - The returned array may be empty if no ongoing phases are present.
-     *
-     * @return array An array of ongoing phases.
-     */
-    public function getOngoing(): array
-    {
-        return $this->ongoing;
-    }
-
-    /**
-     * Retrieves the list of completed items from the container.
-     *
-     * This method provides access to the internal array of completed items stored
-     * within the container. The returned array represents the current state of
-     * completed items at the time of invocation.
-     *
-     * Behavior and side effects:
-     * - Returns the $completed property, which is an array of completed items.
-     * - The method does not modify the internal state of the container.
-     * - The returned array is a direct representation of the internal state, so
-     *   any modifications to the array outside this method will not affect the
-     *   container's internal state.
-     *
-     * @return array The array of completed items.
-     */
-    public function getCompleted(): array
-    {
-        return $this->completed;
-    }
-
-    /**
-     * Retrieves the delayed items from the container.
-     *
-     * This method returns an array containing all items that have been marked as delayed
-     * within the container. The delayed items are stored internally and can be used for
-     * deferred processing or other purposes as needed by the application.
-     *
-     * Behavior and side effects:
-     * - Returns the current state of the $delayed property, which is an array.
-     * - The method does not modify the internal state of the container or the $delayed property.
-     * - The returned array is a snapshot of the delayed items at the time of the method call.
-     *
-     * @return array An array of delayed items stored in the container.
-     */
-    public function getDelayed(): array
-    {
-        return $this->delayed;
-    }
-
-    /**
-     * Retrieves the list of cancelled items from the container.
-     *
-     * This method provides access to the internal array of cancelled items managed by the container.
-     *
-     * Behavior and side effects:
-     * - Returns the $this->cancelled array, which contains the items marked as cancelled.
-     * - The returned array is a direct reference to the internal storage, so modifications to it
-     *   will affect the container's state.
-     * - This method does not perform any validation or filtering on the returned data.
-     *
-     * @return array The array of cancelled items.
-     */
-    public function getCancelled(): array
-    {
-        return $this->cancelled;
+        return isset($this->items[$id]);
     }
 
     /**
@@ -313,14 +176,31 @@ class PhaseContainer extends Container
      */
     public function getByStatus(WorkStatus $status): array
     {
-        return match ($status) {
-            WorkStatus::PENDING => $this->pending,
-            WorkStatus::ONGOING => $this->ongoing,
-            WorkStatus::COMPLETED => $this->completed,
-            WorkStatus::DELAYED => $this->delayed,
-            WorkStatus::CANCELLED => $this->cancelled,
-            default => [],
-        };
+        return $this->byStatus[$status->value] ?? [];
+    }
+
+    /**
+     * Retrieves all items from the container.
+     *
+     * This method combines all items stored in the container across different statuses
+     * into a single array and returns it. The combined array includes items from the
+     * pending, ongoing, completed, delayed, and cancelled categories.
+     *
+     * Behavior and side effects:
+     * - Merges the arrays of items from each status category into one array.
+     * - The order of items in the returned array is determined by the order of merging.
+     * - This method does not modify the internal state of the container.
+     *
+     * @return mixed An array containing all items from the container
+     */
+    public function getItems(): mixed
+    {
+        // Flatten all status buckets preserving keys where possible
+        $merged = [];
+        foreach ($this->byStatus as $bucket) {
+            $merged = array_merge($merged, $bucket);
+        }
+        return $merged;
     }
 
     /**
@@ -356,26 +236,16 @@ class PhaseContainer extends Container
     public function countAll(): array
     {
         return [
-            WorkStatus::PENDING->value     => count($this->pending),
-            WorkStatus::ONGOING->value    => count($this->ongoing),
-            WorkStatus::COMPLETED->value   => count($this->completed),
-            WorkStatus::DELAYED->value     => count($this->delayed),
-            WorkStatus::CANCELLED->value   => count($this->cancelled),
+            WorkStatus::PENDING->value     => count($this->byStatus[WorkStatus::PENDING->value] ?? []),
+            WorkStatus::ONGOING->value     => count($this->byStatus[WorkStatus::ONGOING->value] ?? []),
+            WorkStatus::COMPLETED->value   => count($this->byStatus[WorkStatus::COMPLETED->value] ?? []),
+            WorkStatus::DELAYED->value     => count($this->byStatus[WorkStatus::DELAYED->value] ?? []),
+            WorkStatus::CANCELLED->value   => count($this->byStatus[WorkStatus::CANCELLED->value] ?? []),
         ];
     }
 
     /**
      * Retrieves the count of phases for a specific work status.
-     *
-     * This method uses a match expression to return the count of phases
-     * corresponding to the provided WorkStatus enum value. It checks the
-     * relevant internal array and returns its count.
-     *
-     * Behavior and side effects:
-     * - Matches the provided WorkStatus against predefined cases: PENDING, ONGOING,
-     *   COMPLETED, DELAYED, and CANCELLED.
-     * - Returns the count of items in the corresponding array property
-     *   ($this->pending, $this->ongoing, etc.) based on the matched status.
      *
      * @param WorkStatus $status The work status to get the phase count for
      *
@@ -383,155 +253,22 @@ class PhaseContainer extends Container
      */
     public function countByStatus(WorkStatus $status): int
     {
-        return match ($status) {
-            WorkStatus::PENDING     => count($this->pending),
-            WorkStatus::ONGOING    => count($this->ongoing),
-            WorkStatus::COMPLETED   => count($this->completed),
-            WorkStatus::DELAYED     => count($this->delayed),
-            WorkStatus::CANCELLED   => count($this->cancelled),
-        };
+        return count($this->byStatus[$status->value] ?? []);
     }
 
     /**
-     * Reverses the order of the pending items in the container.
+     * Reverses the order of phases for the specified status.
      *
-     * This method reverses the order of the elements in the $this->pending array while preserving
-     * the original keys. The reversed array is then assigned back to $this->pending and returned.
+     * This method modifies the internal storage of phases for the given status
+     * by reversing their order. It returns the reversed array of phases.
      *
-     * Behavior and side effects:
-     * - Uses array_reverse() with the second parameter set to true to preserve the keys.
-     * - Updates the $this->pending property with the reversed array.
-     * - Returns the updated $this->pending array.
+     * @param WorkStatus $status The work status whose phases should be reversed
      *
-     * @return array The reversed array of pending items.
+     * @return array The reversed array of phases for the specified status
      */
-    public function reversePending(): array
+    public function reverserByStatus(WorkStatus $status): array
     {
-        return $this->pending = array_reverse($this->pending, true);
-    }
-
-    /**
-     * Reverses the order of the ongoing items in the container.
-     *
-     * This method reverses the order of the elements in the $this->ongoing array while preserving
-     * the original keys. The reversed array is then assigned back to $this->ongoing and returned.
-     *
-     * Behavior and side effects:
-     * - The array_reverse function is used with the $preserve_keys parameter set to true, ensuring
-     *   that the original keys of the array are maintained in the reversed array.
-     * - The $this->ongoing property is updated with the reversed array.
-     * - The method returns the updated $this->ongoing array.
-     *
-     * @return array The reversed $this->ongoing array with keys preserved.
-     */
-    public function reverseOngoing(): array
-    {
-        return $this->ongoing = array_reverse($this->ongoing, true);
-    }
-
-    /**
-     * Reverses the order of the completed items in the container.
-     *
-     * This method reverses the order of the elements in the $completed array while preserving
-     * the keys. The reversed array is then stored back in the $completed property and returned.
-     *
-     * Behavior and side effects:
-     * - The $completed array is modified in place to reflect the reversed order.
-     * - The keys of the array are preserved during the reversal.
-     * - If the $completed array is empty, the method returns an empty array.
-     *
-     * @return array The reversed $completed array with keys preserved.
-     */
-    public function reverseCompleted(): array
-    {
-        return $this->completed = array_reverse($this->completed, true);
-    }
-
-    /**
-     * Reverses the order of the delayed items in the container.
-     *
-     * This method reverses the internal $delayed array while preserving the keys.
-     * The reversed array is then stored back into the $delayed property and returned.
-     *
-     * Behavior and side effects:
-     * - The order of elements in the $delayed array is reversed.
-     * - The keys of the array are preserved during the reversal.
-     * - The $delayed property is updated with the reversed array.
-     *
-     * @return array The reversed array of delayed items.
-     */
-    public function reverseDelayed(): array
-    {
-        return $this->delayed = array_reverse($this->delayed, true);
-    }
-
-    /**
-     * Reverses the order of the cancelled items in the container.
-     *
-     * This method reverses the order of the elements in the $cancelled array while
-     * preserving the keys. The reversed array is then stored back in the $cancelled
-     * property and returned.
-     *
-     * Behavior and side effects:
-     * - Reverses the order of the $cancelled array while maintaining key associations.
-     * - Updates the $cancelled property with the reversed array.
-     * - Returns the reversed array.
-     *
-     * @return array The reversed array of cancelled items.
-     */
-    public function reverseCancelled(): array
-    {
-        return $this->cancelled = array_reverse($this->cancelled, true);
-    }
-
-    /**
-     * Clears all pending items.
-     *
-     * @return void
-     */
-    public function clearPending(): void
-    {
-        $this->pending = [];
-    }
-
-    /**
-     * Clears all ongoing items.
-     *
-     * @return void
-     */
-    public function clearOngoing(): void
-    {
-        $this->ongoing = [];
-    }
-
-    /**
-     * Clears all completed items.
-     *
-     * @return void
-     */
-    public function clearCompleted(): void
-    {
-        $this->completed = [];
-    }
-
-    /**
-     * Clears all delayed items.
-     *
-     * @return void
-     */
-    public function clearDelayed(): void
-    {
-        $this->delayed = [];
-    }
-
-    /**
-     * Clears all cancelled items.
-     *
-     * @return void
-     */
-    public function clearCancelled(): void
-    {
-        $this->cancelled = [];
+        return $this->byStatus[$status->value] = array_reverse($this->byStatus[$status->value] ?? [], true);
     }
 
     /**
@@ -541,13 +278,34 @@ class PhaseContainer extends Container
      */
     public function clear(): void
     {
-        $this->pending = [];
-        $this->ongoing = [];
-        $this->completed = [];
-        $this->delayed = [];
-        $this->cancelled = [];
+        $this->byStatus = [];
+        $this->items = [];
+        $this->totalBudget = BUDGET_MIN;
     }
+    
+    /**
+     * Clears all phases for the provided status and removes them from master items map.
+     *
+     * @param WorkStatus $status
+     * @return void
+     */
+    public function clearByStatus(WorkStatus $status): void
+    {
+        if (!isset($this->byStatus[$status->value])) {
+            return;
+        }
 
+        $ids = array_keys($this->byStatus[$status->value]);
+        foreach ($ids as $id) {
+            if (isset($this->items[$id])) {
+                $this->totalBudget -= $this->items[$id]->getBudget();
+                unset($this->items[$id]);
+            }
+        }
+
+        unset($this->byStatus[$status->value]);
+    }
+    
     /**
      * Converts all phases in the container to an array representation.
      *

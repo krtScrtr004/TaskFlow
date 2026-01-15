@@ -10,11 +10,11 @@ use InvalidArgumentException;
 class ProjectContainer extends Container
 {
     private array $projectCountByStatus = [
-        WorkStatus::PENDING->value => 0,
-        WorkStatus::ONGOING->value => 0,
-        WorkStatus::COMPLETED->value => 0,
-        WorkStatus::DELAYED->value => 0,
-        WorkStatus::CANCELLED->value => 0,
+        WorkStatus::PENDING->value      => 0,
+        WorkStatus::ONGOING->value      => 0,
+        WorkStatus::COMPLETED->value    => 0,
+        WorkStatus::DELAYED->value      => 0,
+        WorkStatus::CANCELLED->value    => 0,
     ];
 
     /**
@@ -69,6 +69,59 @@ class ProjectContainer extends Container
     }
 
     /**
+     * Get projects by status
+     *
+     * @param WorkStatus $status
+     * @return array<int,Project>
+     */
+    public function getByStatus(WorkStatus $status): array
+    {
+        $result = [];
+        foreach ($this->items as $project) {
+            if ($project->getStatus()->value === $status->value) {
+                $result[$project->getId()] = $project;
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Clears projects by status and updates counters.
+     *
+     * @param WorkStatus $status
+     * @return void
+     */
+    public function clearByStatus(WorkStatus $status): void
+    {
+        $statusValue = $status->value;
+        foreach ($this->items as $id => $project) {
+            if ($project->getStatus()->value === $statusValue) {
+                unset($this->items[$id]);
+                // Decrease the counter
+                if (isset($this->projectCountByStatus[$statusValue])) {
+                    $this->projectCountByStatus[$statusValue]--;
+                }
+            }
+        }
+    }
+
+    /**
+     * Replace projects for a given status with provided list.
+     *
+     * @param WorkStatus $status
+     * @param array $projects
+     * @return void
+     */
+    public function setByStatus(WorkStatus $status, array $projects): void
+    {
+        // remove existing
+        $this->clearByStatus($status);
+        foreach ($projects as $project) {
+            $this->add($project);
+        }
+    }
+
+    /**
      * Removes a Project instance from the container.
      *
      * This method performs the following actions:
@@ -83,7 +136,7 @@ class ProjectContainer extends Container
      *
      * @return void
      */
-    public function remove($item): void
+    public function remove(mixed $item): void
     {
         if (!$item instanceof Project) {
             throw new InvalidArgumentException('Only Project instances can be removed from ProjectContainer.');
@@ -210,7 +263,7 @@ class ProjectContainer extends Container
      *
      * @return int Integer count of projects matching the provided status, or 0 if none are recorded.
      */
-    public function getCountByStatus(WorkStatus $status): int
+    public function countByStatus(WorkStatus $status): int
     {
         $statusValue = $status->value;
         return $this->projectCountByStatus[$statusValue] ?? 0;

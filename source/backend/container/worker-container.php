@@ -13,9 +13,8 @@ use ArrayIterator;
 
 class WorkerContainer extends Container
 {
-    private array $unassigned = [];
-    private array $assigned = [];
-    private array $terminated = [];
+    /** @var array<string,array> workers by status value then id */
+    private array $byStatus = [];
 
     private float $totalDefaultRate = 0.0;
 
@@ -75,17 +74,10 @@ class WorkerContainer extends Container
 
         $id = $item->getId();
         $status = $item->getStatus();
-        switch ($status) {
-            case WorkerStatus::UNASSIGNED:
-                $this->unassigned[$id] = $item;
-                break;
-            case WorkerStatus::ASSIGNED:
-                $this->assigned[$id] = $item;
-                break;
-            case WorkerStatus::TERMINATED:
-                $this->assigned[$id] = $item;
-                break;
-        }
+
+        $this->byStatus[$status->value][$id] = $item;
+        $this->items[$id] = $item;
+
         $this->totalDefaultRate += $item->getDefaultRate();
     }
 
@@ -121,17 +113,10 @@ class WorkerContainer extends Container
 
         $id = $item->getId();
         $status = $item->getStatus();
-        switch ($status) {
-            case WorkerStatus::UNASSIGNED:
-                unset($this->unassigned[$id]);
-                break;
-            case WorkerStatus::ASSIGNED:
-                unset($this->assigned[$id]);
-                break;
-            case WorkerStatus::TERMINATED:
-                unset($this->terminated[$id]);
-                break;
-        }
+
+        unset($this->byStatus[$status->value][$id]);
+        unset($this->items[$id]);
+
         $this->totalDefaultRate -= $item->getDefaultRate();
     }
 
@@ -165,76 +150,7 @@ class WorkerContainer extends Container
         }
 
         $id = $item->getId();
-        $status = $item->getStatus();
-        switch ($status) {
-            case WorkerStatus::UNASSIGNED:
-                return isset($this->unassigned[$id]);
-            case WorkerStatus::ASSIGNED:
-                return isset($this->assigned[$id]);
-            case WorkerStatus::TERMINATED:
-                return isset($this->terminated[$id]);
-            default:
-                return false;
-        }
-    }
-
-    /**
-     * Returns the collection of unassigned workers stored in this container.
-     *
-     * This method exposes the internal unassigned array without modifying it.
-     * The exact element shape depends on how the container is populated:
-     * - Worker objects when domain objects are stored
-     * - Integer IDs when only identifiers are stored
-     * - Associative arrays when raw worker data is stored
-     *
-     * Consumers should treat the returned array as read-only (do not modify it
-     * expecting the container to be updated) unless explicitly documented otherwise.
-     *
-     * @return array<int|object|array> Array of unassigned workers. Each element can be:
-     *      - Worker object representing an unassigned worker
-     *      - int identifier of a worker
-     *      - array associative array with worker data
-     */
-    public function getUnassigned(): array
-    {
-        return $this->unassigned;
-    }
-
-    /**
-     * Returns the array of items assigned to this worker container.
-     *
-     * This accessor provides a snapshot of the container's current assigned collection.
-     * The returned array is a copy of the internal storage (PHP arrays use copy-on-write),
-     * therefore modifying the returned array will not affect the container's internal state.
-     * Use the container's mutation methods to modify assignments.
-     *
-     * Each element in the returned array represents an assigned item and may be:
-     * - int: an assignment identifier
-     * - string: an assignment key or slug
-     * - object: a domain model representing the assignment
-     * - array: an associative array with assignment data
-     *
-     * @return array<int, mixed> Array of assigned items
-     */
-    public function getAssigned(): array
-    {
-        return $this->assigned;
-    }
-
-    /**
-     * Returns the list of terminated entries from the container.
-     *
-     * This method provides access to the container's internal terminated collection:
-     * - Returns a shallow copy of the internal $terminated array (modifying the returned array will not modify the container's internal state).
-     * - The array may be empty if no entries have been terminated.
-     * - Each element represents a terminated worker entry; elements may be identifiers (int|string) or objects/arrays depending on how entries are stored.
-     * - The original insertion order is preserved in the returned array.
-     *
-     * @return array<int, mixed> Array of terminated entries (identifiers, objects, or arrays) — empty if none
-     */
-    public function getTerminated(): array
-    {
-        return $this->terminated;
+        return isset($this->items[$id]);
     }
 
     /**
@@ -255,12 +171,7 @@ class WorkerContainer extends Container
      */
     public function getByStatus(WorkerStatus $status): array
     {
-        return match ($status) {
-            WorkerStatus::UNASSIGNED => $this->unassigned,
-            WorkerStatus::ASSIGNED => $this->assigned,
-            WorkerStatus::TERMINATED => $this->terminated,
-            default => []
-        };
+        return $this->byStatus[$status->value] ?? [];
     }
 
     /**
@@ -282,85 +193,6 @@ class WorkerContainer extends Container
     }
 
     /**
-     * Returns counts of all workers grouped by their status.
-     *
-     * This method provides an associative array representing a snapshot of worker counts
-     * organized by status. It is intended to give callers an easy way to inspect
-     * how many workers exist for each status:
-     * - Keys are status identifiers (e.g. string names like "unassigned", "assigned", "terminated"
-     *   or numeric status IDs depending on the application's convention)
-     * - Values are integers representing the number of workers for that status
-     *
-     * @return array<string,int> Associative array mapping status identifiers to worker counts
-     */
-    public function countAll(): array
-    {
-        return [
-            WorkerStatus::UNASSIGNED->value    => count($this->unassigned),
-            WorkerStatus::ASSIGNED->value      => count($this->assigned),
-            WorkerStatus::TERMINATED->value    => count($this->terminated),
-        ];
-    }
-
-    /**
-     * Clears all unassigned workers from the container.
-     *
-     * This method removes all workers from the unassigned collection by
-     * clearing the internal array that stores unassigned workers.
-     * After calling this method, the unassigned collection will be empty.
-     *
-     * @return void
-     */
-    public function clearUnassigned(): void
-    {
-        $this->unassigned = [];
-    }
-
-    /**
-     * Clears all assigned workers from the container.
-     *
-     * This method removes all workers from the assigned collection by
-     * clearing the internal array that stores assigned workers.
-     * After calling this method, the assigned collection will be empty.
-     *
-     * @return void
-     */
-    public function clearAssigned(): void
-    {
-        $this->assigned = [];
-    }
-
-    /**
-     * Clears all terminated workers from the container.
-     *
-     * This method removes all workers from the terminated collection by
-     * clearing the internal array that stores terminated workers.
-     * After calling this method, the terminated collection will be empty.
-     *
-     * @return void
-     */
-    public function clearTerminated(): void
-    {
-        $this->terminated = [];
-    }
-
-    /**
-     * Clears all workers from the container.
-     *
-     * This method removes all workers from the container by clearing the internal
-     * arrays that store unassigned, assigned, and terminated workers.
-     * After calling this method, the container will be empty.
-     *
-     * @return void
-     */
-    public function clear(): void
-    {
-        $this->unassigned = [];
-        $this->assigned = [];
-        $this->terminated = [];
-    }
-
-    /**
      * Returns the count of workers for a specific status.
      *
      * This method retrieves the number of workers that match the provided WorkerStatus.
@@ -376,58 +208,84 @@ class WorkerContainer extends Container
      */
     public function countByStatus(WorkerStatus $status): int
     {
-        return match ($status) {
-            WorkerStatus::UNASSIGNED    => count($this->unassigned),
-            WorkerStatus::ASSIGNED      => count($this->assigned),
-            WorkerStatus::TERMINATED    => count($this->terminated),
-        };
+        return count($this->byStatus[$status->value] ?? []);
     }
 
     /**
-     * Reverses the order of the assigned items.
+     * Returns counts of all workers grouped by their status.
      *
-     * This method performs the following steps:
-     * - Reverses the order of the $this->assigned array.
-     * - Updates the object's assigned property with the reversed array.
-     * - Returns the updated array of assigned items.
+     * This method provides an associative array representing a snapshot of worker counts
+     * organized by status. It is intended to give callers an easy way to inspect
+     * how many workers exist for each status:
+     * - Keys are status identifiers (e.g. string names like "unassigned", "assigned", "terminated"
+     *   or numeric status IDs depending on the application's convention)
+     * - Values are integers representing the number of workers for that status
      *
-     * @return array The reversed array of assigned items.
+     * @return array<string,int> Associative array mapping status identifiers to worker counts
      */
-    public function reverseAssigned(): array
+    public function countAll(): array
     {
-        return $this->assigned = array_reverse($this->assigned, true);
+        return [
+            WorkerStatus::UNASSIGNED->value    => count($this->byStatus[WorkerStatus::UNASSIGNED->value] ?? []),
+            WorkerStatus::ASSIGNED->value      => count($this->byStatus[WorkerStatus::ASSIGNED->value] ?? []),
+            WorkerStatus::TERMINATED->value    => count($this->byStatus[WorkerStatus::TERMINATED->value] ?? []),
+        ];
+    }
+    
+    /**
+     * Clears all workers for the given status and updates total default rate and master items.
+     *
+     * @param WorkerStatus $status
+     * @return void
+     */
+    public function clearByStatus(WorkerStatus $status): void
+    {
+        if (!isset($this->byStatus[$status->value])) {
+            return;
+        }
+
+        $ids = array_keys($this->byStatus[$status->value]);
+        foreach ($ids as $id) {
+            if (isset($this->items[$id])) {
+                $this->totalDefaultRate -= $this->items[$id]->getDefaultRate();
+                unset($this->items[$id]);
+            }
+        }
+
+        unset($this->byStatus[$status->value]);
     }
 
     /**
-     * Reverses the internal unassigned items list.
+     * Clears all workers from the container.
      *
-     * This method performs the following steps:
-     * - Reverses the order of the $this->unassigned array.
-     * - Assigns the reversed array back to the $this->unassigned property.
-     * - Returns the reversed array for immediate use by the caller.
+     * This method removes all workers from the container by clearing the internal
+     * arrays that store unassigned, assigned, and terminated workers.
+     * After calling this method, the container will be empty.
      *
-     * @throws UnexpectedValueException If the unassigned property is not an array.
-     *
-     * @return array The reversed unassigned items.
+     * @return void
      */
-    public function reverseUnassigned(): array
+    public function clear(): void
     {
-        return $this->unassigned = array_reverse($this->unassigned, true);
+        $this->byStatus = [];
+        $this->items = [];
+        $this->totalDefaultRate = DEFAULT_RATE_MIN;
     }
 
     /**
-     * Reverses the internal terminated container.
+     * Reverses the order of workers for the given status.
      *
-     * This method performs the following steps:
-     * - Reverses the order of the internal $this->terminated array.
-     * - Assigns the reversed array back to $this->terminated to update internal state.
-     * - Returns the updated terminated array for further use.
+     * This method reverses the sequence of workers stored in the container's
+     * internal array for the specified status.
      *
-     * @return array The reversed terminated array.
+     * @param WorkerStatus $status The status of workers to reverse.
+     *
+     * @throws Exception For unexpected errors during array reversal.
+     *
+     * @return array The reversed array of workers after modification.
      */
-    public function reverseTerminated(): array
+    public function reverseByStatus(WorkerStatus $status): array
     {
-        return $this->terminated = array_reverse($this->terminated, true);
+        return $this->byStatus[$status->value] = array_reverse($this->byStatus[$status->value]);
     }
 
     /**
