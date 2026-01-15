@@ -86,7 +86,6 @@ class WorkerContainer extends Container
                 $this->assigned[$id] = $item;
                 break;
         }
-        $this->items[$id] = $item;
         $this->totalDefaultRate += $item->getDefaultRate();
     }
 
@@ -130,10 +129,9 @@ class WorkerContainer extends Container
                 unset($this->assigned[$id]);
                 break;
             case WorkerStatus::TERMINATED:
-                unset($this->assigned[$id]);
+                unset($this->terminated[$id]);
                 break;
         }
-        unset($this->items[$id]);
         $this->totalDefaultRate -= $item->getDefaultRate();
     }
 
@@ -167,16 +165,14 @@ class WorkerContainer extends Container
         }
 
         $id = $item->getId();
-        $isPresentInAll = isset($this->items[$id]);
-
         $status = $item->getStatus();
         switch ($status) {
             case WorkerStatus::UNASSIGNED:
-                return isset($this->unassigned[$id]) && $isPresentInAll;
+                return isset($this->unassigned[$id]);
             case WorkerStatus::ASSIGNED:
-                return isset($this->assigned[$id]) && $isPresentInAll;
+                return isset($this->assigned[$id]);
             case WorkerStatus::TERMINATED:
-                return isset($this->terminated[$id]) && $isPresentInAll;
+                return isset($this->terminated[$id]);
             default:
                 return false;
         }
@@ -304,6 +300,64 @@ class WorkerContainer extends Container
             WorkerStatus::ASSIGNED->value      => count($this->assigned),
             WorkerStatus::TERMINATED->value    => count($this->terminated),
         ];
+    }
+
+    /**
+     * Clears all unassigned workers from the container.
+     *
+     * This method removes all workers from the unassigned collection by
+     * clearing the internal array that stores unassigned workers.
+     * After calling this method, the unassigned collection will be empty.
+     *
+     * @return void
+     */
+    public function clearUnassigned(): void
+    {
+        $this->unassigned = [];
+    }
+
+    /**
+     * Clears all assigned workers from the container.
+     *
+     * This method removes all workers from the assigned collection by
+     * clearing the internal array that stores assigned workers.
+     * After calling this method, the assigned collection will be empty.
+     *
+     * @return void
+     */
+    public function clearAssigned(): void
+    {
+        $this->assigned = [];
+    }
+
+    /**
+     * Clears all terminated workers from the container.
+     *
+     * This method removes all workers from the terminated collection by
+     * clearing the internal array that stores terminated workers.
+     * After calling this method, the terminated collection will be empty.
+     *
+     * @return void
+     */
+    public function clearTerminated(): void
+    {
+        $this->terminated = [];
+    }
+
+    /**
+     * Clears all workers from the container.
+     *
+     * This method removes all workers from the container by clearing the internal
+     * arrays that store unassigned, assigned, and terminated workers.
+     * After calling this method, the container will be empty.
+     *
+     * @return void
+     */
+    public function clear(): void
+    {
+        $this->unassigned = [];
+        $this->assigned = [];
+        $this->terminated = [];
     }
 
     /**

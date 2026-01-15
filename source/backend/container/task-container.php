@@ -10,15 +10,17 @@ use InvalidArgumentException;
 
 class TaskContainer extends Container
 {
-    private array $pending = [];
-    private array $ongoing = [];
-    private array $completed = [];
-    private array $delayed = [];
-    private array $cancelled = [];
+    /**
+     * Tasks indexed by status, then by task ID
+     * Structure: $byStatus[status_value][task_id] = Task
+     */
+    private array $byStatus = [];
 
-    private array $low = [];
-    private array $medium = [];
-    private array $high = [];
+    /**
+     * Tasks indexed by priority, then by task ID
+     * Structure: $byPriority[priority_value][task_id] = Task
+     */
+    private array $byPriority = [];
 
     /**
      * Initializes the container with an array of Task instances.
@@ -61,13 +63,13 @@ class TaskContainer extends Container
      * - Adds the task to the main $this->items array indexed by its ID.
      * - If a task with the same ID already exists, it will be overwritten in all relevant arrays.
      *
-     * @param mixed $item Task instance to add to the container
+     * @param Task $item Task instance to add to the container
      *
      * @throws InvalidArgumentException If the provided $item is not an instance of Task
      *
      * @return void
      */
-    public function add($item): void
+    public function add(mixed $item): void
     {
         if (!$item instanceof Task) {
             throw new InvalidArgumentException("Only Task instances can be added to TaskContainer.");
@@ -76,37 +78,12 @@ class TaskContainer extends Container
         $id = $item->getId();
         $status = $item->getStatus();
         $priority = $item->getPriority();
-        switch ($status) {
-            case WorkStatus::PENDING:
-                $this->pending[$id] = $item;
-                break;
-            case WorkStatus::ONGOING:
-                $this->ongoing[$id] = $item;
-                break;
-            case WorkStatus::COMPLETED:
-                $this->completed[$id] = $item;
-                break;
-            case WorkStatus::DELAYED:
-                $this->delayed[$id] = $item;
-                break;
-            case WorkStatus::CANCELLED:
-                $this->cancelled[$id] = $item;
-                break;
-        }
 
-        switch ($priority) {
-            case TaskPriority::LOW:
-                $this->low[$id] = $item;
-                break;
-            case TaskPriority::MEDIUM:
-                $this->medium[$id] = $item;
-                break;
-            case TaskPriority::HIGH:
-                $this->high[$id] = $item;
-                break;
-        }
+        // Add to status array
+        $this->byStatus[$status->value][$id] = $item;
 
-        $this->items[$id] = $item;
+        // Add to priority array
+        $this->byPriority[$priority->value][$id] = $item;
     }
 
     /**
@@ -126,13 +103,13 @@ class TaskContainer extends Container
      * - Removes the task from the main $this->items array indexed by its ID.
      * - If the task does not exist in any of the arrays, no action is taken.
      *
-     * @param mixed $item Task instance to remove from the container
+     * @param Task $item Task instance to remove from the container
      *
      * @throws InvalidArgumentException If the provided $item is not an instance of Task
      *
      * @return void
      */
-    public function remove($item): void
+    public function remove(mixed $item): void
     {
         if (!$item instanceof Task) {
             throw new InvalidArgumentException('Only Task instances can be removed from TaskContainer.');
@@ -142,105 +119,44 @@ class TaskContainer extends Container
         $status = $item->getStatus();
         $priority = $item->getPriority();
 
-        switch ($status) {
-            case WorkStatus::PENDING:
-                unset($this->pending[$id]);
-                break;
-            case WorkStatus::ONGOING:
-                unset($this->ongoing[$id]);
-                break;
-            case WorkStatus::COMPLETED:
-                unset($this->completed[$id]);
-                break;
-            case WorkStatus::DELAYED:
-                unset($this->delayed[$id]);
-                break;
-            case WorkStatus::CANCELLED:
-                unset($this->cancelled[$id]);
-                break;
-        }
+        // Remove from status array
+        unset($this->byStatus[$status->value][$id]);
 
-        switch ($priority) {
-            case TaskPriority::LOW:
-                unset($this->low[$id]);
-                break;
-            case TaskPriority::MEDIUM:
-                unset($this->medium[$id]);
-                break;
-            case TaskPriority::HIGH:
-                unset($this->high[$id]);
-                break;
-        }
-
-        unset($this->items[$id]);
+        // Remove from priority array
+        unset($this->byPriority[$priority->value][$id]);
     }
 
     /**
      * Checks if a Task instance exists in the TaskContainer.
      *
-     * This method verifies the presence of a Task in the container by checking its ID,
-     * status, and priority across all relevant internal arrays.
+     * This method verifies the presence of a Task instance in the container by checking
+     * its ID against the internal arrays categorized by status and priority.
      *
      * Behavior and side effects:
      * - Validates that the provided argument is an instance of Task and throws an exception if not.
      * - Retrieves the task's ID, status, and priority using the respective getter methods.
-     * - Checks for the task's existence in the main $this->items array indexed by its ID.
      * - Checks for the task's existence in status-specific arrays: $this->pending, $this->ongoing,
      *   $this->completed, $this->delayed, or $this->cancelled, based on the task's status.
      * - Checks for the task's existence in priority-specific arrays: $this->low, $this->medium,
      *   or $this->high, based on the task's priority.
-     * - Returns true only if the task is found in all relevant arrays; otherwise returns false.
+     * - Returns true if the task is found in any of the relevant arrays; otherwise, returns false.
      *
-     * @param mixed $item Task instance to check for existence in the container
+     * @param Task $item Task instance to check for existence in the container
      *
      * @throws InvalidArgumentException If the provided $item is not an instance of Task
      *
      * @return bool True if the Task exists in the container; false otherwise
      */
-    public function contains($item): bool
+    public function contains(mixed $item): bool
     {
         if (!$item instanceof Task) {
             throw new InvalidArgumentException('Only Task instances can be checked in TaskContainer.');
         }
+        
         $id = $item->getId();
         $status = $item->getStatus();
-        $priority = $item->getPriority();
 
-        $isPresentAll = isset($this->items[$id]);
-
-        $isPresentStatus = false;
-        switch ($status) {
-            case WorkStatus::PENDING:
-                $isPresentStatus = isset($this->pending[$id]);
-                break;
-            case WorkStatus::ONGOING:
-                $isPresentStatus = isset($this->ongoing[$id]);
-                break;
-            case WorkStatus::COMPLETED:
-                $isPresentStatus = isset($this->completed[$id]);
-                break;
-            case WorkStatus::DELAYED:
-                $isPresentStatus = isset($this->delayed[$id]);
-                break;
-            case WorkStatus::CANCELLED:
-                $isPresentStatus = isset($this->cancelled[$id]);
-                break;
-        }
-
-        $isPresentPriority = false;
-        switch ($priority) {
-            case TaskPriority::LOW:
-                $isPresentPriority = isset($this->low[$id]);
-                break;
-            case TaskPriority::MEDIUM:
-                $isPresentPriority = isset($this->medium[$id]);
-                break;
-            case TaskPriority::HIGH:
-                $isPresentPriority = isset($this->high[$id]);
-                break;
-        }
-
-        return $isPresentAll && $isPresentStatus && $isPresentPriority;
+        return isset($this->byStatus[$status->value][$id]);
     }
 
     /**
@@ -256,20 +172,7 @@ class TaskContainer extends Container
      */
     public function countByStatus(WorkStatus $status): int
     {
-        switch ($status) {
-            case WorkStatus::PENDING:
-                return count($this->pending) ?? 0;
-            case WorkStatus::ONGOING:
-                return count($this->ongoing) ?? 0;
-            case WorkStatus::COMPLETED:
-                return count($this->completed) ?? 0;
-            case WorkStatus::DELAYED:
-                return count($this->delayed) ?? 0;
-            case WorkStatus::CANCELLED:
-                return count($this->cancelled) ?? 0;
-            default:
-                return 0;
-        }
+        return count($this->byStatus[$status->value] ?? []);
     }
 
     /**
@@ -291,11 +194,11 @@ class TaskContainer extends Container
     public function countAllByStatus(): array
     {
         return [
-            WorkStatus::PENDING->value      => count($this->pending),
-            WorkStatus::ONGOING->value     => count($this->ongoing),
-            WorkStatus::COMPLETED->value    => count($this->completed),
-            WorkStatus::DELAYED->value      => count($this->delayed),
-            WorkStatus::CANCELLED->value    => count($this->cancelled),
+            WorkStatus::PENDING->value      => count($this->byStatus[WorkStatus::PENDING->value] ?? []),
+            WorkStatus::ONGOING->value      => count($this->byStatus[WorkStatus::ONGOING->value] ?? []),
+            WorkStatus::COMPLETED->value    => count($this->byStatus[WorkStatus::COMPLETED->value] ?? []),
+            WorkStatus::DELAYED->value      => count($this->byStatus[WorkStatus::DELAYED->value] ?? []),
+            WorkStatus::CANCELLED->value    => count($this->byStatus[WorkStatus::CANCELLED->value] ?? []),
         ];
     }
 
@@ -312,16 +215,7 @@ class TaskContainer extends Container
      */
     public function countByPriority(TaskPriority $priority): int
     {
-        switch ($priority) {
-            case TaskPriority::LOW:
-                return count($this->low) ?? 0;
-            case TaskPriority::MEDIUM:
-                return count($this->medium) ?? 0;
-            case TaskPriority::HIGH:
-                return count($this->high) ?? 0;
-            default:
-                return 0;
-        }
+        return count($this->byPriority[$priority->value] ?? []);
     }
 
     /**
@@ -343,10 +237,154 @@ class TaskContainer extends Container
     public function countAllByPriority(): array
     {
         return [
-            TaskPriority::LOW->value      => count($this->low),
-            TaskPriority::MEDIUM->value   => count($this->medium),
-            TaskPriority::HIGH->value     => count($this->high),
+            TaskPriority::LOW->value      => count($this->byPriority[TaskPriority::LOW->value] ?? []),
+            TaskPriority::MEDIUM->value   => count($this->byPriority[TaskPriority::MEDIUM->value] ?? []),
+            TaskPriority::HIGH->value     => count($this->byPriority[TaskPriority::HIGH->value] ?? []),
         ];
+    }
+
+    /**
+     * Clears all tasks with PENDING status from the container.
+     * Also removes these tasks from their respective priority arrays.
+     *
+     * @return void
+     */
+    public function clearPending(): void
+    {
+        $this->clearByStatus(WorkStatus::PENDING);
+    }
+
+    /**
+     * Clears all tasks with ONGOING status from the container.
+     * Also removes these tasks from their respective priority arrays.
+     *
+     * @return void
+     */
+    public function clearOngoing(): void
+    {
+        $this->clearByStatus(WorkStatus::ONGOING);
+    }
+
+    /**
+     * Clears all tasks with COMPLETED status from the container.
+     * Also removes these tasks from their respective priority arrays.
+     *
+     * @return void
+     */
+    public function clearCompleted(): void
+    {
+        $this->clearByStatus(WorkStatus::COMPLETED);
+    }
+
+    /**
+     * Clears all tasks with DELAYED status from the container.
+     * Also removes these tasks from their respective priority arrays.
+     *
+     * @return void
+     */
+    public function clearDelayed(): void
+    {
+        $this->clearByStatus(WorkStatus::DELAYED);
+    }
+
+    /**
+     * Clears all tasks with CANCELLED status from the container.
+     * Also removes these tasks from their respective priority arrays.
+     *
+     * @return void
+     */
+    public function clearCancelled(): void
+    {
+        $this->clearByStatus(WorkStatus::CANCELLED);
+    }
+
+    /**
+     * Clears all tasks with LOW priority from the container.
+     * Also removes these tasks from their respective status arrays.
+     *
+     * @return void
+     */
+    public function clearLow(): void
+    {
+        $this->clearByPriority(TaskPriority::LOW);
+    }
+
+    /**
+     * Clears all tasks with MEDIUM priority from the container.
+     * Also removes these tasks from their respective status arrays.
+     *
+     * @return void
+     */
+    public function clearMedium(): void
+    {
+        $this->clearByPriority(TaskPriority::MEDIUM);
+    }
+
+    /**
+     * Clears all tasks with HIGH priority from the container.
+     * Also removes these tasks from their respective status arrays.
+     *
+     * @return void
+     */
+    public function clearHigh(): void
+    {
+        $this->clearByPriority(TaskPriority::HIGH);
+    }
+
+    /**
+     * Clears all tasks with the specified status from the container.
+     * Also removes these tasks from their respective priority arrays.
+     *
+     * @param WorkStatus $status The status of tasks to clear
+     *
+     * @return void
+     */
+    private function clearByStatus(WorkStatus $status): void
+    {
+        if (!isset($this->byStatus[$status->value])) {
+            return;
+        }
+
+        // Get all task IDs with this status
+        $taskIds = array_keys($this->byStatus[$status->value]);
+
+        // Remove from priority arrays
+        foreach ($taskIds as $taskId) {
+            foreach ($this->byPriority as $priorityValue => &$tasksInPriority) {
+                unset($tasksInPriority[$taskId]);
+            }
+        }
+
+        // Clear the status array
+        unset($this->byStatus[$status->value]);
+    }
+
+    /**
+     * Clears all tasks with the specified priority from the container.
+     * Also removes these tasks from their respective status arrays.
+     *
+     * @param TaskPriority $priority The priority of tasks to clear
+     *
+     * @return void
+     */
+    private function clearByPriority(TaskPriority $priority): void
+    {
+        if (!isset($this->byPriority[$priority->value])) {
+            return;
+        }
+
+        // Get all task IDs with this priority
+        $taskIds = array_keys($this->byPriority[$priority->value]);
+
+        // Remove from status arrays
+        foreach ($taskIds as $taskId) {
+            foreach ($this->byStatus as $statusValue => &$tasksInStatus) {
+                unset($tasksInStatus[$taskId]);
+            }
+        }
+
+        // Clear the priority array
+        unset($this->byPriority[$priority->value]);
     }
 
     /**

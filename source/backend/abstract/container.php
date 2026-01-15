@@ -111,6 +111,20 @@ abstract class Container implements IteratorAggregate, Countable, JsonSerializab
     }
 
     /**
+     * Clears all items from the container.
+     *
+     * This method removes all elements stored in the container by resetting
+     * the internal $items array to an empty array. After calling this method,
+     * the container will be empty and count() will return 0.
+     *
+     * @return void
+     */
+    public function clear(): void
+    {
+        $this->items = [];
+    }
+
+    /**
      * Reverses the order of items in the container.
      *
      * This method performs the following steps:

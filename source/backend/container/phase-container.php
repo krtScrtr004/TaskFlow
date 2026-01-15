@@ -91,7 +91,6 @@ class PhaseContainer extends Container
                 $this->cancelled[$id] = $item;
                 break;
         }
-        $this->items[$id] = $item;
         $this->totalBudget += $item->getBudget();
     }
 
@@ -144,7 +143,6 @@ class PhaseContainer extends Container
                 unset($this->cancelled[$id]);
                 break;
         }
-        unset($this->items[$id]);
         $this->totalBudget -= $item->getBudget();
     }
 
@@ -181,20 +179,19 @@ class PhaseContainer extends Container
         }
 
         $id = $item->getId();
-        $isPresentInAll = isset($this->items[$id]);
 
         $status = $item->getStatus();
         switch ($status) {
             case WorkStatus::PENDING:
-                return isset($this->pending[$id]) && $isPresentInAll;
+                return isset($this->pending[$id]);
             case WorkStatus::ONGOING:
-                return isset($this->ongoing[$id]) && $isPresentInAll;
+                return isset($this->ongoing[$id]);
             case WorkStatus::COMPLETED:
-                return isset($this->completed[$id]) && $isPresentInAll;
+                return isset($this->completed[$id]);
             case WorkStatus::DELAYED:
-                return isset($this->delayed[$id]) && $isPresentInAll;
+                return isset($this->delayed[$id]);
             case WorkStatus::CANCELLED:
-                return isset($this->cancelled[$id]) && $isPresentInAll;
+                return isset($this->cancelled[$id]);
             default:
                 return false;
         }
@@ -485,6 +482,70 @@ class PhaseContainer extends Container
     public function reverseCancelled(): array
     {
         return $this->cancelled = array_reverse($this->cancelled, true);
+    }
+
+    /**
+     * Clears all pending items.
+     *
+     * @return void
+     */
+    public function clearPending(): void
+    {
+        $this->pending = [];
+    }
+
+    /**
+     * Clears all ongoing items.
+     *
+     * @return void
+     */
+    public function clearOngoing(): void
+    {
+        $this->ongoing = [];
+    }
+
+    /**
+     * Clears all completed items.
+     *
+     * @return void
+     */
+    public function clearCompleted(): void
+    {
+        $this->completed = [];
+    }
+
+    /**
+     * Clears all delayed items.
+     *
+     * @return void
+     */
+    public function clearDelayed(): void
+    {
+        $this->delayed = [];
+    }
+
+    /**
+     * Clears all cancelled items.
+     *
+     * @return void
+     */
+    public function clearCancelled(): void
+    {
+        $this->cancelled = [];
+    }
+
+    /**
+     * Clears all items across all statuses.
+     *
+     * @return void
+     */
+    public function clear(): void
+    {
+        $this->pending = [];
+        $this->ongoing = [];
+        $this->completed = [];
+        $this->delayed = [];
+        $this->cancelled = [];
     }
 
     /**

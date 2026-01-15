@@ -122,6 +122,27 @@ class ProjectContainer extends Container
     }
 
     /**
+     * Clears all projects from the container and resets status counts.
+     *
+     * This method performs the following actions:
+     * - Calls the parent Container's clear() method to remove all items.
+     * - Resets the internal projectCountByStatus array to zero counts for each WorkStatus.
+     *
+     * @return void
+     */
+    public function clear(): void
+    {
+        parent::clear();
+        $this->projectCountByStatus = [
+            WorkStatus::PENDING->value => 0,
+            WorkStatus::ONGOING->value => 0,
+            WorkStatus::COMPLETED->value => 0,
+            WorkStatus::DELAYED->value => 0,
+            WorkStatus::CANCELLED->value => 0,
+        ];
+    }
+
+    /**
      * Increments the stored count for the given project's status.
      *
      * This method reads the project's status enum/value and, if an entry for that

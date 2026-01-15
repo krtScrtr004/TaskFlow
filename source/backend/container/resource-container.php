@@ -175,6 +175,26 @@ class ResourceContainer extends Container
     }
 
     /**
+     * Clears all workers from the container.
+     *
+     * @return void
+     */
+    public function clearWorkers(): void
+    {
+        $this->workers = new WorkerContainer();
+    }
+
+    /**
+     * Clears all resources from the container.
+     *
+     * @return void
+     */
+    public function clearResources(): void
+    {
+        $this->resources = [];
+    }
+
+    /**
      * Counts the number of resources stored in the container.
      *
      * @return int The count of Resource instances in the container
