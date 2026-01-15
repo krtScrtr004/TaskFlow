@@ -55,7 +55,7 @@ class PhaseModel extends Model
                     pp.status,
                     ppb.budget,
                     ppb.contingency_rate,
-                    ppb.notes,
+                    ppb.note,
                     pp.start_date_time,
                     pp.completion_date_time,
                     pp.actual_completion_date_time,
@@ -81,7 +81,7 @@ class PhaseModel extends Model
 
             $phases = new PhaseContainer();
             foreach ($result as $item) {
-                $item['budgetNote'] = $item['notes'];
+                $item['budgetNote'] = $item['note'];
                 $phases->add(Phase::createPartial($item));
             }
             return $phases;
@@ -276,7 +276,7 @@ class PhaseModel extends Model
                                 'priority', pt.priority,
                                 'estimated_cost', ptb.estimated_cost,
                                 'actual_cost', ptb.actual_cost,
-                                'budget_not', ptb.note,
+                                'budget_note', ptb.note,
                                 'start_date_time', pt.start_date_time,
                                 'completion_date_time', pt.completion_date_time,
                                 'created_at', pt.created_at,
@@ -298,7 +298,7 @@ class PhaseModel extends Model
                     pp.*,  
                     ppb.budget,
                     ppb.contingency_rate,
-                    ppb.notes,
+                    ppb.note,
                     COALESCE (($taskQuery), JSON_ARRAY()) AS tasks
                 FROM 
                     `project_phase` AS pp
@@ -339,7 +339,7 @@ class PhaseModel extends Model
                     }
                 }
 
-                $item['budgetNote'] = $item['notes'];
+                $item['budgetNote'] = $item['note'];
                 $item['tasks'] = null; // Clear raw tasks data
                 $phase = Phase::createPartial($item);
                 if ($includeTasks && $taskContainer->count() > 0) {
@@ -489,12 +489,12 @@ class PhaseModel extends Model
                         phase_id,
                         budget,
                         contingency_rate,
-                        notes
+                        note
                     ) VALUES (
                         :phaseId,
                         :budget,
                         :contingencyRate,
-                        :notes
+                        :note
                     )";
 
                 $phaseId = (int) $instance->connection->lastInsertId();
@@ -503,7 +503,7 @@ class PhaseModel extends Model
                     ':phaseId'         => $phaseId,
                     ':budget'          => $phase->getBudget() ?? 0.00,
                     ':contingencyRate' => $phase->getContingencyRate() ?? 0.00,
-                    ':notes'           => $phase->getBudgetNote() ?? null,
+                    ':note'           => $phase->getBudgetNote() ?? null,
                 ]);
             }
 
@@ -639,7 +639,7 @@ class PhaseModel extends Model
                 }
 
                 if (isset($data['budgetNote'])) {
-                    $phaseBudgetUpdateFields[] = 'notes = :budgetNote';
+                    $phaseBudgetUpdateFields[] = 'note = :budgetNote';
                     $phaseBudgetParams[':budgetNote'] = trimOrNull($data['budgetNote']);
                 }
 

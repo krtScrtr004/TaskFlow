@@ -216,7 +216,7 @@ class ProjectModel extends Model
                                     'status', pp.status,
                                     'budget', pb.budget,
                                     'contingency_rate', pb.contingency_rate,
-                                    'budget_note', pb.notes,
+                                    'budget_note', pb.note,
                                     'start_date_time', pp.start_date_time,
                                     'completion_date_time', pp.completion_date_time,
                                     'actual_completion_date_time', pp.actual_completion_date_time
