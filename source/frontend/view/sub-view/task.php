@@ -8,6 +8,7 @@ use App\Entity\Task;
 use App\Enumeration\Role;
 use App\Enumeration\WorkStatus;
 use App\Enumeration\TaskPriority;
+use App\Enumeration\WorkerStatus;
 use App\Exception\NotFoundException;
 use App\Middleware\Csrf;
 use App\Model\TaskWorkerModel;
@@ -33,7 +34,7 @@ $taskData = [
     'id'                        => htmlspecialchars(UUID::toString($task->getPublicId())),
     'name'                      => htmlspecialchars($task->getName()),
     'description'               => htmlspecialchars($task->getDescription()),
-    'workers'                   => $task->getWorkers()->getAssigned(),
+    'workers'                   => $task->getWorkers()->getByStatus(WorkerStatus::ASSIGNED),
     'startDateTime'             => $task->getStartDateTime(),
     'completionDateTime'        => $task->getCompletionDateTime(),
     'actualCompletionDateTime'  => $task->getActualCompletionDateTime(),
@@ -87,7 +88,7 @@ $worksOn = TaskWorkerModel::worksOn($task->getId(), Me::getInstance()->getId(), 
             <!-- Task Name and Status -->
             <div class="main flex-row">
                 <button class="back-button unset-button">
-                    <img src="<?= ICON_PATH . 'back.svg' ?>" alt="Back" title="Back" height="24" width="20">
+                    <img src="<?= ICON_PATH . 'back_w.svg' ?>" alt="Back" title="Back" height="24" width="20">
                 </button>
 
                 <section class="name-and-status flex-row">

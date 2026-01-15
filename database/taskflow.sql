@@ -45,7 +45,7 @@ CREATE TABLE `phase_task` (
   CONSTRAINT `phase_task_ibfk_1` FOREIGN KEY (`phase_id`) REFERENCES `project_phase` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `phase_task_chk_1` CHECK ((`status` in (_utf8mb4'pending',_utf8mb4'onGoing',_utf8mb4'completed',_utf8mb4'delayed',_utf8mb4'cancelled'))),
   CONSTRAINT `phase_task_chk_2` CHECK ((`priority` in (_utf8mb4'low',_utf8mb4'medium',_utf8mb4'high')))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -54,6 +54,7 @@ CREATE TABLE `phase_task` (
 
 LOCK TABLES `phase_task` WRITE;
 /*!40000 ALTER TABLE `phase_task` DISABLE KEYS */;
+INSERT INTO `phase_task` VALUES (22,_binary 'f\Z ;FJK‚Q\\ƒ¦2w',55,'Task 1',NULL,'2026-01-11 00:00:00','2026-01-12 00:00:00',NULL,'ongoing','low','2026-01-11 22:34:45','2026-01-11 22:34:45');
 /*!40000 ALTER TABLE `phase_task` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
@@ -122,7 +123,7 @@ CREATE TABLE `phase_task_budget` (
   `task_id` int NOT NULL,
   `estimated_cost` decimal(15,4) NOT NULL DEFAULT '0.0000',
   `actual_cost` decimal(15,4) NOT NULL DEFAULT '0.0000',
-  `notes` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `note` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -130,7 +131,7 @@ CREATE TABLE `phase_task_budget` (
   CONSTRAINT `fk_task_budget_task` FOREIGN KEY (`task_id`) REFERENCES `phase_task` (`id`) ON DELETE CASCADE,
   CONSTRAINT `phase_task_budget_chk_1` CHECK ((`estimated_cost` >= 0)),
   CONSTRAINT `phase_task_budget_chk_2` CHECK ((`actual_cost` >= 0))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -139,6 +140,7 @@ CREATE TABLE `phase_task_budget` (
 
 LOCK TABLES `phase_task_budget` WRITE;
 /*!40000 ALTER TABLE `phase_task_budget` DISABLE KEYS */;
+INSERT INTO `phase_task_budget` VALUES (4,22,2000.0000,0.0000,NULL,'2026-01-11 22:34:45','2026-01-11 22:34:45');
 /*!40000 ALTER TABLE `phase_task_budget` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -154,8 +156,8 @@ CREATE TABLE `phase_task_worker` (
   `task_id` int NOT NULL,
   `worker_id` int NOT NULL,
   `status` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `estimated_hours` decimal(8,2) NOT NULL DEFAULT '0.00',
-  `actual_hours` decimal(8,2) NOT NULL DEFAULT '0.00',
+  `estimated_hour` decimal(8,2) NOT NULL DEFAULT '0.00',
+  `actual_hour` decimal(8,2) NOT NULL DEFAULT '0.00',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -166,9 +168,9 @@ CREATE TABLE `phase_task_worker` (
   KEY `idx_phase_task_worker_status` (`status`),
   CONSTRAINT `phase_task_worker_ibfk_1` FOREIGN KEY (`task_id`) REFERENCES `phase_task` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `phase_task_worker_ibfk_2` FOREIGN KEY (`worker_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `phase_task_worker_chk_1` CHECK ((`estimated_hours` >= 0)),
-  CONSTRAINT `phase_task_worker_chk_2` CHECK ((`actual_hours` >= 0))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  CONSTRAINT `phase_task_worker_ch_act` CHECK ((`actual_hour` >= 0)),
+  CONSTRAINT `phase_task_worker_ch_est` CHECK ((`estimated_hour` >= 0))
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -177,6 +179,7 @@ CREATE TABLE `phase_task_worker` (
 
 LOCK TABLES `phase_task_worker` WRITE;
 /*!40000 ALTER TABLE `phase_task_worker` DISABLE KEYS */;
+INSERT INTO `phase_task_worker` VALUES (14,22,2,'assigned',8.00,0.00,'2026-01-11 22:34:47','2026-01-11 22:34:47');
 /*!40000 ALTER TABLE `phase_task_worker` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -501,7 +504,7 @@ CREATE TABLE `rate_limiter` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `ip` (`ip`,`endpoint`),
   CONSTRAINT `rate_limiter_chk_1` CHECK ((`expires_at` > 0))
-) ENGINE=InnoDB AUTO_INCREMENT=241 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=254 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -510,7 +513,7 @@ CREATE TABLE `rate_limiter` (
 
 LOCK TABLES `rate_limiter` WRITE;
 /*!40000 ALTER TABLE `rate_limiter` DISABLE KEYS */;
-INSERT INTO `rate_limiter` VALUES (228,'127.0.0.1','/endpoint/auth/login:POST',1,1767950635,'2026-01-06 23:05:45','2026-01-09 17:08:55'),(229,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers?status=assigned&key=&offset=1:GET',1,1767950930,'2026-01-06 23:05:59','2026-01-09 17:27:50'),(230,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers?status=assigned&excludeProjectTerminated=true&offset=1:GET',1,1767950930,'2026-01-06 23:05:59','2026-01-09 17:27:50'),(231,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers/3a47359d-c34d-4360-a56b-09777fa6ad2a:GET',5,1767950969,'2026-01-06 23:06:02','2026-01-09 17:28:29'),(232,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/manager:GET',1,1767950946,'2026-01-06 23:06:03','2026-01-09 17:28:06'),(233,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/tasks/workers?status=unassigned&key=&offset=0:GET',2,1767950637,'2026-01-07 16:04:12','2026-01-09 17:22:57'),(234,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers?ids=3a47359d-c34d-4360-a56b-09777fa6ad2a:GET',2,1767950640,'2026-01-07 16:04:15','2026-01-09 17:23:00'),(235,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/tasks/workers?status=unassigned&key=&offset=4:GET',1,1767774705,'2026-01-07 16:30:45',NULL),(236,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/tasks/workers?status=unassigned&key=&offset=2:GET',1,1767774794,'2026-01-07 16:32:14',NULL),(237,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers?status=unassigned&excludeProjectTerminated=true&key=&offset=0:GET',4,1767775637,'2026-01-07 16:45:55','2026-01-07 16:46:17'),(238,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers:POST',1,1767775628,'2026-01-07 16:46:08',NULL),(239,'127.0.0.1','/endpoint/users?status=unassigned&role=worker&excludeProjectTerminated=true&projectReferenceId=6d04a51b-27da-4812-8e46-b62cf08763ef&offset=0&key=:GET',1,1767937646,'2026-01-07 21:05:10','2026-01-09 13:46:26'),(240,'127.0.0.1','/endpoint/users?status=unassigned&role=worker&excludeProjectTerminated=true&projectReferenceId=6d04a51b-27da-4812-8e46-b62cf08763ef&offset=0:GET',1,1767937665,'2026-01-07 21:24:43','2026-01-09 13:46:45');
+INSERT INTO `rate_limiter` VALUES (243,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/phases/a4fcdac0-2dd6-4bd3-8c70-9dbc6adcdb33/tasks:POST',2,1768142145,'2026-01-11 14:30:05','2026-01-11 22:34:45'),(244,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/tasks/workers?status=unassigned&key=&offset=0:GET',1,1768141404,'2026-01-11 14:38:01','2026-01-11 22:22:24'),(245,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers?ids=3a47359d-c34d-4360-a56b-09777fa6ad2a:GET',1,1768141406,'2026-01-11 14:38:03','2026-01-11 22:22:26'),(246,'127.0.0.1','/endpoint/auth/login:POST',1,1768230565,'2026-01-11 20:32:34','2026-01-12 22:54:25'),(247,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers?status=assigned&excludeProjectTerminated=true&offset=1:GET',3,1768230381,'2026-01-11 21:57:07','2026-01-12 23:05:21'),(248,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers?status=assigned&key=&offset=1:GET',3,1768230381,'2026-01-11 21:57:07','2026-01-12 23:05:21'),(249,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers/3a47359d-c34d-4360-a56b-09777fa6ad2a:GET',1,1768230359,'2026-01-12 21:41:30','2026-01-12 23:04:59'),(250,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/manager:GET',1,1768230361,'2026-01-12 21:41:43','2026-01-12 23:05:01'),(251,'127.0.0.1','/endpoint/projects?offset=1:GET',1,1768230351,'2026-01-12 23:04:51',NULL),(252,'127.0.0.1','/endpoint/users?offset=2:GET',1,1768230353,'2026-01-12 23:04:53',NULL),(253,'127.0.0.1','/endpoint/users/3a47359d-c34d-4360-a56b-09777fa6ad2a:GET',1,1768230354,'2026-01-12 23:04:54',NULL);
 /*!40000 ALTER TABLE `rate_limiter` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -556,23 +559,26 @@ CREATE TABLE `task_resource` (
   `id` int NOT NULL AUTO_INCREMENT,
   `task_id` int NOT NULL,
   `resource_type_id` int NOT NULL,
+  `task_worker_id` int DEFAULT NULL,
   `quantity` decimal(10,2) NOT NULL DEFAULT '1.00',
   `unit_rate` decimal(15,4) NOT NULL DEFAULT '0.0000',
-  `estimated_units` decimal(10,2) NOT NULL DEFAULT '0.00',
-  `actual_units` decimal(10,2) NOT NULL DEFAULT '0.00',
-  `notes` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `estimated_unit` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `actual_unit` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `note` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `idx_task_resource_task` (`task_id`),
   KEY `idx_task_resource_type` (`resource_type_id`),
+  KEY `fk_task_resource_worker` (`task_worker_id`),
   CONSTRAINT `fk_task_resource_task` FOREIGN KEY (`task_id`) REFERENCES `phase_task` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_task_resource_type` FOREIGN KEY (`resource_type_id`) REFERENCES `resource_type` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_task_resource_worker` FOREIGN KEY (`task_worker_id`) REFERENCES `phase_task_worker` (`id`),
+  CONSTRAINT `task_resource_ch_act` CHECK ((`actual_unit` >= 0)),
+  CONSTRAINT `task_resource_ch_est` CHECK ((`estimated_unit` >= 0)),
   CONSTRAINT `task_resource_chk_1` CHECK ((`quantity` > 0)),
-  CONSTRAINT `task_resource_chk_2` CHECK ((`unit_rate` >= 0)),
-  CONSTRAINT `task_resource_chk_3` CHECK ((`estimated_units` >= 0)),
-  CONSTRAINT `task_resource_chk_4` CHECK ((`actual_units` >= 0))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  CONSTRAINT `task_resource_chk_2` CHECK ((`unit_rate` >= 0))
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -581,6 +587,7 @@ CREATE TABLE `task_resource` (
 
 LOCK TABLES `task_resource` WRITE;
 /*!40000 ALTER TABLE `task_resource` DISABLE KEYS */;
+INSERT INTO `task_resource` VALUES (5,22,1,14,1.00,0.0000,8.00,0.00,NULL,'2026-01-11 22:34:49','2026-01-11 22:34:49');
 /*!40000 ALTER TABLE `task_resource` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -764,4 +771,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-01-09 21:42:17
+-- Dump completed on 2026-01-13 15:57:19

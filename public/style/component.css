@@ -384,6 +384,7 @@ button > .text-w-icon {
 /* ---------------- STATUS BADGE ---------------- */
 .badge {
 	height: fit-content;
+	min-width: 8ch;;
 	padding: 0.25rem 0.75rem;
 	border-radius: 5rem;
 }
