@@ -265,7 +265,7 @@ class TaskEndpoint extends Endpoint
      * - Aggregates worker cost contributions into a budget boundary validator while converting worker data
      *   (renaming 'id' => 'publicId') and creating TaskWorker partial objects stored in a WorkerContainer.
      * - Normalizes priority and converts provided date/time strings into DateTime objects.
-     * - Constructs a partial Task, associates it with the resolved Phase via additional info,
+     * - Constructs a partial Task, associates it with the resolved Phase via `add`itional info,
      *   and runs full validation; validation failures throw ValidationException with collected errors.
      * - Persists the Task through TaskService::create() and emits a success Response with the new Task public ID.
      * - Catches any Throwable and delegates handling to ResponseExceptionHandler.
@@ -344,7 +344,9 @@ class TaskEndpoint extends Endpoint
             $rawWorkers = $data['workers'];
             $workers = new WorkerContainer();
             foreach ($rawWorkers as $worker) {
-                $worker['publicId'] = $worker['id'];
+                $worker['defaultRate'] = (float) $worker['unitRate']; // Map unitRate to defaultRate
+                
+                $worker['publicId'] = $worker['id'];  
                 unset($worker['id']);
 
                 // Add to budget boundary validator
