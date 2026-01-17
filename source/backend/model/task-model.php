@@ -67,7 +67,7 @@ class TaskModel extends Model
                     ptb.actual_cost AS actual_cost,
                     ptb.note AS budget_note,
                     pt.status AS status,
-                    pt.created_at AS created_at,
+                    pt.created_at AS created_at
                 FROM 
                     `phase_task` AS pt
                 INNER JOIN 

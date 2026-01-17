@@ -4,8 +4,9 @@ use App\Core\UUID;
 use App\Enumeration\TaskPriority;
 use App\Middleware\Csrf;
 
-if (!$project) throw new Exception('Project data is required to render this page');
-$projectData = ['id'    => htmlspecialchars(UUID::toString($project->getPublicId()))];
+$uiState = [];
+$projectData = [];
+$taskData = [];
 
 if (!$phase) throw new Exception('Active phase data is required to render this page');
 $phaseData = [
@@ -15,6 +16,58 @@ $phaseData = [
     'startDateTime'         => $phase->getStartDateTime(),
     'completionDateTime'    => $phase->getCompletionDateTime()
 ];
+
+// Initialize data based on page (create / edit)
+if (isset($project)) {
+    // Create task page 
+
+    if (!$project) throw new Exception('Project data is required to render this page');
+    $projectData = [
+        'id' => $project?->getPublicId() 
+            ? htmlspecialchars(UUID::toString($project->getPublicId())) 
+            : ''
+    ];
+
+    $taskData = [
+        'name'                  => '',
+        'description'           => '',
+        'startDateTime'         => '',
+        'completionDateTime'    => '',
+        'priority'              => '',
+        'estimatedCost'         => '',
+        'budgetNote'            => ''
+    ];
+
+    $uiState = [
+        'pageName'          => 'Create A Task',
+        'formDescription'   => 'Fill in the details below to create a new task',
+        'submitButton'      => 'create_task_button',
+        'noWorkerWall'      => 'flex-col'
+    ];
+} else {
+    // Update task page
+    if (!$task) throw new Exception('Task data is required to render this page');
+
+    $taskData = [
+        'name'                  => $task->getName(),
+        'description'           => $task->getDescription() ?? '',
+        'startDateTime'         => formatDateTime($task->getStartDateTime(), 'Y-m-d'),
+        'completionDateTime'    => formatDateTime($task->getCompletionDateTime(), 'Y-m-d'),
+        'priority'              => $task->getPriority(),
+        'estimatedCost'         => $task->getEstimatedCost(),
+        'budgetNote'            => $task->getBudgetNote() ?? '',
+        'workers'               => $task->getWorkers()
+    ];
+
+    $uiState = [
+        'pageName'          => 'Edit Task',
+        'formDescription'   => 'Modify the details of the task',
+        'submitButton'      => 'edit_task_button',
+        'noWorkerWall'      => $taskData['workers']?->count() === 0 
+            ? 'flex-col'
+            : 'no-display'
+    ];
+}
 ?>
 
 <!DOCTYPE html>
@@ -24,7 +77,7 @@ $phaseData = [
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="<?= Csrf::get() ?>">
-    <title>Create A Task</title>
+    <title><?= $uiState['pageName'] ?></title>
 
     <base href="<?= PUBLIC_PATH ?>">
     <link rel="icon" type="image/x-icon" href="<?= IMAGE_PATH . 'logo-dark.ico' ?>">
@@ -55,7 +108,7 @@ $phaseData = [
                     <div class="back-container flex-row">
                         <img src="<?= ICON_PATH . 'back_w.svg' ?>" alt="Back" title="Back" height="18">
 
-                        <p class="">Back To Dashboard</p>
+                        <p class="">Back To Selection</p>
                     </div>
                 </button>
 
@@ -65,13 +118,12 @@ $phaseData = [
                     <section class="heading">
                         <div class="text-w-icon">
                             <img src="<?= ICON_PATH . 'task_w.svg' ?>" alt="Task" title="Task" height="24">
-                            <h2 class="">Create A New Task</h2>
+                            <h2 class=""><?= $uiState['pageName'] ?></h2>
                         </div>
-                        <p class="dark-white-text light-text">
-                            Fill in the details below to create a new task
-                        </p>
+                        <p class="dark-white-text light-text"><?= $uiState['formDescription'] ?></p>
                     </section>
 
+                    <!-- Phase Info -->
                     <section class="phase-info content-section-block flex-col black-bg">
                         <div class="phase-header flex-col">
                             <p class="green-text minified-text">ACTIVE PHASE</p>
@@ -105,7 +157,13 @@ $phaseData = [
                                             <p class="">Name</p>
                                         </div>
                                     </label>
-                                    <input type="text" id="name" name="name" placeholder="(eg. Requirement Gathering and Analysis)" required>
+                                    <input 
+                                        type="text" 
+                                        id="name" 
+                                        name="name" 
+                                        value="<?= $taskData['name'] ?>"
+                                        placeholder="(eg. Requirement Gathering and Analysis)" 
+                                        required>
                                 </div>
 
                                 <?= workNameRules() ?>
@@ -120,7 +178,12 @@ $phaseData = [
                                             <p class="">Start Date</p>
                                         </div>
                                     </label>
-                                    <input type="date" id="start_date_time" name="start_date_time" required>
+                                    <input 
+                                        type="date" 
+                                        id="start_date_time" 
+                                        name="start_date_time" 
+                                        value="<?= $taskData['startDateTime'] ?>"
+                                        required>
                                 </div>
 
                                 <?= workStartDateTimeRules(2) ?>
@@ -135,7 +198,12 @@ $phaseData = [
                                             <p class="">Completion Date</p>
                                         </div>
                                     </label>
-                                    <input type="date" id="completion_date_time" name="completion_date_time" required>
+                                    <input 
+                                        type="date" 
+                                        id="completion_date_time" 
+                                        name="completion_date_time" 
+                                        value="<?= $taskData['completionDateTime'] ?>"
+                                        required>
                                 </div>
 
                                 <?= workCompletionDateTimeRules(2) ?>
@@ -153,7 +221,11 @@ $phaseData = [
                                     </div>
                                 </label>
 
-                                <textarea name="description" id="description" placeholder="Describe the task in detail (e.g., Gather requirements from stakeholders, analyze feasibility)" rows="8"></textarea>
+                                <textarea 
+                                    name="description" 
+                                    id="description" 
+                                    placeholder="Describe the task in detail (e.g., Gather requirements from stakeholders, analyze feasibility)" 
+                                    rows="8"><?= $taskData['description'] ?></textarea>
                             </div>
 
                             <?= workDescriptionRules() ?>
@@ -170,8 +242,10 @@ $phaseData = [
                                 </label>
 
                                 <select name="priority" id="priority" required>
-                                    <?php foreach (TaskPriority::cases() as $priority) : ?>
-                                        <option value="<?= $priority->value ?>"><?= $priority->getDisplayName() ?></option>
+                                    <?php foreach (TaskPriority::cases() as $priority): 
+                                        $isSelected = $priority === $taskData['priority'];
+                                    ?>
+                                        <option value="<?= $priority->value ?>" <?= $isSelected ? 'selected' : '' ?>><?= $priority->getDisplayName() ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
@@ -186,7 +260,15 @@ $phaseData = [
                                         </div>
                                     </label>
 
-                                    <input type="number" step="0.01" min="0" name="estimated_cost" id="estimated_cost" placeholder="Estimate the cost (e.g., 1500.00)" required>
+                                    <input 
+                                        type="number" 
+                                        step="0.01" 
+                                        min="0" 
+                                        name="estimated_cost" 
+                                        id="estimated_cost" 
+                                        value="<?= $taskData['estimatedCost'] ?>"
+                                        placeholder="Estimate the cost (e.g., 1500.00)" 
+                                        required>
                                 </div>
 
                                 <?= workBudgetRules(2) ?>
@@ -203,7 +285,11 @@ $phaseData = [
                                     </div>
                                 </label>
 
-                                <textarea name="budget_note" id="budget_note" placeholder="Add any notes about the budget (e.g., include additional costs or considerations)" rows="3"></textarea>
+                                <textarea 
+                                    name="budget_note" 
+                                    id="budget_note" 
+                                    placeholder="Add any notes about the budget (e.g., include additional costs or considerations)" 
+                                    rows="3"><?= $taskData['budgetNote'] ?></textarea>
                             </div>
 
                             <?= workDescriptionRules() ?>
@@ -214,7 +300,7 @@ $phaseData = [
                 </section>
 
                 <!-- Submit Button -->
-                <button class="submit-task-button blue-bg">
+                <button class="submit-task-button blue-bg" id="<?= $uiState['submitButton'] ?>">
                     <div class="text-w-icon">
                         <img src="<?= ICON_PATH . 'add_w.svg' ?>" alt="Create Task" title="Create Task" height="20">
                         <h3>Create Task</h3>
@@ -237,9 +323,12 @@ $phaseData = [
 
                 <section class="selected-worker-list flex-col no-display">
                     <!-- Selected Workers Will Appear Here -->
+                    <?php foreach ($taskData['workers'] as $worker) {
+                        echo selectedTaskWorkerCard($worker);
+                    } ?>
                 </section>
 
-                <div class="no-workers-wall no-content-wall light-black-bg flex-col">
+                <div class="no-workers-wall no-content-wall light-black-bg <?= $uiState['noWorkerWall'] ?>">
                     <img src="<?= ICON_PATH . 'empty_dw.svg' ?>" alt="No Workers Assigned" title="No Workers Assigned" height="64">
                     <p class="dark-white">No Workers Assigned</p>
                 </div>

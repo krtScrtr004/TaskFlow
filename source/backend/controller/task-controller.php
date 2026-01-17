@@ -211,7 +211,7 @@ class TaskController implements Controller
                 throw new ForbiddenException('Task ID is required.');
             }
 
-            $task = TaskModel::findById($taskId, $phase->getId(), $project->getId());
+            $task = TaskService::get($taskId, ['workers' => true, 'resources' => true]);
             if ($task === null) {
                 throw new NotFoundException('Task not found.');
             }
