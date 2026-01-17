@@ -82,7 +82,7 @@ class ResourceValidator extends Validator
      * Validates the hours assigned to a worker.
      *
      * This method checks if the provided hours assigned value falls within the acceptable
-     * range defined by WORKER_HOURS_MIN and WORKER_HOURS_MAX constants.
+     * range defined by WORKER_HOURS_MAX constant.
      * If the value is outside this range, an error message is added to the errors array.
      *
      * @param float $hoursAssigned The number of hours assigned.
@@ -91,7 +91,7 @@ class ResourceValidator extends Validator
      */
     public function validateHoursAssigned(float $hoursAssigned): void
     {
-        $min = WORKER_HOURS_MIN;
+        $min = 0;
         $max = WORKER_HOURS_MAX;
 
         if ($hoursAssigned < $min || $hoursAssigned > $max) {

@@ -15,6 +15,7 @@ use App\Model\PhaseModel;
 use App\Model\ProjectModel;
 use App\Model\ProjectWorkerModel;
 use App\Model\TaskModel;
+use App\Service\TaskService;
 use DateTime;
 use ValueError;
 
@@ -252,16 +253,35 @@ class TaskController implements Controller
                 exit();
             }
 
+            // Project ID is required to create a task
             $projectId = isset($args['projectId'])
                 ? UUID::fromString($args['projectId'])
                 : null;
-            if (!$projectId)
+            if (isset($args['projectId']) && !$projectId)
                 throw new ForbiddenException('Project ID is required.');
 
-            $project = ProjectModel::findById($projectId);
-            if (!$project) throw new NotFoundException('Project not found.');
+            $project = isset($args['projectId'])
+                ? ProjectModel::findById($projectId)
+                : null;
+            if (isset($args['projectId']) && !$project) 
+                throw new NotFoundException('Project not found.');
 
-            $phase = PhaseModel::findOnGoingByProjectId($projectId);
+            // Task ID is required for editing an existing task
+            $taskId = isset($args['taskId'])
+                ? UUID::fromString($args['taskId'])
+                : null;
+            if (isset($args['taskId']) && !$taskId)
+                throw new ForbiddenException('Task ID is required.');
+
+            $task = isset($args['taskId'])
+                ? TaskService::get($taskId, ['workers' => true, 'resources' => true])
+                : null;
+            if (isset($args['taskId']) && !$task)
+                throw new NotFoundException('Task not found.');
+
+            $phase = isset($args['projectId']) 
+                ? PhaseModel::findOnGoingByProjectId($projectId) 
+                : TaskModel::findOwningPhase($task->getId());
             if (!$phase) throw new NotFoundException('Active phase not found.');
 
             require_once SUB_VIEW_PATH . 'form' . DS . 'task.php';

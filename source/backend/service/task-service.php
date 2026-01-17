@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Container\ResourceContainer;
 use App\Core\Connection;
+use App\Core\UUID;
 use App\Dependent\TaskResource;
 use App\Entity\ResourceType;
 use App\Entity\Task;
@@ -24,10 +25,6 @@ class TaskService
     private function __construct()
     {
         $this->connection = Connection::getInstance();
-    }
-
-    public static function find() {
-        
     }
 
     /**
@@ -86,7 +83,9 @@ class TaskService
                         $taskWorkerResources->add(TaskResource::createPartial([
                             'type'          => ResourceType::createPartial(['id' => ResourceTypeMapping::LABOR->value]),
                             'quantity'      => 1,
-                            'unitRate'      => $worker->getDefaultRate(),
+                            'unitRate'      => $worker->getUnitRate() !== DEFAULT_RATE_MIN 
+                                ? $worker->getUnitRate()
+                                : $worker->getDefaultRate(),
                             'estimatedUnit' => $worker->getEstimatedHours(),
                             'taskWorkerId'  => $worker->getId()
                         ]));
@@ -108,5 +107,51 @@ class TaskService
             $instance->connection->rollBack();
             throw $e;
         }
+    }
+
+    /**
+     * Retrieves a Task by its ID, with optional inclusion of related entities.
+     * 
+     * This method fetches a Task entity from the database based on the provided task ID.
+     * It supports optional parameters to include related entities such as TaskWorkers
+     * and TaskResources in the returned Task object.
+     * 
+     * @param int|UUID $taskId The ID or UUID of the Task to retrieve.
+     * @param array $options Optional associative array to specify related entities to include:
+     *                       'workers' => bool (default false),
+     *                       'resources' => bool (default false).
+     * 
+     * @return Task|null The retrieved Task entity with optional related entities, or null if not found.
+     * 
+     * @throws \InvalidArgumentException If the provided task ID is invalid.
+     */
+    public static function get(
+        int|UUID $taskId, 
+        array $options = [
+            'workers'   => false,
+            'resources' => false
+        ]
+    ): ?Task {
+        if (is_int($taskId) && $taskId <= 0) 
+            throw new \InvalidArgumentException('Invalid task ID.');
+
+        $includeWorkers = $options['workers'] ?? false;
+        $includeResources = $options['resources'] ?? false;
+
+        $task = TaskModel::findById($taskId);
+
+        // Load related entities based on options
+        if ($task && $includeWorkers) {
+            $workers = TaskWorkerModel::findByTaskId($task->getId());
+            $task->setWorkers($workers);
+        }
+        
+        // Load resources if specified
+        if ($task && $includeResources) {
+            $resources = ResourceModel::findByTaskId($task->getId());
+            $task->setResources($resources);
+        }
+
+            return $task;
     }
 }

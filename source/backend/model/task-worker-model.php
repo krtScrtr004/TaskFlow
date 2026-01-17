@@ -5,6 +5,7 @@ namespace App\Model;
 use App\Abstract\Model;
 use App\Container\WorkerContainer;
 use App\Core\UUID;
+use App\Dependent\TaskWorker;
 use App\Dependent\Worker;
 use App\Enumeration\Role;
 use App\Enumeration\WorkerStatus;
@@ -44,7 +45,7 @@ class TaskWorkerModel extends Model
         $paramOptions = [
             'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
             'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
-            'groupBy'   => $options[':groupBy'] ?? $options['groupBy'] ?? 'u.id',
+            'groupBy'   => $options[':groupBy'] ?? $options['groupBy'] ?? 'u.id, pw.default_rate, ptr.unit_rate, ptw.estimated_hour, ptw.actual_hour, ptw.status',
             'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 'u.last_name ASC',
         ];
 
@@ -62,6 +63,8 @@ class TaskWorkerModel extends Model
                     u.email,
                     u.contact_number,
                     u.profile_link,
+                    pw.default_rate,
+                    ptr.unit_rate,
                     ptw.estimated_hour,
                     ptw.actual_hour,
                     ptw.status,
@@ -97,6 +100,14 @@ class TaskWorkerModel extends Model
                     `phase_task_worker` AS ptw 
                 ON 
                     u.id = ptw.worker_id
+                INNER JOIN 	
+                    `task_resource` AS ptr
+                ON 
+                    ptr.task_worker_id = ptw.id
+                INNER JOIN 
+                    `project_worker` AS pw
+                ON
+                    pw.worker_id = u.id
                 INNER JOIN
                     `phase_task` AS pt
                 ON
@@ -133,7 +144,7 @@ class TaskWorkerModel extends Model
                     'totalTasks'        => (int) $row['total_tasks'],
                     'completedTasks'    => (int) $row['completed_tasks']
                 ];
-                $workers->add(Worker::createPartial($row));
+                $workers->add(TaskWorker::createPartial($row));
             }
             return $workers;
         } catch (PDOException $e) {
@@ -300,6 +311,30 @@ class TaskWorkerModel extends Model
             throw $e;
         }
     }
+
+    /**
+     * Finds all workers associated with a specific task ID.
+     *
+     * This method retrieves all workers assigned to the given task, identified by either an integer ID or a UUID.
+     * It constructs the appropriate WHERE clause based on the type of taskId provided and delegates the search to the find() method.
+     *
+     * @param int|UUID $taskId The unique identifier of the task (integer or UUID).
+     *
+     * @return WorkerContainer|null A container of Worker instances if found, or null if no workers are associated with the task.
+     *
+     * @throws Exception If an error occurs during the query execution.
+     */
+    public static function findByTaskId(int|UUID $taskId): ?WorkerContainer
+    {
+        $whereClause = is_int($taskId)
+            ? 'ptw.task_id = :taskId'
+            : 'pt.public_id = :taskId';
+        $params = [':taskId' => is_int($taskId) 
+            ? $taskId 
+            : UUID::toBinary($taskId)];
+
+        return self::find($whereClause, $params);
+    }
     
     /**
      * Searches for workers based on various criteria such as key, task, project, and status.
@@ -425,6 +460,8 @@ class TaskWorkerModel extends Model
                         u.gender,
                         u.email,
                         u.contact_number,
+                        pw.default_rate,
+	                    ptr.unit_rate,
                         ptw.estimated_hour,
                         ptw.actual_hour,
                         ptw.status,
@@ -439,6 +476,14 @@ class TaskWorkerModel extends Model
                         `phase_task_worker` AS ptw
                     ON
                         u.id = ptw.worker_id
+                    INNER JOIN 	
+                        `task_resource` AS ptr
+                    ON 
+                        ptr.task_worker_id = ptw.id
+                    INNER JOIN 
+                        `project_worker` AS pw
+                    ON
+                        pw.worker_id = u.id
                     INNER JOIN
                         `phase_task` AS pt
                     ON

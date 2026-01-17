@@ -33,7 +33,9 @@ function selectedTaskWorkerCard(TaskWorker $worker): bool|string
             $worker->getLastName()
         )
     );
-    $unitRate = $worker->getUnitRate() ?? $worker->getDefaultRate();
+    $unitRate = $worker->getUnitRate() !== DEFAULT_RATE_MIN 
+        ? $worker->getUnitRate() 
+        : $worker->getDefaultRate();
     $estimatedHoursAssigned = $worker->getEstimatedHours();
 
     ob_start()

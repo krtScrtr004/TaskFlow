@@ -23,28 +23,23 @@ use PDOException;
 class TaskModel extends Model
 {
     /**
-     * Finds and retrieves tasks from the database based on specified criteria.
+     * Finds tasks based on a custom WHERE clause and parameters.
      *
-     * This method executes a complex SQL query to fetch tasks along with their associated phase,
-     * project, and worker information. It supports dynamic WHERE clauses, query parameters, and
-     * additional query options for flexible searching.
+     * This method constructs and executes a SQL query to retrieve tasks from the database
+     * based on the provided WHERE clause and parameters. It supports various options for
+     * pagination, grouping, and ordering of results.
      *
-     * The returned data includes:
-     * - Task details (ID, public ID, name, description, dates, priority, status, creation timestamp)
-     * - Associated phase public ID
-     * - Workers assigned to the task, including:
-     *      - Worker ID, public ID, name, email, contact number, profile link, gender, status, creation timestamp, confirmation timestamp, deletion timestamp
-     *      - Job titles (as an array)
-     *      - Total tasks assigned to the worker
-     *      - Completed tasks by the worker
+     * @param string $whereClause The SQL WHERE clause to filter tasks.
+     * @param array $params The parameters to bind to the SQL query.
+     * @param array $options Options for query execution:
+     *      - limit: int Maximum number of results to return (default: 50)
+     *      - offset: int Number of results to skip (default: 0)
+     *      - groupBy: string SQL GROUP BY clause (default: 'pt.id')
+     *      - orderBy: string SQL ORDER BY clause (default: 'pt.start_date_time DESC')
      *
-     * @param string $whereClause Optional SQL WHERE clause for filtering tasks.
-     * @param array $params Parameters to bind to the prepared statement for the query.
-     * @param array $options Additional options to modify the query (e.g., sorting, limiting).
+     * @return TaskContainer|null A container of found tasks, or null if no tasks match the criteria.
      *
-     * @return TaskContainer|null A container of Task objects matching the criteria, or null if none found.
-     *
-     * @throws DatabaseException If a database error occurs during query execution.
+     * @throws DatabaseException If a database error occurs during the query execution.
      */
     protected static function find(string $whereClause = '', array $params = [], array $options = []): ?TaskContainer
     {
@@ -73,92 +68,6 @@ class TaskModel extends Model
                     ptb.note AS budget_note,
                     pt.status AS status,
                     pt.created_at AS created_at,
-                    COALESCE(
-                        (
-                            JSON_ARRAYAGG(
-                                JSON_OBJECT(
-                                    'id', u.id,
-                                    'public_id', HEX(u.public_id),
-                                    'first_name', u.first_name,
-                                    'middle_name', u.middle_name,
-                                    'last_name', u.last_name,
-                                    'email', u.email,
-                                    'contact_number', u.contact_number,
-                                    'profile_link', u.profile_link,
-                                    'gender', u.gender,
-                                    'status', ptw.status,
-                                    'created_at', u.created_at,
-                                    'confirmed_at', u.confirmed_at,
-                                    'deleted_at', u.deleted_at,
-                                    'job_titles', COALESCE(
-                                        (
-                                            SELECT 
-                                                JSON_ARRAYAGG(mjt.title)
-                                            FROM
-                                                `user_job_title` AS mjt
-                                            WHERE 
-                                                mjt.user_id = u.id
-                                        ), JSON_ARRAY()
-                                    ),
-                                    'worker_total_tasks', (
-                                        SELECT 
-                                            COUNT(*)
-                                        FROM 
-                                            `phase_task_worker` AS ptw2
-                                        WHERE 
-                                            ptw2.worker_id = u.id
-                                    ),
-                                    'worker_completed_tasks', (
-                                        SELECT 
-                                            COUNT(*)
-                                        FROM 
-                                            `phase_task_worker` AS ptw3
-                                        INNER JOIN 
-                                            `phase_task` AS pt3 
-                                        ON
-                                            ptw3.task_id = pt3.id
-                                        WHERE 
-                                            ptw3.worker_id = u.id
-                                        AND 
-                                            pt3.status = 'completed'
-                                    )
-                                )
-                            )
-                        ), JSON_ARRAY()
-                    ) AS task_workers,
-                    COALESCE(
-                        (
-                            SELECT JSON_ARRAYAGG(
-                                JSON_OBJECT(
-                                    'id', ptr.id,
-                                    'quantity', ptr.quantity,
-                                    'unit_rate', ptr.unit_rate,
-                                    'estimated_unit', ptr.estimated_unit,
-                                    'actual_unit', ptr.actual_unit,
-                                    'note', ptr.note,
-                                    'type', (
-                                        SELECT JSON_OBJECT(
-                                            'id', rt.id,
-                                            'name', rt.name,
-                                            'description', rt.description,
-                                            'unit', rt.unit,
-                                            'default_rate', rt.default_rate
-                                        )
-                                        FROM 
-                                            `resource_type` AS rt
-                                        WHERE 
-                                            rt.id = ptr.resource_type_id
-                                        LIMIT 1
-                                    )
-                                )
-                            ) FROM 
-                                `task_resource` AS ptr
-                            WHERE 
-                                ptr.task_id = pt.id
-                            AND 
-                                ptr.task_worker_id IS NULL
-                        ), JSON_ARRAY()
-                    ) AS task_resources
                 FROM 
                     `phase_task` AS pt
                 INNER JOIN 
@@ -196,25 +105,7 @@ class TaskModel extends Model
             $tasks = new TaskContainer();
             foreach ($results as $row) {
                 $row['additionalInfo'] = ['phaseId' => UUID::fromBinary($row['phase_id'])];
-                $task = Task::createPartial($row);
-
-                // Build worker instances
-                $workers = json_decode($row['task_workers'], true) ?? [];
-                foreach ($workers as $worker) {
-                    $worker['additionalInfo'] = [
-                        'totalTasks'        => (int) $worker['worker_total_tasks'],
-                        'completedTasks'    => (int) $worker['worker_completed_tasks']
-                    ];
-                    $task->addWorker(TaskWorker::createPartial($worker));
-                }
-
-                // 
-                $resources = json_decode($row['task_resources'], true);
-                foreach ($resources as $resource) {
-                    $task->addResource(TaskResource::createPartial($resource));
-                }
-
-                $tasks->add($task);
+                $tasks->add(Task::createPartial($row));
             }
             return $tasks;
         } catch (PDOException $e) {
