@@ -15,6 +15,7 @@ use DateTime;
 
 class TaskWorker extends Worker
 {
+    private float $unitRate;
     private float $estimatedHour;
     private float $actualHour;
 
@@ -39,14 +40,15 @@ class TaskWorker extends Worker
      * @param string $email Worker's email address.
      * 
      * TASK WORKER SPECIFIC:
-     * @param string|null $bio Worker's biography (optional).
-     * @param string|null $profileLink Worker's profile link (optional).
      * @param float $defaultRate Worker's default rate (default is DEFAULT_RATE_MIN).
+     * @param float $unitRate Worker's unit rate (default is DEFAULT_RATE_MIN).
      * @param WorkerStatus $status Worker's worker status (default is UNASSIGNED).
      * @param float $estimatedHour Worker's estimated hours assigned (default is WORKER_HOURS_MIN).
      * @param float $actualHour Worker's actual hours worked (default is 0.0).
      * 
      * OPTIONAL / WITH DEFAULT VALUES:
+     * @param string|null $bio Worker's biography (optional).
+     * @param string|null $profileLink Worker's profile link (optional).
      * @param string|null $password Worker's password (optional).
      * @param DateTime|null $confirmedAt Worker's confirmation timestamp (optional).
      * @param DateTime|null $deletedAt Worker's deletion timestamp (optional).
@@ -68,6 +70,7 @@ class TaskWorker extends Worker
 
         // Task worker-specific properties
         float $defaultRate = DEFAULT_RATE_MIN,
+        float $unitRate = DEFAULT_RATE_MIN,
         WorkerStatus $status = WorkerStatus::UNASSIGNED,
         float $estimatedHour = WORKER_HOURS_MIN,
         float $actualHour = 0.0,
@@ -94,9 +97,9 @@ class TaskWorker extends Worker
             contactNumber: $contactNumber,
             email: $email,
             bio: $bio,
+            defaultRate: $defaultRate,
             profileLink: $profileLink,
             createdAt: $createdAt,
-            defaultRate: $defaultRate,
             status: $status,
             password: $password,
             confirmedAt: $confirmedAt,
@@ -105,6 +108,7 @@ class TaskWorker extends Worker
         );
 
         $this->resourceValidator = new ResourceValidator();
+        $this->resourceValidator->validateUnitRate($unitRate);
         $this->resourceValidator->validateHoursAssigned($estimatedHour);
         if ($actualHour > 0) 
             $this->resourceValidator->validateHoursAssigned($actualHour);
@@ -115,12 +119,23 @@ class TaskWorker extends Worker
             );
         }
 
-        $this->estimatedHour = $estimatedHour || WORKER_HOURS_MIN;
+        $this->unitRate = $unitRate;
+        $this->estimatedHour = $estimatedHour;
         $this->actualHour = $actualHour;
         $this->role = Role::TASK_WORKER;
     }
 
     // GETTERS
+
+    /**
+     *  Gets the unit rate of the worker.
+     * 
+     * @return float The worker's unit rate
+     */
+    public function getUnitRate(): float
+    {
+        return $this->unitRate;
+    }
 
     /**
      * Gets the estimated hours assigned to the task worker.
@@ -145,9 +160,30 @@ class TaskWorker extends Worker
     // SETTERS
 
     /**
-     * Gets the actual hours worked by the task worker.
+     * Sets the unit rate of the worker.
+     * 
+     * @param float $unitRate The worker's unit rate
+     * @throws ValidationException If the unit rate is invalid
+     * @return void
+     */
+    public function setUnitRate(float $unitRate): void
+    {
+        $this->resourceValidator->validateUnitRate($unitRate);
+        if ($this->resourceValidator->hasErrors()) {
+            throw new ValidationException(
+                "Invalid Unit Rate",
+                $this->resourceValidator->getErrors()
+            );
+        }
+        $this->unitRate = $unitRate;
+    }
+
+    /**
+     * Sets the estimated hours assigned to the task worker.
      *
-     * @return float The actual hours.
+     * @param float $hours The estimated hours.
+     * @throws ValidationException If the estimated hours are invalid
+     * @return void
      */
     public function setEstimatedHours(float $hours): void
     {
@@ -164,7 +200,9 @@ class TaskWorker extends Worker
     /**
      * Sets the actual hours worked by the task worker.
      *
-     * @return float The actual hours.
+     * @param float $hours The actual hours.
+     * @throws ValidationException If the actual hours are invalid
+     * @return void
      */
     public function setActualHours(float $hours): void
     {
@@ -202,7 +240,8 @@ class TaskWorker extends Worker
      *      - password: string|null Password.
      *      - bio: string|null Biography.
      *      - profileLink: string|null Profile link.
-     *      - defaultRate: float Worker's default rate.
+     *      - defaultRate: float Default rate.
+     *      - unitRate: float Worker's unit rate.
      *      - status: WorkerStatus|null Worker's status.
      *      - createdAt: DateTime Creation timestamp.
      *      - confirmedAt: DateTime|null Confirmation timestamp.
@@ -220,6 +259,7 @@ class TaskWorker extends Worker
         /** @var static $partial */ // tell IDE this is the called class (silences false positive)
         $partial = parent::createPartial($data);
 
+        $partial->setUnitRate((float) ($data['unitRate'] ?? DEFAULT_RATE_MIN));
         $partial->setEstimatedHours((float) ($data['estimatedHour'] ?? WORKER_HOURS_MIN));
         if (isset($data['actualHour'])) {
             $partial->setActualHours((float) $data['actualHour']);
@@ -245,8 +285,9 @@ class TaskWorker extends Worker
     {
         $parentArray = parent::toArray($useSnakeCase);
         $taskWorkerArray = [
+            'unitRate'      => $this->unitRate,
             'estimatedHour' => $this->estimatedHour,
-            'actualHour' => $this->actualHour,
+            'actualHour'    => $this->actualHour,
         ];
         return array_merge($parentArray, $taskWorkerArray);
     }
@@ -284,6 +325,7 @@ class TaskWorker extends Worker
             bio: $worker->getBio(),
             profileLink: $worker->getProfileLink(),
             defaultRate: $worker->getDefaultRate(),
+            unitRate: $data['unitRate'] ?? DEFAULT_RATE_MIN,
             status: $worker->getStatus(),
             createdAt: $worker->getCreatedAt(),
             confirmedAt: $worker->getConfirmedAt(),
