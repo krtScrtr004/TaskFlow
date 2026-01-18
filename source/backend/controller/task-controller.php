@@ -21,13 +21,9 @@ use ValueError;
 
 class TaskController implements Controller
 {
-    private function __construct()
-    {
-    }
+    private function __construct() {}
 
-    public static function index(): void
-    {
-    }
+    public static function index(): void {}
 
     /**
      * Displays the grid view of tasks for a specific project.
@@ -219,7 +215,7 @@ class TaskController implements Controller
             $status = $task->getStatus();
             $startDateTime = formatDateTime($task->getStartDateTime(), 'Y-m-d');
             $completionDateTime = formatDateTime($task->getCompletionDateTime(), 'Y-m-d');
-            $currentDateTime = formatDateTime(new DateTime(), 'Y-m-d');  
+            $currentDateTime = formatDateTime(new DateTime(), 'Y-m-d');
 
             // Check if the task is already ongoing
             if ($startDateTime && compareDates($startDateTime, $currentDateTime) <= 0 && $status === WorkStatus::PENDING) {
@@ -253,20 +249,7 @@ class TaskController implements Controller
                 exit();
             }
 
-            // Project ID is required to create a task
-            $projectId = isset($args['projectId'])
-                ? UUID::fromString($args['projectId'])
-                : null;
-            if (isset($args['projectId']) && !$projectId)
-                throw new ForbiddenException('Project ID is required.');
-
-            $project = isset($args['projectId'])
-                ? ProjectModel::findById($projectId)
-                : null;
-            if (isset($args['projectId']) && !$project) 
-                throw new NotFoundException('Project not found.');
-
-            // Task ID is required for editing an existing task
+            // Task Info
             $taskId = isset($args['taskId'])
                 ? UUID::fromString($args['taskId'])
                 : null;
@@ -279,8 +262,26 @@ class TaskController implements Controller
             if (isset($args['taskId']) && !$task)
                 throw new NotFoundException('Task not found.');
 
-            $phase = isset($args['projectId']) 
-                ? PhaseModel::findOnGoingByProjectId($projectId) 
+            // Project Info
+            $projectId = isset($args['projectId'])
+                ? UUID::fromString($args['projectId'])
+                : null;
+            if (isset($args['projectId']) && !$projectId)
+                throw new ForbiddenException('Project ID is required.');
+
+            /**
+             * If projectId is provided in args, use it to fetch the project (Create form).
+             * Otherwise, retrieve the owning project of the task (Edit form).
+             */
+            $project = isset($projectId)
+                ? ProjectModel::findById($projectId)
+                : TaskModel::findOwningProject($task->getId());
+            if (isset($args['projectId']) && !$project)
+                throw new NotFoundException('Project not found.');
+
+            // Phase Info (Active)
+            $phase = isset($args['projectId'])
+                ? PhaseModel::findOnGoingByProjectId($projectId)
                 : TaskModel::findOwningPhase($task->getId());
             if (!$phase) throw new NotFoundException('Active phase not found.');
 

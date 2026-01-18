@@ -4,9 +4,12 @@ use App\Core\UUID;
 use App\Enumeration\TaskPriority;
 use App\Middleware\Csrf;
 
-$uiState = [];
-$projectData = [];
-$taskData = [];
+if (!$project) throw new Exception('Project data is required to render this page');
+$projectData = [
+    'id' => $project?->getPublicId()
+        ? htmlspecialchars(UUID::toString($project->getPublicId()))
+        : ''
+];
 
 if (!$phase) throw new Exception('Active phase data is required to render this page');
 $phaseData = [
@@ -17,17 +20,12 @@ $phaseData = [
     'completionDateTime'    => $phase->getCompletionDateTime()
 ];
 
+$taskData = [];
+$uiState = [];
+
 // Initialize data based on page (create / edit)
-if (isset($project)) {
+if (!isset($task)) {
     // Create task page 
-
-    if (!$project) throw new Exception('Project data is required to render this page');
-    $projectData = [
-        'id' => $project?->getPublicId() 
-            ? htmlspecialchars(UUID::toString($project->getPublicId())) 
-            : ''
-    ];
-
     $taskData = [
         'name'                  => '',
         'description'           => '',
@@ -45,7 +43,7 @@ if (isset($project)) {
         'noWorkerWall'      => 'flex-col'
     ];
 } else {
-    // Update task page
+    // Edit task page
     if (!$task) throw new Exception('Task data is required to render this page');
 
     $taskData = [
@@ -63,7 +61,7 @@ if (isset($project)) {
         'pageName'          => 'Edit Task',
         'formDescription'   => 'Modify the details of the task',
         'submitButton'      => 'edit_task_button',
-        'noWorkerWall'      => $taskData['workers']?->count() === 0 
+        'noWorkerWall'      => $taskData['workers']?->count() === 0
             ? 'flex-col'
             : 'no-display'
     ];
@@ -92,7 +90,10 @@ if (isset($project)) {
 <body>
     <?php include_once COMPONENT_PATH . 'template' . DS . 'add-worker-modal.php' ?>
 
-    <main class="task-form main-page center-child" data-projectid="<?= $projectData['id'] ?>" data-phaseid="<?= $phaseData['id'] ?>">
+    <main class="task-form main-page center-child"
+        data-projectid="<?= $projectData['id'] ?>"
+        data-phaseid="<?= $phaseData['id'] ?>">
+
         <form id="task_form" class="content-section-block flex-row" action="" method="POST">
 
             <!-- Hidden phase data for FE validation -->
@@ -157,12 +158,12 @@ if (isset($project)) {
                                             <p class="">Name</p>
                                         </div>
                                     </label>
-                                    <input 
-                                        type="text" 
-                                        id="name" 
-                                        name="name" 
+                                    <input
+                                        type="text"
+                                        id="name"
+                                        name="name"
                                         value="<?= $taskData['name'] ?>"
-                                        placeholder="(eg. Requirement Gathering and Analysis)" 
+                                        placeholder="(eg. Requirement Gathering and Analysis)"
                                         required>
                                 </div>
 
@@ -178,10 +179,10 @@ if (isset($project)) {
                                             <p class="">Start Date</p>
                                         </div>
                                     </label>
-                                    <input 
-                                        type="date" 
-                                        id="start_date_time" 
-                                        name="start_date_time" 
+                                    <input
+                                        type="date"
+                                        id="start_date_time"
+                                        name="start_date_time"
                                         value="<?= $taskData['startDateTime'] ?>"
                                         required>
                                 </div>
@@ -198,10 +199,10 @@ if (isset($project)) {
                                             <p class="">Completion Date</p>
                                         </div>
                                     </label>
-                                    <input 
-                                        type="date" 
-                                        id="completion_date_time" 
-                                        name="completion_date_time" 
+                                    <input
+                                        type="date"
+                                        id="completion_date_time"
+                                        name="completion_date_time"
                                         value="<?= $taskData['completionDateTime'] ?>"
                                         required>
                                 </div>
@@ -221,10 +222,10 @@ if (isset($project)) {
                                     </div>
                                 </label>
 
-                                <textarea 
-                                    name="description" 
-                                    id="description" 
-                                    placeholder="Describe the task in detail (e.g., Gather requirements from stakeholders, analyze feasibility)" 
+                                <textarea
+                                    name="description"
+                                    id="description"
+                                    placeholder="Describe the task in detail (e.g., Gather requirements from stakeholders, analyze feasibility)"
                                     rows="8"><?= $taskData['description'] ?></textarea>
                             </div>
 
@@ -242,7 +243,7 @@ if (isset($project)) {
                                 </label>
 
                                 <select name="priority" id="priority" required>
-                                    <?php foreach (TaskPriority::cases() as $priority): 
+                                    <?php foreach (TaskPriority::cases() as $priority):
                                         $isSelected = $priority === $taskData['priority'];
                                     ?>
                                         <option value="<?= $priority->value ?>" <?= $isSelected ? 'selected' : '' ?>><?= $priority->getDisplayName() ?></option>
@@ -260,14 +261,14 @@ if (isset($project)) {
                                         </div>
                                     </label>
 
-                                    <input 
-                                        type="number" 
-                                        step="0.01" 
-                                        min="0" 
-                                        name="estimated_cost" 
-                                        id="estimated_cost" 
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        name="estimated_cost"
+                                        id="estimated_cost"
                                         value="<?= $taskData['estimatedCost'] ?>"
-                                        placeholder="Estimate the cost (e.g., 1500.00)" 
+                                        placeholder="Estimate the cost (e.g., 1500.00)"
                                         required>
                                 </div>
 
@@ -285,10 +286,10 @@ if (isset($project)) {
                                     </div>
                                 </label>
 
-                                <textarea 
-                                    name="budget_note" 
-                                    id="budget_note" 
-                                    placeholder="Add any notes about the budget (e.g., include additional costs or considerations)" 
+                                <textarea
+                                    name="budget_note"
+                                    id="budget_note"
+                                    placeholder="Add any notes about the budget (e.g., include additional costs or considerations)"
                                     rows="3"><?= $taskData['budgetNote'] ?></textarea>
                             </div>
 
@@ -347,7 +348,7 @@ if (isset($project)) {
     </main>
 
     <script type="module" src="<?= EVENT_PATH . 'back-button.js' ?>" defer></script>
-                                    
+
     <script type="module" src="<?= EVENT_PATH . 'form' . DS . 'task' . DS . 'record-changes.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'form' . DS . 'task' . DS . 'create' . DS . 'submit.js' ?>" defer></script>
 
