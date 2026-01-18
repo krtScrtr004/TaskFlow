@@ -3,11 +3,9 @@ import { addWorker } from '../add-worker-event.js'
 import { Http } from '../../../../utility/http.js'
 import { handleException } from '../../../../utility/handle-exception.js'
 import { createFullName, die, toggleElementClass } from '../../../../utility/utility.js'
-import { addedWorkerInfo, removedWorkerInfo } from '../../../form/task/record-changes.js'
+import { addedWorkerInfo, changedWorkerInfo, oldWorkerInfo, removedWorkerInfo } from '../../../form/task/record-changes.js'
 
 let isLoading = false
-
-export const workerIds = {}
 
 const taskForm = document.querySelector('#task_form')
 const noAssignedWorkerWall = taskForm?.querySelector('.no-workers-wall')
@@ -73,9 +71,7 @@ async function sendToBackend(projectId, workerIds) {
  */
 function action(workersData) {
     workersData.forEach(workerData => {
-        if (workerIds[workerData.id]) {
-            return
-        }
+        if (oldWorkerInfo.has(workerData.id) || addedWorkerInfo.has(workerData.id)) return
 
         const card = renderSelectedTaskWorkerCard({
             id: workerData.id,
@@ -100,9 +96,6 @@ function action(workersData) {
 
         // Hide the "no assigned worker" wall if it exists
         toggleElementClass(noAssignedWorkerWall, ['no-display'], ['flex-col'])
-
-        // Track the added worker to prevent duplicates
-        workerIds[workerData.id] = workerData 
     })
 }
 

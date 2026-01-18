@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Returns an HTML fragment describing validation rules for a work name input.
+ * Returns an HTML fragment describing ation rules for a work name input.
  *
  * Renders a rules block (as an HTML string) that states:
  *  - The name must be between the NAME_MIN and NAME_MAX constants in length.
@@ -51,7 +51,7 @@ function workDescriptionRules(): bool|string
 }
 
 /**
- * Generates HTML markup describing validation rules for the worker count input.
+ * Generates HTML markup describing action rules for the worker count input.
  *
  * Returns a small HTML fragment containing an unordered list that explains the
  * value must be a positive integer and that the maximum allowed workers is taken
@@ -75,9 +75,9 @@ function workWorkerCountRules(): bool|string
     return ob_get_clean();
 }
 /**
- * Renders budget input validation rules as an HTML fragment.
+ * Renders budget input ation rules as an HTML fragment.
  *
- * Produces a <div class="rules"> containing an unordered list of validation rules:
+ * Produces a <div class="rules"> containing an unordered list of ation rules:
  *  - Must be a positive number.
  *  - Maximum budget is formatted from the BUDGET_MAX constant (two decimal places).
  *  - Allows up to two decimal places.
@@ -113,7 +113,7 @@ function workBudgetRules(int $mode = 0): bool|string
 }
 
 /**
- * Renders and returns an HTML fragment containing validation rules for the
+ * Renders and returns an HTML fragment containing ation rules for the
  * "work contingency rate" input.
  *
  * The fragment includes a user-facing rule that the value must be a number
@@ -140,7 +140,7 @@ function workContingencyRateRules(): bool|string
 /**
  * Render the work budget note input rules as an HTML fragment.
  *
- * Outputs a small HTML block describing validation rules for the "work budget note"
+ * Outputs a small HTML block describing ation rules for the "work budget note"
  * input, including the allowed character length (using LONG_TEXT_MIN and LONG_TEXT_MAX)
  * and a restriction on consecutive special characters.
  *
@@ -165,14 +165,14 @@ function workBudgetNoteRules(): bool|string
 }
 
 /**
- * Generates an HTML rules block describing valid start date/time constraints.
+ * Generates an HTML rules block describing  start date/time constraints.
  *
  * This function captures and returns an HTML fragment containing a <div class="rules">
- * with an unordered list of validation rules appropriate to the given context mode.
+ * with an unordered list of ation rules appropriate to the given context mode.
  * The content varies by mode to reflect project-, phase-, or task-specific constraints.
  *
  * Modes:
- *  - 0 (project): basic rules (valid date, within allowed year range).
+ *  - 0 (project): basic rules ( date, within allowed year range).
  *  - 1 (phase): includes project timeline constraint in addition to basic rules.
  *  - 2 (task): includes task timeline constraint.
  *
@@ -187,7 +187,7 @@ function workStartDateTimeRules(int $mode = 0): bool|string
     ?>
     <div class="rules">
         <ul>
-            <li>Must be a valid date.</li>
+            <li>Must be a  date.</li>
             <li>Must be between <?= YEAR_CURRENT ?> and <?= YEAR_MAX ?>.</li>
             <?php if ($mode === 1 || $mode === 2): ?>
                 <li>Must be within the timeline of <?php echo $mode === 1 ? 'Project' : 'Phase' ?>.</li>
@@ -202,15 +202,15 @@ function workStartDateTimeRules(int $mode = 0): bool|string
 }
 
 /**
- * Renders work completion date/time validation rules as an HTML fragment.
+ * Renders work completion date/time action rules as an HTML fragment.
  *
  * Builds and returns a string containing a <div class="rules"><ul>...</ul></div>
- * with list items describing the required date validity, the allowed year range
+ * with list items describing the required date ity, the allowed year range
  * (using YEAR_CURRENT and YEAR_MAX), the requirement to be after the start date,
  * and additional mode-dependent rules about timeline scope and phase conflicts.
  *
  * @param int $mode Mode selector controlling additional rules:
- *      - 0: Default — basic rules (valid date, between YEAR_CURRENT and YEAR_MAX, after start date).
+ *      - 0: Default — basic rules ( date, between YEAR_CURRENT and YEAR_MAX, after start date).
  *      - 1: Adds "Must be within the timeline of Project" and "Must not conflict with other Phases".
  *      - 2: Adds "Must be within the timeline of Task".
  *
@@ -222,7 +222,7 @@ function workCompletionDateTimeRules(int $mode = 0): bool|string
     ?>
     <div class="rules">
         <ul>
-            <li>Must be a valid date.</li>
+            <li>Must be a  date.</li>
             <li>Must be between <?= YEAR_CURRENT ?> and <?= YEAR_MAX ?>.</li>
             <li>Must be after the start date.</li>
             <?php if ($mode === 1 || $mode === 2): ?>
