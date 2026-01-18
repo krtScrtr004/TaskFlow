@@ -63,7 +63,7 @@ class ResourceModel extends Model
 
         $instance = new self();
         try {
-            $queryString = 
+            $queryString =
                 "SELECT 
                     ptr.id,
                     ptr.quantity,
@@ -91,10 +91,10 @@ class ResourceModel extends Model
                     `phase_task` AS pt
                 ON
                     pt.id = ptr.task_id";
-                $query = $instance->appendOptionsToFindQuery(
-                    $instance->appendWhereClause($queryString, $whereClause),
-                    $paramOptions
-                );
+            $query = $instance->appendOptionsToFindQuery(
+                $instance->appendWhereClause($queryString, $whereClause),
+                $paramOptions
+            );
 
             $statement = $instance->connection->prepare($query);
             $statement->execute($params);
@@ -148,7 +148,7 @@ class ResourceModel extends Model
      * @return ResourceContainer|null The found ResourceContainer instance, or null if no match
      */
     public static function findByTaskId(
-        int|UUID $taskId, 
+        int|UUID $taskId,
         array $options = [
             'limit'     => 10,
             'offset'    => 0
@@ -217,7 +217,6 @@ class ResourceModel extends Model
         } catch (Exception $e) {
             throw $e;
         }
-
     }
 
     /**
@@ -266,6 +265,7 @@ class ResourceModel extends Model
         try {
             $query =
                 "INSERT INTO `task_resource` (
+                    `public_id`,
                     `task_id`,
                     `resource_type_id`,
                     `task_worker_id`,
@@ -275,6 +275,7 @@ class ResourceModel extends Model
                     `actual_unit`,
                     `note`
                 ) VALUES (
+                    :publicId,
                     :taskId,
                     :resourceTypeId,
                     :taskWorkerId,
@@ -287,6 +288,7 @@ class ResourceModel extends Model
             $statement = $instance->connection->prepare($query);
             foreach ($resources as $resource) {
                 $params = [
+                    ':publicId'         => UUID::toBinary($resource->getPublicId()),
                     ':taskId'           => $taskId,
                     ':resourceTypeId'   => $resource->getType()->getId(),
                     ':taskWorkerId'     => $resource?->getTaskWorkerId(),
@@ -307,10 +309,91 @@ class ResourceModel extends Model
         }
     }
 
+    /**
+     * Updates an existing Resource record in the database with the provided data.
+     *
+     * This method constructs an SQL UPDATE query based on the fields present in the $data array.
+     * It supports updating quantity, unit rate, estimated unit, actual unit, and note fields.
+     * The record to update is identified by either 'id' (integer) or 'public_id' (UUID).
+     *
+     * Behavior and side effects:
+     * - Validates that 'id' in $data is a positive integer if provided; throws
+     *   InvalidArgumentException otherwise.
+     * - Constructs an UPDATE statement dynamically based on which fields are present in $data.
+     * - Binds parameters for each field to be updated.
+     * - Executes the prepared statement against the database.
+     * - Returns true on successful execution.
+     * - Catches and rethrows any PDOException that occurs during execution.
+     *
+     * @param array $data Associative array of fields to update:
+     *                    - 'id' (int): Identifier of the resource to update (required)
+     *                    - 'quantity' (float): New quantity value
+     *                    - 'unitRate' (float): New unit rate value
+     *                    - 'estimatedUnit' (float): New estimated unit value
+     *                    - 'actualUnit' (float): New actual unit value
+     *                    - 'note' (string): New note value
+     *
+     * @throws InvalidArgumentException If 'id' is provided but is not a positive integer
+     * @throws PDOException If a database error occurs during execution
+     *
+     * @return bool True if the update was successful
+     */
     public static function save(array $data): bool
     {
-        // TODO: Implement save() method
-        return false;
+        if (isset($data['id'])) {
+            if (!is_int($data['id']) || $data['id'] < 1) {
+                throw new InvalidArgumentException('Invalid Resource ID provided.');
+            }
+        }
+
+        $instance = new self();
+        try {
+            $updateFields = [];
+            $params = [];
+
+            if (isset($data['quantity'])) {
+                $updateFields[] = '`quantity` = :quantity';
+                $params[':quantity'] = $data['quantity'];
+            }
+
+            if (isset($data['unitRate'])) {
+                $updateFields[] = '`unit_rate` = :unitRate';
+                $params[':unitRate'] = $data['unitRate'];
+            }
+
+            if (isset($data['estimatedUnit'])) {
+                $updateFields[] = '`estimated_unit` = :estimatedUnit';
+                $params[':estimatedUnit'] = $data['estimatedUnit'];
+            }
+
+            if (isset($data['actualUnit'])) {
+                $updateFields[] = '`actual_unit` = :actualUnit';
+                $params[':actualUnit'] = $data['actualUnit'];
+            }
+
+            if (isset($data['note'])) {
+                $updateFields[] = '`note` = :note';
+                $params[':note'] = $data['note'];
+            }
+
+            if (!empty($updateFields)) {
+                $updateQuery = 
+                    "UPDATE 
+                        `task_resource` 
+                    SET " 
+                        . implode(', ', $updateFields) . 
+                    " WHERE " 
+                        . isset($data['id']) 
+                            ? '`id` = :id' 
+                            : '`public_id` = :id';
+                $statement = $instance->connection->prepare($updateQuery);
+                $statement->execute($params);
+            }
+
+            return true;
+        } catch (PDOException $e) {
+            throw $e;
+        }
     }
 
     protected static function delete(mixed $data): bool
