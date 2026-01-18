@@ -17,6 +17,7 @@
 			"viewProjectForm"
 		],
 		"/add-task/{projectId:[\\w+_-]+}": ["TaskController", "viewTaskForm"],
+		"/edit-task/{taskId:[\\w+_-]+}": ["TaskController", "viewTaskForm"],
 
 		"/home": ["ProjectController", "viewHome"],
 		"/project/{projectId:[\\w+_-]+}": ["ProjectController", "viewOther"],
