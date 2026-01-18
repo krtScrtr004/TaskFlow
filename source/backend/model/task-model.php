@@ -704,6 +704,10 @@ class TaskModel extends Model
             $task->setId($taskId);
             $task->setPublicId($taskPublicId);
 
+            $taskEstimatedCost = $task->getEstimatedCost();
+            $taskActualCost    = $task->getActualCost();
+            $taskBudgetNote    = trimOrNull($task->getBudgetNote());
+
             // Insert budget record
             $budgetQuery = 
                 "INSERT INTO `phase_task_budget` (
@@ -720,9 +724,9 @@ class TaskModel extends Model
             $budgetQueryStatement = $instance->connection->prepare($budgetQuery);
             $budgetQueryStatement->execute([
                 ':taskId'           => $taskId,
-                ':estimatedCost'    => $task->getEstimatedCost(),
-                ':actualCost'       => $task->getActualCost(),
-                ':note'             => trimOrNull($task->getBudgetNote())
+                ':estimatedCost'    => $taskEstimatedCost,
+                ':actualCost'       => $taskActualCost,
+                ':note'             => $taskBudgetNote
             ]);
 
             return $task;
@@ -736,8 +740,6 @@ class TaskModel extends Model
     {
         $instance = new self();
         try {
-            $instance->connection->beginTransaction();
-
             $updateFields = [];
             $params = [];
             if (isset($data['id'])) {
@@ -794,18 +796,74 @@ class TaskModel extends Model
                 $statement = $instance->connection->prepare($phaseQuery);
                 $statement->execute($params);
             }
+            $instance->updatePhaseBudget($data);
 
-            if ($data['workers'] && $data['workers'] instanceof WorkerContainer) {
-                foreach ($data['workers'] as $worker) {
-                    $worker->save();
-                }
-            }
-
-            $instance->connection->commit();
             return true;
         } catch (PDOException $e) {
-            $instance->connection->rollBack();
             throw new DatabaseException($e->getMessage());
+        }
+    }
+
+    /**
+     * Updates the budget details of a specific task.
+     *
+     * This method updates the estimated cost, actual cost, and budget note for a task identified by its ID or UUID.
+     * It constructs an SQL UPDATE query based on the provided data and executes it against the database.
+     *
+     * @param array $data An associative array containing budget details to update:
+     *      - id: int|null The ID of the task to update.
+     *      - estimatedCost: float|null The new estimated cost for the task.
+     *      - actualCost: float|null The new actual cost for the task.
+     *      - note: string|null A note regarding the budget.
+     *
+     * @throws InvalidArgumentException If the provided task ID is invalid.
+     * @throws PDOException If a database error occurs during the update operation.
+     *
+     * @return bool True if the update was successful, false otherwise.
+     */
+    private static function updatePhaseBudget(array $data): bool
+    {
+        $instance = new self();
+        try {
+            $updateFields = [];
+            $params = [];
+
+            if (isset($data['id'])) {
+                if (!is_int($data['id']) || $data['id'] < 1) {
+                    throw new InvalidArgumentException('Invalid task ID.');
+                }
+
+                $params[':id'] = $data['id'];
+            } elseif (isset($data['publicId'])) {
+                $params[':publicId'] = UUID::toBinary($data['publicId']);
+            } else {
+                throw new InvalidArgumentException('Task ID or Public ID is required.');
+            }
+
+            if (isset($data['estimatedCost'])) {
+                $updateFields[] = 'estimated_cost = :estimatedCost';
+                $params[':estimatedCost'] = $data['estimatedCost'];
+            }
+
+            if (isset($data['actualCost'])) {
+                $updateFields[] = 'actual_cost = :actualCost';
+                $params[':actualCost'] = $data['actualCost'];
+            }
+
+            if (isset($data['note'])) {
+                $updateFields[] = 'note = :note';
+                $params[':note'] = trimOrNull($data['note']);
+            }
+
+            if (!empty($updateFields)) {
+                $budgetQuery = "UPDATE `phase_task_budget` SET " . implode(', ', $updateFields) . " WHERE task_id = :taskId";
+                $statement = $instance->connection->prepare($budgetQuery);
+                $statement->execute($params);
+            }
+
+            return true;
+        } catch (PDOException $e) {
+            throw $e;
         }
     }
 
