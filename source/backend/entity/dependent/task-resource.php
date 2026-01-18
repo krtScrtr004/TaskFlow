@@ -2,6 +2,7 @@
 
 namespace App\Dependent;
 
+use App\Core\UUID;
 use App\Entity\ResourceType;
 use App\Exception\ValidationException;
 use App\Interface\Entity;
@@ -11,6 +12,7 @@ use DateTime;
 class TaskResource implements Entity 
 {
     private int $id;
+    private UUID $publicId;
     private ResourceType $type;
     private ?int $taskWorkerId; // Optional - links to phase_task_worker for labor resources
     private int $quantity; 
@@ -26,6 +28,7 @@ class TaskResource implements Entity
      * TaskResource constructor.
      * 
      * @param int $id The ID of the task resource.
+     * @param UUID $publicId The public UUID of the task resource.
      * @param ResourceType $type The type of the resource.
      * 
      * OPTIONAL / WITH DEFAULT VALUES:
@@ -41,6 +44,7 @@ class TaskResource implements Entity
      */
     public function __construct(
         int $id,
+        UUID $publicId,
         ResourceType $type,
 
         int $quantity = RESOURCE_QUANTITY_MIN,
@@ -67,6 +71,7 @@ class TaskResource implements Entity
         }
 
         $this->id = $id;
+        $this->publicId = $publicId;
         $this->type = $type;
         $this->taskWorkerId = $taskWorkerId;
         $this->quantity = $quantity;
@@ -87,6 +92,16 @@ class TaskResource implements Entity
     public function getId(): int
     {
         return $this->id;
+    }
+
+    /**
+     * Gets the public UUID of the resource.
+     * 
+     * @return UUID The public UUID of the resource.
+     */
+    public function getPublicId(): UUID
+    {
+        return $this->publicId;
     }
 
     /**
@@ -185,6 +200,18 @@ class TaskResource implements Entity
         if ($id <= 0) 
             throw new ValidationException('Invalid Resource ID');
         $this->id = $id;
+    }
+
+    /**
+     * Sets the public UUID of the resource.
+     * 
+     * @param UUID $publicId The public UUID of the resource.
+     * 
+     * @return void
+     */
+    public function setPublicId(UUID $publicId): void
+    {
+        $this->publicId = $publicId;
     }
 
     /**
@@ -347,6 +374,7 @@ class TaskResource implements Entity
         
         $defaults = [
             'id'            => $data['id'] ?? 0,
+            'publicId'      => $data['publicId'] ?? UUID::get(),
             'type'          => $data['type'] ?? ResourceType::createPartial([]),
             'quantity'      => $data['quantity'] ?? 0,
             'unitRate'      => $data['unitRate'] ?? 0.0,
@@ -362,6 +390,7 @@ class TaskResource implements Entity
 
         return new TaskResource(
             $defaults['id'],
+            $defaults['publicId'],
             $defaults['type'],
             $defaults['quantity'],
             $defaults['unitRate'],
@@ -388,14 +417,15 @@ class TaskResource implements Entity
         $data = normalizeArrayKeysToCamelCase($data);
 
         return new TaskResource(
-            $data['id'],
-            ResourceType::fromArray($data['type']),
-            $data['quantity'],
-            $data['unitRate'],
-            $data['estimatedUnit'] ?? null,
-            $data['actualUnit'] ?? null,
-            $data['note'] ?? null,
-            $data['taskWorkerId'] ?? null
+            id: $data['id'],
+            publicId: UUID::fromString($data['publicId']),
+            type: ResourceType::fromArray($data['type']),
+            quantity: $data['quantity'],
+            unitRate: $data['unitRate'],
+            estimatedUnit: $data['estimatedUnit'] ?? null,
+            actualUnit: $data['actualUnit'] ?? null,
+            note: $data['note'] ?? null,
+            taskWorkerId: $data['taskWorkerId'] ?? null
         );
     }
 
@@ -413,6 +443,7 @@ class TaskResource implements Entity
     {
         $data = [
             'id'            => $this->id,
+            'publicId'      => UUID::toString($this->publicId),
             'type'          => $this->type->toArray(),
             'taskWorkerId'  => $this->taskWorkerId,
             'quantity'      => $this->quantity,
