@@ -13,6 +13,7 @@ use App\Enumeration\WorkStatus;
 use App\Exception\DatabaseException;
 use Exception;
 use InvalidArgumentException;
+use PDO;
 use PDOException;
 
 class TaskWorkerModel extends Model
@@ -804,12 +805,33 @@ class TaskWorkerModel extends Model
         }
     }
 
+    /**
+     * Saves updates to a task-worker association in the database.
+     * 
+     * This method updates fields of a task-worker association based on the provided data array.
+     * It supports identifying the association by either its internal ID or by a combination
+     * of task ID and worker ID. The method constructs an UPDATE SQL query dynamically
+     * based on which fields are present in the data array.
+     * 
+     * @param array $data Associative array containing the fields to update with the following
+     * keys:
+     *      - id: (optional) int Internal ID of the task-worker association.
+     *      - taskId: (optional) int|string|UUID Task identifier (internal ID or public UUID).
+     *      - workerId: (optional) int|string|UUID Worker identifier (internal ID or public UUID).
+     *      - status: (optional) WorkerStatus|string New status of the task-worker association.
+     *      - estimatedHour: (optional) float New estimated hours for the task-worker association.
+     *      - actualHour: (optional) float New actual hours for the task-worker association.
+     *      - unitRate: (optional) float New unit rate for the task-worker association.
+     * 
+     * @return bool True on successful update.
+     * @throws PDOException If a database error occurs during the operation.
+     * @throws InvalidArgumentException If required identifiers are missing or invalid.
+     * @throws DatabaseException If a database error occurs during the operation (wraps PDOException
+     */
 	public static function save(array $data): bool
 	{
         $instance = new self();
         try {
-            $instance->connection->beginTransaction();
-
             $updateFields = [];
             $params = [];
 
@@ -857,23 +879,85 @@ class TaskWorkerModel extends Model
                     : $data['status'];
             }
 
-            // Nothing to update
-            if (empty($updateFields)) {
-                $instance->connection->commit();
-                return true;
+            if (isset($data['estimatedHour'])) {
+                $updateFields[] = 'estimated_hour = :estimatedHour';
+                $params[':estimatedHour'] = $data['estimatedHour'];
             }
 
-            $query = 'UPDATE `phase_task_worker` SET ' . implode(', ', $updateFields) . ' WHERE ' . $where;
-            $statement = $instance->connection->prepare($query);
-            $statement->execute($params);
+            if (isset($data['actualHour'])) {
+                $updateFields[] = 'actual_hour = :actualHour';
+                $params[':actualHour'] = $data['actualHour'];
+            }
 
-            $instance->connection->commit();
+            if (isset($data['unitRate'])) {
+                $instance->saveUnitRate(
+                    $data['taskId'], 
+                    $data['workerId'], 
+                    $data['unitRate']);
+            }
+
+            // Nothing to update
+            if (!empty($updateFields)) {
+                $query = 'UPDATE `phase_task_worker` SET ' . implode(', ', $updateFields) . ' WHERE ' . $where;
+                $statement = $instance->connection->prepare($query);
+                $statement->execute($params);
+            }
+
             return true;
         } catch (PDOException $e) {
-            $instance->connection->rollBack();
             throw new DatabaseException($e->getMessage());
         }
 	}
+
+    /**
+     * Saves the unit rate for a specific task-worker association.
+     *
+     * This private method updates the unit rate in the task_resource table
+     * for a given task and worker. It supports identifying the task and worker
+     * by either their internal IDs or public UUIDs.
+     *
+     * @param int|UUID $taskId The unique identifier of the task (integer or UUID).
+     * @param int|UUID $taskWorkerId The unique identifier of the task worker (integer or UUID).
+     * @param float $unitRate The unit rate to be set for the task-worker association.
+     *
+     * @return bool True on successful update.
+     *
+     * @throws PDOException If a database error occurs during the operation.
+     */
+    private static function saveUnitRate(
+        int|UUID $taskId,
+        int|UUID $taskWorkerId, 
+        float $unitRate
+    ): bool {
+        $instance = new self();
+        try {
+            $query = 
+                "UPDATE 
+                    `task_resource` 
+                SET 
+                    unit_rate = :unitRate 
+                WHERE 
+                    task_id = " . (is_int($taskId) 
+                        ? ':taskId' 
+                        : '(SELECT id FROM `phase_task` WHERE public_id = :taskId)') . "
+                AND
+                    task_worker_id = " . (is_int($taskWorkerId) 
+                        ? ':taskWorkerId' 
+                        : '(SELECT id FROM `phase_task_worker` WHERE public_id = :taskWorkerId)') . ";
+            ";
+            $statement = $instance->connection->prepare($query);
+            $statement->execute([
+                ':unitRate'         => $unitRate,
+                ':taskWorkerId'     => ($taskWorkerId instanceof UUID)
+                    ? UUID::toBinary($taskWorkerId)
+                    : $taskWorkerId,
+            ]); 
+
+            return true;
+        } catch (PDOException $e) {
+            throw $e;
+        }
+    }
 
     /**
      * Deletes a task-worker association from the phaseTaskWorker table.
