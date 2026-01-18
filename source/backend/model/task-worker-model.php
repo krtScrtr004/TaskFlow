@@ -380,6 +380,7 @@ class TaskWorkerModel extends Model
 
             $where = [];
             $params = [];
+            $groupBy = '';
 
             // Base query structure depends on status
             if ($status === WorkerStatus::UNASSIGNED) {
@@ -461,7 +462,7 @@ class TaskWorkerModel extends Model
                         u.email,
                         u.contact_number,
                         pw.default_rate,
-	                    ptr.unit_rate,
+                        ptr.unit_rate,
                         ptw.estimated_hour,
                         ptw.actual_hour,
                         ptw.status,
@@ -532,6 +533,8 @@ class TaskWorkerModel extends Model
                     $where[] = "ptw.status = :status";
                     $params[':status'] = $status->value;
                 }
+
+                $groupBy = ", pw.default_rate, ptr.unit_rate, ptw.estimated_hour, ptw.actual_hour, ptw.status";
             }
 
             // Full-text search (applies to both queries)
@@ -553,7 +556,7 @@ class TaskWorkerModel extends Model
 
             $query .= " 
                 GROUP BY 
-                    u.id 
+                    u.id " . $groupBy . "
                 ORDER BY 
                     u.last_name ASC
                 LIMIT " 
