@@ -13,21 +13,18 @@ use App\Exception\NotFoundException;
 use App\Middleware\Csrf;
 use App\Model\TaskWorkerModel;
 
-if (!isset($project) || !$project instanceof Project) {
+if (isset($project) && !$project instanceof Project)
     throw new NotFoundException('Project is not defined.');
-}
 
-if (!isset($phase) || !$phase instanceof Phase) {
+if (!isset($phase) || !$phase instanceof Phase)
     throw new NotFoundException('Phase is not defined.');
-}
 
-if (!isset($task) || !$task instanceof Task) {
+if (isset($task) && !$task instanceof Task)
     throw new NotFoundException('Task is not defined.');
-}
 
 $otherData = [
     'projectId' => htmlspecialchars(UUID::toString($project->getPublicId())),
-    'phaseId'   => htmlspecialchars(UUID::toString($phase->getPublicId()))
+    'phaseId'   => htmlspecialchars(UUID::toString($phase->getPublicId())),
 ];
 
 $taskData = [
@@ -175,12 +172,14 @@ $worksOn = TaskWorkerModel::worksOn($task->getId(), Me::getInstance()->getId(), 
 
                     <?php if (Role::isProjectManager(Me::getInstance()->getRole())): ?>
                         <!-- Edit Task Button -->
+                        <a href="<?= REDIRECT_PATH . "edit-task/{$taskData['id']}" ?>">
                         <button id="edit_task_button" type="button" class="blue-bg">
                             <div class="text-w-icon">
                                 <img src="<?= ICON_PATH . 'edit_w.svg' ?>" alt="Edit Task" title="Edit Task" height="20">
                                 <h3>Edit</h3>
                             </div>
                         </button>
+                        </a>
 
                         <!-- Cancel Button -->
                         <button id="cancel_task_button" type="button" class="red-bg">
@@ -247,16 +246,23 @@ $worksOn = TaskWorkerModel::worksOn($task->getId(), Me::getInstance()->getId(), 
 
     <script type="module" src="<?= EVENT_PATH . 'tasks' . DS . 'create-worker-card.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'tasks' . DS . 'remove-terminate-worker.js' ?>" defer></script>
-
-    <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'existing' . DS . 'open.js' ?>"
-        defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'existing' . DS . 'add.js' ?>"
-        defer></script>
-
-    <script type="module" src="<?= EVENT_PATH . 'edit-task-modal' . DS . 'open.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'edit-task-modal' . DS . 'complete.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'edit-task-modal' . DS . 'cancel.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'edit-task-modal' . DS . 'submit.js' ?>" defer></script>
+    
 </body>
 
 </html>
+
+<?php   
+
+function i() {
+    ob_Start();
+    ?>
+        <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'existing' . DS . 'open.js' ?>" defer></script>
+        <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'existing' . DS . 'add.js' ?>" defer></script>
+
+        <script type="module" src="<?= EVENT_PATH . 'edit-task-modal' . DS . 'open.js' ?>" defer></script>
+        <script type="module" src="<?= EVENT_PATH . 'edit-task-modal' . DS . 'complete.js' ?>" defer></script>
+        <script type="module" src="<?= EVENT_PATH . 'edit-task-modal' . DS . 'cancel.js' ?>" defer></script>
+        <script type="module" src="<?= EVENT_PATH . 'edit-task-modal' . DS . 'submit.js' ?>" defer></script>
+    <?php
+    $script = ob_get_clean();
+}
