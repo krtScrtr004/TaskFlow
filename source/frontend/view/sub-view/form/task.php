@@ -40,7 +40,8 @@ if (!isset($task)) {
         'pageName'          => 'Create A Task',
         'formDescription'   => 'Fill in the details below to create a new task',
         'submitButton'      => 'create_task_button',
-        'noWorkerWall'      => 'flex-col'
+        'noWorkerWall'      => 'flex-col',
+        'addWorkerScript'   => 'new'
     ];
 } else {
     // Edit task page
@@ -63,7 +64,8 @@ if (!isset($task)) {
         'submitButton'      => 'edit_task_button',
         'noWorkerWall'      => $taskData['workers']?->count() === 0
             ? 'flex-col'
-            : 'no-display'
+            : 'no-display',
+        'addWorkerScript'   => 'edit'
     ];
 }
 ?>
@@ -353,8 +355,8 @@ if (!isset($task)) {
     <script type="module" src="<?= EVENT_PATH . 'form' . DS . 'task' . DS . 'create' . DS . 'submit.js' ?>" defer></script>
 
     <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'validate-form.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'new' . DS . 'open.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'new' . DS . 'add.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . $uiState['addWorkerScript'] . DS . 'open.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . $uiState['addWorkerScript'] . DS . 'add.js' ?>" defer></script>
 </body>
 
 </html>

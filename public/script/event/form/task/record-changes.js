@@ -130,7 +130,7 @@ export const changedWorkerInfo = new Map()
 export const removedWorkerInfo = new Set()
 
 // Record old worker info
-const oldWorkerInfo = new Map()
+export const oldWorkerInfo = new Map()
 const oldSelectedTaskWorkerFormCard = workerInfo.querySelectorAll('.selected-task-worker-form-card')
 oldSelectedTaskWorkerFormCard.forEach(card => {
     const id = card.dataset.workerid
