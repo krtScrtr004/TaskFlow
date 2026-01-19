@@ -124,7 +124,7 @@ class TaskService
      * 
      * @throws Throwable If any error occurs during the edit process, the transaction is rolled back.
      */
-    public static function edit(array $rawTask): bool
+    public static function save(array $rawTask): bool
     {
         $instance = new self();
         try {

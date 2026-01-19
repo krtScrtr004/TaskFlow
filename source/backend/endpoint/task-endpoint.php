@@ -9,7 +9,6 @@ use App\Container\WorkerContainer;
 use App\Core\Me;
 use App\Core\UUID;
 use App\Dependent\TaskWorker;
-use App\Dependent\Worker;
 use App\Entity\Task;
 use App\Enumeration\Role;
 use App\Enumeration\TaskPriority;
@@ -25,6 +24,8 @@ use App\Model\ProjectWorkerModel;
 use App\Model\TaskModel;
 use App\Service\TaskService;
 use App\Utility\ResponseExceptionHandler;
+use App\Validator\ResourceValidator;
+use App\Validator\UserValidator;
 use App\Validator\WorkValidator;
 use DateTime;
 use Exception;
@@ -343,9 +344,7 @@ class TaskEndpoint extends Endpoint
 
             $rawWorkers = $data['workers'];
             $workers = new WorkerContainer();
-            foreach ($rawWorkers as $worker) {
-                $worker['defaultRate'] = (float) $worker['unitRate']; // Map unitRate to defaultRate
-                
+            foreach ($rawWorkers as $worker) {                
                 $worker['publicId'] = $worker['id'];  
                 unset($worker['id']);
 
@@ -375,7 +374,40 @@ class TaskEndpoint extends Endpoint
         }
     }
 
-    // TODO
+    /**
+     * Edits an existing Task along with its associated TaskWorkers and Resources.
+     *
+     * Handles request-level concerns (rate limiting, session authorization, CSRF protection),
+     * authorizes field-specific edits based on user role, decodes and validates input data,
+     * resolves the target Project, Phase, and Task, validates task date/budget boundaries against the Phase,
+     * processes updates to Task fields, Workers, and Resources, performs domain validation,
+     * persists the changes via TaskService, and returns a success response.
+     *
+     * Behavior and side effects:
+     * - Enforces rate limiting via self::formRateLimit().
+     * - Ensures an authorized session exists and CSRF protection passes.
+     * - Authorizes edits to specific fields based on whether the user is a Project Manager; unauthorized edits throw ForbiddenException.
+     * - Decodes input payload (php://input) and throws ValidationException if decoding fails.
+     * - Extracts and validates 'projectId', 'phaseId', and 'taskId' from $args; missing IDs result in ForbiddenException.
+     * - Loads Project, Phase, and Task instances; missing resources result in NotFoundException.
+     * - If phaseId is not provided, resolves Phase by schedule boundary using start/completion date-times.
+     * - Validates updated task start/completion date-times against the Phase bounds.
+     * - Aggregates worker and resource cost contributions into a budget boundary validator while converting their data
+     *   (renaming 'id' => 'publicId').
+     * - Constructs a partial Task with updated fields and runs full validation; validation failures throw ValidationException with collected errors.
+     * - Persists the changes through TaskService::save() and emits a success Response with the Project public ID.
+     * - Catches any Throwable and delegates handling to ResponseExceptionHandler.
+     *
+     * @param array $args Optional routing/context arguments; expects 'projectId', 'phaseId', and 'taskId' as UUID strings.
+     *
+     * @throws ForbiddenException If the session is unauthorized, unauthorized field edits are attempted,
+     *                            or required project/phase/task IDs are missing.
+     * @throws ValidationException If request decoding fails or task/domain validation fails.
+     * @throws NotFoundException If the referenced Project, Phase, or Task cannot be found.
+     * @throws Throwable For any other unexpected errors surfaced during processing (caught and handled by the
+     * caller).
+     * @return void
+     */
     public static function edit(array $args = []): void
     {
         try {
@@ -428,12 +460,9 @@ class TaskEndpoint extends Endpoint
                 throw new NotFoundException('Task not found.');
             }
 
-            $project = null;
-            if ($projectId) {
-                $project = ProjectModel::findById($projectId);
-            } else {
-                $project = TaskModel::findOwningProject($task->getId());
-            }
+            $project = ($projectId)
+                ? ProjectModel::findById($projectId)
+                : TaskModel::findOwningProject($task->getId());
 
             $data = decodeData('php://input');
             if (!$data) {
@@ -444,26 +473,28 @@ class TaskEndpoint extends Endpoint
 
             $taskData = ['id' => $task->getId()];
 
+            // Validate Task fields
             if (isset($data['name'])) {
                 $taskData['name'] = $data['name'];
             }
-
             if (isset($data['description'])) {
-                $taskData['description'] = $data['description'];
+                $taskData['description'] = trimOrNull($data['description']);
             }
-
             if (isset($data['startDateTime'])) {
                 $taskData['startDateTime'] = new DateTime($data['startDateTime']);
             }
-
             if (isset($data['completionDateTime'])) {
                 $taskData['completionDateTime'] = new DateTime($data['completionDateTime']);
             }
-
             if (isset($data['priority'])) {
                 $taskData['priority'] = TaskPriority::from($data['priority']);
             }
-
+            if (isset($data['estimatedCost'])) {
+                $taskData['estimatedCost'] = (float) $data['estimatedCost'];
+            }
+            if (isset($data['budgetNote'])) {
+                $taskData['budgetNote'] = trimOrNull($data['budgetNote']);
+            }
             if (isset($data['status'])) {
                 $taskData['status'] = WorkStatus::from($data['status']);
             } elseif ($task->getStatus() !== WorkStatus::DELAYED) {
@@ -473,19 +504,57 @@ class TaskEndpoint extends Endpoint
                 );
             }
 
+            $budgetBoundaryValidator = $validator->createBudgetBoundaryValidator((float) $data['estimatedCost'] ?? $task->getEstimatedCost());
+
+            // Validate and prepare Task Workers
+            $userValidator = new UserValidator();
+            $workers = $data['workers'] ?? [];
+            if (!is_array($workers)) {
+                throw new ValidationException('Invalid workers data format provided.');
+            }
+            foreach ($workers as $worker) {
+                $budgetBoundaryValidator['addBudget']((float) $worker['unitRate'] * (float) $worker['estimatedHour']);
+
+                $worker['publicId'] = $worker['id'];  
+                unset($worker['id']);
+
+                $userValidator->validateMultiple($worker);
+            }
+
+            $resourceValidator = new ResourceValidator();
+            $resources = $data['resources'] ?? [];
+            if (!is_array($resources)) {
+                throw new ValidationException('Invalid resources data format provided.');
+            }
+            foreach ($resources as $resource) {
+                $budgetBoundaryValidator['addBudget']((float) $resource['unitRate'] * (float) $resource['estimatedUnit']);
+
+                $resource['publicId'] = $resource['id'];  
+                unset($resource['id']);
+
+                $resourceValidator->validateMultiple($resource);
+            }
+
             if ($taskData && count($taskData) > 1) {
+                // Validate date bounds if dates are being updated
                 $validator->validateDateBounds(
                     $taskData['startDateTime'] ?? $task->getStartDateTime(),
                     $taskData['completionDateTime'] ?? $task->getCompletionDateTime(),
-                    $project->getStartDateTime(),
-                    $project->getCompletionDateTime()
+                    $phase->getStartDateTime(),
+                    $phase->getCompletionDateTime(),
+                    'Phase'
                 );
 
-                if ($validator->hasErrors()) {
-                    throw new ValidationException('Task Validation Failed.', $validator->getErrors());
+                $mergedErrors = array_merge(
+                    $validator->getErrors() ??  [], 
+                    $userValidator->getErrors() ?? [],
+                    $resourceValidator->getErrors() ?? []
+                );
+                if ($mergedErrors && count($mergedErrors) > 0) {
+                    throw new ValidationException('Task Validation Failed.', $mergedErrors);
                 }
 
-                TaskModel::save($taskData);
+                TaskService::save($taskData);
             }
 
             Response::success(['projectId' => UUID::toString($project->getPublicId())], 'Project edited successfully.');
