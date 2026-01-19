@@ -246,8 +246,11 @@ export function userValidationRules() {
                 const errors = []
                 if (!inputs.contactNumber || inputs.contactNumber.trim() === '' || inputs.contactNumber.length < VALIDATION_CONSTANTS.CONTACT_NUMBER_MIN || inputs.contactNumber.length > VALIDATION_CONSTANTS.CONTACT_NUMBER_MAX) {
                     errors.push(`Contact number must be between ${VALIDATION_CONSTANTS.CONTACT_NUMBER_MIN} and ${VALIDATION_CONSTANTS.CONTACT_NUMBER_MAX} characters long.`)
-                } else if (!/^[0-9+\-\s()]{${VALIDATION_CONSTANTS.CONTACT_NUMBER_MIN},${VALIDATION_CONSTANTS.CONTACT_NUMBER_MAX}}$/.test(inputs.contactNumber)) {
-                    errors.push('Contact number contains invalid characters.')
+                } else {
+                    const contactNumberPattern = new RegExp('^[0-9+\\-\\s()]{' + VALIDATION_CONSTANTS.CONTACT_NUMBER_MIN + ',' + VALIDATION_CONSTANTS.CONTACT_NUMBER_MAX + '}$')
+                    if (!contactNumberPattern.test(inputs.contactNumber)) {
+                        errors.push('Contact number contains invalid characters.')
+                    }
                 }
                 return errors
             }

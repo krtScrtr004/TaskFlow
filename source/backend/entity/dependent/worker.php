@@ -305,6 +305,8 @@ class Worker extends User
      *      - bio: string Worker's biography
      *      - profileLink: string Worker's profile link
      *      - status: string|WorkerStatus Worker's status
+     *      - defaultRate: float Worker's default hourly rate
+     *      - password: string Worker's password
      *      - createdAt: string|DateTime When the worker joined
      *      - confirmedAt: string|DateTime|null When the worker was confirmed (optional)
      *      - deletedAt: string|DateTime|null When the worker was deleted (optional)
@@ -340,6 +342,7 @@ class Worker extends User
             profileLink: $user->getProfileLink(),
             defaultRate: $defaultRate,
             status: $status,
+            password: $user->getPassword(),
             createdAt: $user->getCreatedAt(),
             confirmedAt: $user->getConfirmedAt(),
             deletedAt: $user->getDeletedAt(),
