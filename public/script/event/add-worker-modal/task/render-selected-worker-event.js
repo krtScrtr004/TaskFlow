@@ -1,9 +1,9 @@
-import { renderSelectedTaskWorkerCard } from '../../render.js'
-import { addWorker } from '../add-worker-event.js'
-import { Http } from '../../../../utility/http.js'
-import { handleException } from '../../../../utility/handle-exception.js'
-import { createFullName, die, toggleElementClass } from '../../../../utility/utility.js'
-import { addedWorkerInfo, changedWorkerInfo, oldWorkerInfo, removedWorkerInfo } from '../../../form/task/record-changes.js'
+import { renderSelectedTaskWorkerCard } from '../render.js'
+import { addWorker } from './add-worker-event.js'
+import { Http } from '../../../utility/http.js'
+import { handleException } from '../../../utility/handle-exception.js'
+import { createFullName, die, toggleElementClass } from '../../../utility/utility.js'
+import { addedWorkerInfo, oldWorkerInfo, removedWorkerInfo } from '../../form/task/record-changes.js'
 
 let isLoading = false
 
@@ -11,7 +11,7 @@ const taskForm = document.querySelector('#task_form')
 const noAssignedWorkerWall = taskForm?.querySelector('.no-workers-wall')
 
 const thisProjectId = taskForm?.parentElement.dataset.projectid
-if (!thisProjectId || thisProjectId.trim() === '') 
+if (!thisProjectId || thisProjectId.trim() === '')
     die('Project ID not found')
 
 try {
@@ -25,7 +25,7 @@ try {
 }
 
 /**
- *  Sends a request to the backend to add selected workers to the specified project.
+ *  Sends a request to the backend to get the information of selected workers to be added to the task.
  * 
  * @param {string} projectId - Project ID to see if selected workers are part of the project
  * @param {string[]} workerIds - Array of worker IDs to add to the project

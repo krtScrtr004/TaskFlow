@@ -355,8 +355,8 @@ if (!isset($task)) {
     <script type="module" src="<?= EVENT_PATH . 'form' . DS . 'task' . DS . 'create' . DS . 'submit.js' ?>" defer></script>
 
     <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'validate-form.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'render-selected-worker-event.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . $uiState['addWorkerScript'] . DS . 'open.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . $uiState['addWorkerScript'] . DS . 'add.js' ?>" defer></script>
 </body>
 
 </html>

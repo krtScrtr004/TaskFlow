@@ -1,3 +1,5 @@
 import { openModal } from '../open-modal.js'
-
-openModal({excludeTerminated: true })
+openModal({
+    status: 'unassigned',
+    excludeTerminated: true 
+})
