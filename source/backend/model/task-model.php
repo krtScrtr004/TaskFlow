@@ -735,7 +735,29 @@ class TaskModel extends Model
         }
     }
 
-    // TODO
+    /**
+     * Updates an existing task in the database with the provided data.
+     *
+     * This method updates the task record in the `phase_task` table based on the provided data array.
+     * It supports updating various fields such as name, description, priority, status, start date/time,
+     * completion date/time, and actual completion date/time. The task can be identified by either its ID or public ID.
+     *
+     * @param array $data An associative array containing the task data to update:
+     *      - id: int|null The ID of the task to update.
+     *      - publicId: UUID|null The public UUID of the task to update.
+     *      - name: string|null The new name of the task.
+     *      - description: string|null The new description of the task.
+     *      - priority: TaskPriority|null The new priority of the task.
+     *      - status: WorkStatus|null The new status of the task.
+     *      - startDateTime: DateTime|null The new start date/time of the task.
+     *      - completionDateTime: DateTime|null The new completion date/time of the task.
+     *      - actualCompletionDateTime: DateTime|null The new actual completion date/time of the task.
+     *
+     * @throws InvalidArgumentException If neither ID nor public ID is provided, or if the provided ID is invalid.
+     * @throws DatabaseException If a database error occurs during the update operation.
+     *
+     * @return bool True if the update was successful, false otherwise.
+     */
     public static function save(array $data): bool
     {
         $instance = new self();
@@ -796,7 +818,7 @@ class TaskModel extends Model
                 $statement = $instance->connection->prepare($phaseQuery);
                 $statement->execute($params);
             }
-            $instance->updatePhaseBudget($data);
+            $instance->savePhaseBudget($data);
 
             return true;
         } catch (PDOException $e) {
@@ -821,7 +843,7 @@ class TaskModel extends Model
      *
      * @return bool True if the update was successful, false otherwise.
      */
-    private static function updatePhaseBudget(array $data): bool
+    private static function savePhaseBudget(array $data): bool
     {
         $instance = new self();
         try {

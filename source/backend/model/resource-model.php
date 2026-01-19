@@ -340,16 +340,18 @@ class ResourceModel extends Model
      */
     public static function save(array $data): bool
     {
-        if (isset($data['id'])) {
-            if (!is_int($data['id']) || $data['id'] < 1) {
-                throw new InvalidArgumentException('Invalid Resource ID provided.');
-            }
+        if (isset($data['id']) && (!is_int($data['id']) || $data['id'] < 1)) {
+            throw new InvalidArgumentException('Invalid Resource ID provided.');
         }
 
         $instance = new self();
         try {
             $updateFields = [];
             $params = [];
+
+            $params[':id'] = isset($data['id']) 
+                ? $data['id'] 
+                : UUID::toBinary($data['publicId']);
 
             if (isset($data['quantity'])) {
                 $updateFields[] = '`quantity` = :quantity';

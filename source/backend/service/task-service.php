@@ -110,6 +110,67 @@ class TaskService
     }
 
     /**
+     * Edits an existing Task along with its associated TaskWorkers and Resources.
+     * 
+     * This method updates the details of an existing Task entity in the database,
+     * including its related TaskWorker entities and Resource entries. It ensures
+     * that all updates are performed within a single transactional operation to
+     * maintain data integrity.
+     * 
+     * @param array $rawTask An associative array containing the updated Task data,
+     *                       including optional 'workers' and 'resources' sub-arrays.
+     * 
+     * @return bool True if the edit operation was successful, false otherwise.
+     * 
+     * @throws Throwable If any error occurs during the edit process, the transaction is rolled back.
+     */
+    public static function edit(array $rawTask): bool
+    {
+        $instance = new self();
+        try {
+            $instance->connection->beginTransaction();
+
+            /**
+             * Update task entry
+             * 
+             * Required:
+             * - Task ID or Public ID
+             */
+            TaskModel::save($rawTask);
+
+            // Update task workers
+            if (isset($rawTask['workers'])) {
+                foreach ($rawTask['workers'] as $workerData) {
+                    /**
+                     * Required:
+                     * - Task ID or Public ID
+                     * - Worker ID or Public ID
+                     */
+                    TaskWorkerModel::save($workerData);
+                }
+            }
+
+            // Update resources
+            if (isset($rawTask['resources'])) {
+                /**
+                 * Required:
+                 * - Resource ID or Public ID
+                 */
+                foreach ($rawTask['resources'] as $resourceData) {
+                    ResourceModel::save($resourceData);
+                }
+            }
+
+            $instance->connection->commit();
+            return true;
+        } catch (Throwable $e) {
+            $instance->connection->rollBack();
+            throw $e;
+        }
+    }
+        
+
+    /**
      * Retrieves a Task by its ID, with optional inclusion of related entities.
      * 
      * This method fetches a Task entity from the database based on the provided task ID.
