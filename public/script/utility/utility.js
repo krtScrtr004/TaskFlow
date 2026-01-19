@@ -266,3 +266,21 @@ export function formatNumber(number) {
     
     return formatted;
 }
+
+/**
+ * Selects elements by attribute matching a regex pattern.
+ *
+ * This function queries the DOM for elements matching the specified selector
+ * and filters them based on whether the given attribute's value matches
+ * the provided regular expression.
+ *  
+ * @param {HTMLElement} root - The root element to query within.
+ * @param {string} selector - The CSS selector to match elements.
+ * @param {string} attribute - The attribute name to test against the regex.
+ * @param {RegExp} regex - The regular expression to match the attribute's value.
+ * @returns {HTMLElement[]} An array of elements whose specified attribute matches the regex.
+ */
+export function querySelectorByRegex(root, selector, attribute, regex) {
+    return [...root.querySelectorAll(`${selector}[${attribute}]`)]
+        .filter(el => regex.test(el.getAttribute(attribute)));
+}

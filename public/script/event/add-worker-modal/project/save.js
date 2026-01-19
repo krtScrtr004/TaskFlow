@@ -3,7 +3,7 @@ import { Loader } from '../../../render/loader.js'
 import { debounceAsync } from '../../../utility/debounce.js'
 import { handleException } from '../../../utility/handle-exception.js'
 import { Http } from '../../../utility/http.js'
-import { die } from '../../../utility/utility.js'
+import { die, querySelectorByRegex } from '../../../utility/utility.js'
 
 let isLoading = false
 
@@ -78,10 +78,10 @@ async function saveAddWorkerButtonEvent(e, endpoint) {
             const id = row.dataset.workerid
             if (!id) throw new Error('Worker ID is required')
 
-            const defaultRate = row.querySelector('#default_rate').value
+            const defaultRate = querySelectorByRegex(row, 'input', 'id', new RegExp(/^default_rate/))?.[0].value
             if (!defaultRate) throw new Error('Worker default rate is required')
 
-                rowData.push({id, defaultRate})
+            rowData.push({id, defaultRate})
         })
 
         await sendToBackend(endpoint, rowData)
