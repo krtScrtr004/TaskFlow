@@ -60,7 +60,7 @@ async function submit(e) {
         const formattedData = formatData(projectInfo, phasesInfo, workersInfo)
         await sendToBackend(formattedData)
 
-        // setTimeout(() => window.location.href = `/home`, 1500)
+        setTimeout(() => window.location.href = `/home`, 1500)
         Dialog.operationSuccess('Project Edited.', 'The project has been successfully edited.')
     } catch (error) {
         handleException(error, `Error preparing project data: ${error.message}`)
