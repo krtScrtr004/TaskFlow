@@ -59,7 +59,7 @@ export function cleanUp() {
  */
 export function toggleNoWorkerWall(show, container) {
     const noWorkersWall = container.querySelector('.no-workers-wall')
-    const listContainer = container.querySelector('.worker-list > .list')
+    const listContainer = container.querySelector('.list')
 
     if (show) {
         toggleElementClass(noWorkersWall, ['flex-col'], ['no-display'])

@@ -12,7 +12,7 @@
         </section>
 
         <section class="table-container">
-            <table class="no-display">
+            <table class="list no-display">
 
                 <!-- Heading -->
                 <thead>
