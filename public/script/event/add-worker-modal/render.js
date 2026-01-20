@@ -327,30 +327,6 @@ function createRemoveButton(workerId, cardElement) {
     removeImg.title = 'Remove Worker'
     removeImg.height = 18
 
-    btn.addEventListener('click', async e => {
-        const { 
-            addedWorkerInfo, 
-            changedTaskInfo, 
-            removedWorkerInfo 
-        } = await import('../form/task/record-changes.js')
-
-        cardElement.remove()
-
-        // Remove worker info
-        if (!addedWorkerInfo.has(workerId)) removedWorkerInfo.add(workerId)
-        addedWorkerInfo.delete(workerId)
-        changedTaskInfo.delete(workerId)
-        selectedUsers.delete(workerId)
-
-        // Show no workers wall when no card remains
-        const workerInfo = document.querySelector('#worker_info')
-        const remainingCards = workerInfo.querySelectorAll('.selected-task-worker-form-card')
-        if (remainingCards.length <= 0) {
-            const noWorkersWall = workerInfo.querySelector('.no-workers-wall')
-            toggleElementClass(noWorkersWall, ['flex-col', 'fade-in'], ['no-display'])
-        }
-    })
-
     btn.appendChild(removeImg)
 
     return btn
