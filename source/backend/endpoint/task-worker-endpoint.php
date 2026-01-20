@@ -363,7 +363,43 @@ class TaskWorkerEndpoint extends Endpoint
         }
     }
 
-    // TODO: 
+/**
+ * Updates a task worker's assignment details and status.
+ *
+ * This method handles the modification of a worker's role within a task, including updating
+ * their status, unit rate, and estimated hours. It enforces authorization checks, validates
+ * input data, and ensures budget constraints are maintained throughout the update process.
+ *
+ * Behavior and side effects:
+ * - Validates the user has an authorized session and passes CSRF protection checks.
+ * - Verifies the provided project ID, phase ID, and task ID are valid UUIDs and retrieves
+ *   the corresponding task from the database.
+ * - Retrieves and validates the worker exists within the specified project.
+ * - Decodes JSON input data from the request body.
+ * - Converts status string to WorkerStatus enum if provided.
+ * - Parses unitRate and estimatedHour as floats if provided.
+ * - Creates a budget boundary validator based on the task's estimated cost.
+ * - If the worker status is being set to TERMINATED, subtracts the worker's existing cost
+ *   from the budget boundary; otherwise, adds the updated worker cost to the boundary.
+ * - Validates unitRate and estimatedHour using ResourceValidator.
+ * - Persists the updated worker assignment to the database via TaskWorkerModel::save().
+ * - Returns a success response on completion.
+ * - Catches and handles all exceptions via ResponseExceptionHandler.
+ *
+ * @param array $args Associative array containing:
+ *                    - 'projectId' (string): UUID of the project
+ *                    - 'phaseId' (string): UUID of the phase
+ *                    - 'taskId' (string): UUID of the task
+ *                    - 'workerId' (string): UUID of the worker to update
+ *
+ * @throws ForbiddenException If the user lacks authorization, CSRF token is invalid,
+ *                            or any required ID parameter is missing or invalid
+ * @throws NotFoundException If the task or worker cannot be found
+ * @throws ValidationException If input data cannot be decoded or validation fails
+ *
+ * @return void
+ */
+   
     public static function edit(array $args = []): void
     {
         try {
@@ -420,10 +456,46 @@ class TaskWorkerEndpoint extends Endpoint
                 throw new ValidationException('Cannot decode data.');
             }
 
+            $status = isset($data['status']) 
+                ? WorkerStatus::from($data['status']) 
+                : null;
+            $unitRate = isset($data['unitRate']) 
+                ? (float) $data['unitRate'] 
+                : null;
+            $estimatedHour = isset($data['estimatedHour']) 
+                ? (float) $data['estimatedHour'] 
+                : null;
+
+            // Validate budget boundaries
+            $workValidator = new WorkValidator();
+            $budgetBoundaryValidator = $workValidator->createBudgetBoundaryValidator($task->getEstimatedCost());
+            if ($status && $status === WorkerStatus::TERMINATED) {
+                // Subtract existing worker cost from budget boundary
+                $budgetBoundaryValidator['subtractBudget'](
+                    (float) $worker->getUnitRate() * (float) $worker->getEstimatedHour()
+                );
+            } else {
+                // Add updated worker cost to budget boundary
+                $budgetBoundaryValidator['addBudget'](
+                    (float) $unitRate * (float) $estimatedHour
+                );
+            }
+
+            $resourceValidator = new ResourceValidator();
+            $resourceValidator->validateMultiple([
+                'unitRate'      => $unitRate,
+                'hoursAssigned' => $estimatedHour
+            ]);  
+            if ($resourceValidator->hasErrors()) {
+                throw new ValidationException('Worker Validation Failed.', $resourceValidator->getErrors());
+            }
+
             TaskWorkerModel::save([
-                'taskId' => $task->getId(),
-                'workerId' => $worker->getId(),
-                'status' => isset($data['status']) ? WorkerStatus::from($data['status']) : null,
+                'taskId'        => $task->getId(),
+                'workerId'      => $worker->getId(),
+                'status'        => $status,
+                'unitRate'      => $unitRate,
+                'estimatedHour' => $estimatedHour
             ]);
 
             Response::success([], 'Worker status updated successfully.');
@@ -519,8 +591,8 @@ class TaskWorkerEndpoint extends Endpoint
             }
 
             TaskWorkerModel::delete([
-                'taskId' => $task->getId(),
-                'workerId' => $worker->getId(),
+                'taskId'    => $task->getId(),
+                'workerId'  => $worker->getId(),
             ]);
 
             Response::success([], 'Worker removed from task successfully.');
