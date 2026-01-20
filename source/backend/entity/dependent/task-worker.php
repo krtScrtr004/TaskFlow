@@ -142,7 +142,7 @@ class TaskWorker extends Worker
      *
      * @return float The estimated hours.
      */
-    public function getEstimatedHours(): float
+    public function getEstimatedHour(): float
     {
         return $this->estimatedHour;
     }
@@ -152,7 +152,7 @@ class TaskWorker extends Worker
      *
      * @return float The actual hours.
      */
-    public function getActualHours(): float
+    public function getActualHour(): float
     {
         return $this->actualHour;
     }
@@ -185,7 +185,7 @@ class TaskWorker extends Worker
      * @throws ValidationException If the estimated hours are invalid
      * @return void
      */
-    public function setEstimatedHours(float $hours): void
+    public function setEstimatedHour(float $hours): void
     {
         $this->resourceValidator->validateHoursAssigned($hours);
         if ($this->resourceValidator->hasErrors()) {
@@ -204,7 +204,7 @@ class TaskWorker extends Worker
      * @throws ValidationException If the actual hours are invalid
      * @return void
      */
-    public function setActualHours(float $hours): void
+    public function setActualHour(float $hours): void
     {
         $this->resourceValidator->validateHoursAssigned($hours);
         if ($this->resourceValidator->hasErrors()) {
@@ -260,9 +260,9 @@ class TaskWorker extends Worker
         $partial = parent::createPartial($data);
 
         $partial->setUnitRate((float) ($data['unitRate'] ?? DEFAULT_RATE_MIN));
-        $partial->setEstimatedHours((float) ($data['estimatedHour'] ?? WORKER_HOURS_MIN));
+        $partial->setEstimatedHour((float) ($data['estimatedHour'] ?? WORKER_HOURS_MIN));
         if (isset($data['actualHour'])) {
-            $partial->setActualHours((float) $data['actualHour']);
+            $partial->setActualHour((float) $data['actualHour']);
         }
 
         return $partial;
