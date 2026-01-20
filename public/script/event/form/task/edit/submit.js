@@ -114,8 +114,11 @@ function getWorkersInfo() {
     }
 
     // Gather removed workers
-    for (const workerId of removedWorkerInfo) {
-        toRemove.push(workerId) 
+    for (const [workerId, workerData] of removedWorkerInfo) {
+        toRemove.push({
+            id: workerId,
+            ...workerData
+        })
     }
 
     return {
