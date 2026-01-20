@@ -6,7 +6,6 @@ use App\Abstract\Model;
 use App\Container\WorkerContainer;
 use App\Core\UUID;
 use App\Dependent\TaskWorker;
-use App\Dependent\Worker;
 use App\Enumeration\Role;
 use App\Enumeration\WorkerStatus;
 use App\Enumeration\WorkStatus;
@@ -170,14 +169,14 @@ class TaskWorkerModel extends Model
      * @throws InvalidArgumentException If any provided ID is an invalid integer (less than 1).
      * @throws Exception If an error occurs during the query execution.
      *
-     * @return Worker|null The found Worker instance, or null if no matching worker is found.
+     * @return TaskWorker|null The found TaskWorker instance, or null if no matching worker is found.
      */
     public static function findById(
         int|UUID $workerId, 
         int|UUID|null $taskId = null,  
         int|UUID|null $phaseId = null, 
         int|UUID|null $projectId = null
-    ): ?Worker {
+    ): ?TaskWorker {
         if (is_int($workerId) && $workerId < 1) {
             throw new InvalidArgumentException('Invalid worker_id provided.');
         }
@@ -578,7 +577,7 @@ class TaskWorkerModel extends Model
                 $row['job_titles'] = $row['job_titles'] 
                     ? explode(',', $row['job_titles']) 
                     : [];
-                $workers->add(Worker::createPartial($row));
+                $workers->add(TaskWorker::createPartial($row));
             }
             return $workers;
         } catch (PDOException $e) {
