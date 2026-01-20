@@ -201,14 +201,17 @@ class WorkValidator extends Validator
      *
      * Returns an associative array with two closures:
      *  - 'addBudget' (callable(float)): increments an internal running total ($currentBudget,
-     *    captured by reference). If the new total exceeds $totalBudget, appends an error to $this->errors.
+     *     captured by reference). If the new total exceeds $totalBudget, appends an error to $this->errors.
+     *  - 'subtractBudget' (callable(float)): decrements the internal running total ($currentBudget,
+     *    captured by reference). If the new total falls below BUDGET_MIN, appends an error to $this->errors.
      *  - 'validateTotal' (callable()): validates the final running total against $totalBudget
-     *    and appends an error to $this->errors if it exceeds the allowed limit.
+     *     and appends an error to $this->errors if it exceeds the allowed limit.
      *
      * @param float $totalBudget Maximum allowed total budget
      *
      * @return array{
      *     addBudget: callable(float): void,
+     *     subtractBudget: callable(float): void,
      *     validateTotal: callable(): void
      * } Associative array of validator closures. Closures update $currentBudget (by reference)
      * and may add formatted error messages to $this->errors when the budget limit is exceeded.
@@ -220,6 +223,12 @@ class WorkValidator extends Validator
                 $currentBudget += $budget;
                 if ($currentBudget > $totalBudget)
                     $this->errors[] = 'Total budget of ₱' . formatNumber($currentBudget) . ' exceeds the allowed budget of ₱' . formatNumber($totalBudget) . '.';
+            },
+
+            'subtractBudget' => function (float $budget) use (&$currentBudget) {
+                $currentBudget -= $budget;
+                if ($currentBudget < BUDGET_MIN) 
+                    $this->errors[] = 'Total budget cannot be less than ₱' . formatNumber(BUDGET_MIN) . '.';
             },
 
             'validateTotal' => function () use (&$currentBudget, $totalBudget) {
