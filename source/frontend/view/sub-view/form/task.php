@@ -51,6 +51,7 @@ if (!isset($task)) {
     if (!$task) throw new Exception('Task data is required to render this page');
 
     $taskData = [
+        'id'                    => UUID::toString($task->getPublicId()),    
         'name'                  => $task->getName(),
         'description'           => $task->getDescription() ?? '',
         'startDateTime'         => formatDateTime($task->getStartDateTime(), 'Y-m-d'),
@@ -100,7 +101,8 @@ if (!isset($task)) {
 
     <main class="task-form main-page center-child"
         data-projectid="<?= $projectData['id'] ?>"
-        data-phaseid="<?= $phaseData['id'] ?>">
+        data-phaseid="<?= $phaseData['id'] ?>"
+        data-taskid="<?= $taskData['id'] ?? '' ?>">
 
         <form id="task_form" class="content-section-block flex-row" action="" method="POST">
 
@@ -358,6 +360,7 @@ if (!isset($task)) {
     <script type="module" src="<?= EVENT_PATH . 'back-button.js' ?>" defer></script>
 
     <script type="module" src="<?= EVENT_PATH . 'form' . DS . 'task' . DS . 'record-changes.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'form' . DS . 'task' . DS . 'remove-worker-event.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'form' . DS . 'task' . DS . $uiState['scriptPaths']['submit'] . DS . 'submit.js' ?>" defer></script>
 
     <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'validate-form.js' ?>" defer></script>

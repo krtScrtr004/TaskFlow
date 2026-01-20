@@ -201,11 +201,11 @@ class WorkValidator extends Validator
      *
      * Returns an associative array with two closures:
      *  - 'addBudget' (callable(float)): increments an internal running total ($currentBudget,
-     *     captured by reference). If the new total exceeds $totalBudget, appends an error to $this->errors.
-     *  - 'subtractBudget' (callable(float)): decrements the internal running total ($currentBudget,
-     *    captured by reference). If the new total falls below BUDGET_MIN, appends an error to $this->errors.
+     *    captured by reference). If the new total exceeds $totalBudget, appends an error to $this->errors.
+     * - 'subtractBudget' (callable(float)): decrements the internal running total ($currentBudget, 
+     *   captured by reference). Ensures the total does not go below zero.
      *  - 'validateTotal' (callable()): validates the final running total against $totalBudget
-     *     and appends an error to $this->errors if it exceeds the allowed limit.
+     *    and appends an error to $this->errors if it exceeds the allowed limit.
      *
      * @param float $totalBudget Maximum allowed total budget
      *
@@ -227,8 +227,7 @@ class WorkValidator extends Validator
 
             'subtractBudget' => function (float $budget) use (&$currentBudget) {
                 $currentBudget -= $budget;
-                if ($currentBudget < BUDGET_MIN) 
-                    $this->errors[] = 'Total budget cannot be less than ₱' . formatNumber(BUDGET_MIN) . '.';
+                if ($currentBudget < BUDGET_MIN) $currentBudget = 0.0;
             },
 
             'validateTotal' => function () use (&$currentBudget, $totalBudget) {

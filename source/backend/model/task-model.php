@@ -872,13 +872,13 @@ class TaskModel extends Model
                 $params[':actualCost'] = $data['actualCost'];
             }
 
-            if (isset($data['note'])) {
+            if (isset($data['budgetNote'])) {
                 $updateFields[] = 'note = :note';
-                $params[':note'] = trimOrNull($data['note']);
+                $params[':note'] = trimOrNull($data['budgetNote']);
             }
 
             if (!empty($updateFields)) {
-                $budgetQuery = "UPDATE `phase_task_budget` SET " . implode(', ', $updateFields) . " WHERE task_id = :taskId";
+                $budgetQuery = "UPDATE `phase_task_budget` SET " . implode(', ', $updateFields) . " WHERE task_id = :id";
                 $statement = $instance->connection->prepare($budgetQuery);
                 $statement->execute($params);
             }

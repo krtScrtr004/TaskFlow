@@ -92,7 +92,7 @@ function action(workersData) {
             unitRate: workerData.defaultRate ?? 0.00,
             hoursAssigned: workerData.estimatedHoursAssigned ?? 0.00
         })
-        removedWorkerInfo.clear(workerData.id)
+        removedWorkerInfo.delete(workerData.id)
 
         // Hide the "no assigned worker" wall if it exists
         toggleElementClass(noAssignedWorkerWall, ['no-display'], ['flex-col'])

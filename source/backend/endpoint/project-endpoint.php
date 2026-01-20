@@ -379,6 +379,7 @@ class ProjectEndpoint extends Endpoint
      */
     public static function edit(array $args = []): void
     {
+        // TODO: Subtract budget of removed phases and workers from validators
         try {
             self::formRateLimit();
 

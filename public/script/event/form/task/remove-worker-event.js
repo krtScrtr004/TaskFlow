@@ -1,6 +1,6 @@
 import { die, toggleElementClass } from '../../../utility/utility.js'
 import { selectedUsers } from '../../add-worker-modal/select.js'
-import { addedWorkerInfo, changedWorkerInfo, removedWorkerInfo } from './record-changes.js'
+import { addedWorkerInfo, changedWorkerInfo, oldWorkerInfo, removedWorkerInfo } from './record-changes.js'
 
 const taskFormMainPage = document.querySelector('.task-form.main-page')
 
@@ -32,7 +32,7 @@ selectedWorkerList.addEventListener('click', e => {
             const hoursAssignedInput = card.querySelector('.hours-assigned-input')
             removedWorkerInfo.set(workerId, {
                 unitRate: parseFloat(unitRateInput.value),
-                estimatedHoursAssigned: parseFloat(hoursAssignedInput.value)
+                estimatedHour: parseFloat(hoursAssignedInput.value)
             })
         }
         addedWorkerInfo.delete(workerId)

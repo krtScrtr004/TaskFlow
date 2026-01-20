@@ -3,9 +3,11 @@
 namespace App\Service;
 
 use App\Container\ResourceContainer;
+use App\Container\WorkerContainer;
 use App\Core\Connection;
 use App\Core\UUID;
 use App\Dependent\TaskResource;
+use App\Dependent\TaskWorker;
 use App\Entity\ResourceType;
 use App\Entity\Task;
 use App\Enumeration\ResourceTypeMapping;
@@ -140,13 +142,27 @@ class TaskService
 
             // Update task workers
             if (isset($rawTask['workers'])) {
-                foreach ($rawTask['workers'] as $workerData) {
-                    /**
-                     * Required:
-                     * - Task ID or Public ID
-                     * - Worker ID or Public ID
-                     */
-                    TaskWorkerModel::save($workerData);
+                // Add new workers
+                if (count($rawTask['workers']['toAdd'] ?? []) > 0) {
+                    $workersToAdd = new WorkerContainer();
+                    foreach ($rawTask['workers']['toAdd'] as $workerData) {
+                        $workersToAdd->add(TaskWorker::createPartial($workerData));
+                    }
+                    TaskWorkerModel::createMultiple($rawTask['id'] ?? $rawTask['publicId'], $workersToAdd);
+                }
+
+                // Update existing workers and remove terminated ones
+                foreach ($rawTask['workers'] as $category => $workers) {
+                    if ($category === 'toAdd') continue;
+
+                    foreach ($workers as $workerData) {
+                        /**
+                         * Required:
+                         * - Task ID or Public ID
+                         * - Worker ID or Public ID
+                         */
+                        TaskWorkerModel::save($workerData);
+                    }
                 }
             }
 

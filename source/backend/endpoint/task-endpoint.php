@@ -12,6 +12,7 @@ use App\Dependent\TaskWorker;
 use App\Entity\Task;
 use App\Enumeration\Role;
 use App\Enumeration\TaskPriority;
+use App\Enumeration\WorkerStatus;
 use App\Enumeration\WorkStatus;
 use App\Exception\ForbiddenException;
 use App\Exception\NotFoundException;
@@ -504,21 +505,33 @@ class TaskEndpoint extends Endpoint
                 );
             }
 
-            $budgetBoundaryValidator = $validator->createBudgetBoundaryValidator((float) $data['estimatedCost'] ?? $task->getEstimatedCost());
+            $budgetBoundaryValidator = $validator->createBudgetBoundaryValidator((float) $data['estimatedCost'] ?: $task->getEstimatedCost());
 
             // Validate and prepare Task Workers
             $userValidator = new UserValidator();
-            $workers = $data['workers'] ?? [];
-            if (!is_array($workers)) {
+            $workerCategories = $data['workers'] ?? [];
+            if (!is_array($workerCategories)) {
                 throw new ValidationException('Invalid workers data format provided.');
             }
-            foreach ($workers as $worker) {
-                $budgetBoundaryValidator['addBudget']((float) $worker['unitRate'] * (float) $worker['estimatedHour']);
+            foreach ($workerCategories as $category => &$workers) {
+                foreach ($workers as &$worker) {
+                    $worker['workerId'] = UUID::fromString($worker['id']);  
+                    unset($worker['id']);
 
-                $worker['publicId'] = $worker['id'];  
-                unset($worker['id']);
+                    if ($category === 'toRemove') {
+                        $budgetBoundaryValidator['subtractBudget']((float) $worker['unitRate'] * (float) $worker['estimatedHour']);
+                        unset($worker['unitRate'], $worker['estimatedHour']); // Remove unnecessary fields for removal
 
-                $userValidator->validateMultiple($worker);
+                        $worker['status'] = WorkerStatus::TERMINATED;
+                    } elseif ($category === 'toAdd' || $category === 'toEdit') {
+                        $budgetBoundaryValidator['addBudget']((float) $worker['unitRate'] * (float) $worker['estimatedHour']);
+                        $userValidator->validateMultiple($worker);
+                    }
+
+                    if ($category === 'toEdit' || $category === 'toRemove') $worker['taskId'] = $task->getId();
+
+                    $taskData['workers'][$category][] = $worker;
+                }
             }
 
             $resourceValidator = new ResourceValidator();
@@ -533,6 +546,7 @@ class TaskEndpoint extends Endpoint
                 unset($resource['id']);
 
                 $resourceValidator->validateMultiple($resource);
+                $taskData['resources'][] = $resource;
             }
 
             if ($taskData && count($taskData) > 1) {
