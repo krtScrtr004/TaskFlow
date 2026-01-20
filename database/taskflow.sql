@@ -45,7 +45,7 @@ CREATE TABLE `phase_task` (
   CONSTRAINT `phase_task_ibfk_1` FOREIGN KEY (`phase_id`) REFERENCES `project_phase` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `phase_task_chk_1` CHECK ((`status` in (_utf8mb4'pending',_utf8mb4'onGoing',_utf8mb4'completed',_utf8mb4'delayed',_utf8mb4'cancelled'))),
   CONSTRAINT `phase_task_chk_2` CHECK ((`priority` in (_utf8mb4'low',_utf8mb4'medium',_utf8mb4'high')))
-) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -54,7 +54,7 @@ CREATE TABLE `phase_task` (
 
 LOCK TABLES `phase_task` WRITE;
 /*!40000 ALTER TABLE `phase_task` DISABLE KEYS */;
-INSERT INTO `phase_task` VALUES (22,_binary 'f\Z ;FJKÇQ\\É¶2w',55,'Task 1',NULL,'2026-01-11 00:00:00','2026-01-12 00:00:00',NULL,'ongoing','low','2026-01-11 22:34:45','2026-01-11 22:34:45');
+INSERT INTO `phase_task` VALUES (22,_binary 'f\Z ;FJKÇQ\\É¶2w',55,'Task 1',NULL,'2026-01-11 00:00:00','2026-01-12 00:00:00',NULL,'delayed','low','2026-01-11 22:34:45','2026-01-15 15:06:22'),(23,_binary '\";Å$pCûû¡2≠°π6\‰',55,'Task Edited 1','Flank drumstick meatloaf pork loin short loin.  Buffalo pork venison chicken pastrami sirloin ball tip jowl flank fatback meatball salami.  Short ribs t-bone bresaola shoulder.  Pork loin turducken ham hock jowl short loin sirloin meatball salami filet mignon shoulder swine.  Frankfurter bresaola chicken porchetta boudin chuck beef drumstick meatloaf jowl short loin kielbasa swine beef ribs.','2026-01-15 00:00:00','2026-01-18 00:00:00',NULL,'delayed','high','2026-01-15 15:16:50','2026-01-20 22:02:29');
 /*!40000 ALTER TABLE `phase_task` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
@@ -131,7 +131,7 @@ CREATE TABLE `phase_task_budget` (
   CONSTRAINT `fk_task_budget_task` FOREIGN KEY (`task_id`) REFERENCES `phase_task` (`id`) ON DELETE CASCADE,
   CONSTRAINT `phase_task_budget_chk_1` CHECK ((`estimated_cost` >= 0)),
   CONSTRAINT `phase_task_budget_chk_2` CHECK ((`actual_cost` >= 0))
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -140,7 +140,7 @@ CREATE TABLE `phase_task_budget` (
 
 LOCK TABLES `phase_task_budget` WRITE;
 /*!40000 ALTER TABLE `phase_task_budget` DISABLE KEYS */;
-INSERT INTO `phase_task_budget` VALUES (4,22,2000.0000,0.0000,NULL,'2026-01-11 22:34:45','2026-01-11 22:34:45');
+INSERT INTO `phase_task_budget` VALUES (4,22,2000.0000,0.0000,NULL,'2026-01-11 22:34:45','2026-01-11 22:34:45'),(5,23,10001.0000,0.0000,'Shankle pancetta venison chuck shoulder capicola.  Prosciutto porchetta picanha, burgdoggen turkey jowl fatback corned beef landjaeger cow meatball tri-tip venison.  Leberkas spare ribs landjaeger prosciutto brisket short ribs corned beef burgdoggen cow pork chop.  Pig tail short ribs drumstick picanha chislic swine, shankle filet mignon doner.','2026-01-15 15:16:50','2026-01-20 22:10:53');
 /*!40000 ALTER TABLE `phase_task_budget` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -170,7 +170,7 @@ CREATE TABLE `phase_task_worker` (
   CONSTRAINT `phase_task_worker_ibfk_2` FOREIGN KEY (`worker_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `phase_task_worker_ch_act` CHECK ((`actual_hour` >= 0)),
   CONSTRAINT `phase_task_worker_ch_est` CHECK ((`estimated_hour` >= 0))
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -179,7 +179,7 @@ CREATE TABLE `phase_task_worker` (
 
 LOCK TABLES `phase_task_worker` WRITE;
 /*!40000 ALTER TABLE `phase_task_worker` DISABLE KEYS */;
-INSERT INTO `phase_task_worker` VALUES (14,22,2,'assigned',8.00,0.00,'2026-01-11 22:34:47','2026-01-11 22:34:47');
+INSERT INTO `phase_task_worker` VALUES (14,22,2,'assigned',8.00,0.00,'2026-01-11 22:34:47','2026-01-11 22:34:47'),(15,23,2,'terminated',3.00,0.00,'2026-01-15 15:16:50','2026-01-20 22:22:34'),(17,23,3,'assigned',5.00,0.00,'2026-01-20 22:11:01','2026-01-20 22:11:01');
 /*!40000 ALTER TABLE `phase_task_worker` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -403,7 +403,7 @@ CREATE TABLE `project_phase_budget` (
   `phase_id` int NOT NULL,
   `budget` decimal(21,4) NOT NULL DEFAULT '0.0000',
   `contingency_rate` decimal(5,2) NOT NULL DEFAULT '10.00',
-  `notes` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `note` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -447,7 +447,7 @@ CREATE TABLE `project_worker` (
   CONSTRAINT `project_worker_ibfk_2` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE CASCADE,
   CONSTRAINT `project_worker_chk_1` CHECK ((`status` in (_utf8mb4'assigned',_utf8mb4'terminated'))),
   CONSTRAINT `project_worker_chk_2` CHECK (((`default_rate` >= 0) and (`default_rate` <= 999999999)))
-) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -456,7 +456,7 @@ CREATE TABLE `project_worker` (
 
 LOCK TABLES `project_worker` WRITE;
 /*!40000 ALTER TABLE `project_worker` DISABLE KEYS */;
-INSERT INTO `project_worker` VALUES (28,2,37,'assigned',162.00,'2026-01-05 22:40:42',NULL);
+INSERT INTO `project_worker` VALUES (28,2,37,'assigned',162.00,'2026-01-05 22:40:42',NULL),(29,3,37,'assigned',78.00,'2026-01-19 22:39:21',NULL);
 /*!40000 ALTER TABLE `project_worker` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
@@ -504,7 +504,7 @@ CREATE TABLE `rate_limiter` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `ip` (`ip`,`endpoint`),
   CONSTRAINT `rate_limiter_chk_1` CHECK ((`expires_at` > 0))
-) ENGINE=InnoDB AUTO_INCREMENT=254 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=275 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -513,7 +513,7 @@ CREATE TABLE `rate_limiter` (
 
 LOCK TABLES `rate_limiter` WRITE;
 /*!40000 ALTER TABLE `rate_limiter` DISABLE KEYS */;
-INSERT INTO `rate_limiter` VALUES (243,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/phases/a4fcdac0-2dd6-4bd3-8c70-9dbc6adcdb33/tasks:POST',2,1768142145,'2026-01-11 14:30:05','2026-01-11 22:34:45'),(244,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/tasks/workers?status=unassigned&key=&offset=0:GET',1,1768141404,'2026-01-11 14:38:01','2026-01-11 22:22:24'),(245,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers?ids=3a47359d-c34d-4360-a56b-09777fa6ad2a:GET',1,1768141406,'2026-01-11 14:38:03','2026-01-11 22:22:26'),(246,'127.0.0.1','/endpoint/auth/login:POST',1,1768230565,'2026-01-11 20:32:34','2026-01-12 22:54:25'),(247,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers?status=assigned&excludeProjectTerminated=true&offset=1:GET',3,1768230381,'2026-01-11 21:57:07','2026-01-12 23:05:21'),(248,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers?status=assigned&key=&offset=1:GET',3,1768230381,'2026-01-11 21:57:07','2026-01-12 23:05:21'),(249,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers/3a47359d-c34d-4360-a56b-09777fa6ad2a:GET',1,1768230359,'2026-01-12 21:41:30','2026-01-12 23:04:59'),(250,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/manager:GET',1,1768230361,'2026-01-12 21:41:43','2026-01-12 23:05:01'),(251,'127.0.0.1','/endpoint/projects?offset=1:GET',1,1768230351,'2026-01-12 23:04:51',NULL),(252,'127.0.0.1','/endpoint/users?offset=2:GET',1,1768230353,'2026-01-12 23:04:53',NULL),(253,'127.0.0.1','/endpoint/users/3a47359d-c34d-4360-a56b-09777fa6ad2a:GET',1,1768230354,'2026-01-12 23:04:54',NULL);
+INSERT INTO `rate_limiter` VALUES (272,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/phases/a4fcdac0-2dd6-4bd3-8c70-9dbc6adcdb33/tasks/223b8124-7003-439e-9ec1-32ada1b936e4:PATCH',1,1768918986,'2026-01-20 22:18:24','2026-01-20 22:22:06'),(273,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers?status=assigned&excludeProjectTerminated=true&offset=2:GET',1,1768921880,'2026-01-20 23:10:20',NULL),(274,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers?status=assigned&key=&offset=2:GET',1,1768921880,'2026-01-20 23:10:20',NULL);
 /*!40000 ALTER TABLE `rate_limiter` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -567,6 +567,7 @@ CREATE TABLE `task_resource` (
   `note` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `public_id` binary(16) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_task_resource_task` (`task_id`),
   KEY `idx_task_resource_type` (`resource_type_id`),
@@ -578,7 +579,7 @@ CREATE TABLE `task_resource` (
   CONSTRAINT `task_resource_ch_est` CHECK ((`estimated_unit` >= 0)),
   CONSTRAINT `task_resource_chk_1` CHECK ((`quantity` > 0)),
   CONSTRAINT `task_resource_chk_2` CHECK ((`unit_rate` >= 0))
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -587,7 +588,7 @@ CREATE TABLE `task_resource` (
 
 LOCK TABLES `task_resource` WRITE;
 /*!40000 ALTER TABLE `task_resource` DISABLE KEYS */;
-INSERT INTO `task_resource` VALUES (5,22,1,14,1.00,0.0000,8.00,0.00,NULL,'2026-01-11 22:34:49','2026-01-11 22:34:49');
+INSERT INTO `task_resource` VALUES (5,22,1,14,1.00,0.0000,8.00,0.00,NULL,'2026-01-11 22:34:49','2026-01-11 22:34:49',_binary '\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0'),(6,23,1,15,1.00,83.2300,3.00,0.00,NULL,'2026-01-15 15:16:50','2026-01-15 15:16:50',_binary '\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0');
 /*!40000 ALTER TABLE `task_resource` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -608,7 +609,7 @@ CREATE TABLE `temporary_link` (
   UNIQUE KEY `unique_token` (`token`),
   UNIQUE KEY `user_email` (`user_email`),
   CONSTRAINT `temporary_link_ibfk_1` FOREIGN KEY (`user_email`) REFERENCES `user` (`email`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -617,7 +618,7 @@ CREATE TABLE `temporary_link` (
 
 LOCK TABLES `temporary_link` WRITE;
 /*!40000 ALTER TABLE `temporary_link` DISABLE KEYS */;
-INSERT INTO `temporary_link` VALUES (1,'xates@mailinator.com','21843ab2ece9d5765b843717d5af493be7a65079bbaa0635de03403e5419b25e','2025-12-18 19:39:25',NULL),(2,'naroneboqa@mailinator.com','0efc44dfe2bfe46bca9700d08b0f8c6b584b6aa362b99dd75c76160f2d97f3b9','2025-12-19 18:26:09',NULL);
+INSERT INTO `temporary_link` VALUES (1,'xates@mailinator.com','21843ab2ece9d5765b843717d5af493be7a65079bbaa0635de03403e5419b25e','2025-12-18 19:39:25',NULL),(2,'naroneboqa@mailinator.com','0efc44dfe2bfe46bca9700d08b0f8c6b584b6aa362b99dd75c76160f2d97f3b9','2025-12-19 18:26:09',NULL),(3,'zugon@mailinator.com','3f3ef2c9221e4c8b66989c84d4322fb29e33b8e453a168aae54e733d930365c2','2026-01-19 21:59:26',NULL);
 /*!40000 ALTER TABLE `temporary_link` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -652,7 +653,7 @@ CREATE TABLE `user` (
   UNIQUE KEY `public_id` (`public_id`),
   FULLTEXT KEY `user_full_text_index` (`first_name`,`middle_name`,`last_name`,`bio`,`email`),
   CONSTRAINT `user_chk_1` CHECK ((`gender` in (_utf8mb4'male',_utf8mb4'female')))
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -661,7 +662,7 @@ CREATE TABLE `user` (
 
 LOCK TABLES `user` WRITE;
 /*!40000 ALTER TABLE `user` DISABLE KEYS */;
-INSERT INTO `user` VALUES (1,_binary '∏Ÿµˇo•F¶Ø\Ã*_\Ô','Lunea','Branden Zamora','Hansen','female','2000-04-07','projectManager','+1 (933) 847-3547','xates@mailinator.com','$argon2id$v=19$m=65536,t=4,p=1$eVdPMnQxZXJqUklNZDhEaw$++uVaojhH7mh2rnSvbMvAfOPH9Qt8TzR0qODEMOxHz4',NULL,NULL,'2025-12-18 19:39:25','2025-12-18 19:40:24','2025-12-18 19:39:25',NULL),(2,_binary ':G5ù\√MC`•k	w¶≠*','Hermione','Demetria Hayden','Beck','male','2005-08-01','worker','+1 (555) 813-2967','naroneboqa@mailinator.com','$argon2id$v=19$m=65536,t=4,p=1$U2VCWU91WnhxTGpHRVd6TA$LZXt0rS/XR+Dg/UA5df/iVJu1AmxFEwqmcFH9XEoyHg',NULL,NULL,'2025-12-19 18:26:09','2025-12-19 18:26:44','2025-12-19 18:26:09',NULL);
+INSERT INTO `user` VALUES (1,_binary '∏Ÿµˇo•F¶Ø\Ã*_\Ô','Lunea','Branden Zamora','Hansen','female','2000-04-07','projectManager','+1 (933) 847-3547','xates@mailinator.com','$argon2id$v=19$m=65536,t=4,p=1$eVdPMnQxZXJqUklNZDhEaw$++uVaojhH7mh2rnSvbMvAfOPH9Qt8TzR0qODEMOxHz4',NULL,NULL,'2025-12-18 19:39:25','2025-12-18 19:40:24','2025-12-18 19:39:25',NULL),(2,_binary ':G5ù\√MC`•k	w¶≠*','Hermione','Demetria Hayden','Beck','male','2005-08-01','worker','+1 (555) 813-2967','naroneboqa@mailinator.com','$argon2id$v=19$m=65536,t=4,p=1$U2VCWU91WnhxTGpHRVd6TA$LZXt0rS/XR+Dg/UA5df/iVJu1AmxFEwqmcFH9XEoyHg',NULL,NULL,'2025-12-19 18:26:09','2025-12-19 18:26:44','2025-12-19 18:26:09',NULL),(3,_binary '2∫∂wgL≈ΩP4ãV(ΩÑ','Zephr','Tarik Knox','Peck','male','1977-02-22','worker','+1 (621) 345-8588','zugon@mailinator.com','$argon2id$v=19$m=65536,t=4,p=1$QjFOV0ZXR0I5UzhjZlhiLw$T8+smbjKyS4Hri2whmzsccYouewjIjQr8sKiHVAqOOE',NULL,NULL,'2026-01-19 21:59:26','2026-01-19 22:00:24','2026-01-19 00:00:00',NULL);
 /*!40000 ALTER TABLE `user` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
@@ -749,7 +750,7 @@ CREATE TABLE `user_job_title` (
   UNIQUE KEY `user_id` (`user_id`,`title`),
   KEY `user_job_title_id_index` (`user_id`),
   CONSTRAINT `user_job_title_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -758,7 +759,7 @@ CREATE TABLE `user_job_title` (
 
 LOCK TABLES `user_job_title` WRITE;
 /*!40000 ALTER TABLE `user_job_title` DISABLE KEYS */;
-INSERT INTO `user_job_title` VALUES (1,1,'Id quidem tempor adi','2025-12-18 19:39:25','2025-12-18 19:39:25'),(2,2,'Dolorem est vero id','2025-12-19 18:26:09','2025-12-19 18:26:09'),(3,2,'Data Analyst','2025-12-22 14:17:11','2025-12-22 14:17:11');
+INSERT INTO `user_job_title` VALUES (1,1,'Id quidem tempor adi','2025-12-18 19:39:25','2025-12-18 19:39:25'),(2,2,'Dolorem est vero id','2025-12-19 18:26:09','2025-12-19 18:26:09'),(3,2,'Data Analyst','2025-12-22 14:17:11','2025-12-22 14:17:11'),(4,3,'Voluptatibus sed qui','2026-01-19 21:59:26','2026-01-19 21:59:26');
 /*!40000 ALTER TABLE `user_job_title` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -771,4 +772,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-01-13 15:57:19
+-- Dump completed on 2026-01-20 23:13:08
