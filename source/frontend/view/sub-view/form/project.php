@@ -77,7 +77,7 @@ if ($project) {
     <link rel="stylesheet" href="<?= STYLE_PATH . 'sidenav.css' ?>">
     <link rel="stylesheet" href="<?= STYLE_PATH . 'component.css' ?>">
     <link rel="stylesheet" href="<?= STYLE_PATH . 'loader.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'project-form.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'form' . DS . 'project.css' ?>">
 
 </head>
 
