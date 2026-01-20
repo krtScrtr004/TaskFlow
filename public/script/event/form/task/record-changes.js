@@ -127,7 +127,7 @@ if (!workerInfo) die('Worker info element not found')
 
 export const addedWorkerInfo = new Map()
 export const changedWorkerInfo = new Map()
-export const removedWorkerInfo = new Set()
+export const removedWorkerInfo = new Map() // TODO: Make this a Map 
 
 // Record old worker info
 export const oldWorkerInfo = new Map()
