@@ -194,6 +194,7 @@
 
 .assigned-workers #add_worker_button {
 	border: 1px solid var(--white);
+	border-style: dashed;
 }
 
 #edit_task_form .task-secondary-info {

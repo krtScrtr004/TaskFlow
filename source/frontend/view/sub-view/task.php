@@ -198,10 +198,10 @@ $worksOn = TaskWorkerModel::worksOn($task->getId(), Me::getInstance()->getId(), 
         <section class="assigned-workers flex-col">
             <!-- No Workers Wall -->
             <div
-                class="no-workers-wall no-content-wall <?= count($taskData['workers']) > 0 ? 'no-display' : 'flex-col' ?>">
-                <img src="<?= ICON_PATH . 'empty_w.svg' ?>" alt="No workers assigned" title="No workers assigned"
-                    height="100">
-                <h3>No workers assigned to this task.</h3>
+                class="no-workers-wall no-content-wall light-black-bg <?= count($taskData['workers']) > 0 ? 'no-display' : 'flex-col' ?>">
+                <img src="<?= ICON_PATH . 'empty_dw.svg' ?>" alt="No workers assigned" title="No workers assigned"
+                    height="75">
+                <p>No workers assigned to this task.</h>
             </div>
 
             <!-- Worker Table -->

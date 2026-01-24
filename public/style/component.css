@@ -388,6 +388,9 @@ button > .text-w-icon {
 	max-width: fit-content;
 	padding: 0.25rem 0.75rem;
 	border-radius: 5rem;
+	display: flex;
+	justify-content: center;
+	align-items: center;
 }
 
 .badge p,

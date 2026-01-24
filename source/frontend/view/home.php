@@ -40,10 +40,10 @@ use App\Middleware\Csrf;
             }
             ?>
             <!-- No project -->
-            <div class="no-project-wall no-content-wall full-body-content flex-col">
+            <div class="no-project-wall no-content-wall light-black-bg full-body-content flex-col">
                 <img src="<?= ICON_PATH . 'empty_dw.svg' ?>" alt="No active project found" title="No active project found"
                     height="150">
-                <h3>No active project found. <?= $createProject ?></h3>
+                <p>No active project found. <?= $createProject ?></p>
             </div>
         <?php } else {
             require_once COMPONENT_PATH . 'project.php';
@@ -56,6 +56,7 @@ use App\Middleware\Csrf;
         <script src="<?= PUBLIC_PATH . 'chart.umd.min.js' ?>"></script>
 
         <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'task-status-chart.js' ?>" defer></script>
+        <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'progress-bar.js' ?>" defer></script>
         <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'total-spending-bar.js' ?>" defer></script>
         <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'create-worker-card.js' ?>" defer></script>
         <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'search-worker.js' ?>" defer></script>

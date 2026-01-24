@@ -13,12 +13,12 @@ if (!infoSection) die('Info section not found in the form')
 export const addedProjectInfo = new Map()
 export const changedProjectInfo = new Map()
 
-const projectNameInput = infoSection.querySelector('change[name="name"]')
+const projectNameInput = infoSection.querySelector('input[name="name"]')
 const projectDescriptionInput = infoSection.querySelector('textarea[name="description"]')
-const projectBudgetInput = infoSection.querySelector('change[name="budget"]')
-const projectMaxWorkersInput = infoSection.querySelector('change[name="max_workers"]')
-const projectStartDateTimeInput = infoSection.querySelector('change[name="start_date_time"]')
-const projectCompletionDateTimeInput = infoSection.querySelector('change[name="completion_date_time"]')
+const projectBudgetInput = infoSection.querySelector('input[name="budget"]')
+const projectMaxWorkersInput = infoSection.querySelector('input[name="max_workers"]')
+const projectStartDateTimeInput = infoSection.querySelector('input[name="start_date_time"]')
+const projectCompletionDateTimeInput = infoSection.querySelector('input[name="completion_date_time"]')
 if (!projectNameInput || !projectDescriptionInput || !projectBudgetInput
     || !projectMaxWorkersInput || !projectStartDateTimeInput || !projectCompletionDateTimeInput) 
     die('One or more project info changes not found in the form')
@@ -244,13 +244,13 @@ phaseSection?.addEventListener('change', e => {
  *      - phaseCompletionDateTimeInput: HTMLInputElement change[name="completionDateTime"]
  */
 export function getPhaseDomParts(card) {
-    const phaseNameInput = card.querySelector('change[name="name"]')
+    const phaseNameInput = card.querySelector('input[name="name"]')
     const phaseDescriptionInput = card.querySelector('textarea[name="description"]')
-    const phaseBudgetInput = card.querySelector('change[name="budget"]')
-    const phaseContingencyRateInput = card.querySelector('change[name="contingency_rate"]')
+    const phaseBudgetInput = card.querySelector('input[name="budget"]')
+    const phaseContingencyRateInput = card.querySelector('input[name="contingency_rate"]')
     const phaseBudgetNoteInput = card.querySelector('textarea[name="budget_note"]')
-    const phaseStartDateTimeInput = card.querySelector('change[name="start_date_time"]')
-    const phaseCompletionDateTimeInput = card.querySelector('change[name="completion_date_time"]')
+    const phaseStartDateTimeInput = card.querySelector('input[name="start_date_time"]')
+    const phaseCompletionDateTimeInput = card.querySelector('input[name="completion_date_time"]')
     if (!phaseNameInput || !phaseDescriptionInput || !phaseBudgetInput || !phaseContingencyRateInput
         || !phaseBudgetNoteInput || !phaseStartDateTimeInput || !phaseCompletionDateTimeInput) {
         console.warn('One or more phase changes not found in the form card')
@@ -322,7 +322,7 @@ selectedWorkerRows.forEach(row => {
     const id = row.dataset.workerid
     if (!id) die('Worker ID not found')
 
-    const defaultRateInput = row.querySelector('change.default-rate-change')
+    const defaultRateInput = row.querySelector('input.default-rate-input')
     oldWorkersData.set(id, defaultRateInput.value.trim())
 })
 
@@ -334,7 +334,7 @@ selectedWorkersTableList?.addEventListener('change', e => {
     const id = row.dataset.workerid
     if (!id) return
 
-    const defaultRateInput = row.querySelector('change.default-rate-change')
+    const defaultRateInput = row.querySelector('input.default-rate-input')
     (!oldWorkersData.has(id))
         ? addedWorkers.set(id, defaultRateInput.value.trim())
         : changedWorkers.set(id, defaultRateInput.value.trim())
