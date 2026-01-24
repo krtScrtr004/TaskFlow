@@ -126,8 +126,6 @@ class ProjectModel extends Model
         }
     }
 
-    // FIXME: Apply changes from the database =============================================================================
-
     /**
      * Retrieves a Project instance with optional related data.
      *
@@ -166,6 +164,8 @@ class ProjectModel extends Model
             $includeTasks = $options['tasks'] ?? false;
             $includeWorkers = $options['workers'] ?? false;
 
+            // TODO: Create a service to separate these queries
+
             // Build dynamic query parts
             $selectFields = [
                 'p.id AS id',
@@ -194,7 +194,7 @@ class ProjectModel extends Model
                             SELECT 
                                 JSON_ARRAYAGG(mjt.title)
                             FROM
-                                `user_job_title` AS mjt
+                                `job_title` AS mjt
                             WHERE 
                                 mjt.user_id = m.id
                         ), JSON_ARRAY()
@@ -209,26 +209,26 @@ class ProjectModel extends Model
                         (
                             SELECT JSON_ARRAYAGG(
                                 JSON_OBJECT(
-                                    'id', pp.id,
-                                    'public_id', HEX(pp.public_id),
-                                    'name', pp.name,
-                                    'description', pp.description,
-                                    'status', pp.status,
-                                    'budget', pb.budget,
-                                    'contingency_rate', pb.contingency_rate,
-                                    'budget_note', pb.note,
-                                    'start_date_time', pp.start_date_time,
-                                    'completion_date_time', pp.completion_date_time,
-                                    'actual_completion_date_time', pp.actual_completion_date_time
+                                    'id', ph.id,
+                                    'public_id', HEX(ph.public_id),
+                                    'name', ph.name,
+                                    'description', ph.description,
+                                    'status', ph.status,
+                                    'budget', phb.budget,
+                                    'contingency_rate', phb.contingency_rate,
+                                    'budget_note', phb.note,
+                                    'start_date_time', ph.start_date_time,
+                                    'completion_date_time', ph.completion_date_time,
+                                    'actual_completion_date_time', ph.actual_completion_date_time
                                 )
                             ) FROM 
-                                `project_phase` pp
+                                `phase` ph
                             INNER JOIN
-                                `project_phase_budget` AS pb
+                                `phase_budget` AS phb
                             ON
-                                pp.id = pb.phase_id
+                                ph.id = phb.phase_id
                             WHERE 
-                                pp.project_id = p.id
+                                ph.project_id = p.id
                         ), JSON_ARRAY()
                     ) AS project_phases";
             }
@@ -258,7 +258,7 @@ class ProjectModel extends Model
                                                 SELECT 
                                                     JSON_ARRAYAGG(wjt.title)
                                                 FROM 
-                                                    `user_job_title` AS wjt
+                                                    `job_title` AS wjt
                                                 WHERE 
                                                     wjt.user_id = w.id
                                             ), JSON_ARRAY()
@@ -283,27 +283,27 @@ class ProjectModel extends Model
                         (
                             SELECT JSON_ARRAYAGG(
                                 JSON_OBJECT(
-                                    'id', pt.id,
-                                    'public_id', HEX(pt.public_id),
-                                    'name', pt.name,
-                                    'description', pt.description,
-                                    'status', pt.status,
-                                    'priority', pt.priority,
-                                    'start_date_time', pt.start_date_time,
-                                    'completion_date_time', pt.completion_date_time,
-                                    'actual_completion_date_time', pt.actual_completion_date_time,
-                                    'created_at', pt.created_at
+                                    'id', t.id,
+                                    'public_id', HEX(t.public_id),
+                                    'name', t.name,
+                                    'description', t.description,
+                                    'status', t.status,
+                                    'priority', t.priority,
+                                    'start_date_time', t.start_date_time,
+                                    'completion_date_time', t.completion_date_time,
+                                    'actual_completion_date_time', t.actual_completion_date_time,
+                                    'created_at', t.created_at
                                 )
                             ) FROM 
-                                `phase_task` AS pt
+                                `task` AS t
                             LEFT JOIN 
-                                `project_phase` AS pp 
+                                `phase` AS ph 
                             ON 
-                                pt.phase_id = pp.id
+                                t.phase_id = ph.id
                             LEFT JOIN 
                                 `project` AS p2 
                             ON 
-                                pp.project_id = p2.id
+                                ph.project_id = p2.id
                             WHERE 
                                 p2.id = p.id
                         ), JSON_ARRAY()
@@ -889,6 +889,8 @@ class ProjectModel extends Model
         // Not implemented (No use case)
         return false;
     }
+
+    /** ------------------------------------------ TODO: MAJOR REFACTOR HERE ------------------------------------------ */
 
     /**
      * Generates a ProjectReport for the given project identifier.
