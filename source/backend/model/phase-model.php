@@ -48,25 +48,25 @@ class PhaseModel extends Model
         try {
             $queryString = 
                 "SELECT 
-                    pp.id,
-                    pp.public_id,
-                    pp.name,
-                    pp.description,
-                    pp.status,
-                    ppb.budget,
-                    ppb.contingency_rate,
-                    ppb.note,
-                    pp.start_date_time,
-                    pp.completion_date_time,
-                    pp.actual_completion_date_time,
-                    pp.created_at,
-                    pp.updated_at
+                    ph.id,
+                    ph.public_id,
+                    ph.name,
+                    ph.description,
+                    ph.status,
+                    phb.budget,
+                    phb.contingency_rate,
+                    phb.note,
+                    ph.start_date_time,
+                    ph.completion_date_time,
+                    ph.actual_completion_date_time,
+                    ph.created_at,
+                    ph.updated_at
                 FROM 
-                    `phase` AS pp
+                    `phase` AS ph
                 INNER JOIN 
-                    `phase_budget` AS ppb
+                    `phase_budget` AS phb
                 ON
-                    ppb.phase_id = pp.id";
+                    phb.phase_id = ph.id";
 
             $query = $instance->appendOptionsToFindQuery(
                 $instance->appendWhereClause($queryString, $whereClause), 
@@ -269,53 +269,52 @@ class PhaseModel extends Model
                     "SELECT 
                         JSON_ARRAYAGG(
                             JSON_OBJECT(
-                                'id', pt.id,
-                                'public_id', HEX(pt.public_id),
-                                'name', pt.name,
-                                'description', pt.description,
-                                'status', pt.status,
-                                'priority', pt.priority,
-                                'estimated_cost', ptb.estimated_cost,
-                                'actual_cost', ptb.actual_cost,
-                                'budget_note', ptb.note,
-                                'start_date_time', pt.start_date_time,
-                                'completion_date_time', pt.completion_date_time,
-                                'created_at', pt.created_at,
-                                'updated_at', pt.updated_at
+                                'id', t.id,
+                                'public_id', HEX(t.public_id),
+                                'name', t.name,
+                                'descrition', t.descrition,
+                                'status', t.status,
+                                'priority', t.priority,
+                                'estimated_cost', tb.estimated_cost,
+                                'actual_cost', tb.actual_cost,
+                                'budget_note', tb.note,
+                                'start_date_time', t.start_date_time,
+                                'completion_date_time', t.completion_date_time,
+                                'created_at', t.created_at,
+                                'updated_at', t.updated_at
                             )
                         )
                     FROM
-                        `task` AS pt
+                        `task` AS t
                     INNER JOIN
-                        `task_budget` AS ptb
+                        `task_budget` AS tb
                     ON
-                        ptb.task_id = pt.id
+                        tb.task_id = t.id
                     WHERE 
-                        pt.phase_id = pp.id";
+                        t.phase_id = ph.id";
             }
 
             $query = 
                 "SELECT 
-                    pp.*,  
-                    ppb.budget,
-                    ppb.contingency_rate,
-                    ppb.note,
+                    ph.*,  
+                    phb.budget,
+                    phb.contingency_rate,
+                    phb.note,
                     COALESCE (($taskQuery), JSON_ARRAY()) AS tasks
                 FROM 
-                    `phase` AS pp
+                    `phase` AS ph
                 INNER JOIN 
-                    `phase_budget` AS ppb
+                    `phase_budget` AS phb
                 ON
-                    ppb.phase_id = pp.id
+                    phb.phase_id = ph.id
                 INNER JOIN
                     `project` AS p
                 ON 
-                    pp.project_id = p.id
+                    ph.project_id = p.id
                 WHERE 
-                    " . (is_int($projectId) ? 'p.id = :projectId' : 'p.public_id = :projectId') . 
-                " 
+                    " . (is_int($projectId) ? 'p.id = :projectId' : 'p.public_id = :projectId') . "
                 ORDER BY
-                    pp.start_date_time ASC";
+                    ph.start_date_time ASC";
 
             $statement = $instance->connection->prepare($query);
             $statement->execute([
