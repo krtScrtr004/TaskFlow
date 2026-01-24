@@ -59,18 +59,18 @@ class ResourceModel extends Model
             'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 'pt.start_date_time DESC',
         ];
 
-        $whereClause .= ' AND ptr.task_worker_id IS NULL'; // Ensure only non-labor resources
+        $whereClause .= ' AND r.task_worker_id IS NULL'; // Ensure only non-labor resources
 
         $instance = new self();
         try {
             $queryString =
                 "SELECT 
-                    ptr.id,
-                    ptr.quantity,
-                    ptr.unit_rate,
-                    ptr.estimated_unit,
-                    ptr.actual_unit,
-                    ptr.note,
+                    r.id,
+                    r.quantity,
+                    r.unit_rate,
+                    r.estimated_unit,
+                    r.actual_unit,
+                    r.note,
                     (
                         SELECT JSON_OBJECT(
                             'id', rt.id,
@@ -82,15 +82,15 @@ class ResourceModel extends Model
                         FROM 
                             `resource_type` AS rt
                         WHERE 
-                            rt.id = ptr.resource_type_id
+                            rt.id = r.resource_type_id
                         LIMIT 1
                     ) AS type
                 FROM
-                    `task_resource` AS ptr
+                    `resource` AS r
                 INNER JOIN
-                    `phase_task` AS pt
+                    `task` AS t
                 ON
-                    pt.id = ptr.task_id";
+                    t.id = r.task_id";
             $query = $instance->appendOptionsToFindQuery(
                 $instance->appendWhereClause($queryString, $whereClause),
                 $paramOptions
@@ -160,9 +160,9 @@ class ResourceModel extends Model
 
         $instance = new self();
         try {
-            $whereClause = 'pt.id = ' . is_int($taskId)
+            $whereClause = 't.id = ' . is_int($taskId)
                 ? ':taskId'
-                : '(SELECT id FROM `phase_task` WHERE public_id = :taskId)';
+                : '(SELECT id FROM `task` WHERE public_id = :taskId)';
             $params = [':taskId' => is_int($taskId) ? $taskId : UUID::toBinary($taskId)];
             $optionParams = [
                 'limit'     => $options['limit'] ?? $options[':limit'] ?? 10,
@@ -264,7 +264,7 @@ class ResourceModel extends Model
         $instance = new self();
         try {
             $query =
-                "INSERT INTO `task_resource` (
+                "INSERT INTO `resource` (
                     `public_id`,
                     `task_id`,
                     `resource_type_id`,
@@ -291,12 +291,12 @@ class ResourceModel extends Model
                     ':publicId'         => UUID::toBinary($resource->getPublicId()),
                     ':taskId'           => $taskId,
                     ':resourceTypeId'   => $resource->getType()->getId(),
-                    ':taskWorkerId'     => $resource?->getTaskWorkerId(),
+                    ':taskWorkerId'     => $resource->getTaskWorkerId(),
                     ':quantity'         => $resource->getQuantity(),
                     ':unitRate'         => $resource->getUnitRate(),
                     ':estimatedUnit'    => $resource->getEstimatedUnit(),
-                    ':actualUnit'       => $resource?->getActualUnit(),
-                    ':note'             => $resource?->getNote()
+                    ':actualUnit'       => $resource->getActualUnit(),
+                    ':note'             => $resource->getNote()
                 ];
                 $statement->execute($params);
 
@@ -381,7 +381,7 @@ class ResourceModel extends Model
             if (!empty($updateFields)) {
                 $updateQuery = 
                     "UPDATE 
-                        `task_resource` 
+                        `resource` 
                     SET " 
                         . implode(', ', $updateFields) . 
                     " WHERE " 
