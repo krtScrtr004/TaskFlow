@@ -3,7 +3,6 @@
 namespace App\Model;
 
 use App\Abstract\Model;
-use App\Container\JobTitleContainer;
 use App\Container\PhaseContainer;
 use App\Container\ProjectContainer;
 use App\Container\TaskContainer;
@@ -12,10 +11,8 @@ use App\Dependent\Phase;
 use App\Dependent\ProjectManager;
 use App\Entity\Project;
 use App\Entity\Task;
-use App\Entity\User;
 use App\Enumeration\Gender;
 use App\Enumeration\Role;
-use App\Enumeration\TaskPriority;
 use App\Enumeration\WorkStatus;
 use App\Exception\DatabaseException;
 use DateTime;
@@ -66,7 +63,7 @@ class ProjectManagerModel extends Model
      * @param int|UUID|null $projectId Optional project ID to filter the manager by (integer, UUID object, or null).
      * @param bool $includeHistory Whether to include the project history with phases and tasks (default: false).
      *
-     * @return User|null The User instance representing the project manager, or null if not found.
+     * @return ProjectManager|null The ProjectManager instance representing the project manager, or null if not found.
      *
      * @throws DatabaseException If a database error occurs during the query execution.
      */
@@ -77,6 +74,7 @@ class ProjectManagerModel extends Model
     ): ?ProjectManager {
         $instance = new self();
         try {
+            // TODO: Separate project history fetching into its own method to avoid complex queries
             $projectHistory = $includeHistory
                 ? "SELECT
                     JSON_ARRAYAGG(
@@ -93,41 +91,41 @@ class ProjectManagerModel extends Model
                                 (
                                     SELECT JSON_ARRAYAGG(
                                         JSON_OBJECT(
-                                            'id', pp2.id,
-                                            'public_id', HEX(pp2.public_id),
-                                            'name', pp2.name,
-                                            'status', pp2.status,
-                                            'start_date_time', pp2.start_date_time,
-                                            'completion_date_time', pp2.completion_date_time,
-                                            'actual_completion_date_time', pp2.actual_completion_date_time,
+                                            'id', ph2.id,
+                                            'public_id', HEX(ph2.public_id),
+                                            'name', ph2.name,
+                                            'status', ph2.status,
+                                            'start_date_time', ph2.start_date_time,
+                                            'completion_date_time', ph2.completion_date_time,
+                                            'actual_completion_date_time', ph2.actual_completion_date_time,
 
                                             'tasks', COALESCE(
                                                 (
                                                     SELECT JSON_ARRAYAGG(
                                                         JSON_OBJECT(
-                                                            'id', pt2.id,
-                                                            'public_id', HEX(pt2.public_id),
-                                                            'name', pt2.name,
-                                                            'status', pt2.status,
-                                                            'priority', pt2.priority,
-                                                            'start_date_time', pt2.start_date_time,
-                                                            'completion_date_time', pt2.completion_date_time,
-                                                            'actual_completion_date_time', pt2.actual_completion_date_time
+                                                            'id', t2.id,
+                                                            'public_id', HEX(t2.public_id),
+                                                            'name', t2.name,
+                                                            'status', t2.status,
+                                                            'priority', t2.priority,
+                                                            'start_date_time', t2.start_date_time,
+                                                            'completion_date_time', t2.completion_date_time,
+                                                            'actual_completion_date_time', t2.actual_completion_date_time
                                                         )
                                                     )
                                                     FROM 
-                                                        `phase_task` AS pt2
+                                                        `task` AS t2
                                                     WHERE 
-                                                        pt2.phase_id = pp2.id
+                                                        t2.phase_id = ph2.id
                                                 ),
                                                 JSON_ARRAY()
                                             )
                                         )
                                     )
                                     FROM 
-                                        `project_phase` AS pp2
+                                        `phase` AS ph2
                                     WHERE 
-                                        pp2.project_id = p2.id
+                                        ph2.project_id = p2.id
                                 ),
                                 JSON_ARRAY()
                             )
@@ -179,7 +177,7 @@ class ProjectManagerModel extends Model
                     u.created_at,
                     u.confirmed_at,
                     u.deleted_at,
-                    GROUP_CONCAT(DISTINCT ujt.title) AS job_titles,
+                    GROUP_CONCAT(DISTINCT jt.title) AS job_titles,
                     (
                         SELECT 
                             COUNT(*)
@@ -206,9 +204,9 @@ class ProjectManagerModel extends Model
                 ON 
                     p.manager_id = u.id
                 LEFT JOIN
-                    `user_job_title` AS ujt
+                    `job_title` AS jt
                 ON 
-                    ujt.user_id = u.id
+                    jt.user_id = u.id
                 WHERE 
                     $where
                 GROUP BY
