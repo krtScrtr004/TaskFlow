@@ -84,7 +84,10 @@ selectedWorkersTableList.addEventListener('click', e => {
     addedWorkers.delete(workerId) 
     existingWorkers.delete(workerId)
     if (existingWorkers.has(workerId) || !addedWorkers.has(workerId)) {
-        removedWorkers.add(workerId) 
+        const defaultRateInput = row.querySelector('.default-rate-input')
+        removedWorkers.set(workerId, {
+            defaultRateInput: defaultRateInput?.value ?? 0
+        }) 
     }
 
     row.remove()

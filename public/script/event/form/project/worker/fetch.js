@@ -33,17 +33,15 @@ export function createWorkerFetcher(defaultEndpoint = null) {
         let endpoint = overrideEndpoint ?? defaultEndpoint ?? ''
         if (!endpoint || endpoint === '') return
 
-        if (!isNaN(offset) && offset > 1) {
+        if (!isNaN(offset) && offset > 1)
             endpoint = rebuildEndpointWithParams(endpoint, { offset: offset })
-        }   
 
         try {
             isLoading = true
 
             const response = await Http.GET(endpoint)
-            if (!response) {
-                throw new Error('No response from server!')
-            }
+            if (!response) throw new Error('No response from server!')
+
             return response.data
         } catch (error) {
             throw error

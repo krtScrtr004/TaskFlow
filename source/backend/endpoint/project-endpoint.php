@@ -308,62 +308,7 @@ class ProjectEndpoint extends Endpoint
      * - Edits existing phases (description, dates, status)
      * - Adds new phases to the project
      * - Cancels phases by updating their status
-     *
-     * Expected data structure in request body:
-     * {
-     *   "project": {
-     *     "description": string,
-     *     "budget": float,
-     *     "startDateTime": string (ISO 8601 format),
-     *     "completionDateTime": string (ISO 8601 format)
-     *   },
-     *   "phase": {
-     *     "toEdit": [
-     *       {
-     *         "id": string (UUID),
-     *         "description": string,
-     *         "startDateTime": string (ISO 8601 format),
-     *         "completionDateTime": string (ISO 8601 format)
-     *       }
-     *     ],
-     *     "toAdd": [
-     *       {
-     *         "name": string,
-     *         "description": string,
-     *         "startDateTime": string (ISO 8601 format),
-     *         "completionDateTime": string (ISO 8601 format)
-     *       }
-     *     ],
-     *     "toCancel": [
-     *       {
-     *         "id": string (UUID)
-     *       }
-     *     ]
-     *   },
-     *   "workers": {
-     *     "toEdit": [
-     *       {
-     *         "id": string (UUID),
-     *         "defaultRate": float,
-     *         "status": string,
-     *       }
-     *     ],
-     *     "toAdd": [
-     *       {
-     *         "id": string (UUID),
-     *         "defaultRate": float,
-     *         "status": string,
-     *       }
-     *     ],
-     *     "toCancel": [
-     *       {
-     *         "id": string (UUID)
-     *       }
-     *     ]
-     *   }
      * 
-     * }
-     *
      * @param array $args Associative array containing route parameters:
      *      - projectId: string UUID of the project to edit
      * 
@@ -379,7 +324,6 @@ class ProjectEndpoint extends Endpoint
      */
     public static function edit(array $args = []): void
     {
-        // TODO: Subtract budget of removed phases and workers from validators
         try {
             self::formRateLimit();
 
@@ -509,17 +453,22 @@ class ProjectEndpoint extends Endpoint
             // Save project edits
             if ($projectData && count($projectData) > 1) {
                 $workValidator->validateMultiple($projectData);
-                
-                if (!empty($projectData['phases'])) {
-                    // Validate project - phase budget bounds
-                    $totalPhasesBudget = $instance->getTotalPhaseBudget($project,  $projectData['phases']);
-                    $projectPhaseBudgetValidator = $workValidator->createBudgetBoundaryValidator($projectData['budget'] ?? $project->getBudget());
-                    $projectPhaseBudgetValidator['addBudget']($totalPhasesBudget);
-                }
 
-                if (!empty($projectData['workers'])) {
-                    // Validate phase - worker budget bounds
-                    $totalDefaultRate = $instance->getTotalWorkerDefaultRate($project, $projectData['workers']);
+                // Always compute totals from existing + requested changes so we can
+                // correctly subtract cancelled phases / removed workers from budget validators.
+                $phasesDelta = $projectData['phases'] ?? [];
+                $workersDelta = $projectData['workers'] ?? [];
+
+                // Validate project - phase budget bounds
+                $totalPhasesBudget = $instance->getTotalPhaseBudget($project, $phasesDelta);
+                $projectPhaseBudgetValidator = $workValidator->createBudgetBoundaryValidator(
+                    $projectData['budget'] ?? $project->getBudget()
+                );
+                $projectPhaseBudgetValidator['addBudget']($totalPhasesBudget);
+
+                // Validate phase - worker budget bounds
+                if (!empty($workersDelta)) {
+                    $totalDefaultRate = $instance->getTotalWorkerDefaultRate($project, $workersDelta);
                     $phaseWorkerBudgetValidator = $workValidator->createBudgetBoundaryValidator($totalPhasesBudget);
                     $phaseWorkerBudgetValidator['addBudget']($totalDefaultRate);
                 }
@@ -564,6 +513,15 @@ class ProjectEndpoint extends Endpoint
         // Build overrides lookup
         $overrides = [];
 
+        // Phases that are being cancelled in this edit operation
+        $cancelled = [];
+        foreach (($phasesRaw['toCancel'] ?? []) as $phaseRaw) {
+            if (!isset($phaseRaw['publicId'])) {
+                continue;
+            }
+            $cancelled[$phaseRaw['publicId']] = true;
+        }
+
         $merged = array_merge(
             $phasesRaw['toAdd'] ?? [],
             $phasesRaw['toEdit'] ?? []
@@ -584,6 +542,11 @@ class ProjectEndpoint extends Endpoint
         foreach ($project->getPhases() as $phase) {
             $id = UUID::toString($phase->getPublicId());
             $existingIds[] = $id;
+
+            // Exclude cancelled phases from the total (both already-cancelled and newly-cancelled)
+            if (($cancelled[$id] ?? false) || $phase->getStatus() === WorkStatus::CANCELLED) {
+                continue;
+            }
 
             $total += $overrides[$id] ?? $phase->getBudget();
         }
@@ -624,6 +587,15 @@ class ProjectEndpoint extends Endpoint
         // Build overrides lookup
         $overrides = [];
 
+        // Workers that are being removed (terminated) in this edit operation
+        $terminated = [];
+        foreach (($workersRaw['toRemove'] ?? []) as $workerRaw) {
+            if (!isset($workerRaw['publicId'])) {
+                continue;
+            }
+            $terminated[$workerRaw['publicId']] = true;
+        }
+
         $merged = array_merge(
             $workersRaw['toAdd'] ?? [],
             $workersRaw['toEdit'] ?? []
@@ -645,6 +617,11 @@ class ProjectEndpoint extends Endpoint
             $id = UUID::toString($worker->getPublicId());
             $existingIds[] = $id;
 
+            // Exclude terminated workers from the total (both already-terminated and newly-terminated)
+            if (($terminated[$id] ?? false) || $worker->getStatus() === WorkerStatus::TERMINATED) {
+                continue;
+            }
+
             $total += $overrides[$id] ?? $worker->getDefaultRate();
         }
 
@@ -657,34 +634,6 @@ class ProjectEndpoint extends Endpoint
 
         return $total;
     }
-
-    // private function getTotalWorkerDefaultRate(Project $project, array $workersRaw): float 
-    // {
-    //     $oldWorkers = $project->getWorkers();
-    //     $newWorkers = new WorkerContainer();
-
-    //     $mergedWorkersRaw = array_merge($workersRaw['toAdd'] ?? [], $workersRaw['toEdit'] ?? []);
-    //     foreach ($mergedWorkersRaw as $workerRaw) {
-    //         if (isset($workerRaw['defaultRate'])) {
-    //             $newWorkers->add(Worker::createPartial($workerRaw));
-    //         }
-    //     }
-
-    //     $totalDefaultRate = 0.00;
-    //     foreach ($oldWorkers as $oldWorker) {
-    //         $oldWorkerId = $oldWorker->getPublicId();
-    //         foreach ($newWorkers as $newWorker) {
-    //             $isTheSame = UUID::equals($oldWorkerId, $newWorker->getPublicId());
-    //             if ($isTheSame) {
-    //                 $totalDefaultRate += $newWorker->getDefaultRate();
-    //             } else {
-    //                 $totalDefaultRate += $oldWorker->getDefaultRate();
-    //             }
-    //         }
-    //     }
-        
-    //     return $totalDefaultRate;
-    // }
 
     /**
      * Not implemented (No use case)

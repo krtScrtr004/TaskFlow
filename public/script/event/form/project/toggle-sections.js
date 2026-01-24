@@ -5,14 +5,11 @@ const navLinks = document.querySelectorAll('main.project-form header a[href^="#"
 const sections = document.querySelectorAll('main.project-form fieldset[id]')
 const mainContainer = document.querySelector('main.project-form')
 
-if (!header)
-    console.warn('Scroll Navigation: Header not found.')
+if (!header) console.warn('Scroll Navigation: Header not found.')
 
-if (!navLinks.length)
-    console.warn('Scroll Navigation: No navigation links found.')
+if (!navLinks.length) console.warn('Scroll Navigation: No navigation links found.')
 
-if (!mainContainer)
-    console.warn('Scroll Navigation: Main container not found.')
+if (!mainContainer) console.warn('Scroll Navigation: Main container not found.')
 
 // Handle click navigation
 let oldTargetSection = sections[0]

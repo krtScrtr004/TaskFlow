@@ -3,19 +3,13 @@ import { createWorkerFetcher } from './fetch.js'
 import { render } from './render.js'
 
 const workersSection = document.querySelector('#project_form #workers_section')
-if (!workersSection) {
-    console.warn('Workers section element not found')
-}
+if (!workersSection) console.warn('Workers section element not found')
 
 const workerPoolList = workersSection.querySelector('.worker-pool-listing .list')
-if (!workerPoolList) {
-    console.warn('Worker pool list element not found')
-}
+if (!workerPoolList) console.warn('Worker pool list element not found')
 
 const sentinel = workersSection.querySelector('.sentinel')
-if (!sentinel) {
-    console.warn('Sentinel element not found')
-}
+if (!sentinel) console.warn('Sentinel element not found')
 
 /**
  * Initialize infinite scrolling for the worker pool list.

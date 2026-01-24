@@ -3,9 +3,8 @@ import { initializeSearch } from '../worker/search.js'
 
 try {
     const projectId = document.querySelector('#project_form')?.dataset.projectid || ''
-    if (!projectId) {
+    if (!projectId) 
         throw new Error('Project ID not found in project form dataset.')
-    }
 
     const params = new URLSearchParams()
     params.append('status', 'unassigned')

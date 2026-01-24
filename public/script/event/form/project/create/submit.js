@@ -13,14 +13,10 @@ import {
 let isLoading = false
 
 const projectForm = document.querySelector('#project_form')
-if (!projectForm) {
-    die('Project form not found on the page')
-}
+if (!projectForm) die('Project form not found on the page')
 
 const createProjectButton = document.querySelector('#create_project_button')
-if (!createProjectButton) {
-    die('Create Project button not found in the form')
-}
+if (!createProjectButton) die('Create Project button not found in the form')
 
 const handler = e => debounceAsync(submit(e), 300)
 projectForm.addEventListener('submit', handler)
@@ -223,9 +219,7 @@ async function sendToBackend(data) {
     try {
         const endpoint = `projects/`
         const response = await Http.POST(endpoint, data)
-        if (!response) {
-            throw new Error('No response from server')
-        }
+        if (!response) throw new Error('No response from server')
     } catch (error) {
         throw error
     } finally {

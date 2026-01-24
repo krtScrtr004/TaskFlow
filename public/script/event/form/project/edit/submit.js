@@ -17,19 +17,13 @@ import { Dialog } from '../../../../render/dialog.js'
 let isLoading = false
 
 const projectForm = document.querySelector('#project_form')
-if (!projectForm) {
-    die('Project form not found on the page')
-}
+if (!projectForm) die('Project form not found on the page')
 
 const projectId = projectForm.dataset.projectid
-if (!projectId) {
-    die('Project ID not found')
-}
+if (!projectId) die('Project ID not found')
 
 const editProjectButton = document.querySelector('#edit_project_button')
-if (!editProjectButton) {
-    die('Edit Project button not found in the form')
-}
+if (!editProjectButton) die('Edit Project button not found in the form')
 
 const handler = e => debounceAsync(submit(e), 300)
 projectForm.addEventListener('submit', handler)
@@ -70,21 +64,23 @@ async function submit(e) {
 }
 
 /**
- * Aggregates phase changes prepared for submission.
+ * Gathers phase changes from the three phase collections and returns them grouped for submission.
  *
- * Reads from the surrounding collections (addedPhases, changedPhases, removedPhases)
- * and builds a plain object containing three arrays:
- *  - toAdd: clones of newly added phase objects
- *  - toEdit: objects containing an `id` and the updated phase properties
- *  - toCancel: ids of phases marked for removal
+ * This function iterates over the maps addedPhases, changedPhases, and removedPhases and builds
+ * three arrays representing phases to add, to edit, and to cancel.
  *
- * Cloning added phase objects ensures the returned data is detached from the source collections.
+ * Behavior and side effects:
+ * - Iterates each source map in insertion order and collects entries.
+ * - toAdd contains shallow copies of values from addedPhases (IDs are not included).
+ * - toEdit contains objects of the shape { id, ...value } for entries from changedPhases.
+ * - toCancel contains objects of the shape { id, ...value } for entries from removedPhases.
+ * - Shallow copies are created using object spread; nested objects are not deep-cloned.
+ * - Does not mutate the source maps (addedPhases, changedPhases, removedPhases).
+ * - Returns a plain object suitable for serialization or API submission.
  *
- * @returns {{ toAdd: Array<Object>, toEdit: Array<Object>, toCancel: Array<string|number> }}
- *      An object with:
- *        - toAdd: Array of cloned phase objects to create
- *        - toEdit: Array of objects { id, ...phaseData } to update
- *        - toCancel: Array of phase ids to remove
+ * @returns {{toAdd: Object[], toEdit: Object[], toCancel: Object[]}} Grouped phase change arrays (JSDoc)
+ *
+ * @return array{toAdd: array<object>, toEdit: array<object>, toCancel: array<object>} Grouped phase change arrays (PHPDoc)
  */
 function getPhasesData() {
     const toAdd = []
@@ -99,31 +95,34 @@ function getPhasesData() {
         toEdit.push({id, ...value})
     }
 
-    for (const id of removedPhases) {
-        toCancel.push(id)
+    for (const [id, value] of removedPhases) {
+        toCancel.push({id, ...value})
     }
 
     return { toAdd, toEdit, toCancel }
 }
 
 /**
- * Constructs structured worker change lists from module-level collections.
+ * Gathers worker changes into structured arrays ready for submission.
  *
- * Iterates over the iterables `addedWorkers`, `changedWorkers`, and `removedWorkers`
- * to produce three arrays:
- *  - toAdd: objects of shape { id, defaultRate } for newly added workers
- *  - toEdit: objects of shape { id, defaultRate } for modified workers
- *  - toRemove: ids for workers to be removed
+ * This function collects entries from the module-level iterables addedWorkers,
+ * changedWorkers, and removedWorkers and returns an object with three arrays:
+ * - toAdd:  [{ id, defaultRate }, ...] built from addedWorkers
+ * - toEdit: [{ id, defaultRate }, ...] built from changedWorkers
+ * - toRemove: [{ id, ...value }, ...] built from removedWorkers (value is spread into the object)
  *
- * Each entry in `addedWorkers` and `changedWorkers` is expected to be an iterable
- * yielding [id, defaultRate]. This function performs shallow extraction and
- * returns plain arrays suitable for serialization or further processing.
+ * Behavior and side effects:
+ * - Iterates over addedWorkers, changedWorkers, and removedWorkers; each is expected to yield
+ *   [id, value] pairs (e.g., Map or other iterable of tuples).
+ * - Preserves the iteration/insertion order of the source collections.
+ * - Does not mutate the source collections.
+ * - Performs no I/O or external side effects.
+ * - Performs no validation or type coercion; values are copied as-is into the result arrays.
  *
- * @returns {{ toAdd: Array<{id: (string|number), defaultRate: number}>, toEdit: Array<{id: (string|number), defaultRate: number}>, toRemove: Array<(string|number)> }}
- *          An object containing:
- *            - toAdd: array of worker objects to add
- *            - toEdit: array of worker objects to edit
- *            - toRemove: array of worker ids to remove
+ * @returns {{toAdd: Array<{id: *, defaultRate: *}>, toEdit: Array<{id: *, defaultRate: *}>, toRemove: Array<Object>}}
+ *
+ * PHPDoc:
+ * @return array{toAdd: list<array{id: mixed, defaultRate: mixed}>, toEdit: list<array{id: mixed, defaultRate: mixed}>, toRemove: list<array>} Array with three lists: toAdd, toEdit and toRemove.
  */
 function getWorkersData() {
     const toAdd = []
@@ -138,8 +137,8 @@ function getWorkersData() {
         toEdit.push({id, defaultRate})
     }
 
-    for (const id of removedWorkers) {
-        toRemove.push(id)
+    for (const [id, value] of removedWorkers) {
+        toRemove.push({id, ...value})
     }
     
     return { toAdd, toEdit, toRemove }
@@ -208,9 +207,7 @@ async function sendToBackend(data) {
     try {
         const endpoint = `projects/${projectId}`
         const response = await Http.PATCH(endpoint, data)
-        if (!response) {
-            throw new Error('No response from server')
-        }
+        if (!response) throw new Error('No response from server')
     } catch (error) {
         throw error
     } finally {

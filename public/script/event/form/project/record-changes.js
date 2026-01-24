@@ -117,7 +117,7 @@ if (!phaseSection) die('Phases section not found in the form')
 
 export const addedPhases = new Map()
 export const changedPhases = new Map()
-export const removedPhases = new Set()
+export const removedPhases = new Map()
 
 // Record old phase data
 const oldPhasesData = new Map()
@@ -313,7 +313,7 @@ if (!selectedWorkersTableList) die('Selected workers table list not found in the
 
 export const addedWorkers = new Map()
 export const changedWorkers = new Map()
-export const removedWorkers = new Set()
+export const removedWorkers = new Map()
 
 // Record old workers data
 const oldWorkersData = new Map()

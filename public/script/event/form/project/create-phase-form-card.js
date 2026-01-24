@@ -1,5 +1,5 @@
 import { handleException } from '../../../utility/handle-exception.js'
-import { getValidationConstraints, die } from '../../../utility/utility.js'
+import { getValidationConstraints, die, toggleElementClass } from '../../../utility/utility.js'
 import { addedPhases, changedPhases, removedPhases } from './record-changes.js'
 import { getPhaseDomParts } from './record-changes.js'
 
@@ -9,9 +9,7 @@ const phaseSection = document.querySelector('#phase_section')
 const noPhasesWall = phaseSection.querySelector('.no-phases-wall')
 
 const addPhaseButton = phaseSection.querySelector('#add_phase_button')
-if (!addPhaseButton) {
-    die('Clone Phase Card: Add Phase button not found.')
-}
+if (!addPhaseButton) die('Clone Phase Card: Add Phase button not found.')
 
 addPhaseButton.addEventListener('click', () => {
     try {
@@ -20,9 +18,7 @@ addPhaseButton.addEventListener('click', () => {
 
         const lastCard = Array.from(phaseSection.querySelectorAll('.phase-form-card')).pop()
         const id = lastCard?.dataset.phaseid
-        if (!id) {
-            throw new Error('Phase ID not found')
-        }
+        if (!id) throw new Error('Phase ID not found')
 
         const {
             phaseNameInput,
@@ -44,8 +40,7 @@ addPhaseButton.addEventListener('click', () => {
         })
 
         // Hide no phases wall
-        noPhasesWall?.classList.add('no-display')
-        noPhasesWall?.classList.remove('flex-col')
+        toggleElementClass(noPhasesWall, ['no-display'], ['flex-col'])
     } catch (error) {
         handleException(error, `Error cloning phase card.`)
     }
@@ -53,15 +48,12 @@ addPhaseButton.addEventListener('click', () => {
 
 phaseSection.addEventListener('click', e => {
     const removeButton = e.target.closest('.remove-phase-button')
-    if (!removeButton) {
-        return
-    }
+    if (!removeButton) return
+
     e.stopImmediatePropagation()
 
     const card = removeButton.closest('.phase-form-card')
-    if (!card) {
-        return
-    }
+    if (!card) return
 
     card.classList.add('fade-out')
     // Wait for animation to finish before removing
@@ -70,15 +62,16 @@ phaseSection.addEventListener('click', e => {
 
         // Check if any phase cards remain, show no phases wall if none
         const remainingCards = phaseSection.querySelectorAll('.phase-form-card')
-        if (remainingCards.length === 0) {
-            noPhasesWall?.classList.remove('no-display')
-            noPhasesWall?.classList.add('flex-col')
-        }
+        if (remainingCards.length === 0) 
+            toggleElementClass(noPhasesWall, ['flex-col'], ['no-display'])
     })
 
     const id = card.dataset.phaseid
     if (!addedPhases.has(id)) {
-        removedPhases.add(id)
+        const { phaseBudgetInput } = getPhaseDomParts(card) ?? {}
+        removedPhases.set(id, {
+            budget: phaseBudgetInput.value ?? 0
+        })
     }
     addedPhases.delete(id)
     changedPhases.delete(id)

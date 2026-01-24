@@ -127,7 +127,8 @@ phaseSection?.addEventListener('input', e => {
     const card = e.target.closest('.phase-form-card')
     if (!card) return
 
-    const id = card.dataset.phaseid || null
+    const id = card.dataset.phaseid
+    if (!id) return
 
     const phaseNameInput = card.querySelector('input[name="name"]')
     const phaseDescriptionInput = card.querySelector('textarea[name="description"]')
@@ -292,7 +293,7 @@ selectedWorkersTableList?.addEventListener('change', e => {
     if (!row) return
 
     const id = row.dataset.workerid
-    if (!id) console.warn('Worker ID not found')
+    if (!id) return
 
     const defaultRateInput = row.querySelector('input.default-rate-input')
     const value = defaultRateInput.value

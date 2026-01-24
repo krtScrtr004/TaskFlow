@@ -31,9 +31,9 @@ import { formatNumber } from '../../../../utility/utility.js'
  * @throws {Error} If the worker argument is not provided or is falsy
  */
 export function render(worker) {
-    if (!worker) {
+    if (!worker)
         throw new Error('Worker data is required to render a selected worker row')
-    }
+
     const ICON_PATH = '/public/asset/image/icon/'
 
     const tr = document.createElement('tr')
@@ -87,9 +87,7 @@ export function render(worker) {
     tr.appendChild(tdRemove)
 
     // When rendering a row, hide the "no workers" wall if present
-    if (noWorkersWall) {
-        noWorkersWall.classList.add('hidden')
-    }
+    if (noWorkersWall) noWorkersWall.classList.add('hidden')
 
     return tr
 }

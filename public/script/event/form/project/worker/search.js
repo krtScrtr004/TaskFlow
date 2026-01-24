@@ -1,4 +1,4 @@
-import { createFullName, die } from '../../../../utility/utility.js'
+import { createFullName, die, toggleElementClass } from '../../../../utility/utility.js'
 import { Loader } from '../../../../render/loader.js'
 import { debounceAsync } from '../../../../utility/debounce.js'
 import { createWorkerFetcher, rebuildEndpointWithParams } from './fetch.js'
@@ -11,19 +11,13 @@ const workersSection = document.querySelector('#workers_section')
 const noWorkersWall = workersSection.querySelector('.worker-pool-listing .no-workers-wall')
 
 const searchBarForm = workersSection.querySelector('.search-bar')
-if (!searchBarForm) {
-    die('Search bar not found in workers section.')
-}
+if (!searchBarForm) die('Search bar not found in workers section.')
 
 const searchButton = searchBarForm.querySelector('#search_bar_button')
-if (!searchButton) {
-    die('Search button not found in workers section.')
-}
+if (!searchButton) die('Search button not found in workers section.')
 
 const workerList = workersSection.querySelector('.worker-pool-listing .list')
-if (!workerList) {
-    throw new Error('Worker list container not found in workers section.')
-}
+if (!workerList) die('Worker list container not found in workers section.')
 
 
 /**
@@ -37,9 +31,9 @@ if (!workerList) {
  * @throws {Error} If the endpoint parameter is not provided.
  */
 export function initializeSearch(endpointParam) {
-    if (!endpointParam) {
+    if (!endpointParam) 
         throw new Error('Endpoint parameter is required to initialize search workers.')
-    }
+
     endpoint = endpointParam
 
     const handler = e => debounceAsync(submit(e), 300)
@@ -84,14 +78,12 @@ export function initializeSearch(endpointParam) {
  */
 async function submit(e) {
     e.preventDefault()
-    if (!endpoint) {
+    if (!endpoint) 
         throw new Error('Endpoint is not defined for searching workers.')
-    }
 
     const searchInput = searchBarForm.querySelector('#search_bar_input')
-    if (!searchInput) {
+    if (!searchInput) 
         throw new Error('Search input field not found in search bar form.')
-    }
 
     // Append search term to endpoint
     const searchTerm = searchInput.value.trim()
@@ -105,7 +97,7 @@ async function submit(e) {
         const fetchWorkers = createWorkerFetcher() // Create a new fetcher instance
         const workers = await fetchWorkers(endpoint)
         if (workers.length === 0) {
-            toggleNoWorkersWall(true)
+            toggleElementClass(noWorkersWall, ['flex-col'], ['no-display'])
             return
         }
 
@@ -114,7 +106,7 @@ async function submit(e) {
             workerList.appendChild(workerCard)
         })
 
-        toggleNoWorkersWall(false)
+        toggleElementClass(noWorkersWall, ['no-display'], ['flex-col'])
     } catch (error) {
         throw error
     } finally {
@@ -157,9 +149,9 @@ async function submit(e) {
  * - This function relies on a global helper createFullName(firstName, middleName, lastName) to compute the displayed name.
  */
 function renderWorkerPoolCard(worker) {
-    if (!worker) {
+    if (!worker)
         throw new Error('Worker data is required to render worker pool card.')
-    }
+
     const ICON_PATH = '/public/asset/image/icon/'
 
     const li = document.createElement('li')
@@ -167,9 +159,7 @@ function renderWorkerPoolCard(worker) {
     const button = document.createElement('button')
     button.type = 'button'
     button.className = 'worker-pool-card unset-button'
-    if (addedWorkers.has(String(worker.id || worker.workerId))) {
-        button.classList.add('selected')
-    }
+    if (addedWorkers.has(String(worker.id || worker.workerId))) button.classList.add('selected')
     button.dataset.workerid = worker.id ?? worker.workerId
 
     const img = document.createElement('img')
@@ -192,26 +182,4 @@ function renderWorkerPoolCard(worker) {
     li.appendChild(button)
 
     return li
-}
-
-/**
- * Toggle the visibility of the "no workers" wall element.
- *
- * When `show` is true, the function makes the element visible by adding
- * the 'flex-col' class and removing 'no-display'. When `show` is false,
- * it hides the element by adding 'no-display' and removing 'flex-col'.
- * The operation is safe — if `noWorkersWall` is undefined or null, the
- * function performs no action.
- *
- * @param {boolean} show True to show the no-workers wall, false to hide it.
- * @returns {void}
- */
-function toggleNoWorkersWall(show) {
-    if (show) {
-        noWorkersWall?.classList.add('flex-col')
-        noWorkersWall?.classList.remove('no-display')
-    } else {
-        noWorkersWall?.classList.add('no-display')
-        noWorkersWall?.classList.remove('flex-col')
-    }
 }
