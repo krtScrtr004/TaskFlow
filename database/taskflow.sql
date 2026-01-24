@@ -16,46 +16,70 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `phase_task`
+-- Table structure for table `job_title`
 --
 
-DROP TABLE IF EXISTS `phase_task`;
+DROP TABLE IF EXISTS `job_title`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `phase_task` (
+CREATE TABLE `job_title` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `title` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `user_id` (`user_id`,`title`),
+  KEY `user_job_title_id_index` (`user_id`),
+  CONSTRAINT `job_title_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `job_title`
+--
+
+LOCK TABLES `job_title` WRITE;
+/*!40000 ALTER TABLE `job_title` DISABLE KEYS */;
+INSERT INTO `job_title` VALUES (1,1,'Id quidem tempor adi','2025-12-18 19:39:25','2025-12-18 19:39:25'),(2,2,'Dolorem est vero id','2025-12-19 18:26:09','2025-12-19 18:26:09'),(3,2,'Data Analyst','2025-12-22 14:17:11','2025-12-22 14:17:11'),(4,3,'Voluptatibus sed qui','2026-01-19 21:59:26','2026-01-19 21:59:26');
+/*!40000 ALTER TABLE `job_title` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `phase`
+--
+
+DROP TABLE IF EXISTS `phase`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `phase` (
   `id` int NOT NULL AUTO_INCREMENT,
   `public_id` binary(16) NOT NULL,
-  `phase_id` int NOT NULL,
+  `project_id` int NOT NULL,
   `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
   `description` varchar(1000) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `start_date_time` datetime NOT NULL,
   `completion_date_time` datetime NOT NULL,
   `actual_completion_date_time` datetime DEFAULT NULL,
   `status` varchar(25) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `priority` varchar(25) COLLATE utf8mb4_unicode_ci NOT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `public_id` (`public_id`),
-  KEY `phase_id` (`phase_id`),
-  KEY `idx_phase_task_phase_id` (`phase_id`),
-  KEY `idx_phase_task_status` (`status`),
-  KEY `idx_phase_task_priority` (`priority`),
-  FULLTEXT KEY `name` (`name`,`description`),
-  CONSTRAINT `phase_task_ibfk_1` FOREIGN KEY (`phase_id`) REFERENCES `project_phase` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `phase_task_chk_1` CHECK ((`status` in (_utf8mb4'pending',_utf8mb4'onGoing',_utf8mb4'completed',_utf8mb4'delayed',_utf8mb4'cancelled'))),
-  CONSTRAINT `phase_task_chk_2` CHECK ((`priority` in (_utf8mb4'low',_utf8mb4'medium',_utf8mb4'high')))
-) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  KEY `project_phase_project_id_index` (`project_id`),
+  CONSTRAINT `phase_ibfk_1` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `phase_chk_1` CHECK ((`status` in (_utf8mb4'pending',_utf8mb4'onGoing',_utf8mb4'completed',_utf8mb4'delayed',_utf8mb4'cancelled')))
+) ENGINE=InnoDB AUTO_INCREMENT=60 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `phase_task`
+-- Dumping data for table `phase`
 --
 
-LOCK TABLES `phase_task` WRITE;
-/*!40000 ALTER TABLE `phase_task` DISABLE KEYS */;
-INSERT INTO `phase_task` VALUES (22,_binary 'f\Z ;FJKÇQ\\É¶2w',55,'Task 1',NULL,'2026-01-11 00:00:00','2026-01-12 00:00:00',NULL,'delayed','low','2026-01-11 22:34:45','2026-01-15 15:06:22'),(23,_binary '\";Å$pCûû¡2≠°π6\‰',55,'Task Edited 1','Flank drumstick meatloaf pork loin short loin.  Buffalo pork venison chicken pastrami sirloin ball tip jowl flank fatback meatball salami.  Short ribs t-bone bresaola shoulder.  Pork loin turducken ham hock jowl short loin sirloin meatball salami filet mignon shoulder swine.  Frankfurter bresaola chicken porchetta boudin chuck beef drumstick meatloaf jowl short loin kielbasa swine beef ribs.','2026-01-15 00:00:00','2026-01-18 00:00:00',NULL,'delayed','high','2026-01-15 15:16:50','2026-01-20 22:02:29');
-/*!40000 ALTER TABLE `phase_task` ENABLE KEYS */;
+LOCK TABLES `phase` WRITE;
+/*!40000 ALTER TABLE `phase` DISABLE KEYS */;
+INSERT INTO `phase` VALUES (55,_binary '§¸\⁄¿-\÷K”åpùºj\‹\€3',37,'The Fall of Saigon','Chuck pastrami sausage short ribs, landjaeger capicola doner ham hock fatback shoulder salami chicken ball tip swine pig.  Beef venison frankfurter sirloin bresaola jerky sausage pancetta spare ribs brisket boudin filet mignon.  Short ribs pork belly hamburger swine jerky capicola chicken leberkas ham tongue venison alcatra doner.  Filet mignon cupim tongue ball tip, t-bone spare ribs buffalo alcatra pork belly corned beef.  Turducken ham hock pork belly ham, sirloin burgdoggen kevin short loin chicken hamburger chislic.  Bresaola pancetta pork belly tri-tip sausage jowl burgdoggen kevin leberkas.  Filet mignon salami swine, andouille alcatra capicola ball tip brisket hamburger shankle corned beef ribeye drumstick sausage.','2025-12-25 00:00:00','2026-03-22 00:00:00',NULL,'ongoing','2025-12-25 18:30:57','2025-12-31 16:42:26'),(59,_binary ',`âBEå`Åk\Z≠¬Ç',37,'Noli De Castro Pics','Boudin pig picanha meatloaf andouille short ribs rump pork chop flank cupim shankle buffalo drumstick.  Frankfurter turducken jowl cow meatball hamburger.  Chuck chislic ham hock kielbasa tenderloin alcatra.  Alcatra short ribs pork chop doner, short loin burgdoggen kevin meatloaf turducken drumstick pig tri-tip.','2026-06-17 00:00:00','2026-08-17 00:00:00',NULL,'pending','2025-12-25 21:16:29','2026-01-24 16:43:36');
+/*!40000 ALTER TABLE `phase` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -66,7 +90,7 @@ UNLOCK TABLES;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
 DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`dbeaver`@`localhost`*/ /*!50003 TRIGGER `check_phase_task_dates_before_update` BEFORE UPDATE ON `phase_task` FOR EACH ROW BEGIN
+/*!50003 CREATE*/ /*!50017 DEFINER=`dbeaver`@`localhost`*/ /*!50003 TRIGGER `check_project_phase_dates_before_update` BEFORE UPDATE ON `phase` FOR EACH ROW BEGIN
         
         IF NEW.start_date_time <> OLD.start_date_time THEN IF NEW.start_date_time IS NOT NULL AND NEW.start_date_time < CURRENT_DATE() THEN SIGNAL SQLSTATE '45000'
     SET MESSAGE_TEXT
@@ -77,12 +101,6 @@ DELIMITER ;;
     IF NEW.completion_date_time <> OLD.completion_date_time THEN IF NEW.completion_date_time IS NOT NULL AND NEW.completion_date_time <= NEW.start_date_time THEN SIGNAL SQLSTATE '45000'
 SET MESSAGE_TEXT
     = 'completion_date_time must be later than start_date_time.' ;
-END IF ;
-END IF ;
-
-IF NEW.actual_completion_date_time <> OLD.actual_completion_date_time THEN IF NEW.actual_completion_date_time IS NOT NULL AND NEW.actual_completion_date_time <= NEW.start_date_time THEN SIGNAL SQLSTATE '45000'
-SET MESSAGE_TEXT
-    = 'actual_completion_date_time must be later than start_date_time.' ;
 END IF ;
 END IF ;
 END */;;
@@ -100,7 +118,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
 DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`dbeaver`@`localhost`*/ /*!50003 TRIGGER `complete_phase_task_trigger` BEFORE UPDATE ON `phase_task` FOR EACH ROW BEGIN
+/*!50003 CREATE*/ /*!50017 DEFINER=`dbeaver`@`localhost`*/ /*!50003 TRIGGER `complete_project_phase_trigger` BEFORE UPDATE ON `phase` FOR EACH ROW BEGIN
         IF NEW.status = 'completed' THEN
     SET NEW
         .actual_completion_date_time = CURRENT_TIMESTAMP ;
@@ -112,75 +130,36 @@ DELIMITER ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
 
 --
--- Table structure for table `phase_task_budget`
+-- Table structure for table `phase_budget`
 --
 
-DROP TABLE IF EXISTS `phase_task_budget`;
+DROP TABLE IF EXISTS `phase_budget`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `phase_task_budget` (
+CREATE TABLE `phase_budget` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `task_id` int NOT NULL,
-  `estimated_cost` decimal(15,4) NOT NULL DEFAULT '0.0000',
-  `actual_cost` decimal(15,4) NOT NULL DEFAULT '0.0000',
+  `phase_id` int NOT NULL,
+  `budget` decimal(21,4) NOT NULL DEFAULT '0.0000',
+  `contingency_rate` decimal(5,2) NOT NULL DEFAULT '10.00',
   `note` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `task_id` (`task_id`),
-  CONSTRAINT `fk_task_budget_task` FOREIGN KEY (`task_id`) REFERENCES `phase_task` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `phase_task_budget_chk_1` CHECK ((`estimated_cost` >= 0)),
-  CONSTRAINT `phase_task_budget_chk_2` CHECK ((`actual_cost` >= 0))
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  UNIQUE KEY `phase_id` (`phase_id`),
+  CONSTRAINT `fk_phase_budget_phase` FOREIGN KEY (`phase_id`) REFERENCES `phase` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `phase_budget_chk_1` CHECK ((`budget` >= 0)),
+  CONSTRAINT `phase_budget_chk_2` CHECK ((`contingency_rate` >= 0))
+) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `phase_task_budget`
+-- Dumping data for table `phase_budget`
 --
 
-LOCK TABLES `phase_task_budget` WRITE;
-/*!40000 ALTER TABLE `phase_task_budget` DISABLE KEYS */;
-INSERT INTO `phase_task_budget` VALUES (4,22,2000.0000,0.0000,NULL,'2026-01-11 22:34:45','2026-01-11 22:34:45'),(5,23,10001.0000,0.0000,'Shankle pancetta venison chuck shoulder capicola.  Prosciutto porchetta picanha, burgdoggen turkey jowl fatback corned beef landjaeger cow meatball tri-tip venison.  Leberkas spare ribs landjaeger prosciutto brisket short ribs corned beef burgdoggen cow pork chop.  Pig tail short ribs drumstick picanha chislic swine, shankle filet mignon doner.','2026-01-15 15:16:50','2026-01-20 22:10:53');
-/*!40000 ALTER TABLE `phase_task_budget` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `phase_task_worker`
---
-
-DROP TABLE IF EXISTS `phase_task_worker`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `phase_task_worker` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `task_id` int NOT NULL,
-  `worker_id` int NOT NULL,
-  `status` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `estimated_hour` decimal(8,2) NOT NULL DEFAULT '0.00',
-  `actual_hour` decimal(8,2) NOT NULL DEFAULT '0.00',
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `task_id_worker_id` (`task_id`,`worker_id`),
-  KEY `worker_id` (`worker_id`),
-  KEY `idx_phase_task_worker_task_id` (`task_id`),
-  KEY `idx_phase_task_worker_worker_id` (`worker_id`),
-  KEY `idx_phase_task_worker_status` (`status`),
-  CONSTRAINT `phase_task_worker_ibfk_1` FOREIGN KEY (`task_id`) REFERENCES `phase_task` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `phase_task_worker_ibfk_2` FOREIGN KEY (`worker_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `phase_task_worker_ch_act` CHECK ((`actual_hour` >= 0)),
-  CONSTRAINT `phase_task_worker_ch_est` CHECK ((`estimated_hour` >= 0))
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `phase_task_worker`
---
-
-LOCK TABLES `phase_task_worker` WRITE;
-/*!40000 ALTER TABLE `phase_task_worker` DISABLE KEYS */;
-INSERT INTO `phase_task_worker` VALUES (14,22,2,'assigned',8.00,0.00,'2026-01-11 22:34:47','2026-01-11 22:34:47'),(15,23,2,'terminated',3.00,0.00,'2026-01-15 15:16:50','2026-01-20 22:22:34'),(17,23,3,'terminated',5.00,0.00,'2026-01-20 22:11:01','2026-01-24 16:42:19');
-/*!40000 ALTER TABLE `phase_task_worker` ENABLE KEYS */;
+LOCK TABLES `phase_budget` WRITE;
+/*!40000 ALTER TABLE `phase_budget` DISABLE KEYS */;
+INSERT INTO `phase_budget` VALUES (26,55,13000.0000,6.00,'Aut nostrum necessit','2025-12-25 18:30:57','2025-12-25 21:44:49'),(30,59,30000.0000,7.00,NULL,'2025-12-25 21:16:29','2025-12-25 21:16:29');
+/*!40000 ALTER TABLE `phase_budget` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -283,21 +262,18 @@ DELIMITER ;
 /*!50003 SET character_set_results = utf8mb4 */ ;
 /*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
 /*!50003 CREATE*/ /*!50017 DEFINER=`dbeaver`@`localhost`*/ /*!50003 TRIGGER `cancel_project` AFTER UPDATE ON `project` FOR EACH ROW BEGIN
-    
     IF NEW.status = 'cancelled' AND OLD.status <> 'cancelled' THEN
-        
-        UPDATE project_phase
+        UPDATE `phase`
         SET status = 'cancelled'
         WHERE project_id = NEW.id;
 
-        
-        UPDATE phase_task
+        UPDATE `task`
         SET status = 'cancelled'
         WHERE phase_id IN (
-            SELECT id FROM project_phase WHERE project_id = NEW.id
+            SELECT id FROM `phase` WHERE project_id = NEW.id
         );
     END IF;
 END */;;
@@ -306,123 +282,6 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
-
---
--- Table structure for table `project_phase`
---
-
-DROP TABLE IF EXISTS `project_phase`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `project_phase` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `public_id` binary(16) NOT NULL,
-  `project_id` int NOT NULL,
-  `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` varchar(1000) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `start_date_time` datetime NOT NULL,
-  `completion_date_time` datetime NOT NULL,
-  `actual_completion_date_time` datetime DEFAULT NULL,
-  `status` varchar(25) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `public_id` (`public_id`),
-  KEY `project_phase_project_id_index` (`project_id`),
-  CONSTRAINT `project_phase_ibfk_1` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `project_phase_chk_1` CHECK ((`status` in (_utf8mb4'pending',_utf8mb4'onGoing',_utf8mb4'completed',_utf8mb4'delayed',_utf8mb4'cancelled')))
-) ENGINE=InnoDB AUTO_INCREMENT=60 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `project_phase`
---
-
-LOCK TABLES `project_phase` WRITE;
-/*!40000 ALTER TABLE `project_phase` DISABLE KEYS */;
-INSERT INTO `project_phase` VALUES (55,_binary '§¸\⁄¿-\÷K”åpùºj\‹\€3',37,'The Fall of Saigon','Chuck pastrami sausage short ribs, landjaeger capicola doner ham hock fatback shoulder salami chicken ball tip swine pig.  Beef venison frankfurter sirloin bresaola jerky sausage pancetta spare ribs brisket boudin filet mignon.  Short ribs pork belly hamburger swine jerky capicola chicken leberkas ham tongue venison alcatra doner.  Filet mignon cupim tongue ball tip, t-bone spare ribs buffalo alcatra pork belly corned beef.  Turducken ham hock pork belly ham, sirloin burgdoggen kevin short loin chicken hamburger chislic.  Bresaola pancetta pork belly tri-tip sausage jowl burgdoggen kevin leberkas.  Filet mignon salami swine, andouille alcatra capicola ball tip brisket hamburger shankle corned beef ribeye drumstick sausage.','2025-12-25 00:00:00','2026-03-22 00:00:00',NULL,'ongoing','2025-12-25 18:30:57','2025-12-31 16:42:26'),(59,_binary ',`âBEå`Åk\Z≠¬Ç',37,'Noli De Castro Pics','Boudin pig picanha meatloaf andouille short ribs rump pork chop flank cupim shankle buffalo drumstick.  Frankfurter turducken jowl cow meatball hamburger.  Chuck chislic ham hock kielbasa tenderloin alcatra.  Alcatra short ribs pork chop doner, short loin burgdoggen kevin meatloaf turducken drumstick pig tri-tip.','2026-06-17 00:00:00','2026-08-17 00:00:00',NULL,'pending','2025-12-25 21:16:29','2026-01-24 16:43:36');
-/*!40000 ALTER TABLE `project_phase` ENABLE KEYS */;
-UNLOCK TABLES;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
-DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`dbeaver`@`localhost`*/ /*!50003 TRIGGER `check_project_phase_dates_before_update` BEFORE UPDATE ON `project_phase` FOR EACH ROW BEGIN
-        
-        IF NEW.start_date_time <> OLD.start_date_time THEN IF NEW.start_date_time IS NOT NULL AND NEW.start_date_time < CURRENT_DATE() THEN SIGNAL SQLSTATE '45000'
-    SET MESSAGE_TEXT
-        = 'start_date_time cannot be in the past.' ;
-        END IF ;
-    END IF ;
-    
-    IF NEW.completion_date_time <> OLD.completion_date_time THEN IF NEW.completion_date_time IS NOT NULL AND NEW.completion_date_time <= NEW.start_date_time THEN SIGNAL SQLSTATE '45000'
-SET MESSAGE_TEXT
-    = 'completion_date_time must be later than start_date_time.' ;
-END IF ;
-END IF ;
-END */;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
-DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`dbeaver`@`localhost`*/ /*!50003 TRIGGER `complete_project_phase_trigger` BEFORE UPDATE ON `project_phase` FOR EACH ROW BEGIN
-        IF NEW.status = 'completed' THEN
-    SET NEW
-        .actual_completion_date_time = CURRENT_TIMESTAMP ;
-    END IF ; END */;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-
---
--- Table structure for table `project_phase_budget`
---
-
-DROP TABLE IF EXISTS `project_phase_budget`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `project_phase_budget` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `phase_id` int NOT NULL,
-  `budget` decimal(21,4) NOT NULL DEFAULT '0.0000',
-  `contingency_rate` decimal(5,2) NOT NULL DEFAULT '10.00',
-  `note` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `phase_id` (`phase_id`),
-  CONSTRAINT `fk_phase_budget_phase` FOREIGN KEY (`phase_id`) REFERENCES `project_phase` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `project_phase_budget_chk_1` CHECK ((`budget` >= 0)),
-  CONSTRAINT `project_phase_budget_chk_2` CHECK ((`contingency_rate` >= 0))
-) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `project_phase_budget`
---
-
-LOCK TABLES `project_phase_budget` WRITE;
-/*!40000 ALTER TABLE `project_phase_budget` DISABLE KEYS */;
-INSERT INTO `project_phase_budget` VALUES (26,55,13000.0000,6.00,'Aut nostrum necessit','2025-12-25 18:30:57','2025-12-25 21:44:49'),(30,59,30000.0000,7.00,NULL,'2025-12-25 21:16:29','2025-12-25 21:16:29');
-/*!40000 ALTER TABLE `project_phase_budget` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `project_worker`
@@ -466,18 +325,17 @@ UNLOCK TABLES;
 /*!50003 SET character_set_results = utf8mb4 */ ;
 /*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
 /*!50003 CREATE*/ /*!50017 DEFINER=`dbeaver`@`localhost`*/ /*!50003 TRIGGER `terminate_worker_tasks_on_project_worker_termination` AFTER UPDATE ON `project_worker` FOR EACH ROW BEGIN
-    
     IF NEW.status = 'terminated' AND OLD.status <> 'terminated' THEN
-        UPDATE `phase_task_worker` AS ptw
-        INNER JOIN `phase_task` AS pt ON ptw.task_id = pt.id
-        INNER JOIN `project_phase` AS pp ON pt.phase_id = pp.id
-        SET ptw.status = 'terminated'
-        WHERE ptw.worker_id = NEW.worker_id
-        AND pp.project_id = NEW.project_id
-        AND ptw.status = 'assigned';
+        UPDATE `task_worker` AS tw
+        INNER JOIN `task` AS t ON tw.task_id = t.id
+        INNER JOIN `phase` AS p ON t.phase_id = p.id
+        SET tw.status = 'terminated'
+        WHERE tw.worker_id = NEW.worker_id
+          AND p.project_id = NEW.project_id
+          AND tw.status = 'assigned';
     END IF;
 END */;;
 DELIMITER ;
@@ -513,8 +371,52 @@ CREATE TABLE `rate_limiter` (
 
 LOCK TABLES `rate_limiter` WRITE;
 /*!40000 ALTER TABLE `rate_limiter` DISABLE KEYS */;
-INSERT INTO `rate_limiter` VALUES (272,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/phases/a4fcdac0-2dd6-4bd3-8c70-9dbc6adcdb33/tasks/223b8124-7003-439e-9ec1-32ada1b936e4:PATCH',1,1768918986,'2026-01-20 22:18:24','2026-01-20 22:22:06'),(273,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers?status=assigned&excludeProjectTerminated=true&offset=2:GET',1,1769260604,'2026-01-20 23:10:20','2026-01-24 21:15:44'),(274,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers?status=assigned&key=&offset=2:GET',1,1769260604,'2026-01-20 23:10:20','2026-01-24 21:15:44'),(275,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers/32bab677-1767-4cc5-bd50-348b5628bd84:GET',2,1768922454,'2026-01-20 23:19:51','2026-01-20 23:19:54'),(276,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers/3a47359d-c34d-4360-a56b-09777fa6ad2a:GET',1,1768922461,'2026-01-20 23:20:01',NULL),(277,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/manager:GET',1,1768922464,'2026-01-20 23:20:04',NULL),(278,'127.0.0.1','/endpoint/users?status=unassigned&role=worker&excludeProjectTerminated=true&projectReferenceId=6d04a51b-27da-4812-8e46-b62cf08763ef&offset=0&key=:GET',1,1769260605,'2026-01-20 23:29:01','2026-01-24 21:15:45'),(279,'127.0.0.1','/endpoint/users?status=unassigned&role=worker&excludeProjectTerminated=true&projectReferenceId=6d04a51b-27da-4812-8e46-b62cf08763ef&offset=0:GET',1,1769260607,'2026-01-20 23:29:02','2026-01-24 21:15:47'),(280,'127.0.0.1','/endpoint/auth/login:POST',1,1769261443,'2026-01-24 15:01:51','2026-01-24 21:15:43'),(281,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef:PATCH',2,1769244258,'2026-01-24 16:37:59','2026-01-24 16:43:18'),(282,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers?status=assigned&excludeProjectTerminated=true&offset=1:GET',1,1769244201,'2026-01-24 16:42:21',NULL),(283,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers?status=assigned&key=&offset=1:GET',1,1769244201,'2026-01-24 16:42:21',NULL),(284,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers?status=unassigned&excludeProjectTerminated=true&key=&offset=0:GET',1,1769244205,'2026-01-24 16:42:25',NULL);
+INSERT INTO `rate_limiter` VALUES (272,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/phases/a4fcdac0-2dd6-4bd3-8c70-9dbc6adcdb33/tasks/223b8124-7003-439e-9ec1-32ada1b936e4:PATCH',1,1768918986,'2026-01-20 22:18:24','2026-01-20 22:22:06'),(273,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers?status=assigned&excludeProjectTerminated=true&offset=2:GET',1,1769261197,'2026-01-20 23:10:20','2026-01-24 21:25:37'),(274,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers?status=assigned&key=&offset=2:GET',1,1769261197,'2026-01-20 23:10:20','2026-01-24 21:25:37'),(275,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers/32bab677-1767-4cc5-bd50-348b5628bd84:GET',2,1768922454,'2026-01-20 23:19:51','2026-01-20 23:19:54'),(276,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers/3a47359d-c34d-4360-a56b-09777fa6ad2a:GET',1,1768922461,'2026-01-20 23:20:01',NULL),(277,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/manager:GET',1,1768922464,'2026-01-20 23:20:04',NULL),(278,'127.0.0.1','/endpoint/users?status=unassigned&role=worker&excludeProjectTerminated=true&projectReferenceId=6d04a51b-27da-4812-8e46-b62cf08763ef&offset=0&key=:GET',1,1769260605,'2026-01-20 23:29:01','2026-01-24 21:15:45'),(279,'127.0.0.1','/endpoint/users?status=unassigned&role=worker&excludeProjectTerminated=true&projectReferenceId=6d04a51b-27da-4812-8e46-b62cf08763ef&offset=0:GET',1,1769260607,'2026-01-20 23:29:02','2026-01-24 21:15:47'),(280,'127.0.0.1','/endpoint/auth/login:POST',1,1769261443,'2026-01-24 15:01:51','2026-01-24 21:15:43'),(281,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef:PATCH',2,1769244258,'2026-01-24 16:37:59','2026-01-24 16:43:18'),(282,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers?status=assigned&excludeProjectTerminated=true&offset=1:GET',1,1769244201,'2026-01-24 16:42:21',NULL),(283,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers?status=assigned&key=&offset=1:GET',1,1769244201,'2026-01-24 16:42:21',NULL),(284,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers?status=unassigned&excludeProjectTerminated=true&key=&offset=0:GET',1,1769244205,'2026-01-24 16:42:25',NULL);
 /*!40000 ALTER TABLE `rate_limiter` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `resource`
+--
+
+DROP TABLE IF EXISTS `resource`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `resource` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `task_id` int NOT NULL,
+  `resource_type_id` int NOT NULL,
+  `task_worker_id` int DEFAULT NULL,
+  `quantity` decimal(10,2) NOT NULL DEFAULT '1.00',
+  `unit_rate` decimal(15,4) NOT NULL DEFAULT '0.0000',
+  `estimated_unit` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `actual_unit` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `note` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `public_id` binary(16) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_task_resource_task` (`task_id`),
+  KEY `idx_task_resource_type` (`resource_type_id`),
+  KEY `fk_task_resource_worker` (`task_worker_id`),
+  CONSTRAINT `fk_task_resource_task` FOREIGN KEY (`task_id`) REFERENCES `task` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_task_resource_type` FOREIGN KEY (`resource_type_id`) REFERENCES `resource_type` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_task_resource_worker` FOREIGN KEY (`task_worker_id`) REFERENCES `task_worker` (`id`),
+  CONSTRAINT `resource_chk_1` CHECK ((`quantity` > 0)),
+  CONSTRAINT `resource_chk_2` CHECK ((`unit_rate` >= 0)),
+  CONSTRAINT `task_resource_ch_act` CHECK ((`actual_unit` >= 0)),
+  CONSTRAINT `task_resource_ch_est` CHECK ((`estimated_unit` >= 0))
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `resource`
+--
+
+LOCK TABLES `resource` WRITE;
+/*!40000 ALTER TABLE `resource` DISABLE KEYS */;
+INSERT INTO `resource` VALUES (5,22,1,14,1.00,0.0000,8.00,0.00,NULL,'2026-01-11 22:34:49','2026-01-11 22:34:49',_binary '\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0'),(6,23,1,15,1.00,83.2300,3.00,0.00,NULL,'2026-01-15 15:16:50','2026-01-15 15:16:50',_binary '\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0');
+/*!40000 ALTER TABLE `resource` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -549,47 +451,171 @@ INSERT INTO `resource_type` VALUES (1,'Labor','All labor services including gene
 UNLOCK TABLES;
 
 --
--- Table structure for table `task_resource`
+-- Table structure for table `task`
 --
 
-DROP TABLE IF EXISTS `task_resource`;
+DROP TABLE IF EXISTS `task`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `task_resource` (
+CREATE TABLE `task` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `task_id` int NOT NULL,
-  `resource_type_id` int NOT NULL,
-  `task_worker_id` int DEFAULT NULL,
-  `quantity` decimal(10,2) NOT NULL DEFAULT '1.00',
-  `unit_rate` decimal(15,4) NOT NULL DEFAULT '0.0000',
-  `estimated_unit` decimal(10,2) NOT NULL DEFAULT '0.00',
-  `actual_unit` decimal(10,2) NOT NULL DEFAULT '0.00',
-  `note` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `public_id` binary(16) NOT NULL,
+  `phase_id` int NOT NULL,
+  `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` varchar(1000) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `start_date_time` datetime NOT NULL,
+  `completion_date_time` datetime NOT NULL,
+  `actual_completion_date_time` datetime DEFAULT NULL,
+  `status` varchar(25) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `priority` varchar(25) COLLATE utf8mb4_unicode_ci NOT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `public_id` binary(16) NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `idx_task_resource_task` (`task_id`),
-  KEY `idx_task_resource_type` (`resource_type_id`),
-  KEY `fk_task_resource_worker` (`task_worker_id`),
-  CONSTRAINT `fk_task_resource_task` FOREIGN KEY (`task_id`) REFERENCES `phase_task` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_task_resource_type` FOREIGN KEY (`resource_type_id`) REFERENCES `resource_type` (`id`) ON DELETE RESTRICT,
-  CONSTRAINT `fk_task_resource_worker` FOREIGN KEY (`task_worker_id`) REFERENCES `phase_task_worker` (`id`),
-  CONSTRAINT `task_resource_ch_act` CHECK ((`actual_unit` >= 0)),
-  CONSTRAINT `task_resource_ch_est` CHECK ((`estimated_unit` >= 0)),
-  CONSTRAINT `task_resource_chk_1` CHECK ((`quantity` > 0)),
-  CONSTRAINT `task_resource_chk_2` CHECK ((`unit_rate` >= 0))
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  UNIQUE KEY `public_id` (`public_id`),
+  KEY `phase_id` (`phase_id`),
+  KEY `idx_phase_task_phase_id` (`phase_id`),
+  KEY `idx_phase_task_status` (`status`),
+  KEY `idx_phase_task_priority` (`priority`),
+  FULLTEXT KEY `name` (`name`,`description`),
+  CONSTRAINT `task_ibfk_1` FOREIGN KEY (`phase_id`) REFERENCES `phase` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `task_chk_1` CHECK ((`status` in (_utf8mb4'pending',_utf8mb4'onGoing',_utf8mb4'completed',_utf8mb4'delayed',_utf8mb4'cancelled'))),
+  CONSTRAINT `task_chk_2` CHECK ((`priority` in (_utf8mb4'low',_utf8mb4'medium',_utf8mb4'high')))
+) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `task_resource`
+-- Dumping data for table `task`
 --
 
-LOCK TABLES `task_resource` WRITE;
-/*!40000 ALTER TABLE `task_resource` DISABLE KEYS */;
-INSERT INTO `task_resource` VALUES (5,22,1,14,1.00,0.0000,8.00,0.00,NULL,'2026-01-11 22:34:49','2026-01-11 22:34:49',_binary '\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0'),(6,23,1,15,1.00,83.2300,3.00,0.00,NULL,'2026-01-15 15:16:50','2026-01-15 15:16:50',_binary '\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0');
-/*!40000 ALTER TABLE `task_resource` ENABLE KEYS */;
+LOCK TABLES `task` WRITE;
+/*!40000 ALTER TABLE `task` DISABLE KEYS */;
+INSERT INTO `task` VALUES (22,_binary 'f\Z ;FJKÇQ\\É¶2w',55,'Task 1',NULL,'2026-01-11 00:00:00','2026-01-12 00:00:00',NULL,'delayed','low','2026-01-11 22:34:45','2026-01-15 15:06:22'),(23,_binary '\";Å$pCûû¡2≠°π6\‰',55,'Task Edited 1','Flank drumstick meatloaf pork loin short loin.  Buffalo pork venison chicken pastrami sirloin ball tip jowl flank fatback meatball salami.  Short ribs t-bone bresaola shoulder.  Pork loin turducken ham hock jowl short loin sirloin meatball salami filet mignon shoulder swine.  Frankfurter bresaola chicken porchetta boudin chuck beef drumstick meatloaf jowl short loin kielbasa swine beef ribs.','2026-01-15 00:00:00','2026-01-18 00:00:00',NULL,'delayed','high','2026-01-15 15:16:50','2026-01-20 22:02:29');
+/*!40000 ALTER TABLE `task` ENABLE KEYS */;
+UNLOCK TABLES;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`dbeaver`@`localhost`*/ /*!50003 TRIGGER `check_phase_task_dates_before_update` BEFORE UPDATE ON `task` FOR EACH ROW BEGIN
+        
+        IF NEW.start_date_time <> OLD.start_date_time THEN IF NEW.start_date_time IS NOT NULL AND NEW.start_date_time < CURRENT_DATE() THEN SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT
+        = 'start_date_time cannot be in the past.' ;
+        END IF ;
+    END IF ;
+    
+    IF NEW.completion_date_time <> OLD.completion_date_time THEN IF NEW.completion_date_time IS NOT NULL AND NEW.completion_date_time <= NEW.start_date_time THEN SIGNAL SQLSTATE '45000'
+SET MESSAGE_TEXT
+    = 'completion_date_time must be later than start_date_time.' ;
+END IF ;
+END IF ;
+
+IF NEW.actual_completion_date_time <> OLD.actual_completion_date_time THEN IF NEW.actual_completion_date_time IS NOT NULL AND NEW.actual_completion_date_time <= NEW.start_date_time THEN SIGNAL SQLSTATE '45000'
+SET MESSAGE_TEXT
+    = 'actual_completion_date_time must be later than start_date_time.' ;
+END IF ;
+END IF ;
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`dbeaver`@`localhost`*/ /*!50003 TRIGGER `complete_phase_task_trigger` BEFORE UPDATE ON `task` FOR EACH ROW BEGIN
+        IF NEW.status = 'completed' THEN
+    SET NEW
+        .actual_completion_date_time = CURRENT_TIMESTAMP ;
+    END IF ; END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+
+--
+-- Table structure for table `task_budget`
+--
+
+DROP TABLE IF EXISTS `task_budget`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `task_budget` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `task_id` int NOT NULL,
+  `estimated_cost` decimal(15,4) NOT NULL DEFAULT '0.0000',
+  `actual_cost` decimal(15,4) NOT NULL DEFAULT '0.0000',
+  `note` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `task_id` (`task_id`),
+  CONSTRAINT `fk_task_budget_task` FOREIGN KEY (`task_id`) REFERENCES `task` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `task_budget_chk_1` CHECK ((`estimated_cost` >= 0)),
+  CONSTRAINT `task_budget_chk_2` CHECK ((`actual_cost` >= 0))
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `task_budget`
+--
+
+LOCK TABLES `task_budget` WRITE;
+/*!40000 ALTER TABLE `task_budget` DISABLE KEYS */;
+INSERT INTO `task_budget` VALUES (4,22,2000.0000,0.0000,NULL,'2026-01-11 22:34:45','2026-01-11 22:34:45'),(5,23,10001.0000,0.0000,'Shankle pancetta venison chuck shoulder capicola.  Prosciutto porchetta picanha, burgdoggen turkey jowl fatback corned beef landjaeger cow meatball tri-tip venison.  Leberkas spare ribs landjaeger prosciutto brisket short ribs corned beef burgdoggen cow pork chop.  Pig tail short ribs drumstick picanha chislic swine, shankle filet mignon doner.','2026-01-15 15:16:50','2026-01-20 22:10:53');
+/*!40000 ALTER TABLE `task_budget` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `task_worker`
+--
+
+DROP TABLE IF EXISTS `task_worker`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `task_worker` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `task_id` int NOT NULL,
+  `worker_id` int NOT NULL,
+  `status` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `estimated_hour` decimal(8,2) NOT NULL DEFAULT '0.00',
+  `actual_hour` decimal(8,2) NOT NULL DEFAULT '0.00',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `task_id_worker_id` (`task_id`,`worker_id`),
+  KEY `worker_id` (`worker_id`),
+  KEY `idx_phase_task_worker_task_id` (`task_id`),
+  KEY `idx_phase_task_worker_worker_id` (`worker_id`),
+  KEY `idx_phase_task_worker_status` (`status`),
+  CONSTRAINT `task_worker_ibfk_1` FOREIGN KEY (`task_id`) REFERENCES `task` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `task_worker_ibfk_2` FOREIGN KEY (`worker_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `phase_task_worker_ch_act` CHECK ((`actual_hour` >= 0)),
+  CONSTRAINT `phase_task_worker_ch_est` CHECK ((`estimated_hour` >= 0))
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `task_worker`
+--
+
+LOCK TABLES `task_worker` WRITE;
+/*!40000 ALTER TABLE `task_worker` DISABLE KEYS */;
+INSERT INTO `task_worker` VALUES (14,22,2,'assigned',8.00,0.00,'2026-01-11 22:34:47','2026-01-11 22:34:47'),(15,23,2,'terminated',3.00,0.00,'2026-01-15 15:16:50','2026-01-20 22:22:34'),(17,23,3,'terminated',5.00,0.00,'2026-01-20 22:11:01','2026-01-24 16:42:19');
+/*!40000 ALTER TABLE `task_worker` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -719,12 +745,11 @@ DELIMITER ;
 /*!50003 SET character_set_results = utf8mb4 */ ;
 /*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
 /*!50003 CREATE*/ /*!50017 DEFINER=`dbeaver`@`localhost`*/ /*!50003 TRIGGER `delete_job_titles_on_user_delete` AFTER UPDATE ON `user` FOR EACH ROW BEGIN
-    
     IF NEW.deleted_at IS NOT NULL AND OLD.deleted_at IS NULL THEN
-        DELETE FROM `user_job_title` WHERE user_id = NEW.id;
+        DELETE FROM `job_title` WHERE user_id = NEW.id;
     END IF;
 END */;;
 DELIMITER ;
@@ -734,34 +759,203 @@ DELIMITER ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
 
 --
--- Table structure for table `user_job_title`
+-- Dumping events for database 'taskflow'
 --
+/*!50106 SET @save_time_zone= @@TIME_ZONE */ ;
+/*!50106 DROP EVENT IF EXISTS `update_phase_status_daily` */;
+DELIMITER ;;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;;
+/*!50003 SET character_set_client  = utf8mb4 */ ;;
+/*!50003 SET character_set_results = utf8mb4 */ ;;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;;
+/*!50003 SET @saved_time_zone      = @@time_zone */ ;;
+/*!50003 SET time_zone             = 'SYSTEM' */ ;;
+/*!50106 CREATE*/ /*!50117 DEFINER=`dbeaver`@`localhost`*/ /*!50106 EVENT `update_phase_status_daily` ON SCHEDULE EVERY 1 DAY STARTS '2026-01-25 00:10:00' ON COMPLETION PRESERVE ENABLE COMMENT 'Automatically updates phase status based on start_date_time and completion_date_time' DO BEGIN
+    UPDATE `phase`
+    SET `status` = 'onGoing'
+    WHERE `status` = 'pending'
+      AND DATE(`start_date_time`) <= CURRENT_DATE
+      AND DATE(`completion_date_time`) > CURRENT_DATE;
 
-DROP TABLE IF EXISTS `user_job_title`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `user_job_title` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `user_id` int NOT NULL,
-  `title` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `user_id` (`user_id`,`title`),
-  KEY `user_job_title_id_index` (`user_id`),
-  CONSTRAINT `user_job_title_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+    UPDATE `phase`
+    SET `status` = 'delayed'
+    WHERE `status` = 'onGoing'
+      AND DATE(`completion_date_time`) < CURRENT_DATE
+      AND (DATE(`actual_completion_date_time`)) IS NULL;
+
+    UPDATE `phase`
+    SET `status` = 'delayed'
+    WHERE `status` = 'pending'
+      AND DATE(`start_date_time`) <= CURRENT_DATE
+      AND DATE(`completion_date_time`) < CURRENT_DATE
+      AND (DATE(`actual_completion_date_time`)) IS NULL;
+
+    UPDATE `phase` AS p
+    SET `status` = 'completed',
+        `actual_completion_date_time` = CURRENT_TIMESTAMP
+    WHERE `status` IN ('onGoing', 'delayed')
+      AND (DATE(`actual_completion_date_time`)) IS NULL
+      AND NOT EXISTS (
+          SELECT 1
+          FROM `task` AS t
+          WHERE t.phase_id = p.id
+            AND t.status != 'completed'
+            AND t.status != 'cancelled'
+      )
+      AND EXISTS (
+          SELECT 1
+          FROM `task` AS t2
+          WHERE t2.phase_id = p.id
+            AND t2.status = 'completed'
+      );
+END */ ;;
+/*!50003 SET time_zone             = @saved_time_zone */ ;;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;;
+/*!50003 SET character_set_results = @saved_cs_results */ ;;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;;
+/*!50106 DROP EVENT IF EXISTS `update_project_status_daily` */;;
+DELIMITER ;;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;;
+/*!50003 SET character_set_client  = utf8mb4 */ ;;
+/*!50003 SET character_set_results = utf8mb4 */ ;;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;;
+/*!50003 SET @saved_time_zone      = @@time_zone */ ;;
+/*!50003 SET time_zone             = 'SYSTEM' */ ;;
+/*!50106 CREATE*/ /*!50117 DEFINER=`dbeaver`@`localhost`*/ /*!50106 EVENT `update_project_status_daily` ON SCHEDULE EVERY 1 DAY STARTS '2026-01-25 00:15:00' ON COMPLETION PRESERVE ENABLE COMMENT 'Automatically updates project status based on start_date_time and completion_date_time' DO BEGIN
+    UPDATE `project`
+    SET `status` = 'onGoing'
+    WHERE `status` = 'pending'
+      AND DATE(`start_date_time`) <= CURRENT_DATE
+      AND DATE(`completion_date_time`) > CURRENT_DATE;
+
+    UPDATE `project`
+    SET `status` = 'delayed'
+    WHERE `status` = 'onGoing'
+      AND DATE(`completion_date_time`) < CURRENT_DATE
+      AND (DATE(`actual_completion_date_time`)) IS NULL;
+
+    UPDATE `project`
+    SET `status` = 'delayed'
+    WHERE `status` = 'pending'
+      AND DATE(`start_date_time`) <= CURRENT_DATE
+      AND DATE(`completion_date_time`) < CURRENT_DATE
+      AND (DATE(`actual_completion_date_time`)) IS NULL;
+
+    UPDATE `project` AS p
+    SET `status` = 'completed',
+        `actual_completion_date_time` = CURRENT_TIMESTAMP
+    WHERE `status` IN ('onGoing', 'delayed')
+      AND (DATE(`actual_completion_date_time`)) IS NULL
+      AND NOT EXISTS (
+          SELECT 1
+          FROM `phase` AS ph
+          WHERE ph.project_id = p.id
+            AND ph.status != 'completed'
+            AND ph.status != 'cancelled'
+      )
+      AND EXISTS (
+          SELECT 1
+          FROM `phase` AS ph2
+          WHERE ph2.project_id = p.id
+            AND ph2.status = 'completed'
+      );
+END */ ;;
+/*!50003 SET time_zone             = @saved_time_zone */ ;;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;;
+/*!50003 SET character_set_results = @saved_cs_results */ ;;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;;
+/*!50106 DROP EVENT IF EXISTS `update_task_status_daily` */;;
+DELIMITER ;;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;;
+/*!50003 SET character_set_client  = utf8mb4 */ ;;
+/*!50003 SET character_set_results = utf8mb4 */ ;;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;;
+/*!50003 SET @saved_time_zone      = @@time_zone */ ;;
+/*!50003 SET time_zone             = 'SYSTEM' */ ;;
+/*!50106 CREATE*/ /*!50117 DEFINER=`dbeaver`@`localhost`*/ /*!50106 EVENT `update_task_status_daily` ON SCHEDULE EVERY 1 DAY STARTS '2026-01-25 00:05:00' ON COMPLETION PRESERVE ENABLE COMMENT 'Automatically updates task status based on start_date_time and completion_date_time' DO BEGIN
+    UPDATE `task`
+    SET `status` = 'onGoing'
+    WHERE `status` = 'pending'
+      AND DATE(`start_date_time`) <= CURRENT_DATE
+      AND DATE(`completion_date_time`) > CURRENT_DATE;
+
+    UPDATE `task`
+    SET `status` = 'delayed'
+    WHERE `status` = 'onGoing'
+      AND DATE(`completion_date_time`) < CURRENT_DATE
+      AND (DATE(`actual_completion_date_time`)) IS NULL;
+
+    UPDATE `task`
+    SET `status` = 'delayed'
+    WHERE `status` = 'pending'
+      AND DATE(`start_date_time`) <= CURRENT_DATE
+      AND DATE(`completion_date_time`) < CURRENT_DATE
+      AND (DATE(`actual_completion_date_time`)) IS NULL;
+END */ ;;
+/*!50003 SET time_zone             = @saved_time_zone */ ;;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;;
+/*!50003 SET character_set_results = @saved_cs_results */ ;;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;;
+/*!50106 DROP EVENT IF EXISTS `update_task_status_hourly` */;;
+DELIMITER ;;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;;
+/*!50003 SET character_set_client  = utf8mb4 */ ;;
+/*!50003 SET character_set_results = utf8mb4 */ ;;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;;
+/*!50003 SET @saved_time_zone      = @@time_zone */ ;;
+/*!50003 SET time_zone             = 'SYSTEM' */ ;;
+/*!50106 CREATE*/ /*!50117 DEFINER=`dbeaver`@`localhost`*/ /*!50106 EVENT `update_task_status_hourly` ON SCHEDULE EVERY 1 HOUR STARTS '2026-01-24 06:00:00' ON COMPLETION PRESERVE ENABLE COMMENT 'Hourly task status updates during business hours for more immediate feedback' DO BEGIN
+    IF HOUR(CURRENT_DATE) BETWEEN 6 AND 22 THEN
+        UPDATE `task`
+        SET `status` = 'onGoing'
+        WHERE `status` = 'pending'
+          AND `start_date_time` <= CURRENT_DATE
+          AND `completion_date_time` > CURRENT_DATE;
+
+        UPDATE `task`
+        SET `status` = 'delayed'
+        WHERE `status` = 'onGoing'
+          AND `completion_date_time` < CURRENT_DATE
+          AND `actual_completion_date_time` IS NULL;
+
+        UPDATE `task`
+        SET `status` = 'delayed'
+        WHERE `status` = 'pending'
+          AND `start_date_time` <= CURRENT_DATE
+          AND `completion_date_time` < CURRENT_DATE
+          AND `actual_completion_date_time` IS NULL;
+    END IF;
+END */ ;;
+/*!50003 SET time_zone             = @saved_time_zone */ ;;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;;
+/*!50003 SET character_set_results = @saved_cs_results */ ;;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;;
+DELIMITER ;
+/*!50106 SET TIME_ZONE= @save_time_zone */ ;
 
 --
--- Dumping data for table `user_job_title`
+-- Dumping routines for database 'taskflow'
 --
-
-LOCK TABLES `user_job_title` WRITE;
-/*!40000 ALTER TABLE `user_job_title` DISABLE KEYS */;
-INSERT INTO `user_job_title` VALUES (1,1,'Id quidem tempor adi','2025-12-18 19:39:25','2025-12-18 19:39:25'),(2,2,'Dolorem est vero id','2025-12-19 18:26:09','2025-12-19 18:26:09'),(3,2,'Data Analyst','2025-12-22 14:17:11','2025-12-22 14:17:11'),(4,3,'Voluptatibus sed qui','2026-01-19 21:59:26','2026-01-19 21:59:26');
-/*!40000 ALTER TABLE `user_job_title` ENABLE KEYS */;
-UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -772,4 +966,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-01-24 21:20:58
+-- Dump completed on 2026-01-24 22:01:13
