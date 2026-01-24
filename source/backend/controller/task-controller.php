@@ -107,17 +107,13 @@ class TaskController implements Controller
                 $key = trim($_GET['key']);
             }
 
-            // Obtain filter from query parameters (one filter type only)
-            $filter = null;
-            if (isset($_GET['filter']) && strcasecmp($_GET['filter'], 'all') !== 0) {
-                $filterValue = $_GET['filter'];
-                // Try to parse as WorkStatus first, then TaskPriority if later fails
-                try {
-                    $filter = WorkStatus::from($filterValue);
-                } catch (ValueError $e) {
-                    $filter = TaskPriority::from($filterValue);
-                }
-            }
+            // Obtain filter from query parameters
+            $status = isset($_GET['status'])
+                ? WorkStatus::from($_GET['status'])
+                : null;
+            $priority = isset($_GET['priority'])
+                ? TaskPriority::from($_GET['priority'])
+                : null;
 
             $options = [
                 'offset' => isset($_GET['offset']) ? (int) $_GET['offset'] : 0,
@@ -130,7 +126,8 @@ class TaskController implements Controller
                 $worker?->getId() ?? Me::getInstance()->getId(),
                 $phase?->getId() ?? null,
                 $projectId,
-                $filter,
+                $status,
+                $priority,
                 $options
             );
             if (!$tasks) {

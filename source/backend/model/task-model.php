@@ -123,7 +123,8 @@ class TaskModel extends Model
      * @param int|UUID|null $userId User ID or UUID to filter tasks by manager or worker.
      * @param int|UUID|null $phaseId Phase ID or UUID to narrow tasks by project phase.
      * @param int|UUID|null $projectId Project ID or UUID to filter tasks by project.
-     * @param WorkStatus|TaskPriority|null $filter Optional filter for task status or priority.
+     * @param WorkStatus|null $status Optional work status to filter tasks.
+     * @param TaskPriority|null $priority Optional task priority to filter tasks.
      * @param array $options Pagination options:
      *      - limit: int Maximum number of results to return (default: 10)
      *      - offset: int Number of results to skip (default: 0)
@@ -138,7 +139,8 @@ class TaskModel extends Model
         int|UUID|null $userId = null,
         int|UUID|null $phaseId = null,
         int|UUID|null $projectId = null,
-        WorkStatus|TaskPriority|null $filter = null,
+        WorkStatus|null $status = null,
+        TaskPriority|null $priority = null,
         array $options = [
             'limit' => 10,
             'offset' => 0,
@@ -224,12 +226,13 @@ class TaskModel extends Model
             }
 
             // Apply status / priority filter if provided
-            if ($filter instanceof WorkStatus) {
+            if ($status) {
                 $where[] = ' t.status = :status';
-                $params[':status'] = $filter->value;
-            } elseif ($filter instanceof TaskPriority) {
+                $params[':status'] = $status->value;
+            }
+            if ($priority) {
                 $where[] = ' t.priority = :priority';
-                $params[':priority'] = $filter->value;
+                $params[':priority'] = $priority->value;
             }
 
             $whereClause = implode(' AND ', $where);
@@ -556,10 +559,10 @@ class TaskModel extends Model
         try {
             $query = 
                 "SELECT
-                    pp.*,
-                    ppb.budget,
-                    ppb.contingency_rate,
-                    ppb.note AS budget_note
+                    ph.*,
+                    phb.budget,
+                    phb.contingency_rate,
+                    phb.note AS budget_note
                 FROM
                     `phase` AS ph
                 INNER JOIN

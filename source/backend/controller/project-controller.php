@@ -284,8 +284,8 @@ class ProjectController implements Controller
             }
 
             // Only status can be filtered here
-            $status = isset($_GET['filter']) && strcasecmp($_GET['filter'], 'all') !== 0
-                ? WorkStatus::from($_GET['filter'])
+            $status = isset($_GET['status']) && strcasecmp($_GET['status'], 'all') !== 0
+                ? WorkStatus::from($_GET['status'])
                 : null;
 
             $projects = ProjectModel::search(
@@ -349,6 +349,7 @@ class ProjectController implements Controller
             null,
             null,
             $projectId,
+            null,
             null,
             [
                 'limit'  => 3,

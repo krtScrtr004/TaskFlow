@@ -56,7 +56,7 @@ class ResourceModel extends Model
             'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
             'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
             'groupBy'   => null,
-            'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 'pt.start_date_time DESC',
+            'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 't.start_date_time DESC',
         ];
 
         $whereClause .= ' AND r.task_worker_id IS NULL'; // Ensure only non-labor resources

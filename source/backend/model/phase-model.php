@@ -272,7 +272,7 @@ class PhaseModel extends Model
                                 'id', t.id,
                                 'public_id', HEX(t.public_id),
                                 'name', t.name,
-                                'descrition', t.descrition,
+                                'description', t.description,
                                 'status', t.status,
                                 'priority', t.priority,
                                 'estimated_cost', tb.estimated_cost,

@@ -78,7 +78,7 @@ class TaskWorkerModel extends Model
                         FROM 
                             `task_worker` AS tw
                         WHERE 
-                            ptw.worker_id = u.id
+                            tw.worker_id = u.id
                     ) AS total_tasks,
                     (
                         SELECT 

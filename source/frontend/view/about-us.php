@@ -118,7 +118,7 @@ use App\Middleware\Csrf;
 
         <!-- Our Team -->
         <section class="our-team flex-col">
-            <h1 class="heading center-text">Our Team</h1>
+            <h1 class="heading center-text black-bg">Our Team</h1>
 
             <section class="team-member-carousel carousel-wrapper relative">
                 <section class="carousel flex-row">
@@ -145,18 +145,18 @@ use App\Middleware\Csrf;
                 </section>
 
                 <div class="left-button tracker absolute">
-                    <img src="<?= ICON_PATH . 'back.svg' ?>" alt="Left Button" height="32">
+                    <img src="<?= ICON_PATH . 'back_w.svg' ?>" alt="Left Button" height="32">
                 </div>
 
                 <div class="right-button tracker absolute">
-                    <img src="<?= ICON_PATH . 'back.svg' ?>" alt="Right Button" height="32">
+                    <img src="<?= ICON_PATH . 'back_w.svg' ?>" alt="Right Button" height="32">
                 </div>
             </section>
         </section>
 
         <!-- Contact -->
         <section id="contact" class="contact flex-col">
-            <h1 class="heading center-text">Contact Us</h1>
+            <h1 class="heading center-text black-bg">Contact Us</h1>
 
             <section class="flex-row">
                 <form id="concern_form" class="contact-form flex-col" action="" method="POST">
