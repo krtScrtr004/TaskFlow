@@ -62,9 +62,9 @@ class PhaseModel extends Model
                     pp.created_at,
                     pp.updated_at
                 FROM 
-                    `project_phase` AS pp
+                    `phase` AS pp
                 INNER JOIN 
-                    `project_phase_budget` AS ppb
+                    `phase_budget` AS ppb
                 ON
                     ppb.phase_id = pp.id";
 
@@ -262,6 +262,7 @@ class PhaseModel extends Model
         try {
             $instance = new self();
 
+            // TODO: Create a separate TaskModel method to fetch tasks by phase ID(s) to avoid N+1 query problem
             $taskQuery = '';
             if ($includeTasks) {
                 $taskQuery = 
@@ -284,9 +285,9 @@ class PhaseModel extends Model
                             )
                         )
                     FROM
-                        `phase_task` AS pt
+                        `task` AS pt
                     INNER JOIN
-                        `phase_task_budget` AS ptb
+                        `task_budget` AS ptb
                     ON
                         ptb.task_id = pt.id
                     WHERE 
@@ -301,9 +302,9 @@ class PhaseModel extends Model
                     ppb.note,
                     COALESCE (($taskQuery), JSON_ARRAY()) AS tasks
                 FROM 
-                    `project_phase` AS pp
+                    `phase` AS pp
                 INNER JOIN 
-                    `project_phase_budget` AS ppb
+                    `phase_budget` AS ppb
                 ON
                     ppb.phase_id = pp.id
                 INNER JOIN
@@ -455,7 +456,7 @@ class PhaseModel extends Model
         $instance = new self();
         try {
             $projectPhaseQuery = 
-                "INSERT INTO `project_phase` (
+                "INSERT INTO `phase` (
                     project_id,
                     public_id,
                     name,
@@ -485,7 +486,7 @@ class PhaseModel extends Model
                 ]);
 
                 $projectPhaseBudgetQuery = 
-                    "INSERT INTO `project_phase_budget` (
+                    "INSERT INTO `phase_budget` (
                         phase_id,
                         budget,
                         contingency_rate,
@@ -617,6 +618,7 @@ class PhaseModel extends Model
 
                 // Budget update 
 
+                // TODO: Separate phase budget update into its own method to avoid duplication
                 $phaseBudgetUpdateFields = [];
                 $phaseBudgetParams = [];
 
@@ -646,11 +648,11 @@ class PhaseModel extends Model
                 if (!empty($phaseBudgetUpdateFields)) {
                     $budgetQuery = "
                         UPDATE 
-                            `project_phase_budget` 
+                            `phase_budget` 
                         SET 
                             " . implode(', ', $phaseBudgetUpdateFields) . " 
                         WHERE 
-                            phase_id = " . (isset($data['id']) ? ':id' : '(SELECT id FROM `project_phase` WHERE public_id = :id)');
+                            phase_id = " . (isset($data['id']) ? ':id' : '(SELECT id FROM `phase` WHERE public_id = :id)');
                     $budgetStatement = $instance->connection->prepare($budgetQuery);
                     $budgetStatement->execute($phaseBudgetParams);
                 }
