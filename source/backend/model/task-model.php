@@ -46,49 +46,48 @@ class TaskModel extends Model
         $paramOptions = [
             'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
             'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
-            'groupBy'   => $options[':groupBy'] ?? $options['groupBy'] ?? 'pt.id',
-            'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 'pt.start_date_time DESC',
+            'groupBy'   => $options[':groupBy'] ?? $options['groupBy'] ?? 't.id',
+            'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 't.start_date_time DESC',
         ];
 
         $instance = new self();
         try {
             $query =
                 "SELECT 
-                    pt.id AS id,
-                    pt.public_id AS public_id,
-                    pp.public_id AS phase_id,
-                    pt.name AS name,
-                    pt.description AS description,
-                    pt.start_date_time AS start_date_time,
-                    pt.completion_date_time AS completion_date_time,
-                    pt.actual_completion_date_time AS actual_completion_date_time,
-                    pt.priority AS priority,
-                    ptb.estimated_cost AS estimated_cost,
-                    ptb.actual_cost AS actual_cost,
-                    ptb.note AS budget_note,
-                    pt.status AS status,
-                    pt.created_at AS created_at
+                    t.id AS id,
+                    t.public_id AS public_id,
+                    ph.public_id AS phase_id,
+                    t.name AS name,
+                    t.description AS description,
+                    t.start_date_time AS start_date_time,
+                    t.completion_date_time AS completion_date_time,
+                    t.actual_completion_date_time AS actual_completion_date_time,
+                    t.priority AS priority,
+                    tb.estimated_cost AS estimated_cost,
+                    tb.actual_cost AS actual_cost,
+                    tb.note AS budget_note,
+                    t.status AS status,
+                    t.created_at AS created_at
                 FROM 
-                    `phase_task` AS pt
+                    `task` AS t
                 INNER JOIN 
-                    `phase_task_budget` AS ptb
+                    `task_budget` AS tb
                 ON
-                    pt.id = ptb.task_id
+                    t.id = tb.task_id
                 INNER JOIN 
-                    `project_phase` AS pp 
+                    `phase` AS ph 
                 ON 
-                    pt.phase_id = pp.id
+                    t.phase_id = ph.id
                 INNER JOIN 
                     `project` AS p 
                 ON 
-                    pp.project_id = p.id
+                    ph.project_id = p.id
                 LEFT JOIN 
-                    `phase_task_worker` AS ptw 
+                    `task_worker` AS tw 
                 ON 
-                    pt.id = ptw.task_id
+                    t.id = tw.task_id
                 LEFT JOIN 
-                    `user` AS u ON ptw.worker_id = u.id";
-
+                    `user` AS u ON tw.worker_id = u.id";
             $projectTaskQuery = $instance->appendOptionsToFindQuery(
                 $instance->appendWhereClause($query, $whereClause),
                 $paramOptions
@@ -167,15 +166,15 @@ class TaskModel extends Model
             $params = [];
 
             if (trimOrNull($key)) {
-                $where[] = "MATCH(pt.name, pt.description) AGAINST (:key IN NATURAL LANGUAGE MODE)";
+                $where[] = "MATCH(t.name, t.description) AGAINST (:key IN NATURAL LANGUAGE MODE)";
                 $params[':key'] = $key;
             }
 
             // Filter by user role if provided
             if ($userId) {
                 $where[] = is_int($userId)
-                    ? ' (p.manager_id = :userId1 OR ptw.worker_id = :userId2)'
-                    : ' (ptw.worker_id IN (
+                    ? ' (p.manager_id = :userId1 OR tw.worker_id = :userId2)'
+                    : ' (tw.worker_id IN (
                             SELECT 
                                 id
                             FROM 
@@ -202,12 +201,12 @@ class TaskModel extends Model
             // Narrow by phase if provided
             if ($phaseId !== null) {
                 $where[] = is_int($phaseId)
-                    ? ' pt.phase_id = :phaseId'
-                    : ' pt.phase_id IN (
+                    ? ' t.phase_id = :phaseId'
+                    : ' t.phase_id IN (
                         SELECT 
                             id 
                         FROM 
-                            `project_phase` 
+                            `phase` 
                         WHERE 
                             public_id = :phaseId)';
                 $params[':phaseId'] = is_int($phaseId)
@@ -226,10 +225,10 @@ class TaskModel extends Model
 
             // Apply status / priority filter if provided
             if ($filter instanceof WorkStatus) {
-                $where[] = ' pt.status = :status';
+                $where[] = ' t.status = :status';
                 $params[':status'] = $filter->value;
             } elseif ($filter instanceof TaskPriority) {
-                $where[] = ' pt.priority = :priority';
+                $where[] = ' t.priority = :priority';
                 $params[':priority'] = $filter->value;
             }
 
@@ -271,8 +270,8 @@ class TaskModel extends Model
 
         try {
             $whereClause = is_int($taskId)
-                ? 'pt.id = :taskId'
-                : 'pt.public_id = :taskId';
+                ? 't.id = :taskId'
+                : 't.public_id = :taskId';
             $params = [
                 ':taskId' => is_int($taskId)
                     ? $taskId
@@ -281,8 +280,8 @@ class TaskModel extends Model
 
             if ($phaseId) {
                 $whereClause .= is_int($phaseId)
-                    ? ' AND pp.id = :phaseId'
-                    : ' AND pp.public_id = :phaseId';
+                    ? ' AND ph.id = :phaseId'
+                    : ' AND ph.public_id = :phaseId';
                 $params[':phaseId'] = is_int($phaseId)
                     ? $phaseId
                     : UUID::toBinary($phaseId);
@@ -340,12 +339,12 @@ class TaskModel extends Model
 
         try {
             $whereClause = is_int($phaseId)
-                ? 'pt.phase_id = :phaseId'
-                : 'pt.phase_id IN (
+                ? 't.phase_id = :phaseId'
+                : 't.phase_id IN (
                     SELECT 
                         id 
                     FROM 
-                        `project_phase` 
+                        `phase` 
                     WHERE 
                         public_id = :phaseId)';
             $params = [
@@ -364,10 +363,10 @@ class TaskModel extends Model
             }
 
             if ($filter instanceof WorkStatus) {
-                $whereClause .= ' AND pt.status = :status';
+                $whereClause .= ' AND t.status = :status';
                 $params[':status'] = $filter->value;
             } elseif ($filter instanceof TaskPriority) {
-                $whereClause .= ' AND pt.priority = :priority';
+                $whereClause .= ' AND t.priority = :priority';
                 $params[':priority'] = $filter->value;
             }
 
@@ -438,10 +437,10 @@ class TaskModel extends Model
             }
 
             if ($filter instanceof WorkStatus) {
-                $whereClause .= ' AND pt.status = :status';
+                $whereClause .= ' AND t.status = :status';
                 $params[':status'] = $filter->value;
             } elseif ($filter instanceof TaskPriority) {
-                $whereClause .= ' AND pt.priority = :priority';
+                $whereClause .= ' AND t.priority = :priority';
                 $params[':priority'] = $filter->value;
             }
 
@@ -491,17 +490,17 @@ class TaskModel extends Model
                 ON 
                     p.manager_id = u.id
                 INNER JOIN 
-                    `project_phase` AS pp
+                    `phase` AS ph
                 ON
-                    p.id = pp.project_id
+                    p.id = ph.project_id
                 INNER JOIN
-                    `phase_task` AS pt
+                    `task` AS t
                 ON
-                    pp.id = pt.phase_id
+                    ph.id = t.phase_id
                 WHERE 
                     " . (is_int($taskId)
-                    ? 'pt.id = :taskId'
-                    : 'pt.public_id = :taskId') . "
+                    ? 't.id = :taskId'
+                    : 't.public_id = :taskId') . "
                 LIMIT 1";
             $statement = $instance->connection->prepare($query);
             $statement->execute([
@@ -562,17 +561,17 @@ class TaskModel extends Model
                     ppb.contingency_rate,
                     ppb.note AS budget_note
                 FROM
-                    `project_phase` AS pp
+                    `phase` AS ph
                 INNER JOIN
-                    `project_phase_budget` AS ppb
+                    `phase_budget` AS phb
                 ON
-                    pp.id = ppb.phase_id
+                    ph.id = phb.phase_id
                 WHERE
-                    pp.id = (
+                    ph.id = (
                                 SELECT 
                                     phase_id
                                 FROM
-                                    `phase_task`
+                                    `task`
                                 WHERE 
                                     " . (is_int($taskId) 
                                                 ? 'id = :taskId'
@@ -667,7 +666,7 @@ class TaskModel extends Model
 
             // Insert task record
             $taskQuery =
-                "INSERT INTO `phase_task` (
+                "INSERT INTO `task` (
                     public_id, 
                     phase_id,
                     name, 
@@ -680,7 +679,7 @@ class TaskModel extends Model
                     :publicId, 
                     " . (is_int($phaseId)
                     ? ':phaseId,'
-                    : '(SELECT id FROM `project_phase` WHERE public_id = :phaseId),') . "
+                    : '(SELECT id FROM `phase` WHERE public_id = :phaseId),') . "
                     :name, 
                     :description, 
                     :priority, 
@@ -710,7 +709,7 @@ class TaskModel extends Model
 
             // Insert budget record
             $budgetQuery = 
-                "INSERT INTO `phase_task_budget` (
+                "INSERT INTO `task_budget` (
                     task_id,
                     estimated_cost,
                     actual_cost,
@@ -814,7 +813,7 @@ class TaskModel extends Model
             }
 
             if (!empty($updateFields)) {
-                $phaseQuery = "UPDATE `phase_task` SET " . implode(', ', $updateFields) . " WHERE id = :id";
+                $phaseQuery = "UPDATE `task` SET " . implode(', ', $updateFields) . " WHERE id = :id";
                 $statement = $instance->connection->prepare($phaseQuery);
                 $statement->execute($params);
             }
@@ -878,7 +877,7 @@ class TaskModel extends Model
             }
 
             if (!empty($updateFields)) {
-                $budgetQuery = "UPDATE `phase_task_budget` SET " . implode(', ', $updateFields) . " WHERE task_id = :id";
+                $budgetQuery = "UPDATE `task_budget` SET " . implode(', ', $updateFields) . " WHERE task_id = :id";
                 $statement = $instance->connection->prepare($budgetQuery);
                 $statement->execute($params);
             }
