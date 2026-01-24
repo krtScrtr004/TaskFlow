@@ -79,7 +79,7 @@ class UserModel extends Model
             $queryString =
                 "SELECT 
                     u.*,
-                    GROUP_CONCAT(ujt.title) AS job_titles,
+                    GROUP_CONCAT(jt.title) AS job_titles,
                     (
                         CASE 
                             WHEN u.role = :projectManagerRole 
@@ -173,9 +173,9 @@ class UserModel extends Model
                 FROM 
                     `user` AS u
                 LEFT JOIN 
-                    `user_job_title` AS ujt 
+                    `job_title` AS jt 
                 ON 
-                    u.id = ujt.user_id";
+                    u.id = jt.user_id";
             $query = $instance->appendOptionsToFindQuery(
                 $instance->appendWhereClause($queryString, $whereClause),
                 $paramOptions
@@ -257,7 +257,8 @@ class UserModel extends Model
                     role 
                 FROM 
                     `user` 
-                WHERE " . (is_int($userId) ? "id" : "public_id") . " = :userId 
+                WHERE 
+                    " . (is_int($userId) ? "id" : "public_id") . " = :userId 
                 LIMIT 1";
             $statement = $instance->connection->prepare($searchRole);
             $statement->execute([':userId' => is_int($userId) ? $userId : UUID::toBinary($userId)]);
@@ -515,13 +516,13 @@ class UserModel extends Model
                         AND NOT EXISTS (
                             SELECT 1
                             FROM 
-                                `phase_task_worker` AS ptw
+                                `task_worker` AS tw
                             JOIN 
-                                `phase_task` AS pt ON ptw.task_id = pt.id
+                                `task` AS t ON tw.task_id = t.id
                             WHERE 
-                                ptw.worker_id = u.id
+                                tw.worker_id = u.id
                             AND 
-                                pt.status NOT IN (
+                                t.status NOT IN (
                                     :completedStatusUnassigned3, :cancelledStatusUnassigned3
                                 )
                         )";
@@ -536,7 +537,7 @@ class UserModel extends Model
                         "((EXISTS (
                             SELECT 1
                             FROM 
-                                `project` p
+                                `project` AS p
                             WHERE 
                                 p.manager_id = u.id
                             AND 
@@ -547,7 +548,7 @@ class UserModel extends Model
                         (EXISTS (
                             SELECT 1
                             FROM 
-                                `project_worker` pw
+                                `project_worker` AS pw
                             WHERE 
                                 pw.worker_id = u.id
                             AND 
@@ -555,11 +556,11 @@ class UserModel extends Model
                         ) OR EXISTS (
                             SELECT 1
                             FROM 
-                                `phase_task_worker` ptw
+                                `task_worker` AS tw
                             WHERE 
-                                ptw.worker_id = u.id
+                                tw.worker_id = u.id
                             AND 
-                                ptw.status = :workerStatus2
+                                tw.status = :workerStatus2
                         )))";
                     $params[':completedStatusUnassigned'] = WorkStatus::COMPLETED->value;
                     $params[':cancelledStatusUnassigned'] = WorkStatus::CANCELLED->value;
@@ -696,9 +697,9 @@ class UserModel extends Model
             // Insert Job Titles, if any
             if (!empty($jobTitles)) {
                 $jobTitleQuery =
-                    "INSERT INTO `user_job_title` (
-                    user_id, 
-                    title
+                    "INSERT INTO `job_title` (
+                        user_id, 
+                        title
                     ) VALUES (
                         :userId, 
                         :title
@@ -832,7 +833,7 @@ class UserModel extends Model
             }
 
             if (!empty($updateFields)) {
-                $projectQuery = "UPDATE `user` SET " . implode(', ', $updateFields) . " WHERE id = " . (isset($params[':id']) ? ":id" : "(SELECT id FROM users WHERE public_id = :publicId)") . "";
+                $projectQuery = "UPDATE `user` SET " . implode(', ', $updateFields) . " WHERE id = " . (isset($params[':id']) ? ":id" : "(SELECT id FROM `user` WHERE public_id = :publicId)") . "";
                 $statement = $instance->connection->prepare($projectQuery);
                 $statement->execute($params);
             }
@@ -887,9 +888,9 @@ class UserModel extends Model
             if (count($jobTitlesToDelete) > 0) {
                 $deleteQuery =
                     "DELETE FROM 
-                        `user_job_title`
+                        `job_title`
                     WHERE 
-                        user_id = " . (is_int($userId) ? ":userId" : "(SELECT id FROM users WHERE public_id = :userId)") . "
+                        user_id = " . (is_int($userId) ? ":userId" : "(SELECT id FROM `user` WHERE public_id = :userId)") . "
                     AND 
                         title = :title";
 
@@ -905,9 +906,9 @@ class UserModel extends Model
             if (count($jobTitlesToAdd) > 0) {
                 $insertQuery =
                     "INSERT INTO
-                        `user_job_title` (user_id, title)
+                        `job_title` (user_id, title)
                     VALUES (
-                        " . (is_int($userId) ? ":userId" : "(SELECT id FROM users WHERE public_id = :userId)") . "   
+                        " . (is_int($userId) ? ":userId" : "(SELECT id FROM `user` WHERE public_id = :userId)") . "   
                         , :title
                     )";
 
@@ -950,8 +951,8 @@ class UserModel extends Model
         try {
             $instance = new self();
             $instance->save([
-                'id' => $data->getId(),
-                'delete' => true
+                'id'        => $data->getId(),
+                'delete'    => true
             ]);
             return true;
         } catch (Exception $e) {
