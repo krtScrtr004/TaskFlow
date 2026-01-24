@@ -179,7 +179,7 @@ CREATE TABLE `phase_task_worker` (
 
 LOCK TABLES `phase_task_worker` WRITE;
 /*!40000 ALTER TABLE `phase_task_worker` DISABLE KEYS */;
-INSERT INTO `phase_task_worker` VALUES (14,22,2,'assigned',8.00,0.00,'2026-01-11 22:34:47','2026-01-11 22:34:47'),(15,23,2,'terminated',3.00,0.00,'2026-01-15 15:16:50','2026-01-20 22:22:34'),(17,23,3,'assigned',5.00,0.00,'2026-01-20 22:11:01','2026-01-20 22:11:01');
+INSERT INTO `phase_task_worker` VALUES (14,22,2,'assigned',8.00,0.00,'2026-01-11 22:34:47','2026-01-11 22:34:47'),(15,23,2,'terminated',3.00,0.00,'2026-01-15 15:16:50','2026-01-20 22:22:34'),(17,23,3,'terminated',5.00,0.00,'2026-01-20 22:11:01','2026-01-24 16:42:19');
 /*!40000 ALTER TABLE `phase_task_worker` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -340,7 +340,7 @@ CREATE TABLE `project_phase` (
 
 LOCK TABLES `project_phase` WRITE;
 /*!40000 ALTER TABLE `project_phase` DISABLE KEYS */;
-INSERT INTO `project_phase` VALUES (55,_binary '¤ü\ÚÀ-\ÖKÓŒp¼j\Ü\Û3',37,'The Fall of Saigon','Chuck pastrami sausage short ribs, landjaeger capicola doner ham hock fatback shoulder salami chicken ball tip swine pig.  Beef venison frankfurter sirloin bresaola jerky sausage pancetta spare ribs brisket boudin filet mignon.  Short ribs pork belly hamburger swine jerky capicola chicken leberkas ham tongue venison alcatra doner.  Filet mignon cupim tongue ball tip, t-bone spare ribs buffalo alcatra pork belly corned beef.  Turducken ham hock pork belly ham, sirloin burgdoggen kevin short loin chicken hamburger chislic.  Bresaola pancetta pork belly tri-tip sausage jowl burgdoggen kevin leberkas.  Filet mignon salami swine, andouille alcatra capicola ball tip brisket hamburger shankle corned beef ribeye drumstick sausage.','2025-12-25 00:00:00','2026-03-22 00:00:00',NULL,'ongoing','2025-12-25 18:30:57','2025-12-31 16:42:26'),(59,_binary ',`‰BEŒ`k\Z­Â‚',37,'Noli De Castro Pics','Boudin pig picanha meatloaf andouille short ribs rump pork chop flank cupim shankle buffalo drumstick.  Frankfurter turducken jowl cow meatball hamburger.  Chuck chislic ham hock kielbasa tenderloin alcatra.  Alcatra short ribs pork chop doner, short loin burgdoggen kevin meatloaf turducken drumstick pig tri-tip.','2026-06-17 00:00:00','2026-08-17 00:00:00',NULL,'pending','2025-12-25 21:16:29',NULL);
+INSERT INTO `project_phase` VALUES (55,_binary '¤ü\ÚÀ-\ÖKÓŒp¼j\Ü\Û3',37,'The Fall of Saigon','Chuck pastrami sausage short ribs, landjaeger capicola doner ham hock fatback shoulder salami chicken ball tip swine pig.  Beef venison frankfurter sirloin bresaola jerky sausage pancetta spare ribs brisket boudin filet mignon.  Short ribs pork belly hamburger swine jerky capicola chicken leberkas ham tongue venison alcatra doner.  Filet mignon cupim tongue ball tip, t-bone spare ribs buffalo alcatra pork belly corned beef.  Turducken ham hock pork belly ham, sirloin burgdoggen kevin short loin chicken hamburger chislic.  Bresaola pancetta pork belly tri-tip sausage jowl burgdoggen kevin leberkas.  Filet mignon salami swine, andouille alcatra capicola ball tip brisket hamburger shankle corned beef ribeye drumstick sausage.','2025-12-25 00:00:00','2026-03-22 00:00:00',NULL,'ongoing','2025-12-25 18:30:57','2025-12-31 16:42:26'),(59,_binary ',`‰BEŒ`k\Z­Â‚',37,'Noli De Castro Pics','Boudin pig picanha meatloaf andouille short ribs rump pork chop flank cupim shankle buffalo drumstick.  Frankfurter turducken jowl cow meatball hamburger.  Chuck chislic ham hock kielbasa tenderloin alcatra.  Alcatra short ribs pork chop doner, short loin burgdoggen kevin meatloaf turducken drumstick pig tri-tip.','2026-06-17 00:00:00','2026-08-17 00:00:00',NULL,'pending','2025-12-25 21:16:29','2026-01-24 16:43:36');
 /*!40000 ALTER TABLE `project_phase` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
@@ -456,7 +456,7 @@ CREATE TABLE `project_worker` (
 
 LOCK TABLES `project_worker` WRITE;
 /*!40000 ALTER TABLE `project_worker` DISABLE KEYS */;
-INSERT INTO `project_worker` VALUES (28,2,37,'assigned',162.00,'2026-01-05 22:40:42',NULL),(29,3,37,'assigned',78.00,'2026-01-19 22:39:21',NULL);
+INSERT INTO `project_worker` VALUES (28,2,37,'assigned',162.00,'2026-01-05 22:40:42',NULL),(29,3,37,'assigned',78.00,'2026-01-19 22:39:21','2026-01-24 16:42:58');
 /*!40000 ALTER TABLE `project_worker` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
@@ -504,7 +504,7 @@ CREATE TABLE `rate_limiter` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `ip` (`ip`,`endpoint`),
   CONSTRAINT `rate_limiter_chk_1` CHECK ((`expires_at` > 0))
-) ENGINE=InnoDB AUTO_INCREMENT=275 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=285 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -513,7 +513,7 @@ CREATE TABLE `rate_limiter` (
 
 LOCK TABLES `rate_limiter` WRITE;
 /*!40000 ALTER TABLE `rate_limiter` DISABLE KEYS */;
-INSERT INTO `rate_limiter` VALUES (272,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/phases/a4fcdac0-2dd6-4bd3-8c70-9dbc6adcdb33/tasks/223b8124-7003-439e-9ec1-32ada1b936e4:PATCH',1,1768918986,'2026-01-20 22:18:24','2026-01-20 22:22:06'),(273,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers?status=assigned&excludeProjectTerminated=true&offset=2:GET',1,1768921880,'2026-01-20 23:10:20',NULL),(274,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers?status=assigned&key=&offset=2:GET',1,1768921880,'2026-01-20 23:10:20',NULL);
+INSERT INTO `rate_limiter` VALUES (272,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/phases/a4fcdac0-2dd6-4bd3-8c70-9dbc6adcdb33/tasks/223b8124-7003-439e-9ec1-32ada1b936e4:PATCH',1,1768918986,'2026-01-20 22:18:24','2026-01-20 22:22:06'),(273,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers?status=assigned&excludeProjectTerminated=true&offset=2:GET',1,1769260604,'2026-01-20 23:10:20','2026-01-24 21:15:44'),(274,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers?status=assigned&key=&offset=2:GET',1,1769260604,'2026-01-20 23:10:20','2026-01-24 21:15:44'),(275,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers/32bab677-1767-4cc5-bd50-348b5628bd84:GET',2,1768922454,'2026-01-20 23:19:51','2026-01-20 23:19:54'),(276,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers/3a47359d-c34d-4360-a56b-09777fa6ad2a:GET',1,1768922461,'2026-01-20 23:20:01',NULL),(277,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/manager:GET',1,1768922464,'2026-01-20 23:20:04',NULL),(278,'127.0.0.1','/endpoint/users?status=unassigned&role=worker&excludeProjectTerminated=true&projectReferenceId=6d04a51b-27da-4812-8e46-b62cf08763ef&offset=0&key=:GET',1,1769260605,'2026-01-20 23:29:01','2026-01-24 21:15:45'),(279,'127.0.0.1','/endpoint/users?status=unassigned&role=worker&excludeProjectTerminated=true&projectReferenceId=6d04a51b-27da-4812-8e46-b62cf08763ef&offset=0:GET',1,1769260607,'2026-01-20 23:29:02','2026-01-24 21:15:47'),(280,'127.0.0.1','/endpoint/auth/login:POST',1,1769261443,'2026-01-24 15:01:51','2026-01-24 21:15:43'),(281,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef:PATCH',2,1769244258,'2026-01-24 16:37:59','2026-01-24 16:43:18'),(282,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers?status=assigned&excludeProjectTerminated=true&offset=1:GET',1,1769244201,'2026-01-24 16:42:21',NULL),(283,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers?status=assigned&key=&offset=1:GET',1,1769244201,'2026-01-24 16:42:21',NULL),(284,'127.0.0.1','/endpoint/projects/6d04a51b-27da-4812-8e46-b62cf08763ef/workers?status=unassigned&excludeProjectTerminated=true&key=&offset=0:GET',1,1769244205,'2026-01-24 16:42:25',NULL);
 /*!40000 ALTER TABLE `rate_limiter` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -772,4 +772,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-01-20 23:13:08
+-- Dump completed on 2026-01-24 21:20:58
