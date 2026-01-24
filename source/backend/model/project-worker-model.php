@@ -69,25 +69,25 @@ class ProjectWorkerModel extends Model
                     u.created_at,
                     u.confirmed_at,
                     u.deleted_at,
-                    GROUP_CONCAT(DISTINCT ujt.title) AS job_titles,
+                    GROUP_CONCAT(DISTINCT jt.title) AS job_titles,
                     (
                         SELECT 
                             COUNT(*)
                         FROM 
-                            `phase_task_worker` AS ptw
+                            `task_worker` AS tw
                         WHERE 
-                            ptw.worker_id = u.id
+                            tw.worker_id = u.id
                     ) AS total_tasks,
                     (
                         SELECT COUNT(*)
                         FROM 
-                            `phase_task_worker` AS ptw
+                            `task_worker` AS tw
                         INNER JOIN 
-                            phase_task AS t 
+                            `task` AS t 
                         ON 
-                            ptw.task_id = t.id
+                            tw.task_id = t.id
                         WHERE 
-                            ptw.worker_id = u.id
+                            tw.worker_id = u.id
                         AND 
                             t.status = '" . WorkStatus::COMPLETED->value . "'
                     ) AS completed_tasks,
@@ -126,9 +126,9 @@ class ProjectWorkerModel extends Model
                 ON
                     pw.project_id = p.id
                 LEFT JOIN
-                    `user_job_title` AS ujt
+                    `job_title` AS jt
                 ON 
-                    u.id = ujt.user_id";
+                    u.id = jt.user_id";
             $query = $instance->appendOptionsToFindQuery(
                 $instance->appendWhereClause($queryString, $whereClause), 
                 $paramOptions);
@@ -145,10 +145,10 @@ class ProjectWorkerModel extends Model
             foreach ($result as $row) {
                 $row['job_titles'] = explode(',', $row['job_titles']);
                 $row['additionalInfo'] = [
-                    'total_tasks'        => (int)$row['total_tasks'],
-                    'completedTasks'     => (int)$row['completed_tasks'],
-                    'totalProjects'      => (int)$row['total_projects'],
-                    'completedProjects'  => (int)$row['completed_projects']
+                    'total_tasks'        => (int) $row['total_tasks'],
+                    'completedTasks'     => (int) $row['completed_tasks'],
+                    'totalProjects'      => (int) $row['total_projects'],
+                    'completedProjects'  => (int) $row['completed_projects']
                 ];
                 $workers->add(Worker::createPartial($row));
             }
@@ -220,7 +220,7 @@ class ProjectWorkerModel extends Model
                     u.created_at,
                     u.confirmed_at,
                     u.deleted_at,
-                    GROUP_CONCAT(ujt.title) AS jobTitles
+                    GROUP_CONCAT(jt.title) AS jobTitles
                 FROM
                     `user` AS u
                 LEFT JOIN
@@ -228,9 +228,9 @@ class ProjectWorkerModel extends Model
                 ON
                     u.id = pw.worker_id
                 LEFT JOIN
-                    `user_job_title` AS ujt
+                    `job_title` AS jt
                 ON
-                    u.id = ujt.user_id";
+                    u.id = jt.user_id";
 
             if (trimOrNull($key))  {
                 $where[] = 
@@ -383,6 +383,7 @@ class ProjectWorkerModel extends Model
 
         $instance = new self();
         try {
+            // TODO: Separate this into its own method to reduce complexity
             $projectHistory = $includeHistory
                 ? "SELECT 
                     JSON_ARRAYAGG(
@@ -400,45 +401,45 @@ class ProjectWorkerModel extends Model
                                 (
                                     SELECT JSON_ARRAYAGG(
                                         JSON_OBJECT(
-                                            'id', pp2.id,
-                                            'public_id', HEX(pp2.public_id),
-                                            'name', pp2.name,
-                                            'status', pp2.status,
-                                            'start_date_time', pp2.start_date_time,
-                                            'completion_date_time', pp2.completion_date_time,
-                                            'actual_completion_date_time', pp2.actual_completion_date_time,
+                                            'id', ph2.id,
+                                            'public_id', HEX(ph2.public_id),
+                                            'name', ph2.name,
+                                            'status', ph2.status,
+                                            'start_date_time', ph2.start_date_time,
+                                            'completion_date_time', ph2.completion_date_time,
+                                            'actual_completion_date_time', ph2.actual_completion_date_time,
 
                                             'tasks', COALESCE(
                                                 (
                                                     SELECT JSON_ARRAYAGG(
                                                         JSON_OBJECT(
-                                                            'id', pt2.id,
-                                                            'public_id', HEX(pt2.public_id),
-                                                            'name', pt2.name,
-                                                            'status', pt2.status,
-                                                            'priority', pt2.priority,
-                                                            'start_date_time', pt2.start_date_time,
-                                                            'completion_date_time', pt2.completion_date_time,
-                                                            'actual_completion_date_time', pt2.actual_completion_date_time,
-                                                            'worker_status', ptw.status
+                                                            'id', t2.id,
+                                                            'public_id', HEX(t2.public_id),
+                                                            'name', t2.name,
+                                                            'status', t2.status,
+                                                            'priority', t2.priority,
+                                                            'start_date_time', t2.start_date_time,
+                                                            'completion_date_time', t2.completion_date_time,
+                                                            'actual_completion_date_time', t2.actual_completion_date_time,
+                                                            'worker_status', tw.status
                                                         )
                                                     ) FROM 
-                                                        `phase_task` AS pt2
+                                                        `task` AS t2
                                                     INNER JOIN
-                                                        `phase_task_worker` AS ptw
+                                                        `task_worker` AS tw
                                                     ON
-                                                        ptw.task_id = pt2.id
+                                                        tw.task_id = t2.id
                                                     WHERE 
-                                                        pt2.phase_id = pp2.id
+                                                        t2.phase_id = ph2.id
                                                     AND
-                                                        ptw.worker_id = u.id
+                                                        tw.worker_id = u.id
                                                 ), JSON_ARRAY()
                                             )
                                         )
                                     ) FROM 
-                                        `project_phase` AS pp2
+                                        `phase` AS ph2
                                     WHERE 
-                                        pp2.project_id = p2.id
+                                        ph2.project_id = p2.id
                                 ), JSON_ARRAY()
                             )
                         )
@@ -489,43 +490,43 @@ class ProjectWorkerModel extends Model
                     u.deleted_at,
                     pw.default_rate,
                     pw.status,
-                    GROUP_CONCAT(DISTINCT ujt.title) AS job_titles,
+                    GROUP_CONCAT(DISTINCT jt.title) AS job_titles,
                     (
                         SELECT 
                             COUNT(*)
                         FROM 
-                            `phase_task_worker` AS ptw
+                            `task_worker` AS tw
                         " . ($projectId ? 
                             "INNER JOIN 
-                                `phase_task` AS pt ON ptw.task_id = pt.id
+                                `task` AS pt ON tw.task_id = pt.id
                             INNER JOIN 
-                                `project_phase` AS pp ON pt.phase_id = pp.id
+                                `phase` AS ph ON pt.phase_id = ph.id
                             WHERE 
-                                ptw.worker_id = u.id 
+                                tw.worker_id = u.id 
                             AND 
-                                pp.project_id = :projectId1" 
-                            : "WHERE ptw.worker_id = u.id") . "
+                                ph.project_id = :projectId1" 
+                            : "WHERE tw.worker_id = u.id") . "
                     ) AS total_tasks,
                     (
                         SELECT 
                             COUNT(*)
                         FROM 
-                            `phase_task_worker` AS ptw
+                            `task_worker` AS tw
                         INNER JOIN 
-                            `phase_task` AS t 
+                            `task` AS t 
                         ON 
-                            ptw.task_id = t.id
+                            tw.task_id = t.id
                         " . ($projectId ? 
                             "INNER JOIN 
-                                `project_phase` AS pp ON t.phase_id = pp.id" 
+                                `phase` AS ph ON t.phase_id = ph.id" 
                             : "") . "
                         WHERE 
-                            ptw.worker_id = u.id 
+                            tw.worker_id = u.id 
                         AND 
                             t.status = '" . WorkStatus::COMPLETED->value . "'
                         AND 
-                            ptw.status != '" . WorkerStatus::TERMINATED->value . "'"
-                        . ($projectId ? " AND pp.project_id = :projectId2" : "") . "
+                            tw.status != '" . WorkerStatus::TERMINATED->value . "'"
+                        . ($projectId ? " AND ph.project_id = :projectId2" : "") . "
                     ) AS completed_tasks,
                     (
                         SELECT 
@@ -563,9 +564,9 @@ class ProjectWorkerModel extends Model
                 ON
                     pw.project_id = p.id
                 LEFT JOIN
-                    `user_job_title` AS ujt
+                    `job_title` AS jt
                 ON 
-                    u.id = ujt.user_id
+                    u.id = jt.user_id
                 WHERE
                     $where
                 GROUP BY
@@ -660,6 +661,8 @@ class ProjectWorkerModel extends Model
             $firstWorkerId = $workerIds[0];
             $useIntId = is_int($firstWorkerId);
 
+            // TODO: Separate this into its own method to reduce complexity
+
             $projectHistory = $includeHistory
                 ? "SELECT 
                     JSON_ARRAYAGG(
@@ -677,45 +680,45 @@ class ProjectWorkerModel extends Model
                                 (
                                     SELECT JSON_ARRAYAGG(
                                         JSON_OBJECT(
-                                            'id', pp2.id,
-                                            'public_id', HEX(pp2.public_id),
-                                            'name', pp2.name,
-                                            'status', pp2.status,
-                                            'start_date_time', pp2.start_date_time,
-                                            'completion_date_time', pp2.completion_date_time,
-                                            'actual_completion_date_time', pp2.actual_completion_date_time,
+                                            'id', ph2.id,
+                                            'public_id', HEX(ph2.public_id),
+                                            'name', ph2.name,
+                                            'status', ph2.status,
+                                            'start_date_time', ph2.start_date_time,
+                                            'completion_date_time', ph2.completion_date_time,
+                                            'actual_completion_date_time', ph2.actual_completion_date_time,
 
                                             'tasks', COALESCE(
                                                 (
                                                     SELECT JSON_ARRAYAGG(
                                                         JSON_OBJECT(
-                                                            'id', pt2.id,
-                                                            'public_id', HEX(pt2.public_id),
-                                                            'name', pt2.name,
-                                                            'status', pt2.status,
-                                                            'priority', pt2.priority,
-                                                            'start_date_time', pt2.start_date_time,
-                                                            'completion_date_time', pt2.completion_date_time,
-                                                            'actual_completion_date_time', pt2.actual_completion_date_time,
-                                                            'worker_status', ptw.status
+                                                            'id', t2.id,
+                                                            'public_id', HEX(t2.public_id),
+                                                            'name', t2.name,
+                                                            'status', t2.status,
+                                                            'priority', t2.priority,
+                                                            'start_date_time', t2.start_date_time,
+                                                            'completion_date_time', t2.completion_date_time,
+                                                            'actual_completion_date_time', t2.actual_completion_date_time,
+                                                            'worker_status', tw.status
                                                         )
                                                     ) FROM 
-                                                        `phase_task` AS pt2
+                                                        `task` AS t2
                                                     INNER JOIN
-                                                        `phase_task_worker` AS ptw
+                                                        `task_worker` AS tw
                                                     ON
-                                                        ptw.task_id = pt2.id
+                                                        tw.task_id = t2.id
                                                     WHERE 
-                                                        pt2.phase_id = pp2.id
+                                                        t2.phase_id = ph2.id
                                                     AND
-                                                        ptw.worker_id = u.id
+                                                        tw.worker_id = u.id
                                                 ), JSON_ARRAY()
                                             )
                                         )
                                     ) FROM 
-                                        `project_phase` AS pp2
+                                        `phase` AS ph2
                                     WHERE 
-                                        pp2.project_id = p2.id
+                                        ph2.project_id = p2.id
                                 ), JSON_ARRAY()
                             )
                         )
@@ -774,43 +777,43 @@ class ProjectWorkerModel extends Model
                     u.deleted_at,
                     pw.default_rate,
                     pw.status,
-                    GROUP_CONCAT(DISTINCT ujt.title) AS job_titles,
+                    GROUP_CONCAT(DISTINCT jt.title) AS job_titles,
                     (
                         SELECT 
                             COUNT(*)
                         FROM 
-                            `phase_task_worker` AS ptw
+                            `task_worker` AS tw
                         " . ($projectId ? 
                             "INNER JOIN 
-                                `phase_task` AS pt ON ptw.task_id = pt.id
+                                `task` AS t ON tw.task_id = t.id
                             INNER JOIN 
-                                `project_phase` AS pp ON pt.phase_id = pp.id
+                                `phase` AS ph ON t.phase_id = ph.id
                             WHERE 
-                                ptw.worker_id = u.id 
+                                tw.worker_id = u.id 
                             AND 
-                                pp.project_id = :projectId1" 
-                            : "WHERE ptw.worker_id = u.id") . "
+                                ph.project_id = :projectId1" 
+                            : "WHERE tw.worker_id = u.id") . "
                     ) AS total_tasks,
                     (
                         SELECT 
                             COUNT(*)
                         FROM 
-                            `phase_task_worker` AS ptw
+                            `task_worker` AS tw
                         INNER JOIN 
-                            `phase_task` AS t 
+                            `task` AS t 
                         ON 
-                            ptw.task_id = t.id
+                            tw.task_id = t.id
                         " . ($projectId ? 
                             "INNER JOIN 
-                                `project_phase` AS pp ON t.phase_id = pp.id" 
+                                `phase` AS ph ON t.phase_id = ph.id" 
                             : "") . "
                         WHERE 
-                            ptw.worker_id = u.id 
+                            tw.worker_id = u.id 
                         AND 
                             t.status = '" . WorkStatus::COMPLETED->value . "'
                         AND 
-                            ptw.status != '" . WorkerStatus::TERMINATED->value . "'"
-                        . ($projectId ? " AND pp.project_id = :projectId2" : "") . "
+                            tw.status != '" . WorkerStatus::TERMINATED->value . "'"
+                        . ($projectId ? " AND ph.project_id = :projectId2" : "") . "
                     ) AS completed_tasks,
                     (
                         SELECT 
@@ -848,9 +851,9 @@ class ProjectWorkerModel extends Model
                 ON
                     pw.project_id = p.id
                 LEFT JOIN
-                    `user_job_title` AS ujt
+                    `job_title` AS jt
                 ON 
-                    u.id = ujt.user_id
+                    u.id = jt.user_id
                 WHERE
                     $where
                 GROUP BY
@@ -912,7 +915,7 @@ class ProjectWorkerModel extends Model
      * Finds and retrieves all workers assigned to a specific project, including their job titles and project statistics.
      *
      * This method queries the database to fetch all users who are assigned as workers to the specified project by joining
-     * the user, projectWorker, and project tables. It also LEFT JOINs userJobTitle to aggregate job titles for each worker.
+     * the user, projectWorker, and project tables. It also LEFT JOINs jobTitle to aggregate job titles for each worker.
      *
      * For each worker, the following additional statistics are included:
      *   - totalProjects: The total number of projects the worker is assigned to (across all projects)
