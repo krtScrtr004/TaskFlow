@@ -244,8 +244,10 @@ $worksOn = TaskWorkerModel::worksOn($task->getId(), Me::getInstance()->getId(), 
     <script type="module" src="<?= EVENT_PATH . 'toggle-menu.js' ?>" defer></script>
     <script type="module" src="<?= EVENT_PATH . 'logout.js' ?>" defer></script>
 
-    <script type="module" src="<?= EVENT_PATH . 'tasks' . DS . 'create-worker-card.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'tasks' . DS . 'remove-terminate-worker.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'tasks' . DS . 'view' . DS . 'create-worker-card.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'tasks' . DS . 'view' . DS . 'complete.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'tasks' . DS . 'view' . DS . 'cancel.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'tasks' . DS . 'view' . DS . 'remove-terminate-worker.js' ?>" defer></script>
     
 </body>
 
@@ -260,8 +262,6 @@ function i() {
         <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'existing' . DS . 'add.js' ?>" defer></script>
 
         <script type="module" src="<?= EVENT_PATH . 'edit-task-modal' . DS . 'open.js' ?>" defer></script>
-        <script type="module" src="<?= EVENT_PATH . 'edit-task-modal' . DS . 'complete.js' ?>" defer></script>
-        <script type="module" src="<?= EVENT_PATH . 'edit-task-modal' . DS . 'cancel.js' ?>" defer></script>
         <script type="module" src="<?= EVENT_PATH . 'edit-task-modal' . DS . 'submit.js' ?>" defer></script>
     <?php
     $script = ob_get_clean();

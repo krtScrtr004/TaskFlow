@@ -6,18 +6,13 @@ import { handleException } from '../../utility/handle-exception.js'
 let isLoading = false
 
 const taskGridContainer = document.querySelector('.task-grid-container')
-if (!taskGridContainer) {
-    console.warn('Task Grid Container element not found.')
-}
+if (!taskGridContainer) console.warn('Task Grid Container element not found')
 
 const sentinel = taskGridContainer?.querySelector('.sentinel')
-if (!sentinel) {
-    console.warn('Sentinel element not found.')
-}
+if (!sentinel) console.warn('Sentinel element not found')
+
 const projectId = taskGridContainer?.dataset.projectid
-if (!projectId || projectId.trim() === '') {
-    console.warn('Project ID not found.')
-}
+if (!projectId || projectId.trim() === '') console.warn('Project ID not found')
 
 const taskGrid = taskGridContainer?.querySelector('.task-grid')
 try {
@@ -30,7 +25,7 @@ try {
         getExistingItemsCount()
     )
 } catch (error) {
-    handleException(error, 'Error initializing infinite scroll:', error)
+    handleException(error)
 }
 
 /**
@@ -71,13 +66,9 @@ async function asyncFunction(offset) {
         }
         isLoading = true
 
-        if (isNaN(offset) || offset < 0) {
-            throw new Error('Invalid offset value.')
-        }
+        if (isNaN(offset) || offset < 0) throw new Error('Invalid offset value')
 
-        if (!projectId || projectId.trim() === '') {
-            throw new Error('Project ID not found.')
-        }
+        if (!projectId || projectId.trim() === '') throw new Error('Project ID not found')
 
         const currentUrl = window.location.href
         const subpath = currentUrl.split('TaskFlow/')[1]
@@ -86,20 +77,17 @@ async function asyncFunction(offset) {
         let endpointPath = ''
         endpointPath = subpath.replace('project', 'projects')
         endpointPath = endpointPath.replace('task', 'tasks')
-        if (subpath.includes('phase')) {
+        if (subpath.includes('phase')) 
             endpointPath = endpointPath.replace('phase', 'phases')
-        }
-        if (subpath.includes('worker')) {
+
+        if (subpath.includes('worker')) 
             endpointPath = endpointPath.replace('worker', 'workers')
-        }
 
         const queryParams = new URLSearchParams(window.location.search)
         queryParams.set('offset', offset)
 
         const response = await Http.GET(`${endpointPath}?${queryParams.toString()}`)
-        if (!response) {
-            throw new Error('No response from server.')
-        }
+        if (!response) throw new Error('No response from server')
 
         return response.data
     } catch (error) {

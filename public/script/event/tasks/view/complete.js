@@ -1,33 +1,29 @@
-import { Http } from '../../utility/http.js'
-import { debounceAsync } from '../../utility/debounce.js'
-import { Loader } from '../../render/loader.js'
-import { Dialog } from '../../render/dialog.js'
-import { confirmationDialog } from '../../render/confirmation-dialog.js'
-import { handleException } from '../../utility/handle-exception.js'
-import { compareDates } from '../../utility/utility.js'
+import { Http } from '../../../utility/http.js'
+import { debounceAsync } from '../../../utility/debounce.js'
+import { Loader } from '../../../render/loader.js'
+import { Dialog } from '../../../render/dialog.js'
+import { confirmationDialog } from '../../../render/confirmation-dialog.js'
+import { handleException } from '../../../utility/handle-exception.js'
+import { compareDates, die } from '../../../utility/utility.js'
 
 let isLoading = false
 
 const viewTaskInfo = document.querySelector('.view-task-info')
+    
 const completeTaskButton = viewTaskInfo.querySelector('#complete_task_button')
-
-if (!completeTaskButton) {
-    console.error('Complete Task button not found.')
-}
+if (!completeTaskButton) console.warn('Complete Task button not found')
 
 completeTaskButton?.addEventListener('click', e => debounceAsync(submit(e), 3000))
 
 // On page load, check if the task was completed late and show dialog if so
 document.addEventListener('DOMContentLoaded', () => {
     const status = viewTaskInfo?.dataset.status.toLowerCase() || ''
-    if (status === 'completed' || status === 'cancelled') {
-        return 
-    }
+    if (status === 'completed' || status === 'cancelled') return
 
     const now = new Date()
     const taskCompletionDateTime = viewTaskInfo?.querySelector('.task-completion-datetime')?.dataset.completiondatetime
     const taskActualCompletionDateTime = viewTaskInfo?.querySelector('.task-actual-completion-datetime')?.dataset.actualcompletiondatetime
-    
+
     // Check if task deadline has passed (now is AFTER the deadline)
     if ((!taskActualCompletionDateTime || taskActualCompletionDateTime === '') &&
         (taskCompletionDateTime && compareDates(now.toISOString(), taskCompletionDateTime) < 0)) {
@@ -70,31 +66,19 @@ async function submit(e) {
         )) return
 
         const projectId = viewTaskInfo.dataset.projectid
-        if (!projectId) {
-            console.error('Project ID not found.')
-            Dialog.somethingWentWrong()
-            return
-        }
+        if (!projectId) throw new Error('Project ID not found')
 
         const phaseId = viewTaskInfo.dataset.phaseid
-        if (!phaseId) {
-            console.error('Phase ID not found.')
-            Dialog.somethingWentWrong()
-            return
-        }
+        if (!phaseId) throw new Error('Phase ID not found')
 
         const taskId = viewTaskInfo.dataset.taskid
-        if (!taskId) {
-            console.error('Task ID not found.')
-            Dialog.somethingWentWrong()
-            return
-        }
+        if (!taskId) throw new Error('Task ID not found')
 
         await sendToBackend(projectId, phaseId, taskId)
         // Reload the page to reflect changes
         window.location.reload()
     } catch (error) {
-        handleException(error, `Error completing task: ${error}`)
+        handleException(error)
     } finally {
         Loader.delete()
     }
@@ -124,22 +108,14 @@ async function sendToBackend(projectId, phaseId, taskId) {
         }
         isLoading = true
 
-        if (!projectId) {
-            throw new Error('Project ID is required.')
-        }
+        if (!projectId) throw new Error('Project ID is required')
 
-        if (!phaseId) {
-            throw new Error('Phase ID is required.')
-        }
+        if (!phaseId) throw new Error('Phase ID is required')
 
-        if (!taskId) {
-            throw new Error('Task ID is required.')
-        }
+        if (!taskId) throw new Error('Task ID is required')
 
         const response = await Http.PUT(`projects/${projectId}/phases/${phaseId}/tasks/${taskId}`, { status: 'completed' })
-        if (!response) {
-            throw error
-        }
+        if (!response) throw new Error('No response from server')
     } catch (error) {
         throw error
     } finally {

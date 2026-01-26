@@ -3,9 +3,7 @@ import { formatDate } from '../../utility/utility.js'
 const taskGridContainer = document.querySelector('.task-grid-container')
 
 const projectId = taskGridContainer?.dataset.projectid
-if (!projectId || projectId.trim() === '') {
-    console.warn('Project ID not found.')
-}
+if (!projectId || projectId.trim() === '') console.warn('Project ID not found')
 
 /**
  * Creates a task grid card DOM element
@@ -15,9 +13,8 @@ if (!projectId || projectId.trim() === '') {
  * @throws {Error} If invalid task data is provided
  */
 export function createTaskGridCard(task) {
-    if (!task) {
-        throw new Error('Invalid task data provided to createTaskGridCard.')
-    }
+    if (!task) 
+        throw new Error('Invalid task data provided to createTaskGridCard')
 
     // Create main card container
     const taskCard = document.createElement('div')

@@ -1,19 +1,16 @@
-import { Http } from '../../utility/http.js'
-import { debounceAsync } from '../../utility/debounce.js'
-import { Loader } from '../../render/loader.js'
-import { Dialog } from '../../render/dialog.js'
-import { errorListDialog } from '../../render/error-list-dialog.js'
-import { confirmationDialog } from '../../render/confirmation-dialog.js'
-import { handleException } from '../../utility/handle-exception.js'
+import { Http } from '../../../utility/http.js'
+import { debounceAsync } from '../../../utility/debounce.js'
+import { Loader } from '../../../render/loader.js'
+import { confirmationDialog } from '../../../render/confirmation-dialog.js'
+import { handleException } from '../../../utility/handle-exception.js'
+import { die } from '../../../utility/utility.js'
 
 let isLoading = false
 
 const viewTaskInfo = document.querySelector('.view-task-info')
 const cancelTaskButton = viewTaskInfo.querySelector('#cancel_task_button')
-if (!cancelTaskButton) {
-    console.error('Cancel Task button not found.')
-}
-
+if (!cancelTaskButton) console.warn('Cancel Task button not found')
+    
 cancelTaskButton?.addEventListener('click', e => debounceAsync(submit(e), 3000))
 
 /**
@@ -46,31 +43,19 @@ async function submit(e) {
         )) return
 
         const projectId = viewTaskInfo.dataset.projectid
-        if (!projectId) {
-            console.error('Project ID not found.')
-            Dialog.somethingWentWrong()
-            return
-        }
+        if (!projectId) die('Project ID not found')
 
         const phaseId = viewTaskInfo.dataset.phaseid
-        if (!phaseId) {
-            console.error('Phase ID not found.')
-            Dialog.somethingWentWrong()
-            return
-        }
+        if (!phaseId) die('Phase ID not found')
 
         const taskId = viewTaskInfo.dataset.taskid
-        if (!taskId) {
-            console.error('Task ID not found.')
-            Dialog.somethingWentWrong()
-            return
-        }
+        if (!taskId) die('Task ID not found')
 
         await sendToBackend(projectId, phaseId, taskId)
         // Reload the page to reflect changes
         window.location.reload()
     } catch (error) {
-        handleException(error, `Error cancelling task: ${error}`)
+        handleException(error)
     } finally {
         Loader.delete()
     }
@@ -100,22 +85,14 @@ async function sendToBackend(projectId, phaseId, taskId) {
         }
         isLoading = true
 
-        if (!projectId) {
-            throw new Error('Project ID is required.')
-        }
+        if (!projectId) throw new Error('Project ID is required')
 
-        if (!phaseId) {
-            throw new Error('Phase ID is required.')
-        }
+        if (!phaseId) throw new Error('Phase ID is required')
 
-        if (!taskId) {
-            throw new Error('Task ID is required.')
-        }
+        if (!taskId) throw new Error('Task ID is required')
 
         const response = await Http.PUT(`projects/${projectId}/phases/${phaseId}/tasks/${taskId}`, { status: 'cancelled' })
-        if (!response) {
-            throw error
-        }
+        if (!response) throw new Error('No response from server')
     } catch (error) {
         throw error
     } finally {
