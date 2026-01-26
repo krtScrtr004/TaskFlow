@@ -14,6 +14,7 @@ use App\Enumeration\ResourceTypeMapping;
 use App\Model\ResourceModel;
 use App\Model\TaskModel;
 use App\Model\TaskWorkerModel;
+use InvalidArgumentException;
 use PDO;
 use Throwable;
 
@@ -78,21 +79,8 @@ class TaskService
                 $taskWorkers = $task->getWorkers();
                 if ($taskWorkers) {
                     $createdWorkers = TaskWorkerModel::createMultiple($taskId, $taskWorkers);
-
-                    // Auto-create labor resources for each worker
-                    $taskWorkerResources = new ResourceContainer();
-                    foreach ($createdWorkers as $worker) {
-                        $taskWorkerResources->add(TaskResource::createPartial([
-                            'type'          => ResourceType::createPartial(['id' => ResourceTypeMapping::LABOR->value]),
-                            'quantity'      => 1,
-                            'unitRate'      => $worker->getUnitRate() !== DEFAULT_RATE_MIN 
-                                ? $worker->getUnitRate()
-                                : $worker->getDefaultRate(),
-                            'estimatedUnit' => $worker->getEstimatedHours(),
-                            'taskWorkerId'  => $worker->getId()
-                        ]));
-                    }
-                    ResourceModel::createMultiple($taskId, $taskWorkerResources);
+                    // Create labor resources for each worker
+                    $instance->createWorkerResources($taskId, $createdWorkers);
                 }
             }
 
@@ -109,6 +97,37 @@ class TaskService
             $instance->connection->rollBack();
             throw $e;
         }
+    }
+
+    /**
+     * Creates labor resources for each TaskWorker associated with a Task.
+     * 
+     * This private helper method generates TaskResource entries of type 'labor'
+     * for each TaskWorker provided. It calculates the unit rate and estimated
+     * hours based on the TaskWorker's properties and associates them with the
+     * specified Task ID.
+     * 
+     * @param int $taskId The ID of the Task to which the resources will be linked.
+     * @param WorkerContainer $workers A container of TaskWorker entities for which
+     *                                  labor resources will be created.
+     * 
+     * @return void
+     */
+    private function createWorkerResources(int $taskId, WorkerContainer $workers): void
+    {
+        $taskWorkerResources = new ResourceContainer();
+        foreach ($workers as $worker) {
+            $taskWorkerResources->add(TaskResource::createPartial([
+                'type'          => ResourceType::createPartial(['id' => ResourceTypeMapping::LABOR->value]),
+                'quantity'      => 1,
+                'unitRate'      => $worker->getUnitRate() !== DEFAULT_RATE_MIN 
+                    ? $worker->getUnitRate()
+                    : $worker->getDefaultRate(),
+                'estimatedUnit' => $worker->getEstimatedHour(),
+                'taskWorkerId'  => $worker->getId()
+            ]));
+        }
+        ResourceModel::createMultiple($taskId, $taskWorkerResources);
     }
 
     /**
@@ -146,9 +165,19 @@ class TaskService
                 if (count($rawTask['workers']['toAdd'] ?? []) > 0) {
                     $workersToAdd = new WorkerContainer();
                     foreach ($rawTask['workers']['toAdd'] as $workerData) {
+                        if (isset($workerData['workerId'])) {
+                            if ($workerData['workerId'] instanceof UUID)
+                                $workerData['publicId'] = $workerData['workerId'];
+                            elseif (is_string($workerData['workerId']))
+                                $workerData['publicId'] = UUID::fromString($workerData['workerId']);
+                            elseif (is_numeric($workerData['workerId']))
+                                $workerData['id'] = (int)$workerData['workerId'];
+                        }
                         $workersToAdd->add(TaskWorker::createPartial($workerData));
                     }
-                    TaskWorkerModel::createMultiple($rawTask['id'] ?? $rawTask['publicId'], $workersToAdd);
+                    $createdWWorkers = TaskWorkerModel::createMultiple($rawTask['id'] ?? $rawTask['publicId'], $workersToAdd);
+                    // Create labor resources for each new worker
+                    $instance->createWorkerResources($rawTask['id'] ?? $rawTask['publicId'], $createdWWorkers);
                 }
 
                 // Update existing workers and remove terminated ones

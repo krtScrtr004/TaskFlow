@@ -786,13 +786,14 @@ class TaskWorkerModel extends Model
             
             $taskIdParam = ($taskId instanceof UUID) ? UUID::toBinary($taskId) : $taskId;
             foreach ($taskWorkers as $worker) {    
+                $workerId = $worker->getId() !== 0
+                    ? $worker->getId()
+                    : UUID::toBinary($worker->getPublicId());
                 $statement->execute([
                     ':taskId'           => $taskIdParam,
-                    ':workerId'         => ($worker->getId() !== 0) 
-                        ? $worker->getId() 
-                        : UUID::toBinary($worker->getPublicId()),
+                    ':workerId'         => $workerId,
                     ':status'           => WorkerStatus::ASSIGNED->value,
-                    ':estimatedHour'   => $worker->getEstimatedHours(),
+                    ':estimatedHour'   => $worker->getEstimatedHour(),
                 ]);
 
                 // Set ID given by the DB
