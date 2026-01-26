@@ -38,6 +38,7 @@ if (!isset($task)) {
 
     $uiState = [
         'pageName'          => 'Create A Task',
+        'backButtonText'   =>  'Back To Selection',
         'formDescription'   => 'Fill in the details below to create a new task',
         'submitButton'      => 'create_task_button',
         'noWorkerWall'      => 'flex-col',
@@ -64,6 +65,7 @@ if (!isset($task)) {
 
     $uiState = [
         'pageName'          => 'Edit Task',
+        'backButtonText'   =>  'Back To Task View',
         'formDescription'   => 'Modify the details of the task',
         'submitButton'      => 'edit_task_button',
         'noWorkerWall'      => $taskData['workers']?->count() === 0
@@ -119,7 +121,7 @@ if (!isset($task)) {
                     <div class="back-container flex-row">
                         <img src="<?= ICON_PATH . 'back_w.svg' ?>" alt="Back" title="Back" height="18">
 
-                        <p class="">Back To Selection</p>
+                        <p class=""><?= $uiState['backButtonText'] ?></p>
                     </div>
                 </button>
 
