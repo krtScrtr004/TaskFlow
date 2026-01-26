@@ -1,12 +1,11 @@
 <?php
 
-namespace App\Dependent;
+namespace App\Entity;
 
 use App\Container\JobTitleContainer;
 use App\Core\UUID;
 use App\Entity\ResourceType;
 use App\Enumeration\Gender;
-use App\Enumeration\ResourceTypeMapping;
 use App\Enumeration\Role;
 use App\Enumeration\WorkerStatus;
 use App\Exception\ValidationException;

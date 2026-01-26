@@ -37,8 +37,6 @@ define('SERVICE_PATH', BACKEND_PATH . 'service' . DS);
 define('ROUTER_PATH', BACKEND_PATH . 'router' . DS);
 define('VALIDATOR_PATH', BACKEND_PATH . 'validator' . DS);
 
-define('DEPENDENT_PATH', ENTITY_PATH . 'dependent' . DS);
-
 define('BE_UTILITY_PATH', BACKEND_PATH . 'utility' . DS);
 define('FE_UTILITY_PATH', FRONTEND_PATH . 'utility' . DS);
 

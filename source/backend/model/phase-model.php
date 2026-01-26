@@ -7,7 +7,7 @@ use App\Container\PhaseContainer;
 use App\Container\TaskContainer;
 use App\Core\UUID;
 use App\Enumeration\WorkStatus;
-use App\Dependent\Phase;
+use App\Entity\Phase;
 use App\Entity\Task;
 use App\Exception\DatabaseException;
 use DateTime;

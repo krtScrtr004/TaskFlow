@@ -2,15 +2,15 @@
 
 namespace App\Entity;
 
-use App\Dependent\Phase;
+use App\Entity\Phase;
 use App\Interface\Entity;
-use App\Dependent\Worker;
+use App\Entity\Worker;
 use App\Enumeration\WorkStatus;
 use App\Container\TaskContainer;
 use App\Container\WorkerContainer;
 use App\Container\PhaseContainer;
 use App\Core\UUID;
-use App\Dependent\ProjectManager;
+use App\Entity\ProjectManager;
 use App\Exception\ValidationException;
 use App\Validator\UuidValidator;
 use App\Validator\WorkValidator;

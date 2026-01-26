@@ -1,6 +1,6 @@
 <?php 
 
-namespace App\Dependent;
+namespace App\Entity;
 
 use App\Container\PhaseContainer;
 use App\Container\WorkerContainer;

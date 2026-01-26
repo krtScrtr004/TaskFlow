@@ -5,7 +5,7 @@ namespace App\Model;
 use App\Abstract\Model;
 use App\Container\WorkerContainer;
 use App\Core\UUID;
-use App\Dependent\TaskWorker;
+use App\Entity\TaskWorker;
 use App\Enumeration\Role;
 use App\Enumeration\WorkerStatus;
 use App\Enumeration\WorkStatus;

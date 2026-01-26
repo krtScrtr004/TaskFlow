@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Dependent;
+namespace App\Entity;
 
 use App\Interface\Entity;
 use App\Enumeration\WorkStatus;

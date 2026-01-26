@@ -7,8 +7,8 @@ use App\Enumeration\Gender;
 use App\Enumeration\Role;
 use App\Container\JobTitleContainer;
 use App\Abstract\User;
-use App\Dependent\ProjectManager;
-use App\Dependent\Worker;
+use App\Entity\ProjectManager;
+use App\Entity\Worker;
 use DateTime;
 
 class Me extends User

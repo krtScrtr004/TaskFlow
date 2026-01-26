@@ -2,7 +2,7 @@
 
 use App\Core\Me;
 use App\Core\UUID;
-use App\Dependent\Phase;
+use App\Entity\Phase;
 use App\Entity\Project;
 use App\Entity\Task;
 use App\Enumeration\Role;

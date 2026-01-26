@@ -1,8 +1,8 @@
 <?php
 
 use App\Core\UUID;
-use App\Dependent\ProjectManager;
-use App\Dependent\Worker;
+use App\Entity\ProjectManager;
+use App\Entity\Worker;
 use App\Enumeration\Role;
 
 /**

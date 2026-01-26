@@ -3,8 +3,8 @@
 namespace App\Container;
 
 use App\Abstract\Container;
-use App\Dependent\TaskResource;
-use App\Dependent\TaskWorker;
+use App\Entity\TaskResource;
+use App\Entity\TaskWorker;
 use InvalidArgumentException;
 
 class ResourceContainer extends Container

@@ -5,8 +5,8 @@ namespace App\Auth;
 use App\Core\Me;
 use App\Core\Session;
 use App\Core\UUID;
-use App\Dependent\ProjectManager;
-use App\Dependent\Worker;
+use App\Entity\ProjectManager;
+use App\Entity\Worker;
 
 class SessionAuth
 {

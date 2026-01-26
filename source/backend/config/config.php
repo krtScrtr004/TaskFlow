@@ -19,7 +19,6 @@ spl_autoload_register(function ($class) {
         'container'     => CONTAINER_PATH,
         'controller'    => CONTROLLER_PATH,
         'core'          => CORE_PATH,
-        'dependent'     => DEPENDENT_PATH,
         'dump'          => DUMP_PATH,
         'endpoint'      => ENDPOINT_PATH,
         'entity'        => ENTITY_PATH,

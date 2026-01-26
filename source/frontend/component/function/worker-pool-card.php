@@ -1,7 +1,7 @@
 <?php
 
 use App\Core\UUID;
-use App\Dependent\Worker;
+use App\Entity\Worker;
 
 /**
  * Renders a worker pool list item card as an HTML string.

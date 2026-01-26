@@ -1,7 +1,7 @@
 <?php
 
 use App\Core\UUID;
-use App\Dependent\Worker;
+use App\Entity\Worker;
 
 /**
  * Generates an HTML table row representing a selected worker.

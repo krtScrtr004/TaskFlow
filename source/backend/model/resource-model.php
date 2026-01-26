@@ -5,7 +5,7 @@ namespace App\Model;
 use App\Abstract\Model;
 use App\Container\ResourceContainer;
 use App\Core\UUID;
-use App\Dependent\TaskResource;
+use App\Entity\TaskResource;
 use App\Entity\ResourceType;
 use App\Exception\DatabaseException;
 use Exception;

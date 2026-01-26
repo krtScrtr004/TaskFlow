@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Dependent;
+namespace App\Entity;
 
 use App\Abstract\User;
 use App\Core\UUID;

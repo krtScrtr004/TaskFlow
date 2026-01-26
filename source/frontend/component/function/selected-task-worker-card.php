@@ -1,7 +1,7 @@
 <?php
 
 use App\Core\UUID;
-use App\Dependent\TaskWorker;
+use App\Entity\TaskWorker;
 
 /**
  * Generates an HTML card component for a selected task worker in the create task form.

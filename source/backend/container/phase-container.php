@@ -3,7 +3,7 @@
 namespace App\Container;
 
 use App\Abstract\Container;
-use App\Dependent\Phase;
+use App\Entity\Phase;
 use App\Enumeration\TaskPriority;
 use App\Enumeration\WorkStatus;
 use InvalidArgumentException;

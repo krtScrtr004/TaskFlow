@@ -3,8 +3,8 @@
 namespace App\Container;
 
 use App\Abstract\Container;
-use App\Dependent\TaskWorker;
-use App\Dependent\Worker;
+use App\Entity\TaskWorker;
+use App\Entity\Worker;
 use App\Enumeration\Role;
 use App\Enumeration\WorkerStatus;
 use InvalidArgumentException;

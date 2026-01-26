@@ -1,7 +1,7 @@
 <?php
 
 use App\Core\UUID;
-use App\Dependent\Phase;
+use App\Entity\Phase;
 use App\Enumeration\WorkStatus;
 
 /**

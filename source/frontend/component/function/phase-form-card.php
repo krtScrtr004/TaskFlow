@@ -1,7 +1,7 @@
 <?php
 
 use App\Core\UUID;
-use App\Dependent\Phase;
+use App\Entity\Phase;
 
 /**
  * Renders an HTML form card for creating or editing a project phase.
