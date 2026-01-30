@@ -161,12 +161,14 @@ class SingleFormController implements Controller
             throw new NotFoundException("Project ID is required to add a task.");
         }
 
-        $project = ProjectModel::findById(UUID::fromString($projectId));
+        $projectModel = new ProjectModel();
+        $project = $projectModel->findById(UUID::fromString($projectId));
         if (!$project) {
             throw new NotFoundException("Project not found.");
         }
 
-        $activePhase = PhaseModel::findOnGoingByProjectId($project->getId());
+        $phaseModel = new PhaseModel();
+        $activePhase = $phaseModel->findOnGoingByProjectId($project->getId());
         if (!$activePhase) {
             throw new NotFoundException("No active phase found for the project.");
         }

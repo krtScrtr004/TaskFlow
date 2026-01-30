@@ -21,6 +21,10 @@ use DateTime;
 
 class ProjectController implements Controller
 {
+    private ProjectModel $projectModel;
+    private PhaseModel $phaseModel;
+    private TaskModel $taskModel;
+
     private UuidValidator $uuidValidator;
 
     /**
@@ -37,6 +41,9 @@ class ProjectController implements Controller
      */
     private function __construct()
     {
+        $this->projectModel = new ProjectModel();
+        $this->phaseModel = new PhaseModel();
+        $this->taskModel = new TaskModel();
         $this->uuidValidator = new UuidValidator();
     }
 
@@ -71,8 +78,8 @@ class ProjectController implements Controller
 
             $fullProjectInfo = null;
             $activeProject = (Role::isProjectManager(Me::getInstance()->getRole()))
-                ? ProjectModel::findManagerActiveProjectByManagerId(Me::getInstance()->getId())
-                : ProjectModel::findWorkerActiveProjectByWorkerId(Me::getInstance()->getId());
+                ? $instance->projectModel->findManagerActiveProjectByManagerId(Me::getInstance()->getId())
+                : $instance->projectModel->findWorkerActiveProjectByWorkerId(Me::getInstance()->getId());
 
             // If projectId is provided, verify that the project is not cancelled
             if ($activeProject && $activeProject->getStatus() !== WorkStatus::CANCELLED) {
@@ -135,7 +142,9 @@ class ProjectController implements Controller
      */
     private function updatePhaseStatus(Project &$project): void
     {
-        $phases = PhaseModel::findAllByProjectId($project->getId(), true);
+        $instance = new self();
+
+        $phases = $instance->phaseModel->findAllByProjectId($project->getId(), true);
         if (!$phases) {
             throw new NotFoundException('Phases not found.');
         }
@@ -193,7 +202,7 @@ class ProjectController implements Controller
 
         // Update phase status in the database
         if (!empty($phasesToUpdate)) {
-            PhaseModel::saveMultiple($phasesToUpdate);
+            $instance->phaseModel->saveMultiple($phasesToUpdate);
         }
 
         // Set additional info on project
@@ -287,8 +296,9 @@ class ProjectController implements Controller
             $status = isset($_GET['status']) && strcasecmp($_GET['status'], 'all') !== 0
                 ? WorkStatus::from($_GET['status'])
                 : null;
-
-            $projects = ProjectModel::search(
+        
+            $instance = new self();
+            $projects = $instance->projectModel->search(
                 $key,
                 Me::getInstance()->getId(),
                 $status,
@@ -338,13 +348,15 @@ class ProjectController implements Controller
         $includePhases = $options['phases'] ?? false;
         $includeWorkers = $options['workers'] ?? false;
 
-        $project = ProjectModel::findFull($projectId, [
+        $instance = new self();
+
+        $project = $instance->projectModel->findFull($projectId, [
             'phases' => $includePhases,
             'tasks' => $includeTasks,
             'workers' => $includeWorkers
         ]);
 
-        $recentTasks = TaskModel::search(
+        $recentTasks = $instance->taskModel->search(
             '',
             null,
             null,
@@ -382,6 +394,7 @@ class ProjectController implements Controller
      */
     private function renderDashboard(Project|null $project): void
     {
+        $instance = new self();
         $projectProgress = null;
 
         if ($project) {
@@ -394,7 +407,7 @@ class ProjectController implements Controller
             if ($project->additionalInfoContains('progress')) {
                 $projectProgress = $project->getAdditionalInfo('progress');
             } else {
-                $phases = PhaseModel::findAllByProjectId($project->getId(), true);
+                $phases = $instance->phaseModel->findAllByProjectId($project->getId(), true);
                 $projectProgress = ($phases?->count() > 0)
                     ? ProjectProgressCalculator::calculate($phases)
                     : [
@@ -409,7 +422,7 @@ class ProjectController implements Controller
             if ($startDateTime && compareDates($currentDateTime, $startDateTime) >= 0 && $status === WorkStatus::PENDING) {
                 // Check if the project is already ongoing
                 $project->setStatus(WorkStatus::ONGOING);
-                ProjectModel::save([
+                $instance->projectModel->save([
                     'id' => $project->getId(),
                     'status' => WorkStatus::ONGOING
                 ]);
@@ -419,13 +432,13 @@ class ProjectController implements Controller
             ) {
                 if ($projectProgress['progressPercentage'] < 100.0) {
                     $project->setStatus(WorkStatus::DELAYED);
-                    ProjectModel::save([
+                    $instance->projectModel->save([
                         'id' => $project->getId(),
                         'status' => WorkStatus::DELAYED
                     ]);
                 } else {
                     $project->setStatus(WorkStatus::COMPLETED);
-                    ProjectModel::save([
+                    $instance->projectModel->save([
                         'id' => $project->getId(),
                         'status' => WorkStatus::COMPLETED
                     ]);
@@ -453,7 +466,7 @@ class ProjectController implements Controller
                 throw new NotFoundException('Project ID is required.');
             }
 
-            $projectReport = ProjectModel::getReport($projectId);
+            $projectReport = $instance->projectModel->getReport($projectId);
 
             require_once SUB_VIEW_PATH . 'report.php';
         } catch (NotFoundException $e) {

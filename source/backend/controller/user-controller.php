@@ -47,7 +47,8 @@ class UserController implements Controller
             $role = isset($_GET['role']) ? Role::tryFrom($_GET['role']) : null;
             $status = isset($_GET['status']) ? WorkerStatus::tryFrom($_GET['status']) : null;
 
-            $users = UserModel::search(
+            $userModel = new UserModel();
+            $users = $userModel->search(
                 isset($_GET['key']) ? trim($_GET['key']) : '',
                 $role,
                 $status,

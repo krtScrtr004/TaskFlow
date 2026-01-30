@@ -34,7 +34,8 @@ class ProfileController implements Controller {
                 exit();
             }
 
-            $profile = UserModel::findById(Me::getInstance()->getId());
+            $userModel = new UserModel();
+            $profile = $userModel->findById(Me::getInstance()->getId());
 
             // Re-instantiate Me with fresh data
             SessionAuth::setAuthorizedSession($profile);

@@ -25,7 +25,9 @@ $statisticsData = [
 ];
 
 if (isset($projects)) {
-    $userInfo = UserModel::findById(Me::getInstance()->getId());
+    $userModel = new UserModel();
+    $userInfo = $userModel->findById(Me::getInstance()->getId());
+    
     $calculateStatistics = Role::isProjectManager(Me::getInstance()->getRole())
         ? ProjectManagerPerformanceCalculator::calculate($userInfo->getAdditionalInfo('projectHistory'))
         : WorkerPerformanceCalculator::calculate($userInfo->getAdditionalInfo('projectHistory'));

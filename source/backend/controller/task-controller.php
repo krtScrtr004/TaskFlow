@@ -21,7 +21,19 @@ use ValueError;
 
 class TaskController implements Controller
 {
-    private function __construct() {}
+    private ProjectModel $projectModel;
+    private ProjectWorkerModel $projectWorkerModel;
+    private PhaseModel $phaseModel;
+    private TaskModel $taskModel;
+
+
+    private function __construct() 
+    {
+        $this->projectModel = new ProjectModel();
+        $this->projectWorkerModel = new ProjectWorkerModel();
+        $this->phaseModel = new PhaseModel();
+        $this->taskModel = new TaskModel();
+    }
 
     public static function index(): void {}
 
@@ -60,6 +72,8 @@ class TaskController implements Controller
                 exit();
             }
 
+            $instance = new self();
+
             $projectId = isset($args['projectId'])
                 ? UUID::fromString($args['projectId'])
                 : null;
@@ -67,7 +81,7 @@ class TaskController implements Controller
                 throw new ForbiddenException('Project ID is required.');
             }
 
-            $project = ProjectModel::findById($projectId);
+            $project = $instance->projectModel->findById($projectId);
             if (!$project) {
                 throw new NotFoundException('Project not found.');
             }
@@ -80,7 +94,7 @@ class TaskController implements Controller
             }
 
             $phase = $phaseId
-                ? PhaseModel::findById($phaseId)
+                ? $instance->phaseModel->findById($phaseId)
                 : null;
             if (isset($args['phaseId']) && !$phase) {
                 throw new NotFoundException('Phase not found.');
@@ -94,7 +108,7 @@ class TaskController implements Controller
             }
 
             $worker = $workerId
-                ? ProjectWorkerModel::findById($workerId)
+                ? $instance->projectWorkerModel->findById($workerId)
                 : null;
             if (isset($args['workerId']) && !$worker) {
                 throw new NotFoundException('Worker not found.');
@@ -121,7 +135,7 @@ class TaskController implements Controller
             ];
 
             // Get all tasks from the project
-            $tasks = TaskModel::search(
+            $tasks = $instance->taskModel->search(
                 $key,
                 $worker?->getId() ?? Me::getInstance()->getId(),
                 $phase?->getId() ?? null,
@@ -173,6 +187,8 @@ class TaskController implements Controller
                 exit();
             }
 
+            $instance = new self();
+
             $projectId = isset($args['projectId'])
                 ? UUID::fromString($args['projectId'])
                 : null;
@@ -180,7 +196,7 @@ class TaskController implements Controller
                 throw new ForbiddenException('Project ID is required.');
             }
 
-            $project = ProjectModel::findById($projectId);
+            $project = $instance->projectModel->findById($projectId);
             if ($project === null) {
                 throw new NotFoundException('Project not found.');
             }
@@ -192,7 +208,7 @@ class TaskController implements Controller
                 throw new ForbiddenException('Phase ID is required.');
             }
 
-            $phase = PhaseModel::findById($phaseId);
+            $phase = $instance->phaseModel->findById($phaseId);
             if ($phase === null) {
                 throw new NotFoundException('Phase not found.');
             }
@@ -217,7 +233,7 @@ class TaskController implements Controller
             // Check if the task is already ongoing
             if ($startDateTime && compareDates($startDateTime, $currentDateTime) <= 0 && $status === WorkStatus::PENDING) {
                 $task->setStatus(WorkStatus::ONGOING);
-                TaskModel::save([
+                $instance->taskModel->save([
                     'id' => $task->getId(),
                     'status' => WorkStatus::ONGOING
                 ]);
@@ -225,7 +241,7 @@ class TaskController implements Controller
                 $completionDateTime && compareDates($completionDateTime, $currentDateTime) < 0 &&
                 ($status === WorkStatus::PENDING || $status === WorkStatus::ONGOING)
             ) {
-                TaskModel::save([
+                $instance->taskModel->save([
                     'id' => $task->getId(),
                     'status' => WorkStatus::DELAYED
                 ]);
@@ -266,20 +282,22 @@ class TaskController implements Controller
             if (isset($args['projectId']) && !$projectId)
                 throw new ForbiddenException('Project ID is required.');
 
+            $instance = new self();
+
             /**
              * If projectId is provided in args, use it to fetch the project (Create form).
              * Otherwise, retrieve the owning project of the task (Edit form).
              */
             $project = isset($projectId)
-                ? ProjectModel::findById($projectId)
-                : TaskModel::findOwningProject($task->getId());
+                ? $instance->projectModel->findById($projectId)
+                : $instance->taskModel->findOwningProject($task->getId());
             if (isset($args['projectId']) && !$project)
                 throw new NotFoundException('Project not found.');
 
             // Phase Info (Active)
             $phase = isset($args['projectId'])
-                ? PhaseModel::findOnGoingByProjectId($projectId)
-                : TaskModel::findOwningPhase($task->getId());
+                ? $instance->phaseModel->findOnGoingByProjectId($projectId)
+                : $instance->taskModel->findOwningPhase($task->getId());
             if (!$phase) throw new NotFoundException('Active phase not found.');
 
             require_once SUB_VIEW_PATH . 'form' . DS . 'task.php';
