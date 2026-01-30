@@ -4,7 +4,6 @@ namespace App\Service;
 
 use App\Container\PhaseContainer;
 use App\Container\WorkerContainer;
-use App\Exception\DatabaseException;
 use PDO;
 use App\Core\Connection;
 use App\Entity\Phase;
@@ -15,12 +14,21 @@ use App\Model\ProjectModel;
 use App\Model\ProjectWorkerModel;
 use Throwable;
 
-class ProjectService {
+class ProjectService
+{
     private PDO $connection;
+
+    private ProjectModel $projectModel;
+    private ProjectWorkerModel $projectWorkerModel;
+    private PhaseModel $phaseModel;
 
     private function __construct()
     {
         $this->connection = Connection::getInstance();
+
+        $this->projectModel = new ProjectModel();
+        $this->projectWorkerModel = new ProjectWorkerModel();
+        $this->phaseModel = new PhaseModel();
     }
 
     /**
@@ -42,11 +50,18 @@ class ProjectService {
         try {
             $instance->connection->beginTransaction();
 
-            $createProject = ProjectModel::create($project);
+            $createProject = $instance->projectModel->create($project);
             $projectId = $createProject->getId();
 
-            PhaseModel::createMultiple($projectId, $project->getPhases());
-            ProjectWorkerModel::createMultiple($projectId, $project->getWorkers());
+            $phases = $project->getPhases();
+            if ($phases && $phases->count() > 0) {
+                $instance->phaseModel->createMultiple($projectId, $project->getPhases());
+            }
+
+            $workers = $project->getWorkers();
+            if ($workers && $workers->count() > 0) {
+                $instance->projectWorkerModel->createMultiple($projectId, $project->getWorkers());
+            }
 
             $instance->connection->commit();
             return $createProject;
@@ -95,7 +110,7 @@ class ProjectService {
         try {
             $instance->connection->beginTransaction();
 
-            ProjectModel::save($project);
+            $instance->projectModel->save($project);
             $projectId = $project['id'];
 
             $addedPhases = $project['phases']['toAdd'] ?? [];
@@ -107,11 +122,11 @@ class ProjectService {
                 foreach ($addedPhases as $phase) {
                     $phases->add(Phase::createPartial($phase));
                 }
-                PhaseModel::createMultiple($projectId, $phases);
-            } 
+                $instance->phaseModel->createMultiple($projectId, $phases);
+            }
             if (count($editedPhases) > 0 || count($cancelledPhases) > 0) {
                 $phases = array_merge($editedPhases, $cancelledPhases);
-                PhaseModel::saveMultiple($phases);
+                $instance->phaseModel->saveMultiple($phases);
             }
 
             $addedWorkers = $project['workers']['toAdd'] ?? [];
@@ -123,11 +138,11 @@ class ProjectService {
                 foreach ($addedWorkers as $worker) {
                     $workers->add(Worker::createPartial($worker));
                 }
-                ProjectWorkerModel::createMultiple($projectId, $workers);
-            } 
+                $instance->projectWorkerModel->createMultiple($projectId, $workers);
+            }
             if (count($editedWorkers) > 0 || count($removedWorkers) > 0) {
                 $workers = array_merge($editedWorkers, $removedWorkers);
-                ProjectWorkerModel::saveMultiple($projectId, $workers);
+                $instance->projectWorkerModel->saveMultiple($projectId, $workers);
             }
 
             $instance->connection->commit();

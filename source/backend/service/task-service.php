@@ -22,12 +22,20 @@ class TaskService
 {
     private PDO $connection;
 
+    private TaskModel $taskModel;
+    private TaskWorkerModel $taskWorkerModel;
+    private ResourceModel $resourceModel;
+
     /**
      * Private constructor to prevent direct instantiation.
      */
     private function __construct()
     {
         $this->connection = Connection::getInstance();
+
+        $this->taskModel = new TaskModel();
+        $this->taskWorkerModel = new TaskWorkerModel();
+        $this->resourceModel = new ResourceModel();
     }
 
     /**
@@ -71,14 +79,14 @@ class TaskService
 
             // Save new task entry
             if ($executeTask)
-                $createdTask = TaskModel::create($task);
+                $createdTask = $instance->taskModel->create($task);
             $taskId = $createdTask?->getID() ?? $task->getID();
 
             // Save task workers
             if ($executeWorker) {
                 $taskWorkers = $task->getWorkers();
                 if ($taskWorkers) {
-                    $createdWorkers = TaskWorkerModel::createMultiple($taskId, $taskWorkers);
+                    $createdWorkers = $instance->taskWorkerModel->createMultiple($taskId, $taskWorkers);
                     // Create labor resources for each worker
                     $instance->createWorkerResources($taskId, $createdWorkers);
                 }
@@ -88,7 +96,7 @@ class TaskService
             if ($executeResource) {
                 $taskResources = $task->getResources()->getResources();
                 if ($taskResources && $taskResources->count() > 0)
-                    ResourceModel::createMultiple($taskId, $taskResources);
+                    $instance->resourceModel->createMultiple($taskId, $taskResources);
             }
 
             $instance->connection->commit();
@@ -127,7 +135,7 @@ class TaskService
                 'taskWorkerId'  => $worker->getId()
             ]));
         }
-        ResourceModel::createMultiple($taskId, $taskWorkerResources);
+        $this->resourceModel->createMultiple($taskId, $taskWorkerResources);
     }
 
     /**
@@ -157,7 +165,7 @@ class TaskService
              * Required:
              * - Task ID or Public ID
              */
-            TaskModel::save($rawTask);
+            $instance->taskModel->save($rawTask);
 
             // Update task workers
             if (isset($rawTask['workers'])) {
@@ -175,7 +183,7 @@ class TaskService
                         }
                         $workersToAdd->add(TaskWorker::createPartial($workerData));
                     }
-                    $createdWWorkers = TaskWorkerModel::createMultiple($rawTask['id'] ?? $rawTask['publicId'], $workersToAdd);
+                    $createdWWorkers = $instance->taskWorkerModel->createMultiple($rawTask['id'] ?? $rawTask['publicId'], $workersToAdd);
                     // Create labor resources for each new worker
                     $instance->createWorkerResources($rawTask['id'] ?? $rawTask['publicId'], $createdWWorkers);
                 }
@@ -190,7 +198,7 @@ class TaskService
                          * - Task ID or Public ID
                          * - Worker ID or Public ID
                          */
-                        TaskWorkerModel::save($workerData);
+                        $instance->taskWorkerModel->save($workerData);
                     }
                 }
             }
@@ -202,7 +210,7 @@ class TaskService
                  * - Resource ID or Public ID
                  */
                 foreach ($rawTask['resources'] as $resourceData) {
-                    ResourceModel::save($resourceData);
+                    $instance->resourceModel->save($resourceData);
                 }
             }
 
@@ -229,7 +237,7 @@ class TaskService
      * 
      * @return Task|null The retrieved Task entity with optional related entities, or null if not found.
      * 
-     * @throws \InvalidArgumentException If the provided task ID is invalid.
+     * @throws InvalidArgumentException If the provided task ID is invalid.
      */
     public static function get(
         int|UUID $taskId, 
@@ -239,22 +247,24 @@ class TaskService
         ]
     ): ?Task {
         if (is_int($taskId) && $taskId <= 0) 
-            throw new \InvalidArgumentException('Invalid task ID.');
+            throw new InvalidArgumentException('Invalid task ID.');
 
         $includeWorkers = $options['workers'] ?? false;
         $includeResources = $options['resources'] ?? false;
 
-        $task = TaskModel::findById($taskId);
+        $instance = new self();
+        $task = $instance->taskModel->findById($taskId);
 
         // Load related entities based on options
         if ($task && $includeWorkers) {
-            $workers = TaskWorkerModel::findByTaskId($task->getId());
+            $workers = $instance->taskWorkerModel-> findByTaskId($task->getId());
             $task->setWorkers($workers);
         }
         
         // Load resources if specified
         if ($task && $includeResources) {
-            $resources = ResourceModel::findByTaskId($task->getId());
+            $instance = new self();
+            $resources = $instance->resourceModel->findByTaskId($task->getId());
             $task->setResources($resources);
         }
 
