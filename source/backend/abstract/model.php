@@ -22,7 +22,7 @@ abstract class Model
      *
      * @throws \RuntimeException If the Connection instance cannot be retrieved.
      */
-    protected function __construct()
+    public function __construct()
     {
         $this->connection = Connection::getInstance();
     }

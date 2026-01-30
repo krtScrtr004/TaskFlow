@@ -62,8 +62,9 @@ class ProjectManagerEndpoint extends Endpoint
                 throw new ForbiddenException('Project ID is required.');
             }
 
+            $projectModel = new ProjectModel();
             $project = $projectId
-                ? ProjectModel::findById($projectId)
+                ? $projectModel->findById($projectId)
                 : null;
             if (!isset($args['projectId']) && !$project) {
                 throw new NotFoundException('Project not found.');
@@ -76,9 +77,10 @@ class ProjectManagerEndpoint extends Endpoint
                 throw new ForbiddenException('Manager ID is required.');
             }
 
+            $projectManagerModel = new ProjectManagerModel();
             $manager = $managerId
-                ? ProjectManagerModel::findById($managerId, $project->getId() ?? $projectId, true)
-                : ProjectManagerModel::findById($project->getManager()->getId(), $project->getId() ?? $projectId, true);
+                ? $projectManagerModel->findById($managerId, $project->getId() ?? $projectId, true)
+                : $projectManagerModel->findById($project->getManager()->getId(), $project->getId() ?? $projectId, true);
             if (!$manager) {
                 throw new NotFoundException('Manager not found.');
             }

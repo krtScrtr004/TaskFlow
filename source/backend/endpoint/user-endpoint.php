@@ -31,6 +31,16 @@ use ValueError;
 
 class UserEndpoint extends Endpoint
 {
+    private UserModel $userModel;
+    private ProjectModel $projectModel;
+
+    private function __construct()
+    {
+        $this->userModel = new UserModel();
+        $this->projectModel = new ProjectModel();
+    }
+
+
     /**
      * Retrieves a user by their unique identifier.
      *
@@ -69,7 +79,8 @@ class UserEndpoint extends Endpoint
                 throw new ForbiddenException('User ID is required.');
             }
 
-            $user = UserModel::findById($userId);
+            $instance = new self();
+            $user = $instance->userModel->findById($userId);
             if (!$user) {
                 throw new NotFoundException('User not found.');
             } else {
@@ -133,7 +144,8 @@ class UserEndpoint extends Endpoint
                 ? Role::tryFrom(trim($_GET['role'])) 
                 : null;
 
-            $users = UserModel::search(
+            $instance = new self();
+            $users = $instance->userModel->search(
                 isset($_GET['key']) ? trim($_GET['key']) : '',
                 $role,
                 $status,
@@ -198,6 +210,7 @@ class UserEndpoint extends Endpoint
                 throw new ForbiddenException();
             }
             Csrf::protect();
+            $instance = new self();
 
             try {
                 $data = decodeData('php://input');
@@ -259,7 +272,7 @@ class UserEndpoint extends Endpoint
 
             if (isset($profileData['contactNumber'])) {
                 // Check for duplicate email or contact number
-                $duplicates = UserModel::hasDuplicateInfo(
+                $duplicates = $instance->userModel->hasDuplicateInfo(
                     null,
                     $profileData['contactNumber'] ?? null,
                     Me::getInstance()->getId()
@@ -296,11 +309,11 @@ class UserEndpoint extends Endpoint
                 $myId = Me::getInstance()->getId();
 
                 $profileData['id'] = $myId;
-                UserModel::save($profileData);
+                $instance->userModel->save($profileData);
 
                 // Reset the Me instance and session data
                 Me::destroy();
-                Me::instantiate(UserModel::findById($myId));
+                Me::instantiate($instance->userModel->findById($myId));
                 if (Session::has('userData')) {
                     $updatedUser = Me::getInstance();
                     Session::set('userData', $updatedUser->toArray());
@@ -339,6 +352,7 @@ class UserEndpoint extends Endpoint
     {
         try {
             self::formRateLimit();
+            $instance = new self();
 
             if (!SessionAuth::hasAuthorizedSession()) {
                 throw new ForbiddenException();
@@ -352,20 +366,20 @@ class UserEndpoint extends Endpoint
                 throw new ForbiddenException('User ID is required.');
             }
 
-            $user = UserModel::findById($userId);
+            $user = $instance->userModel->findById($userId);
             if (!$user) {
                 throw new NotFoundException('User not found.');
             }
 
             // Check if user is assigned to any active projects
             $hasActiveProject = Role::isProjectManager($user->getRole())
-                ? ProjectModel::findManagerActiveProjectByManagerId($user->getId())
-                : ProjectModel::findWorkerActiveProjectByWorkerId($user->getId());
+                ? $instance->projectModel->findManagerActiveProjectByManagerId($user->getId())
+                : $instance->projectModel->findWorkerActiveProjectByWorkerId($user->getId());
             if ($hasActiveProject) {
                 throw new ForbiddenException('Your account cannot be deleted while assigned to an active projects.');
             }
 
-            if (UserModel::delete($user)) {
+            if ($instance->userModel->delete($user)) {
                 Response::success([], 'User deleted successfully.');
 
                 Session::destroy();

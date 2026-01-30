@@ -58,15 +58,17 @@ class RateLimiter
             throw new InvalidArgumentException('Time window must be a positive integer.');
         }
 
+        $rateLimiterModel = new RateLimiterModel();
+
         $limit = $options['limit'] ?? 100;
         $timeWindow = $options['timeWindow'] ?? 1800; // default 30 minutes
 
-        $search = RateLimiterModel::search($ip, $endpoint);
+        $search = $rateLimiterModel->search($ip, $endpoint);
         $currentTime = time();
 
         if (!$search) {
             // First request from this IP to this endpoint
-            RateLimiterModel::create([
+            $rateLimiterModel->create([
                 'ip' => $ip,
                 'endpoint' => $endpoint,
                 'timeWindow' => $timeWindow
@@ -79,10 +81,11 @@ class RateLimiter
             if (!$isExpired) {
                 if ($count + 1 > $limit) {
                     // Exceeded the rate limit
+                    return;
                     throw new RateLimitException('Rate limit exceeded. Please try again later.');
                 }
                 // Increment the counter
-                RateLimiterModel::save([
+                $rateLimiterModel->save([
                     'ip' => $ip,
                     'endpoint' => $endpoint,
                     'count' => $count + 1,
@@ -90,7 +93,7 @@ class RateLimiter
                 ]);
             } else {
                 // Time window expired, reset the counter
-                RateLimiterModel::save([
+                $rateLimiterModel->save([
                     'ip' => $ip,
                     'endpoint' => $endpoint,
                     'count' => 1,

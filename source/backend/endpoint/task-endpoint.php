@@ -8,7 +8,7 @@ use App\Auth\SessionAuth;
 use App\Container\WorkerContainer;
 use App\Core\Me;
 use App\Core\UUID;
-use App\Dependent\TaskWorker;
+use App\Entity\TaskWorker;
 use App\Entity\Task;
 use App\Enumeration\Role;
 use App\Enumeration\TaskPriority;
@@ -35,6 +35,18 @@ use ValueError;
 
 class TaskEndpoint extends Endpoint
 {
+    private ProjectModel $projectModel;
+    private ProjectWorkerModel $projectWorkerModel;
+    private PhaseModel $phaseModel;
+    private TaskModel $taskModel;
+
+    private function __construct()
+    {
+        $this->projectModel = new ProjectModel();
+        $this->projectWorkerModel = new ProjectWorkerModel();
+        $this->phaseModel = new PhaseModel();
+        $this->taskModel = new TaskModel();
+    }
 
     /**
      * Retrieves a task by its ID within a specific project and phase.
@@ -62,6 +74,7 @@ class TaskEndpoint extends Endpoint
     {
         try {
             self::rateLimit();
+            $instance = new self();
 
             if (!HttpAuth::isGETRequest()) {
                 throw new ForbiddenException('Invalid HTTP request method.');
@@ -76,7 +89,7 @@ class TaskEndpoint extends Endpoint
                 : null;
             if (!$projectId) {
                 throw new ForbiddenException('Project ID is required.');
-            } elseif (ProjectModel::findById($projectId) === null) {
+            } elseif ($instance->projectModel->findById($projectId) === null) {
                 throw new NotFoundException('Project not found.');
             }
 
@@ -87,7 +100,7 @@ class TaskEndpoint extends Endpoint
                 throw new ForbiddenException('Phase ID is required.');
             }
 
-            $phase = PhaseModel::findById($phaseId);
+            $phase = $instance->phaseModel->findById($phaseId);
             if (!$phase) {
                 throw new NotFoundException('Phase not found.');
             }
@@ -99,7 +112,7 @@ class TaskEndpoint extends Endpoint
                 throw new ForbiddenException('Task ID is required.');
             }
 
-            $task = TaskModel::findById($taskId, $phaseId, $projectId);
+            $task = $instance->taskModel->findById($taskId, $phaseId, $projectId);
             if ($task === null) {
                 throw new NotFoundException('Task not found.');
             }
@@ -150,6 +163,7 @@ class TaskEndpoint extends Endpoint
     {
         try {
             self::rateLimit();
+            $instance = new self();
 
             if (!HttpAuth::isGETRequest()) {
                 throw new ForbiddenException('Invalid HTTP request method.');
@@ -166,7 +180,7 @@ class TaskEndpoint extends Endpoint
                 throw new ForbiddenException('Project ID is required.');
             }
 
-            $project = ProjectModel::findById($projectId);
+            $project = $instance->projectModel->findById($projectId);
             if (!$project) {
                 throw new NotFoundException('Project not found.');
             }
@@ -179,7 +193,7 @@ class TaskEndpoint extends Endpoint
             }
 
             $phase = isset($args['phaseId'])
-                ? PhaseModel::findById($phaseId)
+                ? $instance->phaseModel->findById($phaseId)
                 : null;
             if (isset($args['phaseId']) && !$phase) {
                 throw new NotFoundException('Phase not found.');
@@ -193,7 +207,7 @@ class TaskEndpoint extends Endpoint
             }
 
             $worker = isset($args['workerId'])
-                ? ProjectWorkerModel::findById($workerId)
+                ? $instance->projectWorkerModel->findById($workerId)
                 : null;
             if (isset($args['workerId']) && !$worker) {
                 throw new NotFoundException('Worker not found.');
@@ -219,7 +233,7 @@ class TaskEndpoint extends Endpoint
                 'limit' => isset($_GET['limit']) ? (int) $_GET['limit'] : 50,
             ];
 
-            $tasks = TaskModel::search(
+            $tasks = $instance->taskModel->search(
                 $key,
                 $worker?->getId() ?? Me::getInstance()->getId(),
                 $phase?->getId() ?? null,
@@ -284,6 +298,7 @@ class TaskEndpoint extends Endpoint
     {
         try {
             self::formRateLimit();
+            $instance = new self();
 
             if (!SessionAuth::hasAuthorizedSession()) {
                 throw new ForbiddenException();
@@ -306,7 +321,7 @@ class TaskEndpoint extends Endpoint
                 throw new ForbiddenException('Project ID is required.');
             }
 
-            $project = ProjectModel::findById($projectId);
+            $project = $instance->projectModel->findById($projectId);
             if (!$project) {
                 throw new NotFoundException('Project not found.');
             }
@@ -320,8 +335,8 @@ class TaskEndpoint extends Endpoint
 
             // Search for phase by ID or by schedule boundary
             $phase = isset($args['phaseId'])
-                ? PhaseModel::findById($phaseId)
-                : PhaseModel::findByScheduleBoundary(
+                ? $instance->phaseModel->findById($phaseId)
+                : $instance->phaseModel->findByScheduleBoundary(
                     $project->getId(),
                     $data['startDateTime'] ?? null,
                     $data['completionDateTime'] ?? null
@@ -411,6 +426,7 @@ class TaskEndpoint extends Endpoint
     {
         try {
             self::formRateLimit();
+            $instance = new self();
 
             if (!SessionAuth::hasAuthorizedSession()) {
                 throw new ForbiddenException();
@@ -429,7 +445,7 @@ class TaskEndpoint extends Endpoint
                 : null;
             if (!$projectId) {
                 throw new ForbiddenException('Project ID is required.');
-            } elseif (ProjectModel::findById($projectId) === null) {
+            } elseif ($instance->projectModel->findById($projectId) === null) {
                 throw new NotFoundException('Project not found.');
             }
 
@@ -441,8 +457,8 @@ class TaskEndpoint extends Endpoint
             }
 
             $phase = isset($args['phaseId'])
-                ? PhaseModel::findById($phaseId)
-                : PhaseModel::findOnGoingByProjectId($projectId);
+                ? $instance->phaseModel->findById($phaseId)
+                : $instance->phaseModel->findOnGoingByProjectId($projectId);
             if (!$phase) {
                 throw new NotFoundException('Phase not found.');
             }
@@ -454,14 +470,14 @@ class TaskEndpoint extends Endpoint
                 throw new ForbiddenException('Task ID is required.');
             }
 
-            $task = TaskModel::findById($taskId, $phaseId);
+            $task = $instance->taskModel->findById($taskId, $phaseId);
             if (!$task) {
                 throw new NotFoundException('Task not found.');
             }
 
             $project = ($projectId)
-                ? ProjectModel::findById($projectId)
-                : TaskModel::findOwningProject($task->getId());
+                ? $instance->projectModel->findById($projectId)
+                : $instance->taskModel->findOwningProject($task->getId());
 
             $data = decodeData('php://input');
             if (!$data) {

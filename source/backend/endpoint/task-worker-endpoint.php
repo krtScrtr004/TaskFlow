@@ -5,8 +5,8 @@ use App\Auth\HttpAuth;
 use App\Auth\SessionAuth;
 use App\Container\WorkerContainer;
 use App\Core\UUID;
-use App\Dependent\Resource;
-use App\Dependent\TaskWorker;
+use App\Entity\Resource;
+use App\Entity\TaskWorker;
 use App\Entity\ResourceType;
 use App\Entity\Task;
 use App\Enumeration\ResourceTypeMapping;
@@ -31,6 +31,21 @@ use App\Validator\WorkValidator;
 
 class TaskWorkerEndpoint extends Endpoint
 {
+    private ProjectModel $projectModel;
+    private ProjectWorkerModel $projectWorkerModel;
+    private PhaseModel $phaseModel;
+    private TaskModel $taskModel;
+    private TaskWorkerModel $taskWorkerModel;
+
+    private function __construct()
+    {
+        $this->projectModel = new ProjectModel();
+        $this->projectWorkerModel = new ProjectWorkerModel();
+        $this->phaseModel = new PhaseModel();
+        $this->taskModel = new TaskModel();
+        $this->taskWorkerModel = new TaskWorkerModel();
+    }
+
     /**
      * Retrieves a TaskWorker by its ID, with project, phase, and task context.
      *
@@ -58,6 +73,7 @@ class TaskWorkerEndpoint extends Endpoint
     {
         try {
             self::rateLimit();
+            $instance = new self();
 
             if (!HttpAuth::isGETRequest()) {
                 throw new ForbiddenException('Invalid HTTP request method.');
@@ -81,7 +97,7 @@ class TaskWorkerEndpoint extends Endpoint
                 throw new ForbiddenException('Project ID is required.');
             }
 
-            $project = ProjectModel::findById($projectId);
+            $project = $instance->projectModel->findById($projectId);
             if (!$project) {
                 throw new NotFoundException('Project not found.');
             }
@@ -100,12 +116,12 @@ class TaskWorkerEndpoint extends Endpoint
                 throw new ForbiddenException('Task ID is required.');
             }
 
-            $task = TaskModel::findById($taskId, $phaseId);
+            $task = $instance->taskModel->findById($taskId, $phaseId);
             if (!$task) {
                 throw new NotFoundException('Task not found.');
             }
 
-            $worker = TaskWorkerModel::findById($workerId, $task->getId() ?? null, null, $project->getId() ?? null);
+            $worker = $instance->taskWorkerModel->findById($workerId, $task->getId() ?? null, null, $project->getId() ?? null);
             if (!$worker) {
                 throw new NotFoundException('Worker not found.');
             }
@@ -157,6 +173,7 @@ class TaskWorkerEndpoint extends Endpoint
     {
         try {
             self::rateLimit();
+            $instance = new self();
 
             if (!HttpAuth::isGETRequest()) {
                 throw new ForbiddenException('Invalid HTTP request method.');
@@ -173,7 +190,7 @@ class TaskWorkerEndpoint extends Endpoint
                 throw new ForbiddenException('Project ID is required.');
             }
 
-            $project = ProjectModel::findById($projectId);
+            $project = $instance->projectModel->findById($projectId);
             if (!$project) {
                 throw new NotFoundException('Project not found.');
             }
@@ -186,7 +203,7 @@ class TaskWorkerEndpoint extends Endpoint
             }
 
             $phase = isset($args['phaseId'])
-                ? PhaseModel::findById($phaseId)
+                ? $instance->phaseModel->findById($phaseId)
                 : null;
             if (!isset($args['phaseId']) && $phase) {
                 throw new ForbiddenException('Phase ID is required.');
@@ -200,7 +217,7 @@ class TaskWorkerEndpoint extends Endpoint
             }
 
             $task = isset($args['taskId'])
-                ? TaskModel::findById($taskId, $phase->getId())
+                ? $instance->taskModel->findById($taskId, $phase->getId())
                 : null;
             if (isset($args['taskId']) && !$task) {
                 throw new NotFoundException('Task not found.');
@@ -213,7 +230,7 @@ class TaskWorkerEndpoint extends Endpoint
                 foreach ($ids as $id) {
                     $uuids[] = UUID::fromString($id);
                 }
-                $workers = TaskWorkerModel::findMultipleById($uuids, $task->getId() ?? null, $project->getId() ?? null);
+                $workers = $instance->taskWorkerModel->findMultipleById($uuids, $task->getId() ?? null, $project->getId() ?? null);
             } else {
                 $key = null;
                 if (isset($_GET['key']) && trim($_GET['key']) !== '') {
@@ -233,7 +250,7 @@ class TaskWorkerEndpoint extends Endpoint
                     }
                 }
 
-                $workers = TaskWorkerModel::search(
+                $workers = $instance->taskWorkerModel->search(
                     $key,
                     $task?->getId() ?? null,
                     $phase?->getId() ?? null,
@@ -289,6 +306,7 @@ class TaskWorkerEndpoint extends Endpoint
     {
         try {
             self::formRateLimit();
+            $instance = new self();
 
             if (!SessionAuth::hasAuthorizedSession()) {
                 throw new ForbiddenException();
@@ -307,7 +325,7 @@ class TaskWorkerEndpoint extends Endpoint
                 throw new ForbiddenException('Project ID is required.');
             }
 
-            $project = ProjectModel::findById($projectId);
+            $project = $instance->projectModel->findById($projectId);
             if (!$project) {
                 throw new NotFoundException('Project not found.');
             }
@@ -319,7 +337,7 @@ class TaskWorkerEndpoint extends Endpoint
                 throw new ForbiddenException('Phase ID is required.');
             }
 
-            $phase = PhaseModel::findById($phaseId);
+            $phase = $instance->phaseModel->findById($phaseId);
             if (!$phase) {
                 throw new NotFoundException('Phase not found.');
             }
@@ -331,7 +349,7 @@ class TaskWorkerEndpoint extends Endpoint
                 throw new ForbiddenException('Task ID is required.');
             }
 
-            $task = TaskModel::findById($taskId, $phase->getId());  
+            $task = $instance->taskModel->findById($taskId, $phase->getId());
             if (!$task) {
                 throw new NotFoundException('Task not found.');
             }
@@ -341,7 +359,7 @@ class TaskWorkerEndpoint extends Endpoint
 
             $workers = new WorkerContainer();
             foreach ($data as $worker) {
-                $worker['publicId'] = $worker['id'];    
+                $worker['publicId'] = $worker['id'];
                 unset($worker['id']);
 
                 // Add to budget boundary validator
@@ -355,7 +373,7 @@ class TaskWorkerEndpoint extends Endpoint
                 throw new ValidationException('Worker Validation Failed.', $workValidator->getErrors());
             }
 
-            TaskService::create($task, [ 'worker' => true ]);
+            TaskService::create($task, ['worker' => true]);
 
             Response::success([], 'Workers added successfully.');
         } catch (Throwable $e) {
@@ -363,47 +381,47 @@ class TaskWorkerEndpoint extends Endpoint
         }
     }
 
-/**
- * Updates a task worker's assignment details and status.
- *
- * This method handles the modification of a worker's role within a task, including updating
- * their status, unit rate, and estimated hours. It enforces authorization checks, validates
- * input data, and ensures budget constraints are maintained throughout the update process.
- *
- * Behavior and side effects:
- * - Validates the user has an authorized session and passes CSRF protection checks.
- * - Verifies the provided project ID, phase ID, and task ID are valid UUIDs and retrieves
- *   the corresponding task from the database.
- * - Retrieves and validates the worker exists within the specified project.
- * - Decodes JSON input data from the request body.
- * - Converts status string to WorkerStatus enum if provided.
- * - Parses unitRate and estimatedHour as floats if provided.
- * - Creates a budget boundary validator based on the task's estimated cost.
- * - If the worker status is being set to TERMINATED, subtracts the worker's existing cost
- *   from the budget boundary; otherwise, adds the updated worker cost to the boundary.
- * - Validates unitRate and estimatedHour using ResourceValidator.
- * - Persists the updated worker assignment to the database via TaskWorkerModel::save().
- * - Returns a success response on completion.
- * - Catches and handles all exceptions via ResponseExceptionHandler.
- *
- * @param array $args Associative array containing:
- *                    - 'projectId' (string): UUID of the project
- *                    - 'phaseId' (string): UUID of the phase
- *                    - 'taskId' (string): UUID of the task
- *                    - 'workerId' (string): UUID of the worker to update
- *
- * @throws ForbiddenException If the user lacks authorization, CSRF token is invalid,
- *                            or any required ID parameter is missing or invalid
- * @throws NotFoundException If the task or worker cannot be found
- * @throws ValidationException If input data cannot be decoded or validation fails
- *
- * @return void
- */
-   
+    /**
+     * Updates a task worker's assignment details and status.
+     *
+     * This method handles the modification of a worker's role within a task, including updating
+     * their status, unit rate, and estimated hours. It enforces authorization checks, validates
+     * input data, and ensures budget constraints are maintained throughout the update process.
+     *
+     * Behavior and side effects:
+     * - Validates the user has an authorized session and passes CSRF protection checks.
+     * - Verifies the provided project ID, phase ID, and task ID are valid UUIDs and retrieves
+     *   the corresponding task from the database.
+     * - Retrieves and validates the worker exists within the specified project.
+     * - Decodes JSON input data from the request body.
+     * - Converts status string to WorkerStatus enum if provided.
+     * - Parses unitRate and estimatedHour as floats if provided.
+     * - Creates a budget boundary validator based on the task's estimated cost.
+     * - If the worker status is being set to TERMINATED, subtracts the worker's existing cost
+     *   from the budget boundary; otherwise, adds the updated worker cost to the boundary.
+     * - Validates unitRate and estimatedHour using ResourceValidator.
+     * - Persists the updated worker assignment to the database via TaskWorkerModel::save().
+     * - Returns a success response on completion.
+     * - Catches and handles all exceptions via ResponseExceptionHandler.
+     *
+     * @param array $args Associative array containing:
+     *                    - 'projectId' (string): UUID of the project
+     *                    - 'phaseId' (string): UUID of the phase
+     *                    - 'taskId' (string): UUID of the task
+     *                    - 'workerId' (string): UUID of the worker to update
+     *
+     * @throws ForbiddenException If the user lacks authorization, CSRF token is invalid,
+     *                            or any required ID parameter is missing or invalid
+     * @throws NotFoundException If the task or worker cannot be found
+     * @throws ValidationException If input data cannot be decoded or validation fails
+     *
+     * @return void
+     */
     public static function edit(array $args = []): void
     {
         try {
             self::formRateLimit();
+            $instance = new self();
 
             if (!SessionAuth::hasAuthorizedSession()) {
                 throw new ForbiddenException();
@@ -431,7 +449,7 @@ class TaskWorkerEndpoint extends Endpoint
                 throw new ForbiddenException('Task ID is required.');
             }
 
-            $task = TaskModel::findById($taskId, $phaseId);
+            $task = $instance->taskModel->findById($taskId, $phaseId);
             if (!$task) {
                 throw new NotFoundException('Task not found.');
             }
@@ -441,11 +459,11 @@ class TaskWorkerEndpoint extends Endpoint
                 throw new ForbiddenException('Worker ID is required.');
             }
 
-            $worker = TaskWorkerModel::findById(
+            $worker = $instance->taskWorkerModel->findById(
                 UUID::fromString($workerId),
                 null,
                 null,
-                ProjectModel::findById($projectId)?->getId() ?? null
+                $instance->projectModel->findById($projectId)?->getId() ?? null
             );
             if (!$worker) {
                 throw new NotFoundException('Worker not found.');
@@ -456,14 +474,14 @@ class TaskWorkerEndpoint extends Endpoint
                 throw new ValidationException('Cannot decode data.');
             }
 
-            $status = isset($data['status']) 
-                ? WorkerStatus::from($data['status']) 
+            $status = isset($data['status'])
+                ? WorkerStatus::from($data['status'])
                 : null;
-            $unitRate = isset($data['unitRate']) 
-                ? (float) $data['unitRate'] 
+            $unitRate = isset($data['unitRate'])
+                ? (float) $data['unitRate']
                 : null;
-            $estimatedHour = isset($data['estimatedHour']) 
-                ? (float) $data['estimatedHour'] 
+            $estimatedHour = isset($data['estimatedHour'])
+                ? (float) $data['estimatedHour']
                 : null;
 
             // Validate budget boundaries
@@ -485,12 +503,12 @@ class TaskWorkerEndpoint extends Endpoint
             $resourceValidator->validateMultiple([
                 'unitRate'      => $unitRate,
                 'hoursAssigned' => $estimatedHour
-            ]);  
+            ]);
             if ($resourceValidator->hasErrors()) {
                 throw new ValidationException('Worker Validation Failed.', $resourceValidator->getErrors());
             }
 
-            TaskWorkerModel::save([
+            $instance->taskWorkerModel->save([
                 'taskId'        => $task->getId(),
                 'workerId'      => $worker->getId(),
                 'status'        => $status,
@@ -536,6 +554,7 @@ class TaskWorkerEndpoint extends Endpoint
     {
         try {
             self::formRateLimit();
+            $instance = new self();
 
             if (!SessionAuth::hasAuthorizedSession()) {
                 throw new ForbiddenException();
@@ -549,7 +568,7 @@ class TaskWorkerEndpoint extends Endpoint
                 throw new ForbiddenException('Project ID is required.');
             }
 
-            $project = ProjectModel::findById($projectId);
+            $project = $instance->projectModel->findById($projectId);
             if (!$project) {
                 throw new NotFoundException('Project not found.');
             }
@@ -561,7 +580,7 @@ class TaskWorkerEndpoint extends Endpoint
                 throw new ForbiddenException('Phase ID is required.');
             }
 
-            $phase = PhaseModel::findById($phase);
+            $phase = $instance->phaseModel->findById($phase);
             if (!$phase) {
                 throw new NotFoundException('Phase not found.');
             }
@@ -573,7 +592,7 @@ class TaskWorkerEndpoint extends Endpoint
                 throw new ForbiddenException('Task ID is required.');
             }
 
-            $task = TaskModel::findById($task, $phase->getId());
+            $task = $instance->taskModel->findById($task, $phase->getId());
             if (!$task) {
                 throw new NotFoundException('Task not found.');
             }
@@ -585,12 +604,12 @@ class TaskWorkerEndpoint extends Endpoint
                 throw new ForbiddenException('Worker ID is required.');
             }
 
-            $worker = ProjectWorkerModel::findById($workerId, $project->getId(), true);
+            $worker = $instance->projectWorkerModel->findById($workerId, $project->getId(), true);
             if (!$worker) {
                 throw new NotFoundException('Worker not found.');
             }
 
-            TaskWorkerModel::delete([
+            $instance->taskWorkerModel->delete([
                 'taskId'    => $task->getId(),
                 'workerId'  => $worker->getId(),
             ]);
@@ -604,7 +623,5 @@ class TaskWorkerEndpoint extends Endpoint
     /**
      * Not implemented (No use case)
      */
-    public static function create(array $args = []): void
-    {
-    }
+    public static function create(array $args = []): void {}
 }

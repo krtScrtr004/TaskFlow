@@ -33,6 +33,18 @@ use ValueError;
 
 class ProjectEndpoint extends Endpoint
 {
+    private ProjectModel $projectModel;
+    private PhaseModel $phaseModel;
+
+    private ProjectService $service;
+
+    private function __construct()
+    {
+        $this->projectModel = new ProjectModel();
+        $this->phaseModel = new PhaseModel();
+
+        $this->service = new ProjectService();
+    }
 
     /**
      * Retrieves projects by key with optional filtering and pagination.
@@ -100,7 +112,8 @@ class ProjectEndpoint extends Endpoint
                 'limit' => isset($_GET['limit']) ? (int) $_GET['limit'] : 50,
             ];
 
-            $projects = ProjectModel::search(
+            $instance = new self();
+            $projects = $instance->projectModel->search(
                 $key,
                 Me::getInstance()->getId(),
                 $status,
@@ -108,13 +121,13 @@ class ProjectEndpoint extends Endpoint
             );
 
             if (!$projects) {
-                Response::success([], 'No tasks found for the specified project.');
+                Response::success([], 'No projects found for the specified key.');
             } else {
                 $return = [];
                 foreach ($projects as $project) {
                     $return[] = $project;
                 }
-                Response::success($return, 'Tasks fetched successfully.');
+                Response::success($return, 'Projects fetched successfully.');
             }
         } catch (Throwable $e) {
             ResponseExceptionHandler::handle('Fetch Projects Failed.', $e);
@@ -192,7 +205,8 @@ class ProjectEndpoint extends Endpoint
             }
 
             // Check if user has active project 
-            if (ProjectModel::findManagerActiveProjectByManagerId(Me::getInstance()->getId())) {
+            $instance = new self();
+            if ($instance->projectModel->findManagerActiveProjectByManagerId(Me::getInstance()->getId())) {
                 throw new ForbiddenException('User already has an active project.');
             }
 
@@ -325,6 +339,7 @@ class ProjectEndpoint extends Endpoint
     {
         try {
             self::formRateLimit();
+            $instance = new self();
 
             if (!SessionAuth::hasAuthorizedSession()) {
                 throw new ForbiddenException();
@@ -347,7 +362,7 @@ class ProjectEndpoint extends Endpoint
                 throw new ValidationException('Cannot decode data.');
             }
 
-            $project = ProjectModel::findFull($projectId, ['phases' => true]);
+            $project = $instance->projectModel->findFull($projectId, ['phases' => true]);
             if (!$project) {
                 throw new NotFoundException('Project is not found.');
             }
@@ -400,7 +415,7 @@ class ProjectEndpoint extends Endpoint
                     $existingPhase = null;
                     // Phase to edit / cancel - fetch existing phase for date bounds
                     if ($key === 'toEdit' || $key === 'toCancel') {
-                        $existingPhase = PhaseModel::findById(UUID::fromString($value['publicId']));
+                        $existingPhase = $instance->phaseModel->findById(UUID::fromString($value['publicId']));
                         if (!$existingPhase) {
                             throw new NotFoundException('Phase to edit not found.');
                         }

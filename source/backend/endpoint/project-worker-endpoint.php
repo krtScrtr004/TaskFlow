@@ -7,7 +7,7 @@ use App\Auth\HttpAuth;
 use App\Auth\SessionAuth;
 use App\Container\WorkerContainer;
 use App\Core\UUID;
-use App\Dependent\Worker;
+use App\Entity\Worker;
 use App\Exception\ForbiddenException;
 use App\Exception\ValidationException;
 use App\Middleware\Response;
@@ -23,6 +23,14 @@ use Throwable;
 
 class ProjectWorkerEndpoint extends Endpoint
 {
+    private ProjectModel $projectModel;
+    private ProjectWorkerModel $projectWorkerModel;
+
+    private function __construct()
+    {
+        $this->projectModel = new ProjectModel();
+        $this->projectWorkerModel = new ProjectWorkerModel();
+    }
 
     /**
      * Retrieves a worker associated with a specific project by their IDs.
@@ -50,6 +58,7 @@ class ProjectWorkerEndpoint extends Endpoint
     {
         try {
             self::rateLimit();
+            $instance = new self();
 
             if (!HttpAuth::isGETRequest()) {
                 throw new ForbiddenException('Invalid HTTP request method.');
@@ -73,13 +82,13 @@ class ProjectWorkerEndpoint extends Endpoint
                 throw new ForbiddenException('Project ID is required.');
             }
 
-            $project = ProjectModel::findById($projectId);
+            $project = $instance->projectModel->findById($projectId);
             if (!isset($projectId) && !$project) {
                 throw new NotFoundException('Project not found.');
             }
 
 
-            $worker = ProjectWorkerModel::findById($workerId, $project->getId() ?? null, true);
+            $worker = $instance->projectWorkerModel->findById($workerId, $project->getId() ?? null, true);
             if (!$worker) {
                 throw new NotFoundException('Worker not found.');
             }
@@ -132,6 +141,7 @@ class ProjectWorkerEndpoint extends Endpoint
     {
         try {
             self::rateLimit();
+            $instance = new self();
 
             if (!HttpAuth::isGETRequest()) {
                 throw new ForbiddenException('Invalid HTTP request method.');
@@ -149,7 +159,7 @@ class ProjectWorkerEndpoint extends Endpoint
             }
 
             $project = $projectId
-                ? ProjectModel::findById($projectId) 
+                ? $instance->projectModel->findById($projectId) 
                 : null;
             if (isset($projectId) && !$project) {
                 throw new NotFoundException('Project not found.');
@@ -162,7 +172,7 @@ class ProjectWorkerEndpoint extends Endpoint
                 foreach ($ids as $id) {
                     $uuids[] = UUID::fromString($id);
                 }
-                $workers = ProjectWorkerModel::findMultipleById($uuids, $project?->getId() ?? null, false);
+                $workers = $instance->projectWorkerModel->findMultipleById($uuids, $project?->getId() ?? null, false);
             } else {
                 $key = null;
                 if (isset($_GET['key']) && trim($_GET['key']) !== '') {
@@ -182,7 +192,7 @@ class ProjectWorkerEndpoint extends Endpoint
                     }
                 }
 
-                $workers = ProjectWorkerModel::search(
+                $workers = $instance->projectWorkerModel->search(
                     $key,
                     $project?->getId() ?? $projectId,
                     $status,
@@ -236,6 +246,7 @@ class ProjectWorkerEndpoint extends Endpoint
     {
         try {
             self::formRateLimit();
+            $instance = new self();
 
             if (!SessionAuth::hasAuthorizedSession()) {
                 throw new ForbiddenException();
@@ -254,7 +265,7 @@ class ProjectWorkerEndpoint extends Endpoint
                 throw new ForbiddenException('Project ID is required.');
             }
 
-            $project = ProjectModel::findById($projectId);
+            $project = $instance->projectModel->findById($projectId);
             if (!$project) {
                 throw new NotFoundException('Project not found.');
             }
@@ -271,7 +282,7 @@ class ProjectWorkerEndpoint extends Endpoint
                     'defaultRate'   => $worker['defaultRate']
                 ]));
             }
-            ProjectWorkerModel::createMultiple($project->getId(), $workerContainer); 
+            $instance->projectWorkerModel->createMultiple($project->getId(), $workerContainer); 
 
             Response::success([], 'Workers added successfully.');
         } catch (Throwable $e) {
@@ -310,6 +321,7 @@ class ProjectWorkerEndpoint extends Endpoint
     {
         try {
             self::formRateLimit();
+            $instance = new self();
 
             if (!SessionAuth::hasAuthorizedSession()) {
                 throw new ForbiddenException();
@@ -323,7 +335,7 @@ class ProjectWorkerEndpoint extends Endpoint
                 throw new ForbiddenException('Project ID is required.');
             }
 
-            $project = ProjectModel::findById($projectId);
+            $project = $instance->projectModel->findById($projectId);
             if (!$project) {
                 throw new NotFoundException('Project not found.');
             }
@@ -335,7 +347,7 @@ class ProjectWorkerEndpoint extends Endpoint
                 throw new ForbiddenException('Worker ID is required.');
             }
 
-            $worker = ProjectWorkerModel::findById($workerId, $project->getId(), true);
+            $worker = $instance->projectWorkerModel->findById($workerId, $project->getId(), true);
             if (!$worker) {
                 throw new NotFoundException('Worker not found.');
             }
@@ -345,7 +357,7 @@ class ProjectWorkerEndpoint extends Endpoint
                 throw new ValidationException('Cannot decode data.');
             }
 
-            ProjectWorkerModel::save([
+            $instance->projectWorkerModel->save([
                 'projectId' => $project->getId(),
                 'workerId' => $worker->getId(),
                 'status' => isset($data['status']) ? WorkerStatus::from($data['status']) : null,
@@ -383,6 +395,7 @@ class ProjectWorkerEndpoint extends Endpoint
     {
         try {
             self::formRateLimit();
+            $instance = new self();
 
             if (!SessionAuth::hasAuthorizedSession()) {
                 throw new ForbiddenException();
@@ -396,7 +409,7 @@ class ProjectWorkerEndpoint extends Endpoint
                 throw new ForbiddenException('Project ID is required.');
             }
 
-            $project = ProjectModel::findById($projectId);
+            $project = $instance->projectModel->findById($projectId);
             if (!$project) {
                 throw new NotFoundException('Project not found.');
             }
@@ -408,12 +421,12 @@ class ProjectWorkerEndpoint extends Endpoint
                 throw new ForbiddenException('Worker ID is required.');
             }
 
-            $worker = ProjectWorkerModel::findById($workerId, $project->getId(), true);
+            $worker = $instance->projectWorkerModel->findById($workerId, $project->getId(), true);
             if (!$worker) {
                 throw new NotFoundException('Worker not found.');
             }
 
-            ProjectWorkerModel::delete([
+            $instance->projectWorkerModel->delete([
                 'projectId' => $project->getId(),
                 'workerId' => $worker->getId(),
             ]);

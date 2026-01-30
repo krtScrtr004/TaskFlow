@@ -4,7 +4,7 @@ namespace App\Endpoint;
 
 use App\Abstract\Endpoint;
 use App\Core\Session;
-use App\Dependent\Worker;
+use App\Entity\Worker;
 use App\Enumeration\Role;
 use App\Exception\DatabaseException;
 use App\Middleware\Csrf;
@@ -15,7 +15,7 @@ use App\Enumeration\Gender;
 use App\Auth\SessionAuth;
 use App\Container\JobTitleContainer;
 use App\Core\Me;
-use App\Dependent\ProjectManager;
+use App\Entity\ProjectManager;
 use App\Exception\ForbiddenException;
 use App\Exception\NotFoundException;
 use App\Exception\ValidationException;
@@ -29,10 +29,16 @@ use Throwable;
 
 class AuthEndpoint extends Endpoint
 {
+    private UserModel $userModel;
+    private TemporaryLinkModel $temporaryLinkModel;
+
     private AuthService $service;
 
     private function __construct()
     {
+        $this->userModel = new UserModel();
+        $this->temporaryLinkModel = new TemporaryLinkModel();
+
         $this->service = new AuthService();
         $this->rateLimiter = new RateLimiter();
     }
@@ -78,7 +84,8 @@ class AuthEndpoint extends Endpoint
             }
 
             // Verify credentials
-            $user = UserModel::findByEmail($email);
+            $instance = new self();
+            $user = $instance->userModel->findByEmail($email);
             // Check if user exists and password is correct and account is not deleted
             if (!$user || !password_verify($password, $user->getPassword()) || $user->getDeletedAt() !== null) {
                 throw new ValidationException('Login Failed.', [
@@ -194,7 +201,7 @@ class AuthEndpoint extends Endpoint
             }
 
             // Check if email / contact number already exists
-            $hasDuplicate = UserModel::hasDuplicateInfo($email, $contactNumber);
+            $hasDuplicate = $instance->userModel->hasDuplicateInfo($email, $contactNumber);
             if ($hasDuplicate['hasDuplicates']) {
                 $duplicateErrors = [];
                 if (isset($hasDuplicate['email']) && $hasDuplicate['email']) {
@@ -236,10 +243,10 @@ class AuthEndpoint extends Endpoint
                     'password'      => $password,
                     'createdAt'     => new DateTime()
                 ]);
-            UserModel::create($partialUser);
+            $instance->userModel->create($partialUser);
 
             $token = bin2hex(random_bytes(16));
-            TemporaryLinkModel::create([
+            $instance->temporaryLinkModel->create([
                 'email' => $email,
                 'token' => $token
             ]);
@@ -308,6 +315,8 @@ class AuthEndpoint extends Endpoint
     public static function confirmEmail(): void
     {
         try {
+            $instance = new self();
+
             $data = decodeData('php://input');
             if (!$data) {
                 throw new ValidationException('Cannot decode data.');
@@ -318,7 +327,7 @@ class AuthEndpoint extends Endpoint
                 throw new ForbiddenException('Token is required.');
             }
 
-            $isValid = TemporaryLinkModel::search($token);
+            $isValid = $instance->temporaryLinkModel->search($token);
             if (!$isValid) {
                 throw new NotFoundException('Invalid token provided.');
             }
@@ -328,24 +337,24 @@ class AuthEndpoint extends Endpoint
                 throw new NotFoundException('Email not found.');
             }
 
-            $user = UserModel::findByEmail($email);
+            $user = $instance->userModel->findByEmail($email);
             if (!$user) {
                 throw new NotFoundException('User not found.');
             }
 
             // Check if the link has expired (valid for 30 days)
             if ((new DateTime())->getTimestamp() - (new DateTime($isValid['createdAt']))->getTimestamp() > (86400 * 30)) {
-                UserModel::hardDelete($user); // Delete unconfirmed user from the database
-                TemporaryLinkModel::delete($token);
+                $instance->userModel->hardDelete($user); // Delete unconfirmed user from the database
+                $instance->temporaryLinkModel->delete($token);
                 throw new ForbiddenException('The email confirmation link has expired.');
             }
 
             // Confirm user's email
-            UserModel::save([
+            $instance->userModel->save([
                 'id'        => $user->getId(),
                 'confirm'   => true
             ]);
-            TemporaryLinkModel::delete($token);
+            $instance->temporaryLinkModel->delete($token);
 
             Response::success([], 'Email confirmed successfully.');
         } catch (Throwable $e) {
@@ -400,13 +409,13 @@ class AuthEndpoint extends Endpoint
             }
 
             // Check if user exists
-            $user = UserModel::findByEmail($email);
+            $user = $instance->userModel->findByEmail($email);
             if (!$user) {
                 throw new NotFoundException('Email not found.');
             }
 
             $token = bin2hex(random_bytes(16));
-            TemporaryLinkModel::create([
+            $instance->temporaryLinkModel->create([
                 'email' => $email,
                 'token' => $token
             ]);
@@ -419,7 +428,7 @@ class AuthEndpoint extends Endpoint
             Response::success([], 'Reset password link has been sent to your email.');
         } catch (Throwable $e) {
             // Clean up the temporary link if email sending fails
-            TemporaryLinkModel::delete($email);
+            $instance->temporaryLinkModel->delete($email);
             ResponseExceptionHandler::handle('Reset Password Failed.', $e);
         }
     }
@@ -452,6 +461,8 @@ class AuthEndpoint extends Endpoint
             Csrf::protect();
             self::rateLimit(3, 3600); // 3 requests per hour
 
+            $instance = new self();
+
             $data = decodeData('php://input');
             if (!$data) {
                 throw new ValidationException('Cannot decode data.');
@@ -463,7 +474,7 @@ class AuthEndpoint extends Endpoint
             }
 
             // Verify token validity
-            $isValid = TemporaryLinkModel::search($token);
+            $isValid = $instance->temporaryLinkModel->search($token);
             if (!$isValid) {
                 throw new NotFoundException('Invalid token provided.');
             }
@@ -476,11 +487,11 @@ class AuthEndpoint extends Endpoint
             // Check if the link has expired (valid for 5 minutes)
             $createdAt = new DateTime($isValid['updatedAt'] ?? $isValid['createdAt']);
             if ((new DateTime())->getTimestamp() - $createdAt->getTimestamp() > 300) {
-                TemporaryLinkModel::delete($token);
+                $instance->temporaryLinkModel->delete($token);
                 throw new ForbiddenException('The password reset link has expired. Please request a new one.');
             }
 
-            $user = UserModel::findByEmail($email);
+            $user = $instance->userModel->findByEmail($email);
             if (!$user) {
                 throw new NotFoundException('User not found.');
             }
@@ -496,13 +507,13 @@ class AuthEndpoint extends Endpoint
             }
 
             // Update password
-            UserModel::save([
+            $instance->userModel->save([
                 'id'        => $user->getId(),
                 'password'  => $newPassword
             ]);
 
             // Delete temporary link token in the database
-            TemporaryLinkModel::delete($token);
+            $instance->temporaryLinkModel->delete($token);
 
             Response::success([], 'Password changed successfully.');
         } catch (Throwable $e) {
