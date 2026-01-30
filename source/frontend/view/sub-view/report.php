@@ -1,7 +1,7 @@
 <?php
 
 use App\Core\UUID;
-use App\Enumeration\TaskPriority;
+use App\Enumeration\Priority;
 use App\Enumeration\WorkStatus;
 use App\Middleware\Csrf;
 use App\Utility\ProjectProgressCalculator;
@@ -274,7 +274,7 @@ $performance = ($reportData['phases']?->count() > 0)
                         <div class="combination-breakdown no-display">
                             <?php foreach (WorkStatus::cases() as $status): ?>
                                 <div class="status-group" data-status="<?= $status->value ?>">
-                                    <?php foreach (TaskPriority::cases() as $priority): ?>
+                                    <?php foreach (Priority::cases() as $priority): ?>
                                         <?php 
                                         $combo = $combinationBreakdown[$status->value][$priority->value] ?? [];
                                         $count = $combo['count'] ?? 0;

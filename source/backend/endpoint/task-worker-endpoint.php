@@ -10,7 +10,7 @@ use App\Entity\TaskWorker;
 use App\Entity\ResourceType;
 use App\Entity\Task;
 use App\Enumeration\ResourceTypeMapping;
-use App\Enumeration\TaskPriority;
+use App\Enumeration\Priority;
 use App\Enumeration\WorkerStatus;
 use App\Enumeration\WorkStatus;
 use App\Exception\ForbiddenException;

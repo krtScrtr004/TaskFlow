@@ -682,7 +682,8 @@ class PhaseModel extends Model
         }
 
         try {
-            return TaskModel::findAllByPhaseId($phaseId, null, null, $options);
+            $taskModel = new TaskModel();
+            return $taskModel->findAllByPhaseId($phaseId, null, null, $options);
         } catch (Exception $e) {
             throw $e;
         }

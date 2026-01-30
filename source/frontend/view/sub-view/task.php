@@ -7,7 +7,7 @@ use App\Entity\Project;
 use App\Entity\Task;
 use App\Enumeration\Role;
 use App\Enumeration\WorkStatus;
-use App\Enumeration\TaskPriority;
+use App\Enumeration\Priority;
 use App\Enumeration\WorkerStatus;
 use App\Exception\NotFoundException;
 use App\Middleware\Csrf;
@@ -154,7 +154,7 @@ $worksOn = $taskModel->worksOn($task->getId(), Me::getInstance()->getId(), $proj
 
             <!-- Task Priority -->
             <div class="task-priority">
-                <?= TaskPriority::badge($taskData['priority']) ?>
+                <?= Priority::badge($taskData['priority']) ?>
             </div>
 
 

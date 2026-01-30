@@ -13,7 +13,7 @@ use App\Entity\TaskWorker;
 use App\Entity\Project;
 use App\Exception\DatabaseException;
 use App\Enumeration\WorkStatus;
-use App\Enumeration\TaskPriority;
+use App\Enumeration\Priority;
 use App\Entity\Task;
 use DateTime;
 use Exception;
@@ -123,7 +123,7 @@ class TaskModel extends Model
      * @param int|UUID|null $phaseId Phase ID or UUID to narrow tasks by project phase.
      * @param int|UUID|null $projectId Project ID or UUID to filter tasks by project.
      * @param WorkStatus|null $status Optional work status to filter tasks.
-     * @param TaskPriority|null $priority Optional task priority to filter tasks.
+     * @param Priority|null $priority Optional task priority to filter tasks.
      * @param array $options Pagination options:
      *      - limit: int Maximum number of results to return (default: 10)
      *      - offset: int Number of results to skip (default: 0)
@@ -139,7 +139,7 @@ class TaskModel extends Model
         int|UUID|null $phaseId = null,
         int|UUID|null $projectId = null,
         WorkStatus|null $status = null,
-        TaskPriority|null $priority = null,
+        Priority|null $priority = null,
         array $options = [
             'limit' => 10,
             'offset' => 0,
@@ -316,7 +316,7 @@ class TaskModel extends Model
      *
      * @param int|UUID $phaseId The phase identifier (integer or UUID) to filter tasks by.
      * @param int|UUID|null $projectId (optional) The project identifier (integer or UUID) to further filter tasks.
-     * @param WorkStatus|TaskPriority|null $filter (optional) Filter tasks by work status or priority.
+     * @param WorkStatus|Priority|null $filter (optional) Filter tasks by work status or priority.
      * @param array $options (optional) Pagination options:
      *      - offset: int The starting index for results (default: 0).
      *      - limit: int The maximum number of results to return (default: 10).
@@ -329,7 +329,7 @@ class TaskModel extends Model
     public function findAllByPhaseId(
         int|UUID $phaseId,
         int|UUID|null $projectId = null,
-        WorkStatus|TaskPriority|null $filter = null,
+        WorkStatus|Priority|null $filter = null,
         array $options = [
             'offset' => 0,
             'limit' => 10,
@@ -367,7 +367,7 @@ class TaskModel extends Model
             if ($filter instanceof WorkStatus) {
                 $whereClause .= ' AND t.status = :status';
                 $params[':status'] = $filter->value;
-            } elseif ($filter instanceof TaskPriority) {
+            } elseif ($filter instanceof Priority) {
                 $whereClause .= ' AND t.priority = :priority';
                 $params[':priority'] = $filter->value;
             }
@@ -387,7 +387,7 @@ class TaskModel extends Model
      *
      * @param int|UUID $workerId The worker's identifier (integer ID or UUID).
      * @param int|UUID|null $projectId (Optional) The project's identifier (integer ID or UUID). If null, tasks from all projects are included.
-     * @param WorkStatus|TaskPriority|null $filter Optional filter to narrow down tasks by status or priority.
+     * @param WorkStatus|Priority|null $filter Optional filter to narrow down tasks by status or priority.
      * @param array $options (Optional) Query options:
      *      - offset: int (default 0) The number of records to skip.
      *      - limit: int (default 10) The maximum number of records to return.
@@ -400,7 +400,7 @@ class TaskModel extends Model
     public function findAssignedToWorker(
         int|UUID $workerId,
         int|UUID|null $projectId = null,
-        WorkStatus|TaskPriority|null $filter = null,
+        WorkStatus|Priority|null $filter = null,
         array $options = [
             'offset' => 0,
             'limit' => 10,
@@ -441,7 +441,7 @@ class TaskModel extends Model
             if ($filter instanceof WorkStatus) {
                 $whereClause .= ' AND t.status = :status';
                 $params[':status'] = $filter->value;
-            } elseif ($filter instanceof TaskPriority) {
+            } elseif ($filter instanceof Priority) {
                 $whereClause .= ' AND t.priority = :priority';
                 $params[':priority'] = $filter->value;
             }
@@ -658,7 +658,7 @@ class TaskModel extends Model
             $taskPublicId       = $task->getPublicId() ?? UUID::get();
             $taskName           = trimOrNull($task->getName());
             $taskDescription    = trimOrNull($task->getDescription());
-            $taskPriority       = $task->getPriority()->value;
+            $Priority       = $task->getPriority()->value;
             $taskStatus         = $task->getStatus()->value;
             $taskStartDateTime  = formatDateTime($task->getStartDateTime());
             $completionDateTime = formatDateTime($task->getCompletionDateTime());
@@ -692,7 +692,7 @@ class TaskModel extends Model
                 ':phaseId'              => is_int($phaseId) ? $phaseId : UUID::toBinary($phaseId),
                 ':name'                 => $taskName,
                 ':description'          => $taskDescription,
-                ':priority'             => $taskPriority,
+                ':priority'             => $Priority,
                 ':status'               => $taskStatus,
                 ':startDateTime'        => $taskStartDateTime,
                 ':completionDateTime'   => $completionDateTime,
@@ -745,7 +745,7 @@ class TaskModel extends Model
      *      - publicId: UUID|null The public UUID of the task to update.
      *      - name: string|null The new name of the task.
      *      - description: string|null The new description of the task.
-     *      - priority: TaskPriority|null The new priority of the task.
+     *      - priority: Priority|null The new priority of the task.
      *      - status: WorkStatus|null The new status of the task.
      *      - startDateTime: DateTime|null The new start date/time of the task.
      *      - completionDateTime: DateTime|null The new completion date/time of the task.

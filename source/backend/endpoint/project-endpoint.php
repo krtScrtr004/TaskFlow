@@ -99,7 +99,7 @@ class ProjectEndpoint extends Endpoint
             $status = null;
             if (isset($_GET['filter']) && strcasecmp($_GET['filter'], 'all') !== 0) {
                 $filterValue = $_GET['filter'];
-                // Try to parse as WorkStatus first, then TaskPriority if later fails
+                // Try to parse as WorkStatus first, then Priority if later fails
                 try {
                     $status = WorkStatus::from($filterValue);
                 } catch (ValueError $e) {

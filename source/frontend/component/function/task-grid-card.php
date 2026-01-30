@@ -2,7 +2,7 @@
 
 use App\Entity\Task;
 use App\Core\UUID;
-use App\Enumeration\TaskPriority;
+use App\Enumeration\Priority;
 use App\Enumeration\WorkStatus;
 
 /**
@@ -15,7 +15,7 @@ use App\Enumeration\WorkStatus;
  * - Formats start/completion datetimes using dateToWords().
  * - Escapes user-facing values with htmlspecialchars() to prevent XSS.
  * - Builds a redirect URL using REDIRECT_PATH, DS and the provided project UUID and task/phase ids.
- * - Uses TaskPriority::badge() and WorkStatus::badge() to render status/priority badges.
+ * - Uses Priority::badge() and WorkStatus::badge() to render status/priority badges.
  * - Captures the generated HTML using output buffering (ob_start/ob_get_clean).
  *
  * @param Task $task Task instance to render. The function expects the task to provide:
@@ -25,7 +25,7 @@ use App\Enumeration\WorkStatus;
  *      - getStartDateTime(): mixed Start date/time value accepted by dateToWords()
  *      - getCompletionDateTime(): mixed Completion date/time value accepted by dateToWords()
  *      - getStatus(): mixed Status value consumed by WorkStatus::badge()
- *      - getPriority(): mixed Priority value consumed by TaskPriority::badge()
+ *      - getPriority(): mixed Priority value consumed by Priority::badge()
  *      - getAdditionalInfo(): array|null Additional info array where a 'phaseId' key (UUID|string) may be present
  *
  * @param UUID $projectId UUID of the project used to construct the task's redirect URL.
@@ -85,7 +85,7 @@ function taskGridCard(Task $task, UUID $projectId): string
 
             <section class="task-badge flex-row flex-child-end-h">
                 <?php
-                echo TaskPriority::badge($priority);
+                echo Priority::badge($priority);
                 echo WorkStatus::badge($status)
                     ?>
             </section>

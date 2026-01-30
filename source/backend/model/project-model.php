@@ -6,7 +6,7 @@ use App\Abstract\Model;
 use App\Container\PhaseContainer;
 use App\Container\TaskContainer;
 use App\Entity\Phase;
-use App\Enumeration\TaskPriority;
+use App\Enumeration\Priority;
 use App\Core\UUID;
 use App\Enumeration\WorkStatus;
 use App\Container\ProjectContainer;
@@ -905,7 +905,7 @@ class ProjectModel extends Model
      * - Converts identifiers and typed values:
      *     - Task and Phase public IDs are converted from hex strings using UUID::fromHex()
      *     - Project public ID is converted from binary using UUID::fromBinary()
-     *     - Priority and status values are converted to enums via TaskPriority::from() and WorkStatus::from()
+     *     - Priority and status values are converted to enums via Priority::from() and WorkStatus::from()
      *     - Datetime strings are converted to DateTime instance; nullable actual completion timestamps are handled
      * - Computes worker status breakdown:
      *     - Builds per-status count and percentage (percentage computed as (count / total) * 100, or 0 when total is 0)
@@ -938,7 +938,7 @@ class ProjectModel extends Model
      *     - taskId: int
      *     - taskPublicId: string (hex; converted via UUID::fromHex)
      *     - taskName: string
-     *     - taskPriority: string (value for TaskPriority::from)
+     *     - Priority: string (value for Priority::from)
      *     - taskStatus: string (value for WorkStatus::from)
      *     - taskStartDateTime: string
      *     - taskCompletionDateTime: string
@@ -997,7 +997,7 @@ class ProjectModel extends Model
                         'id'                        => $task['id'],
                         'publicId'                  => UUID::fromHex($task['public_id']),
                         'name'                      => $task['name'],
-                        'priority'                  => TaskPriority::from($task['priority']),
+                        'priority'                  => Priority::from($task['priority']),
                         'status'                    => WorkStatus::from($task['status']),
                         'startDateTime'             => new DateTime($task['start_date_time']),
                         'completionDateTime'        => new DateTime($task['completion_date_time']),
@@ -1111,7 +1111,7 @@ class ProjectModel extends Model
      *         - taskId: int
      *         - taskPublicId: string (hex representation)
      *         - taskName: string
-     *         - taskPriority: mixed (as stored)
+     *         - Priority: mixed (as stored)
      *         - taskStatus: string
      *         - taskStartDateTime: string|null
      *         - taskCompletionDateTime: string|null
@@ -1494,9 +1494,9 @@ class ProjectModel extends Model
                             CASE 
                                 WHEN pt.status = 'completed' THEN
                                     CASE 
-                                        WHEN pt.priority = '" . TaskPriority::HIGH->value . "' THEN 5.0
-                                        WHEN pt.priority = '" . TaskPriority::MEDIUM->value . "' THEN 3.0
-                                        WHEN pt.priority = '" . TaskPriority::LOW->value . "' THEN 1.0
+                                        WHEN pt.priority = '" . Priority::HIGH->value . "' THEN 5.0
+                                        WHEN pt.priority = '" . Priority::MEDIUM->value . "' THEN 3.0
+                                        WHEN pt.priority = '" . Priority::LOW->value . "' THEN 1.0
                                         ELSE 1.0
                                     END *
                                     CASE 
@@ -1506,25 +1506,25 @@ class ProjectModel extends Model
                                     END
                                 WHEN pt.status = 'onGoing' THEN
                                     CASE 
-                                        WHEN pt.priority = '" . TaskPriority::HIGH->value . "' THEN 5.0 * 0.5
-                                        WHEN pt.priority = '" . TaskPriority::MEDIUM->value . "' THEN 3.0 * 0.5
-                                        WHEN pt.priority = '" . TaskPriority::LOW->value . "' THEN 1.0 * 0.5
+                                        WHEN pt.priority = '" . Priority::HIGH->value . "' THEN 5.0 * 0.5
+                                        WHEN pt.priority = '" . Priority::MEDIUM->value . "' THEN 3.0 * 0.5
+                                        WHEN pt.priority = '" . Priority::LOW->value . "' THEN 1.0 * 0.5
                                         ELSE 0.5
                                     END
                                 WHEN pt.status = 'delayed' THEN
                                     CASE 
-                                        WHEN pt.priority = '" . TaskPriority::HIGH->value . "' THEN 5.0 * 0.3
-                                        WHEN pt.priority = '" . TaskPriority::MEDIUM->value . "' THEN 3.0 * 0.3
-                                        WHEN pt.priority = '" . TaskPriority::LOW->value . "' THEN 1.0 * 0.3
+                                        WHEN pt.priority = '" . Priority::HIGH->value . "' THEN 5.0 * 0.3
+                                        WHEN pt.priority = '" . Priority::MEDIUM->value . "' THEN 3.0 * 0.3
+                                        WHEN pt.priority = '" . Priority::LOW->value . "' THEN 1.0 * 0.3
                                         ELSE 0.3
                                     END
                                 ELSE 0
                             END
                         ) / SUM(
                             CASE 
-                                WHEN pt.priority = '" . TaskPriority::HIGH->value . "' THEN 5.0 * 1.2
-                                WHEN pt.priority = '" . TaskPriority::MEDIUM->value . "' THEN 3.0 * 1.2
-                                WHEN pt.priority = '" . TaskPriority::LOW->value . "' THEN 1.0 * 1.2
+                                WHEN pt.priority = '" . Priority::HIGH->value . "' THEN 5.0 * 1.2
+                                WHEN pt.priority = '" . Priority::MEDIUM->value . "' THEN 3.0 * 1.2
+                                WHEN pt.priority = '" . Priority::LOW->value . "' THEN 1.0 * 1.2
                                 ELSE 1.2
                             END
                         )

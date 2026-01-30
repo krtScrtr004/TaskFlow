@@ -6,7 +6,7 @@ use App\Auth\SessionAuth;
 use App\Container\TaskContainer;
 use App\Core\Me;
 use App\Core\UUID;
-use App\Enumeration\TaskPriority;
+use App\Enumeration\Priority;
 use App\Enumeration\WorkStatus;
 use App\Exception\ForbiddenException;
 use App\Exception\NotFoundException;
@@ -44,7 +44,7 @@ class TaskController implements Controller
      * - Checks if the user has an authorized session.
      * - Validates and parses the project ID from the arguments.
      * - Retrieves the project by its ID and ensures it exists.
-     * - Optionally filters tasks by a search key or a single filter (WorkStatus or TaskPriority) from query parameters.
+     * - Optionally filters tasks by a search key or a single filter (WorkStatus or Priority) from query parameters.
      * - Supports pagination via 'offset' and 'limit' query parameters.
      * - Fetches tasks for the project using the provided filters and options.
      * - Loads the grid view for tasks.
@@ -55,7 +55,7 @@ class TaskController implements Controller
      * 
      * Query parameters (via $_GET):
      *      - key: string (optional) Search keyword for tasks
-     *      - filter: string (optional) Filter by WorkStatus or TaskPriority; 'all' disables filtering
+     *      - filter: string (optional) Filter by WorkStatus or Priority; 'all' disables filtering
      *      - offset: int (optional) Pagination offset (default: 0)
      *      - limit: int (optional) Pagination limit (default: 50)
      * 
@@ -126,7 +126,7 @@ class TaskController implements Controller
                 ? WorkStatus::from($_GET['status'])
                 : null;
             $priority = isset($_GET['priority'])
-                ? TaskPriority::from($_GET['priority'])
+                ? Priority::from($_GET['priority'])
                 : null;
 
             $options = [

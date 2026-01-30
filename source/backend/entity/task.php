@@ -4,7 +4,7 @@ namespace App\Entity;
 
 use App\Container\ResourceContainer;
 use App\Interface\Entity;
-use App\Enumeration\TaskPriority;
+use App\Enumeration\Priority;
 use App\Enumeration\WorkStatus;
 use App\Container\WorkerContainer;
 use App\Core\UUID;
@@ -27,7 +27,7 @@ class Task implements Entity
     private DateTime $startDateTime;
     private DateTime $completionDateTime;
     private ?DateTime $actualCompletionDateTime;
-    private TaskPriority $priority;
+    private Priority $priority;
     private ?WorkStatus $status;
     private ?DateTime $createdAt;
     private array $additionalInfo;
@@ -46,7 +46,7 @@ class Task implements Entity
      * @param string $name The name of the task
      * @param DateTime $startDateTime The start date and time of the task
      * @param DateTime $completionDateTime The expected completion date and time of the task
-     * @param TaskPriority $priority The priority level of the task
+     * @param Priority $priority The priority level of the task
      * @param WorkStatus $status The current status of the task
      * 
      * @param string|null $description Optional description of the task
@@ -67,7 +67,7 @@ class Task implements Entity
         string $name,
         DateTime $startDateTime,
         DateTime $completionDateTime,
-        TaskPriority $priority,
+        Priority $priority,
         WorkStatus $status,
 
         // Optional
@@ -224,9 +224,9 @@ class Task implements Entity
     /**
      * Gets the priority level of the task.
      *
-     * @return TaskPriority The TaskPriority enum representing the task's priority
+     * @return Priority The Priority enum representing the task's priority
      */
-    public function getPriority(): TaskPriority
+    public function getPriority(): Priority
     {
         return $this->priority;
     }
@@ -502,10 +502,10 @@ class Task implements Entity
     /**
      * Sets the task priority.
      *
-     * @param TaskPriority $priority The TaskPriority enum value to set
+     * @param Priority $priority The Priority enum value to set
      * @return void
      */
-    public function setPriority(TaskPriority $priority): void
+    public function setPriority(Priority $priority): void
     {
         $this->priority = $priority;
     }
@@ -614,7 +614,7 @@ class Task implements Entity
             'startDateTime'             => $data['startDateTime'] ?? new DateTime(),
             'completionDateTime'        => $data['completionDateTime'] ?? new DateTime('+7 days'),
             'actualCompletionDateTime'  => $data['actualCompletionDateTime'] ?? null,
-            'priority'                  => $data['priority'] ?? TaskPriority::MEDIUM,
+            'priority'                  => $data['priority'] ?? Priority::MEDIUM,
             'status'                    => $data['status'] ?? WorkStatus::PENDING,
             'estimatedCost'             => $data['estimatedCost'] ?? DEFAULT_RATE_MIN,
             'actualCost'                => $data['actualCost'] ?? DEFAULT_RATE_MIN,
@@ -655,8 +655,8 @@ class Task implements Entity
         }
 
         // Enum conversions
-        if (isset($data['priority']) && !($data['priority'] instanceof TaskPriority)) {
-            $defaults['priority'] = TaskPriority::tryFrom(trimOrNull($data['priority'])) ?? TaskPriority::MEDIUM;
+        if (isset($data['priority']) && !($data['priority'] instanceof Priority)) {
+            $defaults['priority'] = Priority::tryFrom(trimOrNull($data['priority'])) ?? Priority::MEDIUM;
         }
 
         if (isset($data['status']) && !($data['status'] instanceof WorkStatus)) {
@@ -767,7 +767,7 @@ class Task implements Entity
      * - Converts startDateTime string to DateTime
      * - Converts completionDateTime string to DateTime
      * - Converts actualCompletionDateTime string to DateTime
-     * - Ensures priority is a TaskPriority enum
+     * - Ensures priority is a Priority enum
      * - Ensures status is a WorkStatus object
      * - Converts createdAt string to DateTime
      *
@@ -781,7 +781,7 @@ class Task implements Entity
      *      - startDateTime: string|DateTime Task start date and time
      *      - completionDateTime: string|DateTime Expected task completion date and time
      *      - actualCompletionDateTime: string|DateTime Actual task completion date and time
-     *      - priority: string|TaskPriority Task priority level
+     *      - priority: string|Priority Task priority level
      *      - status: string|WorkStatus Current task status
      *      - estimatedCost: float Estimated cost of the task
      *      - actualCost: float Actual cost of the task
@@ -824,7 +824,7 @@ class Task implements Entity
             : $data['actualCompletionDateTime'];
 
         $priority = (is_string($data['priority']))
-            ? TaskPriority::tryFrom(trimOrNull($data['priority']))
+            ? Priority::tryFrom(trimOrNull($data['priority']))
             : $data['priority'];
 
         $status = (is_string($data['status']))

@@ -11,7 +11,7 @@ use App\Core\UUID;
 use App\Entity\TaskWorker;
 use App\Entity\Task;
 use App\Enumeration\Role;
-use App\Enumeration\TaskPriority;
+use App\Enumeration\Priority;
 use App\Enumeration\WorkerStatus;
 use App\Enumeration\WorkStatus;
 use App\Exception\ForbiddenException;
@@ -224,7 +224,7 @@ class TaskEndpoint extends Endpoint
                 ? WorkStatus::from($_GET['status'])
                 : null;
             $priority = isset($_GET['priority'])
-                ? TaskPriority::from($_GET['priority'])
+                ? Priority::from($_GET['priority'])
                 : null;
 
 
@@ -369,7 +369,7 @@ class TaskEndpoint extends Endpoint
             }
 
             $data['workers'] = $workers;
-            $data['priority'] = TaskPriority::from($data['priority'] ?? TaskPriority::LOW);
+            $data['priority'] = Priority::from($data['priority'] ?? Priority::LOW);
             $data['startDateTime'] = new DateTime($data['startDateTime']);
             $data['completionDateTime'] = new DateTime($data['completionDateTime']);
 
@@ -502,7 +502,7 @@ class TaskEndpoint extends Endpoint
                 $taskData['completionDateTime'] = new DateTime($data['completionDateTime']);
             }
             if (isset($data['priority'])) {
-                $taskData['priority'] = TaskPriority::from($data['priority']);
+                $taskData['priority'] = Priority::from($data['priority']);
             }
             if (isset($data['estimatedCost'])) {
                 $taskData['estimatedCost'] = (float) $data['estimatedCost'];

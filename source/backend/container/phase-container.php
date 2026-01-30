@@ -4,7 +4,7 @@ namespace App\Container;
 
 use App\Abstract\Container;
 use App\Entity\Phase;
-use App\Enumeration\TaskPriority;
+use App\Enumeration\Priority;
 use App\Enumeration\WorkStatus;
 use InvalidArgumentException;
 

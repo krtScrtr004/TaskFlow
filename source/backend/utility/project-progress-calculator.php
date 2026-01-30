@@ -4,10 +4,10 @@ namespace App\Utility;
 
 use App\Container\PhaseContainer;
 use App\Enumeration\WorkStatus;
-use App\Enumeration\TaskPriority;
+use App\Enumeration\Priority;
 
 require_once ENUM_PATH . 'work-status.php';
-require_once ENUM_PATH . 'task-priority.php';
+require_once ENUM_PATH . 'priority.php';
 
 /**
  * Utility class for calculating project progress based on phases and task statuses/priorities
@@ -24,9 +24,9 @@ class ProjectProgressCalculator
 {
     // Weight multipliers for different priorities
     private const PRIORITY_WEIGHTS = [
-        TaskPriority::HIGH->value => 3.0,
-        TaskPriority::MEDIUM->value => 2.0,
-        TaskPriority::LOW->value => 1.0
+        Priority::HIGH->value => 3.0,
+        Priority::MEDIUM->value => 2.0,
+        Priority::LOW->value => 1.0
     ];
 
     // Completion percentage for each status
@@ -278,7 +278,7 @@ class ProjectProgressCalculator
     {
         $breakdown = [];
         
-        foreach (TaskPriority::cases() as $priority) {
+        foreach (Priority::cases() as $priority) {
             $count = $priorityCounts[$priority->value] ?? 0;
             $percentage = $totalTasks > 0 ? ($count / $totalTasks) * 100 : 0.0;
             
@@ -307,7 +307,7 @@ class ProjectProgressCalculator
         
         // Initialize combination matrix
         foreach (WorkStatus::cases() as $status) {
-            foreach (TaskPriority::cases() as $priority) {
+            foreach (Priority::cases() as $priority) {
                 $combinations[$status->value][$priority->value] = [
                     'count' => 0,
                     'percentage' => 0
@@ -333,7 +333,7 @@ class ProjectProgressCalculator
         // Calculate percentages
         if ($totalTasks > 0) {
             foreach (WorkStatus::cases() as $status) {
-                foreach (TaskPriority::cases() as $priority) {
+                foreach (Priority::cases() as $priority) {
                     $count = $combinations[$status->value][$priority->value]['count'];
                     $percentage = ($count / $totalTasks) * 100;
                     $combinations[$status->value][$priority->value]['percentage'] = round($percentage, 2);
@@ -380,7 +380,7 @@ class ProjectProgressCalculator
         }
 
         // High priority tasks status
-        $highPriorityTasks = $priorityCounts[TaskPriority::HIGH->value] ?? 0;
+        $highPriorityTasks = $priorityCounts[Priority::HIGH->value] ?? 0;
         $completedTasks = $statusCounts[WorkStatus::COMPLETED->value] ?? 0;
         
         if ($highPriorityTasks > $completedTasks) {
@@ -409,7 +409,7 @@ class ProjectProgressCalculator
         $ongoingTasks = $statusCounts[WorkStatus::ONGOING->value] ?? 0;
         $pendingTasks = $statusCounts[WorkStatus::PENDING->value] ?? 0;
         $delayedTasks = $statusCounts[WorkStatus::DELAYED->value] ?? 0;
-        $highPriorityTasks = $priorityCounts[TaskPriority::HIGH->value] ?? 0;
+        $highPriorityTasks = $priorityCounts[Priority::HIGH->value] ?? 0;
 
         // Resource allocation
         if ($ongoingTasks > ($totalTasks * 0.6)) {

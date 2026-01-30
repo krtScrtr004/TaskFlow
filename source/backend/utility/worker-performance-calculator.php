@@ -5,11 +5,11 @@ namespace App\Utility;
 use App\Container\ProjectContainer;
 use App\Container\TaskContainer;
 use App\Entity\Task;
-use App\Enumeration\TaskPriority;
+use App\Enumeration\Priority;
 use App\Enumeration\WorkerStatus;
 use App\Enumeration\WorkStatus;
 
-require_once ENUM_PATH . 'task-priority.php';
+require_once ENUM_PATH . 'priority.php';
 require_once ENUM_PATH . 'work-status.php';
 
 /**
@@ -19,9 +19,9 @@ class WorkerPerformanceCalculator
 {
     // Priority weights for performance calculation
     private const PRIORITY_WEIGHTS = [
-        TaskPriority::HIGH->value => 5.0,
-        TaskPriority::MEDIUM->value => 3.0,
-        TaskPriority::LOW->value => 1.0
+        Priority::HIGH->value => 5.0,
+        Priority::MEDIUM->value => 3.0,
+        Priority::LOW->value => 1.0
     ];
 
     // Status multipliers (how much each status contributes to performance)
@@ -401,7 +401,7 @@ class WorkerPerformanceCalculator
      */
     private static function calculateTaskScore(Task $task): array
     {
-        $priority = $task->getPriority()->value ?? TaskPriority::MEDIUM->value;
+        $priority = $task->getPriority()->value ?? Priority::MEDIUM->value;
         $status = $task->getStatus()->value ?? WorkStatus::PENDING->value;
         $startDate = $task->getStartDateTime() ?: null;
         $completionDate = $task->getCompletionDateTime() ?: null;

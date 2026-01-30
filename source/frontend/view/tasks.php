@@ -1,7 +1,7 @@
 <?php
 use App\Core\Me;
 use App\Core\UUID;
-use App\Enumeration\TaskPriority;
+use App\Enumeration\Priority;
 use App\Enumeration\Role;
 use App\Enumeration\WorkStatus;
 use App\Middleware\Csrf;
@@ -61,9 +61,9 @@ if (!isset($tasks)) {
                     WorkStatus::CANCELLED->getDisplayName()
                 ],
                 'Priority' => [
-                    TaskPriority::HIGH->getDisplayName(),
-                    TaskPriority::MEDIUM->getDisplayName(),
-                    TaskPriority::LOW->getDisplayName()
+                    Priority::HIGH->getDisplayName(),
+                    Priority::MEDIUM->getDisplayName(),
+                    Priority::LOW->getDisplayName()
                 ]
             ]) ?>
         </section>

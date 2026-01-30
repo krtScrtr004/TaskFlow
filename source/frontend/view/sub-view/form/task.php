@@ -1,7 +1,7 @@
 <?php
 
 use App\Core\UUID;
-use App\Enumeration\TaskPriority;
+use App\Enumeration\Priority;
 use App\Middleware\Csrf;
 
 if (!$project) throw new Exception('Project data is required to render this page');
@@ -255,7 +255,7 @@ if (!isset($task)) {
                                 </label>
 
                                 <select name="priority" id="priority" required>
-                                    <?php foreach (TaskPriority::cases() as $priority):
+                                    <?php foreach (Priority::cases() as $priority):
                                         $isSelected = $priority === $taskData['priority'];
                                     ?>
                                         <option value="<?= $priority->value ?>" <?= $isSelected ? 'selected' : '' ?>><?= $priority->getDisplayName() ?></option>

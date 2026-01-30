@@ -6,8 +6,7 @@ use App\Container\ProjectContainer;
 use App\Enumeration\WorkStatus;
 
 require_once ENUM_PATH . 'work-status.php';
-require_once ENUM_PATH . 'task-priority.php';
-require_once BE_UTILITY_PATH . 'project-progress-calculator.php';
+require_once ENUM_PATH . 'priority.php';
 
 /**
  * Utility class for calculating project manager performance based on managed projects

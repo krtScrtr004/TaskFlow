@@ -4,7 +4,7 @@ namespace App\Container;
 
 use App\Abstract\Container;
 use App\Entity\Task;
-use App\Enumeration\TaskPriority;
+use App\Enumeration\Priority;
 use App\Enumeration\WorkStatus;
 use InvalidArgumentException;
 
@@ -212,11 +212,11 @@ class TaskContainer extends Container
      * priority. It uses the internal arrays that categorize tasks by their priority to
      * efficiently return the count.
      *
-     * @param TaskPriority $priority The priority to count tasks for
+     * @param Priority $priority The priority to count tasks for
      *
      * @return int The count of tasks with the specified priority
      */
-    public function countByPriority(TaskPriority $priority): int
+    public function countByPriority(Priority $priority): int
     {
         return count($this->byPriority[$priority->value] ?? []);
     }
@@ -240,9 +240,9 @@ class TaskContainer extends Container
     public function countAllByPriority(): array
     {
         return [
-            TaskPriority::LOW->value      => count($this->byPriority[TaskPriority::LOW->value] ?? []),
-            TaskPriority::MEDIUM->value   => count($this->byPriority[TaskPriority::MEDIUM->value] ?? []),
-            TaskPriority::HIGH->value     => count($this->byPriority[TaskPriority::HIGH->value] ?? []),
+            Priority::LOW->value      => count($this->byPriority[Priority::LOW->value] ?? []),
+            Priority::MEDIUM->value   => count($this->byPriority[Priority::MEDIUM->value] ?? []),
+            Priority::HIGH->value     => count($this->byPriority[Priority::HIGH->value] ?? []),
         ];
     }
 
@@ -260,10 +260,10 @@ class TaskContainer extends Container
     /**
      * Get tasks indexed by id for a given priority.
      *
-     * @param TaskPriority $priority
+     * @param Priority $priority
      * @return Task[] associative array [id => Task]
      */
-    public function getByPriority(TaskPriority $priority): array
+    public function getByPriority(Priority $priority): array
     {
         return $this->byPriority[$priority->value] ?? [];
     }
@@ -290,11 +290,11 @@ class TaskContainer extends Container
      * Set tasks for a given priority (replaces existing tasks with provided list).
      * Provided tasks should have matching priority values.
      *
-     * @param TaskPriority $priority
+     * @param Priority $priority
      * @param Task[] $tasks
      * @return void
      */
-    public function setByPriority(TaskPriority $priority, array $tasks): void
+    public function setByPriority(Priority $priority, array $tasks): void
     {
         // clear existing tasks for priority
         $this->clearByPriority($priority);
@@ -336,11 +336,11 @@ class TaskContainer extends Container
      * Clears all tasks with the specified priority from the container.
      * Also removes these tasks from their respective status arrays.
      *
-     * @param TaskPriority $priority The priority of tasks to clear
+     * @param Priority $priority The priority of tasks to clear
      *
      * @return void
      */
-    public function clearByPriority(TaskPriority $priority): void
+    public function clearByPriority(Priority $priority): void
     {
         if (!isset($this->byPriority[$priority->value])) {
             return;
