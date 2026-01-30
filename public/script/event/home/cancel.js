@@ -1,5 +1,3 @@
-import { Dialog } from '../../render/dialog.js'
-import { errorListDialog } from '../../render/error-list-dialog.js'
 import { confirmationDialog } from '../../render/confirmation-dialog.js'
 import { Http } from '../../utility/http.js'
 import { handleException } from '../../utility/handle-exception.js'
@@ -7,9 +5,7 @@ import { handleException } from '../../utility/handle-exception.js'
 let isLoading = false
 
 const cancelProjectButton = document.querySelector('#cancel_project_button')
-if (!cancelProjectButton) {
-    console.warn('Cancel Project button not found.')
-}
+if (!cancelProjectButton) console.warn('Cancel Project button not found.')
 
 cancelProjectButton?.addEventListener('click', async (e) => {
     e.preventDefault()
@@ -20,24 +16,17 @@ cancelProjectButton?.addEventListener('click', async (e) => {
         'Are you sure you want to cancel this project? This action cannot be undone.',
     )) return
 
-    const mainProjectContent = document.querySelector('.main-project-content')
-    if (!mainProjectContent) {
-        console.error('Main project content element not found.')
-        Dialog.somethingWentWrong()
-        return
-    }
-    const projectId = mainProjectContent.dataset.projectid
-    if (!projectId) {
-        console.error('Project ID not found in data attributes.')
-        Dialog.somethingWentWrong()
-        return
-    }
-
     try {
+        const mainProjectContent = document.querySelector('.main-project-content')
+        if (!mainProjectContent) throw new Error('Main project content element not found')
+
+        const projectId = mainProjectContent.dataset.projectid
+        if (!projectId) throw new Error('Project ID not found in data attributes.')
+
         await sendToBackend(projectId)
         window.location.reload()
     } catch (error) {
-        handleException(error, `Error cancelling project: ${error}`)
+        handleException(error)
     }
 })
 
@@ -63,14 +52,10 @@ async function sendToBackend(projectId) {
         }
         isLoading = true
 
-        if (!projectId || projectId.trim() === '') {
-            throw new Error('Project ID is required.')
-        }
+        if (!projectId || projectId.trim() === '') throw new Error('Project ID is required')
 
         const response = await Http.PUT(`projects/${projectId}`, { project: {status: 'cancelled'} })
-        if (!response) {
-            throw error
-        }
+        if (!response) throw new Error('No response from server')
     } catch (error) {
         throw error
     } finally {

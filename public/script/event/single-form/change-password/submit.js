@@ -8,16 +8,11 @@ import { Http } from "../../../utility/http.js"
 let isLoading = false
 
 const changePasswordForm = document.querySelector('#change_password_form')
-if (!changePasswordForm) {
-    console.warn('Change Password form not found.')
-}
-
+if (!changePasswordForm) console.warn('Change password form not found')
 changePasswordForm?.addEventListener('submit', e => debounceAsync(submit(e), 300))
 
 const changePasswordButton = changePasswordForm?.querySelector('#change_password_button')
-if (!changePasswordButton) {
-    console.warn('Change Password button not found.')
-}
+if (!changePasswordButton) console.warn('Change password button not found')
 
 changePasswordButton?.addEventListener('click', e => debounceAsync(submit(e), 300))
 
@@ -61,7 +56,10 @@ async function submit(e) {
             password: newPasswordInput 
         })
 
-        Dialog.operationSuccess('Password Changed', 'Your password has been successfully changed.')
+        Dialog.operationSuccess(
+            'Password Changed', 
+            'Your password has been successfully changed.'
+        )
         setTimeout(() => window.location.href = '/login', 1500)
     } catch (error) {
         handleException(error)

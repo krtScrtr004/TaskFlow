@@ -4,16 +4,14 @@ import { Dialog } from '../../render/dialog.js'
 import { errorListDialog } from '../../render/error-list-dialog.js'
 import { debounceAsync } from '../../utility/debounce.js'
 import { handleException } from '../../utility/handle-exception.js'
+import { die } from '../../utility/utility.js'
 
 let isLoading = false
 
 const profile = document.querySelector('.profile')
 
 const deleteMyAccountButton = profile?.querySelector('#delete_my_account_button')
-if (!deleteMyAccountButton) {
-    console.error('Delete My Account button not found.')
-    Dialog.somethingWentWrong()
-}
+if (!deleteMyAccountButton) die('Delete account button not found on the page')
 
 deleteMyAccountButton?.addEventListener('click', e => debounceAsync(submit(e), 300))
 
@@ -47,7 +45,7 @@ async function submit(e) {
         )
         setTimeout(() => window.location.href = '/login', 1500)
     } catch (error) {
-        handleException(error, `Error during account deletion: ${error}`)
+        handleException(error)
     }
 }
 
@@ -66,17 +64,15 @@ async function submit(e) {
  * @returns {Promise<void>} Resolves when the request completes successfully.
  */
 async function sendToBackend() {
+    if (isLoading) {
+        console.warn('Request already in progress. Please wait.')
+        return
+    }
+    isLoading = true
+    
     try {
-        if (isLoading) {
-            console.warn('Request already in progress. Please wait.')
-            return
-        }
-        isLoading = true
-
         const myId = profile?.dataset.myid
-        if (!myId || myId.trim() === '') {
-            throw new Error('User ID not found.')
-        }
+        if (!myId || myId.trim() === '') throw new Error('User ID not found')
 
         await Http.DELETE(`users/${myId}`)
     } catch (error) {

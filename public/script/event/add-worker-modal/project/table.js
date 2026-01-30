@@ -1,4 +1,4 @@
-import { die } from '../../../utility/utility.js'
+import { die, toggleElementClass } from '../../../utility/utility.js'
 import { fetchWorkers } from '../fetch.js'
 import { handleException } from '../../../utility/handle-exception.js'
 import { renderSelectedWorkerRow } from '../render.js'
@@ -11,35 +11,28 @@ import { debounceAsync } from '../../../utility/debounce.js'
  * Add Worker Modal (Selection)
  */
 const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
-if (!addWorkerModalTemplate)
-    die('Add worker modal wrapper element not found')
+if (!addWorkerModalTemplate) die('Add worker modal wrapper element not found')
 
 const addWorkerModal = addWorkerModalTemplate.querySelector('.add-worker-modal')
-if (!addWorkerModal)
-    die('Add worker modal not found')
+if (!addWorkerModal) die('Add worker modal not found')
 
 /**
  * Add Worker Table Modal
  */
 const addWorkerTableTemplate = document.querySelector('#add_worker_table_template')
-if (!addWorkerTableTemplate)
-    die('Add worker table wrapper element not found')
+if (!addWorkerTableTemplate) die('Add worker table wrapper element not found')
 
 const addWorkerTableModal = addWorkerTableTemplate.querySelector('.add-worker-table')
-if (!addWorkerTableModal)
-    die('Add worker table modal element not found')
+if (!addWorkerTableModal) die('Add worker table modal element not found')
 
 const table = addWorkerTableModal.querySelector('table')
-if (!table)
-    die('Table element not found')
+if (!table) die('Table element not found')
 
 const tableBodySection = table.querySelector('tbody')
-if (!tableBodySection)
-    throw new Error('Table body element is not found')
+if (!tableBodySection) die('Table body element is not found')
 
 const confirmAddWorkerButton = addWorkerModalTemplate.querySelector('#confirm_add_worker_button')
-if (!confirmAddWorkerButton)
-    throw new Error('Confirm add button not found')
+if (!confirmAddWorkerButton) throw new Error('Confirm add button not found')
 
 /**
  * Attaches a debounced click handler to the confirmAddWorkerButton to open/configure the "add worker" table modal.
@@ -56,7 +49,8 @@ export function openTableModal(endpoint) {
     if (!endpoint || !typeof endpoint === 'string' || endpoint === '')
         throw new Error('Endpoint is required')
 
-    confirmAddWorkerButton.addEventListener('click', e => debounceAsync(confirmAddWorkerButtonEvent(e, endpoint), 300))
+    const handler = e => debounceAsync(confirmAddWorkerButtonEvent(e, endpoint), 300)
+    confirmAddWorkerButton.addEventListener('click', handler)
 }
 
 /**
@@ -94,7 +88,7 @@ async function confirmAddWorkerButtonEvent(e, endpoint) {
         handleException(error)
     }
 
-    (tableBodySection.childElementCount > 0)
+    tableBodySection.childElementCount > 0
         ? toggleTable(true)
         : toggleTable(false)
 
@@ -207,12 +201,9 @@ function toggleElemDisplay(elem, show, cleanUpElem = null) {
         throw new Error('Clean up element must be a valid element')
 
     if (show) {
-        elem.classList.add('flex-col')
-        elem.classList.remove('no-display')
+        toggleElementClass(elem, ['flex-col'], ['no-display'])
     } else {
-        elem.classList.add('no-display')
-        elem.classList.remove('flex-col')
-
+        toggleElementClass(elem, ['no-display'], ['flex-col'] )
         if (cleanUpElem) cleanUpElem.textContent = ''
     }
 }

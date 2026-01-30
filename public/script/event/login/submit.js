@@ -5,23 +5,19 @@ import { Loader } from '../../render/loader.js'
 import { validateInputs, userValidationRules } from '../../utility/validator.js'
 import { debounceAsync } from '../../utility/debounce.js'
 import { handleException } from '../../utility/handle-exception.js'
+import { die } from '../../utility/utility.js'
 
 let isLoading = false
 
 const loginForm = document.querySelector('#login_form')
-if (!loginForm) {
-    console.error('Login form not found.')
-    Dialog.somethingWentWrong()
-}
+if (!loginForm) die('Login form not found on the page')
 
 const loginButton = loginForm?.querySelector('#login_button')
-if (!loginButton) {
-    console.error('Login button not found.')
-    Dialog.somethingWentWrong()
-}
+if (!loginButton) die('Login button not found on the page')
 
-loginForm?.addEventListener('submit', (e) => debounceAsync(submit(e), 300))
-loginButton?.addEventListener('click', (e) => debounceAsync(submit(e), 300))
+const handler = e => debounceAsync(submit(e), 300)
+loginForm?.addEventListener('submit', handler)
+loginButton?.addEventListener('click', handler)
 
 /**
  * Handles the login form submission event.
@@ -48,14 +44,10 @@ async function submit(e) {
 
 
         const emailInput = loginForm.querySelector('#login_email')
-        if (!emailInput) { 
-            throw new Error('Email input not found.')
-        }
+        if (!emailInput) throw new Error('Email input not found')
 
         const passwordInput = loginForm.querySelector('#login_password')
-        if (!passwordInput) {
-            throw new Error('Password input not found.')
-        }
+        if (!passwordInput) throw new Error('Password input not found')
 
         const email = emailInput.value.trim()
         const password = passwordInput.value.trim()
@@ -71,7 +63,7 @@ async function submit(e) {
         // Redirect to home page after successful login
         window.location.href = `/home` 
     } catch (error) {
-        handleException(error, 'Error during login:', error)
+        handleException(error)
     } finally {
         Loader.delete()
     }
@@ -100,18 +92,12 @@ async function sendToBackend(email, password) {
         }
         isLoading = true
 
-        if (!email || email.trim() === '') {
-            throw new Error('Email is required.')
-        }
+        if (!email || email.trim() === '') throw new Error('Email is required')
 
-        if (!password || password.trim() === '') {
-            throw new Error('Password is required.')
-        }
+        if (!password || password.trim() === '') throw new Error('Password is required')
 
         const response = await Http.POST('auth/login', { email, password })
-        if (!response) {
-            throw new Error('No response from server.')
-        }
+        if (!response) throw new Error('No response from server')
     } catch (error) {
         throw error
     } finally {

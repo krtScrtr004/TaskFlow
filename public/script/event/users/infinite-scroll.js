@@ -10,14 +10,10 @@ let isLoading = false
 const userGridContainer = document.querySelector('.user-grid-container')
 
 const userGrid = userGridContainer?.querySelector('.user-grid')
-if (!userGrid) {
-    console.warn('User Grid element not found.')
-}
+if (!userGrid) console.warn('User grid element not found')
 
 const sentinel = userGridContainer?.querySelector('.sentinel')
-if (!sentinel) {
-    console.warn('Sentinel element not found.')
-}
+if (!sentinel) console.warn('Sentinel element not found')
 
 try {
     // Initialize infinite scroll for loading users
@@ -29,7 +25,7 @@ try {
         getExistingItemsCount()
     )
 } catch (error) {
-    handleException(error, 'Error initializing infinite scroll:', error)
+    handleException(error)
 }
 
 /**
@@ -70,17 +66,13 @@ async function asyncFunction(offset) {
         }
         isLoading = true
 
-        if (!offset || isNaN(offset) || offset < 0) {
-            throw new Error('Invalid offset value.')
-        }
+        if (!offset || isNaN(offset) || offset < 0) throw new Error('Invalid offset value')
 
         const queryParams = new URLSearchParams(window.location.search)
         queryParams.set('offset', offset)
 
         const response = await Http.GET(`users?${queryParams.toString()}`)
-        if (!response) {
-            throw new Error('No response from server.')
-        }
+        if (!response) throw new Error('No response from server')
 
         return response.data
     } catch (error) {

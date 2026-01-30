@@ -174,20 +174,16 @@ export function validateStartDateTime(value,
 
     // Check for Project / Phase timeline bounds (Phase / Task only)
     if (isBounded) {
-        if (boundStart) {
+        if (boundStart) 
             withinBounds = withinBounds && compareDates(value, boundStart) <= 0
-        }
-        if (boundCompletion) {
+        if (boundCompletion) 
             withinBounds = withinBounds && compareDates(value, boundCompletion) >= 0
-        }
     }
 
     // Check for conflicts with other Phases (Phase only)
     if (hasConflict) {
         for (const [id, phase] of phasesSchedule.entries()) {
-            if (ownId === id) {
-                continue
-            }
+            if (ownId === id) continue
 
             if (compareDates(value, phase.start) <= 0 && compareDates(value, phase.completion) >= 0) {
                 notConflicted = false
@@ -269,25 +265,19 @@ export function validateCompletionDateTime(value, startDateTime,
 
     if (startDateTime) {
         const startObj = startDateTime instanceof Date ? startDateTime : new Date(startDateTime)
-        if (!isNaN(startObj.getTime())) {
-            afterStartDate = dateObj > startObj
-        }
+        if (!isNaN(startObj.getTime())) afterStartDate = dateObj > startObj
     }
 
     if (isBounded) {
-        if (boundStart) {
+        if (boundStart)
             withinBounds = withinBounds && compareDates(value, boundStart) <= 0
-        }
-        if (boundCompletion) {
+        if (boundCompletion)
             withinBounds = withinBounds && compareDates(value, boundCompletion) >= 0
-        }
     }
 
     if (hasConflict) {
         for (const [id, phase] of phasesSchedule.entries()) {
-            if (ownId === id) {
-                continue
-            }
+            if (ownId === id) continue
 
             if (compareDates(value, phase.start) <= 0 && compareDates(value, phase.completion) >= 0) {
                 notConflicted = false
@@ -330,23 +320,17 @@ export function applyValidationToRules(
     validClass = 'valid',
     invalidClass = 'invalid'
 ) {
-    if (!rulesContainer) {
-        return
-    }
+    if (!rulesContainer) return
     let hasInvalid = false
 
     const listItems = rulesContainer.querySelectorAll('li')
 
     for (const [ruleKey, liIndex] of Object.entries(ruleMapping)) {
         const li = listItems[liIndex]
-        if (!li) {
-            continue
-        }
+        if (!li) continue
 
         const passed = validationResults[ruleKey]
-        if (!passed) {
-            hasInvalid = true
-        }
+        if (!passed) hasInvalid = true
 
         li.classList.remove(validClass, invalidClass)
         li.classList.add(passed ? validClass : invalidClass)

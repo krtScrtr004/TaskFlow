@@ -3,14 +3,12 @@ import { Notification } from '../../../render/notification.js'
 import { debounceAsync } from '../../../utility/debounce.js'
 import { Http } from '../../../utility/http.js'
 import { Loader } from '../../../render/loader.js'
+import { die } from '../../../utility/utility.js'
 
 let isLoading = false
 
 const resetPasswordForm = document.querySelector('#reset_password_form')
-if (!resetPasswordForm) {
-    console.error('Reset Password form not found.')
-    Dialog.somethingWentWrong()
-}
+if (!resetPasswordForm) die('Reset Password form not found')
 
 const sendLinkButton = resetPasswordForm.querySelector('#send_link_button')
 sendLinkButton?.addEventListener('click', sendLink)
@@ -41,18 +39,14 @@ async function sendLink(e) {
         }
 
         const response = await Http.POST('auth/reset-password', { email: email.value.trim() })
-        if (!response) {
-            throw new Error('No response from server.')
-        }
+        if (!response) throw new Error('No response from server')
 
         Dialog.sendLink(true)
     } catch (error) {
-        console.error('Error sending password reset link:', error)
-        if (error?.status === 422) {
-            Dialog.errorOccurred('Invalid email address provided.')
-        } else {
-            Dialog.sendLink(false)
-        }
+        console.error(error)
+        error?.status === 422
+            ? Dialog.errorOccurred('Invalid email address provided.')
+            : Dialog.sendLink(false)
     } finally {
         Loader.delete()
         isLoading = false

@@ -8,21 +8,16 @@ import { die, querySelectorByRegex } from '../../../utility/utility.js'
 let isLoading = false
 
 const addWorkerTableTemplate = document.querySelector('#add_worker_table_template')
-if (!addWorkerTableTemplate)
-    die('Add worker table wrapper element not found')
+if (!addWorkerTableTemplate) die('Add worker table wrapper element not found')
 
 const addWorkerTableModal = addWorkerTableTemplate.querySelector('.add-worker-table')
-if (!addWorkerTableModal)
-    die('Add worker table modal element not found')
+if (!addWorkerTableModal) die('Add worker table modal element not found')
 
 const tableBodySection = addWorkerTableModal.querySelector('table > tbody')
-if (!tableBodySection)
-    throw new Error('Table body element is not found')
+if (!tableBodySection) throw new Error('Table body element is not found')
 
 const saveAddWorkerButton = addWorkerTableModal.querySelector('#save_added_worker_button')
-if (!saveAddWorkerButton)
-    throw new Error('Save button not found')
-
+if (!saveAddWorkerButton) throw new Error('Save button not found')
 /**
  * Attaches a debounced click handler to the global saveAddWorkerButton that triggers saving selected workers to the provided endpoint.
  *
@@ -35,7 +30,7 @@ if (!saveAddWorkerButton)
  * @returns {void}
  */
 export function saveAddWorkers(endpoint) {
-    if (!endpoint || !typeof endpoint === 'string' || endpoint === '')
+    if (!endpoint || typeof endpoint !== 'string' || endpoint === '') 
         throw new Error('Endpoint is required')
 
     const handler = e => debounceAsync(saveAddWorkerButtonEvent(e, endpoint), 300)
@@ -122,8 +117,7 @@ async function sendToBackend(endpoint, data) {
 
     try {
         const response = await Http.POST(endpoint, { workers: data })
-        if (!response)
-            throw new Error('No response from the server')
+        if (!response) throw new Error('No response from the server')
     } catch (error) {
         throw error
     } finally {

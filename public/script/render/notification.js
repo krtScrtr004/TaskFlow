@@ -1,4 +1,5 @@
 import { stickToTop } from '../utility/stick-to-top.js'
+import { toggleElementClass } from '../utility/utility.js'
 
 /**
  * Removes a notification element from the DOM with slide animations.
@@ -29,12 +30,10 @@ function remove(
     }
 
     // Clear previous animation classes
-    notificationContent.classList.remove('slide-up')
-    notificationContent.classList.add('slide-down')
+    toggleElementClass(notificationContent, ['slide-down'], ['slide-up'])
 
     setTimeout(() => {
-        notificationContent.classList.remove('slide-down')
-        notificationContent.classList.add('slide-up')
+        toggleElementClass(notificationContent, ['slide-up'], ['slide-down'])
 
         // Remove existing listeners (optional safety) and add again
         notificationContent.removeEventListener('animationend', onAnimationEnd)

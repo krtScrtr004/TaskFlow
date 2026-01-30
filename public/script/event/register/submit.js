@@ -6,31 +6,22 @@ import { Notification } from '../../render/notification.js'
 import { validateInputs, userValidationRules } from '../../utility/validator.js'
 import { debounceAsync } from '../../utility/debounce.js'
 import { handleException } from '../../utility/handle-exception.js'
-import { normalizeDateFormat } from '../../utility/utility.js'
+import { die, normalizeDateFormat } from '../../utility/utility.js'
 
 let isLoading = false
 
 const registerForm = document.querySelector('#register_form')
-if (!registerForm) {
-    console.error('Register form not found.')
-    Dialog.somethingWentWrong()
-}
+if (!registerForm) die('Register form element not found')
 
 registerForm?.addEventListener('submit', e => debounceAsync(submit(e), 300))
 
 const registerButton = registerForm?.querySelector('#register_button')
-if (!registerButton) {
-    console.error('Register button not found.')
-    Dialog.somethingWentWrong()
-}
+if (!registerButton) die('Register button not found')
 
 registerButton?.addEventListener('click', e => debounceAsync(submit(e), 300))
 
 const termsCheckbox = registerForm.querySelector('#register_terms')
-if (!termsCheckbox) {
-    console.error('Terms checkbox not found.')
-    Dialog.somethingWentWrong()
-}
+if (!termsCheckbox) die('Terms checkbox not found')
 
 termsCheckbox?.addEventListener('change', () => {
     registerButton.disabled = !termsCheckbox.checked
@@ -54,9 +45,7 @@ termsCheckbox?.addEventListener('change', () => {
 async function submit(e) {
     e.preventDefault()
 
-    if (!checkTermsAgreement()) {
-        return
-    }
+    if (!checkTermsAgreement()) return
 
     try {
         Loader.patch(registerButton.querySelector('.text-w-icon'))
@@ -73,9 +62,8 @@ async function submit(e) {
         const passwordInput = registerForm.querySelector('#register_password')
         const roleInput = registerForm.querySelector('input[name="role"]:checked')
         if (!firstNameInput || !middleNameInput || !lastNameInput || !birthDateInput || 
-            !jobTitlesInput || !emailInput || !passwordInput) {
+            !jobTitlesInput || !emailInput || !passwordInput) 
             throw new Error('One or more form inputs not found.')
-        }
 
         if (!genderInput) {
             Notification.error('Please select a valid gender.', 3000)
@@ -106,16 +94,17 @@ async function submit(e) {
         }
 
         // Validate inputs
-        if (!validateInputs(inputs, userValidationRules())) {
-            return
-        }
+        if (!validateInputs(inputs, userValidationRules())) return
 
         await sendToBackend(...Object.values(inputs))
 
-        Dialog.operationSuccess('Registration Successful', 'A confirmation email has been sent to your email address. Please verify your email before logging in.')
+        Dialog.operationSuccess(
+            'Registration Successful', 
+            'A confirmation email has been sent to your email address. Please verify your email before logging in.'
+        )
         setTimeout(() => window.location.href = '/login', 2000)
     } catch (error) {
-        handleException(error, `Error during register: ${error}`)
+        handleException(error)
     } finally {
         Loader.delete()
     }
@@ -189,41 +178,23 @@ async function sendToBackend(
         }
         isLoading = true
 
-        if (!termsCheckbox.checked) {
-            throw new Error('You must agree to the terms and conditions to register.')
-        }
+        if (!termsCheckbox.checked) throw new Error('You must agree to the terms and conditions to register')
 
-        if (!firstName || firstName.trim() === '') {
-            throw new Error('First name is required.')
-        }
+        if (!firstName || firstName.trim() === '') throw new Error('First name is required')
 
-        if (!lastName || lastName.trim() === '') {
-            throw new Error('Last name is required.')
-        }
+        if (!lastName || lastName.trim() === '') throw new Error('Last name is required')
 
-        if (!gender || gender.trim() === '') {
-            throw new Error('Gender is required.')
-        }
+        if (!gender || gender.trim() === '') throw new Error('Gender is required')
 
-        if (!birthDate || isNaN(new Date(birthDate).getTime())) {
-            throw new Error('Valid date of birth is required.')
-        }
+        if (!birthDate || isNaN(new Date(birthDate).getTime())) throw new Error('Valid date of birth is required')
 
-        if (!contactNumber || contactNumber.trim() === '') {
-            throw new Error('Contact number is required.')
-        }
+        if (!contactNumber || contactNumber.trim() === '') throw new Error('Contact number is required')
+            
+        if (!email || email.trim() === '') throw new Error('Email is required')
 
-        if (!email || email.trim() === '') {
-            throw new Error('Email is required.')
-        }
+        if (!password || password.trim() === '') throw new Error('Password is required')
 
-        if (!password || password.trim() === '') {
-            throw new Error('Password is required.')
-        }
-
-        if (!role || role.trim() === '') {
-            throw new Error('Role is required.')
-        }
+        if (!role || role.trim() === '') throw new Error('Role is required')
 
         await Http.POST('auth/register', {
             agreedToTerms: termsCheckbox.checked,

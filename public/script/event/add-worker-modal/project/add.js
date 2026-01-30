@@ -6,10 +6,8 @@ import { handleException } from '../../../utility/handle-exception.js'
 
 const projectContainer = document.querySelector('.project-container')
 const thisProjectId = projectContainer?.dataset.projectid ?? null
-if (!thisProjectId || thisProjectId.trim() === '') { // Check if project ID is missing or empty
-    die('Project ID not found')
-}
-
+if (!thisProjectId || thisProjectId.trim() === '') die('Project ID not found')
+    
 try {
     const params = new URLSearchParams()
     params.append('status', 'unassigned')

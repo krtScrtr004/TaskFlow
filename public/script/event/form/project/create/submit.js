@@ -52,7 +52,7 @@ async function submit(e) {
         setTimeout(() => window.location.href = `/home`, 1500)
         Dialog.operationSuccess('Project Created.', 'The project has been successfully created.')
     } catch (error) {
-        handleException(error, `Error preparing project data: ${error.message}`)
+        handleException(error)
     } finally {
         Loader.delete()
     }

@@ -7,10 +7,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const targetId = searchParams.get('target')
     const target = targetId ? document.getElementById(targetId) : null
 
-    if (target) {
-        // Scroll to the target element if it exists
-        target.scrollIntoView({ behavior: 'smooth' })
-    }
+    // Scroll to the target element if it exists
+    if (target) target.scrollIntoView({ behavior: 'smooth' })
+
 })
 
 /**
@@ -26,20 +25,17 @@ document.addEventListener('DOMContentLoaded', () => {
  * @throws {Error} If the search button within the form is not found.
  */
 export function search(searchBarForm, targetSection = null) {
-    if (!searchBarForm) {
-        throw new Error('Search Bar form not found.')
-    }
+    if (!searchBarForm || !(searchBarForm instanceof Element)) throw new Error('Search bar form is required')
+    
     target = targetSection
 
     const searchButton = searchBarForm?.querySelector('button.search-button')
 
-    if (!searchButton) {
-        throw new Error('Search Task button not found.')
-    }
-    
-    // Create debounced submit handler    
-    searchButton.addEventListener('click', e => debounce(submit(e, searchBarForm), 300))
-    searchBarForm.addEventListener('submit', e => debounce(submit(e, searchBarForm), 300))
+    if (!searchButton) throw new Error('Search Task button not found')
+
+    const handler = e => debounce(submit(e, searchBarForm), 300)
+    searchButton.addEventListener('click', handler)
+    searchBarForm.addEventListener('submit', handler)
 }
 
 /**
@@ -63,14 +59,12 @@ function submit(e, searchBarForm) {
     const params = new URLSearchParams()
     params.append('key', key)
 
-    if (target) {
-        params.append('target', target.id)
-    }
+    if (target) params.append('target', target.id)
 
     const searchFilter = searchBarForm?.querySelector('select.search-filter')
     const selectedOption = searchFilter.options[searchFilter.selectedIndex]
     const optgroup = selectedOption ? selectedOption.closest('optgroup') : null
-    if (searchFilter && optgroup) 
+    if (searchFilter && optgroup)
         params.append(optgroup.dataset.filterkey || 'filter', searchFilter.value.trim())
 
     params.append('offset', 0)

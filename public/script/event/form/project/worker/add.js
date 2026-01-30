@@ -9,35 +9,26 @@ const existingWorkers = new Set()
 const workersSection = document.querySelector('#workers_section')
 
 const selectedWorkersTable = workersSection.querySelector('.selected-workers-table')
-if (!selectedWorkersTable) {
-    die('Selected workers table not found in workers section.')
-}
+if (!selectedWorkersTable) die('Selected workers table not found in workers section.')
 
 const noWorkersWall = selectedWorkersTable.querySelector('.no-workers-wall')
 
 const workerPoolListingList = workersSection.querySelector('.worker-pool-listing .list')
-if (!workerPoolListingList) {
-    die('Worker pool listing list not found.')
-}
+if (!workerPoolListingList) die('Worker pool listing list not found.')
 
 const selectedWorkersTableList = selectedWorkersTable.querySelector('tbody')
-if (!selectedWorkersTableList) {
-    die('Selected workers table list not found.')
-}
+if (!selectedWorkersTableList) die('Selected workers table list not found.')
 
 const existingSelectedWorkers = selectedWorkersTableList.querySelectorAll('.selected-worker-row')
 existingSelectedWorkers.forEach(row => {
     const workerId = row.dataset.workerid
-    if (workerId) {
-        existingWorkers.add(workerId)
-    }
+    if (workerId) existingWorkers.add(workerId)
 })
 
 workerPoolListingList.addEventListener('click', e => {
     const card = e.target.closest('.worker-pool-card')
-    if (!card) {
-        return
-    }
+    if (!card) return
+
     e.stopImmediatePropagation()
 
     const maxWorkers = document.querySelector('#project_form input[name="max_workers"]')?.value
@@ -64,21 +55,18 @@ workerPoolListingList.addEventListener('click', e => {
         })
         selectedWorkersTableList.appendChild(newRow)
     } catch (error) {
-        handleException(error, `Error handling worker pool listing click.`)
+        handleException(error)
     }
 })
 
 selectedWorkersTableList.addEventListener('click', e => {
     const removeWorkerButton = e.target.closest('.remove-worker-button')
-    if (!removeWorkerButton) {
-        return
-    }
+    if (!removeWorkerButton) return
+
     e.stopImmediatePropagation()
     
     const row = removeWorkerButton.closest('.selected-worker-row')
-    if (!row) {
-        return
-    }
+    if (!row) return
 
     const workerId = row.dataset.workerid
     addedWorkers.delete(workerId) 
@@ -93,9 +81,7 @@ selectedWorkersTableList.addEventListener('click', e => {
     row.remove()
 
     const remaining = selectedWorkersTableList?.querySelectorAll('.selected-worker-row') ?? []
-    if (remaining.length === 0) {
-        toggleNoWorkersWall(true)
-    }
+    if (remaining.length === 0) toggleNoWorkersWall(true)
 })
 
 /**

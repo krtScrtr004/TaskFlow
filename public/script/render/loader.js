@@ -44,9 +44,7 @@ export const Loader = (() => {
     let patchedElem = null
 
     function render(parentElem, loaderHtml, position) {
-        if (!parentElem) {
-            return
-        }
+        if (!parentElem) return
 
         const originalPosition = parentElem.style.position
 
@@ -158,11 +156,9 @@ export const Loader = (() => {
 
             if (patchedElem) {
                 // Restore the patched element
-                if (patchedElem.type === 'element') {
-                    patchedElem.elem.style.display = patchedElem.style
-                } else {
-                    patchedElem.parent.innerHTML = patchedElem.originalText
-                }
+                patchedElem.type === 'element'
+                    ? patchedElem.elem.style.display = patchedElem.style
+                    : patchedElem.parent.innerHTML = patchedElem.originalText
 
                 // Restore original parent dimensions
                 patchedElem.parent.style.minWidth = patchedElem.originalParentStyle.minWidth

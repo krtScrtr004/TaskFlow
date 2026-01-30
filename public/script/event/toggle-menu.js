@@ -3,6 +3,8 @@
  * Toggles the visibility of the sidenav on mobile/tablet devices
  */
 
+import { toggleElementClass } from '../utility/utility.js'
+
 document.addEventListener('DOMContentLoaded', () => {
     const sidenav = document.querySelector('.sidenav')
     const smallSidenav = sidenav.querySelector('.small-sidenav')
@@ -23,14 +25,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (isVisible) {
             // Hide menu
-            smallSidenav.classList.remove('hide')
-            mainSidenav.classList.remove('show')
+            toggleElementClass(smallSidenav, [], ['hide'])
+            toggleElementClass(mainSidenav, [], ['show'])
             adjustSidenav(false)
             hamburgerButton.setAttribute('aria-expanded', 'false')
         } else {
             // Show menu
-            smallSidenav.classList.add('hide')
-            mainSidenav.classList.add('show')
+            toggleElementClass(smallSidenav, ['hide'], [])
+            toggleElementClass(mainSidenav, ['show'], [])
             adjustSidenav(true)
             hamburgerButton.setAttribute('aria-expanded', 'true')
         }
@@ -43,8 +45,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Only close if menu is open and click is outside sidenav
         if (!isClickInsideSidenav && isMenuVisible && window.innerWidth <= 992) {
-            mainSidenav.classList.remove('show')
-            smallSidenav.classList.remove('hide')
+            toggleElementClass(mainSidenav, [], ['show'])
+            toggleElementClass(smallSidenav, [], ['hide'])
             adjustSidenav(false)
             hamburgerButton.setAttribute('aria-expanded', 'false')
 
@@ -59,8 +61,8 @@ document.addEventListener('DOMContentLoaded', () => {
     navLinks.forEach(link => {
         link.addEventListener('click', () => {
             if (window.innerWidth <= 992) {
-                mainSidenav.classList.remove('show')
-                smallSidenav.classList.remove('hide')
+                toggleElementClass(mainSidenav, [], ['show'])
+                toggleElementClass(smallSidenav, [], ['hide'])
                 adjustSidenav(false)
                 hamburgerButton.setAttribute('aria-expanded', 'false')
             }

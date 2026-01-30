@@ -1,5 +1,6 @@
 import { Dialog } from '../../render/dialog.js'
 import { Loader } from '../../render/loader.js'
+import { handleException } from '../../utility/handle-exception.js'
 import { fetchWorkers } from './fetch.js'
 import { createWorkerListCard } from './render.js'
 import { selectedUsers } from './select.js'
@@ -35,7 +36,7 @@ export function infiniteScrollWorkers(projectId, localEndpoint, searchKey = '', 
         // Store the observer for this specific container
         observerMap.set(container, observerContext)
     } catch (error) {
-        console.error('Error initializing infinite scroll:', error)
+        handleException(error)
         Dialog.somethingWentWrong()
     }
 }
@@ -87,8 +88,7 @@ function createInfiniteScrollObserver(container, sentinel, projectId, endpoint, 
                     workers.forEach(worker => options.renderer ? options.renderer(worker) : createWorkerListCard(worker))
                     offset += workers.length
                 } catch (error) {
-                    console.error('Error during infinite scroll fetch:', error)
-                    Dialog.errorOccurred('Failed to load more workers.')
+                    throw error
                 } finally {
                     isLoading = false
                     Loader.delete()

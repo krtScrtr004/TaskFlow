@@ -2,13 +2,12 @@ import { userInfoCard } from '../../render/user-card.js'
 import { Dialog } from '../../render/dialog.js'
 import { Http } from '../../utility/http.js'
 import { handleException } from '../../utility/handle-exception.js'
+import { die } from '../../utility/utility.js'
 
 let isLoading = false
 
 const userGrid = document.querySelector('.user-grid-container > .user-grid')
-if (!userGrid) {
-    console.error('Users grid not found!')
-}
+if (!userGrid) die('User grid container not found')
 
 userGrid?.addEventListener('click', async e => {
     const userCard = e.target.closest('.user-grid-card')
@@ -25,7 +24,7 @@ userGrid?.addEventListener('click', async e => {
         // Render user info card
         userInfoCard(userId, () => fetchUserInfo(userId))
     } catch (error) {
-        handleException(error, 'Error displaying user info card:', error)
+        handleException(error)
     }
 })
 
@@ -51,14 +50,10 @@ async function fetchUserInfo(userId) {
         }
         isLoading = true
 
-        if (!userId || userId === '') {
-            throw new Error('User ID is required.')
-        }
+        if (!userId || userId === '') throw new Error('User ID is required')
 
         const response = await Http.GET(`users/${userId}`)
-        if (!response) {
-            throw error
-        }
+        if (!response) throw new Error('No response from server')
 
         return response.data
     } catch (error) {

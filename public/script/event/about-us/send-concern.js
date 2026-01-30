@@ -7,18 +7,15 @@ import { handleException } from '../../utility/handle-exception.js'
 
 let isLoading = false
 
+const handler = e => debounceAsync(submit(e), 300)
+
 const concernForm = document.querySelector('#concern_form')
-if (!concernForm) {
-    console.warn('Concern form element not found.')
-}
-concernForm.addEventListener('submit', debounceAsync(submit, 300))
+if (!concernForm) console.warn('Concern form element not found')
+concernForm?.addEventListener('submit', handler)
 
-const sendButton = concernForm.querySelector('#send_button')
-if (!sendButton) {
-    console.warn('Send button element not found.')
-}
-sendButton.addEventListener('click', debounceAsync(submit, 300))
-
+const sendButton = concernForm?.querySelector('#send_button')
+if (!sendButton) console.warn('Send button element not found')
+sendButton?.addEventListener('click', handler)
 /**
  * Handles submission of the "concern" form.
  *
@@ -61,7 +58,7 @@ async function submit(e) {
             messageElem.value.trim()
         )
 
-        Dialog.operationSuccess('Concern Sent', 'Your concern has been sent successfully. We will get back to you as soon as possible.')
+        Dialog.operationSuccess('Concern Sent', 'Your concern has been sent successfully. We will get back to you as soon as possible')
         concernForm.reset()
     } catch (error) {
         handleException(error)
@@ -104,26 +101,18 @@ async function sendToBackend(name, email, message) {
         }
         isLoading = true
 
-        if (!name || name.trim() === '') {
-            throw new Error('Name is required.')
-        }
+        if (!name || name.trim() === '') throw new Error('Name is required')
 
-        if (!email || email.trim() === '') {
-            throw new Error('Email is required.')
-        }
+        if (!email || email.trim() === '') throw new Error('Email is required')
 
-        if (!message || message.trim() === '') {
-            throw new Error('Message is required.')
-        }
+        if (!message || message.trim() === '') throw new Error('Message is required')
 
         const response = await Http.POST('about-us/concern', {
             fullName: name.trim(),
             email: email.trim(),
             message: message.trim()
         })
-        if (!response) {
-            throw new Error('No response from server.')
-        }
+        if (!response) throw new Error('No response from server')
     } catch (error) {
         throw error
     } finally {

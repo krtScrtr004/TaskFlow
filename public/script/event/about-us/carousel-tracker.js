@@ -1,4 +1,4 @@
-const EPSILON = 1 // Close to zero gap; Used to calculate right tracker scrollable area left
+const EPSILON = 1 // Close to zero gap Used to calculate right tracker scrollable area left
 
 const carouselWrapper = document.querySelectorAll('.carousel-wrapper')
 if (carouselWrapper) {
@@ -6,7 +6,7 @@ if (carouselWrapper) {
         const carousel = wrapper.querySelector('.carousel')
         const trackers = wrapper.querySelectorAll('.tracker')
 
-        const children = Array.from(carousel.children);
+        const children = Array.from(carousel.children)
         const visibleChildren = children?.filter(child => {
             const containerRect = carousel.getBoundingClientRect()
             const childRect = child.getBoundingClientRect()
@@ -18,8 +18,8 @@ if (carouselWrapper) {
             )
         })
 
-        const style = window.getComputedStyle(carousel);
-        const gap = parseInt(style.columnGap || style.gap) || 0;
+        const style = window.getComputedStyle(carousel)
+        const gap = parseInt(style.columnGap || style.gap) || 0
 
         function hideTracker() {
             const left = Array.from(trackers).find(l => l.classList.contains('left-button'))
@@ -32,17 +32,15 @@ if (carouselWrapper) {
 
         window.addEventListener('load', hideTracker)
 
-        carousel?.addEventListener('scroll', hideTracker);
+        carousel?.addEventListener('scroll', hideTracker)
         trackers?.forEach(tracker => {
             tracker.addEventListener('click', e => {
                 e.stopPropagation()
 
-                const carouselChildLength = children[0].clientWidth + (gap * visibleChildren.length);
-                if (tracker.classList.contains('right-button')) {
-                    carousel.scrollBy({ left: carouselChildLength, behavior: 'smooth' });
-                } else {
-                    carousel.scrollBy({ left: (-carouselChildLength), behavior: 'smooth' });
-                }
+                const carouselChildLength = children[0].clientWidth + (gap * visibleChildren.length)
+                tracker.classList.contains('right-button')
+                    ? carousel.scrollBy({ left: carouselChildLength, behavior: 'smooth' })
+                    : carousel.scrollBy({ left: (-carouselChildLength), behavior: 'smooth' })
             })
         })
     })

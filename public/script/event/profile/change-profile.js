@@ -3,26 +3,20 @@ import { confirmationDialog } from '../../render/confirmation-dialog.js'
 import { Dialog } from '../../render/dialog.js'
 import { Loader } from '../../render/loader.js'
 import { handleException } from '../../utility/handle-exception.js'
+import { die } from '../../utility/utility.js'
 
 let isLoading = false
 
 const profile = document.querySelector('.profile')
 
 const myId = profile?.dataset.myid
-if (!myId || myId.trim() === '') {
-    console.warn('User ID not found in form dataset.')
-}
+if (!myId || myId.trim() === '') console.warn('User ID not found')
 
 const pickProfilePictureButton = profile?.querySelector('#pick_profile_picture_button')
-if (!pickProfilePictureButton) {
-    console.error('Pick Profile Picture button not found.')
-    Dialog.somethingWentWrong()
-}
+if (!pickProfilePictureButton) die('Pick Profile Picture button not found on the page')
 
 const profilePicker = profile?.querySelector('#profile_picker')
-if (!profilePicker) {
-    console.warn('Profile picker input not found.')
-}
+if (!profilePicker) console.warn('Profile picker input not found')
 
 // Handle pick profile picture button click
 pickProfilePictureButton?.addEventListener('click', e => {
@@ -79,7 +73,7 @@ async function submit(file) {
         setTimeout(() => window.location.reload(), 1500)
         Dialog.operationSuccess('Profile Picture Updated.', 'Your profile picture has been successfully updated.')
     } catch (error) {
-        handleException(error, `Error during profile picture change: ${error}`)
+        handleException(error)
     } finally {
         Loader.delete()
     }
@@ -108,20 +102,14 @@ async function sendToBackend(formData) {
         }
         isLoading = true
 
-        if (!formData) {
-            throw new Error('Form data is missing.')
-        }
+        if (!formData) throw new Error('Form data is missing')
 
-        if (!myId || myId.trim() === '') {
-            throw new Error('User ID not found.')
-        }
+        if (!myId || myId.trim() === '') throw new Error('User ID not found')
         
         // Use POST with method override for PATCH
         // Pass serialize = false to prevent JSON.stringify on FormData
         const response = await Http.POST(`users/${myId}`, formData, false)
-        if (!response) {
-            throw new Error('No response from server.')
-        }
+        if (!response) throw new Error('No response from server')
     } catch (error) {
         throw error
     } finally {

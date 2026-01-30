@@ -20,18 +20,12 @@ import { createFullName, formatNumber, toggleElementClass } from '../utility/uti
  * @returns {Promise<void>} Resolves when the user info card is rendered or hidden based on the result.
  */
 export async function userInfoCard(userId, asyncFunction) {
-    if (!userId || userId.trim() === '') {
-        throw new Error('User ID is required to fetch user info.')
-    }
+    if (!userId || userId.trim() === '') throw new Error('User ID is required')
 
-    if (!asyncFunction || typeof asyncFunction !== 'function') {
-        throw new Error('A valid function to fetch user info must be provided.')
-    }
+    if (!asyncFunction || typeof asyncFunction !== 'function') throw new Error('A valid function to fetch user info')
 
     const userInfoCardTemplate = document.querySelector('#user_info_card_template')
-    if (!userInfoCardTemplate) {
-        throw new Error('User Info Card template not found!')
-    }
+    if (!userInfoCardTemplate) throw new Error('User info card template not found')
 
     toggleElementClass(userInfoCardTemplate, ['flex-col'])
     userInfoCardTemplate.setAttribute('data-userid', userId)

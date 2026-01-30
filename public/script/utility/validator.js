@@ -42,9 +42,7 @@ function hasConsecutiveSpecialChars(str) {
         let count = 0
         while (i < str.length && specialChars.includes(str[i])) {
             count++
-            if (count >= MAX_COUNT) {
-                return true
-            }
+            if (count >= MAX_COUNT) return true
             i++
         }
     }

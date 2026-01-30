@@ -12,14 +12,15 @@ export function isValidDate(year, month, day) {
         typeof year !== 'number' ||
         typeof month !== 'number' ||
         typeof day !== 'number'
-    ) return false;
+    ) return false
+
     // JavaScript Date months are 0-based, so subtract 1 from month
-    const date = new Date(year, month - 1, day);
+    const date = new Date(year, month - 1, day)
     return (
         date.getFullYear() === year &&
         date.getMonth() === month - 1 &&
         date.getDate() === day
-    );
+    )
 }
 
 /**
@@ -34,14 +35,12 @@ export function isValidDate(year, month, day) {
  * @return {string} The formatted date string in "Month Day, Year" format.
  */
 export function formatDate(dateString) {
-    if (!dateString) {
-        throw new Error('Date string is required.')
-    }
+    if (!dateString || typeof dateString !== 'string' || dateString.trim() === '') 
+        throw new Error('Date string is required')
 
     const date = new Date(dateString)
-    if (isNaN(date.getTime())) {
-        throw new Error('Invalid date string.')
-    }
+    if (isNaN(date.getTime())) 
+        throw new Error('Invalid date string')
 
     const options = { year: 'numeric', month: 'long', day: 'numeric' }
     return date.toLocaleDateString(undefined, options)
@@ -59,13 +58,9 @@ export function formatDate(dateString) {
  * @returns {string} The formatted date string in 'YYYY-MM-DD' format.
  */
 export function formatDateToString(date) {
-    if (!date) {
-        throw new Error('Date is required.')
-    }
+    if (!date) throw new Error('Date is required')
 
-    if (!(date instanceof Date)) {
-        throw new Error('Invalid \'date\' is not a valid Date object.')
-    }
+    if (!(date instanceof Date)) throw new Error('Invalid \'date\' is not a valid Date object')
 
     return date.toISOString().split('T')[0]
 }
@@ -78,16 +73,19 @@ export function formatDateToString(date) {
  * @throws {Error} If either date string is invalid or missing
  */
 export function compareDates(date1, date2) {
-    if (!date1 || !date2) {
-        throw new Error('Both date strings are required.')
-    }
+    if (!date1 || !date2) throw new Error('Both date strings are required')
+
+    if (typeof date1 !== 'string' && !(date1 instanceof Date))
+        throw new Error('Invalid \'date1\' is not a valid date string or Date object')
+
+    if (typeof date2 !== 'string' && !(date2 instanceof Date))
+        throw new Error('Invalid \'date2\' is not a valid date string or Date object')
 
     const d1 = date1 instanceof Date ? date1 : new Date(date1)
     const d2 = date2 instanceof Date ? date2 : new Date(date2)
 
-    if (isNaN(d1.getTime()) || isNaN(d2.getTime())) {
-        throw new Error('Invalid date string.')
-    }
+    if (isNaN(d1.getTime()) || isNaN(d2.getTime()))
+        throw new Error('Invalid date string')
 
     // Compare only the date part (YYYY-MM-DD)
     const ymd1 = `${d1.getFullYear()}-${String(d1.getMonth() + 1).padStart(2, '0')}-${String(d1.getDate()).padStart(2, '0')}`
@@ -116,9 +114,7 @@ export function compareDates(date1, date2) {
  * normalizeDateFormat(new Date('2025-11-15').toString())
  */
 export function normalizeDateFormat(dateString) {
-    if (!dateString) {
-        return ''
-    }
+    if (!dateString) return ''
 
     // Parse the date string into a Date object
     const date = new Date(dateString)
@@ -153,12 +149,8 @@ export function normalizeDateFormat(dateString) {
  */
 export function createFullName(firstName, middleName, lastName) {
     let fullName = firstName || ''
-    if (middleName) {
-        fullName += ` ${middleName.charAt(0)}.`
-    }
-    if (lastName) {
-        fullName += ` ${lastName}`
-    }
+    if (middleName) fullName += ` ${middleName.charAt(0)}.`
+    if (lastName) fullName += ` ${lastName}`
     return fullName.trim()
 }
 
@@ -196,9 +188,7 @@ export function die(error, { showDialog = true } = {}) {
         ? error
         : new Error(String(error))
 
-    if (showDialog) {
-        Dialog.errorOccurred(err.message)
-    }
+    if (showDialog) Dialog.errorOccurred(err.message)
     console.error(err.message)
 
     throw err
@@ -227,42 +217,34 @@ export function toggleElementClass(elem, addClasses = [], removeClasses = []) {
  * @returns {string} The formatted number as a string with commas.
  */
 export function formatNumber(number) {
-    let stringNumber = String(number);
+    let stringNumber = String(number)
     
-    if (stringNumber.length < 4) {
-        return stringNumber;
-    }
+    if (stringNumber.length < 4) return stringNumber
     
     // Search whether the param is float
-    const decimalIndex = stringNumber.indexOf('.');
-    let decimal = null;
+    const decimalIndex = stringNumber.indexOf('.')
+    let decimal = null
     
     if (decimalIndex !== -1) {
         // Extract the decimal part
-        decimal = Math.round((number - Math.floor(number)) * 100) / 100;
+        decimal = Math.round((number - Math.floor(number)) * 100) / 100
         // Remove the decimal part
-        stringNumber = stringNumber.substring(0, decimalIndex);
+        stringNumber = stringNumber.substring(0, decimalIndex)
     }
     
     // Apply comma on string number
-    let formatted = '';
-    for (let i = stringNumber.length; i > 0; ) {
+    let formatted = ''
+    for (let i = stringNumber.length ; i > 0; ) {
         for (let j = 0; j < 3; j++) {
-            if (i > 0) {
-                formatted = stringNumber[--i] + formatted;
-            }
+            if (i > 0) formatted = stringNumber[--i] + formatted
         }
         // Check if there is/are more number(s) upfront to apply comma
         // Second condition is to check if there is a negative sign
-        if (i > 0 && !isNaN(stringNumber[i - 1])) {
-            formatted = ',' + formatted;
-        }
+        if (i > 0 && !isNaN(stringNumber[i - 1])) formatted = ',' + formatted
     }
-    
-    if (decimal) {
-        // Offset to 1 to remove the leading zero of the decimal part
-        formatted += String(decimal).substring(1, 4);
-    }
+
+    // Offset to 1 to remove the leading zero of the decimal part
+    if (decimal) formatted += String(decimal).substring(1, 4)
     
     return formatted;
 }

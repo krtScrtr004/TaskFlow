@@ -109,7 +109,7 @@ export function createWorkerListCard(worker) {
 
     const workerList = document.querySelector('.project-workers > .worker-list > .list')
     if (!workerList) {
-        console.error('Worker list container not found!')
+        console.error('Worker list container not found')
     } else {
         const noWorkersWall = workerList.parentElement.querySelector('.no-workers-wall')
         noWorkersWall?.classList.remove('flex-col', 'flex-row')

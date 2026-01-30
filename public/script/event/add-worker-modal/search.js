@@ -5,6 +5,7 @@ import { fetchWorkers } from './fetch.js'
 import { createWorkerListCard } from './render.js'
 import { toggleNoWorkerWall } from './modal.js'
 import { infiniteScrollWorkers, disconnectInfiniteScroll } from './infinite-scroll.js'
+import { handleException } from '../../utility/handle-exception.js'
 
 /**
  * Attaches search event listeners to the worker search form and button within the add worker modal.
@@ -120,8 +121,8 @@ async function searchForWorker(e, projectId, endpoint, container, options = {}) 
             // Already disconnected above, no need to disconnect again
         }
     } catch (error) {
-        console.error(error.message)
-        Dialog.errorOccurred('Failed to load workers. Please try again.')
+        handleException(error)
+        Dialog.somethingWentWrong()
         disconnectInfiniteScroll(container) // Ensure cleanup on error
     } finally {
         Loader.delete()

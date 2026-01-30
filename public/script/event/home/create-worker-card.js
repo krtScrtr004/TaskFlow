@@ -1,53 +1,41 @@
-import { Dialog } from '../../render/dialog.js'
 import { userInfoCard } from '../../render/user-card.js'
 import { handleException } from '../../utility/handle-exception.js'
 import { Http } from '../../utility/http.js'
+import { die } from '../../utility/utility.js'
 
 let isLoading = false
 
 const managerContainer = document.querySelector('.project-manager')
-if (!managerContainer) {
-    console.error('Project manager container not found!')
-    Dialog.somethingWentWrong()
-}
+if (!managerContainer) die('Manager container not found')
 
 managerContainer?.addEventListener('click', e => {
     const managerCard = e.target.closest('.user-list-card')
-    if (!managerCard) { 
-        return
-    }
+    if (!managerCard) return
+
     const managerId = managerCard.getAttribute('data-id')
     try {
         userInfoCard(managerId, () => fetchManagerInfo(managerId))
     } catch (error) {
-        handleException(error, `Error fetching manager info: ${error}`)
+        handleException(error)
     }
 })
 
 const workerList = document.querySelector('.project-workers > .worker-list')
-if (!workerList) {
-    console.error('Worker list container not found!')
-    Dialog.somethingWentWrong()
-}
+if (!workerList) die('Worker list container not found')
 
 const projectContainer = document.querySelector('.project-container')
 const projectId = projectContainer.dataset.projectid
-if (!projectId || projectId.trim() === '') {
-    console.error('Project ID is missing.')
-    Dialog.somethingWentWrong()
-} 
+if (!projectId || projectId.trim() === '') die('Project ID is missing')
 
 workerList?.addEventListener('click', e => {
     const workerCard = e.target.closest('.user-list-card')
-    if (!workerCard) { 
-        return
-    }
+    if (!workerCard) return
 
     const workerId = workerCard.getAttribute('data-id')
     try {
         userInfoCard(workerId, () => fetchWorkerInfo(projectId, workerId))
     } catch (error) {
-        handleException(error, `Error fetching worker info: ${error}`)
+        handleException(error)
     }
 })
 
@@ -62,14 +50,10 @@ async function fetchWorkerInfo(projectId, userId) {
         }
         isLoading = true
 
-        if (!userId || userId === '') {
-            throw new Error('User ID is required.')
-        }
+        if (!userId || userId === '') throw new Error('User ID is required')
 
         const response = await Http.GET(`projects/${projectId}/workers/${userId}`)
-        if (!response) {
-            throw new Error('No response from server.')
-        }
+        if (!response) throw new Error('No response from server')
 
         return response.data
     } catch (error) {
@@ -90,14 +74,10 @@ async function fetchManagerInfo(userId) {
         }
         isLoading = true
 
-        if (!userId || userId === '') {
-            throw new Error('User ID is required.')
-        }
+        if (!userId || userId === '') throw new Error('User ID is required')
 
         const response = await Http.GET(`projects/${projectId}/manager`)
-        if (!response) {
-            throw new Error('No response from server.')
-        }
+        if (!response) throw new Error('No response from server')
 
         return response.data
     } catch (error) {

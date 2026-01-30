@@ -2,12 +2,10 @@ import { die } from '../../utility/utility.js'
 
 const projectContainer = document.querySelector('.project-container')
 const taskStatistics = projectContainer?.querySelector('.task-statistics')
-if (!taskStatistics)
-    die('Task statistics element not found')
+if (!taskStatistics) die('Task statistics element not found')
 
 const taskStatisticsChart = taskStatistics.querySelector('#task_statistics_chart')
-if (!taskStatisticsChart)
-    die('Task statistics chart element not found')
+if (!taskStatisticsChart) die('Task statistics chart element not found')
 
 /**
  * Retrieves task statistics data from the DOM and returns it as an object.
@@ -35,8 +33,7 @@ if (!taskStatisticsChart)
  */
 function getData() {
     const taskData = taskStatistics.querySelector('.task-data')
-    if (!taskData)
-        die('Task data element not found')
+    if (!taskData) die('Task data element not found')
 
     const pending = taskData.dataset.pendingcount ?? 0
     const ongoing = taskData.dataset.ongoingcount ?? 0

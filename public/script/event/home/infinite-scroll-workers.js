@@ -1,8 +1,6 @@
 import { infiniteScroll } from '../../utility/infinite-scroll.js'
 import { Http } from '../../utility/http.js'
-import { errorListDialog } from '../../render/error-list-dialog.js'
 import { createWorkerListCard } from './create-worker-list-card.js'
-import { Dialog } from '../../render/dialog.js'
 import { handleException } from '../../utility/handle-exception.js'
 
 let isLoading = false
@@ -10,19 +8,13 @@ let isLoading = false
 const projectContainer = document.querySelector('.project-container')
 
 const projectId = projectContainer?.dataset.projectid
-if (!projectId || projectId.trim() === '') {
-    console.warn('Project ID not found.')
-}
+if (!projectId || projectId.trim() === '') console.warn('Project ID not found')
 
 const workerList = projectContainer?.querySelector('.worker-list > .list')
-if (!workerList) {
-    console.warn('Worker List element not found.')
-}
+if (!workerList) console.warn('Worker List element not found')
 
 const sentinel = projectContainer?.querySelector('.sentinel')
-if (!sentinel) {
-    console.warn('Sentinel element not found.')
-}
+if (!sentinel) console.warn('Sentinel element not found')
 
 try {
     // Initialize infinite scroll for loading workers
@@ -34,7 +26,7 @@ try {
         getExistingItemsCount() // Get the count of existing items for offet 
     )
 } catch (error) {
-    handleException(error, 'Error initializing infinite scroll:', error)
+    handleException(error)
 }
 
 /**
@@ -80,13 +72,9 @@ async function asyncFunction(offset) {
         }
         isLoading = true
 
-        if (isNaN(offset) || offset < 0) {
-            throw new Error('Invalid offset value.')
-        }
+        if (isNaN(offset) || offset < 0) throw new Error('Invalid offset value.')
 
-        if (!projectId || projectId.trim() === '') {
-            throw new Error('Project ID not found.')
-        }
+        if (!projectId || projectId.trim() === '') throw new Error('Project ID not found.')
 
         // Construct query parameters
         const queryParams = new URLSearchParams()
@@ -96,9 +84,7 @@ async function asyncFunction(offset) {
 
         const endpoint = `projects/${projectId}/workers?${queryParams.toString()}`
         const response = await Http.GET(endpoint)
-        if (!response?.data) {
-            throw error
-        }
+        if (!response) throw new Error('No response from server')
 
         return response.data
     } catch (error) {

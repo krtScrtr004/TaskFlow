@@ -10,5 +10,5 @@ try {
     const endpoint = `users?${params.toString()}`
     initializeSearch(endpoint)
 } catch (error) {
-    handleException(error, `Error searching workers: ${error.message}`)
+    handleException(error)
 }

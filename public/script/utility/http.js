@@ -108,15 +108,13 @@ export const Http = (() => {
                 throw error
             }
 
-            if (request.status === 204 || request.status === 302) {
+            if (request.status === 204 || request.status === 302)
                 return true
-            }
 
             if (method !== 'DELETE') {
                 const contentType = request.headers.get('Content-Type')
-                if (!contentType || !contentType.includes('application/json')) {
+                if (!contentType || !contentType.includes('application/json')) 
                     throw new Error('Invalid content type in response.')
-                }
                 return await request.json()
             }
 

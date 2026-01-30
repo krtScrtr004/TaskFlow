@@ -149,8 +149,7 @@ async function submit(e) {
  * - This function relies on a global helper createFullName(firstName, middleName, lastName) to compute the displayed name.
  */
 function renderWorkerPoolCard(worker) {
-    if (!worker)
-        throw new Error('Worker data is required to render worker pool card.')
+    if (!worker) throw new Error('Worker data is required to render worker pool card.')
 
     const ICON_PATH = '/public/asset/image/icon/'
 

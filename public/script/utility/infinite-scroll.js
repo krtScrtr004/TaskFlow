@@ -39,35 +39,24 @@ export function infiniteScroll(
     domCreator,
     existingItemsCount = 0
 ) {
-    if (!container) {
-        throw new Error('Container element not found.')
-    }
+    if (!container) throw new Error('Container element not found')
 
-    if (!sentinel) {
-        throw new Error('Sentinel element not found.')
-    }
+    if (!sentinel) throw new Error('Sentinel element not found')
 
-    if (typeof asyncFunction !== 'function') {
-        throw new Error('asyncFunction must be a function.')
-    }
+    if (typeof asyncFunction !== 'function') throw new Error('asyncFunction must be a function')
 
-    if (typeof domCreator !== 'function') {
-        throw new Error('domCreator must be a function.')
-    }
+    if (typeof domCreator !== 'function') throw new Error('domCreator must be a function')
 
-    if (isNaN(existingItemsCount) || existingItemsCount < 0) {
-        throw new Error('existingItemsCount must be a non-negative number.')
-    }
+    if (isNaN(existingItemsCount) || existingItemsCount < 0) throw new Error('existingItemsCount must be a non-negative number')
+    
     offset = existingItemsCount
-
     try {
         const observer = createObserver(container, asyncFunction, domCreator, offset)
-        if (!observer) {
-            throw new Error('Failed to create IntersectionObserver.')
-        }
+        if (!observer) throw new Error('Failed to create IntersectionObserver')
+            
         observer.observe(sentinel)
     } catch (error) {
-        handleException(error, 'Error in infinite scroll setup:', error)
+        handleException(error)
     }
 }
 

@@ -4,10 +4,9 @@ const inputs = document.querySelectorAll(
     '.password-toggle-wrapper > input[type="password"]',
     '.password-toggle-wrapper > input[type="text"]'
 )
-if (inputs.length > 0) {
-    console.warn('Password inputs not found.')
-}
+if (inputs.length <= 0) console.warn('Password inputs not found')
 inputs?.forEach(input => togglePassword(input))
+
 /**
  * Attaches password visibility toggle functionality and icon display logic to a password input field.
  *
@@ -36,9 +35,7 @@ inputs?.forEach(input => togglePassword(input))
  * togglePassword(document.getElementById('myPassword'));
  */
 function togglePassword(input) {
-    const icon = input.parentElement.querySelector(
-        '.password-toggle-wrapper > img'
-    )
+    const icon = input.parentElement.querySelector('.password-toggle-wrapper > img')
 
     function displayIcon() {
         icon.style.display = 'inline-block';

@@ -36,9 +36,7 @@ export function debounceAsync(callback, delay) {
 
     return function (...args) {
         // Cancel previous pending Promise
-        if (pendingReject) {
-            pendingReject(new Error('Debounced'))
-        }
+        if (pendingReject) pendingReject(new Error('Debounced'))
 
         return new Promise((resolve, reject) => {
             pendingReject = reject

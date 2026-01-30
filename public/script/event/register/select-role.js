@@ -1,22 +1,18 @@
 import { Dialog } from '../../render/dialog.js'
+import { die } from '../../utility/utility.js'
 
 let lastSelectedRoleButton = null
 const registerForm = document.querySelector('#register_form')
 const roleButtons = registerForm?.querySelectorAll('button.role-button')
 
-if (!roleButtons) {
-    console.error('Role buttons not found.')
-    Dialog.somethingWentWrong()
-}
+if (!roleButtons) die('Role buttons not found.')
     
 roleButtons?.forEach(button => {
     button.addEventListener('click', e => {
         e.preventDefault()
 
         // Deselect the last selected button
-        if (lastSelectedRoleButton) {
-            deselectButton(lastSelectedRoleButton)                
-        }
+        if (lastSelectedRoleButton) deselectButton(lastSelectedRoleButton)                
 
         // Select the clicked button
         selectButton(button)
@@ -51,21 +47,15 @@ roleButtons?.forEach(button => {
  * @returns {void} This function does not return a value.
  */
 function selectButton(button) {
-    if (!button) {
-        throw new Error('Button is null or undefined.')
-    }
+    if (!button || !(button instanceof Element)) throw new Error('Button element is required')
 
     button.classList.add('selected')
 
     const icon = button.querySelector('img')
     const text = button.querySelector('p')
 
-    if (icon) {
-        icon.src = icon.src.replace('_w.svg', '_b.svg')
-    }
-    if (text) {
-        text.style.color = '#1e1e1e'
-    }
+    if (icon) icon.src = icon.src.replace('_w.svg', '_b.svg')
+    if (text) text.style.color = '#1e1e1e'
 }
 
 /**
@@ -86,19 +76,13 @@ function selectButton(button) {
  * @returns {void}
  */
 function deselectButton(button) {
-    if (!button) {
-        throw new Error('Button is null or undefined.')
-    }
+    if (!button || !(button instanceof Element)) throw new Error('Button element is required')
 
     button.classList.remove('selected')
 
     const icon = button.querySelector('img')
     const text = button.querySelector('p')
 
-    if (icon) {
-        icon.src = icon.src.replace('_b.svg', '_w.svg')
-    }
-    if (text) {
-        text.style.color = '#fffefe'
-    }
+    if (icon) icon.src = icon.src.replace('_b.svg', '_w.svg')
+    if (text) text.style.color = '#fffefe'
 }

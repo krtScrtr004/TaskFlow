@@ -54,15 +54,13 @@ export function removeTerminateWorker(projectId, userContainer, userCardSelector
     })
 
     removeUserButton = userInfoCardTemplate.querySelector('#remove_worker_button')
-    if (!removeUserButton) {
-        throw new Error('Remove user button not found.')
-    }
+    if (!removeUserButton) throw new Error('Remove user button not found')
+        
     removeUserButton.addEventListener('click', e => debounceAsync(removeButtonEvent(e, projectId, userCardSelector), 300))
 
     terminateUserButton = userInfoCardTemplate.querySelector('#terminate_worker_button')
-    if (!terminateUserButton) {
-        throw new Error('Terminate user button not found.')
-    }
+    if (!terminateUserButton) throw new Error('Terminate user button not found')
+
     terminateUserButton.addEventListener('click', e => debounceAsync(terminateButtonEvent(e, projectId, userCardSelector), 300))
 }
 
@@ -158,18 +156,12 @@ async function sendToBackendRemove(projectId, userId) {
         }
         isLoading = true
 
-        if (!projectId || projectId.trim() === '') {
-            throw new Error('Project ID is required.')
-        }
+        if (!projectId || projectId.trim() === '') throw new Error('Project ID is required')
 
-        if (!userId || userId.trim() === '') {
-            throw new Error('User ID is required.')
-        }
+        if (!userId || userId.trim() === '') throw new Error('User ID is required')
 
         const response = await Http.DELETE(`${endpoint}/workers/${userId}`)
-        if (!response) {
-            throw new Error('Failed to remove worker from project.')
-        }
+        if (!response) throw new Error('Failed to remove worker from project')
     } catch (error) {
         throw error
     } finally {
@@ -206,7 +198,7 @@ async function terminateButtonEvent(e, projectId, userCardSelector) {
 
         const userId = userInfoCardTemplate.dataset.userid
         if (!userId) {
-            console.error('User ID not found.')
+            console.error('User ID not found')
             Dialog.somethingWentWrong()
             return
         }
@@ -218,7 +210,7 @@ async function terminateButtonEvent(e, projectId, userCardSelector) {
         )) return
 
         if (!projectId) {
-            console.error('Project ID not found in modal dataset.')
+            console.error('Project ID not')
             Dialog.somethingWentWrong()
             return
         }
@@ -261,18 +253,13 @@ async function sendToBackendTerminate(projectId, userId) {
         }
         isLoading = true
 
-        if (!projectId || projectId.trim() === '') {
-            throw new Error('Project ID is required.')
-        }
+        if (!projectId || projectId.trim() === '') throw new Error('Project ID is required')
 
-        if (!userId || userId.trim() === '') {
-            throw new Error('User ID is required.')
-        }
+        if (!userId || userId.trim() === '') throw new Error('User ID is required')
 
         const response = await Http.PATCH(`${endpoint}/workers/${userId}`, { status: 'terminated' })
-        if (!response) {
-            throw new Error('Failed to terminate worker from project.')
-        }
+        if (!response) throw new Error('No response from server')
+
     } catch (error) {
         throw error
     } finally {

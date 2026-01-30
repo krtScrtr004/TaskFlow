@@ -1,7 +1,6 @@
 const projectStatistics = document.querySelector('.project-statistics')
 const leftSide = projectStatistics?.querySelector('.left')
-if (!leftSide)
-    console.warn('Project statistics left side element not found')
+if (!leftSide) console.warn('Project statistics left side element not found')
 
 const totalSpending = leftSide?.querySelector('.total-spending')
 const totalSpendingBar = leftSide?.querySelector('#project_total_spending_bar')

@@ -5,7 +5,7 @@ import { Loader } from '../../render/loader.js'
 import { validateInputs, userValidationRules } from '../../utility/validator.js'
 import { debounce, debounceAsync } from '../../utility/debounce.js'
 import { handleException } from '../../utility/handle-exception.js'
-import { normalizeDateFormat } from '../../utility/utility.js'
+import { die, normalizeDateFormat } from '../../utility/utility.js'
 
 let [isLoading, hasSomethingChanged] = [false, false]
 
@@ -18,9 +18,7 @@ const jobTitleToAdd = []
 const jobTitleToRemove = []
 
 const editableProfileDetailsForm = profile?.querySelector('#editable_profile_details_form')
-if (!editableProfileDetailsForm) {
-    console.error('Editable profile details form not found.')
-}
+if (!editableProfileDetailsForm) die('Editable profile details form not found')
 
 // Capture initial values when the page loads
 storeOriginalValues()
@@ -36,16 +34,12 @@ editableProfileDetailsForm?.addEventListener('input', debounce(e => {
 editableProfileDetailsForm?.addEventListener('submit', e => debounceAsync(submit(e), 300))
 
 const saveChangesButton = editableProfileDetailsForm?.querySelector('#save_changes_button')
-if (!saveChangesButton) {
-    console.error('Save Changes button not found.')
-}
+if (!saveChangesButton) die('Save Changes button not found')
 
 saveChangesButton?.addEventListener('click', e => debounceAsync(submit(e), 300))
 
 const myId = profile?.dataset.myid
-if (!myId || myId.trim() === '') {
-    console.error('User ID not found in form dataset.')
-}
+if (!myId || myId.trim() === '') die('User ID not found')
 
 /**
  * Handles the submission of the editable profile details form.
@@ -89,9 +83,8 @@ async function submit(e) {
         const birthDateInput = editableProfileDetailsForm.querySelector('#birth_date')
         const bioInput = editableProfileDetailsForm.querySelector('#bio')
         const jobTitlesInput = editableProfileDetailsForm.querySelector('#job_titles')
-        if (!firstNameInput || !middleNameInput || !lastNameInput || !contactNumberInput || !genderInput || !birthDateInput || !bioInput || !jobTitlesInput) {
+        if (!firstNameInput || !middleNameInput || !lastNameInput || !contactNumberInput || !genderInput || !birthDateInput || !bioInput || !jobTitlesInput)
             throw new Error('One or more profile form inputs not found.')
-        }
 
         // Handle job titles trailing comma and spaces
         let jobTitlesValue = jobTitlesInput.value.trim()
@@ -120,9 +113,7 @@ async function submit(e) {
         }
 
         // Validate only the changed inputs
-        if (!validateInputs(changedParams, userValidationRules())) {
-            return
-        }
+        if (!validateInputs(changedParams, userValidationRules())) return
 
         // If job titles changed, populate the add/remove arrays
         if (changedParams.hasOwnProperty('jobTitles')) {
@@ -146,7 +137,7 @@ async function submit(e) {
             `Your profile has been successfully updated`
         )
     } catch (error) {
-        handleException(error, `Error during profile update: ${error}`)
+        handleException(error)
     } finally {
         Loader.delete()
     }
@@ -282,39 +273,35 @@ async function sendToBackend(params) {
         }
         isLoading = true
 
-        if (!myId || myId.trim() === '') {
-            throw new Error('User ID not found.')
-        }
+        if (!myId || myId.trim() === '') throw new Error('User ID not found')
 
         // Only validate required fields if they were changed
-        if (params.hasOwnProperty('firstName') && (!params.firstName || params.firstName.trim() === '')) {
-            throw new Error('First name is required.')
-        }
-        if (params.hasOwnProperty('lastName') && (!params.lastName || params.lastName.trim() === '')) {
-            throw new Error('Last name is required.')
-        }
-        if (params.hasOwnProperty('contactNumber') && (!params.contactNumber || params.contactNumber.trim() === '')) {
-            throw new Error('Contact number is required.')
-        }
-        if (params.hasOwnProperty('gender') && (!params.gender || params.gender.trim() === '')) {
-            throw new Error('Gender is required.')
-        }
-        if (params.hasOwnProperty('birthDate') && (!params.birthDate || params.birthDate.trim() === '')) {
-            throw new Error('Birth date is required.')
-        }
+        if (params.hasOwnProperty('firstName') && (!params.firstName || params.firstName.trim() === '')) 
+            throw new Error('First name is required')
+
+        if (params.hasOwnProperty('lastName') && (!params.lastName || params.lastName.trim() === '')) 
+            throw new Error('Last name is required')
+        
+        if (params.hasOwnProperty('contactNumber') && (!params.contactNumber || params.contactNumber.trim() === '')) 
+            throw new Error('Contact number is required')
+        
+        if (params.hasOwnProperty('gender') && (!params.gender || params.gender.trim() === '')) 
+            throw new Error('Gender is required')   
+        
+        if (params.hasOwnProperty('birthDate') && (!params.birthDate || params.birthDate.trim() === '')) 
+            throw new Error('Birth date is required')
+        
         if (params.hasOwnProperty('jobTitles') &&
             params['jobTitles']['toAdd'].length === 0 &&
             params['jobTitles']['toRemove'].length === 0) {
-            throw new Error('Job titles are required.')
+                throw new Error('Job titles are required')
         }
 
         // Build request params
         const requestParams = { ...params }
 
         const response = await Http.PATCH(`users/${myId}`, requestParams)
-        if (!response) {
-            throw new Error('No response from server.')
-        }
+        if (!response) throw new Error('No response from server')
     } catch (error) {
         throw error
     } finally {

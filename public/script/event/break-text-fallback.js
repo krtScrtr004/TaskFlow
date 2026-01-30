@@ -2,10 +2,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Check if the browser is Firefox
     const isFirefox = navigator.userAgent.toLowerCase().includes('firefox')
-    if (isFirefox) {
-        // Apply the ellipsis fallback for multi-line text elements
-        applyEllipsisFallback()
-    }
+    if (isFirefox) applyEllipsisFallback() // Apply the ellipsis fallback for multi-line text elements
 })
 
 /**

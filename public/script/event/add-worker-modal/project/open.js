@@ -10,16 +10,13 @@ import { die } from '../../../utility/utility.js'
 const projectContainer = document.querySelector('.project-container')
 
 const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
-if (!addWorkerModalTemplate)
-    die('Add worker modal template not found')
+if (!addWorkerModalTemplate) die('Add worker modal template not found')
 
 const thisProjectId = projectContainer ? projectContainer.dataset.projectid : null
-if (!thisProjectId || thisProjectId.trim() === '') 
-    die('Project ID not found')
+if (!thisProjectId || thisProjectId.trim() === '') die('Project ID not found')
 
 const addWorkerButton = document.querySelector('#add_worker_button')
-if (!addWorkerButton) 
-    die('Add worker button element not found')
+if (!addWorkerButton) die('Add worker button element not found')
 
 addWorkerButton.addEventListener('click', async () => {
     const params = new URLSearchParams()
@@ -46,7 +43,7 @@ addWorkerButton.addEventListener('click', async () => {
         workers.forEach(worker => createWorkerListCard(worker))
         selectWorker()
     } catch (error) {
-        handleException(error, `Error loading workers: ${error}`)
+        handleException(error)
     } finally {
         Loader.delete()
     }
