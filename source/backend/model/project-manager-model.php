@@ -44,7 +44,7 @@ class ProjectManagerModel extends Model
      *
      * @return array|null Array of result rows (each row as an associative array) or null if no results or the method is not implemented
      */
-    protected static function find(string $whereClause = '', array $params = [], array $options = []): ?array
+    protected function find(string $whereClause = '', array $params = [], array $options = []): ?array
     {
         // Not implemented (No use case)
         return null;
@@ -53,7 +53,7 @@ class ProjectManagerModel extends Model
     /**
      * Finds a project manager by their ID, optionally filtering by a specific project and including project history.
      *
-     * This method retrieves a User instance representing a project manager from the database. It can optionally
+     * This method retrieves a User this representing a project manager from the database. It can optionally
      * filter the results to ensure the manager is associated with a specific project. If $includeHistory is true,
      * it includes a detailed history of all projects managed by the user, including their phases and tasks.
      * The returned User object includes additional information such as total projects and completed projects.
@@ -63,16 +63,15 @@ class ProjectManagerModel extends Model
      * @param int|UUID|null $projectId Optional project ID to filter the manager by (integer, UUID object, or null).
      * @param bool $includeHistory Whether to include the project history with phases and tasks (default: false).
      *
-     * @return ProjectManager|null The ProjectManager instance representing the project manager, or null if not found.
+     * @return ProjectManager|null The ProjectManager this representing the project manager, or null if not found.
      *
      * @throws DatabaseException If a database error occurs during the query execution.
      */
-    public static function findById(
+    public function findById(
         int|UUID $managerId, 
         int|UUID|null $projectId = null, 
         bool $includeHistory = false
     ): ?ProjectManager {
-        $instance = new self();
         try {
             // TODO: Separate project history fetching into its own method to avoid complex queries
             $projectHistory = $includeHistory
@@ -213,11 +212,11 @@ class ProjectManagerModel extends Model
                     u.id
                 LIMIT 1";
             
-            $statement = $instance->connection->prepare($query);
+            $statement = $this->connection->prepare($query);
             $statement->execute($params);
             $result = $statement->fetch();
 
-            if (!$instance->hasData($result)) {
+            if (!$this->hasData($result)) {
                 return null;
             }
 
@@ -279,7 +278,7 @@ class ProjectManagerModel extends Model
      * 
      * @return array|null An array of project manager data or null if not implemented
      */
-    public static function all(int $offset = 0, int $limit = 10): ?array
+    public function all(int $offset = 0, int $limit = 10): ?array
     {
         // Not implemented (No use case)
         return null;
@@ -295,7 +294,7 @@ class ProjectManagerModel extends Model
      * 
      * @return mixed|null The created project manager data or null if not implemented
      */
-    public static function create(mixed $data): mixed
+    public function create(mixed $data): mixed
     {
         // Not implemented (No use case)
         return null;
@@ -311,7 +310,7 @@ class ProjectManagerModel extends Model
      * 
      * @return bool False indicating deletion is not implemented
      */
-    protected static function delete(mixed $data): bool
+    protected function delete(mixed $data): bool
     {
         // Not implemented (No use case)
         return false;
@@ -327,7 +326,7 @@ class ProjectManagerModel extends Model
      * 
      * @return bool False indicating save is not implemented
      */
-    public static function save(array $data): bool
+    public function save(array $data): bool
     {
         // Not implemented (No use case)
         return false;

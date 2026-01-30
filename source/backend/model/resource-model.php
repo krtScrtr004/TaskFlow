@@ -50,7 +50,7 @@ class ResourceModel extends Model
      *
      * @return ResourceContainer|null A ResourceContainer of TaskResource objects if rows found, or null if none
      */
-    protected static function find(string $whereClause = '', array $params = [], array $options = []): ?ResourceContainer
+    protected function find(string $whereClause = '', array $params = [], array $options = []): ?ResourceContainer
     {
         $paramOptions = [
             'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
@@ -61,7 +61,6 @@ class ResourceModel extends Model
 
         $whereClause .= ' AND r.task_worker_id IS NULL'; // Ensure only non-labor resources
 
-        $instance = new self();
         try {
             $queryString =
                 "SELECT 
@@ -91,12 +90,12 @@ class ResourceModel extends Model
                     `task` AS t
                 ON
                     t.id = r.task_id";
-            $query = $instance->appendOptionsToFindQuery(
-                $instance->appendWhereClause($queryString, $whereClause),
+            $query = $this->appendOptionsToFindQuery(
+                $this->appendWhereClause($queryString, $whereClause),
                 $paramOptions
             );
 
-            $statement = $instance->connection->prepare($query);
+            $statement = $this->connection->prepare($query);
             $statement->execute($params);
             $results = $statement->fetchAll();
 
@@ -147,7 +146,7 @@ class ResourceModel extends Model
      *
      * @return ResourceContainer|null The found ResourceContainer instance, or null if no match
      */
-    public static function findByTaskId(
+    public function findByTaskId(
         int|UUID $taskId,
         array $options = [
             'limit'     => 10,
@@ -158,7 +157,6 @@ class ResourceModel extends Model
             throw new InvalidArgumentException('Invalid task ID.');
         }
 
-        $instance = new self();
         try {
             $whereClause = 't.id = ' . is_int($taskId)
                 ? ':taskId'
@@ -169,7 +167,7 @@ class ResourceModel extends Model
                 'offset'    => $options['offset'] ?? $options[':offset'] ?? 0
             ];
 
-            return $instance->find($whereClause, $params, $optionParams);
+            return $this->find($whereClause, $params, $optionParams);
         } catch (Exception $e) {
             throw $e;
         }
@@ -178,7 +176,7 @@ class ResourceModel extends Model
     /**
      * Retrieve a page of Resource items as a ResourceContainer.
      *
-     * This static method validates pagination parameters, prepares query options, and delegates
+     * This method validates pagination parameters, prepares query options, and delegates
      * the retrieval to self::find(), returning whatever ResourceContainer (or null) that call
      * produces.
      *
@@ -198,7 +196,7 @@ class ResourceModel extends Model
      *
      * @return ResourceContainer|null   A container of resources for the requested page, or null
      */
-    public static function all(int $offset = 0, int $limit = 10): ?ResourceContainer
+    public function all(int $offset = 0, int $limit = 10): ?ResourceContainer
     {
         if ($offset < 0) {
             throw new InvalidArgumentException('Invalid offset value.');
@@ -226,7 +224,7 @@ class ResourceModel extends Model
      * 
      * @return mixed
      */
-    public static function create(mixed $data): mixed
+    public function create(mixed $data): mixed
     {
         // Not implemented (No use case)
         return null;
@@ -259,9 +257,8 @@ class ResourceModel extends Model
      *
      * @return ResourceContainer The same $resources container, with each Resource's ID updated to the DB-assigned value
      */
-    public static function createMultiple(int $taskId, ResourceContainer $resources): ResourceContainer
+    public function createMultiple(int $taskId, ResourceContainer $resources): ResourceContainer
     {
-        $instance = new self();
         try {
             $query =
                 "INSERT INTO `resource` (
@@ -285,7 +282,7 @@ class ResourceModel extends Model
                     :actualUnit,
                     :note
                 )";
-            $statement = $instance->connection->prepare($query);
+            $statement = $this->connection->prepare($query);
             foreach ($resources as $resource) {
                 $params = [
                     ':publicId'         => UUID::toBinary($resource->getPublicId()),
@@ -301,7 +298,7 @@ class ResourceModel extends Model
                 $statement->execute($params);
 
                 // Set ID given by the DB
-                $resource->setId($instance->connection->lastInsertId());
+                $resource->setId($this->connection->lastInsertId());
             }
             return $resources;
         } catch (PDOException $e) {
@@ -338,13 +335,12 @@ class ResourceModel extends Model
      *
      * @return bool True if the update was successful
      */
-    public static function save(array $data): bool
+    public function save(array $data): bool
     {
         if (isset($data['id']) && (!is_int($data['id']) || $data['id'] < 1)) {
             throw new InvalidArgumentException('Invalid Resource ID provided.');
         }
 
-        $instance = new self();
         try {
             $updateFields = [];
             $params = [];
@@ -388,7 +384,7 @@ class ResourceModel extends Model
                         . isset($data['id']) 
                             ? '`id` = :id' 
                             : '`public_id` = :id';
-                $statement = $instance->connection->prepare($updateQuery);
+                $statement = $this->connection->prepare($updateQuery);
                 $statement->execute($params);
             }
 
@@ -398,7 +394,7 @@ class ResourceModel extends Model
         }
     }
 
-    protected static function delete(mixed $data): bool
+    protected function delete(mixed $data): bool
     {
         // TODO: Implement delete() method
         return false;

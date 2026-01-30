@@ -43,7 +43,7 @@ class ProjectWorkerModel extends Model
      *
      * @throws DatabaseException If a database error occurs during query execution
      */
-    protected static function find(string $whereClause = '', array $params = [], array $options = []): ?WorkerContainer
+    protected function find(string $whereClause = '', array $params = [], array $options = []): ?WorkerContainer
 	{
         $paramOptions = [
             'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
@@ -52,7 +52,6 @@ class ProjectWorkerModel extends Model
             'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 'u.last_name ASC',
         ];
 
-		$instance = new self();
         try {
             $queryString = 
                 "SELECT 
@@ -129,15 +128,15 @@ class ProjectWorkerModel extends Model
                     `job_title` AS jt
                 ON 
                     u.id = jt.user_id";
-            $query = $instance->appendOptionsToFindQuery(
-                $instance->appendWhereClause($queryString, $whereClause), 
+            $query = $this->appendOptionsToFindQuery(
+                $this->appendWhereClause($queryString, $whereClause), 
                 $paramOptions);
 
-            $statement = $instance->connection->prepare($query);
+            $statement = $this->connection->prepare($query);
             $statement->execute($params);
             $result = $statement->fetchAll();
 
-            if (!$instance->hasData($result)) {
+            if (!$this->hasData($result)) {
                 return null;
             }
 
@@ -180,7 +179,7 @@ class ProjectWorkerModel extends Model
      * @throws InvalidArgumentException If an invalid project ID is provided.
      * @throws DatabaseException If a database error occurs during the search.
      */
-    public static function search(
+    public function search(
         string|null $key = '',
         int|UUID|null $projectId = null,
         WorkerStatus|null $status = null,
@@ -199,8 +198,6 @@ class ProjectWorkerModel extends Model
         ];
 
         try {
-            $instance = new self();
-
             $where = [];
             $params = [];
 
@@ -329,11 +326,11 @@ class ProjectWorkerModel extends Model
                 OFFSET " 
                     . intval($paramOptions['offset']);
 
-            $statement = $instance->connection->prepare($query);
+            $statement = $this->connection->prepare($query);
             $statement->execute($params);
             $result = $statement->fetchAll();
 
-            if (!$instance->hasData($result)) {
+            if (!$this->hasData($result)) {
                 return null;
             }
 
@@ -372,7 +369,7 @@ class ProjectWorkerModel extends Model
      *
      * @return Worker|null Worker instance with partial data, or null if not found
      */
-    public static function findById(
+    public function findById(
         int|UUID $workerId, 
         int|UUID|null $projectId = null, 
         bool $includeHistory = false): ?Worker
@@ -381,7 +378,6 @@ class ProjectWorkerModel extends Model
             throw new InvalidArgumentException('Invalid project ID provided.');
         }
 
-        $instance = new self();
         try {
             // TODO: Separate this into its own method to reduce complexity
             $projectHistory = $includeHistory
@@ -572,11 +568,11 @@ class ProjectWorkerModel extends Model
                 GROUP BY
                     u.id, p.id, pw.status, pw.default_rate
                 LIMIT 1 ";
-            $statement = $instance->connection->prepare($query);
+            $statement = $this->connection->prepare($query);
             $statement->execute($params);
             $result = $statement->fetch();
 
-            if (!$instance->hasData($result)) {
+            if (!$this->hasData($result)) {
                 return null;
             }
 
@@ -641,7 +637,7 @@ class ProjectWorkerModel extends Model
      * @return WorkerContainer|null Container of Worker instances matching the criteria, or null if none found.
      */
 
-    public static function findMultipleById(
+    public function findMultipleById(
         array $workerIds, 
         int|UUID|null $projectId = null, 
         bool $includeHistory = false
@@ -655,7 +651,6 @@ class ProjectWorkerModel extends Model
             throw new InvalidArgumentException('Invalid project ID provided.');
         }
 
-        $instance = new self();
         try {
             // Determine if workerIds are integers or UUIDs based on first element
             $firstWorkerId = $workerIds[0];
@@ -861,11 +856,11 @@ class ProjectWorkerModel extends Model
                 ORDER BY
                     u.last_name ASC
             ";
-            $statement = $instance->connection->prepare($query);
+            $statement = $this->connection->prepare($query);
             $statement->execute($params);
             $results = $statement->fetchAll();
 
-            if (!$instance->hasData($results)) {
+            if (!$this->hasData($results)) {
                 return null;
             }
 
@@ -938,7 +933,7 @@ class ProjectWorkerModel extends Model
      * - GROUP_CONCAT is used to aggregate job titles
      * - GROUP BY u.id ensures one row per worker
      */
-    public static function findByProjectId(
+    public function findByProjectId(
         int|UUID $projectId, 
         array $options = [
             'limit' => 10,
@@ -988,7 +983,7 @@ class ProjectWorkerModel extends Model
      *
      * @return WorkerContainer|null A container with the retrieved workers, or null if no workers are found.
      */
-    public static function all(int $offset = 0, int $limit = 10): ?WorkerContainer
+    public function all(int $offset = 0, int $limit = 10): ?WorkerContainer
     {
         if ($offset < 0) {
             throw new InvalidArgumentException('Invalid offset value.');
@@ -1023,7 +1018,7 @@ class ProjectWorkerModel extends Model
      *
      * @return mixed Returns null as the method is not implemented.
      */
-	public static function create(mixed $data): mixed
+	public function create(mixed $data): mixed
 	{
         // Not implemented (No use case)
 		return null;
@@ -1045,7 +1040,7 @@ class ProjectWorkerModel extends Model
      * 
      * @return void
      */
-    public static function createMultiple(int|UUID $projectId, WorkerContainer $workers): bool
+    public function createMultiple(int|UUID $projectId, WorkerContainer $workers): bool
     {
         if (is_int($projectId) && $projectId < 1) {
             throw new InvalidArgumentException('Invalid project ID provided.');
@@ -1055,7 +1050,6 @@ class ProjectWorkerModel extends Model
             ? UUID::toBinary($projectId)
             : $projectId;
 
-        $instance = new self();
         try {
             $insertQuery = 
                 "INSERT INTO `project_worker` (
@@ -1078,7 +1072,7 @@ class ProjectWorkerModel extends Model
                     :defaultRate
                 ) ON DUPLICATE KEY UPDATE 
                     status = VALUES(status)";
-            $statement = $instance->connection->prepare($insertQuery);
+            $statement = $this->connection->prepare($insertQuery);
             foreach ($workers as $worker) {    
                 $statement->execute([
                     ':projectId'    => $projectId,
@@ -1110,7 +1104,7 @@ class ProjectWorkerModel extends Model
      * @throws InvalidArgumentException If an invalid project ID or worker ID is provided.
      * @throws DatabaseException If a database error occurs during the query execution.
      */
-    public static function worksOn(int|UUID $projectId, int|UUID $userId): bool
+    public function worksOn(int|UUID $projectId, int|UUID $userId): bool
     {
         if (is_int($projectId) && $projectId < 1) {
             throw new InvalidArgumentException('Invalid project ID provided.');
@@ -1121,8 +1115,7 @@ class ProjectWorkerModel extends Model
         }
 
         try {
-            $instance = new self();
-            $query = 
+                $query = 
                 "SELECT *
                 FROM 
                     `project_worker` AS pw
@@ -1145,7 +1138,7 @@ class ProjectWorkerModel extends Model
                 AND 
                     pw.status != :terminatedStatus
             ";
-            $statement = $instance->connection->prepare($query);
+            $statement = $this->connection->prepare($query);
             $statement->execute([
                 ':projectId'        => ($projectId instanceof UUID)
                     ? UUID::toBinary($projectId)
@@ -1156,7 +1149,7 @@ class ProjectWorkerModel extends Model
                 ':userId2'           => $userId,
                 ':terminatedStatus' => WorkerStatus::TERMINATED->value
             ]);
-            return $instance->hasData($statement->fetchAll());
+            return $this->hasData($statement->fetchAll());
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
@@ -1175,7 +1168,7 @@ class ProjectWorkerModel extends Model
      *
      * @return bool Returns false as the method is not implemented.
      */
-    public static function save(array $data): bool 
+    public function save(array $data): bool 
     {
         return false;
     }
@@ -1214,13 +1207,12 @@ class ProjectWorkerModel extends Model
      * @throws InvalidArgumentException If $projectId or a worker id is invalid or a worker lacks an identifier
      * @throws DatabaseException If a PDOException occurs while executing an update
      */
-	public static function saveMultiple(int|UUID $projectId, array $workers): bool
+	public function saveMultiple(int|UUID $projectId, array $workers): bool
 	{
         if (is_int($projectId) && $projectId < 1) {
             throw new InvalidArgumentException('Invalid project ID provided.');
         }
         
-        $instance = new self();
         try {
             foreach ($workers as $data) {
                 if (!isset($data['id']) && !isset($data['publicId'])) {
@@ -1273,7 +1265,7 @@ class ProjectWorkerModel extends Model
 
                 $where = implode(' AND ', $whereParts);
                 $query = 'UPDATE `project_worker` SET ' . implode(', ', $updateFields) . ' WHERE ' . $where;
-                $statement = $instance->connection->prepare($query);
+                $statement = $this->connection->prepare($query);
                 $statement->execute($params);
             }
             return true;
@@ -1309,7 +1301,7 @@ class ProjectWorkerModel extends Model
      * @throws InvalidArgumentException If project_id or worker_id is missing or an invalid integer is provided.
      * @throws DatabaseException If a PDO error occurs while preparing or executing the statement.
      */
-    public static function delete(mixed $data): bool
+    public function delete(mixed $data): bool
     {
         if (!isset($data['projectId'])) {
             throw new InvalidArgumentException('Project ID is required.');
@@ -1348,8 +1340,7 @@ class ProjectWorkerModel extends Model
                         WHERE
                             public_id = :workerId)') . "";
 
-            $instance = new self();
-            $statement = $instance->connection->prepare($query);
+                $statement = $this->connection->prepare($query);
             $statement->execute([
                 ':projectId'    => ($data['projectId'] instanceof UUID)
                     ? UUID::toBinary($data['projectId'])

@@ -160,13 +160,13 @@ abstract class Model
         return $query;
     }
 
-    abstract public static function create(mixed $data): mixed;
+    abstract public function create(mixed $data): mixed;
 
-    abstract public static function all(int $offset = 0, int $limit = 10): mixed;
+    abstract public function all(int $offset = 0, int $limit = 10): mixed;
 
-    abstract protected static function find(string $whereClause = '', array $params = [], array $options = []): mixed;
+    abstract protected function find(string $whereClause = '', array $params = [], array $options = []): mixed;
     
-    abstract public static function save(array $data): bool;
+    abstract public function save(array $data): bool;
     
-    abstract static protected function delete(mixed $data): bool;
+    abstract protected function delete(mixed $data): bool;
 }

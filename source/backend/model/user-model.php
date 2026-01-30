@@ -28,7 +28,7 @@ class UserModel extends Model
      *
      * @throws InvalidArgumentException If the role is invalid
      */
-    public static function hydrateByRole(array $data): ProjectManager|Worker
+    public function hydrateByRole(array $data): ProjectManager|Worker
     {
         return match ($data['role']) {
             'projectManager'    => ProjectManager::fromArray($data),
@@ -62,7 +62,7 @@ class UserModel extends Model
      *
      * @throws DatabaseException If a database error occurs during query execution
      */
-    protected static function find(string $whereClause = '', array $params = [], array $options = []): ?array
+    protected function find(string $whereClause = '', array $params = [], array $options = []): ?array
     {
         $paramOptions = [
             'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
@@ -71,7 +71,6 @@ class UserModel extends Model
             'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 'u.last_name ASC',
         ];
 
-        $instance = new self();
         try {
             Csrf::protect();
 
@@ -176,8 +175,8 @@ class UserModel extends Model
                     `job_title` AS jt 
                 ON 
                     u.id = jt.user_id";
-            $query = $instance->appendOptionsToFindQuery(
-                $instance->appendWhereClause($queryString, $whereClause),
+            $query = $this->appendOptionsToFindQuery(
+                $this->appendWhereClause($queryString, $whereClause),
                 $paramOptions
             );
 
@@ -191,11 +190,11 @@ class UserModel extends Model
             $params[':terminatedStatus1']   = WorkerStatus::TERMINATED->value;
             $params[':terminatedStatus2']   = WorkerStatus::TERMINATED->value;
 
-            $statement = $instance->connection->prepare($query);
+            $statement = $this->connection->prepare($query);
             $statement->execute($params);
             $result = $statement->fetchAll();
 
-            if (!$instance->hasData($result)) {
+            if (!$this->hasData($result)) {
                 return null;
             }
 
@@ -207,7 +206,7 @@ class UserModel extends Model
                     'cancelledProjectCount'     => (int) $row['cancelled_project_count'] ?? 0,
                     'terminatedProjectCount'    => (int) $row['terminated_project_count'] ?? 0
                 ];
-                $users[] = $instance->hydrateByRole($row);
+                $users[] = $this->hydrateByRole($row);
             }
             return $users;
         } catch (PDOException $e) {
@@ -219,7 +218,7 @@ class UserModel extends Model
     /**
      * Locate and return a User by numeric ID or public UUID.
      *
-     * This static factory method resolves a user record by either its numeric primary key
+     * This factory method resolves a user record by either its numeric primary key
      * (id) or its public identifier (UUID). It performs a lightweight lookup to determine
      * the user's role and then delegates to the appropriate subtype loader:
      * - If the role matches Role::PROJECT_MANAGER, it delegates to ProjectManagerModel::findById(...)
@@ -243,13 +242,12 @@ class UserModel extends Model
      * @see ProjectManagerModel::findById()
      * @see ProjectWorkerModel::findById()
      */
-    public static function findById(int|UUID $userId): ProjectManager|Worker|null
+    public function findById(int|UUID $userId): ProjectManager|Worker|null
     {
         if (is_int($userId) && $userId < 1) {
             throw new InvalidArgumentException('Invalid user ID provided.');
         }
 
-        $instance = new self();
         try {
             $searchRole =
                 "SELECT 
@@ -260,17 +258,20 @@ class UserModel extends Model
                 WHERE 
                     " . (is_int($userId) ? "id" : "public_id") . " = :userId 
                 LIMIT 1";
-            $statement = $instance->connection->prepare($searchRole);
+            $statement = $this->connection->prepare($searchRole);
             $statement->execute([':userId' => is_int($userId) ? $userId : UUID::toBinary($userId)]);
             $result = $statement->fetch();
 
-            if (!$instance->hasData($result)) {
-                return null;
-            }
+            if (!$this->hasData($result)) return null;
 
-            return ($result['role'] === Role::PROJECT_MANAGER->value)
-                ? ProjectManagerModel::findById($userId, null, true)
-                : ProjectWorkerModel::findById($userId, null, true);
+            // Delegate to appropriate model based on role
+            if ($result['role'] === Role::PROJECT_MANAGER->value) {
+                $projectManagerModel = new ProjectManagerModel();
+                return $projectManagerModel->findById($userId, null, true);
+            } else {
+                $projectWorkerModel = new ProjectWorkerModel();
+                return $projectWorkerModel->findById($userId, null, true);
+            }
         } catch (Exception $e) {
             throw $e;
         }
@@ -289,7 +290,7 @@ class UserModel extends Model
      * 
      * @throws DatabaseException If a database error occurs during the operation
      */
-    public static function findByEmail(string $email): ProjectManager|Worker|null
+    public function findByEmail(string $email): ProjectManager|Worker|null
     {
         try {
             $result = self::find('email = :email AND deleted_at IS NULL', [':email' => $email], ['limit' => 1]);
@@ -318,12 +319,11 @@ class UserModel extends Model
      *
      * @throws DatabaseException If a database error occurs during the query
      */
-    public static function hasDuplicateInfo(
+    public function hasDuplicateInfo(
         ?string $email = null,
         ?string $contactNumber = null,
         int|UUID|null $excludeUserId = null
     ): array {
-        $instance = new self();
         $result = [
             'email' => false,
             'contactNumber' => false,
@@ -377,7 +377,7 @@ class UserModel extends Model
 
             $query .= " LIMIT 1";
 
-            $statement = $instance->connection->prepare($query);
+            $statement = $this->connection->prepare($query);
             $statement->execute($params);
             $row = $statement->fetch();
 
@@ -407,7 +407,7 @@ class UserModel extends Model
      * @throws InvalidArgumentException If offset is negative or limit is less than 1
      * @throws DatabaseException When database query fails
      */
-    public static function all(int $offset = 0, int $limit = 10, bool $includeDeleted = false): ?array
+    public function all(int $offset = 0, int $limit = 10, bool $includeDeleted = false): ?array
     {
         if ($offset < 0) {
             throw new InvalidArgumentException('Invalid offset value.');
@@ -453,7 +453,7 @@ class UserModel extends Model
      *
      * @throws Exception If an error occurs during search.
      */
-    public static function search(
+    public function search(
         string $key = '',
         Role|null $role = null,
         WorkerStatus|null $status = null,
@@ -624,9 +624,8 @@ class UserModel extends Model
      * @throws DatabaseException If any database operation fails
      * @return User
      */
-    public static function create(mixed $user): ProjectManager|Worker|null
+    public function create(mixed $user): ProjectManager|Worker|null
     {
-        $instance = new self();
         try {
             if (!$user instanceof ProjectManager && !$user instanceof Worker) {
                 throw new InvalidArgumentException('Expected instance of ProjectManager or Worker');
@@ -646,7 +645,7 @@ class UserModel extends Model
             $profileLink        =   trimOrNull($user->getProfileLink());
             $password           =   $user->getPassword();
 
-            $instance->connection->beginTransaction();
+            $this->connection->beginTransaction();
 
             // Insert User Data
             $userQuery =
@@ -677,7 +676,7 @@ class UserModel extends Model
                     :profileLink, 
                     :password
                 )";
-            $statement = $instance->connection->prepare($userQuery);
+            $statement = $this->connection->prepare($userQuery);
             $statement->execute([
                 ':publicId'         => UUID::toBinary($uuid),
                 ':firstName'        => $firstName,
@@ -692,7 +691,7 @@ class UserModel extends Model
                 ':profileLink'      => $profileLink,
                 ':password'         => password_hash($password, \PASSWORD_ARGON2ID)
             ]);
-            $userId = $instance->connection->lastInsertId();
+            $userId = $this->connection->lastInsertId();
 
             // Insert Job Titles, if any
             if (!empty($jobTitles)) {
@@ -704,7 +703,7 @@ class UserModel extends Model
                         :userId, 
                         :title
                     )";
-                $jobTitleStatement = $instance->connection->prepare($jobTitleQuery);
+                $jobTitleStatement = $this->connection->prepare($jobTitleQuery);
                 foreach ($jobTitles as $title) {
                     $jobTitleStatement->execute([
                         ':userId'   => $userId,
@@ -713,14 +712,14 @@ class UserModel extends Model
                 }
             }
 
-            $instance->connection->commit();
+            $this->connection->commit();
 
             $user->setId((int)$userId);
             $user->setPublicId($uuid);
             $user->setPassword(null);
             return $user;
         } catch (PDOException $e) {
-            $instance->connection->rollBack();
+            $this->connection->rollBack();
             throw new DatabaseException($e->getMessage());
         }
     }
@@ -757,11 +756,10 @@ class UserModel extends Model
      * @throws InvalidArgumentException If validation fails (e.g., missing ID or publicId)
      * @return bool True on successful update, false otherwise
      */
-    public static function save(array $data): bool
+    public function save(array $data): bool
     {
-        $instance = new self();
         try {
-            $instance->connection->beginTransaction();
+            $this->connection->beginTransaction();
 
             $updateFields = [];
             $params = [];
@@ -834,7 +832,7 @@ class UserModel extends Model
 
             if (!empty($updateFields)) {
                 $projectQuery = "UPDATE `user` SET " . implode(', ', $updateFields) . " WHERE id = " . (isset($params[':id']) ? ":id" : "(SELECT id FROM `user` WHERE public_id = :publicId)") . "";
-                $statement = $instance->connection->prepare($projectQuery);
+                $statement = $this->connection->prepare($projectQuery);
                 $statement->execute($params);
             }
 
@@ -846,10 +844,10 @@ class UserModel extends Model
                 );
             }
 
-            $instance->connection->commit();
+            $this->connection->commit();
             return true;
         } catch (PDOException $e) {
-            $instance->connection->rollBack();
+            $this->connection->rollBack();
             throw new DatabaseException($e->getMessage());
         }
     }
@@ -873,7 +871,7 @@ class UserModel extends Model
      * @throws DatabaseException If a database error occurs during the update.
      * @return void
      */
-    private static function updateJobTitles(int|UUID $userId, JobTitleContainer|null $jobTitlesToDelete = null, JobTitleContainer|null $jobTitlesToAdd = null): void
+    private function updateJobTitles(int|UUID $userId, JobTitleContainer|null $jobTitlesToDelete = null, JobTitleContainer|null $jobTitlesToAdd = null): void
     {
         if (is_int($userId) && $userId < 1) {
             throw new InvalidArgumentException('Invalid user ID provided for job title update.');
@@ -883,7 +881,6 @@ class UserModel extends Model
             return;
         }
 
-        $instance = new self();
         try {
             if (count($jobTitlesToDelete) > 0) {
                 $deleteQuery =
@@ -895,7 +892,7 @@ class UserModel extends Model
                         title = :title";
 
                 foreach ($jobTitlesToDelete as $title) {
-                    $deleteStatement = $instance->connection->prepare($deleteQuery);
+                    $deleteStatement = $this->connection->prepare($deleteQuery);
                     $deleteStatement->execute([
                         ':userId' => is_int($userId) ? $userId : UUID::toBinary($userId),
                         ':title' => $title
@@ -913,7 +910,7 @@ class UserModel extends Model
                     )";
 
                 foreach ($jobTitlesToAdd as $title) {
-                    $insertStatement = $instance->connection->prepare($insertQuery);
+                    $insertStatement = $this->connection->prepare($insertQuery);
                     $insertStatement->execute([
                         ':userId' => is_int($userId) ? $userId : UUID::toBinary($userId),
                         ':title' => $title
@@ -942,15 +939,14 @@ class UserModel extends Model
      * .
      * @throws Exception If an error occurs during the deletion process.
      */
-    public static function delete(mixed $data): bool
+    public function delete(mixed $data): bool
     {
         if (!$data instanceof ProjectManager && !$data instanceof Worker) {
             throw new InvalidArgumentException('Expected instance of ProjectManager or Worker');
         }
 
         try {
-            $instance = new self();
-            $instance->save([
+                $this->save([
                 'id'        => $data->getId(),
                 'delete'    => true
             ]);
@@ -974,16 +970,15 @@ class UserModel extends Model
      * 
      * @return bool Returns true if the deletion was successful.
      */
-    public static function hardDelete(mixed $data): bool
+    public function hardDelete(mixed $data): bool
     {
         if (!$data instanceof ProjectManager && !$data instanceof Worker) {
             throw new InvalidArgumentException('Expected instance of User');
         }
 
-        $instance = new self();
         try {
             $deleteQuery = "DELETE FROM `user` WHERE id = :id";
-            $statement = $instance->connection->prepare($deleteQuery);
+            $statement = $this->connection->prepare($deleteQuery);
             $statement->execute([':id' => $data->getId()]);
             return true;
         } catch (PDOException $e) {

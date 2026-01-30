@@ -41,7 +41,7 @@ class TaskModel extends Model
      *
      * @throws DatabaseException If a database error occurs during the query execution.
      */
-    protected static function find(string $whereClause = '', array $params = [], array $options = []): ?TaskContainer
+    protected function find(string $whereClause = '', array $params = [], array $options = []): ?TaskContainer
     {
         $paramOptions = [
             'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
@@ -50,7 +50,6 @@ class TaskModel extends Model
             'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 't.start_date_time DESC',
         ];
 
-        $instance = new self();
         try {
             $query =
                 "SELECT 
@@ -88,12 +87,12 @@ class TaskModel extends Model
                     t.id = tw.task_id
                 LEFT JOIN 
                     `user` AS u ON tw.worker_id = u.id";
-            $projectTaskQuery = $instance->appendOptionsToFindQuery(
-                $instance->appendWhereClause($query, $whereClause),
+            $projectTaskQuery = $this->appendOptionsToFindQuery(
+                $this->appendWhereClause($query, $whereClause),
                 $paramOptions
             );
 
-            $statement = $instance->connection->prepare($projectTaskQuery);
+            $statement = $this->connection->prepare($projectTaskQuery);
             $statement->execute($params);
             $results = $statement->fetchAll();
 
@@ -134,7 +133,7 @@ class TaskModel extends Model
      * @throws InvalidArgumentException If an invalid ID is / are provided.
      * @throws Exception If an error occurs during the search operation.
      */
-    public static function search(
+    public function search(
         string $key = '',
         int|UUID|null $userId = null,
         int|UUID|null $phaseId = null,
@@ -258,7 +257,7 @@ class TaskModel extends Model
      *
      * @return Task|null The found Task instance, or null if no matching task exists.
      */
-    public static function findById(
+    public function findById(
         int|UUID $taskId,
         int|UUID|null $phaseId = null,
         int|UUID|null $projectId = null
@@ -327,7 +326,7 @@ class TaskModel extends Model
      *
      * @return TaskContainer|null A container of tasks matching the criteria, or null if none found.
      */
-    public static function findAllByPhaseId(
+    public function findAllByPhaseId(
         int|UUID $phaseId,
         int|UUID|null $projectId = null,
         WorkStatus|TaskPriority|null $filter = null,
@@ -398,7 +397,7 @@ class TaskModel extends Model
      *
      * @return TaskContainer|null A container with the found tasks, or null if none found.
      */
-    public static function findAssignedToWorker(
+    public function findAssignedToWorker(
         int|UUID $workerId,
         int|UUID|null $projectId = null,
         WorkStatus|TaskPriority|null $filter = null,
@@ -467,13 +466,12 @@ class TaskModel extends Model
      *
      * @return Project|null The owning Project instance, or null if no project is found for the given task.
      */
-    public static function findOwningProject(int|UUID $taskId): ?Project
+    public function findOwningProject(int|UUID $taskId): ?Project
     {
         if (is_int($taskId) && $taskId < 1) {
             throw new InvalidArgumentException('Invalid task ID provided.');
         }
 
-        $instance = new self();
         try {
             $query =
                 "SELECT 
@@ -505,7 +503,7 @@ class TaskModel extends Model
                     ? 't.id = :taskId'
                     : 't.public_id = :taskId') . "
                 LIMIT 1";
-            $statement = $instance->connection->prepare($query);
+            $statement = $this->connection->prepare($query);
             $statement->execute([
                 ':taskId' => is_int($taskId)
                     ? $taskId
@@ -513,7 +511,7 @@ class TaskModel extends Model
             ]);
             $result = $statement->fetch();
 
-            if (!$instance->hasData($result)) {
+            if (!$this->hasData($result)) {
                 return null;
             }
 
@@ -549,13 +547,12 @@ class TaskModel extends Model
      *
      * @return Phase|null The owning Phase instance, or null if no phase is found for the given task.
      */
-    public static function findOwningPhase(int|UUID $taskId)
+    public function findOwningPhase(int|UUID $taskId)
     {
         if (is_int($taskId) && $taskId < 1) {
             throw new InvalidArgumentException('Invalid task ID provided.');
         }
 
-        $instance = new self();
         try {
             $query = 
                 "SELECT
@@ -580,14 +577,14 @@ class TaskModel extends Model
                                                 ? 'id = :taskId'
                                                 : 'public_id = :taskId') . "
                             )";
-            $statement = $instance->connection->prepare($query);
+            $statement = $this->connection->prepare($query);
             $statement->execute([
                 ':taskId' => is_int($taskId)
                     ? $taskId
                     : UUID::toBinary($taskId)
             ]);
             $result = $statement->fetch();
-            if (!$instance->hasData($result)) {
+            if (!$this->hasData($result)) {
                 return null;
             }
 
@@ -615,7 +612,7 @@ class TaskModel extends Model
      * 
      * @return TaskContainer|null An array of task records or null if no records found
      */
-    public static function all(int $offset = 0, int $limit = 10): ?TaskContainer
+    public function all(int $offset = 0, int $limit = 10): ?TaskContainer
     {
         if ($offset < 0) {
             throw new InvalidArgumentException('Invalid offset value.');
@@ -650,13 +647,12 @@ class TaskModel extends Model
      *
      * @return mixed The created Task instance with updated ID and public ID.
      */
-    public static function create(mixed $task): mixed
+    public function create(mixed $task): mixed
     {
         if (!($task instanceof Task)) {
             throw new InvalidArgumentException('Expected instance of Task');
         }
 
-        $instance = new self();
         try {
             $phaseId            = $task->getAdditionalInfo('phaseId');
             $taskPublicId       = $task->getPublicId() ?? UUID::get();
@@ -690,7 +686,7 @@ class TaskModel extends Model
                     :startDateTime, 
                     :completionDateTime
                 )";
-            $taskQueryStatement = $instance->connection->prepare($taskQuery);
+            $taskQueryStatement = $this->connection->prepare($taskQuery);
             $taskQueryStatement->execute([
                 ':publicId'             => UUID::toBinary($taskPublicId),
                 ':phaseId'              => is_int($phaseId) ? $phaseId : UUID::toBinary($phaseId),
@@ -701,7 +697,7 @@ class TaskModel extends Model
                 ':startDateTime'        => $taskStartDateTime,
                 ':completionDateTime'   => $completionDateTime,
             ]);
-            $taskId = (int)$instance->connection->lastInsertId();
+            $taskId = (int)$this->connection->lastInsertId();
 
             $task->setId($taskId);
             $task->setPublicId($taskPublicId);
@@ -723,7 +719,7 @@ class TaskModel extends Model
                     :actualCost,
                     :note
                 )";
-            $budgetQueryStatement = $instance->connection->prepare($budgetQuery);
+            $budgetQueryStatement = $this->connection->prepare($budgetQuery);
             $budgetQueryStatement->execute([
                 ':taskId'           => $taskId,
                 ':estimatedCost'    => $taskEstimatedCost,
@@ -760,9 +756,8 @@ class TaskModel extends Model
      *
      * @return bool True if the update was successful, false otherwise.
      */
-    public static function save(array $data): bool
+    public function save(array $data): bool
     {
-        $instance = new self();
         try {
             $updateFields = [];
             $params = [];
@@ -817,10 +812,10 @@ class TaskModel extends Model
 
             if (!empty($updateFields)) {
                 $phaseQuery = "UPDATE `task` SET " . implode(', ', $updateFields) . " WHERE id = :id";
-                $statement = $instance->connection->prepare($phaseQuery);
+                $statement = $this->connection->prepare($phaseQuery);
                 $statement->execute($params);
             }
-            $instance->savePhaseBudget($data);
+            $this->savePhaseBudget($data);
 
             return true;
         } catch (PDOException $e) {
@@ -845,9 +840,8 @@ class TaskModel extends Model
      *
      * @return bool True if the update was successful, false otherwise.
      */
-    private static function savePhaseBudget(array $data): bool
+    private function savePhaseBudget(array $data): bool
     {
-        $instance = new self();
         try {
             $updateFields = [];
             $params = [];
@@ -881,7 +875,7 @@ class TaskModel extends Model
 
             if (!empty($updateFields)) {
                 $budgetQuery = "UPDATE `task_budget` SET " . implode(', ', $updateFields) . " WHERE task_id = :id";
-                $statement = $instance->connection->prepare($budgetQuery);
+                $statement = $this->connection->prepare($budgetQuery);
                 $statement->execute($params);
             }
 
@@ -901,7 +895,7 @@ class TaskModel extends Model
      *
      * @return bool Always returns false to indicate deletion is not supported.
      */
-    public static function delete(mixed $data): bool
+    public function delete(mixed $data): bool
     {
         // Not implemented (No use case)
         return false;

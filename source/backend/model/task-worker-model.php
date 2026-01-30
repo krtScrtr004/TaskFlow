@@ -40,7 +40,7 @@ class TaskWorkerModel extends Model
      * 
      * @throws DatabaseException If a database error occurs during query execution.
      */
-    protected static function find(string $whereClause = '', array $params = [], array $options = []): ?WorkerContainer
+    protected function find(string $whereClause = '', array $params = [], array $options = []): ?WorkerContainer
     {
         $paramOptions = [
             'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
@@ -49,7 +49,6 @@ class TaskWorkerModel extends Model
             'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 'u.last_name ASC',
         ];
 
-        $instance = new self();
         try {
             $queryString =
                 "SELECT 
@@ -124,16 +123,16 @@ class TaskWorkerModel extends Model
                     `job_title` AS jt
                 ON 
                     u.id = jt.user_id";
-            $query = $instance->appendOptionsToFindQuery(
-                $instance->appendWhereClause($queryString, $whereClause),
+            $query = $this->appendOptionsToFindQuery(
+                $this->appendWhereClause($queryString, $whereClause),
                 $paramOptions
             );
 
-            $statement = $instance->connection->prepare($query);
+            $statement = $this->connection->prepare($query);
             $statement->execute($params);
             $result = $statement->fetchAll();
 
-            if (!$instance->hasData($result)) {
+            if (!$this->hasData($result)) {
                 return null;
             }
 
@@ -171,7 +170,7 @@ class TaskWorkerModel extends Model
      *
      * @return TaskWorker|null The found TaskWorker instance, or null if no matching worker is found.
      */
-    public static function findById(
+    public function findById(
         int|UUID $workerId, 
         int|UUID|null $taskId = null,  
         int|UUID|null $phaseId = null, 
@@ -247,7 +246,7 @@ class TaskWorkerModel extends Model
      *
      * @return WorkerContainer|null Container of found workers, or null if none found.
      */
-    public static function findMultipleById(
+    public function findMultipleById(
         array $workerIds,
         int|UUID|null $taskId = null,
         int|UUID|null $phaseId = null,
@@ -324,7 +323,7 @@ class TaskWorkerModel extends Model
      *
      * @throws Exception If an error occurs during the query execution.
      */
-    public static function findByTaskId(int|UUID $taskId): ?WorkerContainer
+    public function findByTaskId(int|UUID $taskId): ?WorkerContainer
     {
         $whereClause = is_int($taskId)
             ? 'tw.task_id = :taskId'
@@ -357,7 +356,7 @@ class TaskWorkerModel extends Model
      *
      * @return WorkerContainer|null A container of Worker objects matching the search criteria, or null if no workers found.
      */
-    public static function search(
+    public function search(
         string|null $key = '',
         int|UUID|null $taskId = null,
         int|UUID|null $phaseId = null,
@@ -376,7 +375,7 @@ class TaskWorkerModel extends Model
         ];
 
         try {
-            $instance = new self();
+
 
             $where = [];
             $params = [];
@@ -564,11 +563,11 @@ class TaskWorkerModel extends Model
                 " OFFSET " 
                     . intval($paramOptions['offset']);
 
-            $statement = $instance->connection->prepare($query);
+            $statement = $this->connection->prepare($query);
             $statement->execute($params);
             $result = $statement->fetchAll();
 
-            if (!$instance->hasData($result)) {
+            if (!$this->hasData($result)) {
                 return null;
             }
 
@@ -599,7 +598,7 @@ class TaskWorkerModel extends Model
      *
      * @return WorkerContainer|null A container of worker records, or null if none found.
      */
-    public static function all(int $offset = 0, int $limit = 10): ?WorkerContainer
+    public function all(int $offset = 0, int $limit = 10): ?WorkerContainer
     {
         if ($offset < 0) {
             throw new InvalidArgumentException('Invalid offset value.');
@@ -646,7 +645,7 @@ class TaskWorkerModel extends Model
      * @throws InvalidArgumentException If any provided integer ID is less than 1.
      * @throws DatabaseException If a database error occurs while executing the query (wraps PDOException).
      */
-    public static function worksOn(int|UUID $taskId, int|UUID $userId, int|UUID|null $projectId = null): bool
+    public function worksOn(int|UUID $taskId, int|UUID $userId, int|UUID|null $projectId = null): bool
     {
         if (is_int($taskId) && $taskId < 1) {
             throw new InvalidArgumentException('Invalid task ID provided.');
@@ -661,7 +660,7 @@ class TaskWorkerModel extends Model
         }
 
         try {
-            $instance = new self();
+
 
             $params = [
                 ':taskId'        => ($taskId instanceof UUID)
@@ -709,9 +708,9 @@ class TaskWorkerModel extends Model
                     " . ($projectId ? "AND " . (is_int($projectId) ? 'p.id' : 'p.public_id') . " = :projectId" : '') . "
                 AND 
                     tw.status != :terminatedStatus";
-            $statement = $instance->connection->prepare($query);
+            $statement = $this->connection->prepare($query);
             $statement->execute($params);
-            return $instance->hasData($statement->fetchAll());
+            return $this->hasData($statement->fetchAll());
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
@@ -727,7 +726,7 @@ class TaskWorkerModel extends Model
      * 
      * @return mixed Returns null as this method is not implemented.
      */
-    public static function create(mixed $data): mixed
+    public function create(mixed $data): mixed
     {
         // Not implemented (No use case)
         return null;
@@ -750,7 +749,7 @@ class TaskWorkerModel extends Model
      *
      * @return WorkerContainer The same WorkerContainer with updated IDs from the database.
      */
-    public static function createMultiple(int|UUID $taskId, WorkerContainer $taskWorkers): WorkerContainer
+    public function createMultiple(int|UUID $taskId, WorkerContainer $taskWorkers): WorkerContainer
     {
         if (is_int($taskId) && $taskId < 1)
             throw new InvalidArgumentException('Invalid task ID provided.');
@@ -758,7 +757,6 @@ class TaskWorkerModel extends Model
         if ($taskWorkers->count() === 0)
             throw new InvalidArgumentException('No data provided.');
 
-        $instance = new self();
         try {
             $isTaskInt = is_int($taskId);
             $isWorkerInt = $taskWorkers->first()->getId() !== 0; // 0 means task worker entity is created with partial data (public id only)
@@ -782,7 +780,7 @@ class TaskWorkerModel extends Model
                 ON DUPLICATE KEY UPDATE 
                     status = VALUES(status)";
             
-            $statement = $instance->connection->prepare($insertQuery);
+            $statement = $this->connection->prepare($insertQuery);
             
             $taskIdParam = ($taskId instanceof UUID) ? UUID::toBinary($taskId) : $taskId;
             foreach ($taskWorkers as $worker) {    
@@ -797,7 +795,7 @@ class TaskWorkerModel extends Model
                 ]);
 
                 // Set ID given by the DB
-                $worker->setId($instance->connection->lastInsertId());
+                $worker->setId($this->connection->lastInsertId());
             }
             return $taskWorkers;
         } catch (PDOException $e) {
@@ -828,10 +826,9 @@ class TaskWorkerModel extends Model
      * @throws InvalidArgumentException If required identifiers are missing or invalid.
      * @throws DatabaseException If a database error occurs during the operation (wraps PDOException
      */
-	public static function save(array $data): bool
+	public function save(array $data): bool
 	{
-        $instance = new self();
-        try {
+                try {
             $updateFields = [];
             $params = [];
 
@@ -890,7 +887,7 @@ class TaskWorkerModel extends Model
             }
 
             if (isset($data['unitRate'])) {
-                $instance->saveUnitRate(
+                $this->saveUnitRate(
                     $data['taskId'], 
                     $data['workerId'], 
                     $data['unitRate']);
@@ -899,7 +896,7 @@ class TaskWorkerModel extends Model
             // Nothing to update
             if (!empty($updateFields)) {
                 $query = 'UPDATE `task_worker` SET ' . implode(', ', $updateFields) . ' WHERE ' . $where;
-                $statement = $instance->connection->prepare($query);
+                $statement = $this->connection->prepare($query);
                 $statement->execute($params);
             }
 
@@ -924,13 +921,12 @@ class TaskWorkerModel extends Model
      *
      * @throws PDOException If a database error occurs during the operation.
      */
-    private static function saveUnitRate(
+    private function saveUnitRate(
         int|UUID $taskId,
         int|UUID $taskWorkerId, 
         float $unitRate
     ): bool {
-        $instance = new self();
-        try {
+                try {
             $query = 
                 "UPDATE 
                     `resource` 
@@ -945,7 +941,7 @@ class TaskWorkerModel extends Model
                         ? ':taskWorkerId' 
                         : '(SELECT id FROM `task_worker` WHERE public_id = :taskWorkerId)') . ";
             ";
-            $statement = $instance->connection->prepare($query);
+            $statement = $this->connection->prepare($query);
             $statement->execute([
                 ':unitRate'         => $unitRate,
                 ':taskWorkerId'     => ($taskWorkerId instanceof UUID)
@@ -991,7 +987,7 @@ class TaskWorkerModel extends Model
      * @throws InvalidArgumentException If required keys are missing or integer IDs are invalid.
      * @throws DatabaseException If a database error occurs during the operation (wraps PDOException).
      */
-    public static function delete(mixed $data): bool
+    public function delete(mixed $data): bool
     {
         if (!isset($data['taskId'])) {
             throw new InvalidArgumentException('Task ID is required.');
@@ -1030,8 +1026,8 @@ class TaskWorkerModel extends Model
                         WHERE
                             public_id = :workerId)') . "";
 
-            $instance = new self();
-            $statement = $instance->connection->prepare($query);
+
+                            $statement = $this->connection->prepare($query);
             $statement->execute([
                 ':taskId'    => ($data['taskId'] instanceof UUID)
                     ? UUID::toBinary($data['taskId'])

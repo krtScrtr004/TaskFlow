@@ -29,7 +29,7 @@ class RateLimiterModel extends Model
      * @throws InvalidArgumentException If $data is not an array or required keys are missing/empty.
      * @throws DatabaseException If a PDOException occurs during the database operation.
      */
-    public static function create(mixed $data): mixed
+    public function create(mixed $data): mixed
     {
         if (!is_array($data)) {
             throw new InvalidArgumentException('Data must be an array.');
@@ -48,8 +48,6 @@ class RateLimiterModel extends Model
         $timeWindow = $data['timeWindow'] ?? 3600; // default 1 hour
 
         try {
-            $instance = new self();
-
             $expiresAt = time() + $timeWindow;
 
             $query = 
@@ -57,7 +55,7 @@ class RateLimiterModel extends Model
                     `rate_limiter` (ip, endpoint, expires_at)
                 VALUES
                     (:ip, :endpoint, :expiresAt)";
-            $statement = $instance->connection->prepare($query);
+            $statement = $this->connection->prepare($query);
             $statement->execute([
                 ':ip'           => $ip,
                 ':endpoint'     => $endpoint,
@@ -87,7 +85,7 @@ class RateLimiterModel extends Model
      * @throws InvalidArgumentException If $ip or $endpoint is empty
      * @throws DatabaseException If a PDOException occurs during query preparation or execution
      */
-    public static function search(string $ip, string $endpoint)
+    public function search(string $ip, string $endpoint)
     {
         if (empty($ip)) {
             throw new InvalidArgumentException('IP address cannot be empty.');
@@ -98,8 +96,6 @@ class RateLimiterModel extends Model
         }
 
         try {
-            $instance = new self();
-
             $query = 
                 "SELECT 
                     *
@@ -110,14 +106,14 @@ class RateLimiterModel extends Model
                 AND
                     endpoint = :endpoint
                 LIMIT 1";
-            $statement = $instance->connection->prepare($query);
+            $statement = $this->connection->prepare($query);
             $statement->execute([
                 ':ip'       => $ip,
                 ':endpoint' => $endpoint
             ]);
             $result = $statement->fetch();
 
-            return $instance->hasData($result) ? $result : null;
+            return $this->hasData($result) ? $result : null;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
@@ -147,7 +143,7 @@ class RateLimiterModel extends Model
      *      - when 'count' is not an integer
      * @throws DatabaseException If a PDOException occurs during database interaction (wraps PDOException).
      */
-    public static function save(array $data): bool
+    public function save(array $data): bool
     {
         if (!is_array($data)) {
             throw new InvalidArgumentException('Data must be an array.');
@@ -171,8 +167,6 @@ class RateLimiterModel extends Model
         $timeWindow = $data['timeWindow'] ?? 3600; // default 1 hour
 
         try {
-            $instance = new self();
-
             $expiresAt = time() + $timeWindow;
 
             $query = 
@@ -185,7 +179,7 @@ class RateLimiterModel extends Model
                     ip = :ip
                 AND
                     endpoint = :endpoint";
-            $statement = $instance->connection->prepare($query);
+            $statement = $this->connection->prepare($query);
             $statement->execute([
                 ':ip'           => $ip,
                 ':endpoint'     => $endpoint,
@@ -202,7 +196,7 @@ class RateLimiterModel extends Model
     /**
     * Not implemented (No use case)
     */
-    public static function all(int $offset = 0, int $limit = 10): mixed
+    public function all(int $offset = 0, int $limit = 10): mixed
     {
         return [];
     }
@@ -210,7 +204,7 @@ class RateLimiterModel extends Model
     /**
     * Not implemented (No use case)
     */
-    protected static function delete(mixed $data): bool
+    protected function delete(mixed $data): bool
     {
         return false;
     }
@@ -218,7 +212,7 @@ class RateLimiterModel extends Model
     /**
     * Not implemented (No use case)
     */
-    protected static function find(string $whereClause = '', array $params = [], array $options = []): mixed
+    protected function find(string $whereClause = '', array $params = [], array $options = []): mixed
     {
         return null;
     }

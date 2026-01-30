@@ -50,7 +50,7 @@ class ProjectModel extends Model
      *   by the caller to avoid SQL injection.
      *
      * Return value:
-     * - Returns a ProjectContainer populated with Project instances when one or more rows are found.
+     * - Returns a ProjectContainer populated with Project instance when one or more rows are found.
      * - Returns null if the query yields no rows.
      *
      * @param string $whereClause SQL condition fragment (without the "WHERE" keyword). Required to be valid SQL.
@@ -60,11 +60,11 @@ class ProjectModel extends Model
      *      - offset: int (optional) Number of rows to skip.
      *      - orderBy: string (optional) ORDER BY clause fragment (e.g. "created_at DESC").
      *
-     * @return ProjectContainer|null ProjectContainer with Project instances, or null if no rows found.
+     * @return ProjectContainer|null ProjectContainer with Project instance, or null if no rows found.
      *
      * @throws DatabaseException If a PDOException occurs during query preparation or execution (PDOException message is wrapped).
      */
-    protected static function find(string $whereClause = '', array $params = [], array $options = []): ?ProjectContainer
+    protected function find(string $whereClause = '', array $params = [], array $options = []): ?ProjectContainer
     {
         $paramOptions = [
             'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
@@ -73,7 +73,6 @@ class ProjectModel extends Model
             'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 'p.start_date_time DESC',
         ];
 
-        $instance = new self();
         try {
             $queryString = 
                 "SELECT 
@@ -92,17 +91,15 @@ class ProjectModel extends Model
                     `user` AS u 
                 ON 
                     p.manager_id = u.id";
-            $query = $instance->appendOptionsToFindQuery(
-                $instance->appendWhereClause($queryString, $whereClause), 
+            $query = $this->appendOptionsToFindQuery(
+                $this->appendWhereClause($queryString, $whereClause), 
                 $paramOptions);
 
-            $statement = $instance->connection->prepare($query);
+            $statement = $this->connection->prepare($query);
             $statement->execute($params);
             $result = $statement->fetchAll();
 
-            if (!$instance->hasData($result)) {
-                return null;
-            }
+            if (!$this->hasData($result)) return null;
 
             $projects = new ProjectContainer();
             foreach ($result as $row) {
@@ -127,7 +124,7 @@ class ProjectModel extends Model
     }
 
     /**
-     * Retrieves a Project instance with optional related data.
+     * Retrieves a Project this$this with optional related data.
      *
      * This method fetches a project by its UUID and can include associated phases, tasks, and workers
      * based on the provided options. The returned Project object is fully populated with its manager,
@@ -145,11 +142,11 @@ class ProjectModel extends Model
      *      - tasks: bool Whether to include project tasks (default: false)
      *      - workers: bool Whether to include project workers (default: false)
      *
-     * @return mixed Returns a fully populated Project instance if found, or null if not found.
+     * @return mixed Returns a fully populated Project this$this if found, or null if not found.
      *
      * @throws DatabaseException If a database error occurs during retrieval.
      */
-    public static function findFull(
+    public function findFull(
         UUID $projectId, 
         array $options = [
             'phases' => false,
@@ -157,7 +154,6 @@ class ProjectModel extends Model
             'workers' => false
         ]
     ): mixed {
-        $instance = new self();
         try {
             // Default options
             $includePhases = $options['phases'] ?? false;
@@ -328,12 +324,12 @@ class ProjectModel extends Model
                         p.start_date_time ASC
                 ) AS projectData";
 
-            $statement = $instance->connection->prepare($query);
+            $statement = $this->connection->prepare($query);
             $statement->execute([':projectId' => UUID::toBinary($projectId)]);
             $result = $statement->fetch();
 
             // Process result into Project object
-            if (!$instance->hasData($result)) {
+            if (!$this->hasData($result)) {
                 return null;
             }
 
@@ -380,7 +376,7 @@ class ProjectModel extends Model
      * Retrieves a Project by its ID.
      *
      * Validates the provided project ID, performs a parameterized lookup, and returns the first matching
-     * Project instance or null when no record is found.
+     * Project this$this or null when no record is found.
      *
      * Behavior:
      * - Throws InvalidArgumentException when $projectId is less than 1.
@@ -390,12 +386,12 @@ class ProjectModel extends Model
      *
      * @param int|UUID $projectId The numeric ID or UUID of the project to retrieve.
      *
-     * @return Project|null The matching Project instance, or null if not found
+     * @return Project|null The matching Project this$this, or null if not found
      *
      * @throws InvalidArgumentException If the provided $projectId is invalid (< 1)
      * @throws DatabaseException If a database error occurs (wraps the underlying PDOException)
      */
-    public static function findById(int|UUID $projectId): ?Project
+    public function findById(int|UUID $projectId): ?Project
     {
         if (is_int($projectId) && $projectId < 1) {
             throw new InvalidArgumentException('Invalid project ID provided.');
@@ -431,7 +427,7 @@ class ProjectModel extends Model
      * @throws InvalidArgumentException If manager_id is less than 1
      * @throws DatabaseException If a database error occurs during the query
      */
-    public static function findManagerActiveProjectByManagerId(int $managerId): ?Project
+    public function findManagerActiveProjectByManagerId(int $managerId): ?Project
     {
         if ($managerId < 1) {
             throw new InvalidArgumentException('Invalid manager ID provided.');
@@ -471,13 +467,12 @@ class ProjectModel extends Model
      * @throws InvalidArgumentException If the worker ID is less than 1
      * @throws DatabaseException If a database error occurs during the query execution
      */
-    public static function findWorkerActiveProjectByWorkerId(int $workerId): ?Project
+    public function findWorkerActiveProjectByWorkerId(int $workerId): ?Project
     {
         if ($workerId < 1) {
             throw new InvalidArgumentException('Invalid worker ID provided.');
         }
 
-        $instance = new self();
         try {
             $query = 
                 "SELECT
@@ -513,7 +508,7 @@ class ProjectModel extends Model
                     pw.status != :terminatedStatus
                 LIMIT 1
             ";
-            $statement = $instance->connection->prepare($query);
+            $statement = $this->connection->prepare($query);
             $statement->execute([
                 ':workerId'         => $workerId,
                 ':completedStatus'  => WorkStatus::COMPLETED->value,
@@ -522,7 +517,7 @@ class ProjectModel extends Model
             ]);
             $result = $statement->fetch();
 
-            if (!$instance->hasData($result)) {
+            if (!$this->hasData($result)) {
                 return null;
             }
 
@@ -550,7 +545,7 @@ class ProjectModel extends Model
     /**
      * Searches for projects based on provided criteria.
      *
-     * This static method allows searching for projects using a keyword, user ID (either integer or UUID),
+     * This method allows searching for projects using a keyword, user ID (either integer or UUID),
      * project status, and additional options such as pagination and sorting. It constructs a dynamic SQL
      * WHERE clause based on the provided parameters and delegates the actual data retrieval to the `find` method.
      *
@@ -572,7 +567,7 @@ class ProjectModel extends Model
      *
      * @return ProjectContainer|null A container of found projects, or null if no projects match the criteria.
      */
-    public static function search(
+    public function search(
         string $key = '',
         int|UUID|null $userId = null,
         WorkStatus|null $status = null,
@@ -663,7 +658,7 @@ class ProjectModel extends Model
      * @throws InvalidArgumentException If $offset is negative or $limit is less than 1.
      * @throws DatabaseException If a database error occurs while fetching projects (wraps PDOException).
      */
-    public static function all(int $offset = 0, int $limit = 10): ?ProjectContainer
+    public function all(int $offset = 0, int $limit = 10): ?ProjectContainer
     {
         if ($offset < 0) {
             throw new InvalidArgumentException('Invalid offset value.');
@@ -687,33 +682,32 @@ class ProjectModel extends Model
     /**
      * Creates a new Project record in the database from the provided Project object.
      *
-     * This method validates that the provided argument is an instance of Project, begins
+     * This method validates that the provided argument is an this$this of Project, begins
      * a database transaction, prepares and executes an INSERT into the `project` table
      * (converting the public ID to binary and formatting dates as required), and inserts
      * any associated phases and workers via insertPhases() and insertWorkers() if present.
      * If the Project has no public ID one is generated (UUID::get()), missing string fields
      * are trimmed or normalized, numeric defaults are applied for budget and max workers,
-     * and the current user (Me::getInstance()->getId()) is recorded as the manager.
-     * On success the transaction is committed and the Project instance is updated with
+     * and the current user (Me::getthis$this()->getId()) is recorded as the manager.
+     * On success the transaction is committed and the Project this$this is updated with
      * its newly assigned numeric id and public id before being returned.
      *
      * The method will roll back the transaction and rethrow a DatabaseException on any
      * PDO error.
      *
-     * @param mixed $project Project instance to persist (must be an instance of Project)
+     * @param mixed $project Project this$this to persist (must be an this$this of Project)
      *
-     * @return Project The same Project instance after persisting, populated with id and publicId
+     * @return Project The same Project this$this after persisting, populated with id and publicId
      *
-     * @throws InvalidArgumentException If $project is not an instance of Project
+     * @throws InvalidArgumentException If $project is not an this$this of Project
      * @throws DatabaseException If a database error occurs while inserting the project or related entities
      */
-    public static function create(mixed $project): Project
+    public function create(mixed $project): Project
     {
         if (!($project instanceof Project)) {
             throw new InvalidArgumentException('Expected instance of Project.');
         }
 
-        $instance = new self();
 
         try {
             $projectPublicId           =   $project->getPublicId() ?? UUID::get();
@@ -747,7 +741,7 @@ class ProjectModel extends Model
                     :completionDateTime,
                     :managerId
                 )";
-            $statement = $instance->connection->prepare($projectQuery);
+            $statement = $this->connection->prepare($projectQuery);
             $statement->execute([
                 ':publicId'             => UUID::toBinary($projectPublicId),
                 ':name'                 => $projectName,
@@ -759,7 +753,7 @@ class ProjectModel extends Model
                 ':completionDateTime'   => $projectCompletionDateTime,
                 ':managerId'            => Me::getInstance()->getId(),
             ]);
-            $projectId = (int) $instance->connection->lastInsertId();
+            $projectId = (int) $this->connection->lastInsertId();
 
             
             $project->setId($projectId);
@@ -796,9 +790,8 @@ class ProjectModel extends Model
      * @throws InvalidArgumentException If required fields are missing or invalid
      * @throws DatabaseException If a database error occurs during the transaction
      */
-    public static function save(array $data): bool
+    public function save(array $data): bool
     {
-        $instance = new self();
         try {
             $updateFields = [];
             $params = [];
@@ -864,7 +857,7 @@ class ProjectModel extends Model
                         is_int($data['id']) 
                         ? 'id' 
                         : 'publicId') . " = :id";
-                $statement = $instance->connection->prepare($projectQuery);
+                $statement = $this->connection->prepare($projectQuery);
                 $statement->execute($params);
             }
 
@@ -884,7 +877,7 @@ class ProjectModel extends Model
      *
      * @return bool Always returns false to indicate deletion is not supported.
      */
-    public static function delete(mixed $data): bool
+    public function delete(mixed $data): bool
     {
         // Not implemented (No use case)
         return false;
@@ -913,7 +906,7 @@ class ProjectModel extends Model
      *     - Task and Phase public IDs are converted from hex strings using UUID::fromHex()
      *     - Project public ID is converted from binary using UUID::fromBinary()
      *     - Priority and status values are converted to enums via TaskPriority::from() and WorkStatus::from()
-     *     - Datetime strings are converted to DateTime instances; nullable actual completion timestamps are handled
+     *     - Datetime strings are converted to DateTime instance; nullable actual completion timestamps are handled
      * - Computes worker status breakdown:
      *     - Builds per-status count and percentage (percentage computed as (count / total) * 100, or 0 when total is 0)
      * - Aggregates periodic task counts into a nested array keyed by year and month
@@ -976,13 +969,12 @@ class ProjectModel extends Model
      * @throws InvalidArgumentException When an integer project_id less than 1 is provided.
      * @throws DatabaseException        When a PDOException occurs while querying the database (wrapped).
      */
-    public static function getReport(int|UUID $projectId): ?ProjectReport
+    public function getReport(int|UUID $projectId): ?ProjectReport
     {
         if (is_int($projectId) && $projectId < 1) {
             throw new InvalidArgumentException('Invalid project ID provided.');
         }
 
-        $instance = new self();
         try {
             $projectStatistics = self::projectStatistics($projectId);
             $workerCount = self::workerCount($projectId);
@@ -1092,7 +1084,7 @@ class ProjectModel extends Model
     /**
      * Retrieves aggregated statistics for a project, including its phases and tasks.
      *
-     * This private static method executes a single SQL query that returns project-level
+     * This private method executes a single SQL query that returns project-level
      * fields and a nested JSON representation of phases and their tasks. The query:
      * - Matches the project by numeric ID (p.id) when an int is provided, or by its
      *   binary public_id when a UUID-like value is provided (the UUID is converted to
@@ -1142,7 +1134,7 @@ class ProjectModel extends Model
      *      - projectPhases: string JSON array of phases (see structure described above)
      *
      */ 
-    private static function projectStatistics(int|UUID $projectId)
+    private function projectStatistics(int|UUID $projectId)
     {
         $query = 
             "SELECT 
@@ -1205,8 +1197,7 @@ class ProjectModel extends Model
                 " . (is_int($projectId) ? 'p.id = :projectId' : 'p.public_id = :projectId') . "
             LIMIT 1";
 
-        $instance = new self();
-        $statement = $instance->connection->prepare($query);
+        $statement = $this->connection->prepare($query);
         $statement->execute([
             ':projectId'    => is_int($projectId) 
                 ? $projectId 
@@ -1214,7 +1205,7 @@ class ProjectModel extends Model
         ]);
         $result = $statement->fetch();
 
-        if (!$instance->hasData($result)) {
+        if (!$this->hasData($result)) {
             return null;
         }
         return $result;
@@ -1246,7 +1237,7 @@ class ProjectModel extends Model
      *      - total: int Total number of workers associated with the project
      *      Returns null if the project was not found or no row was returned.
      */
-    private static function workerCount(int|UUID $projectId) {
+    private function workerCount(int|UUID $projectId) {
         $query = 
             "SELECT 
                 (
@@ -1345,8 +1336,7 @@ class ProjectModel extends Model
             " . (is_int($projectId) ? 'p.id = :projectId' : 'p.public_id = :projectId') . "
         ";
 
-        $instance = new self();
-        $statement = $instance->connection->prepare($query);
+        $statement = $this->connection->prepare($query);
         $statement->execute([
             ':projectId'    => is_int($projectId) 
                 ? $projectId 
@@ -1354,7 +1344,7 @@ class ProjectModel extends Model
         ]);
         $result = $statement->fetch();
 
-        if (!$instance->hasData($result)) {
+        if (!$this->hasData($result)) {
             return null;
         }
         return $result;
@@ -1384,7 +1374,7 @@ class ProjectModel extends Model
      *
      * @throws \PDOException If the database query fails
      */
-    private static function periodicTaskCount(int|UUID $projectId) 
+    private function periodicTaskCount(int|UUID $projectId) 
     {
         $query = 
             "SELECT 
@@ -1411,8 +1401,7 @@ class ProjectModel extends Model
                 MONTH(pt.created_at) ASC
         ";
 
-        $instance = new self();
-        $statement = $instance->connection->prepare($query);
+        $statement = $this->connection->prepare($query);
         $statement->execute([
             ':projectId'    => is_int($projectId) 
                 ? $projectId 
@@ -1420,7 +1409,7 @@ class ProjectModel extends Model
         ]);
         $result = $statement->fetchAll();
 
-        if (!$instance->hasData($result)) {
+        if (!$this->hasData($result)) {
             return null;
         }
         return $result;
@@ -1448,7 +1437,7 @@ class ProjectModel extends Model
      * - If $projectId is not an integer, it is treated as a public UUID and converted to binary before binding.
      * - The query returns null when no matching rows are found.
      *
-     * @param int|UUID $projectId Project identifier: either numeric primary key (int) or public UUID instance/string
+     * @param int|UUID $projectId Project identifier: either numeric primary key (int) or public UUID this$this/string
      *
      * @return array|null Returns an indexed array of up to 10 associative arrays with the following keys on success:
      *      - id: int|binary Worker identifier (DB type)
@@ -1461,9 +1450,9 @@ class ProjectModel extends Model
      *    Returns null if no workers are found for the project.
      *
      * @access private
-     * @static
+     * 
      */
-    private static function topWorkersQuery(int|UUID $projectId): ?array
+    private function topWorkersQuery(int|UUID $projectId): ?array
     {
         $query = 
             "SELECT 
@@ -1614,8 +1603,7 @@ class ProjectModel extends Model
                 overall_score DESC
             LIMIT 10";
 
-        $instance = new self();
-        $statement = $instance->connection->prepare($query);
+        $statement = $this->connection->prepare($query);
         $statement->execute([
             ':projectId'    => is_int($projectId) 
                 ? $projectId 
@@ -1623,7 +1611,7 @@ class ProjectModel extends Model
         ]);
         $result = $statement->fetchAll();
 
-        if (!$instance->hasData($result)) {
+        if (!$this->hasData($result)) {
             return null;
         }
 

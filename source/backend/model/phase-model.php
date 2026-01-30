@@ -36,7 +36,7 @@ class PhaseModel extends Model
      * @return PhaseContainer|null PhaseContainer containing matching Phase objects, or null if no results found
      * @throws DatabaseException If a database error occurs during the query
      */
-    protected static function find(string $whereClause = '', array $params = [], array $options = []): ?PhaseContainer
+    protected function find(string $whereClause = '', array $params = [], array $options = []): ?PhaseContainer
     {
         $paramOptions = [
             'limit'     => $options[':limit'] ?? $options['limit'] ?? null,
@@ -44,7 +44,6 @@ class PhaseModel extends Model
             'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 'start_date_time ASC',
         ];
 
-        $instance = new self();
         try {
             $queryString = 
                 "SELECT 
@@ -68,16 +67,14 @@ class PhaseModel extends Model
                 ON
                     phb.phase_id = ph.id";
 
-            $query = $instance->appendOptionsToFindQuery(
-                $instance->appendWhereClause($queryString, $whereClause), 
+            $query = $this->appendOptionsToFindQuery(
+                $this->appendWhereClause($queryString, $whereClause), 
                 $paramOptions);
-            $statement = $instance->connection->prepare($query);
+            $statement = $this->connection->prepare($query);
             $statement->execute($params);
             $result = $statement->fetchAll();
 
-            if (!$instance->hasData($result)) {
-                return null;
-            }
+            if (!$this->hasData($result)) return null;
 
             $phases = new PhaseContainer();
             foreach ($result as $item) {
@@ -106,7 +103,7 @@ class PhaseModel extends Model
      * @throws InvalidArgumentException If the provided Phase ID is invalid.
      * @throws DatabaseException If a database error occurs.
      */
-    public static function findById(int|UUID $phaseId): ?Phase
+    public function findById(int|UUID $phaseId): ?Phase
     {
         if (!$phaseId) {
             throw new InvalidArgumentException('Invalid phase ID provided.');
@@ -151,7 +148,7 @@ class PhaseModel extends Model
      * @throws InvalidArgumentException If the project ID is invalid.
      * @throws DatabaseException If a database error occurs.
      */
-    public static function findOnGoingByProjectId(int|UUID $projectId): ?Phase
+    public function findOnGoingByProjectId(int|UUID $projectId): ?Phase
     {
         if ($projectId < 1) {
             throw new InvalidArgumentException('Invalid project ID provided.');
@@ -199,7 +196,7 @@ class PhaseModel extends Model
      * 
      * @return self[]|null Array of phase instances matching the criteria, or null if an error occurs.
      */
-    public static function findByScheduleBoundary(
+    public function findByScheduleBoundary(
         int|UUID $projectId,
         ?DateTime $startDateTime,
         ?DateTime $completionDateTime,
@@ -253,7 +250,7 @@ class PhaseModel extends Model
      *
      * @return PhaseContainer|null A container of Phase objects for the project, or null if no phases are found.
      */
-    public static function findAllByProjectId(int|UUID $projectId, bool $includeTasks = false): ?PhaseContainer
+    public function findAllByProjectId(int|UUID $projectId, bool $includeTasks = false): ?PhaseContainer
     {
         if (is_int($projectId) && $projectId < 1) {
             throw new InvalidArgumentException('Invalid project ID provided.');
@@ -316,7 +313,7 @@ class PhaseModel extends Model
                 ORDER BY
                     ph.start_date_time ASC";
 
-            $statement = $instance->connection->prepare($query);
+            $statement = $this->connection->prepare($query);
             $statement->execute([
                 ':projectId' => is_int($projectId) 
                     ? $projectId 
@@ -368,7 +365,7 @@ class PhaseModel extends Model
      * @throws InvalidArgumentException When offset is negative or limit is less than 1
      * @throws DatabaseException When a database error occurs during query execution
         */
-    public static function all(int $offset = 0, int $limit = 10): ?PhaseContainer
+    public function all(int $offset = 0, int $limit = 10): ?PhaseContainer
     {
         if ($offset < 0) {
             throw new InvalidArgumentException('Invalid offset value.');
@@ -396,7 +393,7 @@ class PhaseModel extends Model
      * 
      * @return null Returns null as the method is not implemented
      */
-    public static function create(mixed $data): null
+    public function create(mixed $data): null
     {
         // Not Implemented (No use case)
         return null;
@@ -442,7 +439,7 @@ class PhaseModel extends Model
      * ));
      * $phaseIds = PhaseModel::createMultiple(1, $container);
      */
-    public static function createMultiple(int $projectId, PhaseContainer $phases): bool
+    public function createMultiple(int $projectId, PhaseContainer $phases): bool
     {
         if ($projectId < 1) {
             throw new InvalidArgumentException('Invalid project ID provided.');
@@ -472,7 +469,7 @@ class PhaseModel extends Model
                     :completionDateTime,
                     :status
                 )";
-            $phaseStatement = $instance->connection->prepare($projectPhaseQuery);                       
+            $phaseStatement = $this->connection->prepare($projectPhaseQuery);                       
             foreach ($phases as $phase) {
                 $phaseStatement->execute([
                     ':projectId'            => $projectId,
@@ -497,8 +494,8 @@ class PhaseModel extends Model
                         :note
                     )";
 
-                $phaseId = (int) $instance->connection->lastInsertId();
-                $budgetStatement = $instance->connection->prepare($projectPhaseBudgetQuery);
+                $phaseId = (int) $this->connection->lastInsertId();
+                $budgetStatement = $this->connection->prepare($projectPhaseBudgetQuery);
                 $budgetStatement->execute([
                     ':phaseId'         => $phaseId,
                     ':budget'          => $phase->getBudget() ?? 0.00,
@@ -524,7 +521,7 @@ class PhaseModel extends Model
      * 
      * @return bool Always returns false as the method is not implemented
      */
-    public static function save(array $data): bool
+    public function save(array $data): bool
     {
         // Not implemented (No use case)
         return false;
@@ -560,7 +557,7 @@ class PhaseModel extends Model
      *     ['id' => 3, 'startDateTime' => new DateTime('2025-11-01')]
      * ]);
      */
-    public static function saveMultiple(array $phases): bool
+    public function saveMultiple(array $phases): bool
     {
         if (empty($phases)) {
             throw new InvalidArgumentException('Phases array cannot be empty.');
@@ -611,7 +608,7 @@ class PhaseModel extends Model
                 // Only execute update if there are fields to update
                 if (!empty($phaseUpdateFields)) {
                     $query = "UPDATE `project_phase` SET " . implode(', ', $phaseUpdateFields) . " WHERE " . (isset($data['id']) ? 'id' : 'public_id') . " = :id";
-                    $statement = $instance->connection->prepare($query);
+                    $statement = $this->connection->prepare($query);
                     $statement->execute($projectPhaseParams);
                 }
 
@@ -652,7 +649,7 @@ class PhaseModel extends Model
                             " . implode(', ', $phaseBudgetUpdateFields) . " 
                         WHERE 
                             phase_id = " . (isset($data['id']) ? ':id' : '(SELECT id FROM `phase` WHERE public_id = :id)');
-                    $budgetStatement = $instance->connection->prepare($budgetQuery);
+                    $budgetStatement = $this->connection->prepare($budgetQuery);
                     $budgetStatement->execute($phaseBudgetParams);
                 }
             }
@@ -678,7 +675,7 @@ class PhaseModel extends Model
      * @throws InvalidArgumentException If the provided phase ID is invalid
      * @throws DatabaseException If a database error occurs
      */
-    public static function getTasks(int|UUID $phaseId, array $options = []): ?TaskContainer
+    public function getTasks(int|UUID $phaseId, array $options = []): ?TaskContainer
     {
         if (is_int($phaseId) && $phaseId < 1) {
             throw new InvalidArgumentException('Invalid phase ID provided.');
@@ -701,7 +698,7 @@ class PhaseModel extends Model
      *
      * @return bool Always returns false to indicate deletion is not supported.
      */
-    public static function delete(mixed $data): bool
+    public function delete(mixed $data): bool
     {
         // Not implemented (No use case)
         return false;

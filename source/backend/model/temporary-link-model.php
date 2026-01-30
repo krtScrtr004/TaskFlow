@@ -26,7 +26,7 @@ class TemporaryLinkModel extends Model
      *
      * @return bool Returns true on successful creation or update of the temporary link
      */
-    public static function create(mixed $data): mixed
+    public function create(mixed $data): mixed
 	{
         if (!isset($data['email']) || !is_string($data['email']) || !trimOrNull($data['email'])) {
             throw new InvalidArgumentException('Invalid email provided.');
@@ -37,8 +37,6 @@ class TemporaryLinkModel extends Model
         }
 
         try {
-            $instance = new self();
-
             $hashedToken = hash('sha256', $data['token']);
             $query = 
                 "INSERT INTO 
@@ -46,7 +44,7 @@ class TemporaryLinkModel extends Model
                 VALUES 
                     (:email, :token1) 
                 ON DUPLICATE KEY UPDATE token = :token2";
-            $statement = $instance->connection->prepare($query);
+            $statement = $this->connection->prepare($query);
             $statement->execute([
                 ':email' => $data['email'],
                 ':token1' => $hashedToken,
@@ -74,15 +72,13 @@ class TemporaryLinkModel extends Model
      * @throws InvalidArgumentException If the provided token is invalid.
      * @throws DatabaseException If a database error occurs during the search.
      */
-    public static function search(string $token): mixed 
+    public function search(string $token): mixed 
     {
         if (!trimOrNull($token)) {
             throw new InvalidArgumentException('Invalid token provided.');
         }
 
         try {
-            $instance = new self();
-
             $query = 
                 "SELECT * 
                 FROM 
@@ -90,13 +86,13 @@ class TemporaryLinkModel extends Model
                 WHERE 
                     token = :token
                 LIMIT 1";
-            $statement = $instance->connection->prepare($query);
+            $statement = $this->connection->prepare($query);
             $statement->execute([
                 ':token' => hash('sha256', $token)
             ]);
             $result = $statement->fetch();
 
-            if (!$instance->hasData($result)) {
+            if (!$this->hasData($result)) {
                 return null;
             }
 
@@ -121,21 +117,19 @@ class TemporaryLinkModel extends Model
      *
      * @return bool True if a record was deleted, false otherwise.
      */
-    public static function delete(mixed $token): bool
+    public function delete(mixed $token): bool
 	{
         if (!is_string($token) || !trimOrNull($token)) {
             throw new InvalidArgumentException('Invalid token provided.');
         }
 
 		try {
-            $instance = new self();
-
             $query = 
                 "DELETE FROM 
                     `temporary_link`
                 WHERE 
                     token = :token";
-            $statement = $instance->connection->prepare($query);
+            $statement = $this->connection->prepare($query);
             $statement->execute([':token' => hash('sha256', $token)]);
 
             return $statement->rowCount() > 0;
@@ -157,7 +151,7 @@ class TemporaryLinkModel extends Model
      * 
      * @return mixed Returns null as the method is not implemented.
      */
-    protected static function find(string $whereClause = '', array $params = [], array $options = []): mixed
+    protected function find(string $whereClause = '', array $params = [], array $options = []): mixed
 	{
 		// Not implemented (No use case)
 		return null;
@@ -175,7 +169,7 @@ class TemporaryLinkModel extends Model
      * 
      * @return mixed Returns the list of temporary link records, or null if not implemented.
      */
-	public static function all(int $offset = 0, int $limit = 10): mixed
+	public function all(int $offset = 0, int $limit = 10): mixed
 	{
         // Not implemented (No use case)
 		return null;
@@ -197,7 +191,7 @@ class TemporaryLinkModel extends Model
      *
      * @return bool Always returns false as saving is not implemented
      */
-    public static function save(array $data): bool
+    public function save(array $data): bool
 	{
         // Not implemented (No use case)
 		return false;
