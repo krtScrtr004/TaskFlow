@@ -7,6 +7,7 @@ const apiUrl = 'http://TaskFlow.local/endpoint/'
  * CSRF token inclusion, and error parsing for JSON and non-JSON responses.
  *
  * @namespace Http
+ * @throws {Error} Throws error if the request fails or response is not JSON.
  *
  * @function GET
  * @memberof Http
@@ -47,10 +48,15 @@ const apiUrl = 'http://TaskFlow.local/endpoint/'
  * @description Sends a DELETE request to the specified endpoint.
  * @param {string} endpoint The API endpoint to request.
  * @returns {Promise<boolean>} Resolves with true if the request succeeds.
- * @throws {Error} Throws error if the request fails.
+ * @throws {Error} Throws error if the request fails or response is not JSON.
  */
 export const Http = (() => {
     const makeRequest = async (endpoint, method = 'GET', body = null, serialize = true) => {
+        if (!endpoint || typeof endpoint !== 'string')
+            throw new Error('Invalid endpoint URL')
+
+        endpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint
+
         try {
             const options = {
                 method

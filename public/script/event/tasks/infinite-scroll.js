@@ -70,18 +70,21 @@ async function asyncFunction(offset) {
 
         if (!projectId || projectId.trim() === '') throw new Error('Project ID not found')
 
-        const currentUrl = window.location.href
-        const subpath = currentUrl.split('TaskFlow/')[1]
+        const subdomain = window.location.href.split('.local')[1]
+        if (!subdomain) {
+            console.warn('Subdomain not found in URL')
+            return
+        }
 
         // Build endpoint path from page URL 
         let endpointPath = ''
-        endpointPath = subpath.replace('project', 'projects')
-        endpointPath = endpointPath.replace('task', 'tasks')
-        if (subpath.includes('phase')) 
-            endpointPath = endpointPath.replace('phase', 'phases')
-
-        if (subpath.includes('worker')) 
-            endpointPath = endpointPath.replace('worker', 'workers')
+        endpointPath = subdomain.replace(/\/project(\/|$)/, '/projects$1')
+        endpointPath = endpointPath.replace(/\/task(\/|$)/, '/tasks$1')
+        
+        if (subdomain.includes('phase')) 
+            endpointPath = endpointPath.replace(/\/phase(\/|$)/, '/phases$1')
+        if (subdomain.includes('worker')) 
+            endpointPath = endpointPath.replace(/\/worker(\/|$)/, '/workers$1')
 
         const queryParams = new URLSearchParams(window.location.search)
         queryParams.set('offset', offset)
