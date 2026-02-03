@@ -51,10 +51,10 @@ abstract class Model
      */
     protected function hasData(array|bool $data): bool
     {
-        if (is_bool($data) && $data === false) return false;
+        if (\is_bool($data) && $data === false) return false;
 
         foreach ($data as $value) {
-            if (is_array($value)) {
+            if (\is_array($value)) {
                 if (empty($value)) return false;
 
                 foreach ($value as $subValue) {
@@ -90,9 +90,9 @@ abstract class Model
      */
     protected function appendWhereClause(string $query, string|array $where): string 
     {
-        if ($where && is_string($where) && $where !== '') {
+        if ($where && \is_string($where) && $where !== '') {
             $query .= " WHERE " . $where;
-        } elseif (is_array($where) && !empty($where)) {
+        } elseif (\is_array($where) && !empty($where)) {
             $conditions = [];
             foreach (array_keys($where) as $key) {
                 $conditions[] = "$key = :$key";
@@ -143,12 +143,12 @@ abstract class Model
         $orderBy = trimOrNull($options['orderBy']) ?? trimOrNull($options[':orderBy']);
         if ($orderBy && $orderBy !== '') $query .= " ORDER BY " . $orderBy;
 
-        $limit = (int) $options['limit'] ?? (int) $options[':limit'] ?? 10;
-        if ($limit < 1) throw new InvalidArgumentException('Invalid limit value.');
+        $limit = (int) ($options['limit'] ?? $options[':limit'] ?? 10);
+        if ($limit < 1) throw new InvalidArgumentException('Invalid limit value');
         $query .= " LIMIT " . $limit;
 
-        $offset = (int) $options['offset'] ?? (int) $options[':offset'] ?? 0;
-        if ($offset < 0) throw new InvalidArgumentException('Invalid offset value.');
+        $offset = (int) ($options['offset'] ?? $options[':offset'] ?? 0);
+        if ($offset < 0) throw new InvalidArgumentException('Invalid offset value');
         $query .= " OFFSET " . $offset;
 
         return $query;

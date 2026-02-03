@@ -55,6 +55,7 @@ class ProjectWorkerModel extends Model
         try {
             $queryString = 
                 "SELECT 
+                    u.id,
                     u.public_id,
                     u.first_name,
                     u.middle_name,
