@@ -105,12 +105,8 @@ class SingleFormController implements Controller
 
         try {
             // Ensure user is authorized for protected pages
-            if (array_key_exists($page, ['createPassword', 'editProject', 'addTask'])) {
-                if (!SessionAuth::hasAuthorizedSession()) {
-                    header('Location: ' . REDIRECT_PATH . 'Login');
-                    exit();
-                }
-            }
+            if (\array_key_exists($page, ['createPassword', 'editProject', 'addTask'])) 
+                SessionAuth::redirectIfNotAuthorized();
 
             // Special handling for certain pages
             if ($page === 'addTask') {

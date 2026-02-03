@@ -14,7 +14,7 @@ use ValueError;
 class UserController implements Controller
 {
     private function __construct() {}
-    
+
     /**
      * Handles the user listing endpoint with optional filtering and pagination.
      *
@@ -38,11 +38,8 @@ class UserController implements Controller
      */
     public static function index(array $args = []): void
     {
-        try {   
-            if (!SessionAuth::hasAuthorizedSession()) {
-                header('Location: ' . REDIRECT_PATH . 'Login');
-                exit();
-            }
+        try {
+            SessionAuth::redirectIfNotAuthorized();
 
             $role = isset($_GET['role']) ? Role::tryFrom($_GET['role']) : null;
             $status = isset($_GET['status']) ? WorkerStatus::tryFrom($_GET['status']) : null;

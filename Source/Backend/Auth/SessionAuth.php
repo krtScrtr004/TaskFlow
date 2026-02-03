@@ -48,4 +48,12 @@ class SessionAuth
             'additionalInfo'    => $currentUser->getAdditionalInfo(),
         ]);
     }
+
+    public static function redirectIfNotAuthorized(string $redirectUrl = REDIRECT_PATH . 'login'): void
+    {
+        if (!self::hasAuthorizedSession()) {
+            header("Location: $redirectUrl");
+            exit();
+        }
+    }
 }

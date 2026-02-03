@@ -47,9 +47,7 @@ class ProjectController implements Controller
         $this->uuidValidator = new UuidValidator();
     }
 
-    public static function index(): void
-    {
-    }
+    public static function index(): void {}
 
     /**
      * Displays the active project dashboard for the currently authenticated user.
@@ -69,10 +67,7 @@ class ProjectController implements Controller
     public static function viewHome(): void
     {
         try {
-            if (!SessionAuth::hasAuthorizedSession()) {
-                header('Location: ' . REDIRECT_PATH . 'Login');
-                exit();
-            }
+            SessionAuth::redirectIfNotAuthorized();
 
             $instance = new self();
 
@@ -223,10 +218,7 @@ class ProjectController implements Controller
     public static function viewOther(array $args = []): void
     {
         try {
-            if (!SessionAuth::hasAuthorizedSession()) {
-                header('Location: ' . REDIRECT_PATH . 'Login');
-                exit();
-            }
+            SessionAuth::redirectIfNotAuthorized();
 
             $instance = new self();
 
@@ -274,10 +266,7 @@ class ProjectController implements Controller
     public static function viewGrid(): void
     {
         try {
-            if (!SessionAuth::hasAuthorizedSession()) {
-                header('Location: ' . REDIRECT_PATH . 'Login');
-                exit();
-            }
+            SessionAuth::redirectIfNotAuthorized();
 
             $key = '';
             if (isset($_GET['key']) && trim($_GET['key']) !== '')
@@ -287,7 +276,7 @@ class ProjectController implements Controller
             $status = isset($_GET['status']) && strcasecmp($_GET['status'], 'all') !== 0
                 ? WorkStatus::from($_GET['status'])
                 : null;
-        
+
             $instance = new self();
             $projects = $instance->projectModel->search(
                 $key,
@@ -439,10 +428,7 @@ class ProjectController implements Controller
     public static function viewReport(array $args = []): void
     {
         try {
-            if (!SessionAuth::hasAuthorizedSession()) {
-                header('Location: ' . REDIRECT_PATH . 'Login');
-                exit();
-            }
+            SessionAuth::redirectIfNotAuthorized();
 
             $instance = new self();
 
@@ -476,14 +462,12 @@ class ProjectController implements Controller
      * @throws NotFoundException Redirects to 404 error page if the project is not found
      * @throws ForbiddenException Redirects to 403 error page if access is denied
      */
-    public static function viewProjectForm(array $args = []): void {
+    public static function viewProjectForm(array $args = []): void
+    {
         try {
-            if (!SessionAuth::hasAuthorizedSession()) {
-                header('Location: ' . REDIRECT_PATH . 'Login');
-                exit();
-            }
+            SessionAuth::redirectIfNotAuthorized();
             $instance = new self();
-            
+
             $projectId = isset($args['projectId'])
                 ? UUID::fromString($args['projectId'])
                 : null;

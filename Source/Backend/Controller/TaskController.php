@@ -27,7 +27,7 @@ class TaskController implements Controller
     private TaskModel $taskModel;
 
 
-    private function __construct() 
+    private function __construct()
     {
         $this->projectModel = new ProjectModel();
         $this->projectWorkerModel = new ProjectWorkerModel();
@@ -67,10 +67,7 @@ class TaskController implements Controller
     public static function viewGrid(array $args): void
     {
         try {
-            if (!SessionAuth::hasAuthorizedSession()) {
-                header('Location: ' . REDIRECT_PATH . 'Login');
-                exit();
-            }
+            SessionAuth::redirectIfNotAuthorized();
 
             $instance = new self();
 
@@ -131,7 +128,7 @@ class TaskController implements Controller
                 $priority,
                 $options
             );
-            
+
             // No tasks found, assign an empty container
             if (!$tasks) $tasks = new TaskContainer();
             require_once VIEW_PATH . 'Tasks.php';
@@ -168,10 +165,7 @@ class TaskController implements Controller
     public static function viewInfo(array $args = []): void
     {
         try {
-            if (!SessionAuth::hasAuthorizedSession()) {
-                header('Location: ' . REDIRECT_PATH . 'Login');
-                exit();
-            }
+            SessionAuth::redirectIfNotAuthorized();
 
             $instance = new self();
 
@@ -232,10 +226,7 @@ class TaskController implements Controller
     public static function viewTaskForm(array $args = []): void
     {
         try {
-            if (!SessionAuth::hasAuthorizedSession()) {
-                header('Location: ' . REDIRECT_PATH . 'Login');
-                exit();
-            }
+            SessionAuth::redirectIfNotAuthorized();
 
             // Task Info
             $taskId = isset($args['taskId'])

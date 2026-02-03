@@ -29,10 +29,7 @@ class ProfileController implements Controller {
     public static function index(): void 
     {
         try {   
-            if (!SessionAuth::hasAuthorizedSession()) {
-                header('Location: ' . REDIRECT_PATH . 'Login');
-                exit();
-            }
+            SessionAuth::redirectIfNotAuthorized();
 
             $userModel = new UserModel();
             $profile = $userModel->findById(Me::getInstance()->getId());
