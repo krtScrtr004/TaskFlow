@@ -43,8 +43,8 @@ if (!isset($task)) {
         'submitButton'      => 'create_task_button',
         'noWorkerWall'      => 'flex-col',
         'scriptPaths'       => [
-            'workerModal'   => 'new',
-            'submit'        => 'create'
+            'workerModal'   => 'New',
+            'submit'        => 'Create'
         ]
     ];
 } else {
@@ -72,8 +72,8 @@ if (!isset($task)) {
             ? 'flex-col'
             : 'no-display',
         'scriptPaths'       => [
-            'workerModal'   => 'edit',
-            'submit'        => 'edit'
+            'workerModal'   => 'Edit',
+            'submit'        => 'Edit'
         ]
     ];
 }
@@ -90,12 +90,12 @@ if (!isset($task)) {
 
     <base href="<?= PUBLIC_PATH ?>">
     <link rel="icon" type="image/x-icon" href="<?= IMAGE_PATH . 'logo-dark.ico' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'root.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'utility.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'sidenav.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'component.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'loader.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'form' . DS . 'task.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Root.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Utility.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Sidenav.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Component.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Loader.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Form' . DS . 'Task.css' ?>">
 </head>
 
 <body>
@@ -359,15 +359,15 @@ if (!isset($task)) {
         </form>
     </main>
 
-    <script type="module" src="<?= EVENT_PATH . 'back-button.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'BackButton.js' ?>" defer></script>
 
-    <script type="module" src="<?= EVENT_PATH . 'form' . DS . 'task' . DS . 'record-changes.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'form' . DS . 'task' . DS . 'remove-worker-event.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'form' . DS . 'task' . DS . $uiState['scriptPaths']['submit'] . DS . 'submit.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'Form' . DS . 'Task' . DS . 'RecordChanges.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'Form' . DS . 'Task' . DS . 'RemoveWorkerEvent.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'Form' . DS . 'Task' . DS . $uiState['scriptPaths']['submit'] . DS . 'Submit.js' ?>" defer></script>
 
-    <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'validate-form.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'render-selected-worker-event.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . $uiState['scriptPaths']['workerModal'] . DS . 'open.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'AddWorkerModal' . DS . 'Task' . DS . 'ValidateForm.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'AddWorkerModal' . DS . 'Task' . DS . 'RenderSelectedWorkerEvent.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'AddWorkerModal' . DS . 'Task' . DS . $uiState['scriptPaths']['workerModal'] . DS . 'Open.js' ?>" defer></script>
 </body>
 
 </html>

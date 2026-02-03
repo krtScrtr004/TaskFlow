@@ -87,9 +87,8 @@ class ProjectController implements Controller
                     'workers' => true,
                 ]);
                 $projectId = $fullProjectInfo ? UUID::toString($fullProjectInfo->getPublicId()) : null;
-                if ($projectId && !Session::has('activeProjectId')) {
+                if ($projectId && !Session::has('activeProjectId'))
                     Session::set('activeProjectId', $projectId);
-                }
 
                 $instance->updatePhaseStatus($fullProjectInfo);
             }
@@ -172,7 +171,7 @@ class ProjectController implements Controller
             if ($status === WorkStatus::PENDING && compareDates($startDateTime, $now) <= 0) {
                 $reference->setStatus(WorkStatus::ONGOING);
                 $phasesToUpdate[] = [
-                    'id' => (int) $key,
+                    'id'     => (int) $key,
                     'status' => WorkStatus::ONGOING
                 ];
             }
@@ -185,13 +184,13 @@ class ProjectController implements Controller
                 if ($value['simpleProgress'] >= 100.0) {
                     $reference->setStatus(WorkStatus::COMPLETED);
                     $phasesToUpdate[] = [
-                        'id' => (int) $key,
+                        'id'     => (int) $key,
                         'status' => WorkStatus::COMPLETED
                     ];
                 } else {
                     $reference->setStatus(WorkStatus::DELAYED);
                     $phasesToUpdate[] = [
-                        'id' => (int) $key,
+                        'id'     => (int) $key,
                         'status' => WorkStatus::DELAYED
                     ];
                 }
@@ -225,7 +224,7 @@ class ProjectController implements Controller
     {
         try {
             if (!SessionAuth::hasAuthorizedSession()) {
-                header('Location: ' . REDIRECT_PATH . 'login');
+                header('Location: ' . REDIRECT_PATH . 'Login');
                 exit();
             }
 
@@ -234,14 +233,13 @@ class ProjectController implements Controller
             $projectId = isset($args['projectId'])
                 ? UUID::fromString($args['projectId'])
                 : null;
-            if (!$projectId)
-                throw new ForbiddenException('Project ID is required');
+            if (!$projectId) throw new ForbiddenException('Project ID is required');
 
             $fullProjectInfo = $instance->getProjectInfo(
                 $projectId,
                 [
-                    'tasks' => true,
-                    'workers' => true
+                    'tasks'     => true,
+                    'workers'   => true
                 ]
             );
             if (!$fullProjectInfo) throw new NotFoundException('Project not found');
@@ -333,9 +331,7 @@ class ProjectController implements Controller
             'tasks' => false
         ]
     ): ?Project {
-        if (!$projectId) {
-            return null;
-        }
+        if (!$projectId) return null;
 
         $includeTasks = $options['tasks'] ?? false;
         $includePhases = $options['phases'] ?? false;
@@ -403,9 +399,9 @@ class ProjectController implements Controller
                     ? ProjectProgressCalculator::calculate($phases)
                     : [
                         'progressPercentage' => 0.0,
-                        'statusBreakdown' => [],
-                        'priorityBreakdown' => [],
-                        'phaseBreakdown' => []
+                        'statusBreakdown'    => [],
+                        'priorityBreakdown'  => [],
+                        'phaseBreakdown'     => []
                     ];
                 $project->setPhases($phases);
             }
@@ -493,8 +489,8 @@ class ProjectController implements Controller
                 : null;
             $project = isset($projectId)
                 ? $instance->getProjectInfo($projectId, [
-                    'phases' => true,
-                    'workers' => true,
+                    'phases'    => true,
+                    'workers'   => true,
                 ])
                 : null;
 

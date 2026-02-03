@@ -57,7 +57,7 @@ class Router
                 else 
                     $className = 'App\\Controller\\' . $className;
             }
-            return call_user_func([$className, $action[1]], $routeParams);
+            return \call_user_func([$className, $action[1]], $routeParams);
         }
     }
 

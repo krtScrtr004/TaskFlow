@@ -38,12 +38,12 @@ $myData = [
 
     <base href="<?= PUBLIC_PATH ?>">
     <link rel="icon" type="image/x-icon" href="<?= IMAGE_PATH . 'logo-dark.ico' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'root.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'utility.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'component.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'sidenav.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'loader.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'profile.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Root.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Utility.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Component.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Sidenav.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Loader.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Profile.css' ?>">
 </head>
 
 <body>
@@ -294,12 +294,12 @@ $myData = [
 
     </main>
 
-    <script type="module" src="<?= EVENT_PATH . 'toggle-menu.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'logout.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'ToggleMenu.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'Logout.js' ?>" defer></script>
 
-    <script type="module" src="<?= EVENT_PATH . 'profile' . DS . 'change-profile.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'profile' . DS . 'submit.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'profile' . DS . 'delete.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'Profile' . DS . 'ChangeProfile.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'Profile' . DS . 'Submit.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'Profile' . DS . 'Delete.js' ?>" defer></script>
 </body>
 
 </html>

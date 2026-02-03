@@ -52,12 +52,12 @@ $worksOn = $taskModel->worksOn($task->getId(), Me::getInstance()->getId(), $proj
 
     <base href="<?= PUBLIC_PATH ?>">
     <link rel="icon" type="image/x-icon" href="<?= IMAGE_PATH . 'logo-dark.ico' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'root.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'utility.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'component.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'sidenav.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'loader.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'tasks.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Root.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Utility.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Component.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Sidenav.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Loader.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Tasks.css' ?>">
 </head>
 
 <body>
@@ -236,29 +236,15 @@ $worksOn = $taskModel->worksOn($task->getId(), Me::getInstance()->getId(), $proj
         </section>
     </main>
 
-    <script type="module" src="<?= EVENT_PATH . 'back-button.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'toggle-menu.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'logout.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'BackButton.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'ToggleMenu.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'Logout.js' ?>" defer></script>
 
-    <script type="module" src="<?= EVENT_PATH . 'tasks' . DS . 'view' . DS . 'create-worker-card.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'tasks' . DS . 'view' . DS . 'complete.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'tasks' . DS . 'view' . DS . 'cancel.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'tasks' . DS . 'view' . DS . 'remove-terminate-worker.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'Tasks' . DS . 'View' . DS . 'CreateWorkerCard.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'Tasks' . DS . 'View' . DS . 'Complete.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'Tasks' . DS . 'View' . DS . 'Cancel.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'Tasks' . DS . 'View' . DS . 'RemoveTerminateWorker.js' ?>" defer></script>
     
 </body>
 
 </html>
-
-<?php   
-
-function i() {
-    ob_Start();
-    ?>
-        <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'existing' . DS . 'open.js' ?>" defer></script>
-        <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'existing' . DS . 'add.js' ?>" defer></script>
-
-        <script type="module" src="<?= EVENT_PATH . 'edit-task-modal' . DS . 'open.js' ?>" defer></script>
-        <script type="module" src="<?= EVENT_PATH . 'edit-task-modal' . DS . 'submit.js' ?>" defer></script>
-    <?php
-    $script = ob_get_clean();
-}

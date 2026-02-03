@@ -15,12 +15,12 @@ use App\Middleware\Csrf;
 
     <base href="<?= PUBLIC_PATH ?>">
     <link rel="icon" type="image/x-icon" href="<?= IMAGE_PATH . 'logo-dark.ico' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'root.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'utility.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'component.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'sidenav.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'loader.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'about-us.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Root.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Utility.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Component.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Sidenav.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Loader.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'AboutUs.css' ?>">
 </head>
 
 <body>
@@ -124,7 +124,7 @@ use App\Middleware\Csrf;
                 <section class="carousel flex-row">
                     <?php foreach ($memberData as $member): ?>
                         <div class="team-member-card relative">
-                            <img class="fit-cover circle absolute" src="<?= IMAGE_PATH . 'team/' . $member['image'] ?>"
+                            <img class="fit-cover circle absolute" src="<?= IMAGE_PATH . 'Team' . DS . $member['image'] ?>"
                                 alt="<?= $member['name'] ?>" title="<?= $member['name'] ?>" height="100">
 
                             <!-- Info -->
@@ -232,10 +232,10 @@ use App\Middleware\Csrf;
 
     </main>
 
-    <script type="module" src="<?= EVENT_PATH . 'toggle-menu.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'logout.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'about-us' . DS . 'carousel-tracker.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'about-us' . DS . 'send-concern.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'ToggleMenu.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'Logout.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'AboutUs' . DS . 'CarouselTracker.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'AboutUs' . DS . 'SendConcern.js' ?>" defer></script>
 </body>
 
 </html>

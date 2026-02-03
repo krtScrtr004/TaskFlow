@@ -19,15 +19,15 @@ class SingleFormController implements Controller
             'title'         => 'Reset Your Password',
             'description'   => 'Enter your email address below and we will send you a link to reset your password.',
             'form'          => 'ResetPassword',
-            'script'        => ['single-form/reset-password/send-link']
+            'script'        => ['SingleForm/ResetPassword/SendLink']
         ],
         'changePassword' => [
             'title'         => 'Set Your Password',
             'description'   => 'Create a new password.',
             'form'          => 'ChangePassword',
             'script'        => [
-                'password-list-validator',
-                'single-form/change-password/submit'
+                'PasswordListValidator',
+                'SingleForm/ChangePassword/Submit'
             ]
         ],
         'addTask' => [
@@ -35,9 +35,9 @@ class SingleFormController implements Controller
             'description'   => 'Fill in the details below to add a new task.',
             'form'          => 'AddTask',
             'script'        => [
-                'add-worker-modal/task/new/add',
-                'add-worker-modal/task/new/open',
-                'single-form/add-task/submit',
+                'AddWorkerModal/Task/New/Add',
+                'AddWorkerModal/Task/New/Open',
+                'SingleForm/AddTask/Submit',
             ]
         ]
     ];
@@ -101,7 +101,7 @@ class SingleFormController implements Controller
         $component = $components[$page];
 
         $scripts = $component['script'];
-        $form = 'single-form' . DS . camelToKebabCase($component['form']) . '.php';
+        $form = 'SingleForm' . DS . $component['form'] . '.php';
 
         try {
             // Ensure user is authorized for protected pages

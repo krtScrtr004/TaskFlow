@@ -14,16 +14,16 @@ class IndexController implements Controller
             'title'     => 'Log In Your Account', 
             'form'      => 'Login',
             'scripts'   => [
-                'login/submit'
+                'Login/Submit'
             ]
         ],
         'register' => [
             'title'     => 'Register An Account', 
             'form'      => 'Register',
             'scripts'   => [
-                'check-date-validity',
-                'register/select-role',
-                'register/submit'
+                'CheckDateValidity',
+                'Register/SelectRole',
+                'Register/Submit'
             ]
         ],
     ];

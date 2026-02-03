@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Endpoint;
+
 use App\Abstract\Endpoint;
 use App\Auth\HttpAuth;
 use App\Auth\SessionAuth;
@@ -21,6 +23,7 @@ use App\Service\TaskService;
 use App\Utility\ResponseExceptionHandler;
 use App\Validator\ResourceValidator;
 use App\Validator\WorkValidator;
+use Throwable;
 
 class TaskWorkerEndpoint extends Endpoint
 {

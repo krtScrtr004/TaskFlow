@@ -19,12 +19,12 @@ if (!isset($users)) throw new Error('Users data is required');
 
     <base href="<?= PUBLIC_PATH ?>">
     <link rel="icon" type="image/x-icon" href="<?= IMAGE_PATH . 'logo-dark.ico' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'root.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'utility.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'component.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'sidenav.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'loader.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'users.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Root.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Utility.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Component.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Sidenav.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Loader.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Users.css' ?>">
 </head>
 
 <body>
@@ -70,13 +70,13 @@ if (!isset($users)) throw new Error('Users data is required');
         </section>
     </main>
 
-    <script type="module" src="<?= EVENT_PATH . 'toggle-menu.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'break-text-fallback.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'logout.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'ToggleMenu.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'BreakTextFallback.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'Logout.js' ?>" defer></script>
 
-    <script type="module" src="<?= EVENT_PATH . 'users' . DS . 'search.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'users' . DS . 'infinite-scroll.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'users' . DS . 'create-user-card.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'Users' . DS . 'Search.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'Users' . DS . 'InfiniteScroll.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'Users' . DS . 'CreateUserCard.js' ?>" defer></script>
 
 </body>
 

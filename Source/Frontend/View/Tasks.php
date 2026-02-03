@@ -32,12 +32,12 @@ $isAddable = Role::isProjectManager(Me::getInstance()->getRole()) &&
 
     <base href="<?= PUBLIC_PATH ?>">
     <link rel="icon" type="image/x-icon" href="<?= IMAGE_PATH . 'logo-dark.ico' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'root.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'utility.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'component.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'sidenav.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'loader.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'tasks.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Root.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Utility.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Component.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Sidenav.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Loader.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Tasks.css' ?>">
 </head>
 
 <body>
@@ -96,12 +96,12 @@ $isAddable = Role::isProjectManager(Me::getInstance()->getRole()) &&
         </section>
     </main>
 
-    <script type="module" src="<?= EVENT_PATH . 'toggle-menu.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'break-text-fallback.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'logout.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'ToggleMenu.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'BreakTextFallback.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'Logout.js' ?>" defer></script>
 
-    <script type="module" src="<?= EVENT_PATH . 'tasks' . DS . 'search.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'tasks' . DS . 'infinite-scroll.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'Tasks' . DS . 'Search.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'Tasks' . DS . 'InfiniteScroll.js' ?>" defer></script>
 
 </body>
 

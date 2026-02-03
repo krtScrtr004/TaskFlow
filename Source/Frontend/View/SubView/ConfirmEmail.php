@@ -11,10 +11,10 @@
 
     <base href="<?= PUBLIC_PATH ?>">
     <link rel="icon" type="image/x-icon" href="<?= IMAGE_PATH . 'logo-dark.ico' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'root.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'utility.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'component.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'index.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Root.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Utility.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Component.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Index.css' ?>">
 </head>
 
 <body>
@@ -24,6 +24,6 @@
         <p>You may now <a class="blue-text" href="<?= REDIRECT_PATH . 'login' ?>">log in to your account</a></p>
     </main>
 
-    <script type="module" src="<?= EVENT_PATH . 'register' . DS . 'confirm-email.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'Register' . DS . 'ConfirmEmail.js' ?>" defer></script>
 </body>
 </html>

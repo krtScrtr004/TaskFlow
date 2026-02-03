@@ -41,19 +41,17 @@ define('BE_UTILITY_PATH', BACKEND_PATH . 'Utility' . DS);
 define('FE_UTILITY_PATH', FRONTEND_PATH . 'Utility' . DS);
 
 // Relative paths (with leading slash for absolute path from domain root)
-define('PUBLIC_PATH', DS . 'public' . DS);
+define('PUBLIC_PATH', DS . 'Public' . DS);
 
-define('ASSET_PATH', PUBLIC_PATH . 'asset' . DS);
-define('SCRIPT_PATH', PUBLIC_PATH . 'script' . DS);
-define('STYLE_PATH', PUBLIC_PATH . 'style' . DS);
+define('ASSET_PATH', PUBLIC_PATH . 'Asset' . DS);
+define('SCRIPT_PATH', PUBLIC_PATH . 'Script' . DS);
+define('STYLE_PATH', PUBLIC_PATH . 'Style' . DS);
 
-define('EVENT_PATH', SCRIPT_PATH . 'event' . DS);
+define('EVENT_PATH', SCRIPT_PATH . 'Event' . DS);
+define('IMAGE_PATH', ASSET_PATH . 'Image' . DS);
+define('LOGO_PATH', IMAGE_PATH . 'Logo' . DS);
+define('ICON_PATH', IMAGE_PATH . 'Icon' . DS);
 
-define('IMAGE_PATH', ASSET_PATH . 'image' . DS);
-define('LOGO_PATH', IMAGE_PATH . 'logo' . DS);
-define('ICON_PATH', IMAGE_PATH . 'icon' . DS);
-
-define('VIDEO_PATH', ASSET_PATH . 'video' . DS);
-
+define('VIDEO_PATH', ASSET_PATH . 'Video' . DS);
 // README: Remove this
-define('DUMP_PATH', FRONTEND_PATH . 'dump' . DS);
+define('DUMP_PATH', FRONTEND_PATH . 'Dump' . DS);

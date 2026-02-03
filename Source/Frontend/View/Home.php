@@ -16,12 +16,12 @@ use App\Middleware\Csrf;
 
     <base href="<?= PUBLIC_PATH ?>">
     <link rel="icon" type="image/x-icon" href="<?= IMAGE_PATH . 'logo-dark.ico' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'root.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'utility.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'component.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'sidenav.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'loader.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'home.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Root.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Utility.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Component.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Sidenav.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Loader.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Home.css' ?>">
 
 </head>
 
@@ -49,22 +49,22 @@ use App\Middleware\Csrf;
         } ?>
     </main>
 
-    <script type="module" src="<?= EVENT_PATH . 'toggle-menu.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'logout.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'ToggleMenu.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'Logout.js' ?>" defer></script>
     <?php if (isset($project)): ?>
         <script src="<?= PUBLIC_PATH . 'chart.umd.min.js' ?>"></script>
 
-        <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'task-status-chart.js' ?>" defer></script>
-        <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'progress-bar.js' ?>" defer></script>
-        <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'total-spending-bar.js' ?>" defer></script>
-        <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'create-worker-card.js' ?>" defer></script>
-        <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'search-worker.js' ?>" defer></script>
-        <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'infinite-scroll-workers.js' ?>" defer></script>
+        <script type="module" src="<?= EVENT_PATH . 'Home' . DS . 'TaskStatusChart.js' ?>" defer></script>
+        <script type="module" src="<?= EVENT_PATH . 'Home' . DS . 'ProgressBar.js' ?>" defer></script>
+        <script type="module" src="<?= EVENT_PATH . 'Home' . DS . 'TotalSpendingBar.js' ?>" defer></script>
+        <script type="module" src="<?= EVENT_PATH . 'Home' . DS . 'CreateWorkerCard.js' ?>" defer></script>
+        <script type="module" src="<?= EVENT_PATH . 'Home' . DS . 'SearchWorker.js' ?>" defer></script>
+        <script type="module" src="<?= EVENT_PATH . 'Home' . DS . 'InfiniteScrollWorkers.js' ?>" defer></script>
         <?php if (Role::isProjectManager(Me::getInstance()->getRole())): ?>
-            <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'remove-terminate-worker.js' ?>" defer></script>
-            <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'cancel.js' ?>" defer></script>
-            <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'project' . DS . 'open.js' ?>" defer></script>
-            <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'project' . DS . 'add.js' ?>" defer></script>
+            <script type="module" src="<?= EVENT_PATH . 'Home' . DS . 'RemoveTerminateWorker.js' ?>" defer></script>
+            <script type="module" src="<?= EVENT_PATH . 'Home' . DS . 'Cancel.js' ?>" defer></script>
+            <script type="module" src="<?= EVENT_PATH . 'AddWorkerModal' . DS . 'Project' . DS . 'Open.js' ?>" defer></script>
+            <script type="module" src="<?= EVENT_PATH . 'AddWorkerModal' . DS . 'Project' . DS . 'Add.js' ?>" defer></script>
         <?php endif; ?>
     <?php endif; ?>
 </body>

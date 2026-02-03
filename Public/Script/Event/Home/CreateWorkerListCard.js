@@ -1,0 +1,120 @@
+import { createFullName } from '../../Utility/Utility.js'
+
+/**
+ * Creates a worker list card DOM element
+ * @param {Object} worker - The worker data object
+ * @param {string} worker.id - Worker's public ID
+ * @param {string} worker.name - Worker's full name (or firstName + middleName + lastName)
+ * @param {string} [worker.firstName] - Worker's first name (if name not provided)
+ * @param {string} [worker.lastName] - Worker's last name (if name not provided)
+ * @param {string} [worker.profileLink] - URL to worker's profile picture
+ * @param {string} [worker.profilePicture] - Alternative property for profile picture URL
+ * @param {Array<string>} [worker.jobTitles] - Array of job titles
+ * @returns {HTMLElement} The worker list card button element
+ */
+export function createWorkerListCard(worker) {
+    const ICON_PATH = '/Public/Asset/Image/Icon/'
+
+    // Determine profile picture URL
+    const profileLink = worker.profileLink ||
+        worker.profilePicture ||
+        ICON_PATH + 'profile_w.svg'
+
+    // Determine worker name
+    const name = worker.name ||
+        createFullName(worker.firstName, worker.middleName, worker.lastName) || 'Unnamed Worker'
+
+    const id = worker.id
+    const jobTitles = worker.jobTitles || []
+
+    // Create main button container
+    const button = document.createElement('button')
+    button.className = 'user-list-card unset-button'
+    button.dataset.id = id
+
+    // Create profile image
+    const img = document.createElement('img')
+    img.className = 'fit-cover'
+    img.src = profileLink
+    img.alt = name
+    img.title = name
+    img.loading = 'lazy'
+    img.height = 40
+
+    // Create info container
+    const infoContainer = document.createElement('div')
+    infoContainer.className = 'flex-col'
+
+    // Create name and ID section
+    const nameIdSection = document.createElement('div')
+
+    const nameHeader = document.createElement('h4')
+    nameHeader.className = 'name wrap-text single-line-ellipsis'
+    nameHeader.title = name
+    nameHeader.textContent = name
+    nameIdSection.appendChild(nameHeader)
+
+    const idPara = document.createElement('p')
+    const idEm = document.createElement('em')
+    idEm.className = 'id dark-white-text light-text'
+    idEm.textContent = id
+    idPara.appendChild(idEm)
+    nameIdSection.appendChild(idPara)
+
+    // Create job titles section
+    const jobTitlesDiv = document.createElement('div')
+    jobTitlesDiv.className = 'job-titles flex-row flex-wrap'
+
+    if (jobTitles && jobTitles.length > 0) {
+        jobTitles.forEach(jobTitle => {
+            const span = document.createElement('span')
+            span.className = 'job-title-chip'
+
+            const p = document.createElement('p')
+            p.className = 'dark-white-text light-font'
+            p.textContent = jobTitle
+
+            span.appendChild(p)
+            jobTitlesDiv.appendChild(span)
+        })
+    }
+
+    // Assemble the components
+    infoContainer.appendChild(nameIdSection)
+    infoContainer.appendChild(jobTitlesDiv)
+
+    button.appendChild(img)
+    button.appendChild(infoContainer)
+
+    // Optional default rate badge (server renders this in PHP when present)
+    const defaultRateValue = worker.defaultRate || worker.default_rate || worker.default_rate_value
+    if (defaultRateValue) {
+        const rateDiv = document.createElement('div')
+        rateDiv.className = 'default-rate badge absolute'
+
+        const p = document.createElement('p')
+        p.className = 'green-text bold-text'
+
+        const num = typeof defaultRateValue === 'number'
+            ? defaultRateValue
+            : Number(String(defaultRateValue).replace(/[^0-9.-]+/g, ''))
+        const formatted = Number.isFinite(num)
+            ? new Intl.NumberFormat('en-PH').format(num)
+            : defaultRateValue
+
+        p.textContent = `₱ ${formatted}`
+        rateDiv.appendChild(p)
+        button.appendChild(rateDiv)
+    }
+
+    const workerList = document.querySelector('.project-workers > .worker-list > .list')
+    if (!workerList) {
+        console.error('Worker list container not found')
+    } else {
+        const noWorkersWall = workerList.parentElement.querySelector('.no-workers-wall')
+        noWorkersWall?.classList.remove('flex-col', 'flex-row')
+        noWorkersWall?.classList.add('no-display')
+
+        workerList.appendChild(button)
+    }
+}

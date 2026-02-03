@@ -49,12 +49,12 @@ $performance = ($reportData['phases']?->count() > 0)
 
     <base href="<?= PUBLIC_PATH ?>">
     <link rel="icon" type="image/x-icon" href="<?= IMAGE_PATH . 'logo-dark.ico' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'root.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'utility.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'component.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'sidenav.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'loader.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'report.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Root.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Utility.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Component.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Sidenav.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Loader.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Report.css' ?>">
 </head>
 
 <body>
@@ -533,20 +533,21 @@ $performance = ($reportData['phases']?->count() > 0)
         </section>
     </main>
     
-    <script type="module" src="<?= EVENT_PATH . 'toggle-menu.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'logout.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'ToggleMenu.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'Logout.js' ?>" defer></script>
 
-    <script src="<?= EVENT_PATH . 'report' . DS . 'luxon.min.js' ?>"></script>
+    <script src="<?= EVENT_PATH . 'Report' . DS . 'LuxonMin.js' ?>"></script>
     <script src="<?= PUBLIC_PATH . 'chart.umd.min.js' ?>"></script>
-    <script src="<?= EVENT_PATH . 'report' . DS . 'chartjs-adapter-date-fns.js' ?>"></script>
+    <script src="<?= EVENT_PATH . 'Report' . DS . 'ChartjsAdapterDateFns.js' ?>"></script>
 
-    <script type="module" src="<?= EVENT_PATH . 'report' . DS . 'phase-timeline.js' ?>"></script>
-    <script type="module" src="<?= EVENT_PATH . 'home' . DS . 'progress-bar.js' ?>"></script>
-    <script type="module" src="<?= EVENT_PATH . 'report' . DS . 'phase-progress-bar.js' ?>"></script>
-    <script type="module" src="<?= EVENT_PATH . 'report' . DS . 'task-periodic-count.js' ?>"></script>
-    <script type="module" src="<?= EVENT_PATH . 'report' . DS . 'worker-statistics.js' ?>"></script>
-    <script type="module" src="<?= EVENT_PATH . 'report' . DS . 'status_priority_distribution_count.js' ?>"></script>
-    <script type="module" src="<?= EVENT_PATH . 'report' . DS . 'print.js' ?>"></script>
+    <script type="module" src="<?= EVENT_PATH . 'Home' . DS . 'ProgressBar.js' ?>"></script>
+
+    <script type="module" src="<?= EVENT_PATH . 'Report' . DS . 'PhaseTimeline.js' ?>"></script>
+    <script type="module" src="<?= EVENT_PATH . 'Report' . DS . 'PhaseProgressBar.js' ?>"></script>
+    <script type="module" src="<?= EVENT_PATH . 'Report' . DS . 'TaskPeriodicCount.js' ?>"></script>
+    <script type="module" src="<?= EVENT_PATH . 'Report' . DS . 'WorkerStatistics.js' ?>"></script>
+    <script type="module" src="<?= EVENT_PATH . 'Report' . DS . 'StatusPriorityDistributionCount.js' ?>"></script>
+    <script type="module" src="<?= EVENT_PATH . 'Report' . DS . 'Print.js' ?>"></script>
 </body>
 
 </html>

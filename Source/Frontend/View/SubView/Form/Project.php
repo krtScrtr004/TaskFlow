@@ -38,8 +38,8 @@ if ($project) {
         ? formatDateTime($project->getActualCompletionDateTime(), 'Y-m-d')
         : null;
     $projectData['scripts'] = [
-        'edit' . DS . 'search-workers.js',
-        'edit' . DS . 'submit.js',
+        'Edit' . DS . 'SearchWorkers.js',
+        'Edit' . DS . 'Submit.js',
     ];
 
     $uiState['submitButtonId']      = 'edit_project_button';
@@ -49,8 +49,8 @@ if ($project) {
     $uiState['noWorkerWall']    = count($projectData['workers'] ?? []) > 0 ? 'no-display' : 'flex-col';
 } else {
     $projectData['scripts'] = [
-        'create' . DS . 'search-workers.js',
-        'create' . DS . 'submit.js',
+        'Create' . DS . 'SearchWorkers.js',
+        'Create' . DS . 'Submit.js',
     ];
 
     $uiState['submitButtonId']      = 'create_project_button';
@@ -72,12 +72,12 @@ if ($project) {
 
     <base href="<?= PUBLIC_PATH ?>">
     <link rel="icon" type="image/x-icon" href="<?= IMAGE_PATH . 'logo-dark.ico' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'root.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'utility.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'sidenav.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'component.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'loader.css' ?>">
-    <link rel="stylesheet" href="<?= STYLE_PATH . 'form' . DS . 'project.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Root.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Utility.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Sidenav.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Component.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Loader.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'Form' . DS . 'Project.css' ?>">
 
 </head>
 
@@ -361,13 +361,13 @@ if ($project) {
 
     </main>
 
-    <script type="module" src="<?= EVENT_PATH . 'form' . DS . 'project' . DS . 'toggle-sections.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'form' . DS . 'project' . DS . 'create-phase-form-card.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'form' . DS . 'project' . DS . 'record-changes.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'form' . DS . 'project' . DS . 'validate-forms.js' ?>" defer></script>
-    <script type="module" src="<?= EVENT_PATH . 'form' . DS . 'project' . DS . 'worker' . DS . 'add.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'Form' . DS . 'Project' . DS . 'ToggleSections.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'Form' . DS . 'Project' . DS . 'CreatePhaseFormCard.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'Form' . DS . 'Project' . DS . 'RecordChanges.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'Form' . DS . 'Project' . DS . 'ValidateForms.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'Form' . DS . 'Project' . DS . 'Worker' . DS . 'Add.js' ?>" defer></script>
     <?php foreach ($projectData['scripts'] as $script) : ?>
-        <script type="module" src="<?= EVENT_PATH . 'form' . DS . 'project' . DS . $script ?>" defer></script>
+        <script type="module" src="<?= EVENT_PATH . 'Form' . DS . 'Project' . DS . $script ?>" defer></script>
     <?php endforeach; ?>
 </body>
 

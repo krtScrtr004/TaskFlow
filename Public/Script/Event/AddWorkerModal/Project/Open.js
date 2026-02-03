@@ -1,0 +1,50 @@
+import { Loader } from '../../../Render/Loader.js'
+import { fetchWorkers } from '../Fetch.js'
+import { createWorkerListCard } from '../Render.js'
+import { selectWorker } from '../Select.js'
+import { initializeAddWorkerModal } from '../Modal.js'
+import { toggleNoWorkerWall } from '../Modal.js'
+import { handleException } from '../../../Utility/HandleException.js'
+import { die } from '../../../Utility/Utility.js'
+
+const projectContainer = document.querySelector('.project-container')
+
+const addWorkerModalTemplate = document.querySelector('#add_worker_modal_template')
+if (!addWorkerModalTemplate) die('Add worker modal template not found')
+
+const thisProjectId = projectContainer ? projectContainer.dataset.projectid : null
+if (!thisProjectId || thisProjectId.trim() === '') die('Project ID not found')
+
+const addWorkerButton = document.querySelector('#add_worker_button')
+if (!addWorkerButton) die('Add worker button element not found')
+
+addWorkerButton.addEventListener('click', async () => {
+    const params = new URLSearchParams()
+    params.append('status', 'unassigned')
+    params.append('excludeProjectTerminated', 'true')
+
+    const endpoint = `projects/${thisProjectId}/workers?${params.toString()}`
+
+    initializeAddWorkerModal(thisProjectId, endpoint, addWorkerModalTemplate)
+
+    addWorkerModalTemplate.classList.add('flex-col')
+    addWorkerModalTemplate.classList.remove('no-display')
+
+    try {
+        const workerList = addWorkerModalTemplate.querySelector('.worker-list > .list')
+        Loader.full(workerList)
+
+        const workers = await fetchWorkers(endpoint)
+        if (workers.length === 0) {
+            toggleNoWorkerWall(true, addWorkerModalTemplate)
+            return
+        }
+
+        workers.forEach(worker => createWorkerListCard(worker))
+        selectWorker()
+    } catch (error) {
+        handleException(error)
+    } finally {
+        Loader.delete()
+    }
+})

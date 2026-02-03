@@ -56,8 +56,8 @@ class ErrorController implements Controller
     public static function notFound(): void
     {
         self::index([
-            'title' => '404 Not Found',
-            'status' => '404'
+            'title'     => '404 Not Found',
+            'status'    => '404'
         ]);
         http_response_code(404);
     }
@@ -75,8 +75,8 @@ class ErrorController implements Controller
     public static function forbidden(): void
     {
         self::index([
-            'title' => '403 Forbidden',
-            'status' => '403'
+            'title'     => '403 Forbidden',
+            'status'    => '403'
         ]); 
         http_response_code(403);
     }
