@@ -312,7 +312,7 @@ class TaskModel extends Model
      *
      * @return TaskContainer|null A container of tasks matching the criteria, or null if none found.
      */
-    public function findAllByPhaseId(
+    public function findByPhaseId(
         int|UUID $phaseId,
         int|UUID|null $projectId = null,
         WorkStatus|Priority|null $filter = null,
@@ -358,6 +358,31 @@ class TaskModel extends Model
             }
 
             return self::find($whereClause, $params, $options);
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+
+    public function findByProject(
+        int|UUID $projectId,
+        array $options = [
+            'limit'  => 10,
+            'offset' => 0,
+        ]
+    ): TaskContainer|null
+    {
+        if (\is_int($projectId) && $projectId < 1)
+            throw new InvalidArgumentException('Invalid project ID');
+        try {
+            return $this->search(
+                '',
+                null,
+                null,
+                $projectId,
+                null,
+                null,
+                $options
+            );
         } catch (Exception $e) {
             throw $e;
         }

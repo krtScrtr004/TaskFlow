@@ -68,7 +68,8 @@ class TaskService
         'task'      => true,
         'worker'    => true,
         'resource'  => true
-    ]): Task {
+    ]): Task
+    {
         $executeTask = $execute['task'] ?? false;
         $executeWorker = $execute['worker'] ?? false;
         $executeResource = $execute['resource'] ?? false;
@@ -128,7 +129,7 @@ class TaskService
             $taskWorkerResources->add(TaskResource::createPartial([
                 'type'          => ResourceType::createPartial(['id' => ResourceTypeMapping::LABOR->value]),
                 'quantity'      => 1,
-                'unitRate'      => $worker->getUnitRate() !== DEFAULT_RATE_MIN 
+                'unitRate'      => $worker->getUnitRate() !== DEFAULT_RATE_MIN
                     ? $worker->getUnitRate()
                     : $worker->getDefaultRate(),
                 'estimatedUnit' => $worker->getEstimatedHour(),
@@ -221,7 +222,7 @@ class TaskService
             throw $e;
         }
     }
-        
+
 
     /**
      * Retrieves a Task by its ID, with optional inclusion of related entities.
@@ -240,13 +241,13 @@ class TaskService
      * @throws InvalidArgumentException If the provided task ID is invalid.
      */
     public static function get(
-        int|UUID $taskId, 
+        int|UUID $taskId,
         array $options = [
             'workers'   => false,
             'resources' => false
         ]
-    ): ?Task {
-        if (is_int($taskId) && $taskId <= 0) 
+    ): Task|null {
+        if (is_int($taskId) && $taskId <= 0)
             throw new InvalidArgumentException('Invalid task ID.');
 
         $includeWorkers = $options['workers'] ?? false;
@@ -254,20 +255,21 @@ class TaskService
 
         $instance = new self();
         $task = $instance->taskModel->findById($taskId);
+        if (!$task) return null;
 
         // Load related entities based on options
-        if ($task && $includeWorkers) {
-            $workers = $instance->taskWorkerModel-> findByTaskId($task->getId());
+        if ($includeWorkers) {
+            $workers = $instance->taskWorkerModel->findByTaskId($task->getId());
             $task->setWorkers($workers);
         }
-        
+
         // Load resources if specified
-        if ($task && $includeResources) {
+        if ($includeResources) {
             $instance = new self();
             $resources = $instance->resourceModel->findByTaskId($task->getId());
             $task->setResources($resources);
         }
 
-            return $task;
+        return $task;
     }
 }

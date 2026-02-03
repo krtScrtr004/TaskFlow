@@ -15,6 +15,7 @@ use App\Interface\Controller;
 use App\Model\PhaseModel;
 use App\Model\ProjectModel;
 use App\Model\TaskModel;
+use App\Service\ProjectService;
 use App\Utility\ProjectProgressCalculator;
 use App\Validator\UuidValidator;
 use DateTime;
@@ -138,7 +139,7 @@ class ProjectController implements Controller
     {
         $instance = new self();
 
-        $phases = $instance->phaseModel->findAllByProjectId($project->getId(), true);
+        $phases = $instance->phaseModel->findByProjectId($project->getId(), true);
         if (!$phases) throw new NotFoundException('Phases not found');
 
         // Container of phase IDs to update status
@@ -328,10 +329,10 @@ class ProjectController implements Controller
 
         $instance = new self();
 
-        $project = $instance->projectModel->findFull($projectId, [
-            'phases' => $includePhases,
-            'tasks' => $includeTasks,
-            'workers' => $includeWorkers
+        $project = ProjectService::get($projectId, [
+            'phases'    => $includePhases,
+            'tasks'     => $includeTasks,
+            'workers'   => $includeWorkers
         ]);
 
         $recentTasks = $instance->taskModel->search(
@@ -383,7 +384,7 @@ class ProjectController implements Controller
             if ($project->additionalInfoContains('progress')) {
                 $projectProgress = $project->getAdditionalInfo('progress');
             } else {
-                $phases = $instance->phaseModel->findAllByProjectId($project->getId(), true);
+                $phases = $instance->phaseModel->findByProjectId($project->getId(), true);
                 $projectProgress = ($phases?->count() > 0)
                     ? ProjectProgressCalculator::calculate($phases)
                     : [

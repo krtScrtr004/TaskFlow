@@ -357,7 +357,7 @@ class ProjectEndpoint extends Endpoint
             $data = decodeData('php://input');
             if (!$data) throw new ValidationException('Cannot decode data');
 
-            $project = $instance->projectModel->findFull($projectId, ['phases' => true]);
+            $project = ProjectService::get($projectId, ['phases' => true]);
             if (!$project) throw new NotFoundException('Project is not found');
 
             $workValidator = new WorkValidator();

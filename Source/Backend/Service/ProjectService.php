@@ -4,14 +4,17 @@ namespace App\Service;
 
 use App\Container\PhaseContainer;
 use App\Container\WorkerContainer;
+use App\Model\TaskModel;
 use PDO;
 use App\Core\Connection;
+use App\Core\UUID;
 use App\Entity\Phase;
 use App\Entity\Worker;
 use App\Entity\Project;
 use App\Model\PhaseModel;
 use App\Model\ProjectModel;
 use App\Model\ProjectWorkerModel;
+use InvalidArgumentException;
 use Throwable;
 
 class ProjectService
@@ -22,7 +25,7 @@ class ProjectService
     private ProjectWorkerModel $projectWorkerModel;
     private PhaseModel $phaseModel;
 
-    private function __construct()
+    public function __construct()
     {
         $this->connection = Connection::getInstance();
 
@@ -148,5 +151,45 @@ class ProjectService
             $instance->connection->rollBack();
             throw $e;
         }
+    }
+
+    public static function get(
+        int|UUID $projectId,
+        array $options = [
+            'phases'    => false,
+            'tasks'     => false,
+            'workers'   => false
+        ]
+    ): Project|null {
+        if (\is_int($projectId) && $projectId <= 0) 
+            throw new InvalidArgumentException('Invalid project ID');
+
+        $includePhases = $options['phases'] ?? false;
+        $includeTasks = $options['tasks'] ?? false;
+        $includeWorkers = $options['workers'] ?? false;
+
+        $instance = new self();
+        $project = $instance->projectModel->findById($projectId);
+        if (!$project) return null;    
+
+        $projectId = $project->getId();
+
+        if ($includePhases) {
+            $phases = $instance->phaseModel->findByProjectId($projectId);
+            $project->setPhases($phases);
+        }
+
+        if ($includeWorkers) {
+            $workers = $instance->projectWorkerModel->findByProjectId($projectId);
+            $project->setWorkers($workers);
+        }
+
+        if ($includeTasks) {
+            $taskModel = new TaskModel();
+            $tasks = $taskModel->findByProject($projectId);
+            $project->setTasks($tasks);
+        }
+
+        return $project;
     }
 }

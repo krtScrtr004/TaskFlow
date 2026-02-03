@@ -241,10 +241,22 @@ class PhaseModel extends Model
      *
      * @return PhaseContainer|null A container of Phase objects for the project, or null if no phases are found.
      */
-    public function findAllByProjectId(int|UUID $projectId, bool $includeTasks = false): PhaseContainer|null
-    {
+    public function findByProjectId(
+        int|UUID $projectId, 
+        bool $includeTasks = false,
+        array $options = [
+            'limit'   => 10,
+            'offset'  => 0
+        ]
+    ): PhaseContainer|null {
         if (\is_int($projectId) && $projectId < 1)
             throw new InvalidArgumentException('Invalid project ID provided');
+
+        $paramOptions = [
+            'limit'     => $options[':limit'] ?? $options['limit'] ?? null,
+            'offset'    => $options[':offset'] ?? $options['offset'] ?? null,
+            'orderBy'   => 'ph.start_date_time ASC',
+        ];
 
         try {
             $instance = new self();
@@ -281,7 +293,7 @@ class PhaseModel extends Model
                         t.phase_id = ph.id";
             }
 
-            $query =
+            $queryString =
                 "SELECT 
                     ph.*,  
                     phb.budget,
@@ -299,13 +311,12 @@ class PhaseModel extends Model
                 ON 
                     ph.project_id = p.id
                 WHERE 
-                    " . (is_int($projectId) ? 'p.id = :projectId' : 'p.public_id = :projectId') . "
-                ORDER BY
-                    ph.start_date_time ASC";
+                    " . (\is_int($projectId) ? 'p.id = :projectId' : 'p.public_id = :projectId') . "";
 
+            $query = $this->appendOptionsToFindQuery($queryString, $paramOptions);
             $statement = $this->connection->prepare($query);
             $statement->execute([
-                ':projectId' => is_int($projectId)
+                ':projectId' => \is_int($projectId)
                     ? $projectId
                     : UUID::toBinary($projectId)
             ]);
@@ -679,7 +690,7 @@ class PhaseModel extends Model
 
         try {
             $taskModel = new TaskModel();
-            return $taskModel->findAllByPhaseId($phaseId, null, null, $options);
+            return $taskModel->findByPhaseId($phaseId, null, null, $options);
         } catch (Exception $e) {
             throw $e;
         }
