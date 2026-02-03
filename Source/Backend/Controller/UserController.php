@@ -41,15 +41,13 @@ class UserController implements Controller
         try {
             SessionAuth::redirectIfNotAuthorized();
 
-            $role = isset($_GET['role']) ? Role::tryFrom($_GET['role']) : null;
-            $status = isset($_GET['status']) ? WorkerStatus::tryFrom($_GET['status']) : null;
-
             $userModel = new UserModel();
             $users = $userModel->search(
                 isset($_GET['key']) ? trim($_GET['key']) : '',
-                $role,
-                $status,
                 [
+                    'status'    => isset($_GET['status']) ? WorkerStatus::tryFrom($_GET['status']) : null,
+                    'role'      => isset($_GET['role']) ? Role::tryFrom($_GET['role']) : null,
+
                     'limit'     => isset($_GET['limit']) ? (int)$_GET['limit'] : 10,
                     'offset'    => isset($_GET['offset']) ? (int)$_GET['offset'] : 0
                 ]

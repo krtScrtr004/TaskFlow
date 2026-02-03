@@ -281,11 +281,12 @@ class ProjectController implements Controller
             $instance = new self();
             $projects = $instance->projectModel->search(
                 $key,
-                Me::getInstance()->getId(),
-                $status,
                 [
-                    'limit' => 50,
-                    'offset' => 0
+                    'userId'    => Me::getInstance()->getId(),
+                    'status'    => $status,
+
+                    'limit'     => 50,
+                    'offset'    => 0
                 ]
             );
 
@@ -337,14 +338,10 @@ class ProjectController implements Controller
 
         $recentTasks = $instance->taskModel->search(
             '',
-            null,
-            null,
-            $projectId,
-            null,
-            null,
             [
-                'limit'  => 3,
-                'offset' => 0
+                'projectId' => $projectId,
+                'limit'     => 3,
+                'offset'    => 0
             ]
         );
         if ($recentTasks) $project->addAdditionalInfo('recentTasks', $recentTasks);

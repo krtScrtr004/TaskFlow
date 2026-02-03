@@ -179,16 +179,26 @@ class ProjectWorkerModel extends Model
      */
     public function search(
         string|null $key = '',
-        int|UUID|null $projectId = null,
-        WorkerStatus|null $status = null,
         array $options = [
-            'limit' => 10,
-            'offset' => 0,
+            'projectId' => null,
+            'status'    => null,
+
+            'limit'     => 10,
+            'offset'    => 0,
         ]
-    ): ?WorkerContainer {
-        if ($projectId && is_int($projectId) && $projectId < 1) {
-            throw new InvalidArgumentException('Invalid project ID provided.');
+    ): WorkerContainer|null {
+        $projectId = $options['projectId'] ?? null;
+        if ($projectId) {
+            if (!\is_int($projectId) && !($projectId instanceof UUID)) 
+                throw new InvalidArgumentException('Project ID must be an integer or UUID');
+
+            if (\is_int($projectId) && $projectId < 1) 
+                throw new InvalidArgumentException('Invalid project ID provided');
         }
+
+        $status = $options['status'] ?? null;
+        if ($status && !($status instanceof WorkerStatus))
+            throw new InvalidArgumentException('Status must be an instance of WorkerStatus enum');
 
         $paramOptions = [
             'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,

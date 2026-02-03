@@ -200,20 +200,18 @@ class TaskEndpoint extends Endpoint
                 ? Priority::from($_GET['priority'])
                 : null;
 
-
-            $options = [
-                'offset'    => isset($_GET['offset']) ? (int) $_GET['offset'] : 0,
-                'limit'     => isset($_GET['limit']) ? (int) $_GET['limit'] : 50,
-            ];
-
             $tasks = $instance->taskModel->search(
                 $key,
-                $worker?->getId() ?? Me::getInstance()->getId(),
-                $phase?->getId() ?? null,
-                $project->getId(),
-                $status,
-                $priority,
-                $options
+                [
+                    'userId'    => $worker?->getId() ?? $worker?->getPublicId() ?? null,
+                    'phaseId'   => $phase?->getId() ?? null,
+                    'projectId' => $project->getId(),
+                    'status'    => $status,
+                    'priority'  => $priority,
+
+                    'limit'     => isset($_GET['limit']) ? (int) $_GET['limit'] : 50,
+                    'offset'    => isset($_GET['offset']) ? (int) $_GET['offset'] : 0,
+                ]
             );
 
             if (!$tasks) {

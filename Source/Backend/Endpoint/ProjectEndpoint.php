@@ -96,17 +96,16 @@ class ProjectEndpoint extends Endpoint
                 }
             }
 
-            $options = [
-                'offset'    => isset($_GET['offset']) ? (int) $_GET['offset'] : 0,
-                'limit'     => isset($_GET['limit']) ? (int) $_GET['limit'] : 50,
-            ];
-
             $instance = new self();
             $projects = $instance->projectModel->search(
                 $key,
-                Me::getInstance()->getId(),
-                $status,
-                $options
+                [
+                    'userId'    => Me::getInstance()->getId(),
+                    'status'    => $status,
+                    
+                    'offset'     => isset($_GET['offset']) ? (int) $_GET['offset'] : 0,
+                    'limit'    => isset($_GET['limit']) ? (int) $_GET['limit'] : 50,
+                ]
             );
 
             if (!$projects) {

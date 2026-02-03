@@ -124,8 +124,6 @@ class ProjectModel extends Model
         }
     }
 
-    // ===================================================================================================================
-
     /**
      * Retrieves a Project by its ID.
      *
@@ -150,7 +148,7 @@ class ProjectModel extends Model
         if (\is_int($projectId) && $projectId < 1) throw new InvalidArgumentException('Invalid project ID provided');
 
         try {
-            $whereClause = is_int($projectId)
+            $whereClause = \is_int($projectId)
                 ? 'p.id = :projectId'
                 : 'p.public_id = :projectId';
 
@@ -179,14 +177,23 @@ class ProjectModel extends Model
      * @throws InvalidArgumentException If manager_id is less than 1
      * @throws DatabaseException If a database error occurs during the query
      */
-    public function findManagerActiveProjectByManagerId(int $managerId): ?Project
+    public function findManagerActiveProjectByManagerId(int|UUID $managerId): ?Project
     {
-        if ($managerId < 1) throw new InvalidArgumentException('Invalid manager ID provided');
+        if (\is_int($managerId) && $managerId < 1) 
+            throw new InvalidArgumentException('Invalid manager ID provided');
 
         try {
-            $whereClause = 'p.manager_id = :managerId AND p.status != :completedStatus AND p.status != :cancelledStatus';
+            $whereClause =
+                "p.manager_id = " .
+                (\is_int($managerId)
+                    ? ':managerId'
+                    : '(SELECT id FROM `user` WHERE public_id = :managerId)'
+                ) .
+                " AND p.status != :completedStatus AND p.status != :cancelledStatus";
             $param = [
-                ':managerId'        => $managerId,
+                ':managerId'        => \is_int($managerId) 
+                    ? $managerId 
+                    : UUID::toBinary($managerId),
                 ':completedStatus'  => WorkStatus::COMPLETED->value,
                 ':cancelledStatus'  => WorkStatus::CANCELLED->value,
             ];
@@ -315,16 +322,27 @@ class ProjectModel extends Model
      */
     public function search(
         string $key = '',
-        int|UUID|null $userId = null,
-        WorkStatus|null $status = null,
         array $options = [
+            'userId'   => null,
+            'status'   => null,
+
             'offset'    => 0,
             'limit'     => 10,
             'orderBy'   => 'p.start_date_time DESC',
         ]
     ): ?ProjectContainer {
-        if (isset($userId) && \is_int($userId) && $userId < 1)
-            throw new InvalidArgumentException('Invalid user ID provided');
+        $userId = $options['userId'] ?? null;
+        if ($userId) {
+            if (!\is_int($userId) && !($userId instanceof UUID))
+                throw new InvalidArgumentException('User ID must be an integer or UUID');
+
+            if (\is_int($userId) && $userId < 1)
+                throw new InvalidArgumentException('Invalid user ID provided');
+        }
+
+        $status = $options['status'] ?? null;
+        if ($status && !($options['status'] instanceof WorkStatus))
+            throw new InvalidArgumentException('Status must be an instance of WorkStatus enum');
 
         $paramOptions = [
             'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
@@ -342,7 +360,7 @@ class ProjectModel extends Model
             }
 
             if ($userId) {
-                if (is_int($userId)) {
+                if (\is_int($userId)) {
                     $whereClauses[] = '(p.manager_id = :userId1 
                     OR p.id IN (
                         SELECT 

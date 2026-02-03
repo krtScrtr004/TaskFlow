@@ -129,22 +129,48 @@ class TaskModel extends Model
      */
     public function search(
         string $key = '',
-        int|UUID|null $userId = null,
-        int|UUID|null $phaseId = null,
-        int|UUID|null $projectId = null,
-        WorkStatus|null $status = null,
-        Priority|null $priority = null,
         array $options = [
-            'limit' => 10,
-            'offset' => 0,
+            'userId'    => null,
+            'phaseId'   => null,
+            'projectId' => null,
+            'status'    => null,
+            'priority'  => null,
+
+            'limit'     => 10,
+            'offset'    => 0,
         ]
     ): TaskContainer|null {
-        if ($userId && \is_int($userId) && $userId < 1) 
-            throw new InvalidArgumentException('Invalid user ID');
-        if ($phaseId && \is_int($phaseId) && $phaseId < 1)
-            throw new InvalidArgumentException('Invalid phase ID');
-        if ($projectId && \is_int($projectId) && $projectId < 1)
-            throw new InvalidArgumentException('Invalid project ID');
+        $userId = $options['userId'] ?? null;
+        if ($userId) {
+            if (!\is_int($userId) && !($userId instanceof UUID)) 
+                throw new InvalidArgumentException('User ID must be an integer or UUID');
+            if (\is_int($userId) && $userId < 1) 
+                throw new InvalidArgumentException('Invalid user ID provided');
+        }
+
+        $phaseId = $options['phaseId'] ?? null;
+        if ($phaseId) {
+            if (!\is_int($phaseId) && !($phaseId instanceof UUID)) 
+                throw new InvalidArgumentException('Phase ID must be an integer or UUID');
+            if (\is_int($phaseId) && $phaseId < 1) 
+                throw new InvalidArgumentException('Invalid phase ID provided');
+        }
+
+        $projectId = $options['projectId'] ?? null;
+        if ($projectId) {
+            if (!\is_int($projectId) && !($projectId instanceof UUID)) 
+                throw new InvalidArgumentException('Project ID must be an integer or UUID');
+            if (\is_int($projectId) && $projectId < 1) 
+                throw new InvalidArgumentException('Invalid project ID provided');
+        }
+
+        $status = $options['status'] ?? null;
+        if ($status && !($status instanceof WorkStatus))
+            throw new InvalidArgumentException('Status must be an instance of WorkStatus enum');
+
+        $priority = $options['priority'] ?? null;
+        if ($priority && !($priority instanceof Priority))
+            throw new InvalidArgumentException('Priority must be an instance of Priority enum');
 
         $paramOptions = [
             'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
@@ -376,12 +402,11 @@ class TaskModel extends Model
         try {
             return $this->search(
                 '',
-                null,
-                null,
-                $projectId,
-                null,
-                null,
-                $options
+                [
+                    'projectId' => $projectId,
+                    'limit'     => $options['limit'] ?? 10,
+                    'offset'    => $options['offset'] ?? 0,
+                ]
             );
         } catch (Exception $e) {
             throw $e;

@@ -344,16 +344,46 @@ class TaskWorkerModel extends Model
      */
     public function search(
         string|null $key = '',
-        int|UUID|null $taskId = null,
-        int|UUID|null $phaseId = null,
-        int|UUID|null $projectId = null,
-        WorkerStatus|null $status = null,
         array $options = [
+            'taskId'                => null,
+            'phaseId'               => null,
+            'projectId'             => null,
+            'status'                => null,
             'excludeTaskTerminated' => false,
-            'limit' => 10,
-            'offset' => 0,
+
+            'limit'                 => 10,
+            'offset'                => 0,
         ]
     ): WorkerContainer|null {
+        $taskId = $options['taskId'] ?? null;
+        if ($taskId) {
+            if (!\is_int($taskId) && !($taskId instanceof UUID))
+                throw new InvalidArgumentException('Task ID must be an integer or UUID');
+            if (\is_int($taskId) && $taskId < 1)
+                throw new InvalidArgumentException('Invalid task ID provided');
+        }
+
+        $phaseId = $options['phaseId'] ?? null;
+        if ($phaseId) {
+            if (!\is_int($phaseId) && !($phaseId instanceof UUID))
+                throw new InvalidArgumentException('Phase ID must be an integer or UUID');
+            if (\is_int($phaseId) && $phaseId < 1)
+                throw new InvalidArgumentException('Invalid phase ID provided');
+        }
+
+        $projectId = $options['projectId'] ?? null;
+        if ($projectId) {
+            if (!\is_int($projectId) && !($projectId instanceof UUID))
+                throw new InvalidArgumentException('Project ID must be an integer or UUID');
+            if (\is_int($projectId) && $projectId < 1)
+                throw new InvalidArgumentException('Invalid project ID provided');
+        }
+
+        $status = $options['status'] ?? null;
+        if ($status && !($status instanceof WorkStatus))
+            throw new InvalidArgumentException('Status must be an instance of WorkStatus enum');
+
+
         $paramOptions = [
             'excludeTaskTerminated' => $options['excludeTaskTerminated'] ?? false,
             'limit'                 => $options[':limit'] ?? $options['limit'] ?? 50,

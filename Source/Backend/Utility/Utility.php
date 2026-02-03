@@ -1,5 +1,7 @@
 <?php
 
+use App\Core\UUID;
+
 /**
  * Retrieves the value of an HTTP request header by name.
  *

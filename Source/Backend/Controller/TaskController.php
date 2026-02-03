@@ -113,21 +113,28 @@ class TaskController implements Controller
                 ? Priority::from($_GET['priority'])
                 : null;
 
-            $options = [
-                'offset' => isset($_GET['offset']) ? (int) $_GET['offset'] : 0,
-                'limit' => isset($_GET['limit']) ? (int) $_GET['limit'] : 50,
-            ];
-
             // Get all tasks from the project
             $tasks = $instance->taskModel->search(
                 $key,
-                $worker?->getId() ?? Me::getInstance()->getId(),
-                $phase?->getId() ?? null,
-                $projectId,
-                $status,
-                $priority,
-                $options
+                [
+                    'userId'    => $worker?->getId() ?? Me::getInstance()->getId(),
+                    'phaseId'   => $phase?->getId() ?? null,
+                    'projectId' => $projectId,
+                    'status'    => $status,
+                    'priority'  => $priority,
+
+                    'limit'     => isset($_GET['limit']) ? (int) $_GET['limit'] : 50,
+                    'offset'    => isset($_GET['offset']) ? (int) $_GET['offset'] : 0,
+                ]
             );
+
+            // No tasks found, assign an empty container
+            if (!$tasks) $tasks = new TaskContainer();
+            require_once VIEW_PATH . 'Tasks.php';
+        } catch (NotFoundException $e) {
+            ErrorController::notFound();
+        } catch (ForbiddenException $e) {
+            ErrorController::forbidden();
 
             // No tasks found, assign an empty container
             if (!$tasks) $tasks = new TaskContainer();

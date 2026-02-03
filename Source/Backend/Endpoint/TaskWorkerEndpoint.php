@@ -222,14 +222,15 @@ class TaskWorkerEndpoint extends Endpoint
 
                 $workers = $instance->taskWorkerModel->search(
                     $key,
-                    $task?->getId() ?? null,
-                    $phase?->getId() ?? null,
-                    $project?->getId() ?? null,
-                    $status,
                     [
+                        'taskId'                => $task?->getId() ?? null,
+                        'phaseId'               => $phase?->getId() ?? null,
+                        'projectId'             => $project?->getId() ?? null,
+                        'status'                => $status,
                         'excludeTaskTerminated' => $excludeTaskTerminated,
-                        'limit' => isset($_GET['limit']) ? (int) $_GET['limit'] : 10,
-                        'offset' => isset($_GET['offset']) ? (int) $_GET['offset'] : 0,
+
+                        'limit'                 => isset($_GET['limit']) ? (int) $_GET['limit'] : 10,
+                        'offset'                => isset($_GET['offset']) ? (int) $_GET['offset'] : 0,
                     ]
                 );
             }

@@ -182,12 +182,13 @@ class ProjectWorkerEndpoint extends Endpoint
 
                 $workers = $instance->projectWorkerModel->search(
                     $key,
-                    $project?->getId() ?? $projectId,
-                    $status,
                     [
-                        'excludeProjectTerminated' => $excludeProjectTerminated,
-                        'limit' => isset($_GET['limit']) ? (int) $_GET['limit'] : 10,
-                        'offset' => isset($_GET['offset']) ? (int) $_GET['offset'] : 0,
+                        'projectId'                 => $project?->getId() ?? $projectId,
+                        'status'                    => $status,
+                        'excludeProjectTerminated'  => $excludeProjectTerminated,
+
+                        'limit'                     => isset($_GET['limit']) ? (int) $_GET['limit'] : 10,
+                        'offset'                    => isset($_GET['offset']) ? (int) $_GET['offset'] : 0,
                     ]
                 );
             }

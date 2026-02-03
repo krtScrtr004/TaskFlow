@@ -136,18 +136,19 @@ class UserEndpoint extends Endpoint
             $instance = new self();
             $users = $instance->userModel->search(
                 isset($_GET['key']) ? trim($_GET['key']) : '',
-                $role,
-                $status,
                 [
-                    'excludeProjectTerminated' => isset($_GET['excludeProjectTerminated'])
+                    'role'                      => $role,
+                    'status'                    => $status,
+
+                    'excludeProjectTerminated'  => isset($_GET['excludeProjectTerminated'])
                         ? filter_var($_GET['excludeProjectTerminated'], FILTER_VALIDATE_BOOLEAN)
                         : false,
-                    'projectReferenceId' => isset($_GET['projectReferenceId'])
+                    'projectReferenceId'        => isset($_GET['projectReferenceId'])
                         ? UUID::tryFromString($_GET['projectReferenceId'])
                         : null,
 
-                    'limit'     => isset($_GET['limit']) ? (int) $_GET['limit'] : 10,
-                    'offset'    => isset($_GET['offset']) ? (int) $_GET['offset'] : 0
+                    'limit'                     => isset($_GET['limit']) ? (int) $_GET['limit'] : 10,
+                    'offset'                    => isset($_GET['offset']) ? (int) $_GET['offset'] : 0
                 ]
             );
 

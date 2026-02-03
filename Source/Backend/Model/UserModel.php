@@ -441,14 +441,15 @@ class UserModel extends Model
      */
     public function search(
         string $key = '',
-        Role|null $role = null,
-        WorkerStatus|null $status = null,
         array $options = [
-            'excludeProjectTerminated' => false,
-            'projectReferenceId' => null,
+            'role'                      => null,
+            'status'                    => null,
 
-            'limit' => 10,
-            'offset' => 0,
+            'excludeProjectTerminated'  => false,
+            'projectReferenceId'        => null,
+
+            'limit'                     => 10,
+            'offset'                    => 0,
         ]
     ): array|null {
         $paramOptions = [
@@ -466,12 +467,20 @@ class UserModel extends Model
                 $params[':key'] = $key;
             }
 
+            $role = $options['role'] ?? null;
             if ($role) {
+                if (!($role instanceof Role))
+                    throw new InvalidArgumentException('Role must be an instance of Role enum');
+
                 $where[] = "u.role = :role";
                 $params[':role'] = $role->value;
             }
 
+            $status = $options['status'] ?? null;
             if ($status) {
+                if (!($status instanceof WorkerStatus))
+                    throw new InvalidArgumentException('Status must be an instance of WorkerStatus enum');
+
                 // Special case: UNASSIGNED means no active work as manager OR worker
                 if ($status === WorkerStatus::UNASSIGNED) {
                     $where[] =
