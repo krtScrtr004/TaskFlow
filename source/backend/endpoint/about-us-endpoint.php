@@ -3,6 +3,8 @@
 namespace App\Endpoint;
 
 use App\Abstract\Endpoint;
+use App\Auth\HttpAuth;
+use App\Exception\ForbiddenException;
 use App\Exception\ValidationException;
 use App\Middleware\Csrf;
 use App\Middleware\Response;
@@ -47,23 +49,25 @@ class AboutUsEndpoint extends Endpoint
     public static function sendConcern(): void
     {
         try {
-            Csrf::protect();
+            if (!HttpAuth::isPOSTRequest()) throw new ForbiddenException('Invalid HTTP request method');
+
             self::rateLimit(5, 60); // 5 requests per minute
+            Csrf::protect();
 
             $data = decodeData('php://input');
-            if (!$data) {
-                throw new ValidationException('Cannot decode data.');
-            }
+            if (!$data) throw new ValidationException('Cannot decode data');
 
             $validator = new UserValidator();
             $validator->validateMultiple([
-                'fullName' => $data['fullName'] ?? '',
-                'email' => $data['email'] ?? '',
-                'message' => $data['message'] ?? ''
+                'fullName'  => $data['fullName'] ?? '',
+                'email'     => $data['email'] ?? '',
+                'message'   => $data['message'] ?? ''
             ]);
-            if ($validator->hasErrors()) {
-                throw new ValidationException('Validation failed.', $validator->getErrors());
-            }
+            if ($validator->hasErrors()) 
+                throw new ValidationException(
+                    'Validation failed.', 
+                    $validator->getErrors()
+                );
 
             // Sanitize data
             sanitizeData($data, [
@@ -80,9 +84,9 @@ class AboutUsEndpoint extends Endpoint
                 $data['message']
             );
 
-            Response::success([], 'Concern sent successfully.');
+            Response::success([], 'Concern sent successfully');
         } catch (Throwable $e) {
-            ResponseExceptionHandler::handle('Send Concern Failed.', $e);
+            ResponseExceptionHandler::handle('Send Concern Failed', $e);
         }
     }
 

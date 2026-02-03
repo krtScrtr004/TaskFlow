@@ -3,6 +3,7 @@
 namespace App\Endpoint;
 
 use App\Abstract\Endpoint;
+use App\Auth\HttpAuth;
 use App\Core\Session;
 use App\Entity\Worker;
 use App\Enumeration\Role;
@@ -65,13 +66,13 @@ class AuthEndpoint extends Endpoint
     {
         try {
             // Protection guards
-            Csrf::protect();
+            if (!HttpAuth::isPOSTRequest()) throw new ForbiddenException('Invalid HTTP request method');
+
             self::rateLimit(5, 900); // 5 requests per 15 minutes
+            Csrf::protect();
 
             $data = decodeData('php://input');
-            if (!$data) {
-                throw new ValidationException('Cannot decode data.');
-            }
+            if (!$data) throw new ValidationException('Cannot decode data');
 
             $email = trimOrNull($data['email']);
             $password = trimOrNull($data['password']);
@@ -79,24 +80,22 @@ class AuthEndpoint extends Endpoint
             $validator = new UserValidator();
             $validator->validateEmail($email);
             $validator->validatePassword($password);
-            if ($validator->hasErrors()) {
-                throw new ValidationException('Login Failed.', $validator->getErrors());
-            }
+            if ($validator->hasErrors()) throw new ValidationException('Login Failed', $validator->getErrors());
 
             // Verify credentials
             $instance = new self();
             $user = $instance->userModel->findByEmail($email);
+
             // Check if user exists and password is correct and account is not deleted
-            if (!$user || !password_verify($password, $user->getPassword()) || $user->getDeletedAt() !== null) {
-                throw new ValidationException('Login Failed.', [
-                    'Invalid email or password.'
-                ]);
-            }
+            if (!$user || !password_verify($password, $user->getPassword()) || $user->getDeletedAt() !== null)
+                throw new ValidationException(
+                    'Login Failed',
+                    ['Invalid email or password']
+                );
 
             // Check if account's email is confirmed
-            if ($user->getConfirmedAt() === null) {
-                throw new ForbiddenException('Please verify your email before logging in.');
-            }
+            if (!$user->getConfirmedAt())
+                throw new ForbiddenException('Please verify your email before logging in');
 
             // Regenerate session ID to prevent session fixation attacks
             Session::regenerate(true);
@@ -104,9 +103,9 @@ class AuthEndpoint extends Endpoint
             // Create user session
             SessionAuth::setAuthorizedSession($user);
 
-            Response::success([], 'Login successful.');
+            Response::success([], 'Login successful');
         } catch (Throwable $e) {
-            ResponseExceptionHandler::handle('Login Failed.', $e);
+            ResponseExceptionHandler::handle('Login Failed', $e);
         }
     }
 
@@ -141,15 +140,15 @@ class AuthEndpoint extends Endpoint
     public static function register(): void
     {
         try {
-            Csrf::protect();
+            if (!HttpAuth::isPOSTRequest()) throw new ForbiddenException('Invalid HTTP request method');
+
             self::rateLimit(5, 1800); // 5 requests per 30 minutes
+            Csrf::protect();
 
             $instance = new self();
 
             $data = decodeData('php://input');
-            if (!$data) {
-                throw new ValidationException('Cannot decode data.');
-            }
+            if (!$data) throw new ValidationException('Cannot decode data');
 
             // Extract Data
             $agreedToTerms  = isset($data['agreedToTerms']) ? filter_var($data['agreedToTerms'], FILTER_VALIDATE_BOOLEAN) : false;
@@ -173,46 +172,44 @@ class AuthEndpoint extends Endpoint
             }
 
             // Check Terms Agreement
-            if (!$agreedToTerms) {
-                throw new ValidationException('Registration Failed.', [
-                    'You must agree to the terms and conditions to register.'
-                ]);
-            }
+            if (!$agreedToTerms)
+                throw new ValidationException(
+                    'Registration Failed',
+                    ['You must agree to the terms and conditions to register']
+                );
 
             // Validate Data
             $userValidator = new UserValidator();
             $userValidator->validateMultiple([
-                'firstName' => $firstName,
-                'middleName' => $middleName,
-                'lastName' => $lastName,
-                'gender' => $gender,
-                'birthDate' => $birthDate,
-                'role' => $role,
-                'jobTitles' => $jobTitles,
+                'firstName'     => $firstName,
+                'middleName'    => $middleName,
+                'lastName'      => $lastName,
+                'gender'        => $gender,
+                'birthDate'     => $birthDate,
+                'role'          => $role,
+                'jobTitles'     => $jobTitles,
                 'contactNumber' => $contactNumber,
-                'email' => $email,
-                'password' => $password,
+                'email'         => $email,
+                'password'      => $password,
             ]);
-            if ($userValidator->hasErrors()) {
+            if ($userValidator->hasErrors())
                 throw new ValidationException(
-                    'Registration Failed.',
+                    'Registration Failed',
                     $userValidator->getErrors()
                 );
-            }
 
             // Check if email / contact number already exists
             $hasDuplicate = $instance->userModel->hasDuplicateInfo($email, $contactNumber);
             if ($hasDuplicate['hasDuplicates']) {
                 $duplicateErrors = [];
-                if (isset($hasDuplicate['email']) && $hasDuplicate['email']) {
-                    $duplicateErrors[] = 'Email is already in use by another user.';
-                }
-                if (isset($hasDuplicate['contactNumber']) && $hasDuplicate['contactNumber']) {
-                    $duplicateErrors[] = 'Contact number is already in use by another user.';
-                }
-                if (count($duplicateErrors) > 0) {
-                    throw new ValidationException('Registration Failed.', $duplicateErrors);
-                }
+                if (isset($hasDuplicate['email']) && $hasDuplicate['email'])
+                    $duplicateErrors[] = 'Email is already in use by another user';
+
+                if (isset($hasDuplicate['contactNumber']) && $hasDuplicate['contactNumber'])
+                    $duplicateErrors[] = 'Contact number is already in use by another user';
+
+                if (count($duplicateErrors) > 0)
+                    throw new ValidationException('Registration Failed', $duplicateErrors);
             }
 
             // Create user
@@ -252,9 +249,9 @@ class AuthEndpoint extends Endpoint
             ]);
             $instance->service->sendLinkForEmailVerification($email, $token);
 
-            Response::success([], 'Registration successful. Please verify your email before logging in.', 201);
+            Response::success([], 'Registration successful! Please verify your email before logging in', 201);
         } catch (Throwable $e) {
-            ResponseExceptionHandler::handle('Registration Failed.', $e);
+            ResponseExceptionHandler::handle('Registration Failed', $e);
         }
     }
 
@@ -273,14 +270,17 @@ class AuthEndpoint extends Endpoint
     public static function logout(): void
     {
         try {
+            if (!HttpAuth::isPOSTRequest() && !HttpAuth::isPATCHRequest() && !HttpAuth::isPUTRequest()) 
+                throw new ForbiddenException('Invalid HTTP request method');
+
             self::rateLimit(20, 30); // 20 requests per 30 seconds
 
             Session::destroy();
             Me::destroy();
 
-            Response::success([], 'Logout successful.');
+            Response::success([], 'Logout successful');
         } catch (Throwable $e) {
-            ResponseExceptionHandler::handle('Logout Failed.', $e);
+            ResponseExceptionHandler::handle('Logout Failed', $e);
         }
     }
 
@@ -315,38 +315,31 @@ class AuthEndpoint extends Endpoint
     public static function confirmEmail(): void
     {
         try {
+            if (!HttpAuth::isPOSTRequest() && !HttpAuth::isPATCHRequest() && !HttpAuth::isPUTRequest())
+                throw new ForbiddenException('Invalid HTTP request method');
+
             $instance = new self();
 
             $data = decodeData('php://input');
-            if (!$data) {
-                throw new ValidationException('Cannot decode data.');
-            }
+            if (!$data) throw new ValidationException('Cannot decode data');
 
             $token = trimOrNull($data['token']);
-            if (!$token) {
-                throw new ForbiddenException('Token is required.');
-            }
+            if (!$token) throw new ForbiddenException('Token is not provided or invalid');
 
             $isValid = $instance->temporaryLinkModel->search($token);
-            if (!$isValid) {
-                throw new NotFoundException('Invalid token provided.');
-            }
+            if (!$isValid) throw new NotFoundException('Invalid token provided');
 
             $email = $isValid['userEmail'];
-            if (!$email || !trimOrNull($email)) {
-                throw new NotFoundException('Email not found.');
-            }
+            if (!$email || !trimOrNull($email)) throw new NotFoundException('Email not found');
 
             $user = $instance->userModel->findByEmail($email);
-            if (!$user) {
-                throw new NotFoundException('User not found.');
-            }
+            if (!$user) throw new NotFoundException('User not found');
 
             // Check if the link has expired (valid for 30 days)
             if ((new DateTime())->getTimestamp() - (new DateTime($isValid['createdAt']))->getTimestamp() > (86400 * 30)) {
                 $instance->userModel->hardDelete($user); // Delete unconfirmed user from the database
                 $instance->temporaryLinkModel->delete($token);
-                throw new ForbiddenException('The email confirmation link has expired.');
+                throw new ForbiddenException('The email confirmation link has expired');
             }
 
             // Confirm user's email
@@ -356,9 +349,9 @@ class AuthEndpoint extends Endpoint
             ]);
             $instance->temporaryLinkModel->delete($token);
 
-            Response::success([], 'Email confirmed successfully.');
+            Response::success([], 'Email confirmed successfully');
         } catch (Throwable $e) {
-            ResponseExceptionHandler::handle('Email Confirmation Failed.', $e);
+            ResponseExceptionHandler::handle('Email Confirmation Failed', $e);
         }
     }
 
@@ -385,15 +378,16 @@ class AuthEndpoint extends Endpoint
     public static function resetPassword(): void
     {
         try {
-            Csrf::protect();
+            if (!HttpAuth::isPOSTRequest() && !HttpAuth::isPATCHRequest() && !HttpAuth::isPUTRequest())
+                throw new ForbiddenException('Invalid HTTP request method');
+
             self::rateLimit(3, 3600); // 3 requests per hour
+            Csrf::protect();
 
             $instance = new self();
 
             $data = decodeData('php://input');
-            if (!$data) {
-                throw new ValidationException('Cannot decode data.');
-            }
+            if (!$data) throw new ValidationException('Cannot decode data');
 
             // Extract Data
             $email = trimOrNull($data['email']);
@@ -401,18 +395,15 @@ class AuthEndpoint extends Endpoint
             // Validate Data
             $userValidator = new UserValidator();
             $userValidator->validateEmail($email);
-            if ($userValidator->hasErrors()) {
+            if ($userValidator->hasErrors())
                 throw new ValidationException(
-                    'Reset Password Failed.',
+                    'Reset Password Failed',
                     $userValidator->getErrors()
                 );
-            }
 
             // Check if user exists
             $user = $instance->userModel->findByEmail($email);
-            if (!$user) {
-                throw new NotFoundException('Email not found.');
-            }
+            if (!$user) throw new NotFoundException('Email not found');
 
             $token = bin2hex(random_bytes(16));
             $instance->temporaryLinkModel->create([
@@ -421,15 +412,14 @@ class AuthEndpoint extends Endpoint
             ]);
 
             // Send reset password link to email 
-            if (!$instance->service->sendLinkForPasswordReset($email, $token)) {
-                throw new Exception('Failed to send reset password email.');
-            }
+            if (!$instance->service->sendLinkForPasswordReset($email, $token))
+                throw new Exception('Failed to send reset password email');
 
-            Response::success([], 'Reset password link has been sent to your email.');
+            Response::success([], 'Reset password link has been sent to your email');
         } catch (Throwable $e) {
             // Clean up the temporary link if email sending fails
             $instance->temporaryLinkModel->delete($email);
-            ResponseExceptionHandler::handle('Reset Password Failed.', $e);
+            ResponseExceptionHandler::handle('Reset Password Failed', $e);
         }
     }
 
@@ -458,53 +448,45 @@ class AuthEndpoint extends Endpoint
     public static function changePassword(): void
     {
         try {
-            Csrf::protect();
+            if (!HttpAuth::isPOSTRequest() && !HttpAuth::isPATCHRequest() && !HttpAuth::isPUTRequest())
+                throw new ForbiddenException('Invalid HTTP request method');
+
             self::rateLimit(3, 3600); // 3 requests per hour
+            Csrf::protect();
 
             $instance = new self();
 
             $data = decodeData('php://input');
-            if (!$data) {
-                throw new ValidationException('Cannot decode data.');
-            }
+            if (!$data) throw new ValidationException('Cannot decode data');
 
             $token = trimOrNull($data['token']);
-            if (!$token) {
-                throw new ForbiddenException('Token is required.');
-            }
+            if (!$token) throw new ForbiddenException('Token is not provided or invalid');
 
             // Verify token validity
             $isValid = $instance->temporaryLinkModel->search($token);
-            if (!$isValid) {
-                throw new NotFoundException('Invalid token provided.');
-            }
+            if (!$isValid) throw new NotFoundException('Invalid token provided');
 
             $email = $isValid['userEmail'];
-            if (!$email || !trimOrNull($email)) {
-                throw new NotFoundException('Email not found.');
-            }
+            if (!$email || !trimOrNull($email)) throw new NotFoundException('Email not found');
 
             // Check if the link has expired (valid for 5 minutes)
             $createdAt = new DateTime($isValid['updatedAt'] ?? $isValid['createdAt']);
             if ((new DateTime())->getTimestamp() - $createdAt->getTimestamp() > 300) {
                 $instance->temporaryLinkModel->delete($token);
-                throw new ForbiddenException('The password reset link has expired. Please request a new one.');
+                throw new ForbiddenException('The password reset link has expired! Please request a new one');
             }
 
             $user = $instance->userModel->findByEmail($email);
-            if (!$user) {
-                throw new NotFoundException('User not found.');
-            }
+            if (!$user) throw new NotFoundException('User not found');
 
             $newPassword = trimOrNull($data['password']);
             $validator = new UserValidator();
             $validator->validatePassword($newPassword);
-            if ($validator->hasErrors()) {
+            if ($validator->hasErrors())
                 throw new ValidationException(
-                    'Change Password Failed.',
+                    'Change Password Failed',
                     $validator->getErrors()
                 );
-            }
 
             // Update password
             $instance->userModel->save([
@@ -515,44 +497,34 @@ class AuthEndpoint extends Endpoint
             // Delete temporary link token in the database
             $instance->temporaryLinkModel->delete($token);
 
-            Response::success([], 'Password changed successfully.');
+            Response::success([], 'Password changed successfully');
         } catch (Throwable $e) {
-            ResponseExceptionHandler::handle('Change Password Failed.', $e);
+            ResponseExceptionHandler::handle('Change Password Failed', $e);
         }
     }
 
     /**
      * Not implemented (No use case)
      */
-    public static function getById(array $args = []): void
-    {
-    }
+    public static function getById(array $args = []): void {}
 
     /**
      * Not implemented (No use case)
      */
-    public static function getByKey(array $args = []): void
-    {
-    }
+    public static function getByKey(array $args = []): void {}
 
     /**
      * Not implemented (No use case)
      */
-    public static function create(array $args = []): void
-    {
-    }
+    public static function create(array $args = []): void {}
 
     /**
      * Not implemented (No use case)
      */
-    public static function edit(array $args = []): void
-    {
-    }
+    public static function edit(array $args = []): void {}
 
     /**
      * Not implemented (No use case)
      */
-    public static function delete(array $args = []): void
-    {
-    }
+    public static function delete(array $args = []): void {}
 }

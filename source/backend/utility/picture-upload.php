@@ -10,9 +10,8 @@ use Exception;
 
 class PictureUpload
 {
-    private const URL = "https://api.imghippo.com/v1/upload";
     private const ALLOWED_TYPES = ['image/jpeg', 'image/png'];
-    private static ?self $instance = null;
+    private static self|null $instance = null;
 
     /**
      * Private constructor.
@@ -36,18 +35,17 @@ class PictureUpload
      */
     private function __construct()
     {
-        if (!isset($_ENV['CLOUDINARY_NAME'], $_ENV['CLOUDINARY_API'], $_ENV['CLOUDINARY_SECRET'])) {
+        if (!isset($_ENV['CLOUDINARY_NAME'], $_ENV['CLOUDINARY_API'], $_ENV['CLOUDINARY_SECRET']))
             throw new Exception("Cloudinary environment variables are not set");
-        }
 
         Configuration::instance([
             'cloud' => [
-                'cloud_name' => $_ENV['CLOUDINARY_NAME'],
-                'api_key' => $_ENV['CLOUDINARY_API'],
-                'api_secret' => $_ENV['CLOUDINARY_SECRET']
+                'cloud_name'    => $_ENV['CLOUDINARY_NAME'],
+                'api_key'       => $_ENV['CLOUDINARY_API'],
+                'api_secret'    => $_ENV['CLOUDINARY_SECRET']
             ],
             'url' => [
-                'secure' => true
+                'secure'        => true
             ]
         ]);
     }
@@ -67,9 +65,7 @@ class PictureUpload
      */
     private static function getInstance(): self
     {
-        if (self::$instance === null) {
-            self::$instance = new self();
-        }
+        if (!self::$instance) self::$instance = new self();
         return self::$instance;
     }
 
@@ -99,9 +95,8 @@ class PictureUpload
         try {
             self::getInstance(); // Initialize singleton
 
-            if (!in_array($file['type'], self::ALLOWED_TYPES)) {
+            if (!\in_array($file['type'], self::ALLOWED_TYPES))
                 throw new ValidationException("Invalid file type");
-            }
 
             return self::uploadToCloud($file['tmp_name'], $file['name']);
         } catch (Exception $e) {
@@ -131,15 +126,14 @@ class PictureUpload
     {
         try {
             $uploadResult = (new UploadApi())->upload($filePath, [
-                'public_id' => 'profile_pictures/' . pathinfo($fileName, PATHINFO_FILENAME) . '_' . UUID::toString(UUID::get()),
-                'folder' => 'profile_pictures',
-                'overwrite' => true,
+                'public_id'     => 'profile_pictures/' . pathinfo($fileName, PATHINFO_FILENAME) . '_' . UUID::toString(UUID::get()),
+                'folder'        => 'profile_pictures',
+                'overwrite'     => true,
                 'resource_type' => 'image'
             ]);
             $response = json_decode(json_encode($uploadResult), true);
-            if (!$response || !isset($response['secure_url'])) {
+            if (!$response || !isset($response['secure_url']))
                 throw new Exception("Image upload failed: No secure URL returned");
-            }
 
             return $response['secure_url'];
         } catch (Exception $e) {

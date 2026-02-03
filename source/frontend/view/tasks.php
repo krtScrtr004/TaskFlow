@@ -6,9 +6,8 @@ use App\Enumeration\Role;
 use App\Enumeration\WorkStatus;
 use App\Middleware\Csrf;
 
-if (!isset($project)) {
-    throw new Exception('Project ID is required.');
-}
+if (!isset($project)) throw new Exception('Project ID is required');
+if (!isset($tasks)) throw new Exception('Tasks data is required');
 
 $projectData = [
     'name'      => htmlspecialchars($project->getName()),
@@ -17,12 +16,8 @@ $projectData = [
 ];
 
 $isAddable = Role::isProjectManager(Me::getInstance()->getRole()) && 
-            $projectData['status'] !== WorkStatus::COMPLETED && 
-            $projectData['status'] !== WorkStatus::CANCELLED;
-
-if (!isset($tasks)) {
-    throw new Exception('Tasks data is required.');
-}
+    $projectData['status'] !== WorkStatus::COMPLETED && 
+    $projectData['status'] !== WorkStatus::CANCELLED;
 ?>
 
 <!DOCTYPE html>

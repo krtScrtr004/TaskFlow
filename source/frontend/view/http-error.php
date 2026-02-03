@@ -1,7 +1,5 @@
 <?php
-if (!isset($component)) {
-    throw new Exception('No component context found.');
-}
+if (!isset($component)) throw new Exception('No component context found');
 ?>
 
 <!DOCTYPE html>

@@ -18,23 +18,23 @@ require_once ENUM_PATH . 'role.php';
 
 abstract class User implements Entity
 {
-    private ?int $id;
-    private ?UUID $publicId;
+    private int $id;
+    private UUID $publicId;
     protected string $firstName;
-    protected ?string $middleName;
+    protected string|null $middleName;
     protected string $lastName;
-    protected ?Gender $gender;
-    protected ?DateTime $birthDate;
-    protected ?Role $role;
-    protected ?JobTitleContainer $jobTitles;
-    protected ?string $contactNumber;
-    protected ?string $email;
-    private ?string $password;
-    protected ?string $bio;
-    protected ?string $profileLink;
-    protected ?DateTime $createdAt;
-    protected ?DateTime $confirmedAt;
-    protected ?DateTime $deletedAt;
+    protected Gender $gender;
+    protected DateTime|null $birthDate;
+    protected Role|null $role;
+    protected JobTitleContainer|null $jobTitles;
+    protected string|null $contactNumber;
+    protected string|null $email;
+    private string|null $password;
+    protected string|null $bio;
+    protected string|null $profileLink;
+    protected DateTime|null $createdAt;
+    protected DateTime|null $confirmedAt;
+    protected DateTime|null $deletedAt;
     protected array $additionalInfo;
 
     protected UserValidator $userValidator;
@@ -95,14 +95,14 @@ abstract class User implements Entity
         string $email,
 
         // Optional
-        ?string $middleName = null,
-        ?string $bio = null,
-        ?string $profileLink = null,
-        ?DateTime $createdAt = null,
-        ?Role $role = null,
-        ?DateTime $confirmedAt = null,
-        ?DateTime $deletedAt = null,
-        ?string $password = null,
+        string|null $middleName = null,
+        string|null $bio = null,
+        string|null $profileLink = null,
+        DateTime|null $createdAt = null,
+        Role|null $role = null,
+        DateTime|null $confirmedAt = null,
+        DateTime|null $deletedAt = null,
+        string|null $password = null,
         array $additionalInfo = []
     ) {
         try {
@@ -158,7 +158,7 @@ abstract class User implements Entity
      *
      * @return int|null The internal ID of the user or null if not set
      */
-    public function getId(): ?int
+    public function getId(): int
     {
         return $this->id;
     }
@@ -168,7 +168,7 @@ abstract class User implements Entity
      *
      * @return UUID|null The UUID object representing the public ID or null if not set
      */
-    public function getPublicId(): ?UUID
+    public function getPublicId(): UUID
     {
         return $this->publicId;
     }
@@ -188,7 +188,7 @@ abstract class User implements Entity
      *
      * @return string|null The user's middle name or null if not provided
      */
-    public function getMiddleName(): ?string
+    public function getMiddleName(): string|null
     {
         return $this->middleName;
     }
@@ -208,7 +208,7 @@ abstract class User implements Entity
      *
      * @return Gender|null The Gender enum representing the user's gender or null if not set
      */
-    public function getGender(): ?Gender
+    public function getGender(): Gender
     {
         return $this->gender;
     }
@@ -219,7 +219,7 @@ abstract class User implements Entity
      * @return DateTime|null The DateTime object representing the user's birth date or null if not set
      */
 
-    public function getBirthDate(): ?DateTime
+    public function getBirthDate(): DateTime|null
     {
         return $this->birthDate;
     }
@@ -230,7 +230,7 @@ abstract class User implements Entity
      * @return Role|null The Role enum representing the user's role or null if not set
      */
 
-    public function getRole(): ?Role
+    public function getRole(): Role|null
     {
         return $this->role;
     }
@@ -240,7 +240,7 @@ abstract class User implements Entity
      *
      * @return JobTitleContainer|null The container with the user's job titles or null if not set
      */
-    public function getJobTitles(): ?JobTitleContainer
+    public function getJobTitles(): JobTitleContainer|null
     {
         return $this->jobTitles;
     }
@@ -251,7 +251,7 @@ abstract class User implements Entity
      * @return string|null The user's contact number or null if not provided
      */
 
-    public function getContactNumber(): ?string
+    public function getContactNumber(): string|null
     {
         return $this->contactNumber;
     }
@@ -262,7 +262,7 @@ abstract class User implements Entity
      * @return string|null The user's email address or null if not provided
      */
 
-    public function getEmail(): ?string
+    public function getEmail(): string|null
     {
         return $this->email;
     }
@@ -273,7 +273,7 @@ abstract class User implements Entity
      * @return string|null The user's password (likely hashed) or null if not set
      */
 
-    public function getPassword(): ?string
+    public function getPassword(): string|null
     {
         return $this->password;
     }
@@ -283,7 +283,7 @@ abstract class User implements Entity
      *
      * @return string|null The user's biography or null if not provided
      */
-    public function getBio(): ?string
+    public function getBio(): string|null
     {
         return $this->bio;
     }
@@ -293,7 +293,7 @@ abstract class User implements Entity
      *
      * @return string|null The user's profile link or null if not provided
      */
-    public function getProfileLink(): ?string
+    public function getProfileLink(): string|null
     {
         return $this->profileLink;
     }
@@ -303,7 +303,7 @@ abstract class User implements Entity
      *
      * @return DateTime|null The DateTime object representing when the user was created, or null if not defined
      */
-    public function getCreatedAt(): ?DateTime
+    public function getCreatedAt(): DateTime|null
     {
         return $this->createdAt;
     }
@@ -313,7 +313,7 @@ abstract class User implements Entity
      *
      * @return DateTime|null The DateTime object representing when the user was confirmed, or null if not confirmed
      */
-    public function getConfirmedAt(): ?DateTime
+    public function getConfirmedAt(): DateTime|null
     {
         return $this->confirmedAt;
     }
@@ -323,7 +323,7 @@ abstract class User implements Entity
      *
      * @return DateTime|null The DateTime object representing when the user was deleted, or null if not deleted
      */
-    public function getDeletedAt(): ?DateTime
+    public function getDeletedAt(): DateTime|null
     {
         return $this->deletedAt;
     }
@@ -336,9 +336,9 @@ abstract class User implements Entity
      */
     public function getAdditionalInfo(string $key = ''): mixed
     {
-        return trimOrNull($key) 
-            ? ($this->additionalInfo[$key] ?? null) 
-            : $this->additionalInfo;
+        return trimOrNull($key)
+            ? ($this->additionalInfo[$key] ?? null)
+            : $this->additionalInfo ?? [];
     }
 
     // SETTERS
@@ -352,9 +352,7 @@ abstract class User implements Entity
      */
     public function setId(int $id): void
     {
-        if ($id < 0) {
-            throw new ValidationException("Invalid ID");
-        }
+        if ($id < 0) throw new ValidationException("Invalid ID");
         $this->id = $id;
     }
 
@@ -370,9 +368,11 @@ abstract class User implements Entity
         $validator = new UuidValidator();
 
         $validator->validateUuid($publicId);
-        if ($validator->hasErrors()) {
-            throw new ValidationException("Invalid Public ID", $validator->getErrors());
-        }
+        if ($validator->hasErrors())
+            throw new ValidationException(
+                "Invalid Public ID",
+                $validator->getErrors()
+            );
         $this->publicId = $publicId;
     }
 
@@ -386,9 +386,11 @@ abstract class User implements Entity
     public function setFirstName(string $firstName): void
     {
         $this->userValidator->validateFirstName(trimOrNull($firstName));
-        if ($this->userValidator->hasErrors()) {
-            throw new ValidationException("Invalid First Name", $this->userValidator->getErrors());
-        }
+        if ($this->userValidator->hasErrors())
+            throw new ValidationException(
+                "Invalid First Name",
+                $this->userValidator->getErrors()
+            );
         $this->firstName = trimOrNull($firstName);
     }
 
@@ -399,18 +401,18 @@ abstract class User implements Entity
      * @throws ValidationException If the middle name is invalid
      * @return void
      */
-    public function setMiddleName(?string $middleName): void
+    public function setMiddleName(string|null $middleName): void
     {
-        if (!$middleName) {
-            $this->middleName = null;
-            return;
+        $tempMiddleName = $middleName ? trimOrNull($middleName) : $middleName;
+        if ($tempMiddleName) {
+            $this->userValidator->validateMiddleName(trimOrNull($tempMiddleName));
+            if ($this->userValidator->hasErrors())
+                throw new ValidationException(
+                    "Invalid Middle Name",
+                    $this->userValidator->getErrors()
+                );
         }
-
-        $this->userValidator->validateMiddleName(trimOrNull($middleName));
-        if ($this->userValidator->hasErrors()) {
-            throw new ValidationException("Invalid Middle Name", $this->userValidator->getErrors());
-        }
-        $this->middleName = trimOrNull($middleName);
+        $this->middleName = $tempMiddleName;
     }
 
     /**
@@ -423,9 +425,11 @@ abstract class User implements Entity
     public function setLastName(string $lastName): void
     {
         $this->userValidator->validateLastName($lastName);
-        if ($this->userValidator->hasErrors()) {
-            throw new ValidationException("Invalid Last Name", $this->userValidator->getErrors());
-        }
+        if ($this->userValidator->hasErrors())
+            throw new ValidationException(
+                "Invalid Last Name",
+                $this->userValidator->getErrors()
+            );
         $this->lastName = trimOrNull($lastName);
     }
 
@@ -439,9 +443,11 @@ abstract class User implements Entity
     public function setGender(Gender $gender): void
     {
         $this->userValidator->validateGender($gender);
-        if ($this->userValidator->hasErrors()) {
-            throw new ValidationException("Invalid Gender", $this->userValidator->getErrors());
-        }
+        if ($this->userValidator->hasErrors())
+            throw new ValidationException(
+                "Invalid Gender",
+                $this->userValidator->getErrors()
+            );
         $this->gender = $gender;
     }
 
@@ -455,9 +461,11 @@ abstract class User implements Entity
     public function setBirthDate(DateTime $birthDate): void
     {
         $this->userValidator->validateBirthDate($birthDate);
-        if ($this->userValidator->hasErrors()) {
-            throw new ValidationException("Invalid Birth Date", $this->userValidator->getErrors());
-        }
+        if ($this->userValidator->hasErrors())
+            throw new ValidationException(
+                "Invalid Birth Date",
+                $this->userValidator->getErrors()
+            );
         $this->birthDate = $birthDate;
     }
 
@@ -471,9 +479,11 @@ abstract class User implements Entity
     public function setRole(Role $role): void
     {
         $this->userValidator->validateRole($role);
-        if ($this->userValidator->hasErrors()) {
-            throw new ValidationException("Invalid Role", $this->userValidator->getErrors());
-        }
+        if ($this->userValidator->hasErrors())
+            throw new ValidationException(
+                "Invalid Role",
+                $this->userValidator->getErrors()
+            );
         $this->role = $role;
     }
 
@@ -487,9 +497,11 @@ abstract class User implements Entity
     public function setJobTitles(JobTitleContainer $jobTitles): void
     {
         $this->userValidator->validateJobTitles($jobTitles);
-        if ($this->userValidator->hasErrors()) {
-            throw new ValidationException("Invalid Job Titles", $this->userValidator->getErrors());
-        }
+        if ($this->userValidator->hasErrors())
+            throw new ValidationException(
+                "Invalid Job Titles",
+                $this->userValidator->getErrors()
+            );
         $this->jobTitles = $jobTitles;
     }
 
@@ -503,9 +515,11 @@ abstract class User implements Entity
     public function setContactNumber(string $contactNumber): void
     {
         $this->userValidator->validateContactNumber(trimOrNull($contactNumber));
-        if ($this->userValidator->hasErrors()) {
-            throw new ValidationException("Invalid Contact Number", $this->userValidator->getErrors());
-        }
+        if ($this->userValidator->hasErrors())
+            throw new ValidationException(
+                "Invalid Contact Number",
+                $this->userValidator->getErrors()
+            );
         $this->contactNumber = trimOrNull($contactNumber);
     }
 
@@ -519,9 +533,11 @@ abstract class User implements Entity
     public function setEmail(string $email): void
     {
         $this->userValidator->validateEmail(trimOrNull($email));
-        if ($this->userValidator->hasErrors()) {
-            throw new ValidationException("Invalid Email", $this->userValidator->getErrors());
-        }
+        if ($this->userValidator->hasErrors())
+            throw new ValidationException(
+                "Invalid Email",
+                $this->userValidator->getErrors()
+            );
         $this->email = trimOrNull($email);
     }
 
@@ -533,18 +549,18 @@ abstract class User implements Entity
      * @throws ValidationException If the password is invalid
      * @return void
      */
-    public function setPassword(?string $password): void
+    public function setPassword(string|null $password): void
     {
-        if (!$password) {
-            $this->password = null;
-            return;
+        $tempPassword = $password ? trimOrNull($password) : $password;
+        if ($password !== null) {
+            $this->userValidator->validatePassword($tempPassword);
+            if ($this->userValidator->hasErrors())
+                throw new ValidationException(
+                    "Invalid Password",
+                    $this->userValidator->getErrors()
+                );
         }
-
-        $this->userValidator->validatePassword($password);
-        if ($this->userValidator->hasErrors()) {
-            throw new ValidationException("Invalid Password", $this->userValidator->getErrors());
-        }
-        $this->password = $password;
+        $this->password = $tempPassword;
     }
 
     /**
@@ -554,18 +570,18 @@ abstract class User implements Entity
      * @throws ValidationException If the bio is invalid
      * @return void
      */
-    public function setBio(?string $bio): void
+    public function setBio(string|null $bio): void
     {
-        if (!$bio) {
-            $this->bio = null;
-            return;
+        $tempBio = $bio ? trimOrNull($bio) : $bio;
+        if ($tempBio !== null) {
+            $this->userValidator->validateBio(trimOrNull($tempBio));
+            if ($this->userValidator->hasErrors())
+                throw new ValidationException(
+                    "Invalid Bio",
+                    $this->userValidator->getErrors()
+                );
         }
-
-        $this->userValidator->validateBio(trimOrNull($bio));
-        if ($this->userValidator->hasErrors()) {
-            throw new ValidationException("Invalid Bio", $this->userValidator->getErrors());
-        }
-        $this->bio = trimOrNull($bio);
+        $this->bio = $tempBio;
     }
 
     /**
@@ -575,19 +591,19 @@ abstract class User implements Entity
      * @throws ValidationException If the profile link is not a valid URL
      * @return void
      */
-    public function setProfileLink(?string $profileLink): void
+    public function setProfileLink(string|null $profileLink): void
     {
-        if (!$profileLink) {
-            $this->profileLink = null;
-            return;
+        $tempProfileLink = $profileLink ? trimOrNull($profileLink) : $profileLink;
+        if ($tempProfileLink !== null) {
+            $validator = new UrlValidator();
+            $validator->validateUrl($tempProfileLink);
+            if ($validator->hasErrors())
+                throw new ValidationException(
+                    "Invalid Profile Link",
+                    $validator->getErrors()
+                );
         }
-
-        $validator = new UrlValidator();
-        $validator->validateUrl(trimOrNull($profileLink));
-        if ($validator->hasErrors()) {
-            throw new ValidationException("Invalid Profile Link", $validator->getErrors());
-        }
-        $this->profileLink = trimOrNull($profileLink);
+        $this->profileLink = $tempProfileLink;
     }
 
     /**
@@ -608,11 +624,10 @@ abstract class User implements Entity
      * @throws ValidationException If the creation date is in the future
      * @return void
      */
-    public function setCreatedAt(?DateTime $createdAt): void
+    public function setCreatedAt(DateTime|null $createdAt): void
     {
-        if ($createdAt && $createdAt > new DateTime()) {
-            throw new ValidationException("Invalid Created At Date");
-        }
+        if ($createdAt && $createdAt > new DateTime()) 
+            throw new ValidationException("Invalid Creation Date");
         $this->createdAt = $createdAt;
     }
 
@@ -623,11 +638,10 @@ abstract class User implements Entity
      * @throws ValidationException If the confirmation date is in the future
      * @return void
      */
-    public function setConfirmedAt(?DateTime $confirmedAt): void
+    public function setConfirmedAt(DateTime|null $confirmedAt): void
     {
-        if ($confirmedAt && $confirmedAt > new DateTime()) {
-            throw new ValidationException("Invalid Confirmed At Date");
-        }
+        if ($confirmedAt && $confirmedAt > new DateTime())
+            throw new ValidationException("Invalid Confirmation Date");
         $this->confirmedAt = $confirmedAt;
     }
 
@@ -638,11 +652,10 @@ abstract class User implements Entity
      * @throws ValidationException If the deletion date is in the future
      * @return void
      */
-    public function setDeletedAt(?DateTime $deletedAt): void
+    public function setDeletedAt(DateTime|null $deletedAt): void
     {
-        if ($deletedAt && $deletedAt > new DateTime()) {
-            throw new ValidationException("Invalid Deleted At Date");
-        }
+        if ($deletedAt && $deletedAt > new DateTime())
+            throw new ValidationException("Invalid Deletion Date");
         $this->deletedAt = $deletedAt;
     }
 
@@ -666,9 +679,8 @@ abstract class User implements Entity
 
     public function removeAdditionalInfo(string $key): void
     {
-        if (isset($this->additionalInfo[$key])) {
+        if (isset($this->additionalInfo[$key]))
             unset($this->additionalInfo[$key]);
-        }
     }
 
     /**
@@ -736,43 +748,35 @@ abstract class User implements Entity
         ];
 
         // Handle UUID conversion
-        if (isset(($data['publicId'])) && !($data['publicId'] instanceof UUID)) {
+        if (isset(($data['publicId'])) && !($data['publicId'] instanceof UUID))
             $defaults['publicId'] = UUID::tryFromString(trimOrNull($data['publicId']));
-        }
 
         // Handle DateTime conversions
-        if (isset($data['birthDate']) && !($data['birthDate'] instanceof DateTime)) {
+        if (isset($data['birthDate']) && !($data['birthDate'] instanceof DateTime))
             $defaults['birthDate'] = new DateTime(trimOrNull($data['birthDate']));
-        }
 
-        if (isset($data['createdAt']) && !($data['createdAt'] instanceof DateTime)) {
+        if (isset($data['createdAt']) && !($data['createdAt'] instanceof DateTime))
             $defaults['createdAt'] = new DateTime(trimOrNull($data['createdAt']));
-        }
 
-        if (isset($data['deletedAt']) && !($data['deletedAt'] instanceof DateTime) && $data['deletedAt'] !== null) {
+        if (isset($data['deletedAt']) && !($data['deletedAt'] instanceof DateTime))
             $defaults['deletedAt'] = new DateTime(trimOrNull($data['deletedAt']));
-        }
 
-        if (isset($data['confirmedAt']) && !($data['confirmedAt'] instanceof DateTime) && $data['confirmedAt'] !== null) {
+        if (isset($data['confirmedAt']) && !($data['confirmedAt'] instanceof DateTime))
             $defaults['confirmedAt'] = new DateTime(trimOrNull($data['confirmedAt']));
-        }   
 
         // Handle enum conversions
-        if (isset($data['gender']) && !($data['gender'] instanceof Gender)) {
+        if (isset($data['gender']) && !($data['gender'] instanceof Gender))
             $defaults['gender'] = Gender::from(trimOrNull($data['gender']));
-        }
 
-        if (isset($data['role']) && !($data['role'] instanceof Role)) {
+        if (isset($data['role']) && !($data['role'] instanceof Role))
             $defaults['role'] = Role::from(trimOrNull($data['role']));
-        }
 
         // Handle JobTitleContainer conversion
         if (isset($data['jobTitles']) && !($data['jobTitles'] instanceof JobTitleContainer)) {
-            if (is_array($data['jobTitles'])) {
+            if (is_array($data['jobTitles']))
                 $defaults['jobTitles'] = new JobTitleContainer($data['jobTitles']);
-            } elseif (is_string($data['jobTitles'])) {
+            elseif (is_string($data['jobTitles']))
                 $defaults['jobTitles'] = new JobTitleContainer(explode(',', $data['jobTitles']));
-            }
         }
 
         // Create instance bypassing full constructor validation
@@ -845,14 +849,14 @@ abstract class User implements Entity
             'email'             => $this->email,
             'bio'               => $this->bio,
             'profileLink'       => $this->profileLink,
-            'createdAt'         => $this->createdAt 
-                ? $this->createdAt->format('Y-m-d H:i:s') 
+            'createdAt'         => $this->createdAt
+                ? formatDateTime($this->createdAt, 'Y-m-d H:i:s')
                 : null,
-            'confirmedAt'       => $this->confirmedAt 
-                ? $this->confirmedAt->format('Y-m-d H:i:s') 
+            'confirmedAt'       => $this->confirmedAt
+                ? formatDateTime($this->confirmedAt, 'Y-m-d H:i:s')
                 : null,
-            'deletedAt'         => $this->deletedAt 
-                ? $this->deletedAt->format('Y-m-d H:i:s') 
+            'deletedAt'         => $this->deletedAt
+                ? formatDateTime($this->deletedAt, 'Y-m-d H:i:s')
                 : null,
             'additionalInfo'    => $this->additionalInfo
         ];
@@ -899,9 +903,8 @@ abstract class User implements Entity
         $data = normalizeArrayKeysToCamelCase($data);
 
         $publicId = null;
-        if (isset(($data['publicId'])) && !($data['publicId'] instanceof UUID)) {
+        if (isset(($data['publicId'])) && !($data['publicId'] instanceof UUID))
             $publicId = UUID::tryFromString(trimOrNull($data['publicId']));
-        }
 
         $gender = (!($data['gender'] instanceof Gender))
             ? Gender::from(trimOrNull($data['gender']))
@@ -916,11 +919,10 @@ abstract class User implements Entity
             : $data['role'];
 
         $jobTitles =  $data['jobTitles'];
-        if (is_array($data['jobTitles']) && !empty($data['jobTitles'])) {
+        if (is_array($data['jobTitles']) && !empty($data['jobTitles']))
             $jobTitles = JobTitleContainer::fromArray($data['jobTitles']);
-        } elseif (is_string($data['jobTitles'])) {
+        elseif (is_string($data['jobTitles']))
             $jobTitles = new JobTitleContainer(explode(',', $data['jobTitles']));
-        }
 
         $createdAt = (isset($data['createdAt']) && is_string($data['createdAt']))
             ? new DateTime(trimOrNull($data['createdAt']))

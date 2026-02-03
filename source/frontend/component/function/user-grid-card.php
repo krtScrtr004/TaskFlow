@@ -58,7 +58,7 @@ function userGridCard(ProjectManager|Worker $user): string
         htmlspecialchars($user->getProfileLink()) ?:
         ICON_PATH . 'profile_w.svg';
 
-    $isUsersPage = strpos($_SERVER['REQUEST_URI'], 'users') !== false;
+    $isUsersPage    = strpos($_SERVER['REQUEST_URI'], 'users') !== false;
 
     ob_start();
     ?>

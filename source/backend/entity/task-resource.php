@@ -14,13 +14,13 @@ class TaskResource implements Entity
     private int $id;
     private UUID $publicId;
     private ResourceType $type;
-    private ?int $taskWorkerId; // Optional - links to phase_task_worker for labor resources
+    private int|null $taskWorkerId; // Optional - links to phase_task_worker for labor resources
     private int $quantity; 
     private float $unitRate; // Cost per unit
     private float $estimatedUnit; // Estimate quantity 
     private float $actualUnit; // Actual quantity used
-    private ?string $note;
-    private ?DateTime $createdAt;
+    private string|null $note;
+    private DateTime|null $createdAt;
 
     private ResourceValidator $resourceValidator;
 
@@ -49,11 +49,11 @@ class TaskResource implements Entity
 
         int $quantity = RESOURCE_QUANTITY_MIN,
         float $unitRate = DEFAULT_RATE_MIN,
-        ?float $estimatedUnit = null,
-        ?float $actualUnit = null,
-        ?string $note = null,
-        ?int $taskWorkerId = null,
-        ?DateTime $createdAt = null
+        float|null $estimatedUnit = null,
+        float|null $actualUnit = null,
+        string|null $note = null,
+        int|null $taskWorkerId = null,
+        DateTime|null $createdAt = null
     ) {
         $this->resourceValidator = new ResourceValidator();
         $this->resourceValidator->validateMultiple([
@@ -63,12 +63,11 @@ class TaskResource implements Entity
             'actualUnit'    => $actualUnit,
             'note'          => $note
         ]);
-        if ($this->resourceValidator->hasErrors()) {
+        if ($this->resourceValidator->hasErrors())
             throw new ValidationException(
-                'Resource Validation Failed.',
+                'Resource Validation Failed',
                 $this->resourceValidator->getErrors()
             );
-        }
 
         $this->id = $id;
         $this->publicId = $publicId;
@@ -159,7 +158,7 @@ class TaskResource implements Entity
      * 
      * @return string|null The note of the resource.
      */
-    public function getNote(): ?string
+    public function getNote(): string|null
     {
         return $this->note;
     }
@@ -169,7 +168,7 @@ class TaskResource implements Entity
      * 
      * @return int|null The task worker ID.
      */
-    public function getTaskWorkerId(): ?int
+    public function getTaskWorkerId(): int|null
     {
         return $this->taskWorkerId;
     }
@@ -179,7 +178,7 @@ class TaskResource implements Entity
      * 
      * @return DateTime|null The creation timestamp.
      */
-    public function getCreatedAt(): ?DateTime
+    public function getCreatedAt(): DateTime|null
     {
         return $this->createdAt;
     }
@@ -197,8 +196,7 @@ class TaskResource implements Entity
      */
     public function setId(int $id): void
     {
-        if ($id <= 0) 
-            throw new ValidationException('Invalid Resource ID');
+        if ($id <= 0) throw new ValidationException('Invalid ID');
         $this->id = $id;
     }
 
@@ -238,12 +236,11 @@ class TaskResource implements Entity
     public function setQuantity(int $quantity): void
     {
         $this->resourceValidator->validateQuantity($quantity);
-        if ($this->resourceValidator->hasErrors()) {
+        if ($this->resourceValidator->hasErrors())
             throw new ValidationException(
-                'Invalid Resource Quantity',
+                'Invalid Quantity',
                 $this->resourceValidator->getErrors()
             );
-        }
         $this->quantity = $quantity;
     }
 
@@ -259,12 +256,11 @@ class TaskResource implements Entity
     public function setUnitRate(float $unitRate): void
     {
         $this->resourceValidator->validateUnitRate($unitRate);
-        if ($this->resourceValidator->hasErrors()) {
+        if ($this->resourceValidator->hasErrors())
             throw new ValidationException(
-                'Invalid Resource Unit Rate',
+                'Invalid Unit Rate',
                 $this->resourceValidator->getErrors()
             );
-        }
         $this->unitRate = $unitRate;
     }
 
@@ -280,12 +276,11 @@ class TaskResource implements Entity
     public function setEstimatedUnit(float $estimatedUnit): void
     {
         $this->resourceValidator->validateEstimatedUnit($estimatedUnit);
-        if ($this->resourceValidator->hasErrors()) {
+        if ($this->resourceValidator->hasErrors())
             throw new ValidationException(
-                'Invalid Resource Estimated Unit',
+                'Invalid Estimated Unit',
                 $this->resourceValidator->getErrors()
             );  
-        }
         $this->estimatedUnit = $estimatedUnit;
     }
 
@@ -301,12 +296,11 @@ class TaskResource implements Entity
     public function setActualUnit(float $actualUnit): void
     {
         $this->resourceValidator->validateActualUnit($actualUnit);
-        if ($this->resourceValidator->hasErrors()) {
+        if ($this->resourceValidator->hasErrors())
             throw new ValidationException(
-                'Invalid Resource Actual Unit',
+                'Invalid Actual Unit',
                 $this->resourceValidator->getErrors()
             );  
-        }
         $this->actualUnit = $actualUnit;
     }
 
@@ -319,15 +313,14 @@ class TaskResource implements Entity
      * 
      * @throws ValidationException If the note is invalid.
      */    
-    public function setNote(?string $note): void
+    public function setNote(string|null $note): void
     {
         $this->resourceValidator->validateNote($note);
-        if ($this->resourceValidator->hasErrors()) {
+        if ($this->resourceValidator->hasErrors())
             throw new ValidationException(
-                'Invalid Resource Note',
+                'Invalid Note',
                 $this->resourceValidator->getErrors()
             );  
-        }
         $this->note = $note;
     }
 
@@ -338,7 +331,7 @@ class TaskResource implements Entity
      * 
      * @return void
      */
-    public function setTaskWorkerId(?int $taskWorkerId): void
+    public function setTaskWorkerId(int|null $taskWorkerId): void
     {
         $this->taskWorkerId = $taskWorkerId;
     }
@@ -350,7 +343,7 @@ class TaskResource implements Entity
      * 
      * @return void
      */
-    public function setCreatedAt(?DateTime $createdAt): void
+    public function setCreatedAt(DateTime|null $createdAt): void
     {
         $this->createdAt = $createdAt;
     }
@@ -389,15 +382,15 @@ class TaskResource implements Entity
             $defaults['type'] = ResourceType::fromArray($data['type']);
 
         return new TaskResource(
-            $defaults['id'],
-            $defaults['publicId'],
-            $defaults['type'],
-            $defaults['quantity'],
-            $defaults['unitRate'],
-            $defaults['estimatedUnit'],
-            $defaults['actualUnit'],
-            $defaults['note'],
-            $defaults['taskWorkerId']
+            id: $defaults['id'],
+            publicId: $defaults['publicId'],
+            type: $defaults['type'],
+            quantity: $defaults['quantity'],
+            unitRate: $defaults['unitRate'],
+            estimatedUnit: $defaults['estimatedUnit'],
+            actualUnit: $defaults['actualUnit'],
+            note: $defaults['note'],
+            taskWorkerId: $defaults['taskWorkerId']
         );
     }
 

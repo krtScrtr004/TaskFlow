@@ -62,7 +62,7 @@ class UserModel extends Model
      *
      * @throws DatabaseException If a database error occurs during query execution
      */
-    protected function find(string $whereClause = '', array $params = [], array $options = []): ?array
+    protected function find(string $whereClause = '', array $params = [], array $options = []): array|null
     {
         $paramOptions = [
             'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
@@ -72,9 +72,6 @@ class UserModel extends Model
         ];
 
         try {
-            Csrf::protect();
-
-
             $queryString =
                 "SELECT 
                     u.*,
@@ -194,9 +191,7 @@ class UserModel extends Model
             $statement->execute($params);
             $result = $statement->fetchAll();
 
-            if (!$this->hasData($result)) {
-                return null;
-            }
+            if (!$this->hasData($result)) return null;
 
             $users = [];
             foreach ($result as $row) {
@@ -244,9 +239,8 @@ class UserModel extends Model
      */
     public function findById(int|UUID $userId): ProjectManager|Worker|null
     {
-        if (is_int($userId) && $userId < 1) {
-            throw new InvalidArgumentException('Invalid user ID provided.');
-        }
+        if (\is_int($userId) && $userId < 1)
+            throw new InvalidArgumentException('Invalid user ID provided');
 
         try {
             $searchRole =
@@ -256,10 +250,10 @@ class UserModel extends Model
                 FROM 
                     `user` 
                 WHERE 
-                    " . (is_int($userId) ? "id" : "public_id") . " = :userId 
+                    " . (\is_int($userId) ? "id" : "public_id") . " = :userId 
                 LIMIT 1";
             $statement = $this->connection->prepare($searchRole);
-            $statement->execute([':userId' => is_int($userId) ? $userId : UUID::toBinary($userId)]);
+            $statement->execute([':userId' => \is_int($userId) ? $userId : UUID::toBinary($userId)]);
             $result = $statement->fetch();
 
             if (!$this->hasData($result)) return null;
@@ -332,9 +326,7 @@ class UserModel extends Model
 
         try {
             // Skip if both fields are empty
-            if (!$email && !$contactNumber) {
-                return $result;
-            }
+            if (!$email && !$contactNumber) return $result;
 
             // Build single query to check both fields
             $whereConditions = [];
@@ -371,9 +363,8 @@ class UserModel extends Model
                     $contactNumber ? "contact_number = :contactNumber2" : null
                 ]));
 
-            if ($excludeUserId) {
-                $query .= (is_int($excludeUserId) ? " AND id != :excludeUserId" : " AND public_id != :excludeUserId");
-            }
+            if ($excludeUserId)
+                $query .= (\is_int($excludeUserId) ? " AND id != :excludeUserId" : " AND public_id != :excludeUserId");
 
             $query .= " LIMIT 1";
 
@@ -407,15 +398,10 @@ class UserModel extends Model
      * @throws InvalidArgumentException If offset is negative or limit is less than 1
      * @throws DatabaseException When database query fails
      */
-    public function all(int $offset = 0, int $limit = 10, bool $includeDeleted = false): ?array
+    public function all(int $offset = 0, int $limit = 10, bool $includeDeleted = false): array|null
     {
-        if ($offset < 0) {
-            throw new InvalidArgumentException('Invalid offset value.');
-        }
-
-        if ($limit < 1) {
-            throw new InvalidArgumentException('Invalid limit value.');
-        }
+        if ($offset < 0) throw new InvalidArgumentException('Invalid offset value');
+        if ($limit < 1) throw new InvalidArgumentException('Invalid limit value');
 
         try {
             $whereClause = $includeDeleted ? '' : 'deletedAt IS NULL';
@@ -464,7 +450,7 @@ class UserModel extends Model
             'limit' => 10,
             'offset' => 0,
         ]
-    ): ?array {
+    ): array|null {
         $paramOptions = [
             'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
             'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
@@ -627,9 +613,8 @@ class UserModel extends Model
     public function create(mixed $user): ProjectManager|Worker|null
     {
         try {
-            if (!$user instanceof ProjectManager && !$user instanceof Worker) {
+            if (!($user instanceof ProjectManager) && !($user instanceof Worker))
                 throw new InvalidArgumentException('Expected instance of ProjectManager or Worker');
-            }
 
             $uuid               =   $user->getPublicId() ?? UUID::get();
             $firstName          =   trimOrNull($user->getFirstName());
@@ -764,15 +749,14 @@ class UserModel extends Model
             $updateFields = [];
             $params = [];
             if (isset($data['id'])) {
-                if (!is_int($data['id']) || $data['id'] < 1) {
-                    throw new InvalidArgumentException('Invalid user ID provided.');
-                }
+                if (!\is_int($data['id']) || $data['id'] < 1)
+                    throw new InvalidArgumentException('Invalid user ID provided');
 
                 $params[':id'] = $data['id'];
             } elseif (isset($data['publicId'])) {
                 $params[':publicId'] = UUID::toBinary($data['publicId']);
             } else {
-                throw new InvalidArgumentException('User ID or Public ID is required.');
+                throw new InvalidArgumentException('User ID or Public ID is required');
             }
 
             if (isset($data['firstName'])) {
@@ -831,7 +815,13 @@ class UserModel extends Model
             }
 
             if (!empty($updateFields)) {
-                $projectQuery = "UPDATE `user` SET " . implode(', ', $updateFields) . " WHERE id = " . (isset($params[':id']) ? ":id" : "(SELECT id FROM `user` WHERE public_id = :publicId)") . "";
+                $projectQuery =
+                    "UPDATE 
+                        `user` 
+                    SET 
+                        " . implode(', ', $updateFields) . " 
+                    WHERE 
+                        id = " . (isset($params[':id']) ? ":id" : "(SELECT id FROM `user` WHERE public_id = :publicId)") . "";
                 $statement = $this->connection->prepare($projectQuery);
                 $statement->execute($params);
             }
@@ -871,49 +861,49 @@ class UserModel extends Model
      * @throws DatabaseException If a database error occurs during the update.
      * @return void
      */
-    private function updateJobTitles(int|UUID $userId, JobTitleContainer|null $jobTitlesToDelete = null, JobTitleContainer|null $jobTitlesToAdd = null): void
-    {
-        if (is_int($userId) && $userId < 1) {
-            throw new InvalidArgumentException('Invalid user ID provided for job title update.');
-        }
-
-        if ($jobTitlesToDelete?->count() === 0 && $jobTitlesToAdd?->count() === 0) {
+    private function updateJobTitles(
+        int|UUID $userId,
+        JobTitleContainer|null $jobTitlesToDelete = null,
+        JobTitleContainer|null $jobTitlesToAdd = null
+    ): void {
+        if (\is_int($userId) && $userId < 1)
+            throw new InvalidArgumentException('Invalid user ID provided for job title update');
+        if ($jobTitlesToDelete?->count() === 0 && $jobTitlesToAdd?->count() === 0)
             return;
-        }
 
         try {
-            if (count($jobTitlesToDelete) > 0) {
+            if (\count($jobTitlesToDelete) > 0) {
                 $deleteQuery =
                     "DELETE FROM 
                         `job_title`
                     WHERE 
-                        user_id = " . (is_int($userId) ? ":userId" : "(SELECT id FROM `user` WHERE public_id = :userId)") . "
+                        user_id = " . (\is_int($userId) ? ":userId" : "(SELECT id FROM `user` WHERE public_id = :userId)") . "
                     AND 
                         title = :title";
 
                 foreach ($jobTitlesToDelete as $title) {
                     $deleteStatement = $this->connection->prepare($deleteQuery);
                     $deleteStatement->execute([
-                        ':userId' => is_int($userId) ? $userId : UUID::toBinary($userId),
-                        ':title' => $title
+                        ':userId'   => \is_int($userId) ? $userId : UUID::toBinary($userId),
+                        ':title'    => $title
                     ]);
                 }
             }
 
-            if (count($jobTitlesToAdd) > 0) {
+            if (\count($jobTitlesToAdd) > 0) {
                 $insertQuery =
                     "INSERT INTO
                         `job_title` (user_id, title)
                     VALUES (
-                        " . (is_int($userId) ? ":userId" : "(SELECT id FROM `user` WHERE public_id = :userId)") . "   
+                        " . (\is_int($userId) ? ":userId" : "(SELECT id FROM `user` WHERE public_id = :userId)") . "   
                         , :title
                     )";
 
                 foreach ($jobTitlesToAdd as $title) {
                     $insertStatement = $this->connection->prepare($insertQuery);
                     $insertStatement->execute([
-                        ':userId' => is_int($userId) ? $userId : UUID::toBinary($userId),
-                        ':title' => $title
+                        ':userId'   => \is_int($userId) ? $userId : UUID::toBinary($userId),
+                        ':title'    => $title
                     ]);
                 }
             }
@@ -941,12 +931,11 @@ class UserModel extends Model
      */
     public function delete(mixed $data): bool
     {
-        if (!$data instanceof ProjectManager && !$data instanceof Worker) {
+        if (!($data instanceof ProjectManager) && !($data instanceof Worker))
             throw new InvalidArgumentException('Expected instance of ProjectManager or Worker');
-        }
 
         try {
-                $this->save([
+            $this->save([
                 'id'        => $data->getId(),
                 'delete'    => true
             ]);
@@ -972,9 +961,8 @@ class UserModel extends Model
      */
     public function hardDelete(mixed $data): bool
     {
-        if (!$data instanceof ProjectManager && !$data instanceof Worker) {
+        if (!($data instanceof ProjectManager) && !($data instanceof Worker))
             throw new InvalidArgumentException('Expected instance of User');
-        }
 
         try {
             $deleteQuery = "DELETE FROM `user` WHERE id = :id";

@@ -22,12 +22,10 @@ class JobTitleContainer extends Container
     public function __construct(array $jobTitles = [])
     {
         foreach ($jobTitles as $jobTitle) {
-            if (!is_string($jobTitle)) {
-                throw new InvalidArgumentException('All elements of jobTitles array must be instances of String.');
-            }
-            if (empty($jobTitle)) {
-                continue;
-            }
+            if (!is_string($jobTitle)) 
+                throw new InvalidArgumentException('All elements of jobTitles array must be instances of string');
+
+            if (empty($jobTitle)) continue;
             $this->add($jobTitle);
         }
     }
@@ -47,9 +45,8 @@ class JobTitleContainer extends Container
      */
     public function add($jobTitle): void
     {
-        if (!is_string($jobTitle)) {
-            throw new InvalidArgumentException('Only String instances can be added to JobTitlesContainer.');
-        }
+        if (!is_string($jobTitle))
+            throw new InvalidArgumentException('Only string instances can be added to JobTitlesContainer');
 
         $this->items[] = $jobTitle;
     }
@@ -72,14 +69,11 @@ class JobTitleContainer extends Container
      */
     public function remove($jobTitle): void
     {
-        if (!is_string($jobTitle)) {
-            throw new InvalidArgumentException('Only String instances can be removed from JobTitlesContainer.');
-        }
+        if (!is_string($jobTitle))
+            throw new InvalidArgumentException('Only string instances can be removed from JobTitlesContainer');
 
         $index = array_search($jobTitle, $this->items, true);
-        if ($index !== false) {
-            array_splice($this->items, $index, 1);
-        }
+        if ($index !== false) array_splice($this->items, $index, 1);
     }
 
     /**
@@ -99,9 +93,8 @@ class JobTitleContainer extends Container
      */
     public function contains($item): bool
     {
-        if (!is_string($item)) {
-            throw new InvalidArgumentException('Only String instances can be checked in JobTitleContainer.');
-        }
+        if (!is_string($item))
+            throw new InvalidArgumentException('Only string instances can be checked in JobTitleContainer');
         return in_array($item, $this->items, true);
     }
 

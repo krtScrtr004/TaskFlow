@@ -46,7 +46,7 @@ abstract class Validator
      * @return void
      */
     protected function iValidateName(
-        ?string $name,
+        string|null $name,
         array $options = [
             'min' => NAME_MIN,
             'max' => NAME_MAX,
@@ -60,13 +60,13 @@ abstract class Validator
 
         $name = trim($name);
         if (strlen($name) < $min || strlen($name) > $max)
-            $this->errors[] = "{$fieldLabel} must be between {$min} and {$max} characters.";
+            $this->errors[] = "{$fieldLabel} must be between {$min} and {$max} characters";
 
         if (!preg_match('/^[\w\p{L}\s\'\-.]+$/u', $name))
-            $this->errors[] = "{$fieldLabel} must only contain letters, spaces, and common punctuation.";
+            $this->errors[] = "{$fieldLabel} must only contain letters, spaces, and common punctuation";
 
         if ($this->hasConsecutiveSpecialChars($name))
-            $this->errors[] = "{$fieldLabel} must not contain consecutive special characters.";
+            $this->errors[] = "{$fieldLabel} must not contain consecutive special characters";
 
         // Run any additional custom checks provided in options
         foreach ($options['additionalChecks'] as $check) {
@@ -107,7 +107,7 @@ abstract class Validator
      * @return void
      */
     public function iValidateLongMessage(
-        ?string $note,
+        string|null $note,
         array $options = [
             'min' => LONG_TEXT_MIN,
             'max' => LONG_TEXT_MAX,
@@ -124,10 +124,10 @@ abstract class Validator
         if (!$note) return;
 
         if (strlen($note) < $min || strlen($note) > $max)
-            $this->errors[] = "{$fieldLabel} must be between {$min} and {$max} characters.";
+            $this->errors[] = "{$fieldLabel} must be between {$min} and {$max} characters";
 
         if ($this->hasConsecutiveSpecialChars($note))
-            $this->errors[] = "{$fieldLabel} must not contain consecutive special characters.";
+            $this->errors[] = "{$fieldLabel} must not contain consecutive special characters";
 
         // Run any additional custom checks provided in options
         foreach ($options['additionalChecks'] as $check) {
@@ -179,7 +179,7 @@ abstract class Validator
      * @return void
      */
     public function iValidateDefaultRate(
-        ?float $rate,
+        float|null $rate,
         array $options = [
             'min' => DEFAULT_RATE_MIN,
             'max' => DEFAULT_RATE_MAX,
@@ -192,7 +192,7 @@ abstract class Validator
         $fieldLabel = $options['fieldLabel'] ?? 'Default rate';
 
         if ($rate < $min || $rate > $max)
-            $this->errors[] = "{$fieldLabel} must be between {$min} and {$max}.";
+            $this->errors[] = "{$fieldLabel} must be between {$min} and {$max}";
 
         // Run any additional custom checks provided in options
         foreach ($options['additionalChecks'] as $check) {
@@ -241,14 +241,16 @@ abstract class Validator
      * - The $message should describe the validation failure for that key.
      * - If an error already exists for the given key, it will be overwritten.
      *
-     * @param string $key Identifier for the error (e.g. field name or rule)
      * @param string $message Human-readable error message describing the validation failure
      *
      * @return void
      */
-    public function addError(string $key, string $message): void
+    public function addError(string ...$messages): void
     {
-        $this->errors[$key] = $message;
+        foreach ($messages as $message) {
+            if (!trimOrNull($message)) continue;
+            $this->errors[] = $message;
+        }
     }
 
     /**

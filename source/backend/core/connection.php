@@ -7,7 +7,7 @@ use PDOException;
 use RuntimeException;
 
 class Connection {
-    private static ?PDO $instance = null;
+    private static PDO|null $instance = null;
 
     private function __construct() {}
 

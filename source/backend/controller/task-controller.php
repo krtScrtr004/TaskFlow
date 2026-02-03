@@ -77,49 +77,36 @@ class TaskController implements Controller
             $projectId = isset($args['projectId'])
                 ? UUID::fromString($args['projectId'])
                 : null;
-            if (!$projectId) {
-                throw new ForbiddenException('Project ID is required.');
-            }
+            if (!$projectId) throw new ForbiddenException('Project ID is required');
 
             $project = $instance->projectModel->findById($projectId);
-            if (!$project) {
-                throw new NotFoundException('Project not found.');
-            }
+            if (!$project) throw new NotFoundException('Project not found');
 
             $phaseId = isset($args['phaseId'])
                 ? UUID::fromString($args['phaseId'])
                 : null;
-            if (isset($args['phaseId']) && !$phaseId) {
-                throw new ForbiddenException('Phase ID is required.');
-            }
+            if (isset($args['phaseId']) && !$phaseId) throw new ForbiddenException('Phase ID is required');
 
             $phase = $phaseId
                 ? $instance->phaseModel->findById($phaseId)
                 : null;
-            if (isset($args['phaseId']) && !$phase) {
-                throw new NotFoundException('Phase not found.');
-            }
+            if (isset($args['phaseId']) && !$phase) throw new NotFoundException('Phase not found');
 
             $workerId = isset($args['workerId'])
                 ? UUID::fromString($args['workerId'])
                 : null;
-            if (isset($args['workerId']) && !$workerId) {
-                throw new ForbiddenException('Worker ID is required.');
-            }
+            if (isset($args['workerId']) && !$workerId) throw new ForbiddenException('Worker ID is required');
 
             $worker = $workerId
                 ? $instance->projectWorkerModel->findById($workerId)
                 : null;
-            if (isset($args['workerId']) && !$worker) {
-                throw new NotFoundException('Worker not found.');
-            }
+            if (isset($args['workerId']) && !$worker) throw new NotFoundException('Worker not found');
 
             // NOTE: No need for active phase check when viewing tasks in grid view
 
             $key = '';
-            if (isset($_GET['key']) && trim($_GET['key']) !== '') {
+            if (isset($_GET['key']) && trim($_GET['key']) !== '')
                 $key = trim($_GET['key']);
-            }
 
             // Obtain filter from query parameters
             $status = isset($_GET['status'])
@@ -144,10 +131,9 @@ class TaskController implements Controller
                 $priority,
                 $options
             );
-            if (!$tasks) {
-                // No tasks found, assign an empty container
-                $tasks = new TaskContainer();
-            }
+            
+            // No tasks found, assign an empty container
+            if (!$tasks) $tasks = new TaskContainer();
             require_once VIEW_PATH . 'tasks.php';
         } catch (NotFoundException $e) {
             ErrorController::notFound();
@@ -192,38 +178,26 @@ class TaskController implements Controller
             $projectId = isset($args['projectId'])
                 ? UUID::fromString($args['projectId'])
                 : null;
-            if (!$projectId) {
-                throw new ForbiddenException('Project ID is required.');
-            }
+            if (!$projectId) throw new ForbiddenException('Project ID is required');
 
             $project = $instance->projectModel->findById($projectId);
-            if ($project === null) {
-                throw new NotFoundException('Project not found.');
-            }
+            if (!$project) throw new NotFoundException('Project not found');
 
             $phaseId = isset($args['phaseId'])
                 ? UUID::fromString($args['phaseId'])
                 : null;
-            if (!$phaseId) {
-                throw new ForbiddenException('Phase ID is required.');
-            }
+            if (!$phaseId) throw new ForbiddenException('Phase ID is required');
 
             $phase = $instance->phaseModel->findById($phaseId);
-            if ($phase === null) {
-                throw new NotFoundException('Phase not found.');
-            }
+            if (!$phase) throw new NotFoundException('Phase not found');
 
             $taskId = isset($args['taskId'])
                 ? UUID::fromString($args['taskId'])
                 : null;
-            if (!$taskId) {
-                throw new ForbiddenException('Task ID is required.');
-            }
+            if (!$taskId) throw new ForbiddenException('Task ID is required.');
 
             $task = TaskService::get($taskId, ['workers' => true, 'resources' => true]);
-            if ($task === null) {
-                throw new NotFoundException('Task not found.');
-            }
+            if (!$task) throw new NotFoundException('Task not found');
 
             $status = $task->getStatus();
             $startDateTime = formatDateTime($task->getStartDateTime(), 'Y-m-d');
@@ -246,6 +220,7 @@ class TaskController implements Controller
                     'status' => WorkStatus::DELAYED
                 ]);
             }
+
             require_once SUB_VIEW_PATH . 'task.php';
         } catch (NotFoundException $e) {
             ErrorController::notFound();
@@ -280,7 +255,7 @@ class TaskController implements Controller
                 ? UUID::fromString($args['projectId'])
                 : null;
             if (isset($args['projectId']) && !$projectId)
-                throw new ForbiddenException('Project ID is required.');
+                throw new ForbiddenException('Project ID is required');
 
             $instance = new self();
 
@@ -292,13 +267,13 @@ class TaskController implements Controller
                 ? $instance->projectModel->findById($projectId)
                 : $instance->taskModel->findOwningProject($task->getId());
             if (isset($args['projectId']) && !$project)
-                throw new NotFoundException('Project not found.');
+                throw new NotFoundException('Project not found');
 
             // Phase Info (Active)
             $phase = isset($args['projectId'])
                 ? $instance->phaseModel->findOnGoingByProjectId($projectId)
                 : $instance->taskModel->findOwningPhase($task->getId());
-            if (!$phase) throw new NotFoundException('Active phase not found.');
+            if (!$phase) throw new NotFoundException('Active phase not found');
 
             require_once SUB_VIEW_PATH . 'form' . DS . 'task.php';
         } catch (ForbiddenException $e) {

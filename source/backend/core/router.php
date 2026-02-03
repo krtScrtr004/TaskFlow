@@ -32,8 +32,7 @@ class Router
      */
     public static function getRouter(): Router
     {
-        if (!isset(self::$router))
-            self::$router = new Router();
+        if (!isset(self::$router)) self::$router = new Router();
 
         return self::$router;
     }
@@ -53,11 +52,10 @@ class Router
             // If the class name doesn't have a namespace, assume it's in App\Controller
             $className = $action[0];
             if (strpos($className, '\\') === false) {
-                if (stripos($className, 'Controller') === false) {
+                if (stripos($className, 'Controller') === false) 
                     $className = 'App\\Endpoint\\' . $className;
-                } else {
+                else 
                     $className = 'App\\Controller\\' . $className;
-                }
             }
             return call_user_func([$className, $action[1]], $routeParams);
         }
@@ -106,9 +104,8 @@ class Router
 
                 // Find all route params names from route and save in $routeParamsNames
                 $routeParamsNames = [];
-                if (preg_match_all('/{(\w+)(:[^}]+)?}/', $route, $matches)) {
+                if (preg_match_all('/{(\w+)(:[^}]+)?}/', $route, $matches))
                     $routeParamsNames = $matches[1];
-                }
 
                 // Combine between route parameter names and user provided parameter values.
                 $routeParams = array_combine($routeParamsNames, $routeParamsValues);

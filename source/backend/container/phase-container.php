@@ -35,9 +35,8 @@ class PhaseContainer extends Container
     {
         $this->totalBudget = BUDGET_MIN;
         foreach ($phases as $phase) {
-            if (!$phase instanceof Phase) {
-                throw new InvalidArgumentException('All elements of phases array must be instances of Phase.');
-            }
+            if (!$phase instanceof Phase)
+                throw new InvalidArgumentException('All elements of phases array must be instances of Phase');
             $this->add($phase);
         }
     }
@@ -68,9 +67,8 @@ class PhaseContainer extends Container
      */
     public function add($item): void
     {
-        if (!$item instanceof Phase) {
-            throw new InvalidArgumentException('Only Phase instances can be added to PhaseContainer.');
-        }
+        if (!$item instanceof Phase)
+            throw new InvalidArgumentException('Only Phase instances can be added to PhaseContainer');
 
         $id = $item->getId();
         $status = $item->getStatus();
@@ -107,9 +105,8 @@ class PhaseContainer extends Container
      */
     public function remove($item): void
     {
-        if (!$item instanceof Phase) {
-            throw new InvalidArgumentException('Only Phase instances can be removed from PhaseContainer.');
-        }
+        if (!$item instanceof Phase)
+            throw new InvalidArgumentException('Only Phase instances can be removed from PhaseContainer');
 
         $id = $item->getId();
         $status = $item->getStatus();
@@ -148,9 +145,8 @@ class PhaseContainer extends Container
      */
     public function contains($item): bool
     {
-        if (!$item instanceof Phase) {
-            throw new InvalidArgumentException('Only Phase instances can be checked in PhaseContainer.');
-        }
+        if (!$item instanceof Phase)
+            throw new InvalidArgumentException('Only Phase instances can be checked in PhaseContainer');
 
         $id = $item->getId();
         return isset($this->items[$id]);
@@ -339,11 +335,8 @@ class PhaseContainer extends Container
     {
         $phases = new self();
         foreach ($data as $phaseData) {
-            if ($phaseData instanceof Phase) {
-                $phases->add($phaseData);
-            } else {
-                $phases->add(Phase::fromArray($phaseData));
-            }
+            if ($phaseData instanceof Phase) $phases->add($phaseData);
+            else $phases->add(Phase::fromArray($phaseData));
         }
         return $phases;
     }

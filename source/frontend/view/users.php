@@ -4,8 +4,7 @@ use App\Enumeration\Role;
 use App\Enumeration\WorkerStatus;
 use App\Middleware\Csrf;
 
-if (!isset($users))
-    throw new Error('Users data is required.');
+if (!isset($users)) throw new Error('Users data is required');
 ?>
 
 <!DOCTYPE html>

@@ -7,9 +7,7 @@ use App\Enumeration\Role;
 use App\Middleware\Csrf;
 
 $me = Me::getInstance();
-if (!$me) {
-    throw new Exception("User is required to view profile.");
-}
+if (!$me) throw new Exception("User is required to view profile");
 
 $myData = [
     'id'                => htmlspecialchars(UUID::toString($me->getPublicId())),

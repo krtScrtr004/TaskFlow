@@ -58,7 +58,7 @@ class ProjectReport {
         string $name,
         DateTime $startDateTime,
         DateTime $completionDateTime,
-        ?DateTime $actualCompletionDateTime,
+        DateTime|null $actualCompletionDateTime,
         WorkStatus $status,
         array $workerCount,
         array $periodicTaskCount,
@@ -67,13 +67,12 @@ class ProjectReport {
     ) {
         $this->validator = new WorkValidator();
         $this->validator->validateMultiple([
-            'name' => $name,
-            'startDateTime' => $startDateTime,
-            'completionDateTime' => $completionDateTime
+            'name'                  => $name,
+            'startDateTime'         => $startDateTime,
+            'completionDateTime'    => $completionDateTime
         ]);
-        if ($this->validator->hasErrors()) {
+        if ($this->validator->hasErrors())
             throw new ValidationException("Invalid data provided for ProjectReport");
-        }
 
         $this->id = $id;
         $this->publicId = $publicId;
@@ -144,7 +143,7 @@ class ProjectReport {
      *
      * @return DateTime|null
      */
-    public function getActualCompletionDateTime(): ?DateTime
+    public function getActualCompletionDateTime(): DateTime|null
     {
         return $this->actualCompletionDateTime;
     }
@@ -210,9 +209,7 @@ class ProjectReport {
      */
     public function setId(int $id): void
     {
-        if ($id <= 0) {
-            throw new ValidationException("ID must be a positive integer");
-        }
+        if ($id <= 0) throw new ValidationException("Invalid ID");
         $this->id = $id;
     }
 
@@ -229,9 +226,11 @@ class ProjectReport {
     {
         $uuidValidator = new UuidValidator();
         $uuidValidator->validateUuid($publicId);
-        if ($uuidValidator->hasErrors()) {
-            throw new ValidationException("Invalid public ID", $uuidValidator->getErrors());
-        }
+        if ($uuidValidator->hasErrors())
+            throw new ValidationException(
+                'Invalid Public ID', 
+                $uuidValidator->getErrors()
+            );
         $this->publicId = $publicId;
     }
 
@@ -245,9 +244,11 @@ class ProjectReport {
     public function setName(string $name): void
     {
         $this->validator->validateName(trim($name));
-        if ($this->validator->hasErrors()) {
-            throw new ValidationException("Invalid project name", $this->validator->getErrors());
-        }
+        if ($this->validator->hasErrors())
+            throw new ValidationException(
+                'Invalid Name', 
+                $this->validator->getErrors()
+            );
         $this->name = trimOrNull($name);
     }
 
@@ -261,9 +262,11 @@ class ProjectReport {
     public function setStartDateTime(DateTime $startDateTime): void
     {
         $this->validator->validateStartDateTime($startDateTime);
-        if ($this->validator->hasErrors()) {
-            throw new ValidationException("Invalid start date", $this->validator->getErrors());
-        }
+        if ($this->validator->hasErrors())
+            throw new ValidationException(
+                'Invalid Start Date', 
+                $this->validator->getErrors()
+            );
         $this->startDateTime = $startDateTime;
     }
 
@@ -277,9 +280,11 @@ class ProjectReport {
     public function setCompletionDateTime(DateTime $completionDateTime): void
     {
         $this->validator->validateCompletionDateTime($completionDateTime, $this->startDateTime);
-        if ($this->validator->hasErrors()) {
-            throw new ValidationException("Invalid completion date", $this->validator->getErrors());
-        }
+        if ($this->validator->hasErrors()) 
+            throw new ValidationException(
+                'Invalid Completion Date', 
+                $this->validator->getErrors()
+            );
         $this->completionDateTime = $completionDateTime;
     }
 
@@ -289,7 +294,7 @@ class ProjectReport {
      * @param DateTime|null $actualCompletionDateTime
      * @return void
      */
-    public function setActualCompletionDateTime(?DateTime $actualCompletionDateTime): void
+    public function setActualCompletionDateTime(DateTime|null $actualCompletionDateTime): void
     {
         $this->actualCompletionDateTime = $actualCompletionDateTime;
     }
@@ -314,9 +319,10 @@ class ProjectReport {
      */
     public function setWorkerCount(array $workerCount): void
     {
-        if (!isAssociativeArray($workerCount)) {
-            throw new ValidationException("Worker count must be an associative array");
-        }
+        if (!isAssociativeArray($workerCount)) 
+            throw new ValidationException(
+                'Invalid Worker Count Container', 
+                ["Worker count must be an associative array"]);
         $this->workerCount = $workerCount;
     }
 
@@ -329,9 +335,10 @@ class ProjectReport {
      */
     public function setPeriodicTaskCount(array $periodicTaskCount): void
     {
-        if (!isAssociativeArray($periodicTaskCount)) {
-            throw new ValidationException("Periodic task count must be a associative array");
-        }
+        if (!isAssociativeArray($periodicTaskCount))
+            throw new ValidationException(
+                'Invalid Periodic Task Count Container', 
+                ['Periodic task count must be a associative array']);
         $this->periodicTaskCount = $periodicTaskCount;
     }
 

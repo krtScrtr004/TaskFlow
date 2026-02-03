@@ -76,7 +76,7 @@ class UUID
         try {
             return new UUID(RamseyUuid::fromString($uuidString));
         } catch (InvalidUuidStringException $e) {
-            throw new ValidationException('Invalid UUID string provided.');
+            throw new ValidationException('Invalid UUID string provided');
         }
     }
 
@@ -137,7 +137,7 @@ class UUID
             // Convert 16-byte binary back to UUID object
             return new UUID(RamseyUuid::fromBytes($binaryUuid));
         } catch (InvalidUuidStringException $e) {
-            throw new ValidationException('Invalid UUID string provided.');
+            throw new ValidationException('Invalid UUID string provided');
         }
     }
     
@@ -174,7 +174,7 @@ class UUID
                 substr($hexString, 20)
             ));
         } catch (InvalidUuidStringException $e) {
-            throw new ValidationException('Invalid UUID string provided.');
+            throw new ValidationException('Invalid UUID string provided');
         }
     }
 
@@ -193,17 +193,14 @@ class UUID
      */
     public static function tryFromString(string $uuidString): ?UUID
     {
-        if (self::isCanonical($uuidString)) {
-            return UUID::fromString($uuidString);
-        }
+        // Check for canonical (RFC 4122) UUID format first
+        if (self::isCanonical($uuidString)) return UUID::fromString($uuidString);
 
-        if (self::isHex($uuidString)) {
-            return UUID::fromHex($uuidString);
-        }
+        // Check for 32-character hexadecimal format next
+        if (self::isHex($uuidString)) return UUID::fromHex($uuidString);
 
-        if (self::isBinary($uuidString)) {
-            return UUID::fromBinary($uuidString);
-        }
+        // Check for 16-byte binary format last
+        if (self::isBinary($uuidString)) return UUID::fromBinary($uuidString);
 
         return null;
     }

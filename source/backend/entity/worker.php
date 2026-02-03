@@ -72,16 +72,16 @@ class Worker extends User
 
         // Worker-specific properties
         float $defaultRate = DEFAULT_RATE_MIN,
-        ?WorkerStatus $status = WorkerStatus::UNASSIGNED,
+        WorkerStatus|null $status = WorkerStatus::UNASSIGNED,
 
         // Optional properties
-        ?string $middleName = null,
-        ?string $bio = null,
-        ?string $profileLink = null,
-        ?string $password = null,
-        ?DateTime $createdAt = null,
-        ?DateTime $confirmedAt = null,
-        ?DateTime $deletedAt = null,
+        string|null $middleName = null,
+        string|null $bio = null,
+        string|null $profileLink = null,
+        string|null $password = null,
+        DateTime|null $createdAt = null,
+        DateTime|null $confirmedAt = null,
+        DateTime|null $deletedAt = null,
         array $additionalInfo = [],
     ) {
         parent::__construct(
@@ -105,12 +105,11 @@ class Worker extends User
         );
 
         $this->userValidator->validateDefaultRate($defaultRate);
-        if ($this->userValidator->hasErrors()) {
+        if ($this->userValidator->hasErrors()) 
             throw new ValidationException(
-                "Worker Validation Failed", 
+                'Worker Validation Failed', 
                 $this->userValidator->getErrors()
             );
-        }
         // Set role-based properties
         $this->role = Role::WORKER;
         $this->defaultRate = $defaultRate;
@@ -175,12 +174,11 @@ class Worker extends User
     public function setDefaultRate(float $defaultRate): void
     {
         $this->userValidator->validateDefaultRate($defaultRate);
-        if ($this->userValidator->hasErrors()) {
+        if ($this->userValidator->hasErrors())
             throw new ValidationException(
-                "Invalid Default Rate", 
+                'Invalid Default Rate', 
                 $this->userValidator->getErrors()
             );
-        }
         $this->defaultRate = $defaultRate;
     }
 
@@ -199,12 +197,11 @@ class Worker extends User
     public function setStatus(WorkerStatus $status): void
     {
         $this->userValidator->validateStatus($status);
-        if ($this->userValidator->hasErrors()) {
+        if ($this->userValidator->hasErrors())
             throw new ValidationException(
-                "Invalid Status", 
+                'Invalid Status', 
                 $this->userValidator->getErrors()
             );
-        }
         $this->status = $status;
     }
 

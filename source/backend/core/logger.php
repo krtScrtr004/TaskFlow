@@ -33,9 +33,7 @@ class Logger
         $accessMessage = "[$date] - <$ip> $message" . PHP_EOL;
 
         $handle = fopen(self::$fileName['access'], 'a');
-        if (!$handle) {
-            throw new ErrorException('Cannot open ' . self::$fileName['access']);
-        }
+        if (!$handle) throw new ErrorException('Cannot open ' . self::$fileName['access']);
 
         fwrite($handle, $accessMessage);
         fclose($handle);
@@ -85,9 +83,7 @@ class Logger
 
             $exceptionMessage = "[$date] -> $exception\n" . PHP_EOL;
             $handle = fopen(self::$fileName['exception'], 'a');
-            if (!$handle) {
-                throw new ErrorException('Cannot open ' . self::$fileName['exception']);
-            }
+            if (!$handle) throw new ErrorException('Cannot open ' . self::$fileName['exception']);
 
         fwrite($handle, $exceptionMessage);
         fclose($handle);

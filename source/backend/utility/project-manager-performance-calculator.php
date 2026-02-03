@@ -15,18 +15,18 @@ class ProjectManagerPerformanceCalculator
 {
     // Project status weights - higher weight for successful completion
     private const PROJECT_STATUS_WEIGHTS = [
-        WorkStatus::COMPLETED->value => 1.0,    // Full credit
-        WorkStatus::ONGOING->value => 0.6,     // Partial credit for in-progress
-        WorkStatus::DELAYED->value => 0.3,      // Reduced credit for delays
-        WorkStatus::PENDING->value => 0.2,      // Minimal credit for pending
-        WorkStatus::CANCELLED->value => -0.5    // Penalty for cancellations
+        WorkStatus::COMPLETED->value    => 1.0,    // Full credit
+        WorkStatus::ONGOING->value      => 0.6,     // Partial credit for in-progress
+        WorkStatus::DELAYED->value      => 0.3,      // Reduced credit for delays
+        WorkStatus::PENDING->value      => 0.2,      // Minimal credit for pending
+        WorkStatus::CANCELLED->value    => -0.5    // Penalty for cancellations
     ];
 
     // Performance scoring weights for different metrics
     private const METRIC_WEIGHTS = [
-        'projectCompletion' => 0.35,      // 35% - Project delivery success
-        'timeManagement' => 0.30,         // 30% - On-time delivery
-        'projectProgress' => 0.35         // 35% - Actual progress on ongoing projects
+        'projectCompletion'     => 0.35,      // 35% - Project delivery success
+        'timeManagement'        => 0.30,         // 30% - On-time delivery
+        'projectProgress'       => 0.35         // 35% - Actual progress on ongoing projects
     ];
 
     // Time performance bonuses and penalties
@@ -45,13 +45,13 @@ class ProjectManagerPerformanceCalculator
     {
         if (empty($projects)) {
             return [
-                'overallScore' => 0.0,
-                'performanceGrade' => 'N/A',
-                'totalProjects' => 0,
-                'metrics' => [],
-                'messages' => [
-                    'insights' => self::generateNoDataInsights(),
-                    'recommendations' => []
+                'overallScore'         => 0.0,
+                'performanceGrade'     => 'N/A',
+                'totalProjects'        => 0,
+                'metrics'              => [],
+                'messages'             => [
+                    'insights'          => self::generateNoDataInsights(),
+                    'recommendations'   => []
                 ]
             ];
         }
@@ -74,18 +74,18 @@ class ProjectManagerPerformanceCalculator
         $statistics = self::gatherProjectStatistics($projects);
 
         return [
-            'overallScore' => round($overallScore, 2),
-            'performanceGrade' => self::getPerformanceGrade($overallScore),
-            'totalProjects' => $totalProjects,
-            'metrics' => [
-                'projectCompletion' => $completionScore,
-                'timeManagement' => $timeScore,
-                'projectProgress' => $progressScore,
+            'overallScore'          => round($overallScore, 2),
+            'performanceGrade'      => self::getPerformanceGrade($overallScore),
+            'totalProjects'         => $totalProjects,
+            'metrics'       => [
+                'projectCompletion'     => $completionScore,
+                'timeManagement'        => $timeScore,
+                'projectProgress'       => $progressScore,
             ],
-            'statistics' => $statistics,
-            'messages' => [
-                'insights' => self::generateInsights($overallScore, $completionScore, $timeScore, $progressScore, $statistics),
-                'recommendations' => self::generateRecommendations($completionScore, $timeScore, $progressScore, $statistics)
+            'statistics'    => $statistics,
+            'messages'      => [
+                'insights'          => self::generateInsights($overallScore, $completionScore, $timeScore, $progressScore, $statistics),
+                'recommendations'   => self::generateRecommendations($completionScore, $timeScore, $progressScore, $statistics)
             ]
         ];
     }
@@ -111,9 +111,9 @@ class ProjectManagerPerformanceCalculator
         $score = $maxPossibleScore > 0 ? ($totalWeightedScore / $maxPossibleScore) * 100 : 0.0;
         
         return [
-            'score' => round($score, 2),
-            'statusBreakdown' => $statusCounts,
-            'description' => 'Project delivery and completion effectiveness'
+            'score'             => round($score, 2),
+            'statusBreakdown'   => $statusCounts,
+            'description'       => 'Project delivery and completion effectiveness'
         ];
     }
 
@@ -126,19 +126,17 @@ class ProjectManagerPerformanceCalculator
         $totalProgressScore = 0.0;
         $evaluatedProjects = 0;
         $progressStats = [
-            'highProgress' => 0,      // >= 75%
-            'moderateProgress' => 0,  // 50-74%
-            'lowProgress' => 0,       // 25-49%
-            'minimalProgress' => 0    // < 25%
+            'highProgress'      => 0,      // >= 75%
+            'moderateProgress'  => 0,  // 50-74%
+            'lowProgress'       => 0,       // 25-49%
+            'minimalProgress'   => 0    // < 25%
         ];
         
         foreach ($projects as $project) {
             $phases = $project->getPhases();
             
             // Skip projects with no phases or tasks
-            if (!$phases || $phases->count() === 0) {
-                continue;
-            }
+            if (!$phases || $phases->count() === 0) continue;
             
             // Calculate actual project progress
             $progressData = ProjectProgressCalculator::calculate($phases);
@@ -149,24 +147,23 @@ class ProjectManagerPerformanceCalculator
             $evaluatedProjects++;
             
             // Categorize progress
-            if ($progressPercentage >= 75) {
+            if ($progressPercentage >= 75) 
                 $progressStats['highProgress']++;
-            } elseif ($progressPercentage >= 50) {
+            elseif ($progressPercentage >= 50) 
                 $progressStats['moderateProgress']++;
-            } elseif ($progressPercentage >= 25) {
+            elseif ($progressPercentage >= 25) 
                 $progressStats['lowProgress']++;
-            } else {
+            else 
                 $progressStats['minimalProgress']++;
-            }
         }
         
         $score = $evaluatedProjects > 0 ? ($totalProgressScore / $evaluatedProjects) : 0.0;
         
         return [
-            'score' => round($score, 2),
-            'evaluatedProjects' => $evaluatedProjects,
-            'progressDistribution' => $progressStats,
-            'description' => 'Actual task completion progress across all managed projects'
+            'score'                 => round($score, 2),
+            'evaluatedProjects'     => $evaluatedProjects,
+            'progressDistribution'  => $progressStats,
+            'description'           => 'Actual task completion progress across all managed projects'
         ];
     }
 
@@ -178,10 +175,10 @@ class ProjectManagerPerformanceCalculator
         $totalTimeScore = 0.0;
         $completedProjects = 0;
         $timeStats = [
-            'earlyDelivery' => 0,
-            'onTime' => 0,
-            'late' => 0,
-            'severelyLate' => 0
+            'earlyDelivery'     => 0,
+            'onTime'            => 0,
+            'late'              => 0,
+            'severelyLate'      => 0
         ];
 
         foreach ($projects as $project) {
@@ -190,9 +187,7 @@ class ProjectManagerPerformanceCalculator
             $actualCompletionDate = $project->getActualCompletionDateTime();
 
             // Only evaluate completed projects for time management
-            if ($status !== WorkStatus::COMPLETED->value || !$actualCompletionDate) {
-                continue;
-            }
+            if ($status !== WorkStatus::COMPLETED->value || !$actualCompletionDate) continue;
 
             $completedProjects++;
             $daysDifference = $actualCompletionDate->diff($completionDate)->days;
@@ -223,10 +218,10 @@ class ProjectManagerPerformanceCalculator
         $score = $completedProjects > 0 ? ($totalTimeScore / $completedProjects) : 0.0;
 
         return [
-            'score' => round($score, 2),
-            'completedProjects' => $completedProjects,
-            'timePerformance' => $timeStats,
-            'description' => 'On-time project delivery track record'
+            'score'                 => round($score, 2),
+            'completedProjects'     => $completedProjects,
+            'timePerformance'       => $timeStats,
+            'description'           => 'On-time project delivery track record'
         ];
     }
 
@@ -236,12 +231,12 @@ class ProjectManagerPerformanceCalculator
     private static function gatherProjectStatistics(ProjectContainer $projects): array
     {
         $stats = [
-            'total' => count($projects),
-            'byStatus' => [],
-            'averageBudget' => 0.0,
-            'totalBudget' => 0.0,
-            'averageTasksPerProject' => 0.0,
-            'totalTasks' => 0
+            'total'                     => \count($projects),
+            'byStatus'                  => [],
+            'averageBudget'             => 0.0,
+            'totalBudget'               => 0.0,
+            'averageTasksPerProject'    => 0.0,
+            'totalTasks'                => 0
         ];
 
         $totalBudget = 0.0;
@@ -264,9 +259,13 @@ class ProjectManagerPerformanceCalculator
             }
         }
 
-        $stats['averageBudget'] = $projectsWithBudget > 0 ? round($totalBudget / $projectsWithBudget, 2) : 0.0;
+        $stats['averageBudget'] = $projectsWithBudget > 0 
+            ? round($totalBudget / $projectsWithBudget, 2) 
+            : 0.0;
         $stats['totalBudget'] = round($totalBudget, 2);
-        $stats['averageTasksPerProject'] = count($projects) > 0 ? round($totalTasks / count($projects), 1) : 0.0;
+        $stats['averageTasksPerProject'] = \count($projects) > 0 
+            ? round($totalTasks / \count($projects), 1) 
+            : 0.0;
         $stats['totalTasks'] = $totalTasks;
 
         return $stats;
@@ -301,56 +300,51 @@ class ProjectManagerPerformanceCalculator
         $insights = [];
 
         // Overall performance insight
-        if ($overallScore >= 85) {
+        if ($overallScore >= 85) 
             $insights[] = "Exceptional project management performance! Consistently delivers high-quality projects.";
-        } elseif ($overallScore >= 70) {
+        elseif ($overallScore >= 70)
             $insights[] = "Good project management with solid track record. Some areas for improvement identified.";
-        } elseif ($overallScore >= 50) {
+        elseif ($overallScore >= 50)
             $insights[] = "Average performance with significant room for improvement in multiple areas.";
-        } else {
+        else
             $insights[] = "Performance needs immediate attention. Critical improvement required.";
-        }
 
         // Completion insights
         $completedCount = $completionScore['statusBreakdown'][WorkStatus::COMPLETED->value] ?? 0;
         $completionRate = ($completedCount / $statistics['total']) * 100;
-        if ($completionRate >= 80) {
+        if ($completionRate >= 80)
             $insights[] = "Strong project completion rate at {$completionRate}%.";
-        } elseif ($completionRate < 50) {
+        elseif ($completionRate < 50)
             $insights[] = "Low project completion rate ({$completionRate}%) - focus on delivering projects.";
-        }
 
         // Time management insights
         if ($timeScore['completedProjects'] > 0) {
             $onTimeCount = $timeScore['timePerformance']['onTime'] + $timeScore['timePerformance']['earlyDelivery'];
-            if ($onTimeCount >= $timeScore['completedProjects'] * 0.7) {
+            if ($onTimeCount >= $timeScore['completedProjects'] * 0.7) 
                 $insights[] = "Strong time management - majority of projects delivered on schedule.";
-            }
-            if ($timeScore['timePerformance']['severelyLate'] > 0) {
+
+            if ($timeScore['timePerformance']['severelyLate'] > 0) 
                 $insights[] = "Concern: Some projects severely delayed. Review planning and resource allocation.";
-            }
         }
 
         // Project progress insights
         if ($progressScore['evaluatedProjects'] > 0) {
             $avgProgress = $progressScore['score'];
-            if ($avgProgress >= 80) {
+            if ($avgProgress >= 80)
                 $insights[] = "Excellent progress tracking - projects are advancing steadily towards completion.";
-            } elseif ($avgProgress >= 60) {
+            elseif ($avgProgress >= 60)
                 $insights[] = "Good progress on active projects - maintain momentum to meet deadlines.";
-            } elseif ($avgProgress < 40) {
+            elseif ($avgProgress < 40)
                 $insights[] = "Warning: Low average progress across projects. Consider resource reallocation.";
-            }
-            
+                        
             $highProgressCount = $progressScore['progressDistribution']['highProgress'];
             $minimalProgressCount = $progressScore['progressDistribution']['minimalProgress'];
             
-            if ($minimalProgressCount > 0) {
+            if ($minimalProgressCount > 0)
                 $insights[] = "{$minimalProgressCount} project(s) with minimal progress (<25%) - immediate attention required.";
-            }
-            if ($highProgressCount >= $progressScore['evaluatedProjects'] * 0.6) {
+
+            if ($highProgressCount >= $progressScore['evaluatedProjects'] * 0.6)
                 $insights[] = "Strong execution - majority of projects showing high progress (≥75%).";
-            }
         }
 
         return $insights;
@@ -369,14 +363,12 @@ class ProjectManagerPerformanceCalculator
 
         // Completion recommendations
         $cancelledCount = $completionScore['statusBreakdown'][WorkStatus::CANCELLED->value] ?? 0;
-        if ($cancelledCount > 0) {
+        if ($cancelledCount > 0)
             $recommendations[] = "Investigate reasons for cancelled projects and implement preventive measures.";
-        }
 
         $delayedCount = $completionScore['statusBreakdown'][WorkStatus::DELAYED->value] ?? 0;
-        if ($delayedCount >= $statistics['total'] * 0.3) {
+        if ($delayedCount >= $statistics['total'] * 0.3) 
             $recommendations[] = "High number of delayed projects - review resource allocation and planning processes.";
-        }
 
         // Time management recommendations
         if ($timeScore['score'] < 70) {
@@ -394,9 +386,8 @@ class ProjectManagerPerformanceCalculator
             $minimalCount = $progressScore['progressDistribution']['minimalProgress'];
             $lowCount = $progressScore['progressDistribution']['lowProgress'];
             
-            if ($minimalCount > 0) {
+            if ($minimalCount > 0)
                 $recommendations[] = "Urgently address projects with minimal progress - identify blockers and reallocate resources.";
-            }
             
             if ($progressScore['score'] < 50) {
                 $recommendations[] = "Implement weekly progress reviews to identify and resolve bottlenecks early.";
@@ -410,7 +401,7 @@ class ProjectManagerPerformanceCalculator
         }
 
         // General recommendations
-        if (count($recommendations) === 0) {
+        if (\count($recommendations) === 0) {
             $recommendations[] = "Continue maintaining high standards of project management.";
             $recommendations[] = "Share best practices across the organization.";
             $recommendations[] = "Consider mentoring other project managers.";

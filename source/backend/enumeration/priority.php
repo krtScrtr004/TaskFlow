@@ -21,9 +21,9 @@ enum Priority: string {
      */
     public function getDisplayName(): string {
         return match ($this) {
-            self::LOW => ucwords(camelToSentenceCase(SELF::LOW->value)),
-            self::MEDIUM => ucwords(camelToSentenceCase(SELF::MEDIUM->value)),
-            self::HIGH => ucwords(camelToSentenceCase(SELF::HIGH->value)),
+            self::LOW       => ucwords(camelToSentenceCase(SELF::LOW->value)),
+            self::MEDIUM    => ucwords(camelToSentenceCase(SELF::MEDIUM->value)),
+            self::HIGH      => ucwords(camelToSentenceCase(SELF::HIGH->value)),
         };
     }
 
@@ -54,9 +54,9 @@ enum Priority: string {
     public static function badge(Priority $priority): string {
         $priorityName = $priority->getDisplayName();
         $class = match ($priority) {
-            self::LOW => 'green',
-            self::MEDIUM => 'yellow',
-            self::HIGH => 'red',
+            self::LOW       => 'green',
+            self::MEDIUM    => 'yellow',
+            self::HIGH      => 'red',
         };
 
         return <<<HTML

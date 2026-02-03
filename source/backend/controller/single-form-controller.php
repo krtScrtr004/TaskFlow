@@ -16,25 +16,25 @@ class SingleFormController implements Controller
 {
     private array $components = [
         'resetPassword' => [
-            'title' => 'Reset Your Password',
-            'description' => 'Enter your email address below and we will send you a link to reset your password.',
-            'form' => 'resetPassword',
-            'script' => ['single-form/reset-password/send-link']
+            'title'         => 'Reset Your Password',
+            'description'   => 'Enter your email address below and we will send you a link to reset your password.',
+            'form'          => 'resetPassword',
+            'script'        => ['single-form/reset-password/send-link']
         ],
         'changePassword' => [
-            'title' => 'Set Your Password',
-            'description' => 'Create a new password.',
-            'form' => 'changePassword',
-            'script' => [
+            'title'         => 'Set Your Password',
+            'description'   => 'Create a new password.',
+            'form'          => 'changePassword',
+            'script'        => [
                 'password-list-validator',
                 'single-form/change-password/submit'
             ]
         ],
         'addTask' => [
-            'title' => '',
-            'description' => 'Fill in the details below to add a new task.',
-            'form' => 'addTask',
-            'script' => [
+            'title'         => '',
+            'description'   => 'Fill in the details below to add a new task.',
+            'form'          => 'addTask',
+            'script'        => [
                 'add-worker-modal/task/new/add',
                 'add-worker-modal/task/new/open',
                 'single-form/add-task/submit',
@@ -82,9 +82,7 @@ class SingleFormController implements Controller
     public static function index(array $args = []): void
     {
         // For unauthenticated users, ensure session exists and CSRF token is set
-        if (!Session::isSet()) {
-            Session::create();
-        }
+        if (!Session::isSet()) Session::create();
 
         if (!Csrf::get()) {
             Csrf::generate();
@@ -125,9 +123,8 @@ class SingleFormController implements Controller
             } elseif ($page === 'changePassword') {
                 // Check token validity for change password page
                 $token = $_GET['token'];
-                if (!$token || !isset($token) || !trimOrNull($token)) {
-                    throw new ForbiddenException('Token not provided.');
-                }
+                if (!$token || !isset($token) || !trimOrNull($token)) 
+                    throw new ForbiddenException('Token not provided or invalid');
             }
 
             require_once VIEW_PATH . 'single-form.php';
@@ -157,21 +154,18 @@ class SingleFormController implements Controller
      */
     private function addTask(string $projectId): array
     {
-        if (!isset($projectId) && !trimOrNull($projectId)) {
-            throw new NotFoundException("Project ID is required to add a task.");
-        }
+        if (!isset($projectId) && !trimOrNull($projectId))
+            throw new NotFoundException("Project ID is required to add a task");
 
         $projectModel = new ProjectModel();
         $project = $projectModel->findById(UUID::fromString($projectId));
-        if (!$project) {
-            throw new NotFoundException("Project not found.");
-        }
+        if (!$project) 
+            throw new NotFoundException("Project not found");
 
         $phaseModel = new PhaseModel();
         $activePhase = $phaseModel->findOnGoingByProjectId($project->getId());
-        if (!$activePhase) {
-            throw new NotFoundException("No active phase found for the project.");
-        }
+        if (!$activePhase) 
+            throw new NotFoundException("No active phase found for the project");
 
         return [$project, $activePhase];
     }

@@ -71,7 +71,7 @@ class WorkValidator extends Validator
     public function validateMaxWorkers(int $workersCount): void
     {
         if ($workersCount < WORKER_COUNT_MIN || $workersCount > WORKER_COUNT_MAX) 
-            $this->errors[] = 'Maximum number of workers must be between ' . WORKER_COUNT_MIN . ' and ' . WORKER_COUNT_MAX . '.';
+            $this->addError('Maximum number of workers must be between ' . WORKER_COUNT_MIN . ' and ' . WORKER_COUNT_MAX);
     }
 
     /**
@@ -88,7 +88,7 @@ class WorkValidator extends Validator
     public function validateBudget(float $budget): void
     {
         if ($budget < BUDGET_MIN || $budget > BUDGET_MAX) 
-            $this->errors[] = 'Budget must be a number between ' . BUDGET_MIN . ' and ' . BUDGET_MAX . '.';
+            $this->addError('Budget must be a number between ' . BUDGET_MIN . ' and ' . BUDGET_MAX);
     }
 
     /**
@@ -105,7 +105,7 @@ class WorkValidator extends Validator
     public function validateContingencyRate(float $contingencyRate): void
     {
         if ($contingencyRate < CONTINGENCY_RATE_MIN || $contingencyRate > CONTINGENCY_RATE_MAX)
-            $this->errors[] = 'Contingency rate must be between ' . CONTINGENCY_RATE_MIN . '% and ' . CONTINGENCY_RATE_MAX . '%.';
+            $this->addError('Contingency rate must be between ' . CONTINGENCY_RATE_MIN . '% and ' . CONTINGENCY_RATE_MAX . '%');
     }
 
     /**
@@ -143,16 +143,16 @@ class WorkValidator extends Validator
     {
         
         if (checkdate((int) $startDateTime->format('m'), (int) $startDateTime->format('d'), (int) $startDateTime->format('Y')) === false)
-            $this->errors[] = 'Start date is not a valid date.';
+            $this->addError('Start date is not a valid date');
 
         if (!self::isValidYear((int) $startDateTime->format('Y')))
-            $this->errors[] = 'Start date year is not valid.';
+            $this->addError('Start date year is not valid');
 
         $yearFormat = (int) $startDateTime->format('Y');
         $min = YEAR_MIN;
         $max = YEAR_MAX;
         if ($yearFormat < $min || $yearFormat > $max)
-            $this->errors[] = "Start date year must be between {$min} and {$max}.";
+            $this->addError("Start date year must be between {$min} and {$max}");
     }
 
     /**
@@ -177,23 +177,23 @@ class WorkValidator extends Validator
      *
      * @return void
      */
-    public function validateCompletionDateTime(DateTime $completionDateTime, ?DateTime $startDateTime = null): void
+    public function validateCompletionDateTime(DateTime $completionDateTime, DateTime|null $startDateTime = null): void
     {
         if (checkdate((int) $completionDateTime->format('m'), (int) $completionDateTime->format('d'), (int) $completionDateTime->format('Y')) === false) 
-            $this->errors[] = 'Completion date is not a valid date.';
+            $this->addError('Completion date is not a valid date');
 
         $yearFormat = (int) $completionDateTime->format('Y');
         $min = YEAR_MIN;
         $max = YEAR_MAX;
 
         if (!self::isValidYear($yearFormat))
-            $this->errors[] = 'Completion date year is not valid.';
+            $this->addError('Completion date year is not valid');
 
         if ($startDateTime !== null && $completionDateTime <= $startDateTime)
-            $this->errors[] = 'Completion date must be after the start date.';
+            $this->addError('Completion date must be after the start date');
 
         if ($yearFormat < $min || $yearFormat > $max)
-            $this->errors[] = "Completion date year must be between {$min} and {$max}.";
+            $this->addError("Completion date year must be between {$min} and {$max}");
     }
 
     /**
@@ -222,7 +222,7 @@ class WorkValidator extends Validator
             'addBudget' => function (float $budget) use (&$currentBudget, $totalBudget) {
                 $currentBudget += $budget;
                 if ($currentBudget > $totalBudget)
-                    $this->errors[] = 'Total budget of ₱' . formatNumber($currentBudget) . ' exceeds the allowed budget of ₱' . formatNumber($totalBudget) . '.';
+                    $this->addError('Total budget of ₱' . formatNumber($currentBudget) . ' exceeds the allowed budget of ₱' . formatNumber($totalBudget));
             },
 
             'subtractBudget' => function (float $budget) use (&$currentBudget) {
@@ -232,7 +232,7 @@ class WorkValidator extends Validator
 
             'validateTotal' => function () use (&$currentBudget, $totalBudget) {
                 if ($currentBudget > $totalBudget)
-                    $this->errors[] = 'Total budget of ₱' . formatNumber($currentBudget) . ' exceeds the allowed budget of ₱' . formatNumber($totalBudget) . '.';
+                    $this->addError('Total budget of ₱' . formatNumber($currentBudget) . ' exceeds the allowed budget of ₱' . formatNumber($totalBudget));
             }
         ];
     }
@@ -259,32 +259,32 @@ class WorkValidator extends Validator
      * @return void
      */
     public function validateDateBounds(
-        ?DateTime $startDateTime,
-        ?DateTime $completionDateTime,
-        ?DateTime $boundStartDateTime,
-        ?DateTime $boundCompletionDateTime,
+        DateTime|null $startDateTime,
+        DateTime|null $completionDateTime,
+        DateTime|null $boundStartDateTime,
+        DateTime|null $boundCompletionDateTime,
         string $context = 'Project'
     ): void {
         $context = ucwords(trim($context));
 
         if ($startDateTime === null || $completionDateTime === null) {
-            $this->errors[] = 'Start date and completion date are required.';
+            $this->addError('Start date and completion date are required');
             return;
         }
 
         if ($boundStartDateTime === null || $boundCompletionDateTime === null) {
-            $this->errors[] = $context . ' start date and completion date are required.';
+            $this->addError($context . ' start date and completion date are required');
             return;
         }
 
         if ($startDateTime < $boundStartDateTime)
-            $this->errors[] = 'Start date cannot be before ' . $context . ' start date (' . formatDateTime($boundStartDateTime, 'Y-m-d') . ').';
+            $this->addError('Start date cannot be before ' . $context . ' start date (' . formatDateTime($boundStartDateTime, 'Y-m-d') . ')');
 
         if ($startDateTime > $boundCompletionDateTime)
-            $this->errors[] = 'Start date cannot be after ' . $context . ' completion date (' . formatDateTime($boundCompletionDateTime, 'Y-m-d') . ').';
+            $this->addError('Start date cannot be after ' . $context . ' completion date (' . formatDateTime($boundCompletionDateTime, 'Y-m-d') . ')');
 
         if ($completionDateTime > $boundCompletionDateTime)
-            $this->errors[] = 'Completion date cannot be after ' . $context . ' completion date (' . formatDateTime($boundCompletionDateTime, 'Y-m-d') . ').';
+            $this->addError('Completion date cannot be after ' . $context . ' completion date (' . formatDateTime($boundCompletionDateTime, 'Y-m-d') . ')');
     }
 
     // ------------------------------------------------------------------------------------------------------------------------------ //

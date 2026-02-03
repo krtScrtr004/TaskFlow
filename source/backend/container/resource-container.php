@@ -61,12 +61,11 @@ class ResourceContainer extends Container
     public function add(mixed $item): void
     {
         if (!$item instanceof TaskResource && !$item instanceof TaskWorker) 
-            throw new InvalidArgumentException('Only TaskResource or TaskWorker instances can be added to ResourceContainer.');
+            throw new InvalidArgumentException('Only TaskResource or TaskWorker instances can be added to ResourceContainer');
 
-        if ($item instanceof TaskResource)
-            $this->resources[$this->buildId($item)] = $item;
-        else
-            $this->workers->add($item);
+        if ($item instanceof TaskResource) $this->resources[$this->buildId($item)] = $item;
+        else $this->workers->add($item);
+
         $this->items[$this->buildId($item)] = $item;
     }
 
@@ -86,13 +85,11 @@ class ResourceContainer extends Container
      */
     public function remove(mixed $item): void
     {
-        if (!$item instanceof TaskResource && !$item instanceof TaskWorker)
-            throw new InvalidArgumentException('Only TaskResource or TaskWorker instances can be removed from ResourceContainer.');
+        if (!$item instanceof TaskResource && !$item instanceof TaskWorker) throw new InvalidArgumentException('Only TaskResource or TaskWorker instances can be removed from ResourceContainer');
 
-        if ($item instanceof TaskResource)
-            unset($this->resources[$this->buildId($item)]);
-        else
-            $this->workers->remove($item);
+        if ($item instanceof TaskResource) unset($this->resources[$this->buildId($item)]);
+        else $this->workers->remove($item);
+
         unset($this->items[$this->buildId($item)]);
     }
 
@@ -113,7 +110,7 @@ class ResourceContainer extends Container
     public function contains(mixed $item): bool
     {
         if (!$item instanceof TaskResource && !$item instanceof TaskWorker)
-            throw new InvalidArgumentException('Only TaskResource or TaskWorker instances can be checked in ResourceContainer.');
+            throw new InvalidArgumentException('Only TaskResource or TaskWorker instances can be checked in ResourceContainer');
 
         $id = $this->buildId($item);
         $isPresent = $item instanceof TaskResource
@@ -266,19 +263,15 @@ class ResourceContainer extends Container
      * by appending a type-specific suffix to its ID. The suffix is determined based
      * on whether the item is a TaskResource or TaskWorker instance.
      *
-     * @param mixed $item The TaskResource or TaskWorker instance
+     * @param TaskResource|TaskWorker $item The TaskResource or TaskWorker instance
      *
      * @throws InvalidArgumentException If $item is not a TaskResource or TaskWorker instance
      *
      * @return string The unique identifier string
      */
-    private function buildId(mixed $item): string
+    private function buildId(TaskResource|TaskWorker $item): string
     {
-        if ($item instanceof TaskResource)
-            return (string) $item->getId() . self::RESOURCE_SUFFIX;
-        elseif ($item instanceof TaskWorker)
-            return (string) $item->getId() . self::TASK_WORKER_SUFFIX;
-        else
-            throw new InvalidArgumentException('Item must be an instance of TaskResource or TaskWorker.');
+        if ($item instanceof TaskResource) return (string) $item->getId() . self::RESOURCE_SUFFIX;
+        else return (string) $item->getId() . self::TASK_WORKER_SUFFIX;
     }
 }

@@ -136,9 +136,7 @@ class ProjectWorkerModel extends Model
             $statement->execute($params);
             $result = $statement->fetchAll();
 
-            if (!$this->hasData($result)) {
-                return null;
-            }
+            if (!$this->hasData($result)) return null;
 
             $workers = new WorkerContainer();
             foreach ($result as $row) {
@@ -244,7 +242,7 @@ class ProjectWorkerModel extends Model
             // Don't filter by project_id when searching for unassigned workers
             // The NOT EXISTS clause handles the assignment check globally
             if ($projectId && $status !== WorkerStatus::UNASSIGNED) {
-                $where[] = is_int($projectId)
+                $where[] = \is_int($projectId)
                     ? "pw.project_id = :projectId"
                     : "pw.project_id = (SELECT id FROM `project` WHERE public_id = :projectId)";
                 $params[':projectId'] = is_int($projectId)
@@ -286,7 +284,7 @@ class ProjectWorkerModel extends Model
                             WHERE 
                                 pw3.worker_id = u.id
                             AND 
-                                pw3.project_id = " . (is_int($projectId) 
+                                pw3.project_id = " . (\is_int($projectId) 
                                 ? ":projectIdTermCheck" 
                                 : "(SELECT id 
                                     FROM 
@@ -298,7 +296,7 @@ class ProjectWorkerModel extends Model
                                 pw3.status = :terminatedStatus
                         )";
                         $params[':terminatedStatus'] = WorkerStatus::TERMINATED->value;
-                        $params[':projectIdTermCheck'] = is_int($projectId)
+                        $params[':projectIdTermCheck'] = \is_int($projectId)
                             ? $projectId
                             : UUID::toBinary($projectId);
                     }
@@ -330,9 +328,7 @@ class ProjectWorkerModel extends Model
             $statement->execute($params);
             $result = $statement->fetchAll();
 
-            if (!$this->hasData($result)) {
-                return null;
-            }
+            if (!$this->hasData($result)) return null;
 
             $workers = new WorkerContainer();
             foreach ($result as $row) {
@@ -374,9 +370,8 @@ class ProjectWorkerModel extends Model
         int|UUID|null $projectId = null, 
         bool $includeHistory = false): ?Worker
     {
-        if ($projectId && is_int($projectId) && $projectId < 1) {
-            throw new InvalidArgumentException('Invalid project ID provided.');
-        }
+        if ($projectId && \is_int($projectId) && $projectId < 1) 
+            throw new InvalidArgumentException('Invalid project ID provided');
 
         try {
             // TODO: Separate this into its own method to reduce complexity
@@ -453,7 +448,7 @@ class ProjectWorkerModel extends Model
                         ) . " "
             : '';
 
-            $where = (is_int($workerId) ? "u.id" : "u.public_id") . " = :workerId";
+            $where = (\is_int($workerId) ? "u.id" : "u.public_id") . " = :workerId";
             $params = [
                 ':workerId' => ($workerId instanceof UUID) 
                     ? UUID::toBinary($workerId)
@@ -461,7 +456,7 @@ class ProjectWorkerModel extends Model
             ];
 
             if ($projectId) {
-                $where .= " AND " . (is_int($projectId) ? "p.id" : "p.public_id") . " = :projectId";
+                $where .= " AND " . (\is_int($projectId) ? "p.id" : "p.public_id") . " = :projectId";
                 $params[':projectId'] = ($projectId instanceof UUID) 
                     ? UUID::toBinary($projectId)
                     : $projectId;
@@ -572,9 +567,7 @@ class ProjectWorkerModel extends Model
             $statement->execute($params);
             $result = $statement->fetch();
 
-            if (!$this->hasData($result)) {
-                return null;
-            }
+            if (!$this->hasData($result)) return null;
 
             $result['additional_info'] = [
                     'totalTasks'        => (int)$result['total_tasks'],
@@ -643,18 +636,14 @@ class ProjectWorkerModel extends Model
         bool $includeHistory = false
     ): ?WorkerContainer
     {
-        if (empty($workerIds)) {
-            throw new InvalidArgumentException('Worker IDs array cannot be empty.');
-        }
-
-        if ($projectId && is_int($projectId) && $projectId < 1) {
-            throw new InvalidArgumentException('Invalid project ID provided.');
-        }
+        if (empty($workerIds)) throw new InvalidArgumentException('Worker IDs array cannot be empty');
+        if ($projectId && \is_int($projectId) && $projectId < 1) 
+            throw new InvalidArgumentException('Invalid project ID provided');
 
         try {
             // Determine if workerIds are integers or UUIDs based on first element
             $firstWorkerId = $workerIds[0];
-            $useIntId = is_int($firstWorkerId);
+            $useIntId = \is_int($firstWorkerId);
 
             // TODO: Separate this into its own method to reduce complexity
 
@@ -747,7 +736,7 @@ class ProjectWorkerModel extends Model
             $where = "$workerIdColumn IN (" . implode(', ', $workerIdPlaceholders) . ")";
 
             if ($projectId) {
-                $where .= " AND " . (is_int($projectId) ? "p.id" : "p.public_id") . " = :projectId";
+                $where .= " AND " . (\is_int($projectId) ? "p.id" : "p.public_id") . " = :projectId";
                 $params[':projectId'] = ($projectId instanceof UUID) 
                     ? UUID::toBinary($projectId)
                     : $projectId;
@@ -757,7 +746,7 @@ class ProjectWorkerModel extends Model
 
             $query = 
                 "SELECT 
-                    u.id,
+                    u.id,`
                     u.public_id,
                     u.first_name,
                     u.middle_name,
@@ -860,9 +849,7 @@ class ProjectWorkerModel extends Model
             $statement->execute($params);
             $results = $statement->fetchAll();
 
-            if (!$this->hasData($results)) {
-                return null;
-            }
+            if (!$this->hasData($results)) return null;
 
             $workers = new WorkerContainer();
             foreach ($results as $result) {
@@ -940,12 +927,11 @@ class ProjectWorkerModel extends Model
             'offset' => 0
         ]): ?WorkerContainer
     {
-        if (is_int($projectId) && $projectId < 1) {
-            throw new InvalidArgumentException('Invalid project ID provided.');
-        }
+        if (\is_int($projectId) && $projectId < 1) 
+            throw new InvalidArgumentException('Invalid project ID provided');
 
         try {
-            $whereClause = (is_int($projectId) 
+            $whereClause = (\is_int($projectId) 
                 ? "p.id" 
                 : "p.public_id ") . " = :id 
                 AND pw.status != :unassignedStatus 
@@ -985,13 +971,8 @@ class ProjectWorkerModel extends Model
      */
     public function all(int $offset = 0, int $limit = 10): ?WorkerContainer
     {
-        if ($offset < 0) {
-            throw new InvalidArgumentException('Invalid offset value.');
-        }
-
-        if ($limit < 1) {
-            throw new InvalidArgumentException('Invalid limit value.');
-        }
+        if ($offset < 0) throw new InvalidArgumentException('Invalid offset value');
+        if ($limit < 1) throw new InvalidArgumentException('Invalid limit value');
 
         try {
             $paramOptions = [
@@ -1042,9 +1023,7 @@ class ProjectWorkerModel extends Model
      */
     public function createMultiple(int|UUID $projectId, WorkerContainer $workers): bool
     {
-        if (is_int($projectId) && $projectId < 1) {
-            throw new InvalidArgumentException('Invalid project ID provided.');
-        }
+        if (\is_int($projectId) && $projectId < 1) throw new InvalidArgumentException('Invalid project ID provided');
 
         $projectId = ($projectId instanceof UUID)
             ? UUID::toBinary($projectId)
@@ -1106,13 +1085,8 @@ class ProjectWorkerModel extends Model
      */
     public function worksOn(int|UUID $projectId, int|UUID $userId): bool
     {
-        if (is_int($projectId) && $projectId < 1) {
-            throw new InvalidArgumentException('Invalid project ID provided.');
-        }
-
-        if (is_int($userId) && $userId < 1) {
-            throw new InvalidArgumentException('Invalid user ID provided.');
-        }
+        if (\is_int($projectId) && $projectId < 1) throw new InvalidArgumentException('Invalid project ID provided');
+        if (\is_int($userId) && $userId < 1) throw new InvalidArgumentException('Invalid user ID provided');
 
         try {
                 $query = 
@@ -1128,10 +1102,10 @@ class ProjectWorkerModel extends Model
                 ON 
                     pw.worker_id = u.id
                 WHERE 
-                    " . (is_int($projectId) ? "p.id" : "p.public_id") . " = :projectId
+                    " . (\is_int($projectId) ? "p.id" : "p.public_id") . " = :projectId
                 AND 
                     (
-                        " . (is_int($userId) ? "u.id" : "u.public_id") . " = :userId1
+                        " . (\is_int($userId) ? "u.id" : "u.public_id") . " = :userId1
                     OR
                         p.manager_id = :userId2
                     )
@@ -1209,43 +1183,38 @@ class ProjectWorkerModel extends Model
      */
 	public function saveMultiple(int|UUID $projectId, array $workers): bool
 	{
-        if (is_int($projectId) && $projectId < 1) {
-            throw new InvalidArgumentException('Invalid project ID provided.');
-        }
+        if (\is_int($projectId) && $projectId < 1) throw new InvalidArgumentException('Invalid project ID provided');
         
         try {
             foreach ($workers as $data) {
-                if (!isset($data['id']) && !isset($data['publicId'])) {
-                    throw new InvalidArgumentException('Worker ID is required.');
-                }
+                if (!isset($data['id']) && !isset($data['publicId'])) 
+                    throw new InvalidArgumentException('Worker ID is required');
 
                 $id = $data['id'] 
                     ? (int) $data['id']
                     : UUID::fromString($data['publicId']);
-                if (is_int($id) && $id < 1) { 
-                    throw new InvalidArgumentException('Invalid worker ID provided.');                    
+                if (\is_int($id) && $id < 1) {
+                    throw new InvalidArgumentException('Invalid worker ID provided');                    
                 }
 
                 $updateFields = [];
                 $params = [];
                 $whereParts = [];
 
-                if (is_int($projectId)) {
-                    $whereParts[] = 'project_id = :projectId';
-                    $params[':projectId'] = $projectId;
-                } else {
-                    $whereParts[] = 'project_id = (SELECT id FROM `project` WHERE public_id = :projectId)';
-                    $params[':projectId'] = UUID::toBinary($projectId);
-                }
+                $whereParts[] = (\is_int($projectId))
+                    ? 'project_id = :projectId'
+                    : 'project_id = (SELECT id FROM `project` WHERE public_id = :projectId)';
+                $params[':projectId'] = (\is_int($projectId))
+                    ? $projectId
+                    : UUID::toBinary($projectId);
 
-                if (is_int($id)) {
-                    $whereParts[] = 'worker_id = :id';
-                    $params[':id'] = $id;
-                } else {
-                    $whereParts[] = 'worker_id = (SELECT id FROM `user` WHERE public_id = :id)';
-                    $params[':id'] = UUID::toBinary($id);
-                }
-
+                $whereParts[] = (\is_int($id))
+                    ? 'worker_id = :id'
+                    : 'worker_id = (SELECT id FROM `user` WHERE public_id = :id)';
+                $params[':id'] = (\is_int($id))
+                    ? $id
+                    : UUID::toBinary($id);
+                
                 if (isset($data['defaultRate'])) {
                     $updateFields[] = 'default_rate = :defaultRate';
                     $params[':defaultRate'] = $data['defaultRate'];
@@ -1259,9 +1228,7 @@ class ProjectWorkerModel extends Model
                 }
 
                 // Nothing to update
-                if (empty($updateFields)) {
-                    continue;
-                }
+                if (empty($updateFields)) continue;
 
                 $where = implode(' AND ', $whereParts);
                 $query = 'UPDATE `project_worker` SET ' . implode(', ', $updateFields) . ' WHERE ' . $where;
@@ -1303,28 +1270,19 @@ class ProjectWorkerModel extends Model
      */
     public function delete(mixed $data): bool
     {
-        if (!isset($data['projectId'])) {
-            throw new InvalidArgumentException('Project ID is required.');
-        }
-
-        if (is_int($data['projectId']) && $data['projectId'] < 1) {
-            throw new InvalidArgumentException('Invalid project ID provided.');
-        }
-
-        if (!isset($data['workerId'])) {
-            throw new InvalidArgumentException('Worker ID is required.');
-        }
-
-        if (is_int($data['workerId']) && $data['workerId'] < 1) {
-            throw new InvalidArgumentException('Invalid worker ID provided.');
-        }
+        if (!isset($data['projectId'])) throw new InvalidArgumentException('Project ID is required');
+        if (\is_int($data['projectId']) && $data['projectId'] < 1) 
+            throw new InvalidArgumentException('Invalid project ID provided');
+        if (!isset($data['workerId'])) throw new InvalidArgumentException('Worker ID is required');
+        if (\is_int($data['workerId']) && $data['workerId'] < 1) 
+            throw new InvalidArgumentException('Invalid worker ID provided');
 
         try {
             $query = 
                 "DELETE FROM
                     `project_worker`
                 WHERE 
-                    project_id = " . (is_int($data['projectId']) ? ':projectId' : '(
+                    project_id = " . (\is_int($data['projectId']) ? ':projectId' : '(
                         SELECT 
                             id 
                         FROM 
@@ -1332,7 +1290,7 @@ class ProjectWorkerModel extends Model
                         WHERE 
                             public_id = :projectId) ') . "
                 AND 
-                    worker_id = " . (is_int($data['workerId']) ? ':workerId' : '(
+                    worker_id = " . (\is_int($data['workerId']) ? ':workerId' : '(
                         SELECT 
                             id 
                         FROM 

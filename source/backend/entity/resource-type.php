@@ -25,7 +25,7 @@ class ResourceType implements Entity {
         string $unit,
         float $defaultRate,
         DateTime $createdAt,
-        ?DateTime $updatedAt = null
+        DateTime|null $updatedAt = null
     ) {
         $this->resourceValidator = new ResourceValidator();
         $this->resourceValidator->validateMultiple([
@@ -111,7 +111,7 @@ class ResourceType implements Entity {
      * 
      * @return DateTime|null The last updated date of the Resource Type, or null if never updated.
      */
-    public function getUpdatedAt(): ?DateTime {
+    public function getUpdatedAt(): DateTime|null {
         return $this->updatedAt;
     }
 
@@ -125,9 +125,7 @@ class ResourceType implements Entity {
      * @throws ValidationException If the ID is not a positive integer.
      */
     public function setId(int $id): void {
-        if ( $id < 0) {
-            throw new ValidationException('ID must be a positive integer.');
-        }
+        if ( $id < 0) throw new ValidationException('Invalid ID');
         $this->id = $id;
     }
 
@@ -140,12 +138,11 @@ class ResourceType implements Entity {
      */
     public function setName(string $name): void {
         $this->resourceValidator->validateName(trimOrNull($name));
-        if ($this->resourceValidator->hasErrors()) {
+        if ($this->resourceValidator->hasErrors())
             throw new ValidationException(
-                'Invalid Resource Type Name',
+                'Invalid Name',
                 $this->resourceValidator->getErrors()
             );
-        }
         $this->name = $name;
     }
 
@@ -158,12 +155,11 @@ class ResourceType implements Entity {
      */
     public function setDescription(string $description): void {
         $this->resourceValidator->validateDescription(trimOrNull($description));
-        if ($this->resourceValidator->hasErrors()) {
+        if ($this->resourceValidator->hasErrors()) 
             throw new ValidationException(
-                'Invalid Resource Type Description',
+                'Invalid Description',
                 $this->resourceValidator->getErrors()
             );
-        }
         $this->description = $description;
     }
 
@@ -176,12 +172,11 @@ class ResourceType implements Entity {
      */
     public function setUnit(string $unit): void {
         $this->resourceValidator->validateUnit(trimOrNull($unit));
-        if ($this->resourceValidator->hasErrors()) {
+        if ($this->resourceValidator->hasErrors())
             throw new ValidationException(
-                'Invalid Resource Type Unit',
+                'Invalid Unit',
                 $this->resourceValidator->getErrors()
             );
-        }
         $this->unit = $unit;
     }
 
@@ -194,12 +189,11 @@ class ResourceType implements Entity {
      */
     public function setDefaultRate(float $defaultRate): void {
         $this->resourceValidator->validateDefaultRate($defaultRate);
-        if ($this->resourceValidator->hasErrors()) {
+        if ($this->resourceValidator->hasErrors())
             throw new ValidationException(
-                'Invalid Resource Type Default Rate',
+                'Invalid Default Rate',
                 $this->resourceValidator->getErrors()
             );
-        }
         $this->defaultRate = $defaultRate;
     }
 
@@ -297,7 +291,7 @@ class ResourceType implements Entity {
                 : null
         );
     }
-
+    
     /**
      * Converts the ResourceType instance to an array.
      * 

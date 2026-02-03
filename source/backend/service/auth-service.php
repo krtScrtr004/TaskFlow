@@ -28,9 +28,8 @@ class AuthService
      */
     public function sendLinkForPasswordReset(string $email, string $token): bool
     {
-        if (!trimOrNull($email) || !trimOrNull($token)) {
+        if (!trimOrNull($email) || !trimOrNull($token))
             return false;
-        }
 
         $link = REDIRECT_PATH . 'change-password?token=' . urlencode($token);
 
@@ -66,9 +65,8 @@ class AuthService
      */
     public function sendLinkForEmailVerification(string $email, string $token): bool
     {
-        if (!trimOrNull($email) || !trimOrNull($token)) {
+        if (!trimOrNull($email) || !trimOrNull($token))
             return false;
-        }
 
         $link = REDIRECT_PATH . 'confirm-email?token=' . urlencode($token);
 
@@ -98,11 +96,5 @@ class AuthService
     private function sendTemporaryLink(string $email, string $subject, string $body): bool
     {
         return Email::sendHtml($email, $subject, $body);
-        // return Email::sendPlain($_ENV['MAIL_USERNAME'], "Concern from $name", $message, [
-        //     'userFrom' => 'TaskFlow Support',
-        //     'userTo' => 'TaskFlow Support',
-        //     'replyTo' => $email,
-        //     'replyToName' => $name
-        // ]);
     }
 }

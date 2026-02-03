@@ -88,30 +88,32 @@ class Project implements Entity
         WorkStatus $status,
 
         // Optional
-        ?string $description = null,
+        string|null $description = null,
         float $budget = BUDGET_MIN,
         int $maxWorkers = WORKER_COUNT_MIN,
-        ?TaskContainer $tasks = null,
-        ?WorkerContainer $workers = null,
-        ?PhaseContainer $phases = null,
-        ?DateTime $actualCompletionDateTime = null,
-        ?DateTime $createdAt = null,
+        TaskContainer|null $tasks = null,
+        WorkerContainer|null $workers = null,
+        PhaseContainer|null $phases = null,
+        DateTime|null $actualCompletionDateTime = null,
+        DateTime|null $createdAt = null,
         array $additionalInfo = []
     ) {
         try {
             $this->workValidator = new WorkValidator();
             $this->workValidator->validateMultiple([
-                'name' => $name,
-                'description' => $description,
-                'budget' => $budget,
-                'maxWorkers' => $maxWorkers,
-                'startDateTime' => $startDateTime,
-                'completionDateTime' => $completionDateTime
+                'name'                  => $name,
+                'description'           => $description,
+                'budget'                => $budget,
+                'maxWorkers'            => $maxWorkers,
+                'startDateTime'         => $startDateTime,
+                'completionDateTime'    => $completionDateTime
             ]);
 
-            if ($this->workValidator->hasErrors()) {
-                throw new ValidationException("Project Validation Failed", $this->workValidator->getErrors());
-            }
+            if ($this->workValidator->hasErrors())
+                throw new ValidationException(
+                    'Project Validation Failed',
+                    $this->workValidator->getErrors()
+                );
         } catch (ValidationException $th) {
             throw $th;
         }
@@ -181,7 +183,7 @@ class Project implements Entity
      *
      * @return TaskContainer|null The container with the project's tasks or null if not set
      */
-    public function getTasks(): ?TaskContainer
+    public function getTasks(): TaskContainer|null
     {
         return $this->tasks;
     }
@@ -191,7 +193,7 @@ class Project implements Entity
      *
      * @return WorkerContainer|null The container with the project's workers or null if not set
      */
-    public function getWorkers(): ?WorkerContainer
+    public function getWorkers(): WorkerContainer|null
     {
         return $this->workers;
     }
@@ -201,7 +203,7 @@ class Project implements Entity
      *
      * @return PhaseContainer|null The container with the project's phases or null if not set
      */
-    public function getPhases(): ?PhaseContainer
+    public function getPhases(): PhaseContainer|null
     {
         return $this->phases;
     }
@@ -261,7 +263,7 @@ class Project implements Entity
      *
      * @return DateTime|null The DateTime object representing when the project was completed, or null if not completed
      */
-    public function getActualCompletionDateTime(): ?DateTime
+    public function getActualCompletionDateTime(): DateTime|null
     {
         return $this->actualCompletionDateTime;
     }
@@ -327,9 +329,7 @@ class Project implements Entity
      */
     public function setId(int $id): void
     {
-        if ($id < 0) {
-            throw new ValidationException("Invalid project ID");
-        }
+        if ($id < 0) throw new ValidationException('Invalid ID');
         $this->id = $id;
     }
 
@@ -344,9 +344,11 @@ class Project implements Entity
     {
         $uuidValidator = new UuidValidator();
         $uuidValidator->validateUuid($publicId);
-        if ($uuidValidator->hasErrors()) {
-            throw new ValidationException("Invalid public ID", $uuidValidator->getErrors());
-        }
+        if ($uuidValidator->hasErrors())
+            throw new ValidationException(
+                'Invalid Public ID',
+                $uuidValidator->getErrors()
+            );
         $this->publicId = $publicId;
     }
 
@@ -360,9 +362,11 @@ class Project implements Entity
     public function setName(string $name): void
     {
         $this->workValidator->validateName(trim($name));
-        if ($this->workValidator->hasErrors()) {
-            throw new ValidationException("Invalid project name", $this->workValidator->getErrors());
-        }
+        if ($this->workValidator->hasErrors())
+            throw new ValidationException(
+                'Invalid Name',
+                $this->workValidator->getErrors()
+            );
         $this->name = trimOrNull($name);
     }
 
@@ -373,18 +377,18 @@ class Project implements Entity
      * @throws ValidationException If the description is invalid
      * @return void
      */
-    public function setDescription(?string $description): void
+    public function setDescription(string|null $description): void
     {
-        if (!$description) {
-            $this->description = null;
-            return;
+        $tempDescription = $description ? trimOrNull($description) : null;
+        if ($tempDescription) {
+            $this->workValidator->validateDescription($tempDescription);
+            if ($this->workValidator->hasErrors())
+                throw new ValidationException(
+                'Invalid Description', 
+                $this->workValidator->getErrors()
+            );
         }
-
-        $this->workValidator->validateDescription(trim($description));
-        if ($this->workValidator->hasErrors()) {
-            throw new ValidationException("Invalid project description", $this->workValidator->getErrors());
-        }
-        $this->description = trimOrNull($description);
+        $this->description = $tempDescription;
     }
 
     /**
@@ -408,9 +412,11 @@ class Project implements Entity
     public function setMaxWorkers(int $maxWorkers): void
     {
         $this->workValidator->validateMaxWorkers($maxWorkers);
-        if ($this->workValidator->hasErrors()) {
-            throw new ValidationException("Invalid max workers", $this->workValidator->getErrors());
-        }
+        if ($this->workValidator->hasErrors())
+            throw new ValidationException(
+                'Invalid Max Workers', 
+                $this->workValidator->getErrors()
+            );
         $this->maxWorkers = $maxWorkers;
     }
 
@@ -424,9 +430,11 @@ class Project implements Entity
     public function setBudget(float $budget): void
     {
         $this->workValidator->validateBudget($budget);
-        if ($this->workValidator->hasErrors()) {
-            throw new ValidationException("Invalid project budget", $this->workValidator->getErrors());
-        }
+        if ($this->workValidator->hasErrors())
+            throw new ValidationException(
+                "Invalid Budget", 
+                $this->workValidator->getErrors()
+            );
         $this->budget = $budget;
     }
 
@@ -436,7 +444,7 @@ class Project implements Entity
      * @param TaskContainer|null $tasks Container of tasks to set, or null to clear tasks
      * @return void
      */
-    public function setTasks(?TaskContainer $tasks): void
+    public function setTasks(TaskContainer|null $tasks): void
     {
         $this->tasks = $tasks;
     }
@@ -447,7 +455,7 @@ class Project implements Entity
      * @param WorkerContainer|null $workers Container of workers to assign to the project, or null to clear workers
      * @return void
      */
-    public function setWorkers(?WorkerContainer $workers): void
+    public function setWorkers(WorkerContainer|null $workers): void
     {
         $this->workers = $workers;
     }
@@ -458,7 +466,7 @@ class Project implements Entity
      * @param PhaseContainer|null $phases Container of phases to set, or null to clear phases
      * @return void
      */
-    public function setPhases(?PhaseContainer $phases): void
+    public function setPhases(PhaseContainer|null $phases): void
     {
         $this->phases = $phases;
     }
@@ -466,16 +474,18 @@ class Project implements Entity
     /**
      * Sets the project start date and time.
      *
-     * @param DateTime $startDateTime The start date and time to set (cannot be in the past)
+     * @param DateTime|null $startDateTime The start date and time to set (cannot be in the past)
      * @throws ValidationException If the start date is invalid or in the past
      * @return void
      */
     public function setStartDateTime(DateTime $startDateTime): void
     {
         $this->workValidator->validateStartDateTime($startDateTime);
-        if ($this->workValidator->hasErrors()) {
-            throw new ValidationException("Invalid start date", $this->workValidator->getErrors());
-        }
+        if ($this->workValidator->hasErrors())
+            throw new ValidationException(
+                'Invalid Start Date', 
+                $this->workValidator->getErrors()
+            );
         $this->startDateTime = $startDateTime;
     }
 
@@ -489,9 +499,11 @@ class Project implements Entity
     public function setCompletionDateTime(DateTime $completionDateTime): void
     {
         $this->workValidator->validateCompletionDateTime($completionDateTime, $this->startDateTime);
-        if ($this->workValidator->hasErrors()) {
-            throw new ValidationException("Invalid completion date", $this->workValidator->getErrors());
-        }
+        if ($this->workValidator->hasErrors()) 
+            throw new ValidationException(
+                'Invalid Completion Date', 
+                $this->workValidator->getErrors()
+            );
         $this->completionDateTime = $completionDateTime;
     }
 
@@ -501,7 +513,7 @@ class Project implements Entity
      * @param DateTime|null $actualCompletionDateTime The actual completion date and time, or null if not completed
      * @return void
      */
-    public function setActualCompletionDateTime(?DateTime $actualCompletionDateTime): void
+    public function setActualCompletionDateTime(DateTime|null $actualCompletionDateTime): void
     {
         $this->actualCompletionDateTime = $actualCompletionDateTime;
     }
@@ -524,11 +536,9 @@ class Project implements Entity
      * @throws ValidationException If the creation date is in the future
      * @return void
      */
-    public function setCreatedAt(?DateTime $createdAt): void
+    public function setCreatedAt(DateTime|null $createdAt): void
     {
-        if ($createdAt && $createdAt > new DateTime()) {
-            throw new ValidationException("Invalid creation date");
-        }
+        if ($createdAt && $createdAt > new DateTime()) throw new ValidationException('Invalid Creation Date');
         $this->createdAt = $createdAt;
     }
 
@@ -547,7 +557,7 @@ class Project implements Entity
      */
     public function additionalInfoContains(int|string $key): bool
     {
-        return array_key_exists($key, $this->additionalInfo);
+        return \array_key_exists($key, $this->additionalInfo);
     }
 
     /**
@@ -581,9 +591,7 @@ class Project implements Entity
      */
     public function addPhase(Phase $phase): void
     {
-        if (!$this->phases) {
-            $this->phases = new PhaseContainer();
-        }
+        if (!$this->phases) $this->phases = new PhaseContainer();
         $this->phases->add($phase);
     }
 
@@ -600,9 +608,7 @@ class Project implements Entity
      */
     public function addTask(Task $task): void
     {
-        if (!$this->tasks) {
-            $this->tasks = new TaskContainer();
-        }
+        if (!$this->tasks) $this->tasks = new TaskContainer();
         $this->tasks->add($task);
     }
 
@@ -620,9 +626,7 @@ class Project implements Entity
      */
     public function addWorker(Worker $worker): void
     {
-        if (!$this->workers) {
-            $this->workers = new WorkerContainer();
-        }
+        if (!$this->workers) $this->workers = new WorkerContainer();
         $this->workers->add($worker);
     }
 
@@ -688,59 +692,49 @@ class Project implements Entity
         ];
 
         // Handle UUID conversion
-        if (isset($data['publicId']) && !($data['publicId'] instanceof UUID)) {
+        if (isset($data['publicId']) && !($data['publicId'] instanceof UUID))
             $defaults['publicId'] = UUID::tryFromString(trimOrNull($data['publicId']));
-        }
 
         // Handle Project Manager conversion
-        if (isset($data['manager']) && is_array($data['manager'])) {
+        if (isset($data['manager']) && is_array($data['manager']))
             $defaults['manager'] = ProjectManager::createPartial($data['manager']);
-        }
 
         // Handle TaskContainer conversion
-        if (isset($data['tasks']) && !($data['tasks'] instanceof TaskContainer)) {
+        if (isset($data['tasks']) && !($data['tasks'] instanceof TaskContainer))
             $defaults['tasks'] = is_array($data['tasks'])
                 ? TaskContainer::fromArray($data['tasks'])
                 : null;
-        }
 
         // Handle WorkerContainer conversion
-        if (isset($data['workers']) && !($data['workers'] instanceof WorkerContainer)) {
+        if (isset($data['workers']) && !($data['workers'] instanceof WorkerContainer))
             $defaults['workers'] = is_array($data['workers'])
                 ? WorkerContainer::fromArray($data['workers'])
                 : new WorkerContainer();
-        }
 
         // Handle PhaseContainer conversion
-        if (isset($data['phases']) && !($data['phases'] instanceof PhaseContainer)) {
+        if (isset($data['phases']) && !($data['phases'] instanceof PhaseContainer))
             $defaults['phases'] = is_array($data['phases'])
                 ? PhaseContainer::fromArray($data['phases'])
                 : null;
-        }
 
         // Handle DateTime conversions
-        if (isset($data['startDateTime']) && !($data['startDateTime'] instanceof DateTime)) {
+        if (isset($data['startDateTime']) && !($data['startDateTime'] instanceof DateTime))
             $defaults['startDateTime'] = new DateTime(trimOrNull($data['startDateTime']));
-        }
 
-        if (isset($data['completionDateTime']) && !($data['completionDateTime'] instanceof DateTime)) {
+        if (isset($data['completionDateTime']) && !($data['completionDateTime'] instanceof DateTime))
             $defaults['completionDateTime'] = new DateTime(trimOrNull($data['completionDateTime']));
-        }
 
-        if (isset($data['actualCompletionDateTime']) && !($data['actualCompletionDateTime'] instanceof DateTime)) {
+        if (isset($data['actualCompletionDateTime']) && !($data['actualCompletionDateTime'] instanceof DateTime))
             $defaults['actualCompletionDateTime'] = is_string($data['actualCompletionDateTime'])
                 ? new DateTime(trimOrNull($data['actualCompletionDateTime']))
                 : null;
-        }
 
-        if (isset($data['createdAt']) && !($data['createdAt'] instanceof DateTime)) {
+        if (isset($data['createdAt']) && !($data['createdAt'] instanceof DateTime))
             $defaults['createdAt'] = new DateTime(trimOrNull($data['createdAt']));
-        }
 
         // Handle enum conversions
-        if (isset($data['status']) && !($data['status'] instanceof WorkStatus)) {
+        if (isset($data['status']) && !($data['status'] instanceof WorkStatus))
             $defaults['status'] = WorkStatus::from(trimOrNull($data['status']));
-        }
 
         // Create instance with default values
         $instance = new self(
@@ -808,7 +802,7 @@ class Project implements Entity
             'startDateTime'             => formatDateTime($this->startDateTime, DateTime::ATOM),
             'completionDateTime'        => formatDateTime($this->completionDateTime, DateTime::ATOM),
             'actualCompletionDateTime'  =>
-                $this->actualCompletionDateTime
+            $this->actualCompletionDateTime
                 ? formatDateTime($this->actualCompletionDateTime, DateTime::ATOM)
                 : null,
             'status'                    => $this->status->getDisplayName(),
@@ -862,11 +856,10 @@ class Project implements Entity
         $data = normalizeArrayKeysToCamelCase($data);
 
         $publicId = null;
-        if ($data['publicId'] instanceof UUID) {
+        if ($data['publicId'] instanceof UUID)
             $publicId = $data['publicId'];
-        } else if (is_string($data['publicId'])) {
+        elseif (is_string($data['publicId']))
             $publicId = UUID::tryFromString(trimOrNull($data['publicId']));
-        }
 
         $maxWorkers = !is_int($data['maxWorkers'])
             ? (int) $data['maxWorkers']
@@ -888,23 +881,23 @@ class Project implements Entity
             ? PhaseContainer::fromArray($data['phases'])
             : $data['phases'];
 
-        $startDateTime = (is_string($data['startDateTime']))
+        $startDateTime = (\is_string($data['startDateTime']))
             ? new DateTime(trimOrNull($data['startDateTime']))
             : $data['startDateTime'];
 
-        $completionDateTime = (is_string($data['completionDateTime']))
+        $completionDateTime = (\is_string($data['completionDateTime']))
             ? new DateTime(trimOrNull($data['completionDateTime']))
             : $data['completionDateTime'];
 
-        $actualCompletionDateTime = (is_string($data['actualCompletionDateTime']))
+        $actualCompletionDateTime = (\is_string($data['actualCompletionDateTime']))
             ? new DateTime(trimOrNull($data['actualCompletionDateTime']))
             : $data['actualCompletionDateTime'];
 
-        $status = (is_string($data['status']))
+        $status = (\is_string($data['status']))
             ? WorkStatus::fromString(trimOrNull($data['status']))
             : $data['status'];
 
-        $createdAt = (is_string($data['createdAt']))
+        $createdAt = (\is_string($data['createdAt']))
             ? new DateTime(trimOrNull($data['createdAt']))
             : $data['createdAt'];
 

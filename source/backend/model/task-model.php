@@ -3,19 +3,15 @@
 namespace App\Model;
 
 use App\Abstract\Model;
-use App\Container\WorkerContainer;
 use App\Container\TaskContainer;
 use App\Core\UUID;
 use App\Entity\Phase;
 use App\Entity\ProjectManager;
-use App\Entity\TaskResource;
-use App\Entity\TaskWorker;
 use App\Entity\Project;
 use App\Exception\DatabaseException;
 use App\Enumeration\WorkStatus;
 use App\Enumeration\Priority;
 use App\Entity\Task;
-use DateTime;
 use Exception;
 use InvalidArgumentException;
 use PDOException;
@@ -41,7 +37,7 @@ class TaskModel extends Model
      *
      * @throws DatabaseException If a database error occurs during the query execution.
      */
-    protected function find(string $whereClause = '', array $params = [], array $options = []): ?TaskContainer
+    protected function find(string $whereClause = '', array $params = [], array $options = []): TaskContainer|null
     {
         $paramOptions = [
             'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
@@ -96,9 +92,7 @@ class TaskModel extends Model
             $statement->execute($params);
             $results = $statement->fetchAll();
 
-            if (empty($results)) {
-                return null;
-            }
+            if (!$this->hasData($results)) return null;
 
             $tasks = new TaskContainer();
             foreach ($results as $row) {
@@ -144,18 +138,13 @@ class TaskModel extends Model
             'limit' => 10,
             'offset' => 0,
         ]
-    ): ?TaskContainer {
-        if ($userId && is_int($userId) && $userId < 1) {
-            throw new InvalidArgumentException('Invalid user ID.');
-        }
-
-        if ($phaseId && is_int($phaseId) && $phaseId < 1) {
-            throw new InvalidArgumentException('Invalid phase ID.');
-        }
-
-        if ($projectId && is_int($projectId) && $projectId < 1) {
-            throw new InvalidArgumentException('Invalid project ID.');
-        }
+    ): TaskContainer|null {
+        if ($userId && \is_int($userId) && $userId < 1) 
+            throw new InvalidArgumentException('Invalid user ID');
+        if ($phaseId && \is_int($phaseId) && $phaseId < 1)
+            throw new InvalidArgumentException('Invalid phase ID');
+        if ($projectId && \is_int($projectId) && $projectId < 1)
+            throw new InvalidArgumentException('Invalid project ID');
 
         $paramOptions = [
             'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
@@ -261,39 +250,36 @@ class TaskModel extends Model
         int|UUID $taskId,
         int|UUID|null $phaseId = null,
         int|UUID|null $projectId = null
-    ): ?Task {
-        if (is_int($taskId) && $taskId < 1) {
-            throw new InvalidArgumentException('Invalid task ID.');
-        }
-
-        if ($phaseId && is_int($phaseId) && $phaseId < 1) {
-            throw new InvalidArgumentException('Invalid phase ID.');
-        }
+    ): Task|null {
+        if (\is_int($taskId) && $taskId < 1) 
+            throw new InvalidArgumentException('Invalid task ID');
+        if ($phaseId && \is_int($phaseId) && $phaseId < 1) 
+            throw new InvalidArgumentException('Invalid phase ID');
 
         try {
-            $whereClause = is_int($taskId)
+            $whereClause = \is_int($taskId)
                 ? 't.id = :taskId'
                 : 't.public_id = :taskId';
             $params = [
-                ':taskId' => is_int($taskId)
+                ':taskId' => \is_int($taskId)
                     ? $taskId
                     : UUID::toBinary($taskId)
             ];
 
             if ($phaseId) {
-                $whereClause .= is_int($phaseId)
+                $whereClause .= \is_int($phaseId)
                     ? ' AND ph.id = :phaseId'
                     : ' AND ph.public_id = :phaseId';
-                $params[':phaseId'] = is_int($phaseId)
+                $params[':phaseId'] = \is_int($phaseId)
                     ? $phaseId
                     : UUID::toBinary($phaseId);
             }
 
             if ($projectId) {
-                $whereClause .= is_int($projectId)
+                $whereClause .= \is_int($projectId)
                     ? ' AND p.id = :projectId'
                     : ' AND p.public_id = :projectId';
-                $params[':projectId'] = is_int($projectId)
+                $params[':projectId'] = \is_int($projectId)
                     ? $projectId
                     : UUID::toBinary($projectId);
             }
@@ -334,13 +320,12 @@ class TaskModel extends Model
             'offset' => 0,
             'limit' => 10,
         ]
-    ): ?TaskContainer {
-        if (is_int($phaseId) && $phaseId < 1) {
-            throw new InvalidArgumentException('Invalid phase ID.');
-        }
+    ): TaskContainer|null {
+        if (\is_int($phaseId) && $phaseId < 1)
+            throw new InvalidArgumentException('Invalid phase ID');
 
         try {
-            $whereClause = is_int($phaseId)
+            $whereClause = \is_int($phaseId)
                 ? 't.phase_id = :phaseId'
                 : 't.phase_id IN (
                     SELECT 
@@ -350,16 +335,16 @@ class TaskModel extends Model
                     WHERE 
                         public_id = :phaseId)';
             $params = [
-                ':phaseId' => is_int($phaseId)
+                ':phaseId' => \is_int($phaseId)
                     ? $phaseId
                     : UUID::toBinary($phaseId)
             ];
 
             if ($projectId) {
-                $whereClause .= is_int($projectId)
+                $whereClause .= \is_int($projectId)
                     ? ' AND p.id = :projectId'
                     : ' AND p.public_id = :projectId';
-                $params[':projectId'] = is_int($projectId)
+                $params[':projectId'] = \is_int($projectId)
                     ? $projectId
                     : UUID::toBinary($projectId);
             }
@@ -405,14 +390,11 @@ class TaskModel extends Model
             'offset' => 0,
             'limit' => 10,
         ]
-    ): ?TaskContainer {
-        if (is_int($workerId) && $workerId < 1) {
-            throw new InvalidArgumentException('Invalid worker ID.');
-        }
-
-        if ($projectId && is_int($projectId) && $projectId < 1) {
-            throw new InvalidArgumentException('Invalid project ID.');
-        }
+    ): TaskContainer|null {
+        if (\is_int($workerId) && $workerId < 1)
+            throw new InvalidArgumentException('Invalid worker ID');
+        if ($projectId && \is_int($projectId) && $projectId < 1)
+            throw new InvalidArgumentException('Invalid project ID');
 
         $paramOptions = [
             'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
@@ -420,20 +402,20 @@ class TaskModel extends Model
         ];
 
         try {
-            $whereClause = is_int($workerId)
+            $whereClause = \is_int($workerId)
                 ? 'u.id = :workerId'
                 : 'u.public_id = :workerId';
             $params = [
-                ':workerId' => is_int($workerId)
+                ':workerId' => \is_int($workerId)
                     ? $workerId
                     : UUID::toBinary($workerId),
             ];
 
             if ($projectId) {
-                $whereClause .= is_int($projectId)
+                $whereClause .= \is_int($projectId)
                     ? ' AND p.id = :projectId'
                     : ' AND p.public_id = :projectId';
-                $params[':projectId'] = is_int($projectId)
+                $params[':projectId'] = \is_int($projectId)
                     ? $projectId
                     : UUID::toBinary($projectId);
             }
@@ -466,11 +448,10 @@ class TaskModel extends Model
      *
      * @return Project|null The owning Project instance, or null if no project is found for the given task.
      */
-    public function findOwningProject(int|UUID $taskId): ?Project
+    public function findOwningProject(int|UUID $taskId): Project|null
     {
-        if (is_int($taskId) && $taskId < 1) {
-            throw new InvalidArgumentException('Invalid task ID provided.');
-        }
+        if (\is_int($taskId) && $taskId < 1)
+            throw new InvalidArgumentException('Invalid task ID provided');
 
         try {
             $query =
@@ -511,9 +492,7 @@ class TaskModel extends Model
             ]);
             $result = $statement->fetch();
 
-            if (!$this->hasData($result)) {
-                return null;
-            }
+            if (!$this->hasData($result)) return null;
 
             $result['manager'] = ProjectManager::createPartial([
                 'id'           => $result['u_id'],
@@ -549,9 +528,8 @@ class TaskModel extends Model
      */
     public function findOwningPhase(int|UUID $taskId)
     {
-        if (is_int($taskId) && $taskId < 1) {
-            throw new InvalidArgumentException('Invalid task ID provided.');
-        }
+        if (\is_int($taskId) && $taskId < 1) 
+            throw new InvalidArgumentException('Invalid task ID provided');
 
         try {
             $query = 
@@ -573,20 +551,18 @@ class TaskModel extends Model
                                 FROM
                                     `task`
                                 WHERE 
-                                    " . (is_int($taskId) 
+                                    " . (\is_int($taskId) 
                                                 ? 'id = :taskId'
                                                 : 'public_id = :taskId') . "
                             )";
             $statement = $this->connection->prepare($query);
             $statement->execute([
-                ':taskId' => is_int($taskId)
+                ':taskId' => \is_int($taskId)
                     ? $taskId
                     : UUID::toBinary($taskId)
             ]);
             $result = $statement->fetch();
-            if (!$this->hasData($result)) {
-                return null;
-            }
+            if (!$this->hasData($result)) return null;
 
             $phase = Phase::createPartial($result);
             return $phase;
@@ -612,15 +588,10 @@ class TaskModel extends Model
      * 
      * @return TaskContainer|null An array of task records or null if no records found
      */
-    public function all(int $offset = 0, int $limit = 10): ?TaskContainer
+    public function all(int $offset = 0, int $limit = 10): TaskContainer|null
     {
-        if ($offset < 0) {
-            throw new InvalidArgumentException('Invalid offset value.');
-        }
-
-        if ($limit < 1) {
-            throw new InvalidArgumentException('Invalid limit value.');
-        }
+        if ($offset < 0) throw new InvalidArgumentException('Invalid offset value');
+        if ($limit < 1) throw new InvalidArgumentException('Invalid limit value');
 
         try {
             $paramOptions = [
@@ -649,9 +620,8 @@ class TaskModel extends Model
      */
     public function create(mixed $task): mixed
     {
-        if (!($task instanceof Task)) {
+        if (!($task instanceof Task))
             throw new InvalidArgumentException('Expected instance of Task');
-        }
 
         try {
             $phaseId            = $task->getAdditionalInfo('phaseId');
@@ -676,9 +646,9 @@ class TaskModel extends Model
                     completion_date_time
                 ) VALUES (
                     :publicId, 
-                    " . (is_int($phaseId)
-                    ? ':phaseId,'
-                    : '(SELECT id FROM `phase` WHERE public_id = :phaseId),') . "
+                    " . (\is_int($phaseId)
+                        ? ':phaseId,'
+                        : '(SELECT id FROM `phase` WHERE public_id = :phaseId),') . "
                     :name, 
                     :description, 
                     :priority, 
@@ -689,7 +659,7 @@ class TaskModel extends Model
             $taskQueryStatement = $this->connection->prepare($taskQuery);
             $taskQueryStatement->execute([
                 ':publicId'             => UUID::toBinary($taskPublicId),
-                ':phaseId'              => is_int($phaseId) ? $phaseId : UUID::toBinary($phaseId),
+                ':phaseId'              => \is_int($phaseId) ? $phaseId : UUID::toBinary($phaseId),
                 ':name'                 => $taskName,
                 ':description'          => $taskDescription,
                 ':priority'             => $Priority,
@@ -702,10 +672,29 @@ class TaskModel extends Model
             $task->setId($taskId);
             $task->setPublicId($taskPublicId);
 
-            $taskEstimatedCost = $task->getEstimatedCost();
-            $taskActualCost    = $task->getActualCost();
-            $taskBudgetNote    = trimOrNull($task->getBudgetNote());
+            $this->createBudget(
+                $taskId,
+                $task->getEstimatedCost(),
+                $task->getActualCost(),
+                trimOrNull($task->getBudgetNote())
+            );
 
+            return $task;
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
+        }
+    }
+
+    private function createBudget(
+        int|UUID $taskId, 
+        float $estimatedCost,
+        float $actualCost,
+        string|null $budgetNote = null
+    ): void {
+        if (\is_int($taskId) && $taskId < 1)
+            throw new InvalidArgumentException('Invalid task ID');
+
+        try {
             // Insert budget record
             $budgetQuery = 
                 "INSERT INTO `task_budget` (
@@ -714,22 +703,23 @@ class TaskModel extends Model
                     actual_cost,
                     note
                 ) VALUES (
-                    :taskId,
+                    " . (\is_int($taskId) 
+                            ? ':taskId' 
+                            : '(SELECT id FROM `task` WHERE public_id = :taskId)') . ",
                     :estimatedCost,
                     :actualCost,
                     :note
                 )";
             $budgetQueryStatement = $this->connection->prepare($budgetQuery);
             $budgetQueryStatement->execute([
-                ':taskId'           => $taskId,
-                ':estimatedCost'    => $taskEstimatedCost,
-                ':actualCost'       => $taskActualCost,
-                ':note'             => $taskBudgetNote
+                ':taskId'           => \is_int($taskId) ? $taskId : UUID::toBinary($taskId),
+                ':estimatedCost'    => $estimatedCost,
+                ':actualCost'       => $actualCost,
+                ':note'             => $budgetNote ? trimOrNull($budgetNote) : null
             ]);
 
-            return $task;
         } catch (PDOException $e) {
-            throw new DatabaseException($e->getMessage());
+            throw $e;
         }
     }
 
@@ -762,15 +752,14 @@ class TaskModel extends Model
             $updateFields = [];
             $params = [];
             if (isset($data['id'])) {
-                if (!is_int($data['id']) || $data['id'] < 1) {
-                    throw new InvalidArgumentException('Invalid task ID.');
-                }
+                if (!\is_int($data['id']) || $data['id'] < 1) 
+                    throw new InvalidArgumentException('Invalid task ID');
 
                 $params[':id'] = $data['id'];
             } elseif (isset($data['publicId'])) {
                 $params[':publicId'] = UUID::toBinary($data['publicId']);
             } else {
-                throw new InvalidArgumentException('Task ID or Public ID is required.');
+                throw new InvalidArgumentException('Task ID or Public ID is required');
             }
 
             if (isset($data['name'])) {
@@ -815,7 +804,7 @@ class TaskModel extends Model
                 $statement = $this->connection->prepare($phaseQuery);
                 $statement->execute($params);
             }
-            $this->savePhaseBudget($data);
+            $this->saveBudget($data);
 
             return true;
         } catch (PDOException $e) {
@@ -840,22 +829,22 @@ class TaskModel extends Model
      *
      * @return bool True if the update was successful, false otherwise.
      */
-    private function savePhaseBudget(array $data): bool
+    private function saveBudget(array $data): bool
     {
         try {
             $updateFields = [];
             $params = [];
 
             if (isset($data['id'])) {
-                if (!is_int($data['id']) || $data['id'] < 1) {
-                    throw new InvalidArgumentException('Invalid task ID.');
-                }
+                if (!\is_int($data['id']) || $data['id'] < 1) 
+                    throw new InvalidArgumentException('Invalid task ID');
+                
 
                 $params[':id'] = $data['id'];
             } elseif (isset($data['publicId'])) {
                 $params[':publicId'] = UUID::toBinary($data['publicId']);
             } else {
-                throw new InvalidArgumentException('Task ID or Public ID is required.');
+                throw new InvalidArgumentException('Task ID or Public ID is required');
             }
 
             if (isset($data['estimatedCost'])) {

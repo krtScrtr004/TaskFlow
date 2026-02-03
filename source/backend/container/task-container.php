@@ -38,9 +38,8 @@ class TaskContainer extends Container
     public function __construct(array $tasks = [])
     {
         foreach ($tasks as $task) {
-            if (!($task instanceof Task)) {
-                throw new InvalidArgumentException("All elements of tasks array must be instances of Task.");
-            }
+            if (!($task instanceof Task)) 
+                throw new InvalidArgumentException("All elements of tasks array must be instances of Task");
 
             $this->add($task);
         }
@@ -71,9 +70,8 @@ class TaskContainer extends Container
      */
     public function add(mixed $item): void
     {
-        if (!$item instanceof Task) {
-            throw new InvalidArgumentException("Only Task instances can be added to TaskContainer.");
-        }
+        if (!($item instanceof Task))
+            throw new InvalidArgumentException("Only Task instances can be added to TaskContainer");
 
         $id = $item->getId();
         $status = $item->getStatus();
@@ -114,9 +112,8 @@ class TaskContainer extends Container
      */
     public function remove(mixed $item): void
     {
-        if (!$item instanceof Task) {
-            throw new InvalidArgumentException('Only Task instances can be removed from TaskContainer.');
-        }
+        if (!($item instanceof Task)) 
+            throw new InvalidArgumentException('Only Task instances can be removed from TaskContainer');
 
         $id = $item->getId();
         $status = $item->getStatus();
@@ -155,10 +152,10 @@ class TaskContainer extends Container
      */
     public function contains(mixed $item): bool
     {
-        if (!$item instanceof Task) {
-            throw new InvalidArgumentException('Only Task instances can be checked in TaskContainer.');
-        }
-        $id = $item->getId();
+        if (!$item instanceof Task) 
+            throw new InvalidArgumentException('Only Task instances can be checked in TaskContainer');
+
+            $id = $item->getId();
         return isset($this->items[$id]);
     }
 
@@ -314,9 +311,7 @@ class TaskContainer extends Container
      */
     public function clearByStatus(WorkStatus $status): void
     {
-        if (!isset($this->byStatus[$status->value])) {
-            return;
-        }
+        if (!isset($this->byStatus[$status->value])) return;
 
         // Get all task IDs with this status
         $taskIds = array_keys($this->byStatus[$status->value]);
@@ -342,9 +337,7 @@ class TaskContainer extends Container
      */
     public function clearByPriority(Priority $priority): void
     {
-        if (!isset($this->byPriority[$priority->value])) {
-            return;
-        }
+        if (!isset($this->byPriority[$priority->value])) return;
 
         // Get all task IDs with this priority
         $taskIds = array_keys($this->byPriority[$priority->value]);
@@ -398,11 +391,8 @@ class TaskContainer extends Container
     {
         $tasks = new self();
         foreach ($data as $taskData) {
-            if ($taskData instanceof Task) {
-                $tasks->add($taskData);
-            } else {
-                $tasks->add(Task::fromArray($taskData));
-            }
+            if ($taskData instanceof Task) $tasks->add($taskData);
+            else $tasks->add(Task::fromArray($taskData));
         }
         return $tasks;
     }

@@ -10,7 +10,6 @@ use App\Entity\Task;
 use App\Exception\ValidationException;
 use App\Validator\WorkValidator;
 use DateTime;
-use Exception;
 
 class Phase implements Entity
 {
@@ -20,13 +19,13 @@ class Phase implements Entity
     private ?string $description;
     private DateTime $startDateTime;
     private DateTime $completionDateTime;
-    private ?DateTime $actualCompletionDateTime;
+    private DateTime|null $actualCompletionDateTime;
     private WorkStatus $status;
-    private ?TaskContainer $tasks;
+    private TaskContainer|null $tasks;
     private float $budget;
     private float $contingencyRate;
-    private ?string $budgetNote;
-    private ?DateTime $createdAt;
+    private string|null $budgetNote;
+    private DateTime|null $createdAt;
 
 
     protected WorkValidator $workValidator;
@@ -63,10 +62,10 @@ class Phase implements Entity
         ?string $description,
         float $budget = BUDGET_MIN,
         float $contingencyRate = CONTINGENCY_RATE_MIN,
-        ?DateTime $actualCompletionDateTime = null,
-        ?TaskContainer $tasks = null,
-        ?string $budgetNote = null,
-        ?DateTime $createdAt = null
+        DateTime|null $actualCompletionDateTime = null,
+        TaskContainer|null $tasks = null,
+        string|null $budgetNote = null,
+        DateTime|null $createdAt = null
     ) {
         try {
             $this->workValidator = new WorkValidator();
@@ -80,9 +79,11 @@ class Phase implements Entity
                 'budgetNote'            => $budgetNote
             ]);
 
-            if ($this->workValidator->hasErrors()) {
-                throw new ValidationException("Phase validation failed", $this->workValidator->getErrors());
-            }
+            if ($this->workValidator->hasErrors())
+                throw new ValidationException(
+                    "Phase Validation Failed",
+                    $this->workValidator->getErrors()
+                );
         } catch (ValidationException $th) {
             throw $th;
         }
@@ -164,7 +165,7 @@ class Phase implements Entity
         return $this->completionDateTime;
     }
 
-    public function getActualCompletionDateTime(): ?DateTime
+    public function getActualCompletionDateTime(): DateTime|null
     {
         return $this->actualCompletionDateTime;
     }
@@ -184,7 +185,7 @@ class Phase implements Entity
      *
      * @return TaskContainer|null The container with the phase's tasks, or null if not loaded
      */
-    public function getTasks(): ?TaskContainer
+    public function getTasks(): TaskContainer|null
     {
         return $this->tasks;
     }
@@ -212,9 +213,9 @@ class Phase implements Entity
     /**
      * Gets the budget notes for the phase.
      *
-     * @return string The notes regarding the phase budget
+     * @return string|null The notes regarding the phase budget
      */
-    public function getBudgetNote(): ?string
+    public function getBudgetNote(): string|null
     {
         return $this->budgetNote;
     }
@@ -224,7 +225,7 @@ class Phase implements Entity
      *
      * @return DateTime|null The creation timestamp or null if not set
      */
-    public function getCreatedAt(): ?DateTime
+    public function getCreatedAt(): DateTime|null
     {
         return $this->createdAt;
     }
@@ -240,9 +241,7 @@ class Phase implements Entity
      */
     public function setId(int $id): void
     {
-        if ($id < 0) {
-            throw new ValidationException("Invalid phase ID");
-        }
+        if ($id < 0) throw new ValidationException("Invalid ID");
         $this->id = $id;
     }
 
@@ -267,9 +266,11 @@ class Phase implements Entity
     public function setName(string $name): void
     {
         $this->workValidator->validateName(trim($name));
-        if ($this->workValidator->hasErrors()) {
-            throw new ValidationException("Invalid phase name", $this->workValidator->getErrors());
-        }
+        if ($this->workValidator->hasErrors())
+            throw new ValidationException(
+                "Invalid Phase Name",
+                $this->workValidator->getErrors()
+            );
         $this->name = trimOrNull($name);
     }
 
@@ -280,18 +281,19 @@ class Phase implements Entity
      * @throws ValidationException If the description is invalid
      * @return void
      */
-    public function setDescription(?string $description): void
+    public function setDescription(string|null $description): void
     {
-        if (!$description) {
-            $this->description = null;
-            return;
+        $tempDescription = $description ? trimOrNull($description) : null;
+        if ($tempDescription) {
+            $this->workValidator->validateDescription(trim($tempDescription));
+            if ($this->workValidator->hasErrors())
+                throw new ValidationException(
+                    'Invalid Description',
+                    $this->workValidator->getErrors()
+                );
         }
 
-        $this->workValidator->validateDescription(trim($description));
-        if ($this->workValidator->hasErrors()) {
-            throw new ValidationException("Invalid phase description", $this->workValidator->getErrors());
-        }
-        $this->description = trimOrNull($description);
+        $this->description = $tempDescription;
     }
 
     /**
@@ -304,9 +306,11 @@ class Phase implements Entity
     public function setStartDateTime(DateTime $startDateTime): void
     {
         $this->workValidator->validateStartDateTime($startDateTime);
-        if ($this->workValidator->hasErrors()) {
-            throw new ValidationException("Invalid start date", $this->workValidator->getErrors());
-        }
+        if ($this->workValidator->hasErrors())
+            throw new ValidationException(
+                'Invalid Start Date',
+                $this->workValidator->getErrors()
+            );
         $this->startDateTime = $startDateTime;
     }
 
@@ -320,9 +324,11 @@ class Phase implements Entity
     public function setCompletionDateTime(DateTime $completionDateTime): void
     {
         $this->workValidator->validateCompletionDateTime($completionDateTime, $this->startDateTime);
-        if ($this->workValidator->hasErrors()) {
-            throw new ValidationException("Invalid completion date", $this->workValidator->getErrors());
-        }
+        if ($this->workValidator->hasErrors())
+            throw new ValidationException(
+                'Invalid Completion Date',
+                $this->workValidator->getErrors()
+            );
         $this->completionDateTime = $completionDateTime;
     }
 
@@ -332,7 +338,7 @@ class Phase implements Entity
      * @param DateTime|null $actualCompletionDateTime The actual completion date and time to set, or null to unset
      * @return void
      */
-    public function setActualCompletionDateTime(?DateTime $actualCompletionDateTime): void
+    public function setActualCompletionDateTime(DateTime|null $actualCompletionDateTime): void
     {
         $this->actualCompletionDateTime = $actualCompletionDateTime;
     }
@@ -354,7 +360,7 @@ class Phase implements Entity
      * @param TaskContainer|null $tasks Container of tasks to assign to this phase, or null to unset
      * @return void
      */
-    public function setTasks(?TaskContainer $tasks): void
+    public function setTasks(TaskContainer|null $tasks): void
     {
         $this->tasks = $tasks;
     }
@@ -369,9 +375,11 @@ class Phase implements Entity
     public function setBudget(float $budget): void
     {
         $this->workValidator->validateBudget($budget);
-        if ($this->workValidator->hasErrors()) {
-            throw new ValidationException("Invalid budget amount", $this->workValidator->getErrors());
-        }
+        if ($this->workValidator->hasErrors())
+            throw new ValidationException(
+                'Invalid Budget',
+                $this->workValidator->getErrors()
+            );
         $this->budget = $budget;
     }
 
@@ -385,9 +393,11 @@ class Phase implements Entity
     public function setContingencyRate(float $contingencyRate): void
     {
         $this->workValidator->validateContingencyRate($contingencyRate);
-        if ($this->workValidator->hasErrors()) {
-            throw new ValidationException("Invalid contingency rate", $this->workValidator->getErrors());
-        }
+        if ($this->workValidator->hasErrors())
+            throw new ValidationException(
+                'Invalid Contingency Rate',
+                $this->workValidator->getErrors()
+            );
         $this->contingencyRate = $contingencyRate;
     }
 
@@ -398,16 +408,16 @@ class Phase implements Entity
      * @throws ValidationException If the budget note is invalid
      * @return void
      */
-    public function setBudgetNote(?string $budgetNote): void
+    public function setBudgetNote(string|null $budgetNote): void
     {
-        if (!$budgetNote) {
-            $this->budgetNote = null;
-            return;
-        }
-
-        $this->workValidator->validateBudgetNote(trimOrNull($budgetNote));
-        if ($this->workValidator->hasErrors()) {
-            throw new ValidationException("Invalid budget note", $this->workValidator->getErrors());
+        $tempBudgetNote = $budgetNote ? trimOrNull($budgetNote) : null;
+        if ($tempBudgetNote) {
+            $this->workValidator->validateBudgetNote(trimOrNull($tempBudgetNote));
+            if ($this->workValidator->hasErrors())
+                throw new ValidationException(
+                    'Invalid Budget Note', 
+                    $this->workValidator->getErrors()
+                );
         }
         $this->budgetNote = trimOrNull($budgetNote);
     }
@@ -420,9 +430,7 @@ class Phase implements Entity
      */
     public function addTask(Task $task): void
     {
-        if (!$this->tasks) {
-            $this->tasks = new TaskContainer();
-        }
+        if (!$this->tasks) $this->tasks = new TaskContainer();
         $this->tasks->add($task);
     }
 
@@ -477,37 +485,29 @@ class Phase implements Entity
         ];
 
         // Handle UUID conversion
-        if (isset($data['publicId']) && !$data['publicId'] instanceof UUID) {
+        if (isset($data['publicId']) && !$data['publicId'] instanceof UUID)
             $defaults['publicId'] = UUID::tryFromString(trimOrNull($data['publicId']));
-        }
 
-        if (isset($data['status']) && !$data['status'] instanceof WorkStatus) {
+        if (isset($data['status']) && !$data['status'] instanceof WorkStatus)
             $defaults['status'] = WorkStatus::from(trimOrNull($data['status']));
-        }
 
-        if (isset($data['budget']) && !is_float($data['budget'])) {
+        if (isset($data['budget']) && !\is_float($data['budget']))
             $defaults['budget'] = (float) $data['budget'];
-        }
 
-        if (isset($data['contingencyRate']) && !is_float($data['contingencyRate'])) {
+        if (isset($data['contingencyRate']) && !\is_float($data['contingencyRate']))
             $defaults['contingencyRate'] = (float) $data['contingencyRate'];
-        }
 
-        if (isset($data['budgetNote'])) {
+        if (isset($data['budgetNote']))
             $defaults['budgetNote'] = trimOrNull($data['budgetNote']);
-        }
 
-        if (isset($data['tasks']) && !$data['tasks'] instanceof TaskContainer) {
+        if (isset($data['tasks']) && !$data['tasks'] instanceof TaskContainer)
             $defaults['tasks'] = TaskContainer::fromArray($data['tasks']);
-        }
 
-        if (isset($data['startDateTime']) && !$data['startDateTime'] instanceof DateTime) {
+        if (isset($data['startDateTime']) && !$data['startDateTime'] instanceof DateTime)
             $defaults['startDateTime'] = new DateTime(trimOrNull($data['startDateTime']));
-        }
 
-        if (isset($data['completionDateTime']) && !$data['completionDateTime'] instanceof DateTime) {
+        if (isset($data['completionDateTime']) && !$data['completionDateTime'] instanceof DateTime)
             $defaults['completionDateTime'] = new DateTime(trimOrNull($data['completionDateTime']));
-        }
 
         if (isset($data['actualCompletionDateTime']) && !$data['actualCompletionDateTime'] instanceof DateTime) {
             $defaults['actualCompletionDateTime'] = is_string($data['actualCompletionDateTime'])
@@ -621,11 +621,10 @@ class Phase implements Entity
         $data = normalizeArrayKeysToCamelCase($data);
 
         $publicId = null;
-        if ($data['publicId'] instanceof UUID) {
+        if ($data['publicId'] instanceof UUID)
             $publicId = $data['publicId'];
-        } else if (is_string($data['publicId'])) {
+        elseif (is_string($data['publicId'])) 
             $publicId = UUID::tryFromString(trimOrNull($data['publicId']));
-        }
 
         $startDateTime = (is_string($data['startDateTime']))
             ? new DateTime(trimOrNull($data['startDateTime']))

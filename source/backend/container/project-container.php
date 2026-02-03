@@ -35,9 +35,8 @@ class ProjectContainer extends Container
     public function __construct(array $projects = [])
     {
         foreach ($projects as $project) {
-            if (!($project instanceof Project)) {
-                throw new InvalidArgumentException("All elements of projects array must be instances of Project.");
-            }
+            if (!($project instanceof Project))
+                throw new InvalidArgumentException("All elements of projects array must be instances of Project");
 
             $this->add($project);
         }
@@ -61,9 +60,9 @@ class ProjectContainer extends Container
      */
     public function add($project): void
     {
-        if (!$project instanceof Project) {
-            throw new InvalidArgumentException("Only Project instances can be added to ProjectContainer.");
-        }
+        if (!$project instanceof Project)
+            throw new InvalidArgumentException("Only Project instances can be added to ProjectContainer");
+
         $this->increaseCount($project);
         $this->items[$project->getId()] = $project;
     }
@@ -78,9 +77,8 @@ class ProjectContainer extends Container
     {
         $result = [];
         foreach ($this->items as $project) {
-            if ($project->getStatus()->value === $status->value) {
+            if ($project->getStatus()->value === $status->value)
                 $result[$project->getId()] = $project;
-            }
         }
         return $result;
     }
@@ -98,9 +96,8 @@ class ProjectContainer extends Container
             if ($project->getStatus()->value === $statusValue) {
                 unset($this->items[$id]);
                 // Decrease the counter
-                if (isset($this->projectCountByStatus[$statusValue])) {
+                if (isset($this->projectCountByStatus[$statusValue]))
                     $this->projectCountByStatus[$statusValue]--;
-                }
             }
         }
     }
@@ -138,9 +135,8 @@ class ProjectContainer extends Container
      */
     public function remove(mixed $item): void
     {
-        if (!$item instanceof Project) {
-            throw new InvalidArgumentException('Only Project instances can be removed from ProjectContainer.');
-        }
+        if (!$item instanceof Project)
+            throw new InvalidArgumentException('Only Project instances can be removed from ProjectContainer');
 
         $this->decreaseCount($item);
         unset($this->items[$item->getId()]);
@@ -168,9 +164,8 @@ class ProjectContainer extends Container
      */
     public function contains($item): bool
     {
-        if (!$item instanceof Project) {
-            throw new InvalidArgumentException('Only Project instances can be checked in ProjectContainer.');
-        }
+        if (!$item instanceof Project)
+            throw new InvalidArgumentException('Only Project instances can be checked in ProjectContainer');
         return isset($this->items[$item->getId()]);
     }
 
@@ -187,11 +182,11 @@ class ProjectContainer extends Container
     {
         parent::clear();
         $this->projectCountByStatus = [
-            WorkStatus::PENDING->value => 0,
-            WorkStatus::ONGOING->value => 0,
-            WorkStatus::COMPLETED->value => 0,
-            WorkStatus::DELAYED->value => 0,
-            WorkStatus::CANCELLED->value => 0,
+            WorkStatus::PENDING->value      => 0,
+            WorkStatus::ONGOING->value      => 0,
+            WorkStatus::COMPLETED->value    => 0,
+            WorkStatus::DELAYED->value      => 0,
+            WorkStatus::CANCELLED->value    => 0,
         ];
     }
 
@@ -217,9 +212,8 @@ class ProjectContainer extends Container
     private function increaseCount(Project $project): void
     {
         $status = $project->getStatus()->value;
-        if (array_key_exists($status, $this->projectCountByStatus)) {
+        if (array_key_exists($status, $this->projectCountByStatus))
             $this->projectCountByStatus[$status]++;
-        }
     }
 
     /**
@@ -240,11 +234,10 @@ class ProjectContainer extends Container
      * @return void
      */
     private function decreaseCount(Project $project): void
-        {
+    {
         $status = $project->getStatus()->value;
-        if (array_key_exists($status, $this->projectCountByStatus)) {
+        if (array_key_exists($status, $this->projectCountByStatus))
             $this->projectCountByStatus[$status]--;
-        }
     }
 
     /**
@@ -295,11 +288,8 @@ class ProjectContainer extends Container
     {
         $projects = new self();
         foreach ($data as $projectData) {
-            if ($projectData instanceof Project) {
-                $projects->add($projectData);
-            } else {
-                $projects->add(Project::fromArray($projectData));
-            }
+            if ($projectData instanceof Project) $projects->add($projectData);
+            else $projects->add(Project::fromArray($projectData));
         }
         return $projects;
     }

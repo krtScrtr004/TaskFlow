@@ -73,53 +73,40 @@ class TaskEndpoint extends Endpoint
     public static function getById(array $args = []): void
     {
         try {
+            if (!HttpAuth::isGETRequest()) throw new ForbiddenException('Invalid HTTP request method');
+            if (!SessionAuth::hasAuthorizedSession()) throw new ForbiddenException();
+
             self::rateLimit();
+
             $instance = new self();
-
-            if (!HttpAuth::isGETRequest()) {
-                throw new ForbiddenException('Invalid HTTP request method.');
-            }
-
-            if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException();
-            }
 
             $projectId = isset($args['projectId'])
                 ? UUID::fromString($args['projectId'])
                 : null;
-            if (!$projectId) {
-                throw new ForbiddenException('Project ID is required.');
-            } elseif ($instance->projectModel->findById($projectId) === null) {
-                throw new NotFoundException('Project not found.');
-            }
+            if (!$projectId)
+                throw new ForbiddenException('Project ID is required');
+            elseif ($instance->projectModel->findById($projectId) === null)
+                throw new NotFoundException('Project not found');
 
             $phaseId = isset($args['phaseId'])
                 ? UUID::fromString($args['phaseId'])
                 : null;
-            if (isset($phaseId) && !$phaseId) {
-                throw new ForbiddenException('Phase ID is required.');
-            }
+            if (isset($phaseId) && !$phaseId) throw new ForbiddenException('Phase ID is require');
 
             $phase = $instance->phaseModel->findById($phaseId);
-            if (!$phase) {
-                throw new NotFoundException('Phase not found.');
-            }
+            if (!$phase) throw new NotFoundException('Phase not found');
 
             $taskId = isset($args['taskId'])
                 ? UUID::fromString($args['taskId'])
                 : null;
-            if (!$taskId) {
-                throw new ForbiddenException('Task ID is required.');
-            }
+            if (!$taskId) throw new ForbiddenException('Task ID is required');
 
             $task = $instance->taskModel->findById($taskId, $phaseId, $projectId);
-            if ($task === null) {
-                throw new NotFoundException('Task not found.');
-            }
+            if (!$task) throw new NotFoundException('Task not found');
 
-            Response::success([], 'Task fetched successfully.');
+            Response::success([], 'Task fetched successfully');
         } catch (Throwable $e) {
-            ResponseExceptionHandler::handle('Get Task Failed.', $e);
+            ResponseExceptionHandler::handle('Get Task Failed', $e);
         }
     }
 
@@ -162,62 +149,48 @@ class TaskEndpoint extends Endpoint
     public static function getByKey(array $args = []): void
     {
         try {
+            if (!HttpAuth::isGETRequest()) throw new ForbiddenException('Invalid HTTP request method');
+            if (!SessionAuth::hasAuthorizedSession()) throw new ForbiddenException();
+
             self::rateLimit();
+
             $instance = new self();
-
-            if (!HttpAuth::isGETRequest()) {
-                throw new ForbiddenException('Invalid HTTP request method.');
-            }
-
-            if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException();
-            }
 
             $projectId = isset($args['projectId'])
                 ? UUID::fromString($args['projectId'])
                 : null;
-            if (!$projectId) {
-                throw new ForbiddenException('Project ID is required.');
-            }
+            if (!$projectId) throw new ForbiddenException('Project ID is required');
 
             $project = $instance->projectModel->findById($projectId);
-            if (!$project) {
-                throw new NotFoundException('Project not found.');
-            }
+            if (!$project) throw new NotFoundException('Project not found');
 
             $phaseId = isset($args['phaseId'])
                 ? UUID::fromString($args['phaseId'])
                 : null;
-            if (isset($args['phaseId']) && !$phaseId) {
-                throw new ForbiddenException('Phase ID is required.');
-            }
+            if (isset($args['phaseId']) && !$phaseId) throw new ForbiddenException('Phase ID is required');
 
             $phase = isset($args['phaseId'])
                 ? $instance->phaseModel->findById($phaseId)
                 : null;
-            if (isset($args['phaseId']) && !$phase) {
-                throw new NotFoundException('Phase not found.');
-            }
+            if (isset($args['phaseId']) && !$phase)
+                throw new NotFoundException('Phase not found');
 
             $workerId = isset($args['workerId'])
                 ? UUID::fromString($args['workerId'])
                 : null;
-            if (isset($args['workerId']) && !$workerId) {
-                throw new ForbiddenException('Worker ID is required.');
-            }
+            if (isset($args['workerId']) && !$workerId)
+                throw new ForbiddenException('Worker ID is required');
 
             $worker = isset($args['workerId'])
                 ? $instance->projectWorkerModel->findById($workerId)
                 : null;
-            if (isset($args['workerId']) && !$worker) {
-                throw new NotFoundException('Worker not found.');
-            }
+            if (isset($args['workerId']) && !$worker)
+                throw new NotFoundException('Worker not found');
 
             // Check if 'key' parameter is present in the query string
             $key = '';
-            if (isset($_GET['key']) && trim($_GET['key']) !== '') {
+            if (isset($_GET['key']) && trim($_GET['key']) !== '')
                 $key = trim($_GET['key']);
-            }
 
             // Obtain filter from query parameters
             $status = isset($_GET['status'])
@@ -229,8 +202,8 @@ class TaskEndpoint extends Endpoint
 
 
             $options = [
-                'offset' => isset($_GET['offset']) ? (int) $_GET['offset'] : 0,
-                'limit' => isset($_GET['limit']) ? (int) $_GET['limit'] : 50,
+                'offset'    => isset($_GET['offset']) ? (int) $_GET['offset'] : 0,
+                'limit'     => isset($_GET['limit']) ? (int) $_GET['limit'] : 50,
             ];
 
             $tasks = $instance->taskModel->search(
@@ -244,16 +217,16 @@ class TaskEndpoint extends Endpoint
             );
 
             if (!$tasks) {
-                Response::success([], 'No tasks found for the specified phase.');
+                Response::success([], 'No tasks found for the specified phase');
             } else {
                 $return = [];
                 foreach ($tasks as $task) {
                     $return[] = $task;
                 }
-                Response::success($return, 'Tasks fetched successfully.');
+                Response::success($return, 'Tasks fetched successfully');
             }
         } catch (Throwable $e) {
-            ResponseExceptionHandler::handle('Get Task Failed.', $e);
+            ResponseExceptionHandler::handle('Get Task Failed', $e);
         }
     }
 
@@ -297,41 +270,32 @@ class TaskEndpoint extends Endpoint
     public static function add(array $args = []): void
     {
         try {
-            self::formRateLimit();
-            $instance = new self();
+            if (!HttpAuth::isPOSTRequest()) throw new ForbiddenException('Invalid HTTP request method');
+            if (!SessionAuth::hasAuthorizedSession()) throw new ForbiddenException();
 
-            if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException();
-            }
+            self::formRateLimit();
             Csrf::protect();
 
-            if (!Role::isProjectManager(Me::getInstance()->getRole())) {
-                throw new ForbiddenException('Only Project Managers are allowed to add tasks.');
-            }
+            $instance = new self();
+
+            if (!Role::isProjectManager(Me::getInstance()->getRole()))
+                throw new ForbiddenException('Only project managers are allowed to add tasks');
 
             $data = decodeData('php://input');
-            if (!$data) {
-                throw new ValidationException('Cannot decode data.');
-            }
+            if (!$data) throw new ValidationException('Cannot decode data');
 
             $projectId = isset($args['projectId'])
                 ? UUID::fromString($args['projectId'])
                 : null;
-            if (!$projectId) {
-                throw new ForbiddenException('Project ID is required.');
-            }
+            if (!$projectId) throw new ForbiddenException('Project ID is required');
 
             $project = $instance->projectModel->findById($projectId);
-            if (!$project) {
-                throw new NotFoundException('Project not found.');
-            }
+            if (!$project) throw new NotFoundException('Project not found');
 
             $phaseId = isset($args['phaseId'])
                 ? UUID::fromString($args['phaseId'])
                 : null;
-            if (!$phaseId) {
-                throw new ForbiddenException('Phase ID is required.');
-            }
+            if (!$phaseId) throw new ForbiddenException('Phase ID is required');
 
             // Search for phase by ID or by schedule boundary
             $phase = isset($args['phaseId'])
@@ -341,9 +305,7 @@ class TaskEndpoint extends Endpoint
                     $data['startDateTime'] ?? null,
                     $data['completionDateTime'] ?? null
                 );
-            if (!$phase) {
-                throw new NotFoundException('Phase not found.');
-            }
+            if (!$phase) throw new NotFoundException('Phase not found');
 
             $validator = new WorkValidator();
             $validator->validateDateBounds(
@@ -358,8 +320,8 @@ class TaskEndpoint extends Endpoint
 
             $rawWorkers = $data['workers'];
             $workers = new WorkerContainer();
-            foreach ($rawWorkers as $worker) {                
-                $worker['publicId'] = $worker['id'];  
+            foreach ($rawWorkers as $worker) {
+                $worker['publicId'] = $worker['id'];
                 unset($worker['id']);
 
                 // Add to budget boundary validator
@@ -377,14 +339,19 @@ class TaskEndpoint extends Endpoint
             $task->addAdditionalInfo('phaseId', $phase->getId());
 
             $validator->validateMultiple($data);
-            if ($validator->hasErrors()) {
-                throw new ValidationException('Task Validation Failed.', $validator->getErrors());
-            }
+            if ($validator->hasErrors())
+                throw new ValidationException(
+                    'Task Validation Failed',
+                    $validator->getErrors()
+                );
 
             $newTask = TaskService::create($task);
-            Response::success(['id' => UUID::toString($newTask->getPublicId())], 'Workers added successfully.');
+            Response::success(
+                ['id' => UUID::toString($newTask->getPublicId())],
+                'Workers added successfully'
+            );
         } catch (Throwable $e) {
-            ResponseExceptionHandler::handle('Add Task Failed.', $e);
+            ResponseExceptionHandler::handle('Add Task Failed', $e);
         }
     }
 
@@ -425,91 +392,73 @@ class TaskEndpoint extends Endpoint
     public static function edit(array $args = []): void
     {
         try {
-            self::formRateLimit();
-            $instance = new self();
+            if (!HttpAuth::isPATCHRequest() && !HttpAuth::isPUTRequest()) 
+                throw new ForbiddenException('Invalid HTTP request method');
+            if (!SessionAuth::hasAuthorizedSession()) throw new ForbiddenException();
 
-            if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException();
-            }
+            self::formRateLimit();
             Csrf::protect();
+
+            $instance = new self();
 
             $projectManagerOnly = ['name', 'description', 'priority', 'startDateTime', 'completionDateTime'];
             foreach ($projectManagerOnly as $field) {
-                if (isset($data[$field]) && !Role::isProjectManager(Me::getInstance()->getRole())) {
-                    throw new ForbiddenException("Only Project Managers are allowed to edit {$field} field.");
-                }
+                if (isset($data[$field]) && !Role::isProjectManager(Me::getInstance()->getRole()))
+                    throw new ForbiddenException("Only Project Managers are allowed to edit {$field} field");
             }
 
             $projectId = isset($args['projectId'])
                 ? UUID::fromString($args['projectId'])
                 : null;
-            if (!$projectId) {
-                throw new ForbiddenException('Project ID is required.');
-            } elseif ($instance->projectModel->findById($projectId) === null) {
-                throw new NotFoundException('Project not found.');
-            }
+            if (!$projectId)
+                throw new ForbiddenException('Project ID is required');
+            elseif (!$instance->projectModel->findById($projectId))
+                throw new NotFoundException('Project not found');
 
             $phaseId = isset($args['phaseId'])
                 ? UUID::fromString($args['phaseId'])
                 : null;
-            if (!$phaseId) {
-                throw new ForbiddenException('Phase ID is required.');
-            }
+            if (!$phaseId) throw new ForbiddenException('Phase ID is required');
 
             $phase = isset($args['phaseId'])
                 ? $instance->phaseModel->findById($phaseId)
                 : $instance->phaseModel->findOnGoingByProjectId($projectId);
-            if (!$phase) {
-                throw new NotFoundException('Phase not found.');
-            }
+            if (!$phase) throw new NotFoundException('Phase not found');
 
             $taskId = isset($args['taskId'])
                 ? UUID::fromString($args['taskId'])
                 : null;
-            if (!$taskId) {
-                throw new ForbiddenException('Task ID is required.');
-            }
+            if (!$taskId) throw new ForbiddenException('Task ID is required');
 
             $task = $instance->taskModel->findById($taskId, $phaseId);
-            if (!$task) {
-                throw new NotFoundException('Task not found.');
-            }
+            if (!$task) throw new NotFoundException('Task not found');
 
             $project = ($projectId)
                 ? $instance->projectModel->findById($projectId)
                 : $instance->taskModel->findOwningProject($task->getId());
 
             $data = decodeData('php://input');
-            if (!$data) {
-                throw new ValidationException('Cannot decode data.');
-            }
+            if (!$data) throw new ValidationException('Cannot decode data');
 
             $validator = new WorkValidator();
 
             $taskData = ['id' => $task->getId()];
 
             // Validate Task fields
-            if (isset($data['name'])) {
-                $taskData['name'] = $data['name'];
-            }
-            if (isset($data['description'])) {
-                $taskData['description'] = trimOrNull($data['description']);
-            }
-            if (isset($data['startDateTime'])) {
-                $taskData['startDateTime'] = new DateTime($data['startDateTime']);
-            }
-            if (isset($data['completionDateTime'])) {
-                $taskData['completionDateTime'] = new DateTime($data['completionDateTime']);
-            }
-            if (isset($data['priority'])) {
-                $taskData['priority'] = Priority::from($data['priority']);
-            }
-            if (isset($data['estimatedCost'])) {
-                $taskData['estimatedCost'] = (float) $data['estimatedCost'];
-            }
-            if (isset($data['budgetNote'])) {
-                $taskData['budgetNote'] = trimOrNull($data['budgetNote']);
-            }
+            if (isset($data['name'])) $taskData['name'] = $data['name'];
+
+            if (isset($data['description'])) $taskData['description'] = trimOrNull($data['description']);
+
+            if (isset($data['startDateTime'])) $taskData['startDateTime'] = new DateTime($data['startDateTime']);
+
+            if (isset($data['completionDateTime'])) $taskData['completionDateTime'] = new DateTime($data['completionDateTime']);
+
+            if (isset($data['priority'])) $taskData['priority'] = Priority::from($data['priority']);
+
+            if (isset($data['estimatedCost'])) $taskData['estimatedCost'] = (float) $data['estimatedCost'];
+
+            if (isset($data['budgetNote'])) $taskData['budgetNote'] = trimOrNull($data['budgetNote']);
+
             if (isset($data['status'])) {
                 $taskData['status'] = WorkStatus::from($data['status']);
             } elseif ($task->getStatus() !== WorkStatus::DELAYED) {
@@ -524,20 +473,21 @@ class TaskEndpoint extends Endpoint
             // Validate and prepare Task Workers
             $userValidator = new UserValidator();
             $workerCategories = $data['workers'] ?? [];
-            if (!is_array($workerCategories)) {
-                throw new ValidationException('Invalid workers data format provided.');
-            }
+            if (!is_array($workerCategories)) throw new ValidationException('Invalid workers data format provided');
+
             foreach ($workerCategories as $category => &$workers) {
                 foreach ($workers as &$worker) {
-                    $worker['workerId'] = UUID::fromString($worker['id']);  
+                    $worker['workerId'] = UUID::fromString($worker['id']);
                     unset($worker['id']);
 
                     if ($category === 'toRemove') {
+                        // Subtract budget for removed workers
                         $budgetBoundaryValidator['subtractBudget']((float) $worker['unitRate'] * (float) $worker['estimatedHour']);
                         unset($worker['unitRate'], $worker['estimatedHour']); // Remove unnecessary fields for removal
 
                         $worker['status'] = WorkerStatus::TERMINATED;
                     } elseif ($category === 'toAdd' || $category === 'toEdit') {
+                        // Add to budget for added/edited workers
                         $budgetBoundaryValidator['addBudget']((float) $worker['unitRate'] * (float) $worker['estimatedHour']);
                         $userValidator->validateMultiple($worker);
                     }
@@ -550,13 +500,12 @@ class TaskEndpoint extends Endpoint
 
             $resourceValidator = new ResourceValidator();
             $resources = $data['resources'] ?? [];
-            if (!is_array($resources)) {
-                throw new ValidationException('Invalid resources data format provided.');
-            }
+            if (!is_array($resources)) throw new ValidationException('Invalid resources data format provided.');
+
             foreach ($resources as $resource) {
                 $budgetBoundaryValidator['addBudget']((float) $resource['unitRate'] * (float) $resource['estimatedUnit']);
 
-                $resource['publicId'] = $resource['id'];  
+                $resource['publicId'] = $resource['id'];
                 unset($resource['id']);
 
                 $resourceValidator->validateMultiple($resource);
@@ -574,34 +523,33 @@ class TaskEndpoint extends Endpoint
                 );
 
                 $mergedErrors = array_merge(
-                    $validator->getErrors() ??  [], 
+                    $validator->getErrors() ??  [],
                     $userValidator->getErrors() ?? [],
                     $resourceValidator->getErrors() ?? []
                 );
                 if ($mergedErrors && count($mergedErrors) > 0) {
-                    throw new ValidationException('Task Validation Failed.', $mergedErrors);
+                    throw new ValidationException('Task Validation Failed', $mergedErrors);
                 }
 
                 TaskService::save($taskData);
             }
 
-            Response::success(['projectId' => UUID::toString($project->getPublicId())], 'Project edited successfully.');
+            Response::success(
+                ['projectId' => UUID::toString($project->getPublicId())],
+                'Project edited successfully'
+            );
         } catch (Throwable $e) {
-            ResponseExceptionHandler::handle('Edit Task Failed.', $e);
+            ResponseExceptionHandler::handle('Edit Task Failed', $e);
         }
     }
 
     /**
      * Not implemented (No use case)
      */
-    public static function create(array $args = []): void
-    {
-    }
+    public static function create(array $args = []): void {}
 
     /**
      * Not implemented (No use case)
      */
-    public static function delete(array $args = []): void
-    {
-    }
+    public static function delete(array $args = []): void {}
 }

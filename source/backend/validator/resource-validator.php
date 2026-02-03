@@ -55,11 +55,11 @@ class ResourceValidator extends Validator
         $min = UNIT_NAME_MIN;
         $max = UNIT_NAME_MAX;
 
-        if (!$unit || strlen($unit) < $min || strlen($unit) > $max)
-            $this->errors[] = "Resource unit must be between {$min} and {$max} characters.";
+        if (!$unit || \strlen($unit) < $min || \strlen($unit) > $max)
+            $this->addError("Resource unit must be between {$min} and {$max} characters");
 
         if ($this->hasConsecutiveSpecialChars($unit))
-            $this->errors[] = "Resource unit must not contain consecutive special characters.";
+            $this->addError("Resource unit must not contain consecutive special characters");
     }
 
     /**
@@ -94,9 +94,8 @@ class ResourceValidator extends Validator
         $min = 0;
         $max = WORKER_HOURS_MAX;
 
-        if ($hoursAssigned < $min || $hoursAssigned > $max) {
-            $this->errors[] = "Hours assigned must be between {$min} and {$max}.";
-        }
+        if ($hoursAssigned < $min || $hoursAssigned > $max)
+            $this->addError("Hours assigned must be between {$min} and {$max}");
     }
 
     /**
@@ -116,7 +115,7 @@ class ResourceValidator extends Validator
         $max = RESOURCE_QUANTITY_MAX;
 
         if ($quantity < $min || $quantity > $max)
-            $this->errors[] = "Resource quantity must be between {$min} and {$max}.";
+            $this->addError("Resource quantity must be between {$min} and {$max}");
     }
 
     /**

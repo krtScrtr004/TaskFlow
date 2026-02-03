@@ -51,22 +51,16 @@ abstract class Model
      */
     protected function hasData(array|bool $data): bool
     {
-        if ($data === false) {
-            return false;
-        }
+        if (is_bool($data) && $data === false) return false;
 
         foreach ($data as $value) {
             if (is_array($value)) {
-                if (empty($value)) {
-                    return false;
-                } else {
-                    foreach ($value as $subValue) {
-                        if ($subValue !== null && $subValue !== '') {
-                            return true;
-                        }
-                    }
+                if (empty($value)) return false;
+
+                foreach ($value as $subValue) {
+                    if ($subValue !== null && $subValue !== '') return true;
                 }
-            } elseif ($value !== null && $value !== '') {
+            } elseif ($value) {
                 return true;
             }
         }
@@ -94,13 +88,13 @@ abstract class Model
      * @return string The SQL query with the appended WHERE clause, or the original query
      *      if no conditions were provided.
      */
-    protected function appendWhereClause(string $query, string $where): string 
+    protected function appendWhereClause(string $query, string|array $where): string 
     {
         if ($where && is_string($where) && $where !== '') {
             $query .= " WHERE " . $where;
         } elseif (is_array($where) && !empty($where)) {
             $conditions = [];
-            foreach ($where as $key => $value) {
+            foreach (array_keys($where) as $key) {
                 $conditions[] = "$key = :$key";
             }
             $query .= " WHERE " . implode(" AND ", $conditions);
@@ -144,28 +138,28 @@ abstract class Model
     protected function appendOptionsToFindQuery(string $query, array $options): string
     {
         $groupBy = trimOrNull($options['groupBy']) ?? trimOrNull($options[':groupBy']);        
-        if (isset($groupBy) && $groupBy !== '') $query .= " GROUP BY " . $groupBy;
+        if ($groupBy && $groupBy !== '') $query .= " GROUP BY " . $groupBy;
 
         $orderBy = trimOrNull($options['orderBy']) ?? trimOrNull($options[':orderBy']);
-        if (isset($orderBy) && $orderBy !== '') $query .= " ORDER BY " . $orderBy;
+        if ($orderBy && $orderBy !== '') $query .= " ORDER BY " . $orderBy;
 
         $limit = (int) $options['limit'] ?? (int) $options[':limit'] ?? 10;
         if ($limit < 1) throw new InvalidArgumentException('Invalid limit value.');
         $query .= " LIMIT " . $limit;
 
-        $offset = $options['offset'] ?? $options[':offset'] ?? 0;
+        $offset = (int) $options['offset'] ?? (int) $options[':offset'] ?? 0;
         if ($offset < 0) throw new InvalidArgumentException('Invalid offset value.');
         $query .= " OFFSET " . $offset;
 
         return $query;
     }
 
+    abstract protected function find(string $whereClause = '', array $params = [], array $options = []): mixed;
+
     abstract public function create(mixed $data): mixed;
 
     abstract public function all(int $offset = 0, int $limit = 10): mixed;
 
-    abstract protected function find(string $whereClause = '', array $params = [], array $options = []): mixed;
-    
     abstract public function save(array $data): bool;
     
     abstract protected function delete(mixed $data): bool;

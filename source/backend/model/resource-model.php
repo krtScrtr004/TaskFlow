@@ -50,7 +50,7 @@ class ResourceModel extends Model
      *
      * @return ResourceContainer|null A ResourceContainer of TaskResource objects if rows found, or null if none
      */
-    protected function find(string $whereClause = '', array $params = [], array $options = []): ?ResourceContainer
+    protected function find(string $whereClause = '', array $params = [], array $options = []): ResourceContainer|null
     {
         $paramOptions = [
             'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
@@ -99,9 +99,7 @@ class ResourceModel extends Model
             $statement->execute($params);
             $results = $statement->fetchAll();
 
-            if (empty($results)) {
-                return null;
-            }
+            if (!$this->hasData($results)) return null;
 
             $resources = new ResourceContainer();
             foreach ($results as $row) {
@@ -152,16 +150,16 @@ class ResourceModel extends Model
             'limit'     => 10,
             'offset'    => 0
         ]
-    ): ?ResourceContainer {
-        if ($taskId && is_int($taskId) && $taskId < 1) {
-            throw new InvalidArgumentException('Invalid task ID.');
-        }
+    ): ResourceContainer|null
+    {
+        if ($taskId && \is_int($taskId) && $taskId < 1)
+            throw new InvalidArgumentException('Invalid task ID');
 
         try {
-            $whereClause = 't.id = ' . is_int($taskId)
+            $whereClause = 't.id = ' . \is_int($taskId)
                 ? ':taskId'
                 : '(SELECT id FROM `task` WHERE public_id = :taskId)';
-            $params = [':taskId' => is_int($taskId) ? $taskId : UUID::toBinary($taskId)];
+            $params = [':taskId' => \is_int($taskId) ? $taskId : UUID::toBinary($taskId)];
             $optionParams = [
                 'limit'     => $options['limit'] ?? $options[':limit'] ?? 10,
                 'offset'    => $options['offset'] ?? $options[':offset'] ?? 0
@@ -196,15 +194,10 @@ class ResourceModel extends Model
      *
      * @return ResourceContainer|null   A container of resources for the requested page, or null
      */
-    public function all(int $offset = 0, int $limit = 10): ?ResourceContainer
+    public function all(int $offset = 0, int $limit = 10): ResourceContainer|null
     {
-        if ($offset < 0) {
-            throw new InvalidArgumentException('Invalid offset value.');
-        }
-
-        if ($limit < 1) {
-            throw new InvalidArgumentException('Invalid limit value.');
-        }
+        if ($offset < 0) throw new InvalidArgumentException('Invalid offset value');
+        if ($limit < 1) throw new InvalidArgumentException('Invalid limit value');
 
         try {
             $paramOptions = [
@@ -337,9 +330,8 @@ class ResourceModel extends Model
      */
     public function save(array $data): bool
     {
-        if (isset($data['id']) && (!is_int($data['id']) || $data['id'] < 1)) {
-            throw new InvalidArgumentException('Invalid Resource ID provided.');
-        }
+        if (isset($data['id']) && (!\is_int($data['id']) || $data['id'] < 1))
+            throw new InvalidArgumentException('Invalid Resource ID provided');
 
         try {
             $updateFields = [];

@@ -13,14 +13,9 @@ use App\Exception\NotFoundException;
 use App\Middleware\Csrf;
 use App\Model\TaskWorkerModel;
 
-if (isset($project) && !$project instanceof Project)
-    throw new NotFoundException('Project is not defined.');
-
-if (!isset($phase) || !$phase instanceof Phase)
-    throw new NotFoundException('Phase is not defined.');
-
-if (isset($task) && !$task instanceof Task)
-    throw new NotFoundException('Task is not defined.');
+if (isset($project) && !$project instanceof Project)throw new NotFoundException('Project is not defined');
+if (!isset($phase) || !$phase instanceof Phase)throw new NotFoundException('Phase is not defined');
+if (isset($task) && !$task instanceof Task)throw new NotFoundException('Task is not defined');
 
 $otherData = [
     'projectId' => htmlspecialchars(UUID::toString($project->getPublicId())),

@@ -89,9 +89,7 @@ abstract class Endpoint
      */
     protected static function rateLimit(int $limit = 60, int $timeWindow = 60)
     {
-        if (!isset(self::$rateLimiter)) {
-            self::$rateLimiter = new RateLimiter();
-        }
+        if (!isset(self::$rateLimiter)) self::$rateLimiter = new RateLimiter();
 
         self::$rateLimiter->handle(
             self::getIpAddress(),
@@ -122,9 +120,7 @@ abstract class Endpoint
      */
     protected static function formRateLimit()
     {
-        if (!isset(self::$rateLimiter)) {
-            self::$rateLimiter = new RateLimiter();
-        }
+        if (!isset(self::$rateLimiter)) self::$rateLimiter = new RateLimiter();
 
         self::$rateLimiter->handle(
             self::getIpAddress(),

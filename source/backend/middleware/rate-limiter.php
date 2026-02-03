@@ -50,13 +50,11 @@ class RateLimiter
             'timeWindow' => null
         ]
     ): void {
-        if (isset($options['limit']) && (!is_int($options['limit']) || $options['limit'] <= 0)) {
+        if (isset($options['limit']) && (!is_int($options['limit']) || $options['limit'] <= 0))
             throw new InvalidArgumentException('Limit must be a positive integer.');
-        }
 
-        if (isset($options['timeWindow']) && (!is_int($options['timeWindow']) || $options['timeWindow'] <= 0)) {
+        if (isset($options['timeWindow']) && (!is_int($options['timeWindow']) || $options['timeWindow'] <= 0)) 
             throw new InvalidArgumentException('Time window must be a positive integer.');
-        }
 
         $rateLimiterModel = new RateLimiterModel();
 
@@ -81,7 +79,6 @@ class RateLimiter
             if (!$isExpired) {
                 if ($count + 1 > $limit) {
                     // Exceeded the rate limit
-                    return;
                     throw new RateLimitException('Rate limit exceeded. Please try again later.');
                 }
                 // Increment the counter

@@ -14,15 +14,13 @@ class SessionAuth
 
     public static function hasAuthorizedSession(): bool
     {
-        return (Me::getInstance() !== null) && Session::isSet() && Session::has('userData');
+        return Me::getInstance() !== null && Session::isSet() && Session::has('userData');
     }
 
     public static function setAuthorizedSession(ProjectManager|Worker|array $user): void
     {
         // Always ensure session is started FIRST
-        if (!Session::isSet()) {
-            Session::create();
-        }
+        if (!Session::isSet()) Session::create();
 
         // Always re-instantiate Me with the new user data
         // This ensures the Me instance is always up-to-date

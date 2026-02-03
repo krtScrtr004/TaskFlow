@@ -26,9 +26,9 @@ enum WorkerStatus: string {
      */
     public function getDisplayName(): string {
         return match($this) {
-            self::ASSIGNED => ucwords(camelToSentenceCase(self::ASSIGNED->value)),
-            self::UNASSIGNED => ucwords(camelToSentenceCase(self::UNASSIGNED->value)),
-            self::TERMINATED => ucwords(camelToSentenceCase(self::TERMINATED->value))
+            self::ASSIGNED      => ucwords(camelToSentenceCase(self::ASSIGNED->value)),
+            self::UNASSIGNED    => ucwords(camelToSentenceCase(self::UNASSIGNED->value)),
+            self::TERMINATED    => ucwords(camelToSentenceCase(self::TERMINATED->value))
         };
     }
 
@@ -51,9 +51,9 @@ enum WorkerStatus: string {
     public static function badge(self $status): string {
         $statusName = $status->getDisplayName();
         $class = match ($status) {
-            self::ASSIGNED => 'blue',
-            self::UNASSIGNED => 'yellow',
-            self::TERMINATED => 'red'
+            self::ASSIGNED      => 'blue',
+            self::UNASSIGNED    => 'yellow',
+            self::TERMINATED    => 'red'
         };
 
         return <<<HTML

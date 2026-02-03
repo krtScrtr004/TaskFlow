@@ -26,9 +26,9 @@ class UrlValidator extends Validator
     public function validateUrl(string $url): void
     {
         if (mb_strlen($url) < URI_MIN || mb_strlen($url) > URI_MAX)
-            $this->errors[] = 'URL must be between ' . URI_MIN . ' and ' . URI_MAX . ' characters long.';
+            $this->addError('URL must be between ' . URI_MIN . ' and ' . URI_MAX . ' characters long');
 
         if (!filter_var($url, FILTER_VALIDATE_URL))
-            $this->errors[] = 'Invalid URL format.';
+            $this->addError('Invalid URL format');
     }
 }

@@ -59,9 +59,7 @@ class Session
             ]);
         }
 
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            session_start();
-        }
+        if (session_status() !== PHP_SESSION_ACTIVE) session_start();
 
         // Check and handle session inactivity
         $this->checkInactivity();
@@ -118,9 +116,7 @@ class Session
      */
     public static function create(): self
     {
-        if (!self::$session) {
-            self::$session = new self();
-        }
+        if (!self::$session) self::$session = new self();
         return self::$session;
     }
 
@@ -159,9 +155,7 @@ class Session
      */
     public static function restore(): void
     {
-        if (!self::isSet()) {
-            self::create();
-        }
+        if (!self::isSet()) self::create();
 
         // Restore Me instance from session data if it exists
         if (Session::has('userData') && Me::getInstance() === null) {
@@ -258,9 +252,7 @@ class Session
             session_regenerate_id($deleteOldSession);
             
             // Restore CSRF token after regeneration
-            if ($csrfToken) {
-                $_SESSION['csrf_token'] = $csrfToken;
-            }
+            if ($csrfToken) $_SESSION['csrf_token'] = $csrfToken;
         }
     }
 

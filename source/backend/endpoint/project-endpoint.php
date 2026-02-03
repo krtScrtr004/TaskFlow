@@ -72,28 +72,21 @@ class ProjectEndpoint extends Endpoint
     public static function getByKey(array $args = []): void
     {
         try {
+            if (!HttpAuth::isGETRequest()) throw new ForbiddenException('Invalid HTTP request method');
+            if (!SessionAuth::hasAuthorizedSession()) throw new ForbiddenException();
+
             self::rateLimit();
-
-            if (!HttpAuth::isGETRequest()) {
-                throw new ForbiddenException('Invalid HTTP request method.');
-            }
-
-            if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException();
-            }
 
             $projectId = isset($args['projectId'])
                 ? UUID::fromString($args['projectId'])
                 : null;
-            if (isset($args['projectId']) && !$projectId) {
-                throw new ForbiddenException('Project ID is required.');
-            }
+            if (isset($args['projectId']) && !$projectId) 
+                throw new ForbiddenException('Project ID is required');
 
             // Check if 'key' parameter is present in the query string
             $key = '';
-            if (isset($_GET['key']) && trim($_GET['key']) !== '') {
+            if (isset($_GET['key']) && trim($_GET['key']) !== '') 
                 $key = trim($_GET['key']);
-            }
 
             // Obtain filter from query parameters (one filter type only)
             $status = null;
@@ -108,8 +101,8 @@ class ProjectEndpoint extends Endpoint
             }
 
             $options = [
-                'offset' => isset($_GET['offset']) ? (int) $_GET['offset'] : 0,
-                'limit' => isset($_GET['limit']) ? (int) $_GET['limit'] : 50,
+                'offset'    => isset($_GET['offset']) ? (int) $_GET['offset'] : 0,
+                'limit'     => isset($_GET['limit']) ? (int) $_GET['limit'] : 50,
             ];
 
             $instance = new self();
@@ -121,16 +114,16 @@ class ProjectEndpoint extends Endpoint
             );
 
             if (!$projects) {
-                Response::success([], 'No projects found for the specified key.');
+                Response::success([], 'No projects found for the specified key');
             } else {
                 $return = [];
                 foreach ($projects as $project) {
                     $return[] = $project;
                 }
-                Response::success($return, 'Projects fetched successfully.');
+                Response::success($return, 'Projects fetched successfully');
             }
         } catch (Throwable $e) {
-            ResponseExceptionHandler::handle('Fetch Projects Failed.', $e);
+            ResponseExceptionHandler::handle('Fetch Projects Failed', $e);
         }
     }
 
@@ -193,49 +186,50 @@ class ProjectEndpoint extends Endpoint
     public static function create(array $args = []): void
     {
         try {
+            if (!HttpAuth::isPOSTRequest()) throw new ForbiddenException('Invalid HTTP request method');
+            if (!SessionAuth::hasAuthorizedSession()) throw new ForbiddenException();
+                        
             self::formRateLimit();
-
-            if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException();
-            }
             Csrf::protect();
 
-            if (!Role::isProjectManager(Me::getInstance()->getRole())) {
-                throw new ForbiddenException('Only Project Managers can create projects.');
-            }
+            if (!Role::isProjectManager(Me::getInstance()->getRole()))
+                throw new ForbiddenException('Only project managers can create projects');
 
             // Check if user has active project 
             $instance = new self();
-            if ($instance->projectModel->findManagerActiveProjectByManagerId(Me::getInstance()->getId())) {
-                throw new ForbiddenException('User already has an active project.');
-            }
+            if ($instance->projectModel->findManagerActiveProjectByManagerId(Me::getInstance()->getId())) 
+                throw new ForbiddenException('User already has an active project');
 
             $data = decodeData('php://input');
-            if (!$data) {
-                throw new ValidationException('Cannot decode data.', ['Invalid JSON data.']);
-            }
+            if (!$data) throw new ValidationException('Cannot decode data');
 
             $project = $data['project'] ?? null;
-            if (!$project || empty($project)) {
-                throw new ValidationException('Project data is required.', ['Project details are required.']);
-            }
+            if (!$project || empty($project)) 
+                throw new ValidationException(
+                'Project Data is Required', 
+                ['Project details are required']
+                );
 
             $phases = $data['phases'] ?? null;
-            if (!$phases || empty($phases)) {
-                throw new ValidationException('Phases data is required.', ['At least one phase is required.']);
-            }
+            if (!$phases || empty($phases)) 
+                throw new ValidationException(
+                    'Phases Data are Required', 
+                    ['At least one phase is required']
+                );
 
             $workers = $data['workers'] ?? null;
-            if (!$workers || empty($workers)) {
-                throw new ValidationException('Workers data is required.', ['At least one worker is required.']);
-            }
+            if (!$workers || empty($workers)) 
+                throw new ValidationException(
+                    'Workers Data are Required', 
+                    ['At least one worker is required']
+                );
 
             $maximumWorkers = (int) $project['maxWorkers'];
-            if (count($workers) > $maximumWorkers) {
-                throw new ValidationException('Exceeded maximum number of workers.', [
-                    "Number of workers exceeds the maximum allowed ({$maximumWorkers})."
+            if (count($workers) > $maximumWorkers)
+                throw new ValidationException(
+                    'Maximum Workers Exceeded', 
+                    ["Number of workers exceeds the maximum allowed ({$maximumWorkers})"
                 ]);
-            }
 
             sanitizeData($project);
 
@@ -256,9 +250,11 @@ class ProjectEndpoint extends Endpoint
                     new DateTime($project['completionDateTime'])
                 );
                 $projectPhaseBudgetValidator['addBudget']((float) $phase['budget'] ?? 0.00);
-                if ($workValidator->hasErrors()) {
-                    throw new ValidationException('Phase Validation Failed.', $workValidator->getErrors());
-                }
+                if ($workValidator->hasErrors()) 
+                    throw new ValidationException(
+                        'Phase Validation Failed', 
+                        $workValidator->getErrors()
+                    );
                 $totalPhasesBudget += (float) $phase['budget'] ?? 0.00;
 
                 sanitizeData($phase);
@@ -280,18 +276,22 @@ class ProjectEndpoint extends Endpoint
             $workersContainer = new WorkerContainer();
             foreach ($workers as $worker) {
                 $userValidator->validateDefaultRate($worker['defaultRate']);
-                if ($userValidator->hasErrors()) {
-                    throw new ValidationException('Worker Validation Failed.', $userValidator->getErrors());
-                }
+                if ($userValidator->hasErrors())
+                    throw new ValidationException(
+                        'Worker Validation Failed', 
+                        $userValidator->getErrors()
+                    );
 
                 $phaseWorkerBudgetValidator['addBudget']((float) $worker['defaultRate'] ?? DEFAULT_RATE_MIN);
-                if ($workValidator->hasErrors()) {
-                    throw new ValidationException('Phase Validation Failed.', $workValidator->getErrors());
-                }
+                if ($workValidator->hasErrors())
+                    throw new ValidationException(
+                        'Phase Validation Failed', 
+                        $workValidator->getErrors()
+                    );
 
                 $workersContainer->add(Worker::createPartial([
                     'publicId'      => UUID::fromString($worker['id']),
-                    'defaultRate'   => floatval($worker['defaultRate']) ?? DEFAULT_RATE_MIN
+                    'defaultRate'   => \floatval($worker['defaultRate']) ?? DEFAULT_RATE_MIN
                 ]));
             }
 
@@ -299,17 +299,19 @@ class ProjectEndpoint extends Endpoint
             $project['workers'] = $workersContainer;
             $project['phases'] = $phasesContainer;
             $project['status'] = WorkStatus::getStatusFromDates(
-            new DateTime($project['startDateTime']), 
-            new DateTime($project['completionDateTime']));
+                new DateTime($project['startDateTime']), 
+                new DateTime($project['completionDateTime']));
             $newProject = Project::createPartial($project);
 
             $newProject = ProjectService::create($newProject);
 
-            Response::success([
-                'projectId' => UUID::toString($newProject->getPublicId())
-            ], 'Project created successfully.', 201);
+            Response::success(
+                ['projectId' => UUID::toString($newProject->getPublicId())], 
+                'Project created successfully', 
+                201
+            );
         } catch (Throwable $e) {
-            ResponseExceptionHandler::handle('Project Creation Failed.', $e);
+            ResponseExceptionHandler::handle('Project Creation Failed', $e);
         }
     }
 
@@ -338,62 +340,48 @@ class ProjectEndpoint extends Endpoint
     public static function edit(array $args = []): void
     {
         try {
-            self::formRateLimit();
-            $instance = new self();
 
-            if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException();
-            }
+            if (!HttpAuth::isPATCHRequest() || !HttpAuth::isPUTRequest())
+                throw new ForbiddenException('Invalid HTTP request method');
+            if (!SessionAuth::hasAuthorizedSession()) throw new ForbiddenException();
+
+            self::formRateLimit();
             Csrf::protect();
 
-            if (!Role::isProjectManager(Me::getInstance()->getRole())) {
-                throw new ForbiddenException('Only Project Managers can edit projects.');
-            }
+            $instance = new self();
+
+            if (!Role::isProjectManager(Me::getInstance()->getRole()))
+                throw new ForbiddenException('Only project managers can edit projects');
 
             $projectId = isset($args['projectId'])
                 ? UUID::fromString($args['projectId'])
                 : null;
-            if (!$projectId) {
-                throw new ForbiddenException('Project ID is required.');
-            }
+            if (!$projectId) throw new ForbiddenException('Project ID is required');
 
             $data = decodeData('php://input');
-            if (!$data) {
-                throw new ValidationException('Cannot decode data.');
-            }
+            if (!$data) throw new ValidationException('Cannot decode data');
 
             $project = $instance->projectModel->findFull($projectId, ['phases' => true]);
-            if (!$project) {
-                throw new NotFoundException('Project is not found.');
-            }
+            if (!$project) throw new NotFoundException('Project is not found');
 
             $workValidator = new WorkValidator();
 
             $projectData = ['id' => $project->getId()];
 
-            if (isset($data['project']['name'])) {
-                $projectData['name'] = $data['project']['name'];
-            }
+            // Build project data to edit
 
-            if (isset($data['project']['description'])) {
-                $projectData['description'] = $data['project']['description'];
-            }
+            if (isset($data['project']['name'])) $projectData['name'] = $data['project']['name'];
 
-            if (isset($data['project']['budget'])) {
-                $projectData['budget'] = floatval($data['project']['budget']) ?? 0.00;
-            }
+            if (isset($data['project']['description'])) $projectData['description'] = $data['project']['description'];
 
-            if (isset($data['project']['maxWorkers'])) {
-                $projectData['maxWorkers'] = $data['project']['maxWorkers'];
-            }
+            if (isset($data['project']['budget'])) $projectData['budget'] = floatval($data['project']['budget']) ?? 0.00;
 
-            if (isset($data['project']['startDateTime'])) {
-                $projectData['startDateTime'] = new DateTime($data['project']['startDateTime']);
-            }
+            if (isset($data['project']['maxWorkers'])) $projectData['maxWorkers'] = $data['project']['maxWorkers'];
 
-            if (isset($data['project']['completionDateTime'])) {
+            if (isset($data['project']['startDateTime'])) $projectData['startDateTime'] = new DateTime($data['project']['startDateTime']);
+
+            if (isset($data['project']['completionDateTime'])) 
                 $projectData['completionDateTime'] = new DateTime($data['project']['completionDateTime']);
-            }
 
             if (isset($data['project']['status'])) {
                 $projectData['status'] = WorkStatus::from($data['project']['status']);
@@ -404,6 +392,7 @@ class ProjectEndpoint extends Endpoint
                 );
             }
 
+            // Build phases data to edit / add / cancel
             $phasesArray = $data['phases'] ?? [];
             foreach ($phasesArray as $key => &$arr) {
                 foreach ($arr as &$value) {
@@ -416,9 +405,7 @@ class ProjectEndpoint extends Endpoint
                     // Phase to edit / cancel - fetch existing phase for date bounds
                     if ($key === 'toEdit' || $key === 'toCancel') {
                         $existingPhase = $instance->phaseModel->findById(UUID::fromString($value['publicId']));
-                        if (!$existingPhase) {
-                            throw new NotFoundException('Phase to edit not found.');
-                        }
+                        if (!$existingPhase) throw new NotFoundException('Phase to edit not found');
                     }
 
                     $startDateTime = isset($value['startDateTime'])
@@ -435,16 +422,16 @@ class ProjectEndpoint extends Endpoint
                             $projectData['startDateTime'] ?? $project->getStartDateTime(),
                             $projectData['completionDateTime'] ?? $project->getCompletionDateTime()
                         );
-                        if ($workValidator->hasErrors()) {
-                            throw new ValidationException('Phase Validation Failed.', $workValidator->getErrors());
-                        }
+                        if ($workValidator->hasErrors()) 
+                            throw new ValidationException(
+                                'Phase Validation Failed', 
+                                $workValidator->getErrors()
+                            );
 
                         $value['status'] = WorkStatus::getStatusFromDates($startDateTime, $completionDateTime);
                     }
 
-                    if ($key === 'toCancel') {
-                        $value['status'] = WorkStatus::CANCELLED;
-                    }
+                    if ($key === 'toCancel') $value['status'] = WorkStatus::CANCELLED;
 
                     $projectData['phases'][$key][] = $value;
                 }
@@ -452,14 +439,14 @@ class ProjectEndpoint extends Endpoint
 
             $instance = new self();
 
+            // Build workers data to add / remove
             $workersArray = $data['workers'] ?? [];
             foreach ($workersArray as $key => $arr) {
                 foreach ($arr as $value) {
                     $value['publicId'] = $value['id'];
                     unset($value['id']);
-                    if ($key === 'toRemove') {
-                        $value['status'] = WorkerStatus::TERMINATED;
-                    }
+                    if ($key === 'toRemove') $value['status'] = WorkerStatus::TERMINATED;
+
                     $projectData['workers'][$key][] = $value;
                 }
             }
@@ -468,8 +455,11 @@ class ProjectEndpoint extends Endpoint
             if ($projectData && count($projectData) > 1) {
                 $workValidator->validateMultiple($projectData);
 
-                // Always compute totals from existing + requested changes so we can
-                // correctly subtract cancelled phases / removed workers from budget validators.
+                /** 
+                 * Always compute totals from existing + requested changes to
+                 * correctly subtract cancelled phases / removed workers from 
+                 * budget validators.
+                */ 
                 $phasesDelta = $projectData['phases'] ?? [];
                 $workersDelta = $projectData['workers'] ?? [];
 
@@ -487,17 +477,22 @@ class ProjectEndpoint extends Endpoint
                     $phaseWorkerBudgetValidator['addBudget']($totalDefaultRate);
                 }
 
-                if ($workValidator->hasErrors()) {
-                    throw new ValidationException('Project Validation Failed.', $workValidator->getErrors());
-                }
+                if ($workValidator->hasErrors()) 
+                    throw new ValidationException(
+                        'Project Validation Failed', 
+                        $workValidator->getErrors()
+                    );
                 sanitizeData($projectData);
 
                 ProjectService::save($projectData);
             }
 
-            Response::success(['projectId' => UUID::toString($project->getPublicId())], 'Project edited successfully.');
+            Response::success(
+                ['projectId' => UUID::toString($project->getPublicId())], 
+                'Project edited successfully'
+            );
         } catch (Throwable $e) {
-            ResponseExceptionHandler::handle('Project Edit Failed.', $e);
+            ResponseExceptionHandler::handle('Project Edit Failed', $e);
         }
     }
 
@@ -530,9 +525,8 @@ class ProjectEndpoint extends Endpoint
         // Phases that are being cancelled in this edit operation
         $cancelled = [];
         foreach (($phasesRaw['toCancel'] ?? []) as $phaseRaw) {
-            if (!isset($phaseRaw['publicId'])) {
-                continue;
-            }
+            if (!isset($phaseRaw['publicId'])) continue;
+
             $cancelled[$phaseRaw['publicId']] = true;
         }
 
@@ -542,9 +536,7 @@ class ProjectEndpoint extends Endpoint
         );
 
         foreach ($merged as $phaseRaw) {
-            if (!isset($phaseRaw['publicId'], $phaseRaw['budget'])) {
-                continue;
-            }
+            if (!isset($phaseRaw['publicId'], $phaseRaw['budget'])) continue;
 
             $overrides[$phaseRaw['publicId']] = (float) $phaseRaw['budget'];
         }
@@ -604,9 +596,8 @@ class ProjectEndpoint extends Endpoint
         // Workers that are being removed (terminated) in this edit operation
         $terminated = [];
         foreach (($workersRaw['toRemove'] ?? []) as $workerRaw) {
-            if (!isset($workerRaw['publicId'])) {
-                continue;
-            }
+            if (!isset($workerRaw['publicId'])) continue;
+
             $terminated[$workerRaw['publicId']] = true;
         }
 
@@ -616,9 +607,7 @@ class ProjectEndpoint extends Endpoint
         );
 
         foreach ($merged as $workersRaw) {
-            if (!isset($workersRaw['publicId'], $workersRaw['defaultRate'])) {
-                continue;
-            }
+            if (!isset($workersRaw['publicId'], $workersRaw['defaultRate'])) continue;
 
             $overrides[$workersRaw['publicId']] = (float) $workersRaw['defaultRate'];
         }
@@ -632,18 +621,15 @@ class ProjectEndpoint extends Endpoint
             $existingIds[] = $id;
 
             // Exclude terminated workers from the total (both already-terminated and newly-terminated)
-            if (($terminated[$id] ?? false) || $worker->getStatus() === WorkerStatus::TERMINATED) {
-                continue;
-            }
+            if (($terminated[$id] ?? false) || $worker->getStatus() === WorkerStatus::TERMINATED) continue;
 
             $total += $overrides[$id] ?? $worker->getDefaultRate();
         }
 
         // Add budgets of newly added workers
         foreach ($overrides as $id => $budget) {
-            if (!in_array($id, $existingIds, true)) {
+            if (!in_array($id, $existingIds, true))
                 $total += $budget;
-            }
         }
 
         return $total;

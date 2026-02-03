@@ -2,7 +2,6 @@
 use App\Core\Me;
 use App\Enumeration\Role;
 use App\Middleware\Csrf;
-
 ?>
 
 <!DOCTYPE html>

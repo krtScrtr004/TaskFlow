@@ -40,60 +40,52 @@ class ProjectManagerEndpoint extends Endpoint
      */
     public static function getById(array $args = []): void
     {
-        try {
+        try {            
+            if (!HttpAuth::isGETRequest()) throw new ForbiddenException('Invalid HTTP request method');
+            if (!SessionAuth::hasAuthorizedSession()) throw new ForbiddenException();
+
             self::rateLimit();
-            
-            if (!HttpAuth::isGETRequest()) {
-                throw new ForbiddenException('Invalid HTTP request method.');
-            }
 
-            if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException();
-            }
-
-            if (!isset($args['managerId']) && !$args['projectId']) {
-                throw new ForbiddenException('Manager ID and Project ID cannot both be missing.');
-            }
+            if (!isset($args['managerId']) && !$args['projectId'])
+                throw new ForbiddenException('Manager ID and Project ID cannot both be missing');
 
             $projectId = isset($args['projectId'])
                 ? UUID::fromString($args['projectId'])
                 : null;
-            if (isset($args['projectId']) && !$projectId) {
-                throw new ForbiddenException('Project ID is required.');
-            }
+            if (isset($args['projectId']) && !$projectId) 
+                throw new ForbiddenException('Project ID is required');
 
             $projectModel = new ProjectModel();
             $project = $projectId
                 ? $projectModel->findById($projectId)
                 : null;
-            if (!isset($args['projectId']) && !$project) {
-                throw new NotFoundException('Project not found.');
-            }
+            if (!isset($args['projectId']) && !$project)
+                throw new NotFoundException('Project not found');
 
             $managerId = isset($args['managerId'])
                 ? UUID::fromString($args['managerId'])
                 : null;
-            if (isset($args['managerId']) && !$managerId) {
-                throw new ForbiddenException('Manager ID is required.');
-            }
+            if (isset($args['managerId']) && !$managerId) 
+                throw new ForbiddenException('Manager ID is required');
 
             $projectManagerModel = new ProjectManagerModel();
             $manager = $managerId
                 ? $projectManagerModel->findById($managerId, $project->getId() ?? $projectId, true)
                 : $projectManagerModel->findById($project->getManager()->getId(), $project->getId() ?? $projectId, true);
-            if (!$manager) {
-                throw new NotFoundException('Manager not found.');
-            }
+            if (!$manager)
+                throw new NotFoundException('Manager not found');
 
             $projectHistory = $manager->getAdditionalInfo('projectHistory');
-            if ($projectHistory !== null || $projectHistory !== []) {
+            if ($projectHistory !== null || $projectHistory !== [])
                 $performance = ProjectManagerPerformanceCalculator::calculate($manager->getAdditionalInfo('projectHistory') ?? []);
                 $manager->addAdditionalInfo('performance', $performance['overallScore'] ?? 0.0);
-            }
 
-            Response::success([$manager], 'Manager fetched successfully.');
+            Response::success(
+                [$manager], 
+                'Manager fetched successfully'
+            );
         } catch (Throwable $e) {
-            ResponseExceptionHandler::handle('Manager Fetch Failed.', $e);
+            ResponseExceptionHandler::handle('Manager Fetch Failed', $e);
         }
     }
 

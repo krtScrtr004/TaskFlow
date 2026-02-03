@@ -74,7 +74,7 @@ class ProjectModel extends Model
         ];
 
         try {
-            $queryString = 
+            $queryString =
                 "SELECT 
                     p.*,
                     u.id AS u_id,
@@ -92,8 +92,9 @@ class ProjectModel extends Model
                 ON 
                     p.manager_id = u.id";
             $query = $this->appendOptionsToFindQuery(
-                $this->appendWhereClause($queryString, $whereClause), 
-                $paramOptions);
+                $this->appendWhereClause($queryString, $whereClause),
+                $paramOptions
+            );
 
             $statement = $this->connection->prepare($query);
             $statement->execute($params);
@@ -147,7 +148,7 @@ class ProjectModel extends Model
      * @throws DatabaseException If a database error occurs during retrieval.
      */
     public function findFull(
-        UUID $projectId, 
+        UUID $projectId,
         array $options = [
             'phases' => false,
             'tasks' => false,
@@ -174,7 +175,7 @@ class ProjectModel extends Model
                 'p.completion_date_time AS completion_date_time',
                 'p.actual_completion_date_time AS actual_completion_date_time',
                 'p.created_at AS created_at',
-                
+
                 // Manager JSON object (always included)
                 "JSON_OBJECT(
                     'id', m.id,
@@ -200,7 +201,7 @@ class ProjectModel extends Model
 
             // Conditionally add phases subquery
             if ($includePhases) {
-                $selectFields[] = 
+                $selectFields[] =
                     "COALESCE(
                         (
                             SELECT JSON_ARRAYAGG(
@@ -231,7 +232,7 @@ class ProjectModel extends Model
 
             // Conditionally add workers subquery
             if ($includeWorkers) {
-                $selectFields[] = 
+                $selectFields[] =
                     "COALESCE(
                         (
                             SELECT JSON_ARRAYAGG(
@@ -274,7 +275,7 @@ class ProjectModel extends Model
 
             // Select all tasks associated with the project
             if ($includeTasks) {
-                $selectFields[] = 
+                $selectFields[] =
                     "COALESCE(
                         (
                             SELECT JSON_ARRAYAGG(
@@ -307,7 +308,7 @@ class ProjectModel extends Model
             }
 
             // Build the final query
-            $query = 
+            $query =
                 "SELECT *
                 FROM (
                     SELECT 
@@ -329,9 +330,7 @@ class ProjectModel extends Model
             $result = $statement->fetch();
 
             // Process result into Project object
-            if (!$this->hasData($result)) {
-                return null;
-            }
+            if (!$this->hasData($result)) return null;
 
             $managerData = json_decode($result['project_manager'], true);
             $managerData['publicId'] = UUID::fromHex($managerData['public_id']);
@@ -364,7 +363,7 @@ class ProjectModel extends Model
                     $project->addWorker(Worker::createPartial($worker));
                 }
             }
-                    
+
             return $project;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
@@ -393,17 +392,15 @@ class ProjectModel extends Model
      */
     public function findById(int|UUID $projectId): ?Project
     {
-        if (is_int($projectId) && $projectId < 1) {
-            throw new InvalidArgumentException('Invalid project ID provided.');
-        }
+        if (\is_int($projectId) && $projectId < 1) throw new InvalidArgumentException('Invalid project ID provided');
 
         try {
-            $whereClause = is_int($projectId) 
-                ? 'p.id = :projectId' 
+            $whereClause = is_int($projectId)
+                ? 'p.id = :projectId'
                 : 'p.public_id = :projectId';
 
-            $params['projectId'] = is_int($projectId) 
-                ? $projectId 
+            $params['projectId'] = is_int($projectId)
+                ? $projectId
                 : UUID::toBinary($projectId);
 
             $projects = self::find($whereClause, $params);
@@ -429,9 +426,7 @@ class ProjectModel extends Model
      */
     public function findManagerActiveProjectByManagerId(int $managerId): ?Project
     {
-        if ($managerId < 1) {
-            throw new InvalidArgumentException('Invalid manager ID provided.');
-        }
+        if ($managerId < 1) throw new InvalidArgumentException('Invalid manager ID provided');
 
         try {
             $whereClause = 'p.manager_id = :managerId AND p.status != :completedStatus AND p.status != :cancelledStatus';
@@ -469,12 +464,10 @@ class ProjectModel extends Model
      */
     public function findWorkerActiveProjectByWorkerId(int $workerId): ?Project
     {
-        if ($workerId < 1) {
-            throw new InvalidArgumentException('Invalid worker ID provided.');
-        }
+        if ($workerId < 1) throw new InvalidArgumentException('Invalid worker ID provided');
 
         try {
-            $query = 
+            $query =
                 "SELECT
                     p.*,
                     u.id AS u_id,
@@ -517,9 +510,7 @@ class ProjectModel extends Model
             ]);
             $result = $statement->fetch();
 
-            if (!$this->hasData($result)) {
-                return null;
-            }
+            if (!$this->hasData($result)) return null;
 
             // Build manager object
             $result['manager'] = ProjectManager::createPartial([
@@ -577,9 +568,8 @@ class ProjectModel extends Model
             'orderBy'   => 'p.start_date_time DESC',
         ]
     ): ?ProjectContainer {
-        if (isset($userId) && is_int($userId) && $userId < 1) {
-            throw new InvalidArgumentException('Invalid user ID provided.');
-        }
+        if (isset($userId) && \is_int($userId) && $userId < 1)
+            throw new InvalidArgumentException('Invalid user ID provided');
 
         $paramOptions = [
             'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
@@ -620,7 +610,7 @@ class ProjectModel extends Model
                             worker_id = (SELECT id FROM `user` WHERE public_id = :userId2)
                     ))';
                     $params[':userId1'] = UUID::toBinary($userId);
-                    $params[':userId2'] = UUID::toBinary( $userId);
+                    $params[':userId2'] = UUID::toBinary($userId);
                 }
             }
 
@@ -660,13 +650,8 @@ class ProjectModel extends Model
      */
     public function all(int $offset = 0, int $limit = 10): ?ProjectContainer
     {
-        if ($offset < 0) {
-            throw new InvalidArgumentException('Invalid offset value.');
-        }
-
-        if ($limit < 1) {
-            throw new InvalidArgumentException('Invalid limit value.');
-        }
+        if ($offset < 0) throw new InvalidArgumentException('Invalid offset value');
+        if ($limit < 1) throw new InvalidArgumentException('Invalid limit value');
 
         try {
             $options = [
@@ -704,9 +689,8 @@ class ProjectModel extends Model
      */
     public function create(mixed $project): Project
     {
-        if (!($project instanceof Project)) {
-            throw new InvalidArgumentException('Expected instance of Project.');
-        }
+        if (!($project instanceof Project))
+            throw new InvalidArgumentException('Expected instance of Project');
 
 
         try {
@@ -719,7 +703,7 @@ class ProjectModel extends Model
             $projectStartDateTime      =   formatDateTime($project->getStartDateTime());
             $projectCompletionDateTime =   formatDateTime($project->getCompletionDateTime());
 
-            $projectQuery = 
+            $projectQuery =
                 "INSERT INTO `project` (
                     public_id,
                     name,
@@ -755,7 +739,7 @@ class ProjectModel extends Model
             ]);
             $projectId = (int) $this->connection->lastInsertId();
 
-            
+
             $project->setId($projectId);
             $project->setPublicId($projectPublicId);
             return $project;
@@ -797,14 +781,13 @@ class ProjectModel extends Model
             $params = [];
 
             if (isset($data['id'])) {
-                if (!is_int($data['id']) || $data['id'] < 1) {
-                    throw new InvalidArgumentException('Invalid Project ID provided.');
-                }
+                if (!\is_int($data['id']) || $data['id'] < 1)
+                    throw new InvalidArgumentException('Invalid Project ID provided');
                 $params[':id'] = $data['id'];
             } elseif (isset($data['publicId']) && $data['publicId'] instanceof UUID) {
                 $params[':id'] = UUID::toBinary($data['publicId']);
             } else {
-                throw new InvalidArgumentException('Project ID or Public ID is required.');
+                throw new InvalidArgumentException('Project ID or Public ID is required');
             }
 
             if (isset($data['name'])) {
@@ -844,18 +827,18 @@ class ProjectModel extends Model
 
             if (isset($data['actualCompletionDateTime'])) {
                 $updateFields[] = 'actual_completion_date_time = :actualCompletionDateTime';
-                $params[':actualCompletionDateTime'] = $data['actualCompletionDateTime'] !== null 
-                    ? formatDateTime($data['actualCompletionDateTime']) 
+                $params[':actualCompletionDateTime'] = $data['actualCompletionDateTime'] !== null
+                    ? formatDateTime($data['actualCompletionDateTime'])
                     : null;
             }
 
             if (!empty($updateFields)) {
-                $projectQuery = 
+                $projectQuery =
                     "UPDATE `project` 
-                    SET " . implode(', ', $updateFields) . 
+                    SET " . implode(', ', $updateFields) .
                     " WHERE " . (
-                        is_int($data['id']) 
-                        ? 'id' 
+                        \is_int($data['id'])
+                        ? 'id'
                         : 'publicId') . " = :id";
                 $statement = $this->connection->prepare($projectQuery);
                 $statement->execute($params);
@@ -971,19 +954,16 @@ class ProjectModel extends Model
      */
     public function getReport(int|UUID $projectId): ?ProjectReport
     {
-        if (is_int($projectId) && $projectId < 1) {
-            throw new InvalidArgumentException('Invalid project ID provided.');
-        }
+        if (\is_int($projectId) && $projectId < 1)
+            throw new InvalidArgumentException('Invalid project ID provided');
 
         try {
             $projectStatistics = self::projectStatistics($projectId);
             $workerCount = self::workerCount($projectId);
             $periodicTaskCount = self::periodicTaskCount($projectId);
             $topWorkers = self::topWorkersQuery($projectId);
-            
-            if (!$projectStatistics && !$topWorkers) {
-                return null;
-            }
+
+            if (!$projectStatistics && !$topWorkers) return null;
 
             // Build phases and tasks
             $phases = new PhaseContainer();
@@ -1001,8 +981,8 @@ class ProjectModel extends Model
                         'status'                    => WorkStatus::from($task['status']),
                         'startDateTime'             => new DateTime($task['start_date_time']),
                         'completionDateTime'        => new DateTime($task['completion_date_time']),
-                        'actualCompletionDateTime'  => $task['actual_completion_date_time'] 
-                            ? new DateTime($task['actual_completion_date_time']) 
+                        'actualCompletionDateTime'  => $task['actual_completion_date_time']
+                            ? new DateTime($task['actual_completion_date_time'])
                             : null,
                     ]));
                 }
@@ -1013,8 +993,8 @@ class ProjectModel extends Model
                     'name'                      => $phase['name'],
                     'startDateTime'             => new DateTime($phase['start_date_time']),
                     'completionDateTime'        => new DateTime($phase['completion_date_time']),
-                    'actualCompletionDateTime'  => $phase['actual_completion_date_time'] 
-                        ? new DateTime($phase['actual_completion_date_time']) 
+                    'actualCompletionDateTime'  => $phase['actual_completion_date_time']
+                        ? new DateTime($phase['actual_completion_date_time'])
                         : null,
                     'status'                    => WorkStatus::from($phase['status']),
                     'tasks'                     => $tasks
@@ -1025,9 +1005,7 @@ class ProjectModel extends Model
             $workerCounts = [];
             $total = $workerCount['total'];
             foreach ($workerCount as $status => $count) {
-                if ($status === 'total') {
-                    continue;
-                }
+                if ($status === 'total') continue;
 
                 $key = WorkerStatus::from($status);
                 $workerCounts[$key->value]['count'] = $count;
@@ -1035,7 +1013,7 @@ class ProjectModel extends Model
             }
 
             $taskCounts = [];
-            foreach($periodicTaskCount as $row) {
+            foreach ($periodicTaskCount as $row) {
                 $year = (int) $row['year'];
                 $month = (int) $row['month'];
                 $count = (int) $row['task_count'];
@@ -1065,8 +1043,8 @@ class ProjectModel extends Model
                 name: $projectStatistics['name'],
                 startDateTime: new DateTime($projectStatistics['start_date_time']),
                 completionDateTime: new DateTime($projectStatistics['completion_date_time']),
-                actualCompletionDateTime: $projectStatistics['actual_completion_date_time'] 
-                    ? new DateTime($projectStatistics['actual_completion_date_time']) 
+                actualCompletionDateTime: $projectStatistics['actual_completion_date_time']
+                    ? new DateTime($projectStatistics['actual_completion_date_time'])
                     : null,
                 status: WorkStatus::from($projectStatistics['status']),
                 workerCount: $workerCounts,
@@ -1133,10 +1111,10 @@ class ProjectModel extends Model
      *      - projectStatus: string
      *      - projectPhases: string JSON array of phases (see structure described above)
      *
-     */ 
+     */
     private function projectStatistics(int|UUID $projectId)
     {
-        $query = 
+        $query =
             "SELECT 
                 p.id AS id,
                 p.public_id AS public_id,
@@ -1199,16 +1177,13 @@ class ProjectModel extends Model
 
         $statement = $this->connection->prepare($query);
         $statement->execute([
-            ':projectId'    => is_int($projectId) 
-                ? $projectId 
+            ':projectId'    => is_int($projectId)
+                ? $projectId
                 : UUID::toBinary($projectId),
         ]);
         $result = $statement->fetch();
 
-        if (!$this->hasData($result)) {
-            return null;
-        }
-        return $result;
+        return ($this->hasData($result)) ? $result : null;
     }
 
     /**
@@ -1237,8 +1212,9 @@ class ProjectModel extends Model
      *      - total: int Total number of workers associated with the project
      *      Returns null if the project was not found or no row was returned.
      */
-    private function workerCount(int|UUID $projectId) {
-        $query = 
+    private function workerCount(int|UUID $projectId)
+    {
+        $query =
             "SELECT 
                 (
                     SELECT 
@@ -1338,16 +1314,13 @@ class ProjectModel extends Model
 
         $statement = $this->connection->prepare($query);
         $statement->execute([
-            ':projectId'    => is_int($projectId) 
-                ? $projectId 
+            ':projectId'    => is_int($projectId)
+                ? $projectId
                 : UUID::toBinary($projectId),
         ]);
         $result = $statement->fetch();
 
-        if (!$this->hasData($result)) {
-            return null;
-        }
-        return $result;
+        return ($this->hasData($result)) ? $result : null;
     }
 
     /**
@@ -1374,9 +1347,9 @@ class ProjectModel extends Model
      *
      * @throws \PDOException If the database query fails
      */
-    private function periodicTaskCount(int|UUID $projectId) 
+    private function periodicTaskCount(int|UUID $projectId)
     {
-        $query = 
+        $query =
             "SELECT 
                 YEAR(pt.created_at) AS year,
                 MONTH(pt.created_at) AS month,
@@ -1403,16 +1376,13 @@ class ProjectModel extends Model
 
         $statement = $this->connection->prepare($query);
         $statement->execute([
-            ':projectId'    => is_int($projectId) 
-                ? $projectId 
+            ':projectId'    => is_int($projectId)
+                ? $projectId
                 : UUID::toBinary($projectId),
         ]);
         $result = $statement->fetchAll();
 
-        if (!$this->hasData($result)) {
-            return null;
-        }
-        return $result;
+        return ($this->hasData($result)) ? $result : null; 
     }
 
     /**
@@ -1454,7 +1424,7 @@ class ProjectModel extends Model
      */
     private function topWorkersQuery(int|UUID $projectId): ?array
     {
-        $query = 
+        $query =
             "SELECT 
                 ws.id,
                 ws.first_name,
@@ -1481,7 +1451,7 @@ class ProjectModel extends Model
                         ON pt2.id = ptw2.task_id
                         WHERE pt2.status = '" . WorkStatus::COMPLETED->value . "'
                         AND ptw2.worker_id = u.id
-                        AND ptw2.status != '". WorkerStatus::TERMINATED->value ."'
+                        AND ptw2.status != '" . WorkerStatus::TERMINATED->value . "'
                         AND pt2.phase_id IN (
                             SELECT pp2.id
                             FROM `project_phase` AS pp2
@@ -1605,16 +1575,12 @@ class ProjectModel extends Model
 
         $statement = $this->connection->prepare($query);
         $statement->execute([
-            ':projectId'    => is_int($projectId) 
-                ? $projectId 
+            ':projectId'    => is_int($projectId)
+                ? $projectId
                 : UUID::toBinary($projectId),
         ]);
         $result = $statement->fetchAll();
 
-        if (!$this->hasData($result)) {
-            return null;
-        }
-
-        return $result;
+        return ($this->hasData($result)) ? $result : null;
     }
 }

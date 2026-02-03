@@ -24,24 +24,24 @@ use App\Entity\Phase;
 function phaseFormCard(?Phase $phase): bool|string
 {
     $phaseData = [
-        'id' => '',
-        'name' => '',
-        'description' => '',
-        'budget' => '',
-        'contingencyRate' => '',
-        'budgetNote' => '',
-        'startDateTime' => '',
-        'completionDateTime' => '',
+        'id'                    => '',
+        'name'                  => '',
+        'description'           => '',
+        'budget'                => '',
+        'contingencyRate'       => '',
+        'budgetNote'            => '',
+        'startDateTime'         => '',
+        'completionDateTime'    => '',
     ];
     if ($phase) {
-        $phaseData['id'] = htmlspecialchars(UUID::toString($phase->getPublicId()));
-        $phaseData['name'] = htmlspecialchars($phase->getName());
-        $phaseData['description'] = htmlspecialchars($phase->getDescription());
-        $phaseData['budget'] = htmlspecialchars($phase->getBudget());
-        $phaseData['contingencyRate'] = htmlspecialchars($phase->getContingencyRate());
-        $phaseData['budgetNote'] = htmlspecialchars($phase->getBudgetNote());
-        $phaseData['startDateTime'] = htmlspecialchars(formatDateTime($phase->getStartDateTime(), 'Y-m-d'));
-        $phaseData['completionDateTime'] = htmlspecialchars(formatDateTime($phase->getCompletionDateTime(), 'Y-m-d'));
+        $phaseData['id']                    = htmlspecialchars(UUID::toString($phase->getPublicId()));
+        $phaseData['name']                  = htmlspecialchars($phase->getName());
+        $phaseData['description']           = htmlspecialchars($phase->getDescription());
+        $phaseData['budget']                = htmlspecialchars($phase->getBudget());
+        $phaseData['contingencyRate']       = htmlspecialchars($phase->getContingencyRate());
+        $phaseData['budgetNote']            = htmlspecialchars($phase->getBudgetNote());
+        $phaseData['startDateTime']         = htmlspecialchars(formatDateTime($phase->getStartDateTime(), 'Y-m-d'));
+        $phaseData['completionDateTime']    = htmlspecialchars(formatDateTime($phase->getCompletionDateTime(), 'Y-m-d'));
     }
 
     ob_start();

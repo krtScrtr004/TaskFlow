@@ -120,8 +120,8 @@ class Email
         array $data = [], 
         bool $isHtml
     ): bool {
-        $data['userFrom'] = $data['userFrom'] ?? 'TaskFlow.com';
-        $data['userTo'] = $data['userTo'] ?? 'Valued User';
+        $data['userFrom'] ??= 'TaskFlow.com';
+        $data['userTo'] ??= 'Valued User';
 
         try {
             // Create a new instance to ensure fresh state
@@ -132,14 +132,11 @@ class Email
             self::$mail->addAddress($to, $data['userTo']); 
 
             // Set Reply-To if provided (for user-submitted emails)
-            if (!empty($data['replyTo'])) {
+            if (!empty($data['replyTo']))
                 self::$mail->addReplyTo($data['replyTo'], $data['replyToName'] ?? '');
-            }
 
             // Content
-            if ($isHtml) {
-                self::$mail->isHTML(true);  // Set email format to HTML
-            }
+            if ($isHtml) self::$mail->isHTML(true);  // Set email format to HTML
             self::$mail->Subject = $subject;
             self::$mail->Body = $body;
 

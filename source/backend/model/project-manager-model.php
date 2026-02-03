@@ -137,9 +137,7 @@ class ProjectManagerModel extends Model
             : '';
 
             $whereClause = [];
-            $params = [
-                ':completedStatus' => WorkStatus::COMPLETED->value
-            ];
+            $params = [':completedStatus' => WorkStatus::COMPLETED->value];
 
             $whereClause[] = is_int($managerId)
                 ? 'u.id = :managerId'
@@ -216,9 +214,7 @@ class ProjectManagerModel extends Model
             $statement->execute($params);
             $result = $statement->fetch();
 
-            if (!$this->hasData($result)) {
-                return null;
-            }
+            if (!$this->hasData($result)) return null;
 
             $result['role'] = Role::PROJECT_MANAGER;
             $result['additionalInfo'] = [

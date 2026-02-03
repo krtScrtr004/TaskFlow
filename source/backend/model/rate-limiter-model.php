@@ -31,17 +31,11 @@ class RateLimiterModel extends Model
      */
     public function create(mixed $data): mixed
     {
-        if (!is_array($data)) {
-            throw new InvalidArgumentException('Data must be an array.');
-        }
-
-        if (!isset($data['ip']) || empty($data['ip'])) {
-            throw new InvalidArgumentException('IP address is required.');
-        }
-
-        if (!isset($data['endpoint']) || empty($data['endpoint'])) {
-            throw new InvalidArgumentException('Endpoint is required.');
-        }
+        if (!\is_array($data)) throw new InvalidArgumentException('Data must be an array');
+        if (!isset($data['ip']) || empty($data['ip']))
+            throw new InvalidArgumentException('IP address is required');
+        if (!isset($data['endpoint']) || empty($data['endpoint'])) 
+            throw new InvalidArgumentException('Endpoint is required');
 
         $ip = $data['ip'];
         $endpoint = $data['endpoint'];
@@ -87,13 +81,8 @@ class RateLimiterModel extends Model
      */
     public function search(string $ip, string $endpoint)
     {
-        if (empty($ip)) {
-            throw new InvalidArgumentException('IP address cannot be empty.');
-        }
-
-        if (empty($endpoint)) {
-            throw new InvalidArgumentException('Endpoint cannot be empty.');
-        }
+        if (empty($ip)) throw new InvalidArgumentException('IP address cannot be empty');
+        if (empty($endpoint)) throw new InvalidArgumentException('Endpoint cannot be empty');
 
         try {
             $query = 
@@ -145,21 +134,12 @@ class RateLimiterModel extends Model
      */
     public function save(array $data): bool
     {
-        if (!is_array($data)) {
-            throw new InvalidArgumentException('Data must be an array.');
-        }
-
-        if (!isset($data['ip']) || empty($data['ip'])) {
-            throw new InvalidArgumentException('IP address is required.');
-        }
-
-        if (!isset($data['endpoint']) || empty($data['endpoint'])) {
-            throw new InvalidArgumentException('Endpoint is required.');
-        }
-
-        if (!isset($data['count']) || !is_int($data['count'])) {
-            throw new InvalidArgumentException('Count must be an integer.');
-        }
+        if (!\is_array($data)) throw new InvalidArgumentException('Data must be an array');
+        if (!isset($data['ip']) || empty($data['ip'])) throw new InvalidArgumentException('IP address is required');
+        if (!isset($data['endpoint']) || empty($data['endpoint'])) 
+            throw new InvalidArgumentException('Endpoint is required');
+        if (!isset($data['count']) || !\is_int($data['count'])) 
+            throw new InvalidArgumentException('Count must be an integer');
 
         $ip = $data['ip'];
         $endpoint = $data['endpoint'];

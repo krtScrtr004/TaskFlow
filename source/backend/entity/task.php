@@ -22,21 +22,21 @@ class Task implements Entity
     private int $id;
     private UUID $publicId;
     private string $name;
-    private ?string $description;
-    private ?ResourceContainer $resources;
+    private string|null $description;
+    private ResourceContainer|null $resources;
     private DateTime $startDateTime;
     private DateTime $completionDateTime;
-    private ?DateTime $actualCompletionDateTime;
+    private DateTime|null $actualCompletionDateTime;
     private Priority $priority;
     private ?WorkStatus $status;
-    private ?DateTime $createdAt;
+    private DateTime|null $createdAt;
     private array $additionalInfo;
     private float $estimatedCost;
     private float $actualCost;
-    private ?string $budgetNote;
+    private string|null $budgetNote;
 
     protected WorkValidator $workValidator;
-    protected ResourceValidator $resourceValidator; 
+    protected ResourceValidator $resourceValidator;
 
     /**
      * Constructor for the Task entity.
@@ -71,15 +71,15 @@ class Task implements Entity
         WorkStatus $status,
 
         // Optional
-        ?string $description = null,
-        ?WorkerContainer $workers = null,
-        ?ResourceContainer $resources = null,
+        string|null $description = null,
+        WorkerContainer|null $workers = null,
+        ResourceContainer|null $resources = null,
         float $estimatedCost = DEFAULT_RATE_MIN,
         float $actualCost = DEFAULT_RATE_MIN,
-        ?string $budgetNote = null,
-        ?DateTime $actualCompletionDateTime = null,
+        string|null $budgetNote = null,
+        DateTime|null $actualCompletionDateTime = null,
         array $additionalInfo = [],
-        ?DateTime $createdAt = null,
+        DateTime|null $createdAt = null,
     ) {
         try {
             $this->workValidator = new WorkValidator();
@@ -91,9 +91,11 @@ class Task implements Entity
                 'startDateTime'         => $startDateTime,
                 'completionDateTime'    => $completionDateTime
             ]);
-            if ($this->workValidator->hasErrors()) {
-                throw new ValidationException("Task validation failed", $this->workValidator->getErrors());
-            }
+            if ($this->workValidator->hasErrors())
+                throw new ValidationException(
+                    "Task Validation Failed",
+                    $this->workValidator->getErrors()
+                );
         } catch (ValidationException $e) {
             throw $e;
         }
@@ -166,7 +168,7 @@ class Task implements Entity
      *
      * @return string|null The task's description
      */
-    public function getDescription(): ?string
+    public function getDescription(): string|null
     {
         return $this->description;
     }
@@ -176,7 +178,7 @@ class Task implements Entity
      *
      * @return WorkerContainer|null The container with the task's workers
      */
-    public function getWorkers(): ?WorkerContainer
+    public function getWorkers(): WorkerContainer|null
     {
         return $this->resources?->getWorkers();
     }
@@ -186,7 +188,7 @@ class Task implements Entity
      *
      * @return ResourceContainer The container with the task's resources
      */
-    public function getResources(): ?ResourceContainer
+    public function getResources(): ResourceContainer|null
     {
         return $this->resources;
     }
@@ -216,7 +218,7 @@ class Task implements Entity
      *
      * @return DateTime|null The DateTime object representing when the task was completed, or null if not completed
      */
-    public function getActualCompletionDateTime(): ?DateTime
+    public function getActualCompletionDateTime(): DateTime|null
     {
         return $this->actualCompletionDateTime;
     }
@@ -266,7 +268,7 @@ class Task implements Entity
      *
      * @return string|null The budget note, or null if none
      */
-    public function getBudgetNote(): ?string
+    public function getBudgetNote(): string|null
     {
         return $this->budgetNote;
     }
@@ -289,8 +291,8 @@ class Task implements Entity
      */
     public function getAdditionalInfo(string $key = ''): mixed
     {
-        return trimOrNull(string: $key) 
-            ? ($this->additionalInfo[$key] ?? null) 
+        return trimOrNull(string: $key)
+            ? ($this->additionalInfo[$key] ?? null)
             : $this->additionalInfo;
     }
 
@@ -305,9 +307,7 @@ class Task implements Entity
      */
     public function setId(int $id): void
     {
-        if ($id < 0) {
-            throw new ValidationException("Invalid task ID");
-        }
+        if ($id < 0) throw new ValidationException("Invalid ID");
         $this->id = $id;
     }
 
@@ -322,9 +322,11 @@ class Task implements Entity
     {
         $uuidValidator = new UuidValidator();
         $uuidValidator->validateUuid($publicId);
-        if ($uuidValidator->hasErrors()) {
-            throw new ValidationException("Invalid public ID", $uuidValidator->getErrors());
-        }
+        if ($uuidValidator->hasErrors())
+            throw new ValidationException(
+                'Invalid Public ID',
+                $uuidValidator->getErrors()
+            );
         $this->publicId = $publicId;
     }
 
@@ -338,9 +340,11 @@ class Task implements Entity
     public function setName(string $name): void
     {
         $this->workValidator->validateName(trim($name));
-        if ($this->workValidator->hasErrors()) {
-            throw new ValidationException("Invalid task name", $this->workValidator->getErrors());
-        }
+        if ($this->workValidator->hasErrors())
+            throw new ValidationException(
+                'Invalid Name',
+                $this->workValidator->getErrors()
+            );
         $this->name = trimOrNull($name);
     }
 
@@ -351,18 +355,18 @@ class Task implements Entity
      * @throws ValidationException If the description is invalid
      * @return void
      */
-    public function setDescription(?string $description): void
+    public function setDescription(string|null $description): void
     {
-        if (!$description) {
-            $this->description = null;
-            return;
+        $tempDescription = $description ? trimOrNull($description) : null;
+        if (!$tempDescription) {
+            $this->workValidator->validateDescription(trim($tempDescription));
+            if ($this->workValidator->hasErrors())
+                throw new ValidationException(
+                    'Invalid Description',
+                    $this->workValidator->getErrors()
+                );
         }
-
-        $this->workValidator->validateDescription(trim($description));
-        if ($this->workValidator->hasErrors()) {
-            throw new ValidationException("Invalid task description", $this->workValidator->getErrors());
-        }
-        $this->description = trimOrNull($description);
+        $this->description = $tempDescription;
     }
 
     /**
@@ -371,17 +375,14 @@ class Task implements Entity
      * @param WorkerContainer|null $workers Container of workers to assign to the task, or null to clear
      * @return void
      */
-    public function setWorkers(?WorkerContainer $workers): void
+    public function setWorkers(WorkerContainer|null $workers): void
     {
         if (!$workers) {
             $this->resources?->clearWorkers();
-            return;
+        } else {
+            if (!$this->resources) $this->resources = new ResourceContainer();
+            $this->resources->setWorkers($workers);
         }
-
-        if (!$this->resources) {
-            $this->resources = new ResourceContainer();
-        }
-        $this->resources->setWorkers($workers);
     }
 
     /**
@@ -390,17 +391,14 @@ class Task implements Entity
      * @param ResourceContainer|null $resources Container of resources to associate with the task, or null to clear
      * @return void
      */
-    public function setResources(?ResourceContainer $resources): void
+    public function setResources(ResourceContainer|null $resources): void
     {
         if (!$resources) {
             $this->resources?->clearResources();
-            return;
+        } else {
+            if (!$this->resources) $this->resources = new ResourceContainer();
+            $this->resources = $resources;
         }
-
-        if (!$this->resources) {
-            $this->resources = new ResourceContainer();
-        }
-        $this->resources = $resources;
     }
 
     /**
@@ -413,9 +411,11 @@ class Task implements Entity
     public function setEstimatedCost(float $estimatedCost): void
     {
         $this->resourceValidator->validateEstimatedUnit($estimatedCost);
-        if ($this->resourceValidator->hasErrors()) {
-            throw new ValidationException("Invalid estimated cost", $this->resourceValidator->getErrors());
-        }
+        if ($this->resourceValidator->hasErrors())
+            throw new ValidationException(
+                'Invalid Estimated Cost',
+                $this->resourceValidator->getErrors()
+            );
         $this->estimatedCost = $estimatedCost;
     }
 
@@ -429,9 +429,11 @@ class Task implements Entity
     public function setActualCost(float $actualCost): void
     {
         $this->resourceValidator->validateActualUnit($actualCost);
-        if ($this->resourceValidator->hasErrors()) {
-            throw new ValidationException("Invalid actual cost", $this->resourceValidator->getErrors());
-        }
+        if ($this->resourceValidator->hasErrors())
+            throw new ValidationException(
+                'Invalid Actual Cost',
+                $this->resourceValidator->getErrors()
+            );
         $this->actualCost = $actualCost;
     }
 
@@ -442,16 +444,16 @@ class Task implements Entity
      * @throws ValidationException If the budget note is invalid
      * @return void
      */
-    public function setBudgetNote(?string $budgetNote): void
+    public function setBudgetNote(string|null $budgetNote): void
     {
-        if (!$budgetNote) {
-            $this->budgetNote = null;
-            return;
-        }
-
-        $this->workValidator->validateBudgetNote($budgetNote);
-        if ($this->workValidator->hasErrors()) {
-            throw new ValidationException("Invalid budget note", $this->workValidator->getErrors());
+        $tempBudgetNote = $budgetNote ? trimOrNull($budgetNote) : null;
+        if ($tempBudgetNote) {
+            $this->workValidator->validateBudgetNote($tempBudgetNote);
+            if ($this->workValidator->hasErrors()) 
+                throw new ValidationException(
+                    'Invalid Budget Note', 
+                    $this->workValidator->getErrors()
+                );
         }
         $this->budgetNote = $budgetNote;
     }
@@ -466,9 +468,11 @@ class Task implements Entity
     public function setStartDateTime(DateTime $startDateTime): void
     {
         $this->workValidator->validateStartDateTime($startDateTime);
-        if ($this->workValidator->hasErrors()) {
-            throw new ValidationException("Invalid start date", $this->workValidator->getErrors());
-        }
+        if ($this->workValidator->hasErrors())
+            throw new ValidationException(
+                'Invalid Start Date', 
+                $this->workValidator->getErrors()
+            );
         $this->startDateTime = $startDateTime;
     }
 
@@ -482,9 +486,11 @@ class Task implements Entity
     public function setCompletionDateTime(DateTime $completionDateTime): void
     {
         $this->workValidator->validateCompletionDateTime($completionDateTime, $this->startDateTime);
-        if ($this->workValidator->hasErrors()) {
-            throw new ValidationException("Invalid completion date", $this->workValidator->getErrors());
-        }
+        if ($this->workValidator->hasErrors())
+            throw new ValidationException(
+                'Invalid completion date', 
+                $this->workValidator->getErrors()
+            );
         $this->completionDateTime = $completionDateTime;
     }
 
@@ -494,7 +500,7 @@ class Task implements Entity
      * @param DateTime|null $actualCompletionDateTime The actual completion date and time, or null if not completed
      * @return void
      */
-    public function setActualCompletionDateTime(?DateTime $actualCompletionDateTime): void
+    public function setActualCompletionDateTime(DateTime|null $actualCompletionDateTime): void
     {
         $this->actualCompletionDateTime = $actualCompletionDateTime;
     }
@@ -530,9 +536,7 @@ class Task implements Entity
      */
     public function setCreatedAt(DateTime $createdAt): void
     {
-        if ($createdAt && $createdAt > new DateTime()) {
-            throw new ValidationException("Invalid creation date");
-        }
+        if ($createdAt && $createdAt > new DateTime()) throw new ValidationException("Invalid Creation Date");
         $this->createdAt = $createdAt;
     }
 
@@ -556,13 +560,11 @@ class Task implements Entity
      */
     public function addWorker(TaskWorker $worker): void
     {
-        if (!$this->resources) {
-            $this->resources = new ResourceContainer();
-        }
+        if (!$this->resources) $this->resources = new ResourceContainer();
         $this->resources->add($worker);
     }
 
-/**
+    /**
      * Adds or updates a key-value pair in the task's additional information.
      *
      * This method stores custom data in the additionalInfo array property,
@@ -624,40 +626,33 @@ class Task implements Entity
         ];
 
         // Handle publicId conversion (accept UUID or string)
-        if (isset($data['publicId']) && !($data['publicId'] instanceof UUID)) {
+        if (isset($data['publicId']) && !($data['publicId'] instanceof UUID))
             $defaults['publicId'] = UUID::tryFromString(trimOrNull($data['publicId']));
-        }
 
         // Convert workers to WorkerContainer when provided as array
-        if (isset($data['workers']) && !($data['workers'] instanceof WorkerContainer)) {
+        if (isset($data['workers']) && !($data['workers'] instanceof WorkerContainer))
             $defaults['workers'] = is_array($data['workers'])
                 ? WorkerContainer::fromArray($data['workers'])
                 : new WorkerContainer();
-        }
 
         // Date conversions
-        if (isset($data['startDateTime']) && !($data['startDateTime'] instanceof DateTime)) {
+        if (isset($data['startDateTime']) && !($data['startDateTime'] instanceof DateTime))
             $defaults['startDateTime'] = new DateTime(trimOrNull($data['startDateTime']));
-        }
 
-        if (isset($data['completionDateTime']) && !($data['completionDateTime'] instanceof DateTime)) {
+        if (isset($data['completionDateTime']) && !($data['completionDateTime'] instanceof DateTime))
             $defaults['completionDateTime'] = new DateTime(trimOrNull($data['completionDateTime']));
-        }
 
-        if (isset($data['actualCompletionDateTime']) && !($data['actualCompletionDateTime'] instanceof DateTime)) {
+        if (isset($data['actualCompletionDateTime']) && !($data['actualCompletionDateTime'] instanceof DateTime))
             $defaults['actualCompletionDateTime'] = is_string($data['actualCompletionDateTime'])
                 ? new DateTime(trimOrNull($data['actualCompletionDateTime']))
                 : $data['actualCompletionDateTime'];
-        }
 
-        if (isset($data['createdAt']) && !($data['createdAt'] instanceof DateTime)) {
+        if (isset($data['createdAt']) && !($data['createdAt'] instanceof DateTime)) 
             $defaults['createdAt'] = new DateTime(trimOrNull($data['createdAt']));
-        }
 
         // Enum conversions
-        if (isset($data['priority']) && !($data['priority'] instanceof Priority)) {
+        if (isset($data['priority']) && !($data['priority'] instanceof Priority)) 
             $defaults['priority'] = Priority::tryFrom(trimOrNull($data['priority'])) ?? Priority::MEDIUM;
-        }
 
         if (isset($data['status']) && !($data['status'] instanceof WorkStatus)) {
             try {
@@ -678,7 +673,7 @@ class Task implements Entity
             name: $defaults['name'],
             description: $defaults['description'],
             workers: $defaults['workers'],
-            resources: $defaults['resources'],  
+            resources: $defaults['resources'],
             startDateTime: $defaults['startDateTime'],
             completionDateTime: $defaults['completionDateTime'],
             actualCompletionDateTime: $defaults['actualCompletionDateTime'],
@@ -692,7 +687,7 @@ class Task implements Entity
         );
     }
 
-    
+
 
     /**
      * Converts the Task object to an associative array representation.
@@ -732,8 +727,8 @@ class Task implements Entity
             'resources'                 => null,
             'startDateTime'             => formatDateTime($this->startDateTime),
             'completionDateTime'        => formatDateTime($this->completionDateTime),
-            'actualCompletionDateTime'  => $this->actualCompletionDateTime 
-                ? formatDateTime($this->actualCompletionDateTime) 
+            'actualCompletionDateTime'  => $this->actualCompletionDateTime
+                ? formatDateTime($this->actualCompletionDateTime)
                 : null,
             'priority'                  => $this->priority->getDisplayName(),
             'status'                    => $this->status->getDisplayName(),
@@ -797,11 +792,10 @@ class Task implements Entity
         $data = normalizeArrayKeysToCamelCase($data);
 
         $publicId = null;
-        if ($data['publicId'] instanceof UUID) {
+        if ($data['publicId'] instanceof UUID)
             $publicId = $data['publicId'];
-        } else if (is_string($data['publicId'])) {
+        else if (is_string($data['publicId']))
             $publicId = UUID::tryFromString(trimOrNull($data['publicId']));
-        }
 
         $workers = ($data['workers'] && !($data['workers'] instanceof WorkerContainer))
             ? WorkerContainer::fromArray($data['workers'])

@@ -54,14 +54,12 @@ class ProjectService
             $projectId = $createProject->getId();
 
             $phases = $project->getPhases();
-            if ($phases && $phases->count() > 0) {
+            if ($phases && $phases->count() > 0)
                 $instance->phaseModel->createMultiple($projectId, $project->getPhases());
-            }
 
             $workers = $project->getWorkers();
-            if ($workers && $workers->count() > 0) {
+            if ($workers && $workers->count() > 0)
                 $instance->projectWorkerModel->createMultiple($projectId, $project->getWorkers());
-            }
 
             $instance->connection->commit();
             return $createProject;
@@ -117,14 +115,14 @@ class ProjectService
             $editedPhases = $project['phases']['toEdit'] ?? [];
             $cancelledPhases = $project['phases']['toCancel'] ?? [];
 
-            if (count($addedPhases) > 0) {
+            if (\count($addedPhases) > 0) {
                 $phases = new PhaseContainer();
                 foreach ($addedPhases as $phase) {
                     $phases->add(Phase::createPartial($phase));
                 }
                 $instance->phaseModel->createMultiple($projectId, $phases);
             }
-            if (count($editedPhases) > 0 || count($cancelledPhases) > 0) {
+            if (\count($editedPhases) > 0 || \count($cancelledPhases) > 0) {
                 $phases = array_merge($editedPhases, $cancelledPhases);
                 $instance->phaseModel->saveMultiple($phases);
             }
@@ -133,14 +131,14 @@ class ProjectService
             $editedWorkers = $project['workers']['toEdit'] ?? [];
             $removedWorkers = $project['workers']['toRemove'] ?? [];
 
-            if (count($addedWorkers) > 0) {
+            if (\count($addedWorkers) > 0) {
                 $workers = new WorkerContainer();
                 foreach ($addedWorkers as $worker) {
                     $workers->add(Worker::createPartial($worker));
                 }
                 $instance->projectWorkerModel->createMultiple($projectId, $workers);
             }
-            if (count($editedWorkers) > 0 || count($removedWorkers) > 0) {
+            if (\count($editedWorkers) > 0 || \count($removedWorkers) > 0) {
                 $workers = array_merge($editedWorkers, $removedWorkers);
                 $instance->projectWorkerModel->saveMultiple($projectId, $workers);
             }

@@ -1,19 +1,15 @@
 <?php
 
-use App\Entity\Task;
 use App\Enumeration\Priority;
 use App\Enumeration\WorkStatus;
 
-if (!$task)
-    throw new InvalidArgumentException('Task data is required to render the edit task modal.');
-
-if (!$taskData)
-    throw new InvalidArgumentException('Task data array is required to render the edit task modal.');
+if (!$task) throw new InvalidArgumentException('Task data is required to render the edit task modal');
+if (!$taskData) throw new InvalidArgumentException('Task data array is required to render the edit task modal');
 
 $uiState = [
-    'taskHasStarted' => $taskData['startDateTime'] <= new DateTime() ? 'disabled' : '',
-    'taskIsCompleted' => $taskData['status'] === WorkStatus::COMPLETED ? 'disabled' : '',
-    'showWarning' => in_array($taskData['status'], [WorkStatus::COMPLETED, WorkStatus::CANCELLED])
+    'taskHasStarted'    => $taskData['startDateTime'] <= new DateTime() ? 'disabled' : '',
+    'taskIsCompleted'   => $taskData['status'] === WorkStatus::COMPLETED ? 'disabled' : '',
+    'showWarning'       => in_array($taskData['status'], [WorkStatus::COMPLETED, WorkStatus::CANCELLED])
 ];
 ?>
 

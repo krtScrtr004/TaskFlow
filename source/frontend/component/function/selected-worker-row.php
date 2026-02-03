@@ -76,12 +76,12 @@ function selectedWorkerRowProjectForm(Worker $worker): bool|string
  */
 function selectedWorkerRowDashboard(Worker $worker): bool|string
 {
-    $id = htmlspecialchars(UUID::toString($worker->getPublicId()));
-    $name = htmlspecialchars(createFullName($worker->getFirstName(), $worker->getMiddleName(), $worker->getLastName()));
-    $defaultRate = $worker->getDefaultRate() !== 0.00
+    $id             = htmlspecialchars(UUID::toString($worker->getPublicId()));
+    $name           = htmlspecialchars(createFullName($worker->getFirstName(), $worker->getMiddleName(), $worker->getLastName()));
+    $defaultRate    = $worker->getDefaultRate() !== 0.00
         ? $worker->getDefaultRate()
         : '';
-    $profileLink = $worker->getProfileLink()
+    $profileLink    = $worker->getProfileLink()
         ? htmlspecialchars($worker->getProfileLink())
         : ICON_PATH . 'worker_w.svg';
 

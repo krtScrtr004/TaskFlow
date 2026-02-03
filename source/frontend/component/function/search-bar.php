@@ -39,12 +39,11 @@
  * @return string HTML markup of the search form
  */
 function searchBar(
-    ?array $filterOptions = null,
+    array|null $filterOptions = null,
     string $placeholder = 'Search...'
 ): string {
-    if (isset($filterOptions) && !isAssociativeArray($filterOptions)) {
-        throw new InvalidArgumentException('Filter options must be an associative array.');
-    }
+    if (isset($filterOptions) && !isAssociativeArray($filterOptions))
+        throw new InvalidArgumentException('Filter options must be an associative array');
 
     $searchKey = isset($_GET['key']) ? htmlspecialchars($_GET['key']) : '';
     $searchFilter = htmlspecialchars($_GET['status'] ?? $_GET['role'] ?? $_GET['filter'] ?? 'all');

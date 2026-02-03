@@ -28,13 +28,10 @@ class TemporaryLinkModel extends Model
      */
     public function create(mixed $data): mixed
 	{
-        if (!isset($data['email']) || !is_string($data['email']) || !trimOrNull($data['email'])) {
-            throw new InvalidArgumentException('Invalid email provided.');
-        }
-
-        if (!isset($data['token']) || !is_string($data['token']) || !trimOrNull($data['token'])) {
-            throw new InvalidArgumentException('Invalid token provided.');
-        }
+        if (!isset($data['email']) || !\is_string($data['email']) || !trimOrNull($data['email'])) 
+            throw new InvalidArgumentException('Invalid email provided');
+        if (!isset($data['token']) || !\is_string($data['token']) || !trimOrNull($data['token']))
+            throw new InvalidArgumentException('Invalid token provided');
 
         try {
             $hashedToken = hash('sha256', $data['token']);
@@ -74,9 +71,7 @@ class TemporaryLinkModel extends Model
      */
     public function search(string $token): mixed 
     {
-        if (!trimOrNull($token)) {
-            throw new InvalidArgumentException('Invalid token provided.');
-        }
+        if (!trimOrNull($token)) throw new InvalidArgumentException('Invalid token provided');
 
         try {
             $query = 
@@ -92,9 +87,7 @@ class TemporaryLinkModel extends Model
             ]);
             $result = $statement->fetch();
 
-            if (!$this->hasData($result)) {
-                return null;
-            }
+            if (!$this->hasData($result)) return null;
 
             return normalizeArrayKeysToCamelCase($result);
         } catch (PDOException $e) {
@@ -119,9 +112,8 @@ class TemporaryLinkModel extends Model
      */
     public function delete(mixed $token): bool
 	{
-        if (!is_string($token) || !trimOrNull($token)) {
-            throw new InvalidArgumentException('Invalid token provided.');
-        }
+        if (!\is_string($token) || !trimOrNull($token)) 
+            throw new InvalidArgumentException('Invalid token provided');
 
 		try {
             $query = 

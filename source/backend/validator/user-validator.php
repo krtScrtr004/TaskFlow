@@ -158,8 +158,8 @@ class UserValidator extends Validator
      */
     public function validateGender(Gender $gender): void
     {
-        if (!in_array($gender, [Gender::MALE, Gender::FEMALE])) 
-            $this->errors[] = 'Please select a valid gender.';
+        if (!\in_array($gender, [Gender::MALE, Gender::FEMALE])) 
+            $this->addError('Please select a valid gender');
     }
 
     /**
@@ -187,18 +187,18 @@ class UserValidator extends Validator
     {
         $now = new DateTime();
         if ($birthDate >= $now) 
-            $this->errors[] = 'Date of birth must be in the past.';
+            $this->addError('Date of birth must be in the past');
 
         if (checkdate((int) $birthDate->format('m'), (int) $birthDate->format('d'), (int) $birthDate->format('Y')) === false) 
-            $this->errors[] = 'Date of birth is not a valid date.';
+            $this->addError('Date of birth is not a valid date');
 
         if (!self::isValidYear((int) $birthDate->format('Y'))) 
-            $this->errors[] = 'Date of birth year is not valid.';
+            $this->addError('Date of birth year is not valid');
 
         // Calculate age
         $age = $now->diff($birthDate)->y;
         if ($age < 18) 
-            $this->errors[] = 'You must be at least 18 years old to register.';
+            $this->addError('You must be at least 18 years old to register');
     }
 
     /**
@@ -217,7 +217,7 @@ class UserValidator extends Validator
     public function validateRole(Role $role): void
     {
         if (!in_array($role, [Role::PROJECT_MANAGER, Role::WORKER, Role::TASK_WORKER]))
-            $this->errors[] = 'Please select a valid role.';
+            $this->addError('Please select a valid role');
     }
 
     /**
@@ -241,13 +241,13 @@ class UserValidator extends Validator
         if ($jobTitles->count() < 1) return;
 
         foreach ($jobTitles as $jobTitle) {
-            if (strlen(trim($jobTitle)) < 1 || strlen(trim($jobTitle)) > 100) {
-                $this->errors[] = 'Each job title must be between 1 and 100 characters long.';
+            if (\strlen(trim($jobTitle)) < 1 || \strlen(trim($jobTitle)) > 100) {
+                $this->addError('Each job title must be between 1 and 100 characters long');
                 break;
             }
 
             if (preg_match("/[^a-zA-Z0-9\s'\-\\\/]/", $jobTitle)) {
-                $this->errors[] = 'Job title "' . $jobTitle . '" contains invalid characters.';
+                $this->addError('Job title "' . $jobTitle . '" contains invalid characters');
                 break;
             }
         }
@@ -271,11 +271,11 @@ class UserValidator extends Validator
      */
     public function validateContactNumber(string $contactNumber): void
     {
-        if (trim($contactNumber) === '' || strlen($contactNumber) < CONTACT_NUMBER_MIN || strlen($contactNumber) > CONTACT_NUMBER_MAX) 
-            $this->errors[] = 'Contact number must be between ' . CONTACT_NUMBER_MIN . ' and ' . CONTACT_NUMBER_MAX . ' characters long.';
+        if (trim($contactNumber) === '' || \strlen($contactNumber) < CONTACT_NUMBER_MIN || \strlen($contactNumber) > CONTACT_NUMBER_MAX) 
+            $this->addError('Contact number must be between ' . CONTACT_NUMBER_MIN . ' and ' . CONTACT_NUMBER_MAX . ' characters long');
 
         if (!preg_match('/^\+?[\d\s\-\(\)]{' . CONTACT_NUMBER_MIN . ',' . CONTACT_NUMBER_MAX . '}$/', $contactNumber)) 
-            $this->errors[] = 'Contact number contains invalid characters.';
+            $this->addError('Contact number contains invalid characters');
     }
 
     /**
@@ -296,7 +296,7 @@ class UserValidator extends Validator
     public function validateDefaultRate(float $defaultRate): void
     {
         if ($defaultRate < DEFAULT_RATE_MIN || $defaultRate > DEFAULT_RATE_MAX) 
-            $this->errors[] = 'Default rate must be between ' . DEFAULT_RATE_MIN . ' and ' . DEFAULT_RATE_MAX . '.';
+            $this->addError('Default rate must be between ' . DEFAULT_RATE_MIN . ' and ' . DEFAULT_RATE_MAX . '');
     }
 
     /**
@@ -314,8 +314,8 @@ class UserValidator extends Validator
      */
     public function validateStatus(WorkerStatus $status): void
     {
-        if (!in_array($status, [WorkerStatus::ASSIGNED, WorkerStatus::UNASSIGNED, WorkerStatus::TERMINATED])) 
-            $this->errors[] = 'Please select a valid worker status.';
+        if (!\in_array($status, [WorkerStatus::ASSIGNED, WorkerStatus::UNASSIGNED, WorkerStatus::TERMINATED])) 
+            $this->addError('Please select a valid worker status');
     }
 
     /**
@@ -336,11 +336,11 @@ class UserValidator extends Validator
      */
     public function validateEmail(string $email): void
     {
-        if (strlen(trim($email)) < URI_MIN || strlen(trim($email)) > URI_MAX) 
-            $this->errors[] = 'Email must be between ' . URI_MIN . ' and ' . URI_MAX . ' characters long.';
+        if (\strlen(trim($email)) < URI_MIN || \strlen(trim($email)) > URI_MAX) 
+            $this->addError('Email must be between ' . URI_MIN . ' and ' . URI_MAX . ' characters long');
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL))
-            $this->errors[] = 'Invalid email address.';
+            $this->addError('Invalid email address');
     }
 
     /**
@@ -364,20 +364,20 @@ class UserValidator extends Validator
      */
     public function validatePassword(string $password): void
     {
-        if (strlen($password) < PASSWORD_MIN || strlen($password) > PASSWORD_MAX) 
-            $this->errors[] = 'Password must be between ' . PASSWORD_MIN . ' and ' . PASSWORD_MAX . ' characters long.';
+        if (\strlen($password) < PASSWORD_MIN || \strlen($password) > PASSWORD_MAX) 
+            $this->addError('Password must be between ' . PASSWORD_MIN . ' and ' . PASSWORD_MAX . ' characters long');
 
         // Check for at least one lowercase letter
         if (!preg_match('/[a-z]/', $password))
-            $this->errors[] = 'Password must contain at least one lowercase letter.';
+            $this->addError('Password must contain at least one lowercase letter');
 
         // Check for at least one uppercase letter
         if (!preg_match('/[A-Z]/', $password))
-            $this->errors[] = 'Password must contain at least one uppercase letter.';
+            $this->addError('Password must contain at least one uppercase letter');
 
         // Check for special characters (should NOT contain special characters except _!@'.- which are allowed)
         if (preg_match('/[^a-zA-Z0-9_!@\'\.\-]/', $password))
-            $this->errors[] = 'Password contains invalid special characters. Only _!@\'.- are allowed.';
+            $this->addError('Password contains invalid special characters. Only _!@\'.- are allowed');
     }
 
     // ------------------------------------------------------------------------------------------------------------------------------ //

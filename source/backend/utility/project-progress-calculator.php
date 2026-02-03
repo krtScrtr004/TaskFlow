@@ -24,18 +24,18 @@ class ProjectProgressCalculator
 {
     // Weight multipliers for different priorities
     private const PRIORITY_WEIGHTS = [
-        Priority::HIGH->value => 3.0,
+        Priority::HIGH->value   => 3.0,
         Priority::MEDIUM->value => 2.0,
-        Priority::LOW->value => 1.0
+        Priority::LOW->value    => 1.0
     ];
 
     // Completion percentage for each status
     private const STATUS_COMPLETION = [
-        WorkStatus::PENDING->value => 0.0,
-        WorkStatus::ONGOING->value => 50.0,
-        WorkStatus::COMPLETED->value => 100.0,
-        WorkStatus::DELAYED->value => 25.0,  // Partial progress assumed
-        WorkStatus::CANCELLED->value => 0.0  // No progress counted
+        WorkStatus::PENDING->value      => 0.0,
+        WorkStatus::ONGOING->value      => 50.0,
+        WorkStatus::COMPLETED->value    => 100.0,
+        WorkStatus::DELAYED->value      => 25.0,  // Partial progress assumed
+        WorkStatus::CANCELLED->value    => 0.0  // No progress counted
     ];
 
     /**
@@ -51,13 +51,13 @@ class ProjectProgressCalculator
         
         if (empty($phases)) {
             return [
-                'progressPercentage' => 0.0,
-                'totalTasks' => 0,
-                'statusBreakdown' => [],
-                'priorityBreakdown' => [],
-                'weightedProgress' => 0.0,
-                'phaseBreakdown' => [],
-                'insights' => ['message' => 'No phases found in project']
+                'progressPercentage'    => 0.0,
+                'totalTasks'            => 0,
+                'statusBreakdown'       => [],
+                'priorityBreakdown'     => [],
+                'weightedProgress'      => 0.0,
+                'phaseBreakdown'        => [],
+                'insights'              => ['message' => 'No phases found in project']
             ];
         }
 
@@ -77,12 +77,12 @@ class ProjectProgressCalculator
             
             // Initialize phase data
             $phaseData[$phaseId] = [
-                'phaseName' => $phaseName,
-                'totalTasks' => 0,
-                'statusCounts' => [],
-                'priorityCounts' => [],
+                'phaseName'             => $phaseName,
+                'totalTasks'            => 0,
+                'statusCounts'          => [],
+                'priorityCounts'        => [],
                 'totalWeightedProgress' => 0.0,
-                'totalWeight' => 0.0
+                'totalWeight'           => 0.0
             ];
 
             // Process tasks within this phase
@@ -122,13 +122,13 @@ class ProjectProgressCalculator
         // Handle case where all phases have no tasks
         if ($totalTasks === 0) {
             return [
-                'progressPercentage' => 0.0,
-                'totalTasks' => 0,
-                'statusBreakdown' => [],
-                'priorityBreakdown' => [],
-                'weightedProgress' => 0.0,
-                'phaseBreakdown' => $phaseData,
-                'insights' => ['message' => 'No tasks found in any phase']
+                'progressPercentage'    => 0.0,
+                'totalTasks'            => 0,
+                'statusBreakdown'       => [],
+                'priorityBreakdown'     => [],
+                'weightedProgress'      => 0.0,
+                'phaseBreakdown'        => $phaseData,
+                'insights'              => ['message' => 'No tasks found in any phase']
             ];
         }
 
@@ -143,15 +143,15 @@ class ProjectProgressCalculator
         $combinationBreakdown = self::calculateStatusPriorityCombinations($phases);
 
         return [
-            'progressPercentage' => round($progressPercentage, 2),
-            'simpleProgressPercentage' => round($simpleProgress, 2),
-            'totalTasks' => $totalTasks,
-            'statusBreakdown' => self::formatStatusBreakdown($statusCounts, $totalTasks),
-            'priorityBreakdown' => self::formatPriorityBreakdown($priorityCounts, $totalTasks),
-            'combinationBreakdown' => $combinationBreakdown,
-            'phaseBreakdown' => $phaseBreakdown,
-            'weightedProgress' => round($progressPercentage, 2),
-            'insights' => self::generateInsights($statusCounts, $priorityCounts, $totalTasks, $progressPercentage)
+            'progressPercentage'        => round($progressPercentage, 2),
+            'simpleProgressPercentage'  => round($simpleProgress, 2),
+            'totalTasks'                => $totalTasks,
+            'statusBreakdown'           => self::formatStatusBreakdown($statusCounts, $totalTasks),
+            'priorityBreakdown'         => self::formatPriorityBreakdown($priorityCounts, $totalTasks),
+            'combinationBreakdown'      => $combinationBreakdown,
+            'phaseBreakdown'            => $phaseBreakdown,
+            'weightedProgress'          => round($progressPercentage, 2),
+            'insights'                  => self::generateInsights($statusCounts, $priorityCounts, $totalTasks, $progressPercentage)
         ];
     }
 
@@ -199,9 +199,7 @@ class ProjectProgressCalculator
      */
     private static function calculatePhaseWeightedProgress(array $phaseBreakdown): float
     {
-        if (empty($phaseBreakdown)) {
-            return 0.0;
-        }
+        if (empty($phaseBreakdown)) return 0.0;
         
         $totalTaskCount = 0;
         $totalWeightedProgress = 0.0;
@@ -233,8 +231,8 @@ class ProjectProgressCalculator
             $percentage = $totalTasks > 0 ? ($count / $totalTasks) * 100 : 0.0;
             
             $breakdown[$status->value] = [
-                'count' => $count,
-                'percentage' => round($percentage, 1)
+                'count'         => $count,
+                'percentage'    => round($percentage, 1)
             ];
         }
         
@@ -262,9 +260,9 @@ class ProjectProgressCalculator
             $percentage = $totalTasks > 0 ? ($count / $totalTasks) * 100 : 0.0;
             
             $breakdown[$status->value] = [
-                'count' => $count,
-                'percentage' => round($percentage, 1),
-                'displayName' => $status->getDisplayName()
+                'count'         => $count,
+                'percentage'    => round($percentage, 1),
+                'displayName'   => $status->getDisplayName()
             ];
         }
 
@@ -283,10 +281,10 @@ class ProjectProgressCalculator
             $percentage = $totalTasks > 0 ? ($count / $totalTasks) * 100 : 0.0;
             
             $breakdown[$priority->value] = [
-                'count' => $count,
-                'percentage' => round($percentage, 1),
-                'display_name' => $priority->getDisplayName(),
-                'weight' => self::PRIORITY_WEIGHTS[$priority->value]
+                'count'         => $count,
+                'percentage'    => round($percentage, 1),
+                'display_name'  => $priority->getDisplayName(),
+                'weight'        => self::PRIORITY_WEIGHTS[$priority->value]
             ];
         }
 
@@ -309,8 +307,8 @@ class ProjectProgressCalculator
         foreach (WorkStatus::cases() as $status) {
             foreach (Priority::cases() as $priority) {
                 $combinations[$status->value][$priority->value] = [
-                    'count' => 0,
-                    'percentage' => 0
+                    'count'         => 0,
+                    'percentage'    => 0
                 ];
             }
         }
@@ -352,15 +350,15 @@ class ProjectProgressCalculator
         $insights = [];
         
         // Progress status
-        if ($progress === 100) {
+        if (abs($progress - 100.0) < 0.01) {
             $insights[] = "Project is completed successfully!";
-        } elseif ($progress >= 90) {
+        } elseif ($progress >= 90.0) {
             $insights[] = "Project is near completion - excellent progress!";
-        } elseif ($progress >= 70) {
+        } elseif ($progress >= 70.0) {
             $insights[] = "Project is on track with good progress.";
-        } elseif ($progress >= 50) {
+        } elseif ($progress >= 50.0) {
             $insights[] = "Project is progressing steadily.";
-        } elseif ($progress >= 25) {
+        } elseif ($progress >= 25.0) {
             $insights[] = "Project needs attention to improve progress.";
         } else {
             $insights[] = "Project requires immediate attention - low progress.";
@@ -375,27 +373,23 @@ class ProjectProgressCalculator
 
         // Cancelled tasks notice
         $cancelledTasks = $statusCounts[WorkStatus::CANCELLED->value] ?? 0;
-        if ($cancelledTasks > 0) {
-            $insights[] = "Note: {$cancelledTasks} tasks have been cancelled.";
-        }
+        if ($cancelledTasks > 0) $insights[] = "Note: {$cancelledTasks} tasks have been cancelled.";
 
         // High priority tasks status
         $highPriorityTasks = $priorityCounts[Priority::HIGH->value] ?? 0;
         $completedTasks = $statusCounts[WorkStatus::COMPLETED->value] ?? 0;
         
-        if ($highPriorityTasks > $completedTasks) {
+        if ($highPriorityTasks > $completedTasks) 
             $insights[] = "Focus needed: {$highPriorityTasks} high-priority tasks require attention.";
-        }
 
         // Pending tasks
         $pendingTasks = $statusCounts[WorkStatus::PENDING->value] ?? 0;
-        if ($pendingTasks > ($totalTasks * 0.3)) {
+        if ($pendingTasks > ($totalTasks * 0.3))
             $insights[] = "Many tasks are still pending - consider resource allocation.";
-        }
 
         return [
-            'messages' => $insights,
-            'recommendations' => self::generateRecommendations($statusCounts, $priorityCounts, $totalTasks)
+            'messages'          => $insights,
+            'recommendations'   => self::generateRecommendations($statusCounts, $priorityCounts, $totalTasks)
         ];
     }
 
@@ -412,24 +406,20 @@ class ProjectProgressCalculator
         $highPriorityTasks = $priorityCounts[Priority::HIGH->value] ?? 0;
 
         // Resource allocation
-        if ($ongoingTasks > ($totalTasks * 0.6)) {
+        if ($ongoingTasks > ($totalTasks * 0.6))
             $recommendations[] = "Consider if team capacity is sufficient for current workload.";
-        }
 
         // Priority focus
-        if ($highPriorityTasks > 0) {
+        if ($highPriorityTasks > 0)
             $recommendations[] = "Prioritize high-priority tasks for maximum impact.";
-        }
 
         // Delayed task management
-        if ($delayedTasks > 0) {
+        if ($delayedTasks > 0)
             $recommendations[] = "Review delayed tasks and reassign resources if necessary.";
-        }
 
         // Pending task activation
-        if ($pendingTasks > ($totalTasks * 0.4)) {
+        if ($pendingTasks > ($totalTasks * 0.4))
             $recommendations[] = "Activate pending tasks to maintain project momentum.";
-        }
 
         return $recommendations;
     }

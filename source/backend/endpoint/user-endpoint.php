@@ -62,39 +62,33 @@ class UserEndpoint extends Endpoint
     public static function getById(array $args = []): void
     {
         try {
-            self::rateLimit();
-            
-            if (!HttpAuth::isGETRequest()) {
-                throw new ForbiddenException('Invalid HTTP request method.');
-            }
+            if (!HttpAuth::isGETRequest()) throw new ForbiddenException('Invalid HTTP request method');
+            if (!SessionAuth::hasAuthorizedSession()) throw new ForbiddenException();
 
-            if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException();
-            }
+            self::rateLimit();
 
             $userId = isset($args['userId'])
                 ? UUID::fromString($args['userId'])
                 : null;
-            if (!$userId) {
-                throw new ForbiddenException('User ID is required.');
-            }
+            if (!$userId) throw new ForbiddenException('User ID is required');
 
             $instance = new self();
             $user = $instance->userModel->findById($userId);
             if (!$user) {
-                throw new NotFoundException('User not found.');
+                throw new NotFoundException('User not found');
             } else {
+                // Calculate performance if project history exists
                 $projectHistory = $user->getAdditionalInfo('projectHistory');
                 if (count($projectHistory?->getItems() ?? []) > 0) {
-                    $performance = (Role::isProjectManager($user->getRole()))  
+                    $performance = (Role::isProjectManager($user->getRole()))
                         ? ProjectManagerPerformanceCalculator::calculate($projectHistory)
                         : WorkerPerformanceCalculator::calculate($projectHistory);
                     $user->addAdditionalInfo('performance', $performance['overallScore']);
                 }
-                Response::success([$user], 'User fetched successfully.');
+                Response::success([$user], 'User fetched successfully');
             }
         } catch (Throwable $e) {
-            ResponseExceptionHandler::handle('Get User Failed.', $e);
+            ResponseExceptionHandler::handle('Get User Failed', $e);
         }
     }
 
@@ -127,21 +121,16 @@ class UserEndpoint extends Endpoint
     public static function getByKey(array $args = []): void
     {
         try {
+            if (!HttpAuth::isGETRequest()) throw new ForbiddenException('Invalid HTTP request method');
+            if (!SessionAuth::hasAuthorizedSession()) throw new ForbiddenException();
+
             self::rateLimit();
 
-            if (!HttpAuth::isGETRequest()) {
-                throw new ForbiddenException('Invalid HTTP request method.');
-            }
-
-            if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException();
-            }
-
-            $status = isset($_GET['status']) 
-                ? WorkerStatus::tryFrom(trim($_GET['status'])) 
+            $status = isset($_GET['status'])
+                ? WorkerStatus::tryFrom(trim($_GET['status']))
                 : null;
-            $role = isset($_GET['role']) 
-                ? Role::tryFrom(trim($_GET['role'])) 
+            $role = isset($_GET['role'])
+                ? Role::tryFrom(trim($_GET['role']))
                 : null;
 
             $instance = new self();
@@ -150,29 +139,29 @@ class UserEndpoint extends Endpoint
                 $role,
                 $status,
                 [
-                    'excludeProjectTerminated' => isset($_GET['excludeProjectTerminated']) 
-                        ? filter_var($_GET['excludeProjectTerminated'], FILTER_VALIDATE_BOOLEAN) 
+                    'excludeProjectTerminated' => isset($_GET['excludeProjectTerminated'])
+                        ? filter_var($_GET['excludeProjectTerminated'], FILTER_VALIDATE_BOOLEAN)
                         : false,
-                    'projectReferenceId' => isset($_GET['projectReferenceId']) 
-                        ? UUID::tryFromString($_GET['projectReferenceId']) 
+                    'projectReferenceId' => isset($_GET['projectReferenceId'])
+                        ? UUID::tryFromString($_GET['projectReferenceId'])
                         : null,
 
-                    'limit' => isset($_GET['limit']) ? (int) $_GET['limit'] : 10,
-                    'offset' => isset($_GET['offset']) ? (int) $_GET['offset'] : 0
+                    'limit'     => isset($_GET['limit']) ? (int) $_GET['limit'] : 10,
+                    'offset'    => isset($_GET['offset']) ? (int) $_GET['offset'] : 0
                 ]
             );
 
             if (!$users) {
-                Response::success([], 'No users found.');
+                Response::success([], 'No users found');
             } else {
                 $return = [];
                 foreach ($users as $user) {
                     $return[] = $user;
                 }
-                Response::success($return, 'Users fetched successfully.');
+                Response::success($return, 'Users fetched successfully');
             }
         } catch (Throwable $e) {
-            ResponseExceptionHandler::handle('Get Users Failed.', $e);
+            ResponseExceptionHandler::handle('Get Users Failed', $e);
         }
     }
 
@@ -204,12 +193,13 @@ class UserEndpoint extends Endpoint
     public static function edit(array $args = []): void
     {
         try {
-            self::formRateLimit();
+            if (!HttpAuth::isPATCHRequest() && !HttpAuth::isPUTRequest())
+                throw new ForbiddenException('Invalid HTTP request method');
+            if (!SessionAuth::hasAuthorizedSession()) throw new ForbiddenException();
 
-            if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException();
-            }
+            self::formRateLimit();
             Csrf::protect();
+
             $instance = new self();
 
             try {
@@ -218,51 +208,33 @@ class UserEndpoint extends Endpoint
                 $data = [];
             }
 
+            // Build profile data array to edit
+
             $profileData = [];
-            if (isset($data['firstName'])) {
-                $profileData['firstName'] = trim($data['firstName']);
-            }
+            if (isset($data['firstName'])) $profileData['firstName'] = trim($data['firstName']);
 
-            if (isset($data['middleName'])) {
-                $profileData['middleName'] = trim($data['middleName']);
-            }
+            if (isset($data['middleName'])) $profileData['middleName'] = trim($data['middleName']);
 
-            if (isset($data['lastName'])) {
-                $profileData['lastName'] = trim($data['lastName']);
-            }
+            if (isset($data['lastName'])) $profileData['lastName'] = trim($data['lastName']);
 
-            if (isset($data['gender'])) {
-                $profileData['gender'] = Gender::from($data['gender']);
-            }
+            if (isset($data['gender'])) $profileData['gender'] = Gender::from($data['gender']);
 
-            if (isset($data['email'])) {
-                $profileData['email'] = trim($data['email']);
-            }
+            if (isset($data['email'])) $profileData['email'] = trim($data['email']);
 
-            if (isset($data['contactNumber'])) {
-                $profileData['contactNumber'] = trim($data['contactNumber']);
-            }
+            if (isset($data['contactNumber'])) $profileData['contactNumber'] = trim($data['contactNumber']);
 
-            if (isset($data['bio'])) {
-                $profileData['bio'] = trim($data['bio']);
-            }
+            if (isset($data['bio'])) $profileData['bio'] = trim($data['bio']);
 
-            if (isset($data['birthDate'])) {
-                $profileData['birthDate'] = new DateTime(trim($data['birthDate']));
-            }
+            if (isset($data['birthDate'])) $profileData['birthDate'] = new DateTime(trim($data['birthDate']));
 
             if (isset($data['jobTitles'])) {
                 $profileData['jobTitles']['toAdd'] = JobTitleContainer::fromArray($data['jobTitles']['toAdd'] ?? []);
                 $profileData['jobTitles']['toRemove'] = JobTitleContainer::fromArray($data['jobTitles']['toRemove'] ?? []);
             }
 
-            if (isset($data['password'])) {
-                $profileData['password'] = $data['password'];
-            }
+            if (isset($data['password'])) $profileData['password'] = $data['password'];
 
-            if (isset($data['confirm'])) {
-                $profileData['confirm'] = (bool) $data['confirm'];
-            }
+            if (isset($data['confirm'])) $profileData['confirm'] = (bool) $data['confirm'];
 
             if (count($_FILES) > 0 && isset($_FILES['profilePicture'])) {
                 // Handle profile picture upload
@@ -278,32 +250,36 @@ class UserEndpoint extends Endpoint
                     Me::getInstance()->getId()
                 );
 
-                $duplicateErrors = [];
                 if (isset($duplicates['contactNumber']) && $duplicates['contactNumber']) {
-                    throw new ValidationException('Profile Edit failed.', ['Contact number is already in use by another user.']);
+                    throw new ValidationException(
+                        'Profile Edit Failed',
+                        ['Contact number is already in use by another user']
+                    );
                 }
             }
 
             // Validate and update profile data
             $validator = new UserValidator();
             $validator->validateMultiple([
-                'firstName' => $profileData['firstName'] ?? null,
-                'middleName' => $profileData['middleName'] ?? null,
-                'lastName' => $profileData['lastName'] ?? null,
-                'birthDate' => $profileData['birthDate'] ?? null,
+                'firstName'     => $profileData['firstName'] ?? null,
+                'middleName'    => $profileData['middleName'] ?? null,
+                'lastName'      => $profileData['lastName'] ?? null,
+                'birthDate'     => $profileData['birthDate'] ?? null,
                 'contactNumber' => $profileData['contactNumber'] ?? null,
-                'bio' => $profileData['bio'] ?? null,
-                'password' => $profileData['password'] ?? null
+                'bio'           => $profileData['bio'] ?? null,
+                'password'      => $profileData['password'] ?? null
             ]);
-            if (isset($profileData['jobTitles']['toAdd']) && $profileData['jobTitles']['toAdd']->count() > 0) {
+            if (isset($profileData['jobTitles']['toAdd']) && $profileData['jobTitles']['toAdd']->count() > 0)
                 $validator->validateJobTitles($profileData['jobTitles']['toAdd']);
-            }
-            if (isset($profileData['jobTitles']['toRemove']) && $profileData['jobTitles']['toRemove']->count() > 0) {
+
+            if (isset($profileData['jobTitles']['toRemove']) && $profileData['jobTitles']['toRemove']->count() > 0)
                 $validator->validateJobTitles($profileData['jobTitles']['toRemove']);
-            }
-            if ($validator->hasErrors()) {
-                throw new ValidationException('Profile Edit failed.', $validator->getErrors());
-            }
+
+            if ($validator->hasErrors())
+                throw new ValidationException(
+                    'Profile Edit Failed',
+                    $validator->getErrors()
+                );
 
             if (count($profileData) > 0) {
                 $myId = Me::getInstance()->getId();
@@ -319,9 +295,10 @@ class UserEndpoint extends Endpoint
                     Session::set('userData', $updatedUser->toArray());
                 }
             }
-            Response::success([], 'User edited successfully.');
+
+            Response::success([], 'User edited successfully');
         } catch (Throwable $e) {
-            ResponseExceptionHandler::handle('Profile Edit Failed.', $e);
+            ResponseExceptionHandler::handle('Profile Edit Failed', $e);
         }
     }
 
@@ -351,51 +328,44 @@ class UserEndpoint extends Endpoint
     public static function delete(array $args = []): void
     {
         try {
-            self::formRateLimit();
-            $instance = new self();
+            if (!HttpAuth::isDELETERequest() && !HttpAuth::isPATCHRequest() && !HttpAuth::isPUTRequest())
+                throw new ForbiddenException('Invalid HTTP request method');
+            if (!SessionAuth::hasAuthorizedSession()) throw new ForbiddenException();
 
-            if (!SessionAuth::hasAuthorizedSession()) {
-                throw new ForbiddenException();
-            }
+            self::formRateLimit();
             Csrf::protect();
+
+            $instance = new self();
 
             $userId = isset($args['userId'])
                 ? UUID::fromString($args['userId'])
                 : null;
-            if (!$userId) {
-                throw new ForbiddenException('User ID is required.');
-            }
+            if (!$userId) throw new ForbiddenException('User ID is required');
 
             $user = $instance->userModel->findById($userId);
-            if (!$user) {
-                throw new NotFoundException('User not found.');
-            }
+            if (!$user) throw new NotFoundException('User not found');
 
             // Check if user is assigned to any active projects
             $hasActiveProject = Role::isProjectManager($user->getRole())
                 ? $instance->projectModel->findManagerActiveProjectByManagerId($user->getId())
                 : $instance->projectModel->findWorkerActiveProjectByWorkerId($user->getId());
-            if ($hasActiveProject) {
-                throw new ForbiddenException('Your account cannot be deleted while assigned to an active projects.');
-            }
+            if ($hasActiveProject) throw new ForbiddenException('Your account cannot be deleted while assigned to an active projects');
 
             if ($instance->userModel->delete($user)) {
-                Response::success([], 'User deleted successfully.');
+                Response::success([], 'User deleted successfully');
 
                 Session::destroy();
                 Me::destroy();
             } else {
-                throw new Exception('User deletion failed.');
+                throw new Exception('User deletion failed');
             }
         } catch (Throwable $e) {
-            ResponseExceptionHandler::handle('User Deletion Failed.', $e);
+            ResponseExceptionHandler::handle('User Deletion Failed', $e);
         }
     }
 
     /**
      * Not implemented (No use case)
      */
-    public static function create(array $args = []): void
-    {
-    }
+    public static function create(array $args = []): void {}
 }

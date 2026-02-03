@@ -1,10 +1,7 @@
 <?php
-
 use App\Middleware\Csrf;
-
-if (!$component) { 
-    throw new Exception('Component is not defined'); 
-} ?>
+if (!$component) throw new Exception('Component is not defined') 
+?>
 
     <!DOCTYPE html>
     <html lang="en">

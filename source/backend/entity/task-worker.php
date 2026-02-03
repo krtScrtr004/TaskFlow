@@ -75,14 +75,14 @@ class TaskWorker extends Worker
         float $actualHour = 0.0,
 
         // Optional
-        ?string $middleName = null,
-        ?string $bio = null,
-        ?string $profileLink = null,
-        ?string $password = null,
-        ?DateTime $confirmedAt = null,
-        ?DateTime $deletedAt = null,
+        string|null $middleName = null,
+        string|null $bio = null,
+        string|null $profileLink = null,
+        string|null $password = null,
+        DateTime|null $confirmedAt = null,
+        DateTime|null $deletedAt = null,
         array $additionalInfo = [],
-        ?DateTime $createdAt = null,
+        DateTime|null $createdAt = null,
     ) {
         parent::__construct(
             id: $id,
@@ -111,12 +111,11 @@ class TaskWorker extends Worker
         $this->resourceValidator->validateHoursAssigned($estimatedHour);
         if ($actualHour > 0) 
             $this->resourceValidator->validateHoursAssigned($actualHour);
-        if ($this->resourceValidator->hasErrors()) {
+        if ($this->resourceValidator->hasErrors())
             throw new ValidationException(
                 "Task Worker Validation Failed",
                 $this->resourceValidator->getErrors()
             );
-        }
 
         $this->unitRate = $unitRate;
         $this->estimatedHour = $estimatedHour;
@@ -168,12 +167,11 @@ class TaskWorker extends Worker
     public function setUnitRate(float $unitRate): void
     {
         $this->resourceValidator->validateUnitRate($unitRate);
-        if ($this->resourceValidator->hasErrors()) {
+        if ($this->resourceValidator->hasErrors())
             throw new ValidationException(
                 "Invalid Unit Rate",
                 $this->resourceValidator->getErrors()
             );
-        }
         $this->unitRate = $unitRate;
     }
 
@@ -187,12 +185,11 @@ class TaskWorker extends Worker
     public function setEstimatedHour(float $hours): void
     {
         $this->resourceValidator->validateHoursAssigned($hours);
-        if ($this->resourceValidator->hasErrors()) {
+        if ($this->resourceValidator->hasErrors())
             throw new ValidationException(
                 "Invalid Estimated Hours",
                 $this->resourceValidator->getErrors()
             );
-        }
         $this->estimatedHour = $hours;
     }
 
@@ -206,12 +203,11 @@ class TaskWorker extends Worker
     public function setActualHour(float $hours): void
     {
         $this->resourceValidator->validateHoursAssigned($hours);
-        if ($this->resourceValidator->hasErrors()) {
+        if ($this->resourceValidator->hasErrors())
             throw new ValidationException(
                 "Invalid Actual Hours",
                 $this->resourceValidator->getErrors()
             );
-        }
         $this->actualHour = $hours;
     }
 
@@ -260,9 +256,7 @@ class TaskWorker extends Worker
 
         $partial->setUnitRate((float) ($data['unitRate'] ?? DEFAULT_RATE_MIN));
         $partial->setEstimatedHour((float) ($data['estimatedHour'] ?? WORKER_HOURS_MIN));
-        if (isset($data['actualHour'])) {
-            $partial->setActualHour((float) $data['actualHour']);
-        }
+        if (isset($data['actualHour'])) $partial->setActualHour((float) $data['actualHour']);
 
         return $partial;
     }

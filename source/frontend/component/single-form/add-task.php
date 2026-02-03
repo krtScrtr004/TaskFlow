@@ -2,17 +2,13 @@
 
 use App\Core\UUID;
 use App\Exception\ForbiddenException;
-if (!isset($project) ?? !trimOrNull($project)) {
-    throw new ForbiddenException("Project is required to add a task.");
-}
 
-if (!isset($activePhase)) {
-    throw new ForbiddenException("No active phase found for the project.");
-}
+if (!isset($project) ?? !trimOrNull($project)) throw new ForbiddenException("Project is required to add a task");
+if (!isset($activePhase)) throw new ForbiddenException("No active phase found for the project");
 
 $ids = [
     'projectId' => UUID::toString($project->getPublicId()),
-    'phaseId' => UUID::toString($activePhase->getPublicId())
+    'phaseId'   => UUID::toString($activePhase->getPublicId())
 ];
 
 require_once COMPONENT_PATH . 'template' . DS . 'add-worker-modal.php';

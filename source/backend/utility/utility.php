@@ -57,8 +57,7 @@ function decodeData(String $rawData): array
 
     $rawData = file_get_contents($rawData);
     $contents = json_decode($rawData, true);
-    if (!$contents)
-        throw new JsonException('JSON contents cannot be decoded.');
+    if (!$contents) throw new JsonException('JSON contents cannot be decoded');
 
     return $contents;
 }
@@ -219,44 +218,6 @@ function sentenceToKebabCase(string $string): string
 function sentenceToCamelCase(string $string): string
 {
     return lcfirst(str_replace(' ', '', ucwords($string)));
-}
-
-/**
- * Converts a monetary amount in major currency units to an integer number of cents.
- *
- * This function performs the following steps:
- * - Multiplies the provided amount by 100 to convert from major units (e.g. dollars) to cents
- * - Rounds the result to the nearest cent using PHP's round() behavior (PHP_ROUND_HALF_UP by default)
- * - Casts the rounded value to int and returns it
- * - Preserves the sign for negative amounts
- *
- * Note: Because the function accepts a float, very large or highly precise values may be subject to floating-point
- * precision limitations. For exact monetary arithmetic consider using integer types from the start or a precise
- * library (BCMath, GMP) or represent amounts as strings.
- *
- * @param float $amount Amount in major currency units (e.g. dollars, euros). May be negative.
- *
- * @return int Amount expressed in cents (rounded to the nearest cent)
- */
-function formatBudgetToCents(float $amount): int {
-    return (int) round($amount * 100);
-}
-
-/**
- * Converts an integer amount in centavos to pesos as a float.
- *
- * This function treats the input as the smallest currency unit (centavos) and
- * converts it to the major currency unit (pesos) by dividing by 100. The
- * returned value preserves fractional pesos. Note that floating-point values
- * can introduce precision issues for financial calculations; for exact decimal
- * arithmetic, prefer using integer cents or a dedicated decimal/bignum library.
- *
- * @param int $amountInCents Amount in centavos (integer)
- *
- * @return float Monetary value in pesos (e.g., 12345 -> 123.45)
- */
-function formatBudgetToPesos(int $amountInCents): float {
-    return (float) $amountInCents / 100;
 }
 
 /**
@@ -460,9 +421,8 @@ function normalizeArrayKeysToCamelCase(array $data, bool $recursive = true): arr
             } else {
                 // numeric-indexed list: normalize any associative children
                 foreach ($value as $i => $item) {
-                    if (is_array($item) && isAssociativeArray($item)) {
+                    if (is_array($item) && isAssociativeArray($item))
                         $value[$i] = normalizeArrayKeysToCamelCase($item, $recursive);
-                    }
                 }
             }
         }
@@ -497,9 +457,8 @@ function normalizeArrayKeysToSnakeCase(array $data, bool $recursive = true): arr
             } else {
                 // numeric-indexed list: normalize any associative children
                 foreach ($value as $i => $item) {
-                    if (is_array($item) && isAssociativeArray($item)) {
+                    if (is_array($item) && isAssociativeArray($item))
                         $value[$i] = normalizeArrayKeysToSnakeCase($item, $recursive);
-                    }
                 }
             }
         }

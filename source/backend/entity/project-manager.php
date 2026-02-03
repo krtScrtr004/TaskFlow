@@ -60,13 +60,13 @@ class ProjectManager extends User
         string $email, 
 
         // Optional
-        ?string $middleName = null, 
-        ?string $bio = null, 
-        ?string $profileLink = null, 
-        ?string $password = null, 
-        ?DateTime $createdAt, 
-        ?DateTime $confirmedAt = null, 
-        ?DateTime $deletedAt = null, 
+        string|null $middleName = null, 
+        string|null $bio = null, 
+        string|null $profileLink = null, 
+        string|null $password = null, 
+        DateTime|null $createdAt, 
+        DateTime|null $confirmedAt = null, 
+        DateTime|null $deletedAt = null, 
         array $additionalInfo = [],
     ) {
         $this->role = Role::PROJECT_MANAGER;

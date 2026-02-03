@@ -8,9 +8,7 @@ use App\Enumeration\WorkerStatus;
 use App\Enumeration\WorkStatus;
 use App\Utility\ProjectProgressCalculator;
 
-if (!$project) {
-    throw new Exception('Project data is required to render this component.');
-}
+if (!$project) throw new Exception('Project data is required to render this component');
 
 $projectData = [
     'id'                        => htmlspecialchars(UUID::toString($project->getPublicId())),

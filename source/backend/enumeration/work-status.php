@@ -33,10 +33,10 @@ enum WorkStatus: string
     public function getDisplayName(): string
     {
         return match ($this) {
-            self::PENDING => ucwords(camelToSentenceCase(self::PENDING->value)),
-            self::ONGOING => ucwords(camelToSentenceCase(self::ONGOING->value)),
+            self::PENDING   => ucwords(camelToSentenceCase(self::PENDING->value)),
+            self::ONGOING   => ucwords(camelToSentenceCase(self::ONGOING->value)),
             self::COMPLETED => ucwords(camelToSentenceCase(self::COMPLETED->value)),
-            self::DELAYED => ucwords(camelToSentenceCase(self::DELAYED->value)),
+            self::DELAYED   => ucwords(camelToSentenceCase(self::DELAYED->value)),
             self::CANCELLED => ucwords(camelToSentenceCase(self::CANCELLED->value))
         };
     }
@@ -68,15 +68,14 @@ enum WorkStatus: string
     {
         $now = new DateTime();
 
-        if ($now < $startDate) {
+        if ($now < $startDate)
             return self::PENDING;
-        } elseif ($now >= $startDate && $now <= $completionDate) {
+        elseif ($now >= $startDate && $now <= $completionDate)
             return self::ONGOING;
-        } elseif ($now > $completionDate) {
+        elseif ($now > $completionDate)
             return self::COMPLETED;
-        } else {
-            throw new Exception("Unable to determine status from given dates.");
-        }
+        else 
+            throw new Exception("Unable to determine status from given dates");
     }
 
     /**
@@ -104,10 +103,10 @@ enum WorkStatus: string
     {
         $statusName = $status->getDisplayName();
         $class = match ($status) {
-            self::PENDING => 'yellow',
-            self::ONGOING => 'green',
+            self::PENDING   => 'yellow',
+            self::ONGOING   => 'green',
             self::COMPLETED => 'blue',
-            self::DELAYED => 'orange',
+            self::DELAYED   => 'orange',
             self::CANCELLED => 'red'
         };
 

@@ -6,9 +6,7 @@ use App\Enumeration\WorkStatus;
 use App\Middleware\Csrf;
 use App\Utility\ProjectProgressCalculator;
 
-if (!$projectReport) {
-    throw new Error('Project Report data is not defined.');
-}
+if (!$projectReport) throw new Error('Project Report data is not defined');
 
 $reportData = [
     'id'                        => htmlspecialchars(UUID::toString($projectReport->getPublicId())),
@@ -28,12 +26,12 @@ $reportData = [
 $performance = ($reportData['phases']?->count() > 0)
     ? ProjectProgressCalculator::calculate($reportData['phases'])
     : [
-        'progressPercentage' => 0.0,
-        'statusBreakdown' => [],
-        'priorityBreakdown' => [],
-        'insights' => [
-            'messages' => ['No insights available.'],
-            'recommendations' => ['No recommendations available.']
+        'progressPercentage'    => 0.0,
+        'statusBreakdown'       => [],
+        'priorityBreakdown'     => [],
+        'insights'              => [
+            'messages'          => ['No insights available.'],
+            'recommendations'   => ['No recommendations available.']
         ]
     ];
 

@@ -33,9 +33,9 @@ class Response
     public static function success(array $data, string $message, int $statusCode = 200): void
     {
         self::sendResponse($statusCode, [
-            'status' => 'success',
-            'message' => $message,
-            'data' => $data
+            'status'    => 'success',
+            'message'   => $message,
+            'data'      => $data
         ]);
     }
 
@@ -61,9 +61,9 @@ class Response
     public static function error(string $message, array $errors = [], int $statusCode = 400): void
     {
         self::sendResponse($statusCode, [
-            'status' => 'error',
-            'message' => $message,
-            'errors' => $errors
+            'status'    => 'error',
+            'message'   => $message,
+            'errors'    => $errors
         ]);
     }
 

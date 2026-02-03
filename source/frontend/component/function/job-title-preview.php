@@ -27,13 +27,11 @@ use App\Container\JobTitleContainer;
  */
 function jobTitlePreview(JobTitleContainer $jobTitle, int $limit = 3, int|null $charLimit = null): string
 {
-    if ($jobTitle->count() === 0) return '';    
-
-    if ($limit <= 0) 
-        throw new InvalidArgumentException('Limit must be a positive integer');
-
-    if ($charLimit !== null && $charLimit <= 0) 
+    if ($limit <= 0) throw new InvalidArgumentException('Limit must be a positive integer');
+    if ($charLimit !== null && $charLimit <= 0)
         throw new InvalidArgumentException('Character limit must be a positive integer or null');
+
+    if ($jobTitle->count() === 0) return '';
 
     $html = '';
     $total = $jobTitle->count();
@@ -41,9 +39,8 @@ function jobTitlePreview(JobTitleContainer $jobTitle, int $limit = 3, int|null $
     $counter = 0;
     while ($counter < $total && $counter < $limit) {
         $current = htmlspecialchars($jobTitle->get($counter));
-        if ($charLimit !== null && strlen($current) > $charLimit) {
+        if ($charLimit !== null && strlen($current) > $charLimit)
             $current = substr($current, 0, $charLimit) . '…';
-        }
 
         $html .= '
             <span class="job-title-chip" title="' . $current . '">

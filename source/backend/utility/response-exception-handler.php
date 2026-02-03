@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace App\Utility;
 
@@ -31,16 +31,15 @@ class ResponseExceptionHandler
      */
     public static function handle(string $title, Throwable $exception): void
     {
-        if ($exception instanceof ValidationException) {
+        if ($exception instanceof ValidationException)
             Response::error($title, $exception->getErrors(), 422);
-        } elseif ($exception instanceof NotFoundException) {
+        elseif ($exception instanceof NotFoundException)
             Response::error($title, [$exception->getMessage()], 404);
-        } elseif ($exception instanceof ForbiddenException) {
+        elseif ($exception instanceof ForbiddenException)
             Response::error($title, [$exception->getMessage()], 403);
-        } elseif ($exception instanceof RateLimitException) {
+        elseif ($exception instanceof RateLimitException)
             Response::error($title, [$exception->getMessage()], 429);
-        } else {
+        else
             Response::error($title, ['An unexpected error occurred. Please try again later.'], 500);
-        }
     }
 }

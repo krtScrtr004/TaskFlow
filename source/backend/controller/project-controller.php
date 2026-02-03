@@ -145,9 +145,7 @@ class ProjectController implements Controller
         $instance = new self();
 
         $phases = $instance->phaseModel->findAllByProjectId($project->getId(), true);
-        if (!$phases) {
-            throw new NotFoundException('Phases not found.');
-        }
+        if (!$phases) throw new NotFoundException('Phases not found');
 
         // Container of phase IDs to update status
         $phasesToUpdate = [];
@@ -201,9 +199,8 @@ class ProjectController implements Controller
         }
 
         // Update phase status in the database
-        if (!empty($phasesToUpdate)) {
+        if (!empty($phasesToUpdate))
             $instance->phaseModel->saveMultiple($phasesToUpdate);
-        }
 
         // Set additional info on project
         $project->addAdditionalInfo('progress', $projectProgress);
@@ -237,9 +234,8 @@ class ProjectController implements Controller
             $projectId = isset($args['projectId'])
                 ? UUID::fromString($args['projectId'])
                 : null;
-            if (!$projectId) {
-                throw new ForbiddenException('Project ID is required.');
-            }
+            if (!$projectId)
+                throw new ForbiddenException('Project ID is required');
 
             $fullProjectInfo = $instance->getProjectInfo(
                 $projectId,
@@ -248,9 +244,7 @@ class ProjectController implements Controller
                     'workers' => true
                 ]
             );
-            if (!$fullProjectInfo) {
-                throw new NotFoundException('Project not found.');
-            }
+            if (!$fullProjectInfo) throw new NotFoundException('Project not found');
 
             $instance->renderDashboard($fullProjectInfo);
         } catch (NotFoundException $e) {
@@ -288,9 +282,8 @@ class ProjectController implements Controller
             }
 
             $key = '';
-            if (isset($_GET['key']) && trim($_GET['key']) !== '') {
+            if (isset($_GET['key']) && trim($_GET['key']) !== '')
                 $key = trim($_GET['key']);
-            }
 
             // Only status can be filtered here
             $status = isset($_GET['status']) && strcasecmp($_GET['status'], 'all') !== 0
@@ -368,9 +361,7 @@ class ProjectController implements Controller
                 'offset' => 0
             ]
         );
-        if ($recentTasks) {
-            $project->addAdditionalInfo('recentTasks', $recentTasks);
-        }
+        if ($recentTasks) $project->addAdditionalInfo('recentTasks', $recentTasks);
 
         return $project;
     }
@@ -462,9 +453,7 @@ class ProjectController implements Controller
             $projectId = isset($args['projectId'])
                 ? UUID::fromString($args['projectId'])
                 : null;
-            if (!$projectId) {
-                throw new NotFoundException('Project ID is required.');
-            }
+            if (!$projectId) throw new NotFoundException('Project ID is required');
 
             $projectReport = $instance->projectModel->getReport($projectId);
 

@@ -1,7 +1,6 @@
 <?php
 
 use App\Core\Me;
-use App\Core\UUID;
 use App\Enumeration\Role;
 use App\Enumeration\WorkStatus;
 ?>

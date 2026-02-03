@@ -25,15 +25,15 @@ $uiState = [
 if ($project) {
     $uiState['pageName'] = 'Edit Project';
 
-    $projectData['id']                      = htmlspecialchars(UUID::toString($project->getPublicId()));
-    $projectData['name']                    = htmlspecialchars($project->getName());
-    $projectData['description']             = htmlspecialchars($project->getDescription());
-    $projectData['budget']                  = $project->getBudget();
-    $projectData['maxWorkers']              = $project->getMaxWorkers();
-    $projectData['workers']                 = $project->getWorkers()?->getItems();
-    $projectData['phases']                  = $project->getPhases();
-    $projectData['startDateTime']           = formatDateTime($project->getStartDateTime(), 'Y-m-d');
-    $projectData['completionDateTime']      = formatDateTime($project->getCompletionDateTime(), 'Y-m-d');
+    $projectData['id']                       = htmlspecialchars(UUID::toString($project->getPublicId()));
+    $projectData['name']                     = htmlspecialchars($project->getName());
+    $projectData['description']              = htmlspecialchars($project->getDescription());
+    $projectData['budget']                   = $project->getBudget();
+    $projectData['maxWorkers']               = $project->getMaxWorkers();
+    $projectData['workers']                  = $project->getWorkers()?->getItems();
+    $projectData['phases']                   = $project->getPhases();
+    $projectData['startDateTime']            = formatDateTime($project->getStartDateTime(), 'Y-m-d');
+    $projectData['completionDateTime']       = formatDateTime($project->getCompletionDateTime(), 'Y-m-d');
     $projectData['actualCompletionDateTime'] = $project->getActualCompletionDateTime()
         ? formatDateTime($project->getActualCompletionDateTime(), 'Y-m-d')
         : null;

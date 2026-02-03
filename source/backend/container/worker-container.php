@@ -35,9 +35,8 @@ class WorkerContainer extends Container
     {
         $this->totalDefaultRate = DEFAULT_RATE_MIN;
         foreach ($workers as $worker) {
-            if (!($worker instanceof Worker)) {
-                throw new InvalidArgumentException("All elements of workers array must be instances of Worker.");
-            }
+            if (!($worker instanceof Worker))
+                throw new InvalidArgumentException("All elements of workers array must be instances of Worker");
             $this->add($worker);
         }
     }
@@ -66,11 +65,10 @@ class WorkerContainer extends Container
      *
      * @return void
      */
-    public function add($item): void
+    public function add(mixed $item): void
     {
-        if (!$item instanceof Worker && !$item instanceof TaskWorker) {
-            throw new InvalidArgumentException('Only Worker or TaskWorker instances can be added from WorkerContainer.');
-        }
+        if (!$item instanceof Worker && !$item instanceof TaskWorker)
+            throw new InvalidArgumentException('Only Worker or TaskWorker instances can be added from WorkerContainer');
 
         $id = $item->getId();
         $status = $item->getStatus();
@@ -105,11 +103,10 @@ class WorkerContainer extends Container
      *
      * @return void
      */
-    public function remove($item): void
+    public function remove(mixed $item): void
     {
-        if (!$item instanceof Worker && !$item instanceof TaskWorker) {
-            throw new InvalidArgumentException('Only Worker or TaskWorker instances can be removed from WorkerContainer.');
-        }
+        if (!$item instanceof Worker && !$item instanceof TaskWorker)
+            throw new InvalidArgumentException('Only Worker or TaskWorker instances can be removed from WorkerContainer');
 
         $id = $item->getId();
         $status = $item->getStatus();
@@ -143,11 +140,10 @@ class WorkerContainer extends Container
      *
      * @return bool True if the Worker instance is present in the container, false otherwise
      */
-    public function contains($item): bool
+    public function contains(mixed $item): bool
     {
-        if (!$item instanceof Worker && !$item instanceof TaskWorker) {
-            throw new InvalidArgumentException('Only Worker or TaskWorker instances can be checked from WorkerContainer.');
-        }
+        if (!$item instanceof Worker && !$item instanceof TaskWorker)
+            throw new InvalidArgumentException('Only Worker or TaskWorker instances can be checked from WorkerContainer');
 
         $id = $item->getId();
         return isset($this->items[$id]);
@@ -240,9 +236,7 @@ class WorkerContainer extends Container
      */
     public function clearByStatus(WorkerStatus $status): void
     {
-        if (!isset($this->byStatus[$status->value])) {
-            return;
-        }
+        if (!isset($this->byStatus[$status->value])) return;
 
         $ids = array_keys($this->byStatus[$status->value]);
         foreach ($ids as $id) {
@@ -322,11 +316,8 @@ class WorkerContainer extends Container
     {
         $workers = new self();
         foreach ($data as $workerData) {
-            if ($workerData instanceof Worker) {
-                $workers->add($workerData);
-            } else {
-                $workers->add(Worker::fromArray($workerData));
-            }
+            if ($workerData instanceof Worker) $workers->add($workerData);
+            else $workers->add(Worker::fromArray($workerData));
         }
         return $workers;
     }

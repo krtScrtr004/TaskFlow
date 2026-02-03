@@ -25,15 +25,15 @@ use App\Entity\TaskWorker;
  */
 function selectedTaskWorkerCard(TaskWorker $worker): bool|string
 {
-    $id = htmlspecialchars(UUID::toString($worker->getPublicId()));
-    $fullName = htmlspecialchars(
+    $id                     = htmlspecialchars(UUID::toString($worker->getPublicId()));
+    $fullName               = htmlspecialchars(
         createFullName(
             $worker->getFirstName(),
             $worker->getMiddleName(),
             $worker->getLastName()
         )
     );
-    $unitRate = $worker->getUnitRate() !== DEFAULT_RATE_MIN 
+    $unitRate               = $worker->getUnitRate() !== DEFAULT_RATE_MIN 
         ? $worker->getUnitRate() 
         : $worker->getDefaultRate();
     $estimatedHoursAssigned = $worker->getEstimatedHour();

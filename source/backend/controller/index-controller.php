@@ -11,16 +11,16 @@ class IndexController implements Controller
 {
     private static array $components = [
         'login' => [ 
-            'title' => 'Log In Your Account', 
-            'form'  => 'login',
-            'scripts' => [
+            'title'     => 'Log In Your Account', 
+            'form'      => 'login',
+            'scripts'   => [
                 'login/submit'
             ]
         ],
         'register' => [
-            'title' => 'Register An Account', 
-            'form'  => 'register',
-            'scripts' => [
+            'title'     => 'Register An Account', 
+            'form'      => 'register',
+            'scripts'   => [
                 'check-date-validity',
                 'register/select-role',
                 'register/submit'
@@ -55,9 +55,7 @@ class IndexController implements Controller
         }
 
         // For unauthenticated users, ensure session exists and CSRF token is set
-        if (!Session::isSet()) {
-            Session::create();
-        }
+        if (!Session::isSet()) Session::create();
         
         if (!Csrf::get()) {
             Csrf::generate();
@@ -90,9 +88,7 @@ class IndexController implements Controller
     public static function confirmEmail(): void
     {
         // For unauthenticated users, ensure session exists and CSRF token is set
-        if (!Session::isSet()) {
-            Session::create();
-        }
+        if (!Session::isSet()) Session::create();
 
         if (!Csrf::get()) {
             Csrf::generate();
