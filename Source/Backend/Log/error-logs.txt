@@ -1,0 +1,208 @@
+[2026-02-03 : 03:24:17 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:24:17 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:24:17 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:24:17 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:24:17 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:24:17 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:24:17 PM] [2] -> preg_match(): Unknown modifier ']' @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Validator/UserValidator.php : 249
+[2026-02-03 : 03:24:17 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:24:17 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:24:17 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:24:17 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:24:17 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:24:17 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:24:17 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 133
+[2026-02-03 : 03:24:17 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 133
+[2026-02-03 : 03:24:17 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:24:17 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:24:17 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:24:17 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:24:17 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:24:17 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:24:17 PM] [2] -> preg_match(): Unknown modifier ']' @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Validator/UserValidator.php : 249
+[2026-02-03 : 03:24:17 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:24:17 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:24:17 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:24:17 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:24:17 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 133
+[2026-02-03 : 03:24:17 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 133
+[2026-02-03 : 03:24:17 PM] [2] -> Undefined array key "cancelled" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Utility/ProjectProgressCalculator.php : 174
+[2026-02-03 : 03:24:17 PM] [2] -> Undefined array key "cancelled" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Utility/ProjectProgressCalculator.php : 174
+[2026-02-03 : 03:24:18 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:24:18 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:24:18 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:24:18 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:24:18 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:24:18 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:24:18 PM] [2] -> preg_match(): Unknown modifier ']' @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Validator/UserValidator.php : 249
+[2026-02-03 : 03:25:33 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:25:33 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:25:33 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:25:33 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:25:33 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:25:33 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:25:33 PM] [2] -> preg_match(): Unknown modifier ']' @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Validator/UserValidator.php : 249
+[2026-02-03 : 03:25:33 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:25:33 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:25:33 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:25:33 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:25:33 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:25:33 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:25:33 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 133
+[2026-02-03 : 03:25:33 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 133
+[2026-02-03 : 03:25:33 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:25:33 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:25:33 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:25:33 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:25:33 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:25:33 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:25:33 PM] [2] -> preg_match(): Unknown modifier ']' @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Validator/UserValidator.php : 249
+[2026-02-03 : 03:25:33 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:25:33 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:25:33 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:25:33 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:25:33 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 133
+[2026-02-03 : 03:25:33 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 133
+[2026-02-03 : 03:25:33 PM] [2] -> Undefined array key "cancelled" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Utility/ProjectProgressCalculator.php : 174
+[2026-02-03 : 03:25:33 PM] [2] -> Undefined array key "cancelled" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Utility/ProjectProgressCalculator.php : 174
+[2026-02-03 : 03:25:33 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:25:33 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:25:33 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:25:33 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:25:33 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:25:33 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:25:33 PM] [2] -> preg_match(): Unknown modifier ']' @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Validator/UserValidator.php : 249
+[2026-02-03 : 03:26:04 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:04 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:04 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:04 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:04 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:04 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:04 PM] [2] -> preg_match(): Unknown modifier ']' @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Validator/UserValidator.php : 249
+[2026-02-03 : 03:26:04 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:04 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:04 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:04 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:04 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:04 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:04 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 133
+[2026-02-03 : 03:26:04 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 133
+[2026-02-03 : 03:26:04 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:04 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:04 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:04 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:04 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:04 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:04 PM] [2] -> preg_match(): Unknown modifier ']' @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Validator/UserValidator.php : 249
+[2026-02-03 : 03:26:04 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:04 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:04 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:04 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:04 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 133
+[2026-02-03 : 03:26:04 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 133
+[2026-02-03 : 03:26:04 PM] [2] -> Undefined array key "cancelled" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Utility/ProjectProgressCalculator.php : 174
+[2026-02-03 : 03:26:04 PM] [2] -> Undefined array key "cancelled" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Utility/ProjectProgressCalculator.php : 174
+[2026-02-03 : 03:26:04 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:04 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:04 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:04 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:04 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:04 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:04 PM] [2] -> preg_match(): Unknown modifier ']' @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Validator/UserValidator.php : 249
+[2026-02-03 : 03:26:07 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:07 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:07 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:07 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:07 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:07 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:07 PM] [2] -> preg_match(): Unknown modifier ']' @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Validator/UserValidator.php : 249
+[2026-02-03 : 03:26:07 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Frontend/View/Projects.php : 196
+[2026-02-03 : 03:26:09 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> preg_match(): Unknown modifier ']' @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Validator/UserValidator.php : 249
+[2026-02-03 : 03:26:09 PM] [2] -> Undefined array key "excludeProjectTerminated" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Model/UserModel.php : 558
+[2026-02-03 : 03:26:09 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> preg_match(): Unknown modifier ']' @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Validator/UserValidator.php : 249
+[2026-02-03 : 03:26:09 PM] [2] -> preg_match(): Unknown modifier ']' @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Validator/UserValidator.php : 249
+[2026-02-03 : 03:26:09 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> preg_match(): Unknown modifier ']' @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Validator/UserValidator.php : 249
+[2026-02-03 : 03:26:09 PM] [2] -> preg_match(): Unknown modifier ']' @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Validator/UserValidator.php : 249
+[2026-02-03 : 03:26:09 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> preg_match(): Unknown modifier ']' @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Validator/UserValidator.php : 249
+[2026-02-03 : 03:26:09 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> preg_match(): Unknown modifier ']' @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Validator/UserValidator.php : 249
+[2026-02-03 : 03:26:09 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> preg_match(): Unknown modifier ']' @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Validator/UserValidator.php : 249
+[2026-02-03 : 03:26:09 PM] [8192] -> htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated @ /home/krtscrtr44/Workspace/TaskFlow/Source/Frontend/Component/Function/UserGridCard.php : 58
+[2026-02-03 : 03:26:09 PM] [8192] -> htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated @ /home/krtscrtr44/Workspace/TaskFlow/Source/Frontend/Component/Function/UserGridCard.php : 58
+[2026-02-03 : 03:26:09 PM] [8192] -> htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated @ /home/krtscrtr44/Workspace/TaskFlow/Source/Frontend/Component/Function/UserGridCard.php : 58
+[2026-02-03 : 03:26:09 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:09 PM] [2] -> preg_match(): Unknown modifier ']' @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Validator/UserValidator.php : 249
+[2026-02-03 : 03:26:10 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:10 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:10 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:10 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:10 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:10 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:10 PM] [2] -> preg_match(): Unknown modifier ']' @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Validator/UserValidator.php : 249
+[2026-02-03 : 03:26:10 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:10 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:10 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:10 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:10 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:10 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:10 PM] [2] -> preg_match(): Unknown modifier ']' @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Validator/UserValidator.php : 249
+[2026-02-03 : 03:26:10 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:10 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:10 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:10 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:10 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 133
+[2026-02-03 : 03:26:10 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 133
+[2026-02-03 : 03:26:10 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:10 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:10 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:10 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:10 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:10 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:10 PM] [2] -> preg_match(): Unknown modifier ']' @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Validator/UserValidator.php : 249
+[2026-02-03 : 03:26:12 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:12 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:12 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:12 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:12 PM] [2] -> Undefined array key "additionalChecks" @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:12 PM] [2] -> foreach() argument must be of type array|object, null given @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Abstract/Validator.php : 72
+[2026-02-03 : 03:26:12 PM] [2] -> preg_match(): Unknown modifier ']' @ /home/krtscrtr44/Workspace/TaskFlow/Source/Backend/Validator/UserValidator.php : 249

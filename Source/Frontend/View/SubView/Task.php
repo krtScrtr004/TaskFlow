@@ -1,0 +1,264 @@
+<?php
+
+use App\Core\Me;
+use App\Core\UUID;
+use App\Entity\Phase;
+use App\Entity\Project;
+use App\Entity\Task;
+use App\Enumeration\Role;
+use App\Enumeration\WorkStatus;
+use App\Enumeration\Priority;
+use App\Enumeration\WorkerStatus;
+use App\Exception\NotFoundException;
+use App\Middleware\Csrf;
+use App\Model\TaskWorkerModel;
+
+if (isset($project) && !$project instanceof Project)throw new NotFoundException('Project is not defined');
+if (!isset($phase) || !$phase instanceof Phase)throw new NotFoundException('Phase is not defined');
+if (isset($task) && !$task instanceof Task)throw new NotFoundException('Task is not defined');
+
+$otherData = [
+    'projectId' => htmlspecialchars(UUID::toString($project->getPublicId())),
+    'phaseId'   => htmlspecialchars(UUID::toString($phase->getPublicId())),
+];
+
+$taskData = [
+    'id'                        => htmlspecialchars(UUID::toString($task->getPublicId())),
+    'name'                      => htmlspecialchars($task->getName()),
+    'description'               => htmlspecialchars($task->getDescription()),
+    'workers'                   => $task->getWorkers()->getByStatus(WorkerStatus::ASSIGNED),
+    'startDateTime'             => $task->getStartDateTime(),
+    'completionDateTime'        => $task->getCompletionDateTime(),
+    'actualCompletionDateTime'  => $task->getActualCompletionDateTime(),
+    'status'                    => $task->getStatus(),
+    'priority'                  => $task->getPriority(),
+];
+
+$isTaskEditable = $task->getStatus() !== WorkStatus::COMPLETED 
+    && $task->getStatus() !== WorkStatus::CANCELLED;
+$taskModel = new TaskWorkerModel();
+$worksOn = $taskModel->worksOn($task->getId(), Me::getInstance()->getId(), $project->getId());
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<?= Csrf::get() ?>">
+
+    <title><?= $taskData['name'] ?? 'Task' ?></title>
+
+    <base href="<?= PUBLIC_PATH ?>">
+    <link rel="icon" type="image/x-icon" href="<?= IMAGE_PATH . 'logo-dark.ico' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'root.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'utility.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'component.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'sidenav.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'loader.css' ?>">
+    <link rel="stylesheet" href="<?= STYLE_PATH . 'tasks.css' ?>">
+</head>
+
+<body>
+    <?php
+    require_once COMPONENT_PATH . 'Sidenav.php';
+    require_once COMPONENT_PATH . 'Template' . DS. 'EditTaskModal.php';
+    require_once COMPONENT_PATH . 'Template' . DS . 'UserInfoCard.php';
+    require_once COMPONENT_PATH . 'Template' . DS . 'AddWorkerModal.php';
+    require_once COMPONENT_PATH . 'Function' . DS . 'UserTableRow.php';
+    ?>
+
+    <main class="view-task-info main-page flex-col" 
+        data-status="<?= $taskData['status']->value ?>"
+        data-projectid="<?= $otherData['projectId'] ?>"
+        data-phaseid="<?= $otherData['phaseId'] ?>"
+        data-taskid="<?= $taskData['id'] ?>">
+
+        <!-- Task Info -->
+        <section class="task-info content-section-block flex-col">
+
+            <!-- Task Name and Status -->
+            <div class="main flex-row">
+                <button class="back-button unset-button">
+                    <img src="<?= ICON_PATH . 'back_w.svg' ?>" alt="Back" title="Back" height="24" width="20">
+                </button>
+
+                <section class="name-and-status flex-row">
+                    <div class="heading text-w-icon">
+                        <img src="<?= ICON_PATH . 'task_w.svg' ?>" alt="<?= $taskData['name'] ?>"
+                            title="<?= $taskData['name'] ?>" height="24">
+    
+                        <h3 class="task-name wrap-text">
+                            <?= $taskData['name'] ?>
+                        </h3>
+                    </div>
+                    
+                    <div class="center-child">
+                        <?= WorkStatus::badge($taskData['status']) ?>
+                    </div>
+                </section>
+            </div>
+
+            <p class="task-id"><em><?= $taskData['id'] ?></em></p>
+
+            <!-- Task Description -->
+            <p class="task-description wrap-text"><?= $taskData['description'] ?></p>
+
+            <!-- Task Schedule -->
+            <div class="task-schedule flex-col">
+                <!-- Task Start Date -->
+                <div class="text-w-icon">
+                    <img src="<?= ICON_PATH . 'start_w.svg' ?>" alt="Task Start Date" title="Task Start Date"
+                        height="16">
+
+                    <p>Start Date: 
+                        <span class="task-start-datetime" data-startDatetime="<?= htmlspecialchars(formatDateTime($taskData['startDateTime'])) ?>">
+                            <?= htmlspecialchars(dateToWords($taskData['startDateTime'])) ?>
+                        </span>
+                    </p>
+                </div>
+
+                <!-- Task Completion Date -->
+                <div class="text-w-icon">
+                    <img src="<?= ICON_PATH . 'complete_w.svg' ?>" alt="Task Completion Date"
+                        title="Task Completion Date" height="16">
+
+                    <p>Completion Date: 
+                        <span class="task-completion-datetime" data-completionDatetime="<?= htmlspecialchars(formatDateTime($taskData['completionDateTime'])) ?>">
+                            <?= htmlspecialchars(dateToWords($taskData['completionDateTime'])) ?>
+                        </span>
+                    </p>
+                </div>
+
+                <span class="task-actual-completion-datetime no-display" data-actualCompletionDateTime="<?= ($taskData['actualCompletionDateTime'] ? htmlspecialchars(formatDateTime($taskData['actualCompletionDateTime'])) : '') ?>"></span>
+                <?php if ($taskData['status'] === WorkStatus::COMPLETED): ?>
+                    <div class="text-w-icon">
+                        <img src="<?= ICON_PATH . 'complete_w.svg' ?>" alt="Completed At" title="Completed At"
+                            height="16">
+
+                        <p>Completed At: 
+                            <span>
+                                <?= htmlspecialchars(dateToWords($taskData['actualCompletionDateTime'])) ?>
+                            </span>
+                        </p>                    
+                    </div>
+                <?php endif; ?>
+
+            </div>
+
+            <!-- Task Priority -->
+            <div class="task-priority">
+                <?= Priority::badge($taskData['priority']) ?>
+            </div>
+
+
+            <!-- Buttons -->
+            <section class="action-buttons flex-row flex-child-end-v">
+                <?php if ($isTaskEditable): ?>
+                    <?php if ($worksOn): ?>
+                        <!-- Complete Task Button -->
+                        <button id="complete_task_button" type="button" class="green-bg">
+                            <div class="text-w-icon">
+                                <img src="<?= ICON_PATH . 'complete_w.svg' ?>" alt="Complete Task" title="Complete Task" height="20">
+                                <h3>Complete</h3>
+                            </div>
+                        </button>
+                    <?php endif; ?>
+
+                    <?php if (Role::isProjectManager(Me::getInstance()->getRole())): ?>
+                        <!-- Edit Task Button -->
+                        <a href="<?= REDIRECT_PATH . "edit-task/{$taskData['id']}" ?>">
+                        <button id="edit_task_button" type="button" class="blue-bg">
+                            <div class="text-w-icon">
+                                <img src="<?= ICON_PATH . 'edit_w.svg' ?>" alt="Edit Task" title="Edit Task" height="20">
+                                <h3>Edit</h3>
+                            </div>
+                        </button>
+                        </a>
+
+                        <!-- Cancel Button -->
+                        <button id="cancel_task_button" type="button" class="red-bg">
+                            <div class="text-w-icon">
+                                <img src="<?= ICON_PATH . 'delete_w.svg' ?>" alt="Cancel Task" title="Cancel Task" height="20">
+                                <h3>Cancel</h3>
+                            </div>
+                        </button>
+                    <?php endif; ?>
+                <?php endif; ?>
+            </section>
+
+        </section>
+
+        <!-- Assigned Workers -->
+        <section class="assigned-workers flex-col">
+            <!-- No Workers Wall -->
+            <div
+                class="no-workers-wall no-content-wall light-black-bg <?= count($taskData['workers']) > 0 ? 'no-display' : 'flex-col' ?>">
+                <img src="<?= ICON_PATH . 'empty_dw.svg' ?>" alt="No workers assigned" title="No workers assigned"
+                    height="75">
+                <p>No workers assigned to this task.</h>
+            </div>
+
+            <!-- Worker Table -->
+            <div class="worker-table-container <?= count($taskData['workers']) === 0 ? 'no-display' : '' ?>">
+                <table class="worker-table">
+                    <thead>
+                        <tr>
+                            <th>Profile</th>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>Email</th>
+                            <th>Contact</th>
+                            <th>Total Tasks</th>
+                            <th>Completed</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($taskData['workers'] as $worker) {
+                            echo workerTableRow($worker);
+                        } ?>
+                    </tbody>
+                </table>
+            </div>
+
+            <?php if (Role::isProjectManager(Me::getInstance()->getRole()) && $isTaskEditable): ?>
+                <!-- Add Worker Button -->
+                <button id="add_worker_button" type="button" class="transparent-bg">
+                    <div class="text-w-icon">
+                        <img src="<?= ICON_PATH . 'add_w.svg' ?>" alt="Add Worker" title="Add Worker" height="20">
+                        <h3>Add Worker</h3>
+                    </div>
+                </button>
+            <?php endif; ?>
+
+        </section>
+    </main>
+
+    <script type="module" src="<?= EVENT_PATH . 'back-button.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'toggle-menu.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'logout.js' ?>" defer></script>
+
+    <script type="module" src="<?= EVENT_PATH . 'tasks' . DS . 'view' . DS . 'create-worker-card.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'tasks' . DS . 'view' . DS . 'complete.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'tasks' . DS . 'view' . DS . 'cancel.js' ?>" defer></script>
+    <script type="module" src="<?= EVENT_PATH . 'tasks' . DS . 'view' . DS . 'remove-terminate-worker.js' ?>" defer></script>
+    
+</body>
+
+</html>
+
+<?php   
+
+function i() {
+    ob_Start();
+    ?>
+        <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'existing' . DS . 'open.js' ?>" defer></script>
+        <script type="module" src="<?= EVENT_PATH . 'add-worker-modal' . DS . 'task' . DS . 'existing' . DS . 'add.js' ?>" defer></script>
+
+        <script type="module" src="<?= EVENT_PATH . 'edit-task-modal' . DS . 'open.js' ?>" defer></script>
+        <script type="module" src="<?= EVENT_PATH . 'edit-task-modal' . DS . 'submit.js' ?>" defer></script>
+    <?php
+    $script = ob_get_clean();
+}

@@ -168,7 +168,7 @@ export function createFullName(firstName, middleName, lastName) {
  */
 export async function getValidationConstraints() {
     try {
-        const response = await fetch('../../../source/backend/data/validation-constraints.json')
+        const response = await fetch('../../../Source/Backend/Data/ValidationConstraints.json')
         return await response.json()
     } catch (error) {
         throw new Error('Error loading validation constraints: ' + error.message)
