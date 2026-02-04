@@ -171,15 +171,15 @@ class TaskService
             // Update task workers
             if (isset($rawTask['workers'])) {
                 // Add new workers
-                if (count($rawTask['workers']['toAdd'] ?? []) > 0) {
+                if (\count($rawTask['workers']['toAdd'] ?? []) > 0) {
                     $workersToAdd = new WorkerContainer();
                     foreach ($rawTask['workers']['toAdd'] as $workerData) {
                         if (isset($workerData['workerId'])) {
                             if ($workerData['workerId'] instanceof UUID)
                                 $workerData['publicId'] = $workerData['workerId'];
-                            elseif (is_string($workerData['workerId']))
+                            elseif (\is_string($workerData['workerId']))
                                 $workerData['publicId'] = UUID::fromString($workerData['workerId']);
-                            elseif (is_numeric($workerData['workerId']))
+                            elseif (\is_numeric($workerData['workerId']))
                                 $workerData['id'] = (int)$workerData['workerId'];
                         }
                         $workersToAdd->add(TaskWorker::createPartial($workerData));
@@ -247,8 +247,8 @@ class TaskService
             'resources' => false
         ]
     ): Task|null {
-        if (is_int($taskId) && $taskId <= 0)
-            throw new InvalidArgumentException('Invalid task ID.');
+        if (\is_int($taskId) && $taskId <= 0)
+            throw new InvalidArgumentException('Invalid task ID');
 
         $includeWorkers = $options['workers'] ?? false;
         $includeResources = $options['resources'] ?? false;

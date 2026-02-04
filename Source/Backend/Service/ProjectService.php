@@ -186,7 +186,7 @@ class ProjectService
 
         if ($includeTasks) {
             $taskModel = new TaskModel();
-            $tasks = $taskModel->findByProject($projectId);
+            $tasks = $taskModel->findByProjectId($projectId);
             $project->setTasks($tasks);
         }
 

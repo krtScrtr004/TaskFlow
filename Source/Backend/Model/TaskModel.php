@@ -340,15 +340,33 @@ class TaskModel extends Model
      */
     public function findByPhaseId(
         int|UUID $phaseId,
-        int|UUID|null $projectId = null,
-        WorkStatus|Priority|null $filter = null,
         array $options = [
-            'offset' => 0,
-            'limit' => 10,
+            'projectId' => null,
+            'status'    => null,
+            'priority'  => null,
+
+            'offset'    => 0,
+            'limit'     => 10,
         ]
     ): TaskContainer|null {
         if (\is_int($phaseId) && $phaseId < 1)
             throw new InvalidArgumentException('Invalid phase ID');
+
+        $projectId = $options['projectId'] ?? null;
+        if ($projectId) {
+            if (!\is_int($projectId) && !($projectId instanceof UUID)) 
+                throw new InvalidArgumentException('Project ID must be an integer or UUID');
+            if (\is_int($projectId) && $projectId < 1) 
+                throw new InvalidArgumentException('Invalid project ID provided');
+        }
+
+        $status = $options['status'] ?? null;
+        if ($status && !($status instanceof WorkStatus))
+            throw new InvalidArgumentException('Status must be an instance of WorkStatus enum');
+
+        $priority = $options['priority'] ?? null;
+        if ($priority && !($priority instanceof Priority))
+            throw new InvalidArgumentException('Priority must be an instance of Priority enum');
 
         try {
             $whereClause = \is_int($phaseId)
@@ -375,12 +393,14 @@ class TaskModel extends Model
                     : UUID::toBinary($projectId);
             }
 
-            if ($filter instanceof WorkStatus) {
+            if ($status) {
                 $whereClause .= ' AND t.status = :status';
-                $params[':status'] = $filter->value;
-            } elseif ($filter instanceof Priority) {
+                $params[':status'] = $status->value;
+            } 
+            
+            if ($priority) {
                 $whereClause .= ' AND t.priority = :priority';
-                $params[':priority'] = $filter->value;
+                $params[':priority'] = $priority->value;
             }
 
             return self::find($whereClause, $params, $options);
@@ -389,14 +409,61 @@ class TaskModel extends Model
         }
     }
 
-    public function findByProject(
+    /**
+     * Finds all tasks for multiple phase IDs in a single query.
+     *
+     * This method efficiently retrieves tasks for multiple phases at once,
+     * avoiding the N+1 query problem. Returned tasks include their phase_id
+     * for grouping.
+     *
+     * @param array $phaseIds Array of integer phase IDs
+     * @param array $options Query options (limit, offset, etc.)
+     * 
+     * @return TaskContainer|null Container with tasks, or null if none found
+     * 
+     * @throws InvalidArgumentException If phaseIds array is empty
+     * @throws DatabaseException If a database error occurs
+     */
+    public function findByPhaseIds(
+        array $phaseIds, 
+        array $options = [
+            'status'    => null,
+        ]): TaskContainer|null
+    {
+        if (empty($phaseIds)) throw new InvalidArgumentException('Phase IDs array cannot be empty');
+
+        try {
+            $params = [];
+
+            $placeholders = '';
+            foreach ($phaseIds as $index => $id) {
+                $placeholders .= ':phaseId' . $index . ',';
+                $params[':phaseId' . $index] = $id;
+            }
+            $whereClause = "t.phase_id IN (" . rtrim($placeholders, ',') . ")";
+
+            $status = $options['status'] ?? null;
+            if ($status) {
+                if (!($status instanceof WorkStatus))
+                    throw new InvalidArgumentException('Status must be an instance of WorkStatus enum');
+
+                $whereClause .= ' AND t.status = :status';
+                $params[':status'] = $status->value;
+            }
+            
+            return self::find($whereClause, $params, $options);
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+
+    public function findByProjectId(
         int|UUID $projectId,
         array $options = [
             'limit'  => 10,
             'offset' => 0,
         ]
-    ): TaskContainer|null
-    {
+    ): TaskContainer|null {
         if (\is_int($projectId) && $projectId < 1)
             throw new InvalidArgumentException('Invalid project ID');
         try {

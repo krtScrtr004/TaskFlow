@@ -243,7 +243,6 @@ class PhaseModel extends Model
      */
     public function findByProjectId(
         int|UUID $projectId, 
-        bool $includeTasks = false,
         array $options = [
             'limit'   => 10,
             'offset'  => 0
@@ -261,45 +260,12 @@ class PhaseModel extends Model
         try {
             $instance = new self();
 
-            // TODO: Create a separate TaskModel method to fetch tasks by phase ID(s) to avoid N+1 query problem
-            $taskQuery = '';
-            if ($includeTasks) {
-                $taskQuery =
-                    "SELECT 
-                        JSON_ARRAYAGG(
-                            JSON_OBJECT(
-                                'id', t.id,
-                                'public_id', HEX(t.public_id),
-                                'name', t.name,
-                                'description', t.description,
-                                'status', t.status,
-                                'priority', t.priority,
-                                'estimated_cost', tb.estimated_cost,
-                                'actual_cost', tb.actual_cost,
-                                'budget_note', tb.note,
-                                'start_date_time', t.start_date_time,
-                                'completion_date_time', t.completion_date_time,
-                                'created_at', t.created_at,
-                                'updated_at', t.updated_at
-                            )
-                        )
-                    FROM
-                        `task` AS t
-                    INNER JOIN
-                        `task_budget` AS tb
-                    ON
-                        tb.task_id = t.id
-                    WHERE 
-                        t.phase_id = ph.id";
-            }
-
             $queryString =
                 "SELECT 
                     ph.*,  
                     phb.budget,
                     phb.contingency_rate,
-                    phb.note,
-                    COALESCE (($taskQuery), JSON_ARRAY()) AS tasks
+                    phb.note
                 FROM 
                     `phase` AS ph
                 INNER JOIN 
@@ -328,17 +294,10 @@ class PhaseModel extends Model
             foreach ($result as $item) {
                 // Populate tasks if requested
                 $taskContainer = new TaskContainer();
-                if ($includeTasks) {
-                    $tasks = json_decode($item['tasks'], true);
-                    foreach ($tasks as $taskData) {
-                        $taskContainer->add(Task::createPartial($taskData));
-                    }
-                }
 
                 $item['budgetNote'] = $item['note'];
                 $item['tasks'] = null; // Clear raw tasks data
                 $phase = Phase::createPartial($item);
-                if ($includeTasks && $taskContainer->count() > 0) $phase->setTasks($taskContainer);
                 $phases->add($phase);
             }
 
@@ -690,7 +649,7 @@ class PhaseModel extends Model
 
         try {
             $taskModel = new TaskModel();
-            return $taskModel->findByPhaseId($phaseId, null, null, $options);
+            return $taskModel->findByPhaseId($phaseId, $options);
         } catch (Exception $e) {
             throw $e;
         }
