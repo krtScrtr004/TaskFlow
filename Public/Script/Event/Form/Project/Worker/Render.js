@@ -87,7 +87,8 @@ export function render(worker) {
     tr.appendChild(tdRemove)
 
     // When rendering a row, hide the "no workers" wall if present
-    if (noWorkersWall) noWorkersWall.classList.add('hidden')
+    const noWorkersWall = document.querySelector('.selected-workers-table .no-workers-wall')
+    noWorkersWall?.classList.add('hidden')
 
     return tr
 }

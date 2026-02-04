@@ -178,8 +178,9 @@ phaseCards.forEach(card => {
  * @return void
  */
 function updatePhaseInfoMap(id, key, change) {
+    const { phaseNameInput } = getPhaseDomParts(change.closest('.phase-form-card')) ?? {}
     const value = phaseNameInput.value.trim()
-    if (oldPhasesData.get(id)[key] === value) return
+    if (oldPhasesData.get(id)?.[key] === value) return
 
     let phaseChanges = changedPhases.get(id) || addedPhases.get(id) || {}
     phaseChanges[key] = value
@@ -335,9 +336,10 @@ selectedWorkersTableList?.addEventListener('change', e => {
     if (!id) return
 
     const defaultRateInput = row.querySelector('input.default-rate-input')
-    (!oldWorkersData.has(id))
-        ? addedWorkers.set(id, defaultRateInput.value.trim())
-        : changedWorkers.set(id, defaultRateInput.value.trim())
+    if (!oldWorkersData.has(id))
+        addedWorkers.set(id, defaultRateInput.value.trim())
+    else
+        changedWorkers.set(id, defaultRateInput.value.trim())
 })
 
 /**

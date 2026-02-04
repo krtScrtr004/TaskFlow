@@ -1,4 +1,5 @@
 import { infiniteScroll } from '../../../../Utility/InfiniteScroll.js'
+import { addedWorkers } from '../RecordChanges.js'
 import { createWorkerFetcher } from './Fetch.js'
 import { render } from './Render.js'
 
@@ -35,7 +36,10 @@ export function initializeInfiniteScroll(endpoint) {
         workerPoolList,
         sentinel,
         (offset) => fetcherFunction(null, { offset: offset }),
-        (worker) => { workerPoolList.appendChild(render(worker)) },
-        workerPoolList.querySelectorAll('.selected-worker-row').length ?? 0
+        (worker) => { 
+            if (!addedWorkers.has(worker.id))
+                workerPoolList.appendChild(render(worker)) 
+        },
+        workerPoolList.querySelectorAll('.worker-pool-card').length ?? 0
     )
 }

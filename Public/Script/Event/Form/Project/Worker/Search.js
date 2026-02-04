@@ -31,18 +31,32 @@ if (!workerList) die('Worker list container not found in workers section.')
  * @throws {Error} If the endpoint parameter is not provided.
  */
 export function initializeSearch(endpointParam) {
-    if (!endpointParam) 
+    if (!endpointParam)
         throw new Error('Endpoint parameter is required to initialize search workers')
 
     endpoint = endpointParam
 
-    const handler = e => debounceAsync(submit(e), 300)
+    const debouncedSubmit = debounceAsync(submit, 300)
+    const handler = e => {
+        debouncedSubmit(e).catch(error => {
+            // debounceAsync rejects superseded calls with Error('Debounced'); ignore those.
+            if (error?.message === 'Debounced') return
+            console.error(error)
+        })
+    }
     searchBarForm.addEventListener('submit', handler)
     searchButton.addEventListener('click', handler)
 
-    initializeInfiniteScroll(endpoint)
+    ;(async () => {
+        await submit({ preventDefault() { } })
+        await nextPaint()
+        initializeInfiniteScroll(endpoint)
+    })().catch(console.error)
+}
 
-    searchButton?.click()
+async function nextPaint() {
+    await new Promise(requestAnimationFrame)
+    await new Promise(requestAnimationFrame)
 }
 
 /**
@@ -78,11 +92,11 @@ export function initializeSearch(endpointParam) {
  */
 async function submit(e) {
     e.preventDefault()
-    if (!endpoint) 
+    if (!endpoint)
         throw new Error('Endpoint is not defined for searching workers.')
 
     const searchInput = searchBarForm.querySelector('#search_bar_input')
-    if (!searchInput) 
+    if (!searchInput)
         throw new Error('Search input field not found in search bar form.')
 
     // Append search term to endpoint
@@ -162,7 +176,7 @@ function renderWorkerPoolCard(worker) {
     button.dataset.workerid = worker.id ?? worker.workerId
 
     const img = document.createElement('img')
-    img.className = 'circle fit-cover'
+    img.className = 'fit-cover'
     img.alt = worker && worker.name ? worker.name : ''
     img.height = 55
     img.src = worker.profileLink || ICON_PATH + 'profile_w.svg'

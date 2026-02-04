@@ -112,6 +112,11 @@
 	border: 1px solid var(--red) !important;
 }
 
+#phase_section .no-phases-wall {
+	padding: 2rem;
+	text-align: center;
+}
+
 #add_phase_button {
 	box-shadow: none;
 	border: 2px dashed var(--dark-white);
@@ -131,9 +136,6 @@
 	border-radius: var(--border-radius);
 }
 
-#workers_section .worker-pool {
-
-}
 
 #workers_section .worker-pool > .heading,
 #workers_section .worker-pool .list {
@@ -236,10 +238,6 @@
 	border-radius: 0 0 var(--input-border-radius) var(--input-border-radius);
 }
 
-#workers_section .selected-workers-table tbody tr:nth-child(even) {
-	background-color: var(--light-black);
-}
-
 #workers_section .selected-workers-table .selected-worker-row {
 	cursor: pointer;
 	transition: background-color var(--transition-dur) ease;
@@ -315,10 +313,6 @@
 		max-height: 350px;
 	}
 
-	#workers_section .selected-workers-table table {
-		/* min-width: 550px; */
-	}
-
 	#project_form .phase-form-card > * {
 		padding: 1.2rem;
 	}
@@ -388,10 +382,6 @@
 		flex-direction: column;
 	}
 
-	#workers_section .selected-workers-table table {
-		/* min-width: 500px; */
-	}
-
 	#workers_section .selected-workers-table th,
 	#workers_section .selected-workers-table td {
 		padding: 0.5rem 0.75rem;
@@ -414,6 +404,7 @@
 	.worker-pool-card img {
 		height: 40px !important;
 		width: 40px !important;
+		border-radius: var(--border-radius);
 	}
 }
 
