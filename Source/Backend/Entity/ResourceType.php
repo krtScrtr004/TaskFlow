@@ -235,7 +235,7 @@ class ResourceType implements Entity {
         $data = normalizeArrayKeysToCamelCase($data);
 
         $defaults = [
-            'id'            => $data['id'] ?? 0,
+            'id'            => $data['id'] ?? mt_rand(),
             'name'          => $data['name'] ?? 'Unknown Resource Type',
             'description'   => $data['description'] ?? '',
             'category'      => $data['category'] ?? 'General',

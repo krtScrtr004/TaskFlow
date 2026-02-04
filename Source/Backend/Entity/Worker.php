@@ -320,7 +320,7 @@ class Worker extends User
 
         $defaultRate = $data['defaultRate'] ?? DEFAULT_RATE_MIN;
 
-        $status = (is_string($data['status']))
+        $status = (\is_string($data['status']))
             ? WorkerStatus::tryFrom(trimOrNull($data['status']))
             : $data['status'];
 

@@ -727,7 +727,7 @@ abstract class User implements Entity
 
         // Provide default values for required fields
         $defaults = [
-            'id'                        => $data['id'] ?? 0,
+            'id'                        => $data['id'] ?? mt_rand(),
             'publicId'                  => $data['publicId'] ?? UUID::get(),
             'firstName'                 => $data['firstName'] ?? 'Unknown',
             'middleName'                => $data['middleName'] ?? null,

@@ -607,7 +607,7 @@ class Task implements Entity
         $data = normalizeArrayKeysToCamelCase($data);
 
         $defaults = [
-            'id'                        => $data['id'] ?? 0,
+            'id'                        => $data['id'] ?? mt_rand(),
             'publicId'                  => $data['publicId'] ?? UUID::get(),
             'name'                      => $data['name'] ?? 'Untitled Task',
             'description'               => $data['description'] ?? null,

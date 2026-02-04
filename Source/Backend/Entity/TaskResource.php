@@ -366,7 +366,7 @@ class TaskResource implements Entity
         $data = normalizeArrayKeysToCamelCase($data);
         
         $defaults = [
-            'id'            => $data['id'] ?? 0,
+            'id'            => $data['id'] ?? mt_rand(),
             'publicId'      => $data['publicId'] ?? UUID::get(),
             'type'          => $data['type'] ?? ResourceType::createPartial([]),
             'quantity'      => $data['quantity'] ?? 0,

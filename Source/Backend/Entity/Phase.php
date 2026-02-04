@@ -469,7 +469,7 @@ class Phase implements Entity
 
         // Provide default values for required fields
         $defaults = [
-            'id'                        => $data['id'] ?? 0,
+            'id'                        => $data['id'] ?? mt_rand(),
             'publicId'                  => $data['publicId'] ?? UUID::get(),
             'name'                      => $data['name'] ?? 'Untitled Phase',
             'description'               => $data['description'] ?? null,
