@@ -19,6 +19,7 @@ use App\Model\ProjectModel;
 use App\Model\ProjectWorkerModel;
 use App\Model\TaskModel;
 use App\Model\TaskWorkerModel;
+use App\Service\ProjectWorkerService;
 use App\Service\TaskService;
 use App\Utility\ResponseExceptionHandler;
 use App\Validator\ResourceValidator;
@@ -541,7 +542,15 @@ class TaskWorkerEndpoint extends Endpoint
                 : null;
             if (!isset($workerId)) throw new ForbiddenException('Worker ID is required');
 
-            $worker = $instance->projectWorkerModel->findById($workerId, $project->getId(), true);
+            $worker = ProjectWorkerService::get($workerId, [
+                'projectId'             => $project->getId(),
+
+                'projectHistory'        => true,
+                'projectHistoryOptions' => [
+                    'phases'    => true,
+                    'tasks'     => true,
+                ],
+            ]);
             if (!$worker) throw new NotFoundException('Worker not found');
 
             $instance->taskWorkerModel->delete([

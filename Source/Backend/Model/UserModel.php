@@ -13,6 +13,7 @@ use App\Enumeration\WorkerStatus;
 use App\Enumeration\WorkStatus;
 use App\Exception\DatabaseException;
 use App\Middleware\Csrf;
+use App\Service\ProjectWorkerService;
 use DateTime;
 use Exception;
 use InvalidArgumentException;
@@ -263,8 +264,13 @@ class UserModel extends Model
                 $projectManagerModel = new ProjectManagerModel();
                 return $projectManagerModel->findById($userId, null, true);
             } else {
-                $projectWorkerModel = new ProjectWorkerModel();
-                return $projectWorkerModel->findById($userId, null, true);
+                return ProjectWorkerService::get($userId, [
+                    'projectHistory'        => true,
+                    'projectHistoryOptions' => [
+                        'phases'    => true,
+                        'tasks'     => true,
+                    ],
+                ]);
             }
         } catch (Exception $e) {
             throw $e;

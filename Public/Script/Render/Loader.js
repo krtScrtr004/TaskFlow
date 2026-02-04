@@ -54,12 +54,15 @@ export const Loader = (() => {
     }
 
     return {
-        full: function (parentElem) {
+        full: function (parentElem, { 
+            background = 'transparent',
+            blur = false
+        } = {}) {
             const parentHeight = parentElem.offsetHeight
             const loaderElem = `
                 <div 
-                    class="loader-wrapper padded center-child absolute transparent-bg" 
-                    style="height:${parentHeight}; top:0; left:0; right:0; bottom:0;">
+                    class="loader-wrapper padded center-child absolute transparent-bg ${blur ? 'blur' : ''}" 
+                    style="height:${parentHeight}; top:0; left:0; right:0; bottom:0; background-color: ${background};">
                         <span class="loader"></span>
                 </div>`
             render(parentElem, loaderElem, 'afterbegin')

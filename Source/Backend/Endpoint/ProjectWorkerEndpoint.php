@@ -16,6 +16,7 @@ use App\Enumeration\WorkerStatus;
 use App\Exception\NotFoundException;
 use App\Middleware\Csrf;
 use App\Model\ProjectWorkerModel;
+use App\Service\ProjectWorkerService;
 use App\Utility\ResponseExceptionHandler;
 use App\Utility\WorkerPerformanceCalculator;
 use Exception;
@@ -79,8 +80,15 @@ class ProjectWorkerEndpoint extends Endpoint
             if (!isset($projectId) && !$project)
                 throw new NotFoundException('Project not found');
 
+            $worker = ProjectWorkerService::get($workerId, [
+                'projectId'             => $project->getId() ?? null,
 
-            $worker = $instance->projectWorkerModel->findById($workerId, $project->getId() ?? null, true);
+                'projectHistory'        => true,
+                'projectHistoryOptions' => [
+                    'phases'    => true,
+                    'tasks'     => true,
+                ],
+            ]);
             if (!$worker) throw new NotFoundException('Worker not found');
 
             $projectHistory = $worker->getAdditionalInfo('projectHistory');
@@ -327,7 +335,15 @@ class ProjectWorkerEndpoint extends Endpoint
                 : null;
             if (!isset($workerId)) throw new ForbiddenException('Worker ID is required');
 
-            $worker = $instance->projectWorkerModel->findById($workerId, $project->getId(), true);
+            $worker = ProjectWorkerService::get($workerId, [
+                'projectId'             => $project->getId(),
+
+                'projectHistory'        => true,
+                'projectHistoryOptions' => [
+                    'phases'    => true,
+                    'tasks'     => true,
+                ],
+            ]);
             if (!$worker) throw new NotFoundException('Worker not found');
 
             $data = decodeData('php://input');
@@ -392,7 +408,15 @@ class ProjectWorkerEndpoint extends Endpoint
                 : null;
             if (!isset($workerId)) throw new ForbiddenException('Worker ID is required');
 
-            $worker = $instance->projectWorkerModel->findById($workerId, $project->getId(), true);
+            $worker = ProjectWorkerService::get($workerId, [
+                'projectId'             => $project->getId(),
+
+                'projectHistory'        => true,
+                'projectHistoryOptions' => [
+                    'phases'    => true,
+                    'tasks'     => true,
+                ],
+            ]);
             if (!$worker) throw new NotFoundException('Worker not found');
 
             $instance->projectWorkerModel->delete([

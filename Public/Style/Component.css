@@ -597,7 +597,7 @@ button > .text-w-icon {
 	height: fit-content;
 	width: 30rem !important;
 	max-width: unset !important;
-	max-height: 70vh;
+	max-height: 80vh;
 	padding: 0 !important;
 	border: none;
 	gap: 0;

@@ -296,6 +296,184 @@ class ProjectModel extends Model
     }
 
     /**
+     * Finds a worker's project history with optional phases and tasks.
+     *
+     * This method paginates projects (LIMIT/OFFSET) and can optionally include:
+     * - phases: phases for each project
+     * - tasks: tasks for each phase filtered to the given worker
+     *
+     * Notes:
+     * - LIMIT/OFFSET apply only to the project list.
+     * - When tasks are included, each task includes the worker's status as additional info.
+     *
+     * @param int|UUID $userId Worker identifier (internal id or public UUID)
+     * @param array $options
+     *      - phase: bool Include phases (default false)
+     *      - tasks: bool Include tasks on phases (default false; only when phase=true)
+     *      - limit: int Project limit (default 10)
+     *      - offset: int Project offset (default 0)
+     *
+     * @return ProjectContainer|null
+     */
+    public function findWorkerHistory(
+        int|UUID $userId,
+        array $options = [
+            'phases' => false,
+            'tasks' => false,
+            'limit' => 10,
+            'offset' => 0,
+        ]
+    ): ProjectContainer|null {
+        if (\is_int($userId) && $userId < 1) throw new InvalidArgumentException('Invalid user ID provided');
+
+        $includePhases = (bool) ($options['phases'] ?? false);
+        $includeTasks = $includePhases && (bool) ($options['tasks'] ?? false);
+
+        $paramOptions = [
+            'limit'     => $options[':limit'] ?? $options['limit'] ?? 10,
+            'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
+            // 'groupBy'   => $options[':groupBy'] ?? $options['groupBy'] ?? 'p.id, pw.status',
+            'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 'p.start_date_time DESC',
+        ];
+
+        try {
+            $whereClause = \is_int($userId)
+                ? 'u.id = :userId'
+                : 'u.public_id = :userId';
+
+            $params = [
+                ':userId' => \is_int($userId)
+                    ? $userId
+                    : UUID::toBinary($userId),
+            ];
+
+            $taskSubquery = $includeTasks
+                ? "COALESCE((
+                        SELECT JSON_ARRAYAGG(
+                            JSON_OBJECT(
+                                'id', t2.id,
+                                'public_id', HEX(t2.public_id),
+                                'name', t2.name,
+                                'status', t2.status,
+                                'priority', t2.priority,
+                                'start_date_time', t2.start_date_time,
+                                'completion_date_time', t2.completion_date_time,
+                                'actual_completion_date_time', t2.actual_completion_date_time,
+                                'worker_status', tw.status
+                            )
+                        )
+                        FROM `task` AS t2
+                        INNER JOIN `task_worker` AS tw
+                            ON tw.task_id = t2.id
+                        WHERE t2.phase_id = ph2.id
+                            AND tw.worker_id = u.id
+                    ), JSON_ARRAY())"
+                : 'JSON_ARRAY()';
+
+            $phaseSelect = $includePhases
+                ? "COALESCE((
+                        SELECT JSON_ARRAYAGG(
+                            JSON_OBJECT(
+                                'id', ph2.id,
+                                'public_id', HEX(ph2.public_id),
+                                'name', ph2.name,
+                                'status', ph2.status,
+                                'start_date_time', ph2.start_date_time,
+                                'completion_date_time', ph2.completion_date_time,
+                                'actual_completion_date_time', ph2.actual_completion_date_time,
+                                'tasks', $taskSubquery
+                            )
+                        )
+                        FROM `phase` AS ph2
+                        WHERE ph2.project_id = p.id
+                    ), JSON_ARRAY()) AS phases"
+                : 'NULL AS phases';
+
+            $queryString =
+                "SELECT
+                    p.id,
+                    p.public_id,
+                    p.name,
+                    p.status,
+                    p.start_date_time,
+                    p.completion_date_time,
+                    p.actual_completion_date_time,
+                    pw.status AS worker_status,
+                    $phaseSelect
+                FROM
+                    `project` AS p
+                INNER JOIN
+                    `project_worker` AS pw
+                ON
+                    pw.project_id = p.id
+                INNER JOIN
+                    `user` AS u
+                ON
+                    u.id = pw.worker_id";
+
+            $query = $this->appendOptionsToFindQuery(
+                $this->appendWhereClause($queryString, $whereClause),
+                $paramOptions
+            );
+
+            $statement = $this->connection->prepare($query);
+            $statement->execute($params);
+            $result = $statement->fetchAll();
+
+            if (!$this->hasData($result)) return null;
+
+            $projects = new ProjectContainer();
+            foreach ($result as $row) {
+                $phasesJson = $row['phases'] ?? null;
+                unset($row['phases']);
+
+                $project = Project::createPartial($row);
+                if (\array_key_exists('worker_status', $row))
+                    $project->addAdditionalInfo('workerStatus', $row['worker_status']);
+
+                if ($includePhases && \is_string($phasesJson)) {
+                    $phaseLists = json_decode($phasesJson, true);
+                    if (\is_array($phaseLists)) {
+                        foreach ($phaseLists as $phaseData) {
+                            $taskLists = $includeTasks
+                                ? ($phaseData['tasks'] ?? [])
+                                : [];
+
+                            unset($phaseData['tasks']);
+                            $phase = Phase::createPartial($phaseData);
+
+                            if ($includeTasks && \is_array($taskLists)) {
+                                $tasks = new TaskContainer();
+                                foreach ($taskLists as $taskData) {
+                                    if (!\is_array($taskData)) continue;
+
+                                    $workerStatus = $taskData['worker_status'] ?? null;
+                                    unset($taskData['worker_status']);
+
+                                    $task = Task::createPartial($taskData);
+                                    if ($workerStatus !== null)
+                                        $task->addAdditionalInfo('workerStatus', $workerStatus);
+
+                                    $tasks->add($task);
+                                }
+                                $phase->setTasks($tasks);
+                            }
+
+                            $project->addPhase($phase);
+                        }
+                    }
+                }
+
+                $projects->add($project);
+            }
+
+            return $projects;
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
+        }
+    }
+
+    /**
      * Searches for projects based on provided criteria.
      *
      * This method allows searching for projects using a keyword, user ID (either integer or UUID),

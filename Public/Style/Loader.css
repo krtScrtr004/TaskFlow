@@ -5,6 +5,12 @@
 	background-color: inherit;
 }
 
+.loader-wrapper.blur {
+	background-color: rgba(0, 0, 0, 0.5) !important;
+	backdrop-filter: blur(4px);
+	--webkit-backdrop-filter: blur(4px);
+}
+
 .loader-wrapper.padded {
 	padding: 5px 0;
 }

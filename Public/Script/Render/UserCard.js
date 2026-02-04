@@ -30,7 +30,7 @@ export async function userInfoCard(userId, asyncFunction) {
     toggleElementClass(userInfoCardTemplate, ['flex-col'])
     userInfoCardTemplate.setAttribute('data-userid', userId)
 
-    Loader.full(userInfoCardTemplate.querySelector('.user-info-card'))
+    Loader.full(userInfoCardTemplate.querySelector('.user-info-card'), { blur: true     })
 
     try {
         const user = await asyncFunction(userId)
@@ -80,8 +80,8 @@ function addInfoToCard(card, user) {
     const domElements = getCardDomElements(card)
     const {
         userProfilePicture, userName, userId, userBio,
-        userTotalStatistics, userCompletedStatistics, userPerformance,
-        userDefaultRate, userEmail, userContact, userJobTitles
+        userPerformance,userDefaultRate, userEmail, 
+        userContact, userJobTitles
     } = domElements
 
     // Check page context to determine which statistics to show

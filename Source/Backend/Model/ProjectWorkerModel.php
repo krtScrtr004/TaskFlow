@@ -48,7 +48,7 @@ class ProjectWorkerModel extends Model
         $paramOptions = [
             'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
             'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
-            'groupBy'   => $options[':groupBy'] ?? $options['groupBy'] ?? 'u.id, pw.status',
+            'groupBy'   => $options[':groupBy'] ?? $options['groupBy'] ?? 'u.id, pw.status, pw.default_rate',
             'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 'u.last_name ASC',
         ];
 
@@ -66,6 +66,7 @@ class ProjectWorkerModel extends Model
                     u.contact_number,
                     u.profile_link,
                     pw.status,
+                    pw.default_rate,
                     u.created_at,
                     u.confirmed_at,
                     u.deleted_at,
@@ -378,87 +379,19 @@ class ProjectWorkerModel extends Model
      */
     public function findById(
         int|UUID $workerId, 
-        int|UUID|null $projectId = null, 
-        bool $includeHistory = false): ?Worker
+        array $options = [
+            'projectId' => null
+        ]
+    ): Worker|null
     {
+        if (\is_int($workerId) && $workerId < 1) 
+            throw new InvalidArgumentException('Invalid worker ID provided');
+        
+        $projectId = $options['projectId'] ?? null;
         if ($projectId && \is_int($projectId) && $projectId < 1) 
             throw new InvalidArgumentException('Invalid project ID provided');
 
         try {
-            // TODO: Separate this into its own method to reduce complexity
-            $projectHistory = $includeHistory
-                ? "SELECT 
-                    JSON_ARRAYAGG(
-                        JSON_OBJECT(
-                            'id', p2.id,
-                            'public_id', HEX(p2.public_id),
-                            'name', p2.name,
-                            'status', p2.status,
-                            'start_date_time', p2.start_date_time,
-                            'completion_date_time', p2.completion_date_time,
-                            'actual_completion_date_time', p2.actual_completion_date_time,
-                            'worker_status', pw4.status,
-
-                            'phases', COALESCE(
-                                (
-                                    SELECT JSON_ARRAYAGG(
-                                        JSON_OBJECT(
-                                            'id', ph2.id,
-                                            'public_id', HEX(ph2.public_id),
-                                            'name', ph2.name,
-                                            'status', ph2.status,
-                                            'start_date_time', ph2.start_date_time,
-                                            'completion_date_time', ph2.completion_date_time,
-                                            'actual_completion_date_time', ph2.actual_completion_date_time,
-
-                                            'tasks', COALESCE(
-                                                (
-                                                    SELECT JSON_ARRAYAGG(
-                                                        JSON_OBJECT(
-                                                            'id', t2.id,
-                                                            'public_id', HEX(t2.public_id),
-                                                            'name', t2.name,
-                                                            'status', t2.status,
-                                                            'priority', t2.priority,
-                                                            'start_date_time', t2.start_date_time,
-                                                            'completion_date_time', t2.completion_date_time,
-                                                            'actual_completion_date_time', t2.actual_completion_date_time,
-                                                            'worker_status', tw.status
-                                                        )
-                                                    ) FROM 
-                                                        `task` AS t2
-                                                    INNER JOIN
-                                                        `task_worker` AS tw
-                                                    ON
-                                                        tw.task_id = t2.id
-                                                    WHERE 
-                                                        t2.phase_id = ph2.id
-                                                    AND
-                                                        tw.worker_id = u.id
-                                                ), JSON_ARRAY()
-                                            )
-                                        )
-                                    ) FROM 
-                                        `phase` AS ph2
-                                    WHERE 
-                                        ph2.project_id = p2.id
-                                ), JSON_ARRAY()
-                            )
-                        )
-
-                    ) FROM 
-                        `project` AS p2
-                    INNER JOIN
-                        `project_worker` AS pw4
-                    ON
-                        pw4.project_id = p2.id
-                    WHERE 
-                        pw4.worker_id = u.id " . ($projectId ? 
-                            " AND p2.id = p.id" 
-                            : ""
-                        ) . " "
-            : '';
-
             $where = (\is_int($workerId) ? "u.id" : "u.public_id") . " = :workerId";
             $params = [
                 ':workerId' => ($workerId instanceof UUID) 
@@ -553,8 +486,7 @@ class ProjectWorkerModel extends Model
                             p2.status = '" . WorkStatus::COMPLETED->value . "'
                         AND 
                             pw3.status != '" . WorkerStatus::TERMINATED->value . "'
-                    ) AS completed_projects,
-                    ($projectHistory) AS project_history
+                    ) AS completed_projects
                 FROM
                     `user` AS u
                 LEFT JOIN
@@ -587,32 +519,7 @@ class ProjectWorkerModel extends Model
                     'completedProjects' => (int)$result['completed_projects'],
             ];
             $worker = Worker::createPartial($result);
-            if ($includeHistory) {
-                $projects = new ProjectContainer();
 
-                $projectLists = json_decode($result['project_history'], true);
-                foreach ($projectLists as &$project) {
-                    $entry = Project::createPartial($project);
-
-                    $phaseLists = $project['phases'];
-                    foreach ($phaseLists as $phase) {
-                        $taskLists = $phase['tasks'];
-
-                        $tasks = new TaskContainer();
-                        foreach ($taskLists as $task) {
-                            $tasks->add(
-                                Task::createPartial($task)
-                            );
-                        }
-                        $phase['tasks'] = $tasks;
-                        $phaseEntry = Phase::createPartial($phase);
-
-                        $entry->addPhase($phaseEntry);
-                    }
-                    $projects->add($entry);
-                }
-                $worker->addAdditionalInfo('projectHistory', $projects);
-            }
             return $worker;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
