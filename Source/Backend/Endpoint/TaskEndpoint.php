@@ -41,12 +41,16 @@ class TaskEndpoint extends Endpoint
     private PhaseModel $phaseModel;
     private TaskModel $taskModel;
 
+    private TaskService $taskService;
+
     private function __construct()
     {
         $this->projectModel = new ProjectModel();
         $this->projectWorkerModel = new ProjectWorkerModel();
         $this->phaseModel = new PhaseModel();
         $this->taskModel = new TaskModel();
+
+        $this->taskService = new TaskService();
     }
 
     /**
@@ -347,7 +351,7 @@ class TaskEndpoint extends Endpoint
                     $validator->getErrors()
                 );
 
-            $newTask = TaskService::create($task);
+            $newTask = $instance->taskService->create($task);
             Response::success(
                 ['id' => UUID::toString($newTask->getPublicId())],
                 'Workers added successfully'
@@ -502,7 +506,7 @@ class TaskEndpoint extends Endpoint
 
             $resourceValidator = new ResourceValidator();
             $resources = $data['resources'] ?? [];
-            if (!is_array($resources)) throw new ValidationException('Invalid resources data format provided.');
+            if (!\is_array($resources)) throw new ValidationException('Invalid resources data format provided.');
 
             foreach ($resources as $resource) {
                 $budgetBoundaryValidator['addBudget']((float) $resource['unitRate'] * (float) $resource['estimatedUnit']);
@@ -533,7 +537,7 @@ class TaskEndpoint extends Endpoint
                     throw new ValidationException('Task Validation Failed', $mergedErrors);
                 }
 
-                TaskService::save($taskData);
+                $instance->taskService->save($taskData);
             }
 
             Response::success(

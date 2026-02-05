@@ -335,7 +335,8 @@ class TaskWorkerEndpoint extends Endpoint
                     $workValidator->getErrors()
                 );
 
-            TaskService::create($task, ['worker' => true]);
+            $taskService = new TaskService();
+            $taskService->create($task, ['worker' => true]);
 
             Response::success([], 'Workers added successfully');
         } catch (Throwable $e) {
@@ -542,7 +543,8 @@ class TaskWorkerEndpoint extends Endpoint
                 : null;
             if (!isset($workerId)) throw new ForbiddenException('Worker ID is required');
 
-            $worker = ProjectWorkerService::get($workerId, [
+            $projectWorkerService = new ProjectWorkerService();
+            $worker = $projectWorkerService->get($workerId, [
                 'projectId'             => $project->getId(),
 
                 'projectHistory'        => true,

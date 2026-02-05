@@ -15,13 +15,13 @@ class ProjectWorkerService
     private ProjectModel $projectModel;
     private ProjectWorkerModel $projectWorkerModel;
 
-    private function __construct()
+    public function __construct()
     {
         $this->projectModel = new ProjectModel();
         $this->projectWorkerModel = new ProjectWorkerModel();
     }
 
-    public static function get(
+    public function get(
         int|UUID|array $workerId,
         array $options = [
             'projectId'             => null,
@@ -53,8 +53,6 @@ class ProjectWorkerService
                 throw new InvalidArgumentException('Invalid worker ID provided');
         }
 
-        $instance = new self();
-
         $projectId = $options['projectId'] ?? null;
         if ($projectId) {
             if (!\is_int($projectId) && !($projectId instanceof UUID))
@@ -65,7 +63,7 @@ class ProjectWorkerService
         }
 
         // Fetch workers
-        $workers = $instance->projectWorkerModel->findById($workerIds, $projectId);
+        $workers = $this->projectWorkerModel->findById($workerIds, $projectId);
         if (!$workers) return null;
 
         $includeHistory = (bool) ($options['projectHistory'] ?? false);
@@ -85,7 +83,7 @@ class ProjectWorkerService
             }
 
             // Fetch project history for these workers
-            $projectHistory = $instance->projectModel->findWorkerHistory(
+            $projectHistory = $this->projectModel->findWorkerHistory(
                 $internalIds,
                 [
                     'phases'    => $historyIncludePhases,

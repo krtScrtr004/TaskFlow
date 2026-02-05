@@ -16,13 +16,13 @@ class PhaseService
     private PhaseModel $phaseModel;
     private TaskModel $taskModel;
 
-    private function __construct()
+    public function __construct()
     {
         $this->phaseModel = new PhaseModel();
         $this->taskModel = new TaskModel();
     }
 
-    public static function get(
+    public function get(
         int|UUID|array $phaseId,
         array $options = [
             'tasks' => true,
@@ -30,8 +30,6 @@ class PhaseService
     ): Phase|null {
         $isBatch = \is_array($phaseId);
         $phaseIds = $isBatch ? array_values($phaseId) : [$phaseId];
-
-        $instance = new self();
 
         $phases = new PhaseContainer();
         foreach ($phaseIds as $item) {
@@ -41,14 +39,14 @@ class PhaseService
             if (\is_int($item) && $item < 1)
                 throw new InvalidArgumentException('Invalid phase ID provided');
 
-            $phase = $instance->phaseModel->findById($item);
+            $phase = $this->phaseModel->findById($item);
             if (!$phase) return null;
 
             $phaseId = $phase->getId();
 
             $includeTasks = $options['tasks'] ?? true;
             if ($includeTasks) {
-                $tasks = $instance->taskModel->findByPhaseId($phaseId);
+                $tasks = $this->taskModel->findByPhaseId($phaseId);
                 $phase->setTasks($tasks);
             }
             $phases->add($phase);
@@ -71,14 +69,12 @@ class PhaseService
      * 
      * @throws InvalidArgumentException If project ID is invalid
      */
-    public static function getByProjectId(
+    public function getByProjectId(
         int|UUID $projectId,
         array $options = ['tasks' => false]
     ): PhaseContainer|null {
-        $instance = new self();
-
         // Fetch phases without tasks
-        $phases = $instance->phaseModel->findByProjectId($projectId, $options);
+        $phases = $this->phaseModel->findByProjectId($projectId, $options);
 
         if (!$phases || $phases->count() === 0) return null;
 
@@ -90,7 +86,7 @@ class PhaseService
                 $phaseIds[] = $phase->getId();
             }
 
-            $allTasks = $instance->taskModel->findByPhaseIds($phaseIds, ['limit' => null]);
+            $allTasks = $this->taskModel->findByPhaseIds($phaseIds, ['limit' => null]);
 
             if ($allTasks && $allTasks->count() > 0) {
                 // Group tasks by phase_id

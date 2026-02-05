@@ -36,10 +36,14 @@ class ProjectEndpoint extends Endpoint
     private ProjectModel $projectModel;
     private PhaseModel $phaseModel;
 
+    private ProjectService $projectService;
+
     private function __construct()
     {
         $this->projectModel = new ProjectModel();
         $this->phaseModel = new PhaseModel();
+
+        $this->projectService = new ProjectService();
     }
 
     /**
@@ -298,7 +302,7 @@ class ProjectEndpoint extends Endpoint
                 new DateTime($project['completionDateTime']));
             $newProject = Project::createPartial($project);
 
-            $newProject = ProjectService::create($newProject);
+            $newProject = $instance->projectService->create($newProject);
 
             Response::success(
                 ['projectId' => UUID::toString($newProject->getPublicId())], 
@@ -356,7 +360,7 @@ class ProjectEndpoint extends Endpoint
             $data = decodeData('php://input');
             if (!$data) throw new ValidationException('Cannot decode data');
 
-            $project = ProjectService::get($projectId, ['phases' => true]);
+            $project = $instance->projectService->get($projectId, ['phases' => true]);
             if (!$project) throw new NotFoundException('Project is not found');
 
             $workValidator = new WorkValidator();
@@ -479,7 +483,7 @@ class ProjectEndpoint extends Endpoint
                     );
                 sanitizeData($projectData);
 
-                ProjectService::save($projectData);
+                $instance->projectService->save($projectData);
             }
 
             Response::success(

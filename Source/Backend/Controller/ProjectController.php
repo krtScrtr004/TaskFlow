@@ -28,6 +28,8 @@ class ProjectController implements Controller
     private PhaseModel $phaseModel;
     private TaskModel $taskModel;
 
+    private PhaseService $phaseService;
+
     private UuidValidator $uuidValidator;
 
     /**
@@ -47,6 +49,9 @@ class ProjectController implements Controller
         $this->projectModel = new ProjectModel();
         $this->phaseModel = new PhaseModel();
         $this->taskModel = new TaskModel();
+
+        $this->phaseService = new PhaseService();
+
         $this->uuidValidator = new UuidValidator();
     }
 
@@ -144,7 +149,7 @@ class ProjectController implements Controller
         $projectId = TemporaryId::isTemporary($project->getId())
             ? $project->getPublicId()
             : $project->getId();
-        $phases = PhaseService::getByProjectId($projectId, ['tasks' => true]);
+        $phases = $this->phaseService->getByProjectId($projectId, ['tasks' => true]);
         if (!$phases) throw new NotFoundException('Phases not found');
 
         // Container of phase IDs to update status
@@ -335,7 +340,8 @@ class ProjectController implements Controller
 
         $instance = new self();
 
-        $project = ProjectService::get($projectId, [
+        $projectService = new ProjectService();
+        $project = $projectService->get($projectId, [
             'phases'    => $includePhases,
             'tasks'     => $includeTasks,
             'workers'   => $includeWorkers
@@ -386,7 +392,7 @@ class ProjectController implements Controller
             if ($project->additionalInfoContains('progress')) {
                 $projectProgress = $project->getAdditionalInfo('progress');
             } else {
-                $phases = PhaseService::getByProjectId($project->getId(), ['tasks' => true]);
+                $phases = $this->phaseService->getByProjectId($project->getId(), ['tasks' => true]);
                 $projectProgress = ($phases?->count() > 0)
                     ? ProjectProgressCalculator::calculate($phases)
                     : [

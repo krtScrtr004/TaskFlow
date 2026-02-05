@@ -27,10 +27,14 @@ class ProjectWorkerEndpoint extends Endpoint
     private ProjectModel $projectModel;
     private ProjectWorkerModel $projectWorkerModel;
 
+    private ProjectWorkerService $projectWorkerService;
+
     private function __construct()
     {
         $this->projectModel = new ProjectModel();
         $this->projectWorkerModel = new ProjectWorkerModel();
+
+        $this->projectWorkerService = new ProjectWorkerService();
     }
 
     /**
@@ -80,7 +84,7 @@ class ProjectWorkerEndpoint extends Endpoint
             if (!isset($projectId) && !$project)
                 throw new NotFoundException('Project not found');
 
-            $worker = ProjectWorkerService::get($workerId, [
+            $worker = $instance->projectWorkerService->get($workerId, [
                 'projectId'             => $project->getId() ?? null,
 
                 'projectHistory'        => true,
@@ -169,7 +173,7 @@ class ProjectWorkerEndpoint extends Endpoint
                 foreach ($ids as $id) {
                     $uuids[] = UUID::fromString($id);
                 }
-                $workers = ProjectWorkerService::get($uuids, [
+                $workers = $instance->projectWorkerService->get($uuids, [
                     'projectId' => $project?->getId() ?? $projectId,
                 ]);
             } else {
@@ -337,7 +341,7 @@ class ProjectWorkerEndpoint extends Endpoint
                 : null;
             if (!isset($workerId)) throw new ForbiddenException('Worker ID is required');
 
-            $worker = ProjectWorkerService::get($workerId, [
+            $worker = $instance->projectWorkerService->get($workerId, [
                 'projectId'             => $project->getId(),
 
                 'projectHistory'        => true,
@@ -409,7 +413,7 @@ class ProjectWorkerEndpoint extends Endpoint
                 : null;
             if (!isset($workerId)) throw new ForbiddenException('Worker ID is required');
 
-            $worker = ProjectWorkerService::get($workerId, [
+            $worker = $instance->projectWorkerService->get($workerId, [
                 'projectId'             => $project->getId(),
 
                 'projectHistory'        => true,

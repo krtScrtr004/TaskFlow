@@ -30,7 +30,7 @@ class TaskService
     /**
      * Private constructor to prevent direct instantiation.
      */
-    private function __construct()
+    public function __construct()
     {
         $this->connection = Connection::getInstance();
 
@@ -65,7 +65,7 @@ class TaskService
      * 
      * @throws Throwable If any error occurs during the creation process, the transaction is rolled back.
      */
-    public static function create(
+    public function create(
         Task|TaskContainer $task,
         array $execute = [
             'task'      => true,
@@ -80,24 +80,23 @@ class TaskService
         $executeWorker = $execute['worker'] ?? false;
         $executeResource = $execute['resource'] ?? false;
 
-        $instance = new self();
         try {
-            $instance->connection->beginTransaction();
+            $this->connection->beginTransaction();
 
             $createdTasks = new TaskContainer();
             foreach ($tasks as $item) {
                 // Save new task entry
                 if ($executeTask)
-                    $createdTask = $instance->taskModel->create($item);
+                    $createdTask = $this->taskModel->create($item);
                 $taskId = $createdTask?->getID() ?? $item->getID();
 
                 // Save task workers
                 if ($executeWorker) {
                     $taskWorkers = $item->getWorkers();
                     if ($taskWorkers) {
-                        $createdWorkers = $instance->taskWorkerModel->create($taskId, $taskWorkers);
+                        $createdWorkers = $this->taskWorkerModel->create($taskId, $taskWorkers);
                         // Create labor resources for each worker
-                        $instance->createWorkerResources($taskId, $createdWorkers);
+                        $this->createWorkerResources($taskId, $createdWorkers);
                     }
                 }
 
@@ -105,15 +104,15 @@ class TaskService
                 if ($executeResource) {
                     $taskResources = $item->getResources()->getResources();
                     if ($taskResources && $taskResources->count() > 0)
-                        $instance->resourceModel->create($taskId, $taskResources);
+                        $this->resourceModel->create($taskId, $taskResources);
                 }
                 $createdTasks->add($createdTask ?? $item);
             }
 
-            $instance->connection->commit();
+            $this->connection->commit();
             return $isBatch ? $createdTasks : $createdTasks->first();
         } catch (Throwable $e) {
-            $instance->connection->rollBack();
+            $this->connection->rollBack();
             throw $e;
         }
     }
@@ -164,14 +163,13 @@ class TaskService
      * 
      * @throws Throwable If any error occurs during the edit process, the transaction is rolled back.
      */
-    public static function save(array $rawTask): bool
+    public function save(array $rawTask): bool
     {
         $isBatch = array_keys($rawTask) === range(0, count($rawTask) - 1);
         $rawTasks = $isBatch ? $rawTask : [$rawTask];
 
-        $instance = new self();
         try {
-            $instance->connection->beginTransaction();
+            $this->connection->beginTransaction();
 
             foreach ($rawTasks as $item) {
                 /**
@@ -180,7 +178,7 @@ class TaskService
                  * Required:
                  * - Task ID or Public ID
                  */
-                $instance->taskModel->save($item);
+                $this->taskModel->save($item);
 
                 // Update task workers
                 if (isset($item['workers'])) {
@@ -198,9 +196,9 @@ class TaskService
                             }
                             $workersToAdd->add(TaskWorker::createPartial($workerData));
                         }
-                        $createdWWorkers = $instance->taskWorkerModel->create($item['id'] ?? $item['publicId'], $workersToAdd);
+                        $createdWWorkers = $this->taskWorkerModel->create($item['id'] ?? $item['publicId'], $workersToAdd);
                         // Create labor resources for each new worker
-                        $instance->createWorkerResources($item['id'] ?? $item['publicId'], $createdWWorkers);
+                        $this->createWorkerResources($item['id'] ?? $item['publicId'], $createdWWorkers);
                     }
 
                     // Update existing workers and remove terminated ones
@@ -213,7 +211,7 @@ class TaskService
                              * - Task ID or Public ID
                              * - Worker ID or Public ID
                              */
-                            $instance->taskWorkerModel->save($workerData);
+                            $this->taskWorkerModel->save($workerData);
                         }
                     }
                 }
@@ -225,15 +223,15 @@ class TaskService
                      * - Resource ID or Public ID
                      */
                     foreach ($item['resources'] as $resourceData) {
-                        $instance->resourceModel->save($resourceData);
+                        $this->resourceModel->save($resourceData);
                     }
                 }
             }
 
-            $instance->connection->commit();
+            $this->connection->commit();
             return true;
         } catch (Throwable $e) {
-            $instance->connection->rollBack();
+            $this->connection->rollBack();
             throw $e;
         }
     }
@@ -255,7 +253,7 @@ class TaskService
      * 
      * @throws InvalidArgumentException If the provided task ID is invalid.
      */
-    public static function get(
+    public function get(
         int|UUID|array $taskId,
         array $options = [
             'workers'   => false,
@@ -277,20 +275,18 @@ class TaskService
             $includeWorkers = $options['workers'] ?? false;
             $includeResources = $options['resources'] ?? false;
 
-            $instance = new self();
-            $task = $instance->taskModel->findById($item);
+                $task = $this->taskModel->findById($item);
             if (!$task) return null;
 
             // Load related entities based on options
             if ($includeWorkers) {
-                $workers = $instance->taskWorkerModel->findByTaskId($task->getId());
+                $workers = $this->taskWorkerModel->findByTaskId($task->getId());
                 $task->setWorkers($workers);
             }
 
             // Load resources if specified
             if ($includeResources) {
-                $instance = new self();
-                $resources = $instance->resourceModel->findByTaskId($task->getId());
+                        $resources = $this->resourceModel->findByTaskId($task->getId());
                 $task->setResources($resources);
             }
 

@@ -6,6 +6,7 @@ use App\Auth\SessionAuth;
 use App\Container\TaskContainer;
 use App\Core\Me;
 use App\Core\UUID;
+use App\Entity\Task;
 use App\Entity\Worker;
 use App\Enumeration\Priority;
 use App\Enumeration\WorkStatus;
@@ -17,6 +18,7 @@ use App\Model\ProjectModel;
 use App\Model\ProjectWorkerModel;
 use App\Model\TaskModel;
 use App\Service\TaskService;
+use Cloudinary\Tag\Tag;
 use DateTime;
 use ValueError;
 
@@ -27,6 +29,8 @@ class TaskController implements Controller
     private PhaseModel $phaseModel;
     private TaskModel $taskModel;
 
+    private TaskService $taskService;
+
 
     private function __construct()
     {
@@ -34,6 +38,8 @@ class TaskController implements Controller
         $this->projectWorkerModel = new ProjectWorkerModel();
         $this->phaseModel = new PhaseModel();
         $this->taskModel = new TaskModel();
+
+        $this->taskService = new TaskService();
     }
 
     public static function index(): void {}
@@ -199,7 +205,7 @@ class TaskController implements Controller
                 : null;
             if (!$taskId) throw new ForbiddenException('Task ID is required.');
 
-            $task = TaskService::get($taskId, ['workers' => true, 'resources' => true]);
+            $task = $instance->taskService->get($taskId, ['workers' => true, 'resources' => true]);
             if (!$task) throw new NotFoundException('Task not found');
 
             $status = $task->getStatus();
@@ -237,6 +243,8 @@ class TaskController implements Controller
         try {
             SessionAuth::redirectIfNotAuthorized();
 
+            $instance = new self();
+
             // Task Info
             $taskId = isset($args['taskId'])
                 ? UUID::fromString($args['taskId'])
@@ -245,7 +253,7 @@ class TaskController implements Controller
                 throw new ForbiddenException('Task ID is required');
 
             $task = isset($args['taskId'])
-                ? TaskService::get($taskId, ['workers' => true, 'resources' => true])
+                ? $instance->taskService->get($taskId, ['workers' => true, 'resources' => true])
                 : null;
             if (isset($args['taskId']) && !$task)
                 throw new NotFoundException('Task not found.');
@@ -256,8 +264,6 @@ class TaskController implements Controller
                 : null;
             if (isset($args['projectId']) && !$projectId)
                 throw new ForbiddenException('Project ID is required');
-
-            $instance = new self();
 
             /**
              * If projectId is provided in args, use it to fetch the project (Create form).

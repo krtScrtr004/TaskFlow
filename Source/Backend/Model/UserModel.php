@@ -265,7 +265,8 @@ class UserModel extends Model
                 $projectManagerModel = new ProjectManagerModel();
                 return $projectManagerModel->findById($userId, null, true);
             } else {
-                return ProjectWorkerService::get($userId, [
+                $projectWorkerService = new ProjectWorkerService();
+                return $projectWorkerService->get($userId, [
                     'projectHistory'        => true,
                     'projectHistoryOptions' => [
                         'phases'    => true,

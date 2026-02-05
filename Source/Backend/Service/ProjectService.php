@@ -48,33 +48,31 @@ class ProjectService
      * @return Project The persisted Project instance (including assigned ID)
      * @throws \Throwable Re-throws any exception or error encountered during creation
      */
-    public static function create(Project|ProjectContainer $project): Project
+    public function create(Project|ProjectContainer $project): Project
     {
         $isBatch = $project instanceof ProjectContainer;
         $projects = $isBatch ? $project : new ProjectContainer([$project]);
 
-        $instance = new self();
-
         try {
-            $instance->connection->beginTransaction();
+            $this->connection->beginTransaction();
 
             foreach ($projects as $item) {
-                $createProject = $instance->projectModel->create($item);
+                $createProject = $this->projectModel->create($item);
                 $projectId = $createProject->getId();
 
                 $phases = $item->getPhases();
                 if ($phases && $phases->count() > 0)
-                    $instance->phaseModel->create($projectId, $item->getPhases());
+                    $this->phaseModel->create($projectId, $item->getPhases());
 
                 $workers = $item->getWorkers();
                 if ($workers && $workers->count() > 0)
-                    $instance->projectWorkerModel->create($projectId, $item->getWorkers());
+                    $this->projectWorkerModel->create($projectId, $item->getWorkers());
             }
 
-            $instance->connection->commit();
+            $this->connection->commit();
             return $createProject;
         } catch (Throwable $e) {
-            $instance->connection->rollBack();
+            $this->connection->rollBack();
             throw $e;
         }
     }
@@ -112,18 +110,16 @@ class ProjectService
      * @return void
      * @throws Throwable If any error occurs; transaction will be rolled back before re-throwing.
      */
-    public static function save(array $project): void
+    public function save(array $project): void
     {
         $isBatch = array_keys($project) === range(0, count($project) - 1);
         $projects = $isBatch ? $project : [$project];
 
-        $instance = new self();
-
         try {
-            $instance->connection->beginTransaction();
+            $this->connection->beginTransaction();
 
             foreach ($projects as $item) {
-                $instance->projectModel->save($item);
+                $this->projectModel->save($item);
                 $projectId = $item['id'];
 
                 $addedPhases = $item['phases']['toAdd'] ?? [];
@@ -135,11 +131,11 @@ class ProjectService
                     foreach ($addedPhases as $phase) {
                         $phases->add(Phase::createPartial($phase));
                     }
-                    $instance->phaseModel->create($projectId, $phases);
+                    $this->phaseModel->create($projectId, $phases);
                 }
                 if (\count($editedPhases) > 0 || \count($cancelledPhases) > 0) {
                     $phases = array_merge($editedPhases, $cancelledPhases);
-                    $instance->phaseModel->save($phases);
+                    $this->phaseModel->save($phases);
                 }
 
                 $addedWorkers = $item['workers']['toAdd'] ?? [];
@@ -151,22 +147,22 @@ class ProjectService
                     foreach ($addedWorkers as $worker) {
                         $workers->add(Worker::createPartial($worker));
                     }
-                    $instance->projectWorkerModel->create($projectId, $workers);
+                    $this->projectWorkerModel->create($projectId, $workers);
                 }
                 if (\count($editedWorkers) > 0 || \count($removedWorkers) > 0) {
                     $workers = array_merge($editedWorkers, $removedWorkers);
-                    $instance->projectWorkerModel->save($projectId, $workers);
+                    $this->projectWorkerModel->save($projectId, $workers);
                 }
             }
 
-            $instance->connection->commit();
+            $this->connection->commit();
         } catch (Throwable $e) {
-            $instance->connection->rollBack();
+            $this->connection->rollBack();
             throw $e;
         }
     }
 
-    public static function get(
+    public function get(
         int|UUID|array $projectId,
         array $options = [
             'phases'    => false,
@@ -184,8 +180,6 @@ class ProjectService
         $includeTasks = $options['tasks'] ?? false;
         $includeWorkers = $options['workers'] ?? false;
 
-        $instance = new self();
-
         $projects = new ProjectContainer();
         foreach ($projectIds as $item) {
             if (!\is_int($item) && !($item instanceof UUID))
@@ -194,18 +188,18 @@ class ProjectService
             if (\is_int($item) && $item < 1)
                 throw new InvalidArgumentException('Invalid project ID provided');
 
-            $project = $instance->projectModel->findById($item);
+            $project = $this->projectModel->findById($item);
             if (!$project) return null;
 
             $projectId = $project->getId();
 
             if ($includePhases) {
-                $phases = $instance->phaseModel->findByProjectId($projectId);
+                $phases = $this->phaseModel->findByProjectId($projectId);
                 $project->setPhases($phases);
             }
 
             if ($includeWorkers) {
-                $workers = $instance->projectWorkerModel->findByProjectId($projectId);
+                $workers = $this->projectWorkerModel->findByProjectId($projectId);
                 $project->setWorkers($workers);
             }
 
