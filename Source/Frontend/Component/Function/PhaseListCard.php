@@ -106,7 +106,7 @@ function phaseListCard(Phase $phase): string
 
                 <div class="secondary-info-card">
                     <p class="dark-white-text light-text">COMPLETED</p>
-                    <p><?= $completionDateTime ?></p>
+                    <p><?= $actualCompletionDateTime ?></p>
                 </div>
 
                 <div class="secondary-info-card">

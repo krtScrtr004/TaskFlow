@@ -26,33 +26,41 @@ class TemporaryLinkModel extends Model
      *
      * @return bool Returns true on successful creation or update of the temporary link
      */
-    public function create(mixed $data): mixed
-	{
-        if (!isset($data['email']) || !\is_string($data['email']) || !trimOrNull($data['email'])) 
-            throw new InvalidArgumentException('Invalid email provided');
-        if (!isset($data['token']) || !\is_string($data['token']) || !trimOrNull($data['token']))
-            throw new InvalidArgumentException('Invalid token provided');
+    public function create(array $temporaryLink): bool
+    {
+        $isBatch = array_keys($temporaryLink) === range(0, \count($temporaryLink) - 1);
+        $temporaryLinks = $isBatch ? $temporaryLink : [$temporaryLink];
 
         try {
-            $hashedToken = hash('sha256', $data['token']);
-            $query = 
-                "INSERT INTO 
+            foreach ($temporaryLinks as $item) {
+                if (!\is_array($item))
+                    throw new InvalidArgumentException('Each temporary link item must be an array');
+                if (!isset($item['email']) || !\is_string($item['email']) || !trimOrNull($item['email']))
+                    throw new InvalidArgumentException('Invalid email provided');
+                if (!isset($item['token']) || !\is_string($item['token']) || !trimOrNull($item['token']))
+                    throw new InvalidArgumentException('Invalid token provided');
+
+                $hashedToken = hash('sha256', $item['token']);
+                $query =
+                    "INSERT INTO 
                     `temporary_link` (user_email, token) 
                 VALUES 
                     (:email, :token1) 
                 ON DUPLICATE KEY UPDATE token = :token2";
-            $statement = $this->connection->prepare($query);
-            $statement->execute([
-                ':email' => $data['email'],
-                ':token1' => $hashedToken,
-                ':token2' => $hashedToken
-            ]);
-            
+                
+                $statement = $this->connection->prepare($query);
+                $statement->execute([
+                    ':email'    => $item['email'],
+                    ':token1'   => $hashedToken,
+                    ':token2'   => $hashedToken
+                ]);
+            }
+
             return true;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
-	}
+    }
 
     /**
      * Searches for a temporary link record by user email.
@@ -69,12 +77,12 @@ class TemporaryLinkModel extends Model
      * @throws InvalidArgumentException If the provided token is invalid.
      * @throws DatabaseException If a database error occurs during the search.
      */
-    public function search(string $token): mixed 
+    public function search(string $token): mixed
     {
         if (!trimOrNull($token)) throw new InvalidArgumentException('Invalid token provided');
 
         try {
-            $query = 
+            $query =
                 "SELECT * 
                 FROM 
                     `temporary_link`
@@ -111,12 +119,12 @@ class TemporaryLinkModel extends Model
      * @return bool True if a record was deleted, false otherwise.
      */
     public function delete(mixed $token): bool
-	{
-        if (!\is_string($token) || !trimOrNull($token)) 
+    {
+        if (!\is_string($token) || !trimOrNull($token))
             throw new InvalidArgumentException('Invalid token provided');
 
-		try {
-            $query = 
+        try {
+            $query =
                 "DELETE FROM 
                     `temporary_link`
                 WHERE 
@@ -128,7 +136,7 @@ class TemporaryLinkModel extends Model
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
-	}
+    }
 
     /**
      * Finds temporary link records based on the specified criteria.
@@ -144,10 +152,10 @@ class TemporaryLinkModel extends Model
      * @return mixed Returns null as the method is not implemented.
      */
     protected function find(string $whereClause = '', array $params = [], array $options = []): mixed
-	{
-		// Not implemented (No use case)
-		return null;
-	}
+    {
+        // Not implemented (No use case)
+        return null;
+    }
 
     /**
      * Retrieves all temporary link records with pagination.
@@ -161,11 +169,11 @@ class TemporaryLinkModel extends Model
      * 
      * @return mixed Returns the list of temporary link records, or null if not implemented.
      */
-	public function all(int $offset = 0, int $limit = 10): mixed
-	{
+    public function all(int $offset = 0, int $limit = 10): mixed
+    {
         // Not implemented (No use case)
-		return null;
-	}
+        return null;
+    }
 
     /**
      * Saves a temporary link record to the data store.
@@ -184,8 +192,8 @@ class TemporaryLinkModel extends Model
      * @return bool Always returns false as saving is not implemented
      */
     public function save(array $data): bool
-	{
+    {
         // Not implemented (No use case)
-		return false;
-	}
+        return false;
+    }
 }

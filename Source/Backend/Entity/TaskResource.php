@@ -370,7 +370,7 @@ class TaskResource implements Entity
             'id'            => $data['id'] ?? TemporaryId::generate(),
             'publicId'      => $data['publicId'] ?? UUID::get(),
             'type'          => $data['type'] ?? ResourceType::createPartial([]),
-            'quantity'      => $data['quantity'] ?? 0,
+            'quantity'      => $data['quantity'] ?? RESOURCE_QUANTITY_MIN,
             'unitRate'      => $data['unitRate'] ?? 0.0,
             'estimatedUnit' => $data['estimatedUnit'] ?? 0.0,
             'actualUnit'    => $data['actualUnit'] ?? 0.0,

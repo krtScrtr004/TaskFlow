@@ -18,6 +18,7 @@ use App\Model\TaskModel;
 use App\Service\PhaseService;
 use App\Service\ProjectService;
 use App\Utility\ProjectProgressCalculator;
+use App\Utility\TemporaryId;
 use App\Validator\UuidValidator;
 use DateTime;
 
@@ -140,7 +141,10 @@ class ProjectController implements Controller
     {
         $instance = new self();
 
-        $phases = PhaseService::getByProjectId($project->getId(), ['tasks' => true]);
+        $projectId = TemporaryId::isTemporary($project->getId())
+            ? $project->getPublicId()
+            : $project->getId();
+        $phases = PhaseService::getByProjectId($projectId, ['tasks' => true]);
         if (!$phases) throw new NotFoundException('Phases not found');
 
         // Container of phase IDs to update status
@@ -196,7 +200,7 @@ class ProjectController implements Controller
 
         // Update phase status in the database
         if (!empty($phasesToUpdate))
-            $instance->phaseModel->saveMultiple($phasesToUpdate);
+            $instance->phaseModel->save($phasesToUpdate);
 
         // Set additional info on project
         $project->addAdditionalInfo('progress', $projectProgress);

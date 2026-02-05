@@ -302,6 +302,11 @@
 
 .phase-list-card .budget-note-container p {
 	font-size: 0.9rem;
+	white-space: pre-wrap !important;
+}
+
+.phase-list-card .budget-note-container img {
+	margin-right: 0.5rem !important;
 }
 
 .phase-list-card .text-w-icon > img {

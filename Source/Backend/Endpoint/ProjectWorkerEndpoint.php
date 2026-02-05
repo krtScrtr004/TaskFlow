@@ -169,7 +169,9 @@ class ProjectWorkerEndpoint extends Endpoint
                 foreach ($ids as $id) {
                     $uuids[] = UUID::fromString($id);
                 }
-                $workers = $instance->projectWorkerModel->findMultipleById($uuids, $project?->getId() ?? null, false);
+                $workers = ProjectWorkerService::get($uuids, [
+                    'projectId' => $project?->getId() ?? $projectId,
+                ]);
             } else {
                 // Fetch by key, status, and other filters
                 $key = null;
@@ -275,7 +277,7 @@ class ProjectWorkerEndpoint extends Endpoint
                     'defaultRate'   => $worker['defaultRate']
                 ]));
             }
-            $instance->projectWorkerModel->createMultiple($project->getId(), $workerContainer);
+            $instance->projectWorkerModel->create($project->getId(), $workerContainer);
 
             Response::success([], 'Workers added successfully');
         } catch (Throwable $e) {
@@ -349,10 +351,9 @@ class ProjectWorkerEndpoint extends Endpoint
             $data = decodeData('php://input');
             if (!$data) throw new ValidationException('Cannot decode data');
 
-            $instance->projectWorkerModel->save([
-                'projectId' => $project->getId(),
-                'workerId' => $worker->getId(),
-                'status' => isset($data['status']) ? WorkerStatus::from($data['status']) : null,
+            $instance->projectWorkerModel->save($project->getId(), [
+                'workerId'    => $worker->getId(),
+                'status'      => isset($data['status']) ? WorkerStatus::from($data['status']) : null,
             ]);
 
             Response::success([], 'Worker status updated successfully');
@@ -421,7 +422,7 @@ class ProjectWorkerEndpoint extends Endpoint
 
             $instance->projectWorkerModel->delete([
                 'projectId' => $project->getId(),
-                'workerId' => $worker->getId(),
+                'workerId'  => $worker->getId(),
             ]);
 
             Response::success([], 'Worker removed from project successfully');

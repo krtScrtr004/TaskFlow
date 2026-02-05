@@ -50,6 +50,8 @@ class RateLimiter
             'timeWindow' => null
         ]
     ): void {
+        return; // TODO: Remove this
+
         if (isset($options['limit']) && (!is_int($options['limit']) || $options['limit'] <= 0))
             throw new InvalidArgumentException('Limit must be a positive integer.');
 

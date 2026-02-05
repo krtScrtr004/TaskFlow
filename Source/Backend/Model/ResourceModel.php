@@ -7,6 +7,7 @@ use App\Container\ResourceContainer;
 use App\Core\UUID;
 use App\Entity\TaskResource;
 use App\Entity\ResourceType;
+use App\Entity\TaskWorker;
 use App\Exception\DatabaseException;
 use Exception;
 use InvalidArgumentException;
@@ -150,8 +151,7 @@ class ResourceModel extends Model
             'limit'     => 10,
             'offset'    => 0
         ]
-    ): ResourceContainer|null
-    {
+    ): ResourceContainer|null {
         if ($taskId && \is_int($taskId) && $taskId < 1)
             throw new InvalidArgumentException('Invalid task ID');
 
@@ -211,19 +211,6 @@ class ResourceModel extends Model
     }
 
     /**
-     * Not implemented as there is no use case for creating a single resource independently.
-     * 
-     * @param mixed $data
-     * 
-     * @return mixed
-     */
-    public function create(mixed $data): mixed
-    {
-        // Not implemented (No use case)
-        return null;
-    }
-
-    /**
      * Inserts multiple Resource entries for a given task into the database and updates each
      * Resource in the provided container with the database-assigned identifier.
      *
@@ -250,8 +237,16 @@ class ResourceModel extends Model
      *
      * @return ResourceContainer The same $resources container, with each Resource's ID updated to the DB-assigned value
      */
-    public function createMultiple(int $taskId, ResourceContainer $resources): ResourceContainer
+    public function create(int|UUID $taskId, TaskResource|ResourceContainer $resource): ResourceContainer
     {
+        if (\is_int($taskId) && $taskId < 1)
+            throw new InvalidArgumentException('Invalid task ID provided');
+
+        // Allow passing a single Resource without wrapping
+        $isBatch = $resource instanceof ResourceContainer;
+        $resources = $isBatch ? $resource : new ResourceContainer([ $resource ]);
+        if ($resources->count() === 0) throw new InvalidArgumentException('ResourceContainer cannot be empty');
+
         try {
             $query =
                 "INSERT INTO `resource` (
@@ -266,7 +261,9 @@ class ResourceModel extends Model
                     `note`
                 ) VALUES (
                     :publicId,
-                    :taskId,
+                    " . (\is_int($taskId)
+                        ? ":taskId"
+                        : "(SELECT id FROM `task` WHERE `public_id` = :taskId)") . ",
                     :resourceTypeId,
                     :taskWorkerId,
                     :quantity,
@@ -276,24 +273,39 @@ class ResourceModel extends Model
                     :note
                 )";
             $statement = $this->connection->prepare($query);
-            foreach ($resources as $resource) {
+
+            foreach ($resources as $oldId => &$item) {
                 $params = [
-                    ':publicId'         => UUID::toBinary($resource->getPublicId()),
-                    ':taskId'           => $taskId,
-                    ':resourceTypeId'   => $resource->getType()->getId(),
-                    ':taskWorkerId'     => $resource->getTaskWorkerId(),
-                    ':quantity'         => $resource->getQuantity(),
-                    ':unitRate'         => $resource->getUnitRate(),
-                    ':estimatedUnit'    => $resource->getEstimatedUnit(),
-                    ':actualUnit'       => $resource->getActualUnit(),
-                    ':note'             => $resource->getNote()
+                    ':publicId'         => UUID::toBinary($item->getPublicId()),
+                    ':taskId'           => \is_int($taskId)
+                        ? $taskId
+                        : UUID::toBinary($taskId),
+                    ':resourceTypeId'   => $item->getType()->getId(),
+                    ':taskWorkerId'     => $item->getTaskWorkerId(),
+                    ':quantity'         => $item->getQuantity(),
+                    ':unitRate'         => $item->getUnitRate(),
+                    ':estimatedUnit'    => $item->getEstimatedUnit(),
+                    ':actualUnit'       => $item->getActualUnit(),
+                    ':note'             => $item->getNote()
                 ];
                 $statement->execute($params);
 
                 // Set ID given by the DB
-                $resource->setId($this->connection->lastInsertId());
+                $item->setId($this->connection->lastInsertId());
+
+                // Replace in container to update reference
+                if ($item instanceof TaskResource)
+                    $resources->remove(TaskResource::createPartial([
+                        'id' => (int) $oldId]
+                    ));
+                else
+                    $resources->remove(TaskWorker::createPartial([
+                        'id' => (int) $oldId]
+                    ));
+                $resources->add($item);
             }
-            return $resources;
+
+            return $isBatch ? $resources : $resources->first();
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
@@ -328,54 +340,73 @@ class ResourceModel extends Model
      *
      * @return bool True if the update was successful
      */
-    public function save(array $data): bool
+    public function save(array $resources): bool
     {
-        if (isset($data['id']) && (!\is_int($data['id']) || $data['id'] < 1))
-            throw new InvalidArgumentException('Invalid Resource ID provided');
+        if (empty($resources))
+            throw new InvalidArgumentException('Resource data cannot be empty');
+
+        $isBatch = array_keys($resources) === range(0, \count($resources) - 1);
+        if (!$isBatch) $resources = [ $resources ];
 
         try {
-            $updateFields = [];
-            $params = [];
+            foreach ($resources as $item) {
+                if (!\is_array($item))
+                    throw new InvalidArgumentException('Each resource update item must be an array');
 
-            $params[':id'] = isset($data['id']) 
-                ? $data['id'] 
-                : UUID::toBinary($data['publicId']);
+                $updateFields = [];
+                $params = [];
 
-            if (isset($data['quantity'])) {
-                $updateFields[] = '`quantity` = :quantity';
-                $params[':quantity'] = $data['quantity'];
-            }
+                // Determine resource ID type (int or UUID) and build WHERE clause
+                if (isset($item['id'])) {
+                    if (!\is_int($item['id']) || $item['id'] < 1)
+                        throw new InvalidArgumentException('Invalid resource ID provided');
 
-            if (isset($data['unitRate'])) {
-                $updateFields[] = '`unit_rate` = :unitRate';
-                $params[':unitRate'] = $data['unitRate'];
-            }
+                    $params[':id'] = $item['id'];
+                    $whereClause = '`id` = :id';
+                } elseif (isset($item['publicId'])) {
+                    $publicId = $item['publicId'];
+                    if (\is_string($publicId))
+                        $publicId = UUID::fromString($publicId);
+                    if (!($publicId instanceof UUID))
+                        throw new InvalidArgumentException('Public ID must be an instance of UUID');
 
-            if (isset($data['estimatedUnit'])) {
-                $updateFields[] = '`estimated_unit` = :estimatedUnit';
-                $params[':estimatedUnit'] = $data['estimatedUnit'];
-            }
+                    $params[':id'] = UUID::toBinary($publicId);
+                    $whereClause = '`public_id` = :id';
+                } else {
+                    throw new InvalidArgumentException('Resource ID or Public ID is required');
+                }
 
-            if (isset($data['actualUnit'])) {
-                $updateFields[] = '`actual_unit` = :actualUnit';
-                $params[':actualUnit'] = $data['actualUnit'];
-            }
+                if (isset($item['quantity'])) {
+                    $updateFields[] = '`quantity` = :quantity';
+                    $params[':quantity'] = $item['quantity'];
+                }
 
-            if (isset($data['note'])) {
-                $updateFields[] = '`note` = :note';
-                $params[':note'] = $data['note'];
-            }
+                if (isset($item['unitRate'])) {
+                    $updateFields[] = '`unit_rate` = :unitRate';
+                    $params[':unitRate'] = $item['unitRate'];
+                }
 
-            if (!empty($updateFields)) {
-                $updateQuery = 
-                    "UPDATE 
-                        `resource` 
-                    SET " 
-                        . implode(', ', $updateFields) . 
-                    " WHERE " 
-                        . isset($data['id']) 
-                            ? '`id` = :id' 
-                            : '`public_id` = :id';
+                if (isset($item['estimatedUnit'])) {
+                    $updateFields[] = '`estimated_unit` = :estimatedUnit';
+                    $params[':estimatedUnit'] = $item['estimatedUnit'];
+                }
+
+                if (isset($item['actualUnit'])) {
+                    $updateFields[] = '`actual_unit` = :actualUnit';
+                    $params[':actualUnit'] = $item['actualUnit'];
+                }
+
+                if (isset($item['note'])) {
+                    $updateFields[] = '`note` = :note';
+                    $params[':note'] = trimOrNull($item['note']);
+                }
+
+                if (empty($updateFields)) continue;
+
+                $updateQuery =
+                    "UPDATE `resource` SET "
+                    . implode(', ', $updateFields)
+                    . " WHERE {$whereClause}";
                 $statement = $this->connection->prepare($updateQuery);
                 $statement->execute($params);
             }

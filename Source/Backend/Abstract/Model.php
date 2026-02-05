@@ -156,11 +156,11 @@ abstract class Model
 
     abstract protected function find(string $whereClause = '', array $params = [], array $options = []): mixed;
 
-    abstract public function create(mixed $data): mixed;
+    // abstract public function create(mixed $data): mixed;
 
     abstract public function all(int $offset = 0, int $limit = 10): mixed;
 
-    abstract public function save(array $data): bool;
+    // abstract public function save(array $data): bool;
     
-    abstract protected function delete(mixed $data): bool;
+    // abstract protected function delete(mixed $data): bool;
 }

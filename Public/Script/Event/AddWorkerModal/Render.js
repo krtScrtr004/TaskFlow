@@ -221,7 +221,7 @@ function createRemoveCell() {
  * @returns {HTMLElement} The generated card element
  */
 export function renderSelectedTaskWorkerCard(taskWorker) {
-    const iconPath = '/public/asset/image/icon/'
+    const iconPath = '/Public/Asset/Image/Icon/'
     const { id, fullName, unitRate, estimatedHoursAssigned } = taskWorker
 
     const card = createCardContainer(id)

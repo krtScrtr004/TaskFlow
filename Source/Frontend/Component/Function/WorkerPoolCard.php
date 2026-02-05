@@ -35,7 +35,7 @@ function workerPoolCard(Worker $worker): bool|string
     ?>
     <li>
         <button class="worker-pool-card unset-button" type="button" data-workerid="<?= $id ?>">
-            <img src="<?= $profileLink ?>" class="circle fit-cover" alt="" height="55">
+            <img src="<?= $profileLink ?>" class="`fit-cover" alt="" height="55">
 
             <div class="flex-col flex-child-start-h worker-info">
                 <span class="name"><?= $name ?></span>

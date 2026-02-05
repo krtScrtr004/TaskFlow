@@ -341,68 +341,16 @@ class PhaseModel extends Model
         }
     }
 
-    /**
-     * Creates a Phase instance from an array of data.
-     *
-     * Note: This method is currently not implemented as there is no use case for it.
-     * The creation of Phase instances is handled through other means in the application.
-     *
-     * @param mixed $data Data that would be used to create a Phase instance (unused)
-     * 
-     * @return null Returns null as the method is not implemented
-     */
-    public function create(mixed $data): null
+    public function create(int|UUID $projectId, Phase|PhaseContainer $phase): Phase|PhaseContainer
     {
-        // Not Implemented (No use case)
-        return null;
-    }
+        if (\is_int($projectId) && $projectId < 1) 
+            throw new InvalidArgumentException('Invalid project ID provided');
 
-    /**
-     * Creates multiple phases in a single transaction for improved performance and atomicity.
-     *
-     * This method allows batch insertion of multiple phases within a single database transaction.
-     * If any insertion fails, all changes are rolled back ensuring data consistency.
-     * Each phase is inserted individually with its specified fields. 
-     *
-     * @param int $projectId The ID of the project to which all phases belong (required)
-     * @param PhaseContainer $phases PhaseContainer with Phase objects. Each Phase object should have:
-     *      - name: string (required) The phase name
-     *      - description: string (optional) The phase description
-     *      - status: WorkStatus (required) The phase status enum (defaults to PENDING if null)
-     *      - budget: float (required) The phase budget (defaults to BUDGET_MIN if null)
-     *      - contingencyRate: float (required) The phase contingency rate (defaults to CONTINGENCY_RATE_MIN if null)
-     *      - budgetNote: string (optional) The phase budget note
-     *      - startDateTime: DateTime (required) The phase start date/time
-     *      - completionDateTime: DateTime (required) The phase completion date/time
-     *      - publicId: UUID (optional) Will be generated if not provided
-     *
-     * @return void
-     *
-     * @throws InvalidArgumentException If PhaseContainer is empty, project_id is invalid, container contains non-Phase objects, or required fields are missing
-     * @throws DatabaseException If a database error occurs during any insertion operation
-     * 
-     * @example
-     * $container = new PhaseContainer();
-     * $container->add(new Phase(
-     *     id: null,
-     *     publicId: UUID::get(),
-     *     name: 'Planning Phase',
-     *     description: 'Initial planning',
-     *     status: WorkStatus::PENDING,
-     *     budget: 10000.00,
-     *     contingencyRate: 0.1,
-     *     budgetNote: 'Initial budget allocation',
-     *     startDateTime: new DateTime('2025-11-01'),
-     *     completionDateTime: new DateTime('2025-11-15')
-     * ));
-     * $phaseIds = PhaseModel::createMultiple(1, $container);
-     */
-    public function createMultiple(int $projectId, PhaseContainer $phases): bool
-    {
-        if ($projectId < 1) throw new InvalidArgumentException('Invalid project ID provided');
+        // Allow passing a single Phase without wrapping
+        $isBatch = $phase instanceof PhaseContainer;
+        $phases = $isBatch ? $phase : new PhaseContainer([$phase]);
         if ($phases->count() === 0) throw new InvalidArgumentException('PhaseContainer cannot be empty');
 
-        $instance = new self();
         try {
             $projectPhaseQuery =
                 "INSERT INTO `phase` (
@@ -414,7 +362,9 @@ class PhaseModel extends Model
                     completion_date_time,
                     status
                 ) VALUES (
-                    :projectId,
+                    " . (\is_int($projectId) 
+                            ? ":projectId" 
+                            : "(SELECT id FROM project WHERE id = :projectId)") . ",
                     :publicId,
                     :name,
                     :description,
@@ -423,146 +373,129 @@ class PhaseModel extends Model
                     :status
                 )";
             $phaseStatement = $this->connection->prepare($projectPhaseQuery);
-            foreach ($phases as $phase) {
+            foreach ($phases as &$item) {
                 $phaseStatement->execute([
-                    ':projectId'            => $projectId,
-                    ':publicId'             => UUID::toBinary($phase->getPublicId()),
-                    ':name'                 => $phase->getName(),
-                    ':description'          => $phase->getDescription(),
-                    ':startDateTime'        => formatDateTime($phase->getStartDateTime()),
-                    ':completionDateTime'   => formatDateTime($phase->getCompletionDateTime()),
-                    ':status'               => $phase->getStatus()->value,
+                    ':projectId'            => \is_int($projectId) 
+                        ? $projectId 
+                        : UUID::toBinary($projectId),
+                    ':publicId'             => UUID::toBinary($item->getPublicId()),
+                    ':name'                 => $item->getName(),
+                    ':description'          => $item->getDescription(),
+                    ':startDateTime'        => formatDateTime($item->getStartDateTime()),
+                    ':completionDateTime'   => formatDateTime($item->getCompletionDateTime()),
+                    ':status'               => $item->getStatus()->value,
                 ]);
 
-                $projectPhaseBudgetQuery =
-                    "INSERT INTO `phase_budget` (
-                        phase_id,
-                        budget,
-                        contingency_rate,
-                        note
-                    ) VALUES (
-                        :phaseId,
-                        :budget,
-                        :contingencyRate,
-                        :note
-                    )";
-
-                $phaseId = (int) $this->connection->lastInsertId();
-                $budgetStatement = $this->connection->prepare($projectPhaseBudgetQuery);
-                $budgetStatement->execute([
-                    ':phaseId'         => $phaseId,
-                    ':budget'          => $phase->getBudget() ?? 0.00,
-                    ':contingencyRate' => $phase->getContingencyRate() ?? 0.00,
-                    ':note'           => $phase->getBudgetNote() ?? null,
+                // Create budget record
+                $this->createBudget($item->getId(), [
+                    'budget'            => $item->getBudget(),
+                    'contingencyRate'   => $item->getContingencyRate(),
+                    'budgetNote'        => $item->getBudgetNote(),
                 ]);
+
+                $item->setId((int) $this->connection->lastInsertId());
             }
 
-            return true;
+            return $isBatch ? $phases : $phases->first();
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
     }
 
-    /**
-     * Saves phase data to the database.
-     *
-     * This method is currently not implemented as there is no use case for saving
-     * phase data through this model. The method exists to maintain interface
-     * compatibility but will always return false.
-     *
-     * @param array $data Associative array containing phase data to be saved
-     * 
-     * @return bool Always returns false as the method is not implemented
-     */
-    public function save(array $data): bool
+    private function createBudget(int|UUID $phaseId, array $data): void
     {
-        // Not implemented (No use case)
-        return false;
+        if (\is_int($phaseId) && $phaseId < 1) throw new InvalidArgumentException('Invalid phase ID provided');
+        if (empty($data)) return;
+
+        try {
+            $projectPhaseBudgetQuery =
+                "INSERT INTO `phase_budget` (
+                    phase_id,
+                    budget,
+                    contingency_rate,
+                    note
+                ) VALUES (
+                    " . (\is_int($phaseId) 
+                            ? ":phaseId" 
+                            : "(SELECT id FROM `phase` WHERE public_id = :phaseId)") . ",
+                    :budget,
+                    :contingencyRate,
+                    :note
+                )";
+
+            $budgetStatement = $this->connection->prepare($projectPhaseBudgetQuery);
+            $budgetStatement->execute([
+                ':phaseId'         => \is_int($phaseId)
+                    ? $phaseId
+                    : UUID::toBinary($phaseId),
+                ':budget'          => $data['budget'] ?? 0.00,
+                ':contingencyRate' => $data['contingencyRate'] ?? 0.00,
+                ':note'            => trimOrNull($data['budgetNote'] ?? null),
+            ]);
+        } catch (PDOException $e) {
+            throw $e;
+        }
     }
 
-    /**
-     * Saves multiple phases in a single transaction for improved performance and atomicity.
-     *
-     * This method allows batch updating of multiple phases within a single database transaction.
-     * If any update fails, all changes are rolled back ensuring data consistency.
-     * Each phase in the array is updated individually with its specified fields.
-     *
-     * @param array $phases Array of phase data arrays. Each phase array should contain:
-     *      - id: int (required) The phase ID to update
-     *      - name: string (optional) The phase name
-     *      - description: string (optional) The phase description
-     *      - status: WorkStatus (optional) The phase status enum
-     *      - budget: float (optional) The phase budget
-     *      - contingencyRate: float (optional) The phase contingency rate
-     *      - budgetNote: string (optional) The phase budget note
-     *      - startDateTime: DateTime (optional) The phase start date/time
-     *      - completionDateTime: DateTime (optional) The phase completion date/time
-     * 
-     * @return bool Returns true if all phases were successfully updated
-     * 
-     * @throws InvalidArgumentException If phases array is empty or any phase is missing an ID
-     * @throws DatabaseException If a database error occurs during any update operation
-     * 
-     * @example
-     * PhaseModel::saveMany([
-     *     ['id' => 1, 'description' => 'Updated phase 1', 'status' => WorkStatus::IN_PROGRESS],
-     *     ['id' => 2, 'description' => 'Updated phase 2'],
-     *     ['id' => 3, 'startDateTime' => new DateTime('2025-11-01')]
-     * ]);
-     */
-    public function saveMultiple(array $phases): bool
+    public function save(array $phases): bool
     {
         if (empty($phases)) throw new InvalidArgumentException('Phases array cannot be empty');
 
+        // Allow passing a single phase update item without wrapping
+        $isBatch = array_keys($phases) === range(0, \count($phases) - 1);
+        if (!$isBatch) $phases = [$phases];
+
         try {
-            foreach ($phases as $data) {
-                if (isset($data['id']) && is_int($data['id']) && $data['id'] < 1)
+            foreach ($phases as $item) {
+                if (!\is_array($item))
+                    throw new InvalidArgumentException('Each phase update item must be an array');
+
+                if (isset($item['id']) && \is_int($item['id']) && $item['id'] < 1)
                     throw new InvalidArgumentException('Invalid phase ID provided');
 
                 $phaseUpdateFields = [];
                 $projectPhaseParams = [];
 
+                $projectPhaseParams[':id'] = (isset($item['id']))
+                    ? $item['id']
+                    : ($item['publicId'] instanceof UUID
+                        ? UUID::toBinary($item['publicId'])
+                        : UUID::toBinary(UUID::fromString($item['publicId'])));
 
-                $projectPhaseParams[':id'] = (isset($data['id']))
-                    ? $data['id']
-                    : ($data['publicId'] instanceof UUID
-                        ? UUID::toBinary($data['publicId'])
-                        : UUID::toBinary(UUID::fromString($data['publicId'])));
-
-                if (isset($data['name'])) {
+                if (isset($item['name'])) {
                     $phaseUpdateFields[] = 'name = :name';
-                    $projectPhaseParams[':name'] = trimOrNull($data['name']);
+                    $projectPhaseParams[':name'] = trimOrNull($item['name']);
                 }
 
-                if (isset($data['description'])) {
+                if (isset($item['description'])) {
                     $phaseUpdateFields[] = 'description = :description';
-                    $projectPhaseParams[':description'] = trimOrNull($data['description']);
+                    $projectPhaseParams[':description'] = trimOrNull($item['description']);
                 }
 
-                if (isset($data['status'])) {
+                if (isset($item['status'])) {
                     $phaseUpdateFields[] = 'status = :status';
-                    $projectPhaseParams[':status'] = $data['status']->value;
+                    $projectPhaseParams[':status'] = $item['status']->value;
                 }
 
-                if (isset($data['startDateTime'])) {
+                if (isset($item['startDateTime'])) {
                     $phaseUpdateFields[] = 'start_date_time = :startDateTime';
-                    $projectPhaseParams[':startDateTime'] = formatDateTime($data['startDateTime']);
+                    $projectPhaseParams[':startDateTime'] = formatDateTime($item['startDateTime']);
                 }
 
-                if (isset($data['completionDateTime'])) {
+                if (isset($item['completionDateTime'])) {
                     $phaseUpdateFields[] = 'completion_date_time = :completionDateTime';
-                    $projectPhaseParams[':completionDateTime'] = formatDateTime($data['completionDateTime']);
+                    $projectPhaseParams[':completionDateTime'] = formatDateTime($item['completionDateTime']);
                 }
 
                 // Only execute update if there are fields to update
                 if (!empty($phaseUpdateFields)) {
                     $query = "
                         UPDATE 
-                            `project_phase` 
+                            `phase` 
                         SET 
                             " . implode(', ', $phaseUpdateFields) . " 
                         WHERE 
-                            " . (isset($data['id']) 
+                            " . (isset($item['id']) 
                                 ? 'id' 
                                 : 'public_id') . " 
                             = :id";
@@ -571,7 +504,7 @@ class PhaseModel extends Model
                 }
 
                 // Budget update 
-                $this->saveBudget($data['id'] ?? $data['publicId'], $data);
+                $this->saveBudget($item['id'] ?? UUID::tryFromString($item['publicId']), $item);
             }
 
             return true;

@@ -12,6 +12,7 @@ use App\Exception\DatabaseException;
 use App\Enumeration\WorkStatus;
 use App\Enumeration\Priority;
 use App\Entity\Task;
+use App\Utility\TemporaryId;
 use Exception;
 use InvalidArgumentException;
 use PDOException;
@@ -142,25 +143,25 @@ class TaskModel extends Model
     ): TaskContainer|null {
         $userId = $options['userId'] ?? null;
         if ($userId) {
-            if (!\is_int($userId) && !($userId instanceof UUID)) 
+            if (!\is_int($userId) && !($userId instanceof UUID))
                 throw new InvalidArgumentException('User ID must be an integer or UUID');
-            if (\is_int($userId) && $userId < 1) 
+            if (\is_int($userId) && $userId < 1)
                 throw new InvalidArgumentException('Invalid user ID provided');
         }
 
         $phaseId = $options['phaseId'] ?? null;
         if ($phaseId) {
-            if (!\is_int($phaseId) && !($phaseId instanceof UUID)) 
+            if (!\is_int($phaseId) && !($phaseId instanceof UUID))
                 throw new InvalidArgumentException('Phase ID must be an integer or UUID');
-            if (\is_int($phaseId) && $phaseId < 1) 
+            if (\is_int($phaseId) && $phaseId < 1)
                 throw new InvalidArgumentException('Invalid phase ID provided');
         }
 
         $projectId = $options['projectId'] ?? null;
         if ($projectId) {
-            if (!\is_int($projectId) && !($projectId instanceof UUID)) 
+            if (!\is_int($projectId) && !($projectId instanceof UUID))
                 throw new InvalidArgumentException('Project ID must be an integer or UUID');
-            if (\is_int($projectId) && $projectId < 1) 
+            if (\is_int($projectId) && $projectId < 1)
                 throw new InvalidArgumentException('Invalid project ID provided');
         }
 
@@ -277,9 +278,9 @@ class TaskModel extends Model
         int|UUID|null $phaseId = null,
         int|UUID|null $projectId = null
     ): Task|null {
-        if (\is_int($taskId) && $taskId < 1) 
+        if (\is_int($taskId) && $taskId < 1)
             throw new InvalidArgumentException('Invalid task ID');
-        if ($phaseId && \is_int($phaseId) && $phaseId < 1) 
+        if ($phaseId && \is_int($phaseId) && $phaseId < 1)
             throw new InvalidArgumentException('Invalid phase ID');
 
         try {
@@ -354,9 +355,9 @@ class TaskModel extends Model
 
         $projectId = $options['projectId'] ?? null;
         if ($projectId) {
-            if (!\is_int($projectId) && !($projectId instanceof UUID)) 
+            if (!\is_int($projectId) && !($projectId instanceof UUID))
                 throw new InvalidArgumentException('Project ID must be an integer or UUID');
-            if (\is_int($projectId) && $projectId < 1) 
+            if (\is_int($projectId) && $projectId < 1)
                 throw new InvalidArgumentException('Invalid project ID provided');
         }
 
@@ -396,8 +397,8 @@ class TaskModel extends Model
             if ($status) {
                 $whereClause .= ' AND t.status = :status';
                 $params[':status'] = $status->value;
-            } 
-            
+            }
+
             if ($priority) {
                 $whereClause .= ' AND t.priority = :priority';
                 $params[':priority'] = $priority->value;
@@ -425,11 +426,11 @@ class TaskModel extends Model
      * @throws DatabaseException If a database error occurs
      */
     public function findByPhaseIds(
-        array $phaseIds, 
+        array $phaseIds,
         array $options = [
             'status'    => null,
-        ]): TaskContainer|null
-    {
+        ]
+    ): TaskContainer|null {
         if (empty($phaseIds)) throw new InvalidArgumentException('Phase IDs array cannot be empty');
 
         try {
@@ -450,7 +451,7 @@ class TaskModel extends Model
                 $whereClause .= ' AND t.status = :status';
                 $params[':status'] = $status->value;
             }
-            
+
             return self::find($whereClause, $params, $options);
         } catch (Exception $e) {
             throw $e;
@@ -645,11 +646,11 @@ class TaskModel extends Model
      */
     public function findOwningPhase(int|UUID $taskId)
     {
-        if (\is_int($taskId) && $taskId < 1) 
+        if (\is_int($taskId) && $taskId < 1)
             throw new InvalidArgumentException('Invalid task ID provided');
 
         try {
-            $query = 
+            $query =
                 "SELECT
                     ph.*,
                     phb.budget,
@@ -668,9 +669,9 @@ class TaskModel extends Model
                                 FROM
                                     `task`
                                 WHERE 
-                                    " . (\is_int($taskId) 
-                                                ? 'id = :taskId'
-                                                : 'public_id = :taskId') . "
+                                    " . (\is_int($taskId)
+                    ? 'id = :taskId'
+                    : 'public_id = :taskId') . "
                             )";
             $statement = $this->connection->prepare($query);
             $statement->execute([
@@ -722,107 +723,114 @@ class TaskModel extends Model
     }
 
     /**
-     * Creates a new task in the database with the provided Task instance.
+     * Creates a new task / tasks in the database.
      *
-     * This method inserts a new task record into the `phase_task` table using the data from the provided Task instance.
-     * It also creates an associated budget record in the `phase_task_budget` table.
-     * The method handles UUID conversion and prepares SQL statements to prevent SQL injection.
+     * This method supports both single and batch creation. For each Task, it inserts
+     * a record into `task` and creates its associated record in `task_budget`.
      *
-     * @param mixed $task The Task instance containing data for the new task.
+     * Requirements per Task:
+     * - `additionalInfo['phaseId']` must be provided as an int ID or UUID.
      *
-     * @throws InvalidArgumentException If the provided task is not an instance of Task.
+     * @param Task|TaskContainer $tasks A Task instance or a TaskContainer of Task instances.
+     *
+     * @throws InvalidArgumentException If invalid data is provided.
      * @throws DatabaseException If a database error occurs during the creation process.
      *
-     * @return mixed The created Task instance with updated ID and public ID.
+     * @return Task|TaskContainer The created Task or TaskContainer with updated identifiers.
      */
-    public function create(mixed $task): mixed
+    public function create(Task|TaskContainer $task): Task|TaskContainer
     {
-        if (!($task instanceof Task))
-            throw new InvalidArgumentException('Expected instance of Task');
+        $isBatch = $task instanceof TaskContainer;
+        $tasks = $isBatch ? $task : new TaskContainer([$task]);
+        if ($tasks->count() === 0) throw new InvalidArgumentException('TaskContainer cannot be empty');
 
+        $firstIntId = TemporaryId::isTemporary($tasks->first()->getId())
+            ? $tasks->first()->getPublicId()
+            : $tasks->first()->getId();
         try {
-            $phaseId            = $task->getAdditionalInfo('phaseId');
-            $taskPublicId       = $task->getPublicId() ?? UUID::get();
-            $taskName           = trimOrNull($task->getName());
-            $taskDescription    = trimOrNull($task->getDescription());
-            $Priority       = $task->getPriority()->value;
-            $taskStatus         = $task->getStatus()->value;
-            $taskStartDateTime  = formatDateTime($task->getStartDateTime());
-            $completionDateTime = formatDateTime($task->getCompletionDateTime());
-
-            // Insert task record
-            $taskQuery =
+            $query =
                 "INSERT INTO `task` (
-                    public_id, 
+                    public_id,
                     phase_id,
-                    name, 
-                    description, 
-                    priority, 
-                    status, 
-                    start_date_time, 
+                    name,
+                    description,
+                    priority,
+                    status,
+                    start_date_time,
                     completion_date_time
                 ) VALUES (
-                    :publicId, 
-                    " . (\is_int($phaseId)
-                        ? ':phaseId,'
-                        : '(SELECT id FROM `phase` WHERE public_id = :phaseId),') . "
-                    :name, 
-                    :description, 
-                    :priority, 
-                    :status, 
-                    :startDateTime, 
+                    :publicId,
+                    " . ($firstIntId
+                    ? ":phaseId"
+                    : "(SELECT id FROM `phase` WHERE public_id = :phaseId)") . ",
+                    :name,
+                    :description,
+                    :priority,
+                    :status,
+                    :startDateTime,
                     :completionDateTime
                 )";
-            $taskQueryStatement = $this->connection->prepare($taskQuery);
-            $taskQueryStatement->execute([
-                ':publicId'             => UUID::toBinary($taskPublicId),
-                ':phaseId'              => \is_int($phaseId) ? $phaseId : UUID::toBinary($phaseId),
-                ':name'                 => $taskName,
-                ':description'          => $taskDescription,
-                ':priority'             => $Priority,
-                ':status'               => $taskStatus,
-                ':startDateTime'        => $taskStartDateTime,
-                ':completionDateTime'   => $completionDateTime,
-            ]);
-            $taskId = (int)$this->connection->lastInsertId();
 
-            $task->setId($taskId);
-            $task->setPublicId($taskPublicId);
+            $statement = $this->connection->prepare($query);
+            foreach ($tasks as $task) {
+                $phaseId = $task->getAdditionalInfo('phaseId'); // Required
 
-            $this->createBudget(
-                $taskId,
-                $task->getEstimatedCost(),
-                $task->getActualCost(),
-                trimOrNull($task->getBudgetNote())
-            );
+                if (!\is_int($phaseId) && !($phaseId instanceof UUID))
+                    throw new InvalidArgumentException('Phase ID must be an integer or UUID');
+                if (\is_int($phaseId) && $phaseId < 1)
+                    throw new InvalidArgumentException('Invalid phase ID provided');
 
-            return $task;
+                $taskPublicId = $task->getPublicId() ?? UUID::get();
+                $statement->execute([
+                    ':publicId'             => UUID::toString($taskPublicId),
+                    ':phaseId'              => $firstIntId
+                        ? $phaseId
+                        : UUID::toBinary($phaseId),
+                    ':name'                 => trimOrNull($task->getName()),
+                    ':description'          => trimOrNull($task->getDescription()),
+                    ':priority'             => $task->getPriority()->value,
+                    ':status'               => $task->getStatus()->value,
+                    ':startDateTime'        => formatDateTime($task->getStartDateTime()),
+                    ':completionDateTime'   => formatDateTime($task->getCompletionDateTime()),
+                ]);
+
+                $taskId = (int)$this->connection->lastInsertId();
+                $task->setId($taskId);
+                $task->setPublicId($taskPublicId);
+
+                $this->createBudget(
+                    $taskId,
+                    [
+                        'estimatedCost'    => $task->getEstimatedCost(),
+                        'actualCost'       => $task->getActualCost(),
+                        'budgetNote'             => $task->getBudgetNote(),
+                    ]
+                );
+            }
+
+            return $isBatch ? $tasks : $tasks->first();
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
     }
 
-    private function createBudget(
-        int|UUID $taskId, 
-        float $estimatedCost,
-        float $actualCost,
-        string|null $budgetNote = null
-    ): void {
+    private function createBudget(int|UUID $taskId, array $data): void
+    {
         if (\is_int($taskId) && $taskId < 1)
             throw new InvalidArgumentException('Invalid task ID');
 
         try {
             // Insert budget record
-            $budgetQuery = 
+            $budgetQuery =
                 "INSERT INTO `task_budget` (
                     task_id,
                     estimated_cost,
                     actual_cost,
                     note
                 ) VALUES (
-                    " . (\is_int($taskId) 
-                            ? ':taskId' 
-                            : '(SELECT id FROM `task` WHERE public_id = :taskId)') . ",
+                    " . (\is_int($taskId)
+                    ? ':taskId'
+                    : '(SELECT id FROM `task` WHERE public_id = :taskId)') . ",
                     :estimatedCost,
                     :actualCost,
                     :note
@@ -830,98 +838,110 @@ class TaskModel extends Model
             $budgetQueryStatement = $this->connection->prepare($budgetQuery);
             $budgetQueryStatement->execute([
                 ':taskId'           => \is_int($taskId) ? $taskId : UUID::toBinary($taskId),
-                ':estimatedCost'    => $estimatedCost,
-                ':actualCost'       => $actualCost,
-                ':note'             => $budgetNote ? trimOrNull($budgetNote) : null
+                ':estimatedCost'    => $data['estimatedCost'],
+                ':actualCost'       => $data['actualCost'],
+                ':note'             => $data['budgetNote'] ? trimOrNull($data['budgetNote']) : null
             ]);
-
         } catch (PDOException $e) {
             throw $e;
         }
     }
 
     /**
-     * Updates an existing task in the database with the provided data.
+     * Updates an existing task / tasks in the database.
      *
-     * This method updates the task record in the `phase_task` table based on the provided data array.
-     * It supports updating various fields such as name, description, priority, status, start date/time,
-     * completion date/time, and actual completion date/time. The task can be identified by either its ID or public ID.
+     * Backward compatible:
+     * - Accepts a single associative array (existing behavior)
+     * - Accepts a list of associative arrays for batch updates
      *
-     * @param array $data An associative array containing the task data to update:
-     *      - id: int|null The ID of the task to update.
-     *      - publicId: UUID|null The public UUID of the task to update.
-     *      - name: string|null The new name of the task.
-     *      - description: string|null The new description of the task.
-     *      - priority: Priority|null The new priority of the task.
-     *      - status: WorkStatus|null The new status of the task.
-     *      - startDateTime: DateTime|null The new start date/time of the task.
-     *      - completionDateTime: DateTime|null The new completion date/time of the task.
-     *      - actualCompletionDateTime: DateTime|null The new actual completion date/time of the task.
+     * Each update item can identify the task by either:
+     * - id (int)
+     * - publicId (UUID|string)
      *
-     * @throws InvalidArgumentException If neither ID nor public ID is provided, or if the provided ID is invalid.
+     * @param array $data A single update array, or a list of update arrays.
+     *
+     * @throws InvalidArgumentException If invalid data is provided.
      * @throws DatabaseException If a database error occurs during the update operation.
      *
-     * @return bool True if the update was successful, false otherwise.
+     * @return bool True if all updates were successful.
      */
-    public function save(array $data): bool
+    public function save(array $tasks): bool
     {
+        if (empty($tasks)) throw new InvalidArgumentException('Tasks array cannot be empty');
+
+        $isBatch = array_keys($tasks) === range(0, \count($tasks) - 1);
+        if (!$isBatch) $tasks = [$tasks];
+
         try {
-            $updateFields = [];
-            $params = [];
-            if (isset($data['id'])) {
-                if (!\is_int($data['id']) || $data['id'] < 1) 
-                    throw new InvalidArgumentException('Invalid task ID');
+            foreach ($tasks as $item) {
+                $updateFields = [];
+                $params = [];
+                $whereClause = null;
 
-                $params[':id'] = $data['id'];
-            } elseif (isset($data['publicId'])) {
-                $params[':publicId'] = UUID::toBinary($data['publicId']);
-            } else {
-                throw new InvalidArgumentException('Task ID or Public ID is required');
-            }
+                if (isset($item['id'])) {
+                    if (!\is_int($item['id']) || $item['id'] < 1)
+                        throw new InvalidArgumentException('Invalid task ID');
 
-            if (isset($data['name'])) {
-                $updateFields[] = 'name = :name';
-                $params[':name'] = trimOrNull($data['name']);
-            }
+                    $params[':id'] = $item['id'];
+                    $whereClause = 'id = :id';
+                } elseif (isset($item['publicId'])) {
+                    $publicId = $item['publicId'];
+                    if (is_string($publicId))
+                        $publicId = UUID::fromString($publicId);
+                    if (!($publicId instanceof UUID))
+                        throw new InvalidArgumentException('Public ID must be an instance of UUID');
 
-            if (isset($data['description'])) {
-                $updateFields[] = 'description = :description';
-                $params[':description'] = trimOrNull($data['description']);
-            }
+                    $params[':publicId'] = UUID::toBinary($publicId);
+                    $whereClause = 'public_id = :publicId';
+                } else {
+                    throw new InvalidArgumentException('Task ID or Public ID is required');
+                }
 
-            if (isset($data['priority'])) {
-                $updateFields[] = 'priority = :priority';
-                $params[':priority'] = $data['priority']->value;
-            }
+                if (isset($item['name'])) {
+                    $updateFields[] = 'name = :name';
+                    $params[':name'] = trimOrNull($item['name']);
+                }
 
-            if (isset($data['status'])) {
-                $updateFields[] = 'status = :status';
-                $params[':status'] = $data['status']->value;
-            }
+                if (isset($item['description'])) {
+                    $updateFields[] = 'description = :description';
+                    $params[':description'] = trimOrNull($item['description']);
+                }
 
-            if (isset($data['startDateTime'])) {
-                $updateFields[] = 'start_date_time = :startDateTime';
-                $params[':startDateTime'] = formatDateTime($data['startDateTime']);
-            }
+                if (isset($item['priority'])) {
+                    $updateFields[] = 'priority = :priority';
+                    $params[':priority'] = $item['priority']->value;
+                }
 
-            if (isset($data['completionDateTime'])) {
-                $updateFields[] = 'completion_date_time = :completionDateTime';
-                $params[':completionDateTime'] = formatDateTime($data['completionDateTime']);
-            }
+                if (isset($item['status'])) {
+                    $updateFields[] = 'status = :status';
+                    $params[':status'] = $item['status']->value;
+                }
 
-            if (isset($data['actualCompletionDateTime'])) {
-                $updateFields[] = 'actual_completion_date_time = :actualCompletionDateTime';
-                $params[':actualCompletionDateTime'] = $data['actualCompletionDateTime'] !== null
-                    ? formatDateTime($data['actualCompletionDateTime'])
-                    : null;
-            }
+                if (isset($item['startDateTime'])) {
+                    $updateFields[] = 'start_date_time = :startDateTime';
+                    $params[':startDateTime'] = formatDateTime($item['startDateTime']);
+                }
 
-            if (!empty($updateFields)) {
-                $phaseQuery = "UPDATE `task` SET " . implode(', ', $updateFields) . " WHERE id = :id";
-                $statement = $this->connection->prepare($phaseQuery);
-                $statement->execute($params);
+                if (isset($item['completionDateTime'])) {
+                    $updateFields[] = 'completion_date_time = :completionDateTime';
+                    $params[':completionDateTime'] = formatDateTime($item['completionDateTime']);
+                }
+
+                if (isset($item['actualCompletionDateTime'])) {
+                    $updateFields[] = 'actual_completion_date_time = :actualCompletionDateTime';
+                    $params[':actualCompletionDateTime'] = $item['actualCompletionDateTime'] !== null
+                        ? formatDateTime($item['actualCompletionDateTime'])
+                        : null;
+                }
+
+                if (!empty($updateFields)) {
+                    $taskQuery = "UPDATE `task` SET " . implode(', ', $updateFields) . " WHERE {$whereClause}";
+                    $statement = $this->connection->prepare($taskQuery);
+                    $statement->execute($params);
+                }
+
+                $this->saveBudget($item);
             }
-            $this->saveBudget($data);
 
             return true;
         } catch (PDOException $e) {
@@ -952,14 +972,23 @@ class TaskModel extends Model
             $updateFields = [];
             $params = [];
 
+            $whereClause = null;
+
             if (isset($data['id'])) {
-                if (!\is_int($data['id']) || $data['id'] < 1) 
+                if (!\is_int($data['id']) || $data['id'] < 1)
                     throw new InvalidArgumentException('Invalid task ID');
-                
 
                 $params[':id'] = $data['id'];
+                $whereClause = 'task_id = :id';
             } elseif (isset($data['publicId'])) {
-                $params[':publicId'] = UUID::toBinary($data['publicId']);
+                $publicId = $data['publicId'];
+                if (is_string($publicId))
+                    $publicId = UUID::fromString($publicId);
+                if (!($publicId instanceof UUID))
+                    throw new InvalidArgumentException('Public ID must be an instance of UUID');
+
+                $params[':publicId'] = UUID::toBinary($publicId);
+                $whereClause = 'task_id = (SELECT id FROM `task` WHERE public_id = :publicId)';
             } else {
                 throw new InvalidArgumentException('Task ID or Public ID is required');
             }
@@ -980,7 +1009,7 @@ class TaskModel extends Model
             }
 
             if (!empty($updateFields)) {
-                $budgetQuery = "UPDATE `task_budget` SET " . implode(', ', $updateFields) . " WHERE task_id = :id";
+                $budgetQuery = "UPDATE `task_budget` SET " . implode(', ', $updateFields) . " WHERE {$whereClause}";
                 $statement = $this->connection->prepare($budgetQuery);
                 $statement->execute($params);
             }

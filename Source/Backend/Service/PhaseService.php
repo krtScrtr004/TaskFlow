@@ -23,25 +23,38 @@ class PhaseService
     }
 
     public static function get(
-        int|UUID $phaseId,
+        int|UUID|array $phaseId,
         array $options = [
             'tasks' => true,
         ]
     ): Phase|null {
+        $isBatch = \is_array($phaseId);
+        $phaseIds = $isBatch ? array_values($phaseId) : [$phaseId];
+
         $instance = new self();
 
-        $phase = $instance->phaseModel->findById($phaseId);
-        if (!$phase) return null;
+        $phases = new PhaseContainer();
+        foreach ($phaseIds as $item) {
+            if (!\is_int($item) && !($item instanceof UUID))
+                throw new InvalidArgumentException('Phase ID must be an integer or UUID');
 
-        $phaseId = $phase->getId();
+            if (\is_int($item) && $item < 1)
+                throw new InvalidArgumentException('Invalid phase ID provided');
 
-        $includeTasks = $options['tasks'] ?? true;
-        if ($includeTasks) {
-            $tasks = $instance->taskModel->findByPhaseId($phaseId);
-            $phase->setTasks($tasks);
+            $phase = $instance->phaseModel->findById($item);
+            if (!$phase) return null;
+
+            $phaseId = $phase->getId();
+
+            $includeTasks = $options['tasks'] ?? true;
+            if ($includeTasks) {
+                $tasks = $instance->taskModel->findByPhaseId($phaseId);
+                $phase->setTasks($tasks);
+            }
+            $phases->add($phase);
         }
 
-        return $phase;
+        return $isBatch ? $phases : $phases->first();
     }
 
     /**
@@ -66,7 +79,7 @@ class PhaseService
 
         // Fetch phases without tasks
         $phases = $instance->phaseModel->findByProjectId($projectId, $options);
-        
+
         if (!$phases || $phases->count() === 0) return null;
 
         // If tasks are needed, fetch all tasks for these phases in one query
@@ -91,7 +104,7 @@ class PhaseService
                                 $internalPhaseId = $phase->getId();
 
                                 // Add task to the corresponding phase's task container
-                                if (!isset($tasksByPhaseId[$internalPhaseId])) 
+                                if (!isset($tasksByPhaseId[$internalPhaseId]))
                                     $tasksByPhaseId[$internalPhaseId] = new TaskContainer();
                                 $tasksByPhaseId[$internalPhaseId]->add($task);
                                 break;

@@ -179,7 +179,7 @@ class ProjectModel extends Model
      */
     public function findManagerActiveProjectByManagerId(int|UUID $managerId): ?Project
     {
-        if (\is_int($managerId) && $managerId < 1) 
+        if (\is_int($managerId) && $managerId < 1)
             throw new InvalidArgumentException('Invalid manager ID provided');
 
         try {
@@ -191,8 +191,8 @@ class ProjectModel extends Model
                 ) .
                 " AND p.status != :completedStatus AND p.status != :cancelledStatus";
             $param = [
-                ':managerId'        => \is_int($managerId) 
-                    ? $managerId 
+                ':managerId'        => \is_int($managerId)
+                    ? $managerId
                     : UUID::toBinary($managerId),
                 ':completedStatus'  => WorkStatus::COMPLETED->value,
                 ':cancelledStatus'  => WorkStatus::CANCELLED->value,
@@ -316,7 +316,7 @@ class ProjectModel extends Model
      * @return ProjectContainer|null
      */
     public function findWorkerHistory(
-        int|UUID $userId,
+        int|UUID|array $userId,  // Changed to accept array
         array $options = [
             'phases' => false,
             'tasks' => false,
@@ -324,7 +324,17 @@ class ProjectModel extends Model
             'offset' => 0,
         ]
     ): ProjectContainer|null {
-        if (\is_int($userId) && $userId < 1) throw new InvalidArgumentException('Invalid user ID provided');
+        // Normalize to array
+        $userIds = \is_array($userId) ? $userId : [$userId];
+
+        // Validate all IDs
+        foreach ($userIds as $id) {
+            if (\is_int($id) && $id < 1) 
+                throw new InvalidArgumentException('Invalid user ID provided');
+        }
+
+        if (empty($userIds)) 
+            throw new InvalidArgumentException('At least one user ID must be provided');
 
         $includePhases = (bool) ($options['phases'] ?? false);
         $includeTasks = $includePhases && (bool) ($options['tasks'] ?? false);
@@ -332,65 +342,83 @@ class ProjectModel extends Model
         $paramOptions = [
             'limit'     => $options[':limit'] ?? $options['limit'] ?? 10,
             'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
-            // 'groupBy'   => $options[':groupBy'] ?? $options['groupBy'] ?? 'p.id, pw.status',
             'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 'p.start_date_time DESC',
         ];
 
         try {
-            $whereClause = \is_int($userId)
-                ? 'u.id = :userId'
-                : 'u.public_id = :userId';
+            // Determine if we're using integer IDs or UUIDs
+            $isIntId = \is_int($userIds[0]);
 
-            $params = [
-                ':userId' => \is_int($userId)
-                    ? $userId
-                    : UUID::toBinary($userId),
-            ];
+            // Build WHERE IN clause
+            $innerPlaceholders = []; // Placeholders for task subquery
+            $outerPlaceholders = []; // Placeholders for main query
+            $params = [];
+
+            foreach ($userIds as $index => $id) {
+                $innerPlaceholder = ":userIdInner{$index}";
+                $outerPlaceholder = ":userIdOuter{$index}";
+                
+                $innerPlaceholders[] = $innerPlaceholder;
+                $outerPlaceholders[] = $outerPlaceholder;
+                $params[$outerPlaceholder] = $params[$innerPlaceholder] = $isIntId ? $id : UUID::toBinary($id);
+            }
+
+            $whereClause = $isIntId
+                ? 'u.id IN (' . implode(', ', $outerPlaceholders) . ')'
+                : 'u.public_id IN (' . implode(', ', $outerPlaceholders) . ')';
 
             $taskSubquery = $includeTasks
                 ? "COALESCE((
-                        SELECT JSON_ARRAYAGG(
-                            JSON_OBJECT(
-                                'id', t2.id,
-                                'public_id', HEX(t2.public_id),
-                                'name', t2.name,
-                                'status', t2.status,
-                                'priority', t2.priority,
-                                'start_date_time', t2.start_date_time,
-                                'completion_date_time', t2.completion_date_time,
-                                'actual_completion_date_time', t2.actual_completion_date_time,
-                                'worker_status', tw.status
-                            )
+                    SELECT JSON_ARRAYAGG(
+                        JSON_OBJECT(
+                            'id', t2.id,
+                            'public_id', HEX(t2.public_id),
+                            'name', t2.name,
+                            'status', t2.status,
+                            'priority', t2.priority,
+                            'start_date_time', t2.start_date_time,
+                            'completion_date_time', t2.completion_date_time,
+                            'actual_completion_date_time', t2.actual_completion_date_time,
+                            'worker_status', tw.status
                         )
-                        FROM `task` AS t2
-                        INNER JOIN `task_worker` AS tw
-                            ON tw.task_id = t2.id
-                        WHERE t2.phase_id = ph2.id
-                            AND tw.worker_id = u.id
-                    ), JSON_ARRAY())"
+                    )
+                    FROM 
+                        `task` AS t2
+                    INNER JOIN 
+                        `task_worker` AS tw
+                    ON 
+                        tw.task_id = t2.id
+                    WHERE 
+                        t2.phase_id = ph2.id
+                    AND 
+                        tw.worker_id IN (" . implode(', ', $innerPlaceholders) . ")
+                ), JSON_ARRAY())"
                 : 'JSON_ARRAY()';
 
             $phaseSelect = $includePhases
                 ? "COALESCE((
-                        SELECT JSON_ARRAYAGG(
-                            JSON_OBJECT(
-                                'id', ph2.id,
-                                'public_id', HEX(ph2.public_id),
-                                'name', ph2.name,
-                                'status', ph2.status,
-                                'start_date_time', ph2.start_date_time,
-                                'completion_date_time', ph2.completion_date_time,
-                                'actual_completion_date_time', ph2.actual_completion_date_time,
-                                'tasks', $taskSubquery
-                            )
+                    SELECT JSON_ARRAYAGG(
+                        JSON_OBJECT(
+                            'id', ph2.id,
+                            'public_id', HEX(ph2.public_id),
+                            'name', ph2.name,
+                            'status', ph2.status,
+                            'start_date_time', ph2.start_date_time,
+                            'completion_date_time', ph2.completion_date_time,
+                            'actual_completion_date_time', ph2.actual_completion_date_time,
+                            'tasks', $taskSubquery
                         )
-                        FROM `phase` AS ph2
-                        WHERE ph2.project_id = p.id
-                    ), JSON_ARRAY()) AS phases"
+                    )
+                    FROM 
+                        `phase` AS ph2
+                    WHERE 
+                        ph2.project_id = p.id
+                ), JSON_ARRAY()) AS phases"
                 : 'NULL AS phases';
 
             $queryString =
                 "SELECT
+                    u.public_id AS u_public_id,
                     p.id,
                     p.public_id,
                     p.name,
@@ -463,7 +491,7 @@ class ProjectModel extends Model
                         }
                     }
                 }
-
+                $project->addAdditionalInfo('userId', UUID::tryFromString($row['u_public_id']));
                 $projects->add($project);
             }
 
@@ -471,9 +499,7 @@ class ProjectModel extends Model
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
-    }
-
-    /**
+    }   /**
      * Searches for projects based on provided criteria.
      *
      * This method allows searching for projects using a keyword, user ID (either integer or UUID),
@@ -638,62 +664,65 @@ class ProjectModel extends Model
      * @throws InvalidArgumentException If $project is not an this$this of Project
      * @throws DatabaseException If a database error occurs while inserting the project or related entities
      */
-    public function create(mixed $project): Project
+    public function create(Project|ProjectContainer $project): Project|ProjectContainer
     {
-        if (!($project instanceof Project))
-            throw new InvalidArgumentException('Expected instance of Project');
 
+        // Allow passing a single Project without wrapping
+        $isBatch = $project instanceof ProjectContainer;
+        $projects = $isBatch ? $project : new ProjectContainer([$project]);
+        if ($projects->count() === 0) throw new InvalidArgumentException('ProjectContainer cannot be empty');
+
+        $projectQuery =
+            "INSERT INTO `project` (
+                public_id,
+                name,
+                description,
+                budget,
+                status,
+                max_worker,
+                start_date_time,
+                completion_date_time,
+                manager_id
+            ) VALUES (
+                :publicId,
+                :name,
+                :description,
+                :budget,
+                :status,
+                :maxWorker,
+                :startDateTime,
+                :completionDateTime,
+                :managerId
+            )";
 
         try {
-            $projectPublicId           =   $project->getPublicId() ?? UUID::get();
-            $projectName               =   trimOrNull(string: $project->getName());
-            $projectDescription        =   trimOrNull($project->getDescription());
-            $projectBudget             =   ($project->getBudget()) ?? 0.00;
-            $projectMaxWorkers         =   ($project->getMaxWorkers()) ?? WORKER_COUNT_MIN;
-            $projectStatus             =   $project->getStatus() ?? WorkStatus::PENDING;
-            $projectStartDateTime      =   formatDateTime($project->getStartDateTime());
-            $projectCompletionDateTime =   formatDateTime($project->getCompletionDateTime());
-
-            $projectQuery =
-                "INSERT INTO `project` (
-                    public_id,
-                    name,
-                    description,
-                    budget,
-                    status,
-                    max_worker,
-                    start_date_time,
-                    completion_date_time,
-                    manager_id
-                ) VALUES (
-                    :publicId,
-                    :name,
-                    :description,
-                    :budget,
-                    :status,
-                    :maxWorker,
-                    :startDateTime,
-                    :completionDateTime,
-                    :managerId
-                )";
             $statement = $this->connection->prepare($projectQuery);
-            $statement->execute([
-                ':publicId'             => UUID::toBinary($projectPublicId),
-                ':name'                 => $projectName,
-                ':description'          => $projectDescription,
-                ':budget'               => $projectBudget,
-                ':status'               => $projectStatus->value,
-                ':maxWorker'            => $projectMaxWorkers,
-                ':startDateTime'        => $projectStartDateTime,
-                ':completionDateTime'   => $projectCompletionDateTime,
-                ':managerId'            => Me::getInstance()->getId(),
-            ]);
-            $projectId = (int) $this->connection->lastInsertId();
+            $managerId = Me::getInstance()->getId();
 
+            foreach ($projects as $oldId => &$project) {
+                $projectPublicId = $project->getPublicId() ?? UUID::get();
+                $project->setPublicId($projectPublicId);
 
-            $project->setId($projectId);
-            $project->setPublicId($projectPublicId);
-            return $project;
+                $statement->execute([
+                    ':publicId'             => UUID::toBinary($projectPublicId),
+                    ':name'                 => trimOrNull($project->getName()),
+                    ':description'          => trimOrNull($project->getDescription()),
+                    ':budget'               => $project->getBudget() ?? 0.00,
+                    ':status'               => ($project->getStatus() ?? WorkStatus::PENDING)->value,
+                    ':maxWorker'            => $project->getMaxWorkers() ?? WORKER_COUNT_MIN,
+                    ':startDateTime'        => formatDateTime($project->getStartDateTime()),
+                    ':completionDateTime'   => formatDateTime($project->getCompletionDateTime()),
+                    ':managerId'            => $managerId,
+                ]);
+
+                $projectId = (int) $this->connection->lastInsertId();
+                $project->setId($projectId);
+
+                $projects->remove(Project::createPartial(['id' => $oldId]));
+                $projects->add($project);
+            }
+
+            return $isBatch ? $projects : $projects->first();
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
@@ -725,74 +754,82 @@ class ProjectModel extends Model
      * @throws InvalidArgumentException If required fields are missing or invalid
      * @throws DatabaseException If a database error occurs during the transaction
      */
-    public function save(array $data): bool
+    public function save(array $projects): bool
     {
+        if (empty($projects)) throw new InvalidArgumentException('Project data cannot be empty');
+
+        // Allow passing a single project update item without wrapping
+        $isBatch = array_keys($projects) === range(0, \count($projects) - 1);
+        if (!$isBatch) $projects = [$projects];
+
         try {
-            $updateFields = [];
-            $params = [];
+            foreach ($projects as $item) {
+                if (!\is_array($item))
+                    throw new InvalidArgumentException('Each project update item must be an array');
 
-            if (isset($data['id'])) {
-                if (!\is_int($data['id']) || $data['id'] < 1)
+                if (isset($item['id']) && \is_int($item['id']) && $item['id'] < 1)
                     throw new InvalidArgumentException('Invalid Project ID provided');
-                $params[':id'] = $data['id'];
-            } elseif (isset($data['publicId']) && $data['publicId'] instanceof UUID) {
-                $params[':id'] = UUID::toBinary($data['publicId']);
-            } else {
-                throw new InvalidArgumentException('Project ID or Public ID is required');
-            }
 
-            if (isset($data['name'])) {
-                $updateFields[] = 'name = :name';
-                $params[':name'] = trimOrNull($data['name']);
-            }
+                $updateFields = [];
+                $params = [];
 
-            if (isset($data['description'])) {
-                $updateFields[] = 'description = :description';
-                $params[':description'] = trimOrNull($data['description']);
-            }
+                $params[':id'] = (isset($item['id']))
+                    ? $item['id']
+                    : ($item['publicId'] instanceof UUID
+                        ? UUID::toBinary($item['publicId'])
+                        : UUID::toBinary(UUID::fromString($item['publicId'])));
+                if (isset($item['name'])) {
+                    $updateFields[] = 'name = :name';
+                    $params[':name'] = trimOrNull($item['name']);
+                }
 
-            if (isset($data['budget'])) {
-                $updateFields[] = 'budget = :budget';
-                $params[':budget'] = $data['budget'];
-            }
+                if (isset($item['description'])) {
+                    $updateFields[] = 'description = :description';
+                    $params[':description'] = trimOrNull($item['description']);
+                }
 
-            if (isset($data['status'])) {
-                $updateFields[] = 'status = :status';
-                $params[':status'] = $data['status']->value;
-            }
+                if (isset($item['budget'])) {
+                    $updateFields[] = 'budget = :budget';
+                    $params[':budget'] = $item['budget'];
+                }
 
-            if (isset($data['maxWorkers'])) {
-                $updateFields[] = 'max_worker = :maxWorkers';
-                $params[':maxWorkers'] = $data['maxWorkers'];
-            }
+                if (isset($item['status'])) {
+                    $updateFields[] = 'status = :status';
+                    $params[':status'] = $item['status']->value;
+                }
 
-            if (isset($data['startDateTime'])) {
-                $updateFields[] = 'start_date_time = :startDateTime';
-                $params[':startDateTime'] = formatDateTime($data['startDateTime']);
-            }
+                if (isset($item['maxWorkers'])) {
+                    $updateFields[] = 'max_worker = :maxWorkers';
+                    $params[':maxWorkers'] = $item['maxWorkers'];
+                }
 
-            if (isset($data['completionDateTime'])) {
-                $updateFields[] = 'completion_date_time = :completionDateTime';
-                $params[':completionDateTime'] = formatDateTime($data['completionDateTime']);
-            }
+                if (isset($item['startDateTime'])) {
+                    $updateFields[] = 'start_date_time = :startDateTime';
+                    $params[':startDateTime'] = formatDateTime($item['startDateTime']);
+                }
 
-            if (isset($data['actualCompletionDateTime'])) {
-                $updateFields[] = 'actual_completion_date_time = :actualCompletionDateTime';
-                $params[':actualCompletionDateTime'] = $data['actualCompletionDateTime'] !== null
-                    ? formatDateTime($data['actualCompletionDateTime'])
-                    : null;
-            }
+                if (isset($item['completionDateTime'])) {
+                    $updateFields[] = 'completion_date_time = :completionDateTime';
+                    $params[':completionDateTime'] = formatDateTime($item['completionDateTime']);
+                }
 
-            if (!empty($updateFields)) {
-                $projectQuery =
-                    "UPDATE `project` 
-                    SET " . implode(', ', $updateFields) .
-                    " WHERE " . (
-                        \is_int($data['id'])
-                        ? 'id'
-                        : 'publicId') . " = :id";
-                $statement = $this->connection->prepare($projectQuery);
-                $statement->execute($params);
+                if (\array_key_exists('actualCompletionDateTime', $item)) {
+                    $updateFields[] = 'actual_completion_date_time = :actualCompletionDateTime';
+                    $params[':actualCompletionDateTime'] = $item['actualCompletionDateTime'] !== null
+                        ? formatDateTime($item['actualCompletionDateTime'])
+                        : null;
+                }
+
+                if (!empty($updateFields)) {
+                    $projectQuery =
+                        "UPDATE `project` 
+                        SET " . implode(', ', $updateFields) .
+                        " WHERE " . (isset($item['id'])
+                            ? 'id'
+                            : 'public_id') . " = :id";
+                    $statement = $this->connection->prepare($projectQuery);
+                    $statement->execute($params);
+                }
             }
 
             return true;
@@ -1334,7 +1371,7 @@ class ProjectModel extends Model
         $result = $statement->fetchAll();
 
         return ($this->hasData($result)) ? $result : null; 
-    }
+   }
 
     /**
      * Retrieves the top workers for a given project based on a weighted scoring algorithm.

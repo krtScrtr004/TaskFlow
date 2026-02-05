@@ -177,9 +177,8 @@ phaseCards.forEach(card => {
  * @param mixed $change Input element containing the new value for the phase field
  * @return void
  */
-function updatePhaseInfoMap(id, key, change) {
-    const { phaseNameInput } = getPhaseDomParts(change.closest('.phase-form-card')) ?? {}
-    const value = phaseNameInput.value.trim()
+function updatePhaseInfoMap(id, key, input) {
+    const value = input.value.trim()
     if (oldPhasesData.get(id)?.[key] === value) return
 
     let phaseChanges = changedPhases.get(id) || addedPhases.get(id) || {}

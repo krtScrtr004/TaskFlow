@@ -10,6 +10,7 @@ use App\Enumeration\Role;
 use App\Enumeration\WorkerStatus;
 use App\Enumeration\WorkStatus;
 use App\Exception\DatabaseException;
+use App\Utility\TemporaryId;
 use Exception;
 use InvalidArgumentException;
 use PDOException;
@@ -380,8 +381,8 @@ class TaskWorkerModel extends Model
         }
 
         $status = $options['status'] ?? null;
-        if ($status && !($status instanceof WorkStatus))
-            throw new InvalidArgumentException('Status must be an instance of WorkStatus enum');
+        if ($status && !($status instanceof WorkerStatus))
+            throw new InvalidArgumentException('Status must be an instance of WorkerStatus enum');
 
 
         $paramOptions = [
@@ -719,83 +720,61 @@ class TaskWorkerModel extends Model
     }
 
     /**
-     * Creates a TaskWorker instance from the provided data.
+     * Creates one or more task-worker associations.
      *
-     * This method is intended to instantiate a TaskWorker object from an array or object of data.
-     * Currently, this method is not implemented as there is no use case for creating TaskWorker instances in this way.
+     * Mirrors the PhaseModel::create() style:
+     * - Validates taskId
+     * - Ensures WorkerContainer is non-empty
+     * - Prepares the INSERT once and executes it for each worker
      *
-     * @param mixed $data Data used to create a TaskWorker instance. Expected to be an associative array or object with relevant fields.
-     * 
-     * @return mixed Returns null as this method is not implemented.
+     * Status is set to WorkerStatus::ASSIGNED for backward compatibility with createMultiple().
      */
-    public function create(mixed $data): mixed
-    {
-        // Not implemented (No use case)
-        return null;
-    }
-
-    /**
-     * Creates multiple task-worker associations in the database.
-     *
-     * This method accepts a task ID (either integer or UUID) and a WorkerContainer
-     * containing multiple Worker instances to be associated with the specified task.
-     * It performs bulk insertion into the phase_task_worker table, setting the status
-     * of each association to 'ASSIGNED'. If an association already exists, it updates
-     * the status accordingly.
-     *
-     * @param int|UUID $taskId The unique identifier of the task (integer or UUID).
-     * @param WorkerContainer $taskWorkers A container of Worker instances to associate with the task.
-     *
-     * @throws InvalidArgumentException If an invalid task ID is provided or if no workers are given.
-     * @throws DatabaseException If a database error occurs during insertion.
-     *
-     * @return WorkerContainer The same WorkerContainer with updated IDs from the database.
-     */
-    public function createMultiple(int|UUID $taskId, WorkerContainer $taskWorkers): WorkerContainer
+    public function create(int|UUID $taskId, TaskWorker|WorkerContainer $taskWorker): WorkerContainer
     {
         if (\is_int($taskId) && $taskId < 1)
             throw new InvalidArgumentException('Invalid task ID provided');
+
+        $isBatch = $taskWorker instanceof WorkerContainer;
+        $taskWorkers = $isBatch ? $taskWorker : new WorkerContainer([$taskWorker]);
         if ($taskWorkers->count() === 0)
-            throw new InvalidArgumentException('No data provided.');
+            throw new InvalidArgumentException('WorkerContainer cannot be empty');
 
         try {
             $isTaskInt = \is_int($taskId);
-            $isWorkerInt = $taskWorkers->first()->getId() !== 0; // 0 means task worker entity is created with partial data (public id only)
+            $isWorkerInt = !TemporaryId::isTemporary($taskWorkers->first()->getId());
 
             $insertQuery =
                 "INSERT INTO `task_worker` (
-                    task_id, 
-                    worker_id, 
+                    task_id,
+                    worker_id,
                     status,
                     estimated_hour
                 ) VALUES (
                     " . ($isTaskInt
-                    ? ":taskId"
-                    : "(SELECT id FROM `task` WHERE public_id = :taskId)") . ",
+                        ? ":taskId"
+                        : "(SELECT id FROM `task` WHERE public_id = :taskId)") . ",
                     " . ($isWorkerInt
-                    ? ":workerId"
-                    : "(SELECT id FROM `user` WHERE public_id = :workerId)") . ",
+                        ? ":workerId"
+                        : "(SELECT id FROM `user` WHERE public_id = :workerId)") . ",
                     :status,
                     :estimatedHour
                 )
-                ON DUPLICATE KEY UPDATE 
+                ON DUPLICATE KEY UPDATE
                     status = VALUES(status)";
 
             $statement = $this->connection->prepare($insertQuery);
 
             $taskIdParam = ($taskId instanceof UUID) ? UUID::toBinary($taskId) : $taskId;
-            foreach ($taskWorkers as $worker) {
-                $workerId = $worker->getId() !== 0
-                    ? $worker->getId()
-                    : UUID::toBinary($worker->getPublicId());
+            foreach ($taskWorkers as &$worker) {
                 $statement->execute([
                     ':taskId'           => $taskIdParam,
-                    ':workerId'         => $workerId,
+                    ':workerId'         => $isWorkerInt
+                        ? $worker->getId()
+                        : UUID::toBinary($worker->getPublicId()),
                     ':status'           => WorkerStatus::ASSIGNED->value,
-                    ':estimatedHour'   => $worker->getEstimatedHour(),
+                    ':estimatedHour'    => $worker->getEstimatedHour(),
                 ]);
 
-                // Set ID given by the DB
                 $worker->setId($this->connection->lastInsertId());
             }
 
@@ -828,76 +807,87 @@ class TaskWorkerModel extends Model
      * @throws InvalidArgumentException If required identifiers are missing or invalid.
      * @throws DatabaseException If a database error occurs during the operation (wraps PDOException
      */
-    public function save(array $data): bool
+    public function save(array $taskWorkers): bool
     {
+        if (empty($taskWorkers))
+            throw new InvalidArgumentException('Task worker array cannot be empty');
+
+        $isBatch = array_keys($taskWorkers) === range(0, count($taskWorkers) - 1);
+        if ($isBatch) $taskWorkers = [$taskWorkers];
+
         try {
-            $updateFields = [];
-            $params = [];
+            foreach ($taskWorkers as $item) {
+                if (!\is_array($item))
+                    throw new InvalidArgumentException('Each worker update item must be an array');
 
-            // Determine identifier clause: prefer numeric/internal id when provided
-            if (isset($data['id'])) {
-                $where = 'id = :id';
-                $params[':id'] = $data['id'];
-            } else {
-                // Require task_id and worker_id when id is not provided
-                if (\is_int($data['taskId']) && $data['taskId'] < 1)
-                    throw new InvalidArgumentException('Invalid task ID provided');
-                if (\is_int($data['workerId']) && $data['workerId'] < 1)
-                    throw new InvalidArgumentException('Invalid worker ID provided');
+                $updateFields = [];
+                $params = [];
 
-                $whereParts = [];
-                // task_id may be int or UUID
-                if ($data['taskId'] instanceof UUID) {
-                    $whereParts[] = 'task_id = (SELECT id FROM `task` WHERE public_id = :taskPublicId)';
-                    $params[':taskPublicId'] = UUID::toBinary($data['taskId']);
+                // Determine identifier clause: prefer numeric/internal id when provided
+                if (isset($item['id'])) {
+                    if (!\is_int($item['id']) && !is_numeric($item['id']))
+                        throw new InvalidArgumentException('Invalid task worker ID provided');
+
+                    $where = 'id = :id';
+                    $params[':id'] = (int) $item['id'];
                 } else {
-                    $whereParts[] = 'task_id = :taskId';
-                    $params[':taskId'] = $data['taskId'];
+                    if (!isset($item['taskId']) || !isset($item['workerId']))
+                        throw new InvalidArgumentException('Task ID and Worker ID are required');
+
+                    if (\is_int($item['taskId']) && $item['taskId'] < 1)
+                        throw new InvalidArgumentException('Invalid task ID provided');
+                    if (\is_int($item['workerId']) && $item['workerId'] < 1)
+                        throw new InvalidArgumentException('Invalid worker ID provided');
+
+                    $whereParts = [];
+                    if ($item['taskId'] instanceof UUID) {
+                        $whereParts[] = 'task_id = (SELECT id FROM `task` WHERE public_id = :taskPublicId)';
+                        $params[':taskPublicId'] = UUID::toBinary($item['taskId']);
+                    } else {
+                        $whereParts[] = 'task_id = :taskId';
+                        $params[':taskId'] = $item['taskId'];
+                    }
+
+                    if ($item['workerId'] instanceof UUID) {
+                        $whereParts[] = 'worker_id = (SELECT id FROM `user` WHERE public_id = :workerPublicId)';
+                        $params[':workerPublicId'] = UUID::toBinary($item['workerId']);
+                    } else {
+                        $whereParts[] = 'worker_id = :workerId';
+                        $params[':workerId'] = $item['workerId'];
+                    }
+
+                    $where = implode(' AND ', $whereParts);
                 }
 
-                // worker_id may be int or UUID
-                if ($data['workerId'] instanceof UUID) {
-                    $whereParts[] = 'worker_id = (SELECT id FROM `user` WHERE public_id = :workerPublicId)';
-                    $params[':workerPublicId'] = UUID::toBinary($data['workerId']);
-                } else {
-                    $whereParts[] = 'worker_id = :workerId';
-                    $params[':workerId'] = $data['workerId'];
+                if (isset($item['status'])) {
+                    $updateFields[] = 'status = :status';
+                    $params[':status'] = ($item['status'] instanceof WorkerStatus)
+                        ? $item['status']->value
+                        : $item['status'];
                 }
 
-                $where = implode(' AND ', $whereParts);
-            }
+                if (isset($item['estimatedHour'])) {
+                    $updateFields[] = 'estimated_hour = :estimatedHour';
+                    $params[':estimatedHour'] = $item['estimatedHour'];
+                }
 
-            // Build update fields
-            if (isset($data['status'])) {
-                $updateFields[] = 'status = :status';
-                $params[':status'] = ($data['status'] instanceof WorkerStatus)
-                    ? $data['status']->value
-                    : $data['status'];
-            }
+                if (isset($item['actualHour'])) {
+                    $updateFields[] = 'actual_hour = :actualHour';
+                    $params[':actualHour'] = $item['actualHour'];
+                }
 
-            if (isset($data['estimatedHour'])) {
-                $updateFields[] = 'estimated_hour = :estimatedHour';
-                $params[':estimatedHour'] = $data['estimatedHour'];
-            }
+                if (!empty($updateFields)) {
+                    $query = 'UPDATE `task_worker` SET ' . implode(', ', $updateFields) . ' WHERE ' . $where;
+                    $statement = $this->connection->prepare($query);
+                    $statement->execute($params);
+                }
 
-            if (isset($data['actualHour'])) {
-                $updateFields[] = 'actual_hour = :actualHour';
-                $params[':actualHour'] = $data['actualHour'];
-            }
-
-            if (isset($data['unitRate'])) {
-                $this->saveUnitRate(
-                    $data['taskId'],
-                    $data['workerId'],
-                    $data['unitRate']
-                );
-            }
-
-            // Nothing to update
-            if (!empty($updateFields)) {
-                $query = 'UPDATE `task_worker` SET ' . implode(', ', $updateFields) . ' WHERE ' . $where;
-                $statement = $this->connection->prepare($query);
-                $statement->execute($params);
+                if (isset($item['unitRate'])) {
+                    if (isset($item['id']))
+                        $this->saveUnitRateByTaskWorkerId((int) $item['id'], (float) $item['unitRate']);
+                    else
+                        $this->saveUnitRateByTaskAndWorker($item['taskId'], $item['workerId'], (float) $item['unitRate']);
+                }
             }
 
             return true;
@@ -921,11 +911,8 @@ class TaskWorkerModel extends Model
      *
      * @throws PDOException If a database error occurs during the operation.
      */
-    private function saveUnitRate(
-        int|UUID $taskId,
-        int|UUID $taskWorkerId,
-        float $unitRate
-    ): bool {
+    private function saveUnitRateByTaskWorkerId(int $taskWorkerId, float $unitRate): bool
+    {
         try {
             $query =
                 "UPDATE 
@@ -933,20 +920,44 @@ class TaskWorkerModel extends Model
                 SET 
                     unit_rate = :unitRate 
                 WHERE 
-                    task_id = " . (is_int($taskId)
-                    ? ':taskId'
-                    : '(SELECT id FROM `task` WHERE public_id = :taskId)') . "
-                AND
-                    task_worker_id = " . (is_int($taskWorkerId)
-                    ? ':taskWorkerId'
-                    : '(SELECT id FROM `task_worker` WHERE public_id = :taskWorkerId)') . ";
-            ";
+                    task_worker_id = :taskWorkerId";
             $statement = $this->connection->prepare($query);
             $statement->execute([
-                ':unitRate'         => $unitRate,
-                ':taskWorkerId'     => ($taskWorkerId instanceof UUID)
-                    ? UUID::toBinary($taskWorkerId)
-                    : $taskWorkerId,
+                ':unitRate'     => $unitRate,
+                ':taskWorkerId' => $taskWorkerId,
+            ]);
+
+            return true;
+        } catch (PDOException $e) {
+            throw $e;
+        }
+    }
+
+    private function saveUnitRateByTaskAndWorker(int|UUID $taskId, int|UUID $workerId, float $unitRate): bool
+    {
+        try {
+            $taskIdClause = \is_int($taskId)
+                ? ':taskId'
+                : '(SELECT id FROM `task` WHERE public_id = :taskId)';
+
+            $workerIdClause = \is_int($workerId)
+                ? ':workerId'
+                : '(SELECT id FROM `user` WHERE public_id = :workerId)';
+
+            $taskWorkerIdClause =
+                '(SELECT id FROM `task_worker` WHERE task_id = ' . $taskIdClause . ' AND worker_id = ' . $workerIdClause . ' LIMIT 1)';
+
+            $query =
+                "UPDATE `resource`
+                SET unit_rate = :unitRate
+                WHERE task_id = {$taskIdClause}
+                AND task_worker_id = {$taskWorkerIdClause}";
+
+            $statement = $this->connection->prepare($query);
+            $statement->execute([
+                ':unitRate' => $unitRate,
+                ':taskId'   => ($taskId instanceof UUID) ? UUID::toBinary($taskId) : $taskId,
+                ':workerId' => ($workerId instanceof UUID) ? UUID::toBinary($workerId) : $workerId,
             ]);
 
             return true;

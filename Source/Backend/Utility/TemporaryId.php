@@ -13,8 +13,8 @@ class TemporaryId
         return self::$counter--;
     }
 
-    public static function isTemporary(int $id): bool
+    public static function isTemporary(int|null $id): bool
     {
-        return $id < 0;
+        return $id < 0 || $id === null;
     }
 }

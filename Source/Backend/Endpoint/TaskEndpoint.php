@@ -25,6 +25,7 @@ use App\Model\ProjectWorkerModel;
 use App\Model\TaskModel;
 use App\Service\TaskService;
 use App\Utility\ResponseExceptionHandler;
+use App\Utility\TemporaryId;
 use App\Validator\ResourceValidator;
 use App\Validator\UserValidator;
 use App\Validator\WorkValidator;
@@ -181,6 +182,7 @@ class TaskEndpoint extends Endpoint
             if (isset($args['workerId']) && !$workerId)
                 throw new ForbiddenException('Worker ID is required');
 
+            /** @var TaskWorker */
             $worker = isset($args['workerId'])
                 ? $instance->projectWorkerModel->findById($workerId)
                 : null;
@@ -203,7 +205,9 @@ class TaskEndpoint extends Endpoint
             $tasks = $instance->taskModel->search(
                 $key,
                 [
-                    'userId'    => $worker?->getId() ?? $worker?->getPublicId() ?? null,
+                    'userId'    => TemporaryId::isTemporary($worker?->getId()) 
+                        ? $worker?->getId() 
+                        : $worker?->getPublicId(),
                     'phaseId'   => $phase?->getId() ?? null,
                     'projectId' => $project->getId(),
                     'status'    => $status,

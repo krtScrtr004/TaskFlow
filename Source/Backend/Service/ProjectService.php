@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Container\PhaseContainer;
+use App\Container\ProjectContainer;
 use App\Container\WorkerContainer;
 use App\Model\TaskModel;
 use PDO;
@@ -47,22 +48,28 @@ class ProjectService
      * @return Project The persisted Project instance (including assigned ID)
      * @throws \Throwable Re-throws any exception or error encountered during creation
      */
-    public static function create(Project $project): Project
+    public static function create(Project|ProjectContainer $project): Project
     {
+        $isBatch = $project instanceof ProjectContainer;
+        $projects = $isBatch ? $project : new ProjectContainer([$project]);
+
         $instance = new self();
+
         try {
             $instance->connection->beginTransaction();
 
-            $createProject = $instance->projectModel->create($project);
-            $projectId = $createProject->getId();
+            foreach ($projects as $item) {
+                $createProject = $instance->projectModel->create($item);
+                $projectId = $createProject->getId();
 
-            $phases = $project->getPhases();
-            if ($phases && $phases->count() > 0)
-                $instance->phaseModel->createMultiple($projectId, $project->getPhases());
+                $phases = $item->getPhases();
+                if ($phases && $phases->count() > 0)
+                    $instance->phaseModel->create($projectId, $item->getPhases());
 
-            $workers = $project->getWorkers();
-            if ($workers && $workers->count() > 0)
-                $instance->projectWorkerModel->createMultiple($projectId, $project->getWorkers());
+                $workers = $item->getWorkers();
+                if ($workers && $workers->count() > 0)
+                    $instance->projectWorkerModel->create($projectId, $item->getWorkers());
+            }
 
             $instance->connection->commit();
             return $createProject;
@@ -107,43 +114,49 @@ class ProjectService
      */
     public static function save(array $project): void
     {
+        $isBatch = array_keys($project) === range(0, count($project) - 1);
+        $projects = $isBatch ? $project : [$project];
+
         $instance = new self();
+
         try {
             $instance->connection->beginTransaction();
 
-            $instance->projectModel->save($project);
-            $projectId = $project['id'];
+            foreach ($projects as $item) {
+                $instance->projectModel->save($item);
+                $projectId = $item['id'];
 
-            $addedPhases = $project['phases']['toAdd'] ?? [];
-            $editedPhases = $project['phases']['toEdit'] ?? [];
-            $cancelledPhases = $project['phases']['toCancel'] ?? [];
+                $addedPhases = $item['phases']['toAdd'] ?? [];
+                $editedPhases = $item['phases']['toEdit'] ?? [];
+                $cancelledPhases = $item['phases']['toCancel'] ?? [];
 
-            if (\count($addedPhases) > 0) {
-                $phases = new PhaseContainer();
-                foreach ($addedPhases as $phase) {
-                    $phases->add(Phase::createPartial($phase));
+                if (\count($addedPhases) > 0) {
+                    $phases = new PhaseContainer();
+                    foreach ($addedPhases as $phase) {
+                        $phases->add(Phase::createPartial($phase));
+                    }
+                    $instance->phaseModel->create($projectId, $phases);
                 }
-                $instance->phaseModel->createMultiple($projectId, $phases);
-            }
-            if (\count($editedPhases) > 0 || \count($cancelledPhases) > 0) {
-                $phases = array_merge($editedPhases, $cancelledPhases);
-                $instance->phaseModel->saveMultiple($phases);
-            }
-
-            $addedWorkers = $project['workers']['toAdd'] ?? [];
-            $editedWorkers = $project['workers']['toEdit'] ?? [];
-            $removedWorkers = $project['workers']['toRemove'] ?? [];
-
-            if (\count($addedWorkers) > 0) {
-                $workers = new WorkerContainer();
-                foreach ($addedWorkers as $worker) {
-                    $workers->add(Worker::createPartial($worker));
+                if (\count($editedPhases) > 0 || \count($cancelledPhases) > 0) {
+                    $phases = array_merge($editedPhases, $cancelledPhases);
+                    $instance->phaseModel->save($phases);
                 }
-                $instance->projectWorkerModel->createMultiple($projectId, $workers);
-            }
-            if (\count($editedWorkers) > 0 || \count($removedWorkers) > 0) {
-                $workers = array_merge($editedWorkers, $removedWorkers);
-                $instance->projectWorkerModel->saveMultiple($projectId, $workers);
+
+                $addedWorkers = $item['workers']['toAdd'] ?? [];
+                $editedWorkers = $item['workers']['toEdit'] ?? [];
+                $removedWorkers = $item['workers']['toRemove'] ?? [];
+
+                if (\count($addedWorkers) > 0) {
+                    $workers = new WorkerContainer();
+                    foreach ($addedWorkers as $worker) {
+                        $workers->add(Worker::createPartial($worker));
+                    }
+                    $instance->projectWorkerModel->create($projectId, $workers);
+                }
+                if (\count($editedWorkers) > 0 || \count($removedWorkers) > 0) {
+                    $workers = array_merge($editedWorkers, $removedWorkers);
+                    $instance->projectWorkerModel->save($projectId, $workers);
+                }
             }
 
             $instance->connection->commit();
@@ -154,14 +167,17 @@ class ProjectService
     }
 
     public static function get(
-        int|UUID $projectId,
+        int|UUID|array $projectId,
         array $options = [
             'phases'    => false,
             'tasks'     => false,
             'workers'   => false
         ]
     ): Project|null {
-        if (\is_int($projectId) && $projectId <= 0) 
+        $isBatch = \is_array($projectId);
+        $projectIds = $isBatch ? array_values($projectId) : [$projectId];
+
+        if (\is_int($projectId) && $projectId <= 0)
             throw new InvalidArgumentException('Invalid project ID');
 
         $includePhases = $options['phases'] ?? false;
@@ -169,27 +185,39 @@ class ProjectService
         $includeWorkers = $options['workers'] ?? false;
 
         $instance = new self();
-        $project = $instance->projectModel->findById($projectId);
-        if (!$project) return null;    
 
-        $projectId = $project->getId();
+        $projects = new ProjectContainer();
+        foreach ($projectIds as $item) {
+            if (!\is_int($item) && !($item instanceof UUID))
+                throw new InvalidArgumentException('Project ID must be an integer or UUID');
 
-        if ($includePhases) {
-            $phases = $instance->phaseModel->findByProjectId($projectId);
-            $project->setPhases($phases);
+            if (\is_int($item) && $item < 1)
+                throw new InvalidArgumentException('Invalid project ID provided');
+
+            $project = $instance->projectModel->findById($item);
+            if (!$project) return null;
+
+            $projectId = $project->getId();
+
+            if ($includePhases) {
+                $phases = $instance->phaseModel->findByProjectId($projectId);
+                $project->setPhases($phases);
+            }
+
+            if ($includeWorkers) {
+                $workers = $instance->projectWorkerModel->findByProjectId($projectId);
+                $project->setWorkers($workers);
+            }
+
+            if ($includeTasks) {
+                $taskModel = new TaskModel();
+                $tasks = $taskModel->findByProjectId($projectId);
+                $project->setTasks($tasks);
+            }
+
+            $projects->add($project);
         }
 
-        if ($includeWorkers) {
-            $workers = $instance->projectWorkerModel->findByProjectId($projectId);
-            $project->setWorkers($workers);
-        }
-
-        if ($includeTasks) {
-            $taskModel = new TaskModel();
-            $tasks = $taskModel->findByProjectId($projectId);
-            $project->setTasks($tasks);
-        }
-
-        return $project;
+        return $isBatch ? $projects : $projects->first();
     }
 }

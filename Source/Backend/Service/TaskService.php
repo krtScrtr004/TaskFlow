@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Container\ResourceContainer;
+use App\Container\TaskContainer;
 use App\Container\WorkerContainer;
 use App\Core\Connection;
 use App\Core\UUID;
@@ -64,12 +65,17 @@ class TaskService
      * 
      * @throws Throwable If any error occurs during the creation process, the transaction is rolled back.
      */
-    public static function create(Task $task, array $execute = [
-        'task'      => true,
-        'worker'    => true,
-        'resource'  => true
-    ]): Task
-    {
+    public static function create(
+        Task|TaskContainer $task,
+        array $execute = [
+            'task'      => true,
+            'worker'    => true,
+            'resource'  => true
+        ]
+    ): Task|TaskContainer {
+        $isBatch = $task instanceof TaskContainer;
+        $tasks = $isBatch ? $task : new TaskContainer([$task]);
+
         $executeTask = $execute['task'] ?? false;
         $executeWorker = $execute['worker'] ?? false;
         $executeResource = $execute['resource'] ?? false;
@@ -78,30 +84,34 @@ class TaskService
         try {
             $instance->connection->beginTransaction();
 
-            // Save new task entry
-            if ($executeTask)
-                $createdTask = $instance->taskModel->create($task);
-            $taskId = $createdTask?->getID() ?? $task->getID();
+            $createdTasks = new TaskContainer();
+            foreach ($tasks as $item) {
+                // Save new task entry
+                if ($executeTask)
+                    $createdTask = $instance->taskModel->create($item);
+                $taskId = $createdTask?->getID() ?? $item->getID();
 
-            // Save task workers
-            if ($executeWorker) {
-                $taskWorkers = $task->getWorkers();
-                if ($taskWorkers) {
-                    $createdWorkers = $instance->taskWorkerModel->createMultiple($taskId, $taskWorkers);
-                    // Create labor resources for each worker
-                    $instance->createWorkerResources($taskId, $createdWorkers);
+                // Save task workers
+                if ($executeWorker) {
+                    $taskWorkers = $item->getWorkers();
+                    if ($taskWorkers) {
+                        $createdWorkers = $instance->taskWorkerModel->create($taskId, $taskWorkers);
+                        // Create labor resources for each worker
+                        $instance->createWorkerResources($taskId, $createdWorkers);
+                    }
                 }
-            }
 
-            // Save additional resources (non-labor: materials, equipment, etc.)
-            if ($executeResource) {
-                $taskResources = $task->getResources()->getResources();
-                if ($taskResources && $taskResources->count() > 0)
-                    $instance->resourceModel->createMultiple($taskId, $taskResources);
+                // Save additional resources (non-labor: materials, equipment, etc.)
+                if ($executeResource) {
+                    $taskResources = $item->getResources()->getResources();
+                    if ($taskResources && $taskResources->count() > 0)
+                        $instance->resourceModel->create($taskId, $taskResources);
+                }
+                $createdTasks->add($createdTask ?? $item);
             }
 
             $instance->connection->commit();
-            return $createdTask ?? $task;
+            return $isBatch ? $createdTasks : $createdTasks->first();
         } catch (Throwable $e) {
             $instance->connection->rollBack();
             throw $e;
@@ -136,7 +146,7 @@ class TaskService
                 'taskWorkerId'  => $worker->getId()
             ]));
         }
-        $this->resourceModel->createMultiple($taskId, $taskWorkerResources);
+        $this->resourceModel->create($taskId, $taskWorkerResources);
     }
 
     /**
@@ -156,62 +166,67 @@ class TaskService
      */
     public static function save(array $rawTask): bool
     {
+        $isBatch = array_keys($rawTask) === range(0, count($rawTask) - 1);
+        $rawTasks = $isBatch ? $rawTask : [$rawTask];
+
         $instance = new self();
         try {
             $instance->connection->beginTransaction();
 
-            /**
-             * Update task entry
-             * 
-             * Required:
-             * - Task ID or Public ID
-             */
-            $instance->taskModel->save($rawTask);
-
-            // Update task workers
-            if (isset($rawTask['workers'])) {
-                // Add new workers
-                if (\count($rawTask['workers']['toAdd'] ?? []) > 0) {
-                    $workersToAdd = new WorkerContainer();
-                    foreach ($rawTask['workers']['toAdd'] as $workerData) {
-                        if (isset($workerData['workerId'])) {
-                            if ($workerData['workerId'] instanceof UUID)
-                                $workerData['publicId'] = $workerData['workerId'];
-                            elseif (\is_string($workerData['workerId']))
-                                $workerData['publicId'] = UUID::fromString($workerData['workerId']);
-                            elseif (\is_numeric($workerData['workerId']))
-                                $workerData['id'] = (int)$workerData['workerId'];
-                        }
-                        $workersToAdd->add(TaskWorker::createPartial($workerData));
-                    }
-                    $createdWWorkers = $instance->taskWorkerModel->createMultiple($rawTask['id'] ?? $rawTask['publicId'], $workersToAdd);
-                    // Create labor resources for each new worker
-                    $instance->createWorkerResources($rawTask['id'] ?? $rawTask['publicId'], $createdWWorkers);
-                }
-
-                // Update existing workers and remove terminated ones
-                foreach ($rawTask['workers'] as $category => $workers) {
-                    if ($category === 'toAdd') continue;
-
-                    foreach ($workers as $workerData) {
-                        /**
-                         * Required:
-                         * - Task ID or Public ID
-                         * - Worker ID or Public ID
-                         */
-                        $instance->taskWorkerModel->save($workerData);
-                    }
-                }
-            }
-
-            // Update resources
-            if (isset($rawTask['resources'])) {
+            foreach ($rawTasks as $item) {
                 /**
+                 * Update task entry
+                 * 
                  * Required:
-                 * - Resource ID or Public ID
+                 * - Task ID or Public ID
                  */
-                foreach ($rawTask['resources'] as $resourceData) {
-                    $instance->resourceModel->save($resourceData);
+                $instance->taskModel->save($item);
+
+                // Update task workers
+                if (isset($item['workers'])) {
+                    // Add new workers
+                    if (\count($item['workers']['toAdd'] ?? []) > 0) {
+                        $workersToAdd = new WorkerContainer();
+                        foreach ($item['workers']['toAdd'] as $workerData) {
+                            if (isset($workerData['workerId'])) {
+                                if ($workerData['workerId'] instanceof UUID)
+                                    $workerData['publicId'] = $workerData['workerId'];
+                                elseif (\is_string($workerData['workerId']))
+                                    $workerData['publicId'] = UUID::fromString($workerData['workerId']);
+                                elseif (\is_numeric($workerData['workerId']))
+                                    $workerData['id'] = (int)$workerData['workerId'];
+                            }
+                            $workersToAdd->add(TaskWorker::createPartial($workerData));
+                        }
+                        $createdWWorkers = $instance->taskWorkerModel->create($item['id'] ?? $item['publicId'], $workersToAdd);
+                        // Create labor resources for each new worker
+                        $instance->createWorkerResources($item['id'] ?? $item['publicId'], $createdWWorkers);
+                    }
+
+                    // Update existing workers and remove terminated ones
+                    foreach ($item['workers'] as $category => $workers) {
+                        if ($category === 'toAdd') continue;
+
+                        foreach ($workers as $workerData) {
+                            /**
+                             * Required:
+                             * - Task ID or Public ID
+                             * - Worker ID or Public ID
+                             */
+                            $instance->taskWorkerModel->save($workerData);
+                        }
+                    }
+                }
+
+                // Update resources
+                if (isset($item['resources'])) {
+                    /**
+                     * Required:
+                     * - Resource ID or Public ID
+                     */
+                    foreach ($item['resources'] as $resourceData) {
+                        $instance->resourceModel->save($resourceData);
+                    }
                 }
             }
 
@@ -241,35 +256,47 @@ class TaskService
      * @throws InvalidArgumentException If the provided task ID is invalid.
      */
     public static function get(
-        int|UUID $taskId,
+        int|UUID|array $taskId,
         array $options = [
             'workers'   => false,
             'resources' => false
         ]
-    ): Task|null {
-        if (\is_int($taskId) && $taskId <= 0)
-            throw new InvalidArgumentException('Invalid task ID');
+    ): Task|TaskContainer|null {
+        $isBatch = \is_array($taskId);
+        /**  @var array<int|UUID> $taskId  */
+        $taskIds = $isBatch ? array_values($taskId) : [$taskId];
 
-        $includeWorkers = $options['workers'] ?? false;
-        $includeResources = $options['resources'] ?? false;
+        $tasks = new TaskContainer();
+        foreach ($taskIds as $item) {
+            if (!\is_int($item) && !($item instanceof UUID))
+                throw new InvalidArgumentException('Task ID must be an integer or UUID');
 
-        $instance = new self();
-        $task = $instance->taskModel->findById($taskId);
-        if (!$task) return null;
+            if (\is_int($item) && $item <= 0)
+                throw new InvalidArgumentException('Invalid task ID');
 
-        // Load related entities based on options
-        if ($includeWorkers) {
-            $workers = $instance->taskWorkerModel->findByTaskId($task->getId());
-            $task->setWorkers($workers);
-        }
+            $includeWorkers = $options['workers'] ?? false;
+            $includeResources = $options['resources'] ?? false;
 
-        // Load resources if specified
-        if ($includeResources) {
             $instance = new self();
-            $resources = $instance->resourceModel->findByTaskId($task->getId());
-            $task->setResources($resources);
+            $task = $instance->taskModel->findById($item);
+            if (!$task) return null;
+
+            // Load related entities based on options
+            if ($includeWorkers) {
+                $workers = $instance->taskWorkerModel->findByTaskId($task->getId());
+                $task->setWorkers($workers);
+            }
+
+            // Load resources if specified
+            if ($includeResources) {
+                $instance = new self();
+                $resources = $instance->resourceModel->findByTaskId($task->getId());
+                $task->setResources($resources);
+            }
+
+            $tasks->add($task);
         }
 
-        return $task;
+        return $isBatch ? $tasks : $tasks->first();
     }
 }

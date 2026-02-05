@@ -6,6 +6,7 @@ use App\Auth\SessionAuth;
 use App\Container\TaskContainer;
 use App\Core\Me;
 use App\Core\UUID;
+use App\Entity\Worker;
 use App\Enumeration\Priority;
 use App\Enumeration\WorkStatus;
 use App\Exception\ForbiddenException;
@@ -94,6 +95,7 @@ class TaskController implements Controller
                 : null;
             if (isset($args['workerId']) && !$workerId) throw new ForbiddenException('Worker ID is required');
 
+            /** @var Worker */
             $worker = $workerId
                 ? $instance->projectWorkerModel->findById($workerId)
                 : null;

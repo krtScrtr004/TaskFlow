@@ -10,7 +10,8 @@ if (totalSpending && totalSpendingBar) {
 
     const projectTotalSpendingBar = leftSide.querySelector('#project_total_spending_bar')
     if (projectTotalSpendingBar && totalSpendingValue > 0) {
-        const spendingPercentage = Math.min((totalSpendingValue / projectBudgetValue) * 100, 100)
+        let spendingPercentage = Math.min((totalSpendingValue / projectBudgetValue) * 100, 100)
+        if (spendingPercentage < 1 && totalSpendingValue > 0) spendingPercentage = 1 // Minimum width for visibility
         // Set total spending bar width dynamically
         projectTotalSpendingBar.style.width = spendingPercentage + '%'
     }

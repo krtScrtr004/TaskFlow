@@ -7,6 +7,7 @@ use App\Abstract\Model;
 use App\Container\JobTitleContainer;
 use App\Core\UUID;
 use App\Entity\ProjectManager;
+use App\Entity\TaskWorker;
 use App\Entity\Worker;
 use App\Enumeration\Role;
 use App\Enumeration\WorkerStatus;
@@ -625,12 +626,12 @@ class UserModel extends Model
      * @throws DatabaseException If any database operation fails
      * @return User
      */
-    public function create(mixed $user): ProjectManager|Worker|null
+    public function create(ProjectManager|Worker|TaskWorker $user): ProjectManager|Worker|TaskWorker|null
     {
         try {
-            if (!($user instanceof ProjectManager) && !($user instanceof Worker))
-                throw new InvalidArgumentException('Expected instance of ProjectManager or Worker');
-
+            if (!($user instanceof ProjectManager) && !($user instanceof Worker) && !($user instanceof TaskWorker))
+                throw new InvalidArgumentException('Expected instance of ProjectManager, Worker, or TaskWorker');
+            
             $uuid               =   $user->getPublicId() ?? UUID::get();
             $firstName          =   trimOrNull($user->getFirstName());
             $middleName         =   trimOrNull($user->getMiddleName());

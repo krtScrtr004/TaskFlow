@@ -103,8 +103,8 @@ class ProjectEndpoint extends Endpoint
                     'userId'    => Me::getInstance()->getId(),
                     'status'    => $status,
                     
-                    'offset'     => isset($_GET['offset']) ? (int) $_GET['offset'] : 0,
-                    'limit'    => isset($_GET['limit']) ? (int) $_GET['limit'] : 50,
+                    'offset'    => isset($_GET['offset']) ? (int) $_GET['offset'] : 0,
+                    'limit'     => isset($_GET['limit']) ? (int) $_GET['limit'] : 50,
                 ]
             );
 
@@ -220,7 +220,7 @@ class ProjectEndpoint extends Endpoint
                 );
 
             $maximumWorkers = (int) $project['maxWorkers'];
-            if (count($workers) > $maximumWorkers)
+            if (\count($workers) > $maximumWorkers)
                 throw new ValidationException(
                     'Maximum Workers Exceeded', 
                     ["Number of workers exceeds the maximum allowed ({$maximumWorkers})"
@@ -554,7 +554,7 @@ class ProjectEndpoint extends Endpoint
 
         // Add budgets of newly added phases
         foreach ($overrides as $id => $budget) {
-            if (!in_array($id, $existingIds, true)) {
+            if (!\in_array($id, $existingIds, true)) {
                 $total += $budget;
             }
         }
@@ -623,7 +623,7 @@ class ProjectEndpoint extends Endpoint
 
         // Add budgets of newly added workers
         foreach ($overrides as $id => $budget) {
-            if (!in_array($id, $existingIds, true))
+            if (!\in_array($id, $existingIds, true))
                 $total += $budget;
         }
 

@@ -26,20 +26,20 @@ class RateLimiterModel extends Model
      *
      * @return bool True on successful insertion.
      *
-     * @throws InvalidArgumentException If $data is not an array or required keys are missing/empty.
+     * @throws InvalidArgumentException If $rateLimit is not an array or required keys are missing/empty.
      * @throws DatabaseException If a PDOException occurs during the database operation.
      */
-    public function create(mixed $data): mixed
+    public function create(mixed $rateLimit): mixed
     {
-        if (!\is_array($data)) throw new InvalidArgumentException('Data must be an array');
-        if (!isset($data['ip']) || empty($data['ip']))
+        if (!\is_array($rateLimit)) throw new InvalidArgumentException('Data must be an array');
+        if (!isset($rateLimit['ip']) || empty($rateLimit['ip']))
             throw new InvalidArgumentException('IP address is required');
-        if (!isset($data['endpoint']) || empty($data['endpoint'])) 
+        if (!isset($rateLimit['endpoint']) || empty($rateLimit['endpoint'])) 
             throw new InvalidArgumentException('Endpoint is required');
 
-        $ip = $data['ip'];
-        $endpoint = $data['endpoint'];
-        $timeWindow = $data['timeWindow'] ?? 3600; // default 1 hour
+        $ip = $rateLimit['ip'];
+        $endpoint = $rateLimit['endpoint'];
+        $timeWindow = $rateLimit['timeWindow'] ?? 3600; // default 1 hour
 
         try {
             $expiresAt = time() + $timeWindow;

@@ -44,7 +44,7 @@ class ProjectWorkerModel extends Model
      * @throws DatabaseException If a database error occurs during query execution
      */
     protected function find(string $whereClause = '', array $params = [], array $options = []): ?WorkerContainer
-	{
+    {
         $paramOptions = [
             'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
             'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
@@ -53,7 +53,7 @@ class ProjectWorkerModel extends Model
         ];
 
         try {
-            $queryString = 
+            $queryString =
                 "SELECT 
                     u.id,
                     u.public_id,
@@ -131,8 +131,9 @@ class ProjectWorkerModel extends Model
                 ON 
                     u.id = jt.user_id";
             $query = $this->appendOptionsToFindQuery(
-                $this->appendWhereClause($queryString, $whereClause), 
-                $paramOptions);
+                $this->appendWhereClause($queryString, $whereClause),
+                $paramOptions
+            );
 
             $statement = $this->connection->prepare($query);
             $statement->execute($params);
@@ -155,7 +156,7 @@ class ProjectWorkerModel extends Model
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
-	}
+    }
 
     /**
      * Searches for workers based on provided criteria and returns a WorkerContainer of matching results.
@@ -191,10 +192,10 @@ class ProjectWorkerModel extends Model
     ): WorkerContainer|null {
         $projectId = $options['projectId'] ?? null;
         if ($projectId) {
-            if (!\is_int($projectId) && !($projectId instanceof UUID)) 
+            if (!\is_int($projectId) && !($projectId instanceof UUID))
                 throw new InvalidArgumentException('Project ID must be an integer or UUID');
 
-            if (\is_int($projectId) && $projectId < 1) 
+            if (\is_int($projectId) && $projectId < 1)
                 throw new InvalidArgumentException('Invalid project ID provided');
         }
 
@@ -211,7 +212,7 @@ class ProjectWorkerModel extends Model
             $where = [];
             $params = [];
 
-            $query = 
+            $query =
                 "SELECT 
                     u.id,
                     u.public_id,
@@ -239,8 +240,8 @@ class ProjectWorkerModel extends Model
                 ON
                     u.id = jt.user_id";
 
-            if (trimOrNull($key))  {
-                $where[] = 
+            if (trimOrNull($key)) {
+                $where[] =
                     "MATCH (
                         u.first_name, 
                         u.middle_name, 
@@ -296,9 +297,9 @@ class ProjectWorkerModel extends Model
                             WHERE 
                                 pw3.worker_id = u.id
                             AND 
-                                pw3.project_id = " . (\is_int($projectId) 
-                                ? ":projectIdTermCheck" 
-                                : "(SELECT id 
+                                pw3.project_id = " . (\is_int($projectId)
+                            ? ":projectIdTermCheck"
+                            : "(SELECT id 
                                     FROM 
                                         `project` 
                                     WHERE 
@@ -331,10 +332,10 @@ class ProjectWorkerModel extends Model
                     u.id, pw.status
                 ORDER BY 
                     u.last_name ASC  
-                LIMIT " 
-                    . intval($paramOptions['limit']) . "
-                OFFSET " 
-                    . intval($paramOptions['offset']);
+                LIMIT "
+                . \intval($paramOptions['limit']) . "
+                OFFSET "
+                . \intval($paramOptions['offset']);
 
             $statement = $this->connection->prepare($query);
             $statement->execute($params);
@@ -344,183 +345,12 @@ class ProjectWorkerModel extends Model
 
             $workers = new WorkerContainer();
             foreach ($result as $row) {
-                $row['jobTitles'] = $row['jobTitles'] 
-                    ? explode(',', $row['jobTitles']) 
+                $row['jobTitles'] = $row['jobTitles']
+                    ? explode(',', $row['jobTitles'])
                     : [];
                 $workers->add(Worker::createPartial($row));
             }
             return $workers;
-        } catch (PDOException $e) {
-            throw new DatabaseException($e->getMessage());
-        }
-    }
-
-
-    /**
-     * Finds a Worker instance by its ID, optionally filtered by project ID and including project/task history.
-     *
-     * This method retrieves a worker's details from the database, including:
-     * - Worker personal information and status
-     * - Associated job titles
-     * - Task and project statistics (total/completed)
-     * - Optionally, a history of projects and tasks the worker participated in
-     *
-     * If $includeHistory is true, the method fetches up to 10 recent projects for the worker,
-     * each with its associated tasks, and attaches them as a ProjectContainer to the worker's additional info.
-     *
-     * @param int|UUID $workerId Worker ID (integer or UUID)
-     * @param int|UUID|null $projectId (optional) Project ID to filter by (integer or UUID)
-     * @param bool $includeHistory (optional) Whether to include project, phase, and task history (default: false)
-     *
-     * @throws InvalidArgumentException If an invalid project ID is provided
-     * @throws DatabaseException If a database error occurs
-     *
-     * @return Worker|null Worker instance with partial data, or null if not found
-     */
-    public function findById(
-        int|UUID $workerId, 
-        array $options = [
-            'projectId' => null
-        ]
-    ): Worker|null
-    {
-        if (\is_int($workerId) && $workerId < 1) 
-            throw new InvalidArgumentException('Invalid worker ID provided');
-        
-        $projectId = $options['projectId'] ?? null;
-        if ($projectId && \is_int($projectId) && $projectId < 1) 
-            throw new InvalidArgumentException('Invalid project ID provided');
-
-        try {
-            $where = (\is_int($workerId) ? "u.id" : "u.public_id") . " = :workerId";
-            $params = [
-                ':workerId' => ($workerId instanceof UUID) 
-                    ? UUID::toBinary($workerId)
-                    : $workerId,
-            ];
-
-            if ($projectId) {
-                $where .= " AND " . (\is_int($projectId) ? "p.id" : "p.public_id") . " = :projectId";
-                $params[':projectId'] = ($projectId instanceof UUID) 
-                    ? UUID::toBinary($projectId)
-                    : $projectId;
-                $params[':projectId1'] = $params[':projectId'];
-                $params[':projectId2'] = $params[':projectId'];
-            }
-
-            $query = 
-                "SELECT 
-                    u.id,
-                    u.public_id,
-                    u.first_name,
-                    u.middle_name,
-                    u.last_name,
-                    u.bio,
-                    u.gender,
-                    u.email,
-                    u.contact_number,
-                    u.profile_link,
-                    u.created_at,
-                    u.confirmed_at,
-                    u.deleted_at,
-                    pw.default_rate,
-                    pw.status,
-                    GROUP_CONCAT(DISTINCT jt.title) AS job_titles,
-                    (
-                        SELECT 
-                            COUNT(*)
-                        FROM 
-                            `task_worker` AS tw
-                        " . ($projectId ? 
-                            "INNER JOIN 
-                                `task` AS pt ON tw.task_id = pt.id
-                            INNER JOIN 
-                                `phase` AS ph ON pt.phase_id = ph.id
-                            WHERE 
-                                tw.worker_id = u.id 
-                            AND 
-                                ph.project_id = :projectId1" 
-                            : "WHERE tw.worker_id = u.id") . "
-                    ) AS total_tasks,
-                    (
-                        SELECT 
-                            COUNT(*)
-                        FROM 
-                            `task_worker` AS tw
-                        INNER JOIN 
-                            `task` AS t 
-                        ON 
-                            tw.task_id = t.id
-                        " . ($projectId ? 
-                            "INNER JOIN 
-                                `phase` AS ph ON t.phase_id = ph.id" 
-                            : "") . "
-                        WHERE 
-                            tw.worker_id = u.id 
-                        AND 
-                            t.status = '" . WorkStatus::COMPLETED->value . "'
-                        AND 
-                            tw.status != '" . WorkerStatus::TERMINATED->value . "'"
-                        . ($projectId ? " AND ph.project_id = :projectId2" : "") . "
-                    ) AS completed_tasks,
-                    (
-                        SELECT 
-                            COUNT(*) 
-                        FROM 
-                            `project_worker` AS pw2 
-                        WHERE 
-                            pw2.worker_id = u.id
-                    ) AS total_projects,
-                    (
-                        SELECT 
-                            COUNT(*) 
-                        FROM 
-                            `project_worker` AS pw3
-                        INNER JOIN 
-                            `project` AS p2 
-                        ON 
-                            pw3.project_id = p2.id
-                        WHERE 
-                            pw3.worker_id = u.id 
-                        AND 
-                            p2.status = '" . WorkStatus::COMPLETED->value . "'
-                        AND 
-                            pw3.status != '" . WorkerStatus::TERMINATED->value . "'
-                    ) AS completed_projects
-                FROM
-                    `user` AS u
-                LEFT JOIN
-                    `project_worker` AS pw
-                ON
-                    u.id = pw.worker_id
-                LEFT JOIN
-                    `project` AS p
-                ON
-                    pw.project_id = p.id
-                LEFT JOIN
-                    `job_title` AS jt
-                ON 
-                    u.id = jt.user_id
-                WHERE
-                    $where
-                GROUP BY
-                    u.id, p.id, pw.status, pw.default_rate
-                LIMIT 1 ";
-            $statement = $this->connection->prepare($query);
-            $statement->execute($params);
-            $result = $statement->fetch();
-
-            if (!$this->hasData($result)) return null;
-
-            $result['additional_info'] = [
-                    'totalTasks'        => (int)$result['total_tasks'],
-                    'completedTasks'    => (int)$result['completed_tasks'],
-                    'totalProjects'     => (int)$result['total_projects'],
-                    'completedProjects' => (int)$result['completed_projects'],
-            ];
-            $worker = Worker::createPartial($result);
-
-            return $worker;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
@@ -548,123 +378,58 @@ class ProjectWorkerModel extends Model
      * @return WorkerContainer|null Container of Worker instances matching the criteria, or null if none found.
      */
 
-    public function findMultipleById(
-        array $workerIds, 
-        int|UUID|null $projectId = null, 
-        bool $includeHistory = false
-    ): ?WorkerContainer
-    {
+    public function findById(
+        int|UUID|array $workerId,
+        int|UUID|null $projectId = null,
+    ): Worker|WorkerContainer|null {
+        $isBatch = \is_array($workerId);
+        $workerIds = $isBatch ? array_values($workerId) : [$workerId];
+
         if (empty($workerIds)) throw new InvalidArgumentException('Worker IDs array cannot be empty');
-        if ($projectId && \is_int($projectId) && $projectId < 1) 
+        if ($projectId && \is_int($projectId) && $projectId < 1)
             throw new InvalidArgumentException('Invalid project ID provided');
 
+        // Determine if workerIds are integers or UUIDs based on first element
+        $firstIsInt = \is_int($workerIds[0]);
+        foreach ($workerIds as $id) {
+            if (!\is_int($id) && !($id instanceof UUID))
+                throw new InvalidArgumentException('Worker ID must be an integer or UUID');
+
+            if ($firstIsInt !== \is_int($id))
+                throw new InvalidArgumentException('Worker IDs must be of the same type (all int or all UUID)');
+
+            if (\is_int($id) && $id < 1)
+                throw new InvalidArgumentException('Invalid worker ID provided');
+        }
+
         try {
-            // Determine if workerIds are integers or UUIDs based on first element
-            $firstWorkerId = $workerIds[0];
-            $useIntId = \is_int($firstWorkerId);
-
-            // TODO: Separate this into its own method to reduce complexity
-
-            $projectHistory = $includeHistory
-                ? "SELECT 
-                    JSON_ARRAYAGG(
-                        JSON_OBJECT(
-                            'id', p2.id,
-                            'public_id', HEX(p2.public_id),
-                            'name', p2.name,
-                            'status', p2.status,
-                            'start_date_time', p2.start_date_time,
-                            'completion_date_time', p2.completion_date_time,
-                            'actual_completion_date_time', p2.actual_completion_date_time,
-                            'worker_status', pw4.status,
-
-                            'phases', COALESCE(
-                                (
-                                    SELECT JSON_ARRAYAGG(
-                                        JSON_OBJECT(
-                                            'id', ph2.id,
-                                            'public_id', HEX(ph2.public_id),
-                                            'name', ph2.name,
-                                            'status', ph2.status,
-                                            'start_date_time', ph2.start_date_time,
-                                            'completion_date_time', ph2.completion_date_time,
-                                            'actual_completion_date_time', ph2.actual_completion_date_time,
-
-                                            'tasks', COALESCE(
-                                                (
-                                                    SELECT JSON_ARRAYAGG(
-                                                        JSON_OBJECT(
-                                                            'id', t2.id,
-                                                            'public_id', HEX(t2.public_id),
-                                                            'name', t2.name,
-                                                            'status', t2.status,
-                                                            'priority', t2.priority,
-                                                            'start_date_time', t2.start_date_time,
-                                                            'completion_date_time', t2.completion_date_time,
-                                                            'actual_completion_date_time', t2.actual_completion_date_time,
-                                                            'worker_status', tw.status
-                                                        )
-                                                    ) FROM 
-                                                        `task` AS t2
-                                                    INNER JOIN
-                                                        `task_worker` AS tw
-                                                    ON
-                                                        tw.task_id = t2.id
-                                                    WHERE 
-                                                        t2.phase_id = ph2.id
-                                                    AND
-                                                        tw.worker_id = u.id
-                                                ), JSON_ARRAY()
-                                            )
-                                        )
-                                    ) FROM 
-                                        `phase` AS ph2
-                                    WHERE 
-                                        ph2.project_id = p2.id
-                                ), JSON_ARRAY()
-                            )
-                        )
-
-                    ) FROM 
-                        `project` AS p2
-                    INNER JOIN
-                        `project_worker` AS pw4
-                    ON
-                        pw4.project_id = p2.id
-                    WHERE 
-                        pw4.worker_id = u.id " . ($projectId ? 
-                            " AND p2.id = p.id" 
-                            : ""
-                        ) . " "
-            : '';
-
             // Build WHERE clause for multiple worker IDs
             $workerIdPlaceholders = [];
             $params = [];
-            
+
             foreach ($workerIds as $index => $workerId) {
                 $placeholder = ":workerId$index";
                 $workerIdPlaceholders[] = $placeholder;
-                $params[$placeholder] = ($workerId instanceof UUID) 
+                $params[$placeholder] = ($workerId instanceof UUID)
                     ? UUID::toBinary($workerId)
                     : $workerId;
             }
 
-            $workerIdColumn = $useIntId ? "u.id" : "u.public_id";
+            $workerIdColumn = $firstIsInt ? "u.id" : "u.public_id";
             $where = "$workerIdColumn IN (" . implode(', ', $workerIdPlaceholders) . ")";
 
             if ($projectId) {
                 $where .= " AND " . (\is_int($projectId) ? "p.id" : "p.public_id") . " = :projectId";
-                $params[':projectId'] = ($projectId instanceof UUID) 
+                $params[':projectId'] = ($projectId instanceof UUID)
                     ? UUID::toBinary($projectId)
                     : $projectId;
                 $params[':projectId1'] = $params[':projectId'];
                 $params[':projectId2'] = $params[':projectId'];
             }
 
-            $query = 
+            $query =
                 "SELECT 
-                    u.id,`
+                    u.id,
                     u.public_id,
                     u.first_name,
                     u.middle_name,
@@ -685,16 +450,21 @@ class ProjectWorkerModel extends Model
                             COUNT(*)
                         FROM 
                             `task_worker` AS tw
-                        " . ($projectId ? 
-                            "INNER JOIN 
-                                `task` AS t ON tw.task_id = t.id
-                            INNER JOIN 
-                                `phase` AS ph ON t.phase_id = ph.id
-                            WHERE 
-                                tw.worker_id = u.id 
-                            AND 
-                                ph.project_id = :projectId1" 
-                            : "WHERE tw.worker_id = u.id") . "
+                        " . ($projectId ?
+                        "INNER JOIN 
+                            `task` AS t 
+                        ON 
+                            tw.task_id = t.id
+                        INNER JOIN 
+                            `phase` AS ph 
+                        ON 
+                            t.phase_id = ph.id
+                        WHERE 
+                            tw.worker_id = u.id 
+                        AND 
+                            ph.project_id = :projectId1"
+                        : "WHERE 
+                            tw.worker_id = u.id") . "
                     ) AS total_tasks,
                     (
                         SELECT 
@@ -705,9 +475,11 @@ class ProjectWorkerModel extends Model
                             `task` AS t 
                         ON 
                             tw.task_id = t.id
-                        " . ($projectId ? 
-                            "INNER JOIN 
-                                `phase` AS ph ON t.phase_id = ph.id" 
+                        " . ($projectId ?
+                        "INNER JOIN 
+                                `phase` AS ph 
+                        ON 
+                            t.phase_id = ph.id"
                             : "") . "
                         WHERE 
                             tw.worker_id = u.id 
@@ -715,7 +487,7 @@ class ProjectWorkerModel extends Model
                             t.status = '" . WorkStatus::COMPLETED->value . "'
                         AND 
                             tw.status != '" . WorkerStatus::TERMINATED->value . "'"
-                        . ($projectId ? " AND ph.project_id = :projectId2" : "") . "
+                . ($projectId ? " AND ph.project_id = :projectId2" : "") . "
                     ) AS completed_tasks,
                     (
                         SELECT 
@@ -740,8 +512,7 @@ class ProjectWorkerModel extends Model
                             p2.status = '" . WorkStatus::COMPLETED->value . "'
                         AND 
                             pw3.status != '" . WorkerStatus::TERMINATED->value . "'
-                    ) AS completed_projects,
-                    " . ($projectHistory ? "($projectHistory) AS project_history" : "JSON_ARRAY() AS project_history") . "
+                    ) AS completed_projects
                 FROM
                     `user` AS u
                 LEFT JOIN
@@ -778,34 +549,10 @@ class ProjectWorkerModel extends Model
                     'completedProjects' => (int)$result['completed_projects'],
                 ];
                 $worker = Worker::createPartial($result);
-                if ($includeHistory) {
-                    $projects = new ProjectContainer();
-
-                    $projectLists = json_decode($result['project_history'], true);
-                    foreach ($projectLists as &$project) {
-                        $entry = Project::createPartial($project);
-
-                        $phaseLists = $project['phases'];
-                        foreach ($phaseLists as $phase) {
-                            $phaseEntry = Phase::createPartial($phase);
-
-                            $taskLists = $phase['tasks'];
-                            foreach ($taskLists as $task) {
-                                $phaseEntry->addTask(
-                                    Task::createPartial($task)
-                                );
-                            }
-                            $entry->addPhase($phaseEntry);
-                        }
-                        $projects->add($entry);
-                    }
-                    $worker->addAdditionalInfo('projectHistory', $projects);
-                }
-
                 $workers->add($worker);
             }
 
-            return $workers;
+            return $isBatch ? $workers : $workers->first();
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
@@ -839,18 +586,18 @@ class ProjectWorkerModel extends Model
      * - GROUP BY u.id ensures one row per worker
      */
     public function findByProjectId(
-        int|UUID $projectId, 
+        int|UUID $projectId,
         array $options = [
             'limit' => 10,
             'offset' => 0
-        ]): ?WorkerContainer
-    {
-        if (\is_int($projectId) && $projectId < 1) 
+        ]
+    ): ?WorkerContainer {
+        if (\is_int($projectId) && $projectId < 1)
             throw new InvalidArgumentException('Invalid project ID provided');
 
         try {
-            $whereClause = (\is_int($projectId) 
-                ? "p.id" 
+            $whereClause = (\is_int($projectId)
+                ? "p.id"
                 : "p.public_id ") . " = :id 
                 AND pw.status != :unassignedStatus 
                 AND pw.status != :terminatedStatus";
@@ -869,119 +616,6 @@ class ProjectWorkerModel extends Model
             return self::find($whereClause, $params, $paramOptions);
         } catch (Exception $e) {
             throw $e;
-        }
-    }
-
-    /**
-     * Retrieves a paginated list of all workers.
-     *
-     * This method fetches a collection of workers from the data source, supporting pagination
-     * through the use of offset and limit parameters. The results are ordered by creation date
-     * in descending order.
-     *
-     * @param int $offset The number of records to skip before starting to collect the result set. Must be zero or positive.
-     * @param int $limit The maximum number of records to return. Must be at least 1.
-     *
-     * @throws InvalidArgumentException If the offset is negative or the limit is less than 1.
-     * @throws Exception If an error occurs during data retrieval.
-     *
-     * @return WorkerContainer|null A container with the retrieved workers, or null if no workers are found.
-     */
-    public function all(int $offset = 0, int $limit = 10): ?WorkerContainer
-    {
-        if ($offset < 0) throw new InvalidArgumentException('Invalid offset value');
-        if ($limit < 1) throw new InvalidArgumentException('Invalid limit value');
-
-        try {
-            $paramOptions = [
-                'offset'    => $offset,
-                'limit'     => $limit,
-                'orderBy'   => 'u.last_name ASC',
-            ];  
-
-            return self::find('', [], $paramOptions);
-        } catch (Exception $e) {
-            throw $e;
-        }
-    }
-
-    /**
-     * Creates a new ProjectWorker instance from the provided data.
-     *
-     * This method is intended to instantiate a ProjectWorker model using the given data.
-     * Currently, this method is not implemented as there is no use case for creating
-     * ProjectWorker instances directly from data arrays.
-     *
-     * @param mixed $data Data required to create a ProjectWorker instance. The expected
-     *      structure and type of this data is not defined as the method is not implemented.
-     *
-     * @return mixed Returns null as the method is not implemented.
-     */
-	public function create(mixed $data): mixed
-	{
-        // Not implemented (No use case)
-		return null;
-	}
-
-    /**
-     * Creates multiple project-worker assignments for a given project.
-     *
-     * This method inserts multiple worker assignments into the `project_worker` table for the specified project.
-     * It uses a transaction to ensure all assignments are created atomically. Each worker is referenced by their
-     * public UUID, which is converted to binary if necessary. The project is also referenced by its public UUID.
-     * The status for each assignment is set to WorkerStatus::ASSIGNED.
-     *
-     * @param int|UUID $projectId The public UUID or integer ID of the project to assign workers to.
-     * @param WorkerContainer $workers Container of worker public UUIDs or binary IDs to be assigned to the project.
-     *
-     * @throws InvalidArgumentException If the data array is empty.
-     * @throws DatabaseException If a database error occurs during the transaction.
-     * 
-     * @return void
-     */
-    public function createMultiple(int|UUID $projectId, WorkerContainer $workers): bool
-    {
-        if (\is_int($projectId) && $projectId < 1) throw new InvalidArgumentException('Invalid project ID provided');
-
-        $projectId = ($projectId instanceof UUID)
-            ? UUID::toBinary($projectId)
-            : $projectId;
-
-        try {
-            $insertQuery = 
-                "INSERT INTO `project_worker` (
-                    project_id, 
-                    worker_id, 
-                    status,
-                    default_rate
-                ) VALUES (
-                    (
-                        SELECT id 
-                        FROM `project` 
-                        WHERE " . (is_int($projectId) ? 'id' : 'public_id') . " = :projectId
-                    ),
-                    (
-                        SELECT id 
-                        FROM `user` 
-                        WHERE public_id = :workerId
-                    ),
-                    :status,
-                    :defaultRate
-                ) ON DUPLICATE KEY UPDATE 
-                    status = VALUES(status)";
-            $statement = $this->connection->prepare($insertQuery);
-            foreach ($workers as $worker) {    
-                $statement->execute([
-                    ':projectId'    => $projectId,
-                    ':workerId'     => UUID::toBinary($worker->getPublicId()),
-                    ':status'       => WorkerStatus::ASSIGNED->value,
-                    ':defaultRate'  => $worker->getDefaultRate()
-                ]);
-            }
-
-            return true;
-        } catch (PDOException $e) {
-            throw new DatabaseException($e->getMessage());
         }
     }
 
@@ -1007,7 +641,7 @@ class ProjectWorkerModel extends Model
         if (\is_int($userId) && $userId < 1) throw new InvalidArgumentException('Invalid user ID provided');
 
         try {
-                $query = 
+            $query =
                 "SELECT *
                 FROM 
                     `project_worker` AS pw
@@ -1048,6 +682,103 @@ class ProjectWorkerModel extends Model
     }
 
     /**
+     * Retrieves a paginated list of all workers.
+     *
+     * This method fetches a collection of workers from the data source, supporting pagination
+     * through the use of offset and limit parameters. The results are ordered by creation date
+     * in descending order.
+     *
+     * @param int $offset The number of records to skip before starting to collect the result set. Must be zero or positive.
+     * @param int $limit The maximum number of records to return. Must be at least 1.
+     *
+     * @throws InvalidArgumentException If the offset is negative or the limit is less than 1.
+     * @throws Exception If an error occurs during data retrieval.
+     *
+     * @return WorkerContainer|null A container with the retrieved workers, or null if no workers are found.
+     */
+    public function all(int $offset = 0, int $limit = 10): ?WorkerContainer
+    {
+        if ($offset < 0) throw new InvalidArgumentException('Invalid offset value');
+        if ($limit < 1) throw new InvalidArgumentException('Invalid limit value');
+
+        try {
+            $paramOptions = [
+                'offset'    => $offset,
+                'limit'     => $limit,
+                'orderBy'   => 'u.last_name ASC',
+            ];
+
+            return self::find('', [], $paramOptions);
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+
+    /**
+     * Creates one or more project-worker assignments.
+     *
+     * Mirrors the PhaseModel::create() style:
+     * - Validates projectId
+     * - Normalizes a single Worker into WorkerContainer
+     * - Prepares the INSERT once and executes it for each worker
+     *
+     * Note: This method uses the worker public UUID to resolve the internal user ID.
+     * Status is set to WorkerStatus::ASSIGNED for backward compatibility with createMultiple().
+     */
+    public function create(int|UUID $projectId, Worker|WorkerContainer $worker): Worker|WorkerContainer
+    {
+        if (\is_int($projectId) && $projectId < 1)
+            throw new InvalidArgumentException('Invalid project ID provided');
+
+        // Allow passing a single Worker without wrapping
+        $isBatch = $worker instanceof WorkerContainer;
+        $workers = $isBatch ? $worker : new WorkerContainer([$worker]);
+        if ($workers->count() === 0) throw new InvalidArgumentException('WorkerContainer cannot be empty');
+
+        try {
+            $insertQuery =
+                "INSERT INTO `project_worker` (
+                    project_id,
+                    worker_id,
+                    status,
+                    default_rate
+                ) VALUES (
+                    (
+                        SELECT id
+                        FROM `project`
+                        WHERE " . (\is_int($projectId) ? 'id' : 'public_id') . " = :projectId
+                    ),
+                    (
+                        SELECT id
+                        FROM `user`
+                        WHERE public_id = :workerId
+                    ),
+                    :status,
+                    :defaultRate
+                ) ON DUPLICATE KEY UPDATE
+                    status = VALUES(status)";
+
+            $statement = $this->connection->prepare($insertQuery);
+            foreach ($workers as &$worker) {
+                $publicId = $worker->getPublicId();
+
+                $statement->execute([
+                    ':projectId'    => ($projectId instanceof UUID)
+                        ? UUID::toBinary($projectId)
+                        : $projectId,
+                    ':workerId'     => UUID::toBinary($publicId),
+                    ':status'       => WorkerStatus::ASSIGNED->value,
+                    ':defaultRate'  => $worker->getDefaultRate(),
+                ]);
+            }
+
+            return $isBatch ? $workers : $workers->first();
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
+        }
+    }
+
+    /**
      * Persists a project-worker association.
      *
      * Validates and normalizes the provided $data array, then inserts or updates
@@ -1060,65 +791,40 @@ class ProjectWorkerModel extends Model
      *
      * @return bool Returns false as the method is not implemented.
      */
-    public function save(array $data): bool 
+    public function save(int|UUID $projectId, array $worker): bool
     {
-        return false;
-    }
+        if (\is_int($projectId) && $projectId < 1)
+            throw new InvalidArgumentException('Invalid project ID provided');
+        if (empty($worker)) throw new InvalidArgumentException('Worker array cannot be empty');
 
-    /**
-     * Updates multiple project-worker records in the database.
-     *
-     * Iterates over the provided $workers array and updates each corresponding
-     * row in the `project_worker` table. Each worker entry must provide either
-     * an integer 'id' or a 'publicId' (UUID string). The method accepts a project
-     * identifier as either an integer primary key or a UUID; when a UUID is used
-     * the method resolves it to the internal id via a subquery and binds the
-     * binary UUID value to the prepared statement. Only supplied fields are
-     * updated — currently 'defaultRate' and 'status' are supported. If a worker
-     * item contains no updatable fields it is skipped.
-     *
-     * Validation performed:
-     *  - integer $projectId must be >= 1
-     *  - each worker must include 'id' or 'publicId'
-     *  - integer worker id must be >= 1
-     *
-     * The 'status' field may be provided as a WorkerStatus enum instance or as a
-     * scalar value; when an enum is provided its ->value is used.
-     *
-     * Database errors from PDO are wrapped and rethrown as DatabaseException.
-     *
-     * @param int|UUID $projectId Project identifier (integer ID or UUID)
-     * @param array $workers Array of associative arrays describing workers to update. Each item may contain:
-     *      - id: int Optional internal worker ID
-     *      - publicId: string|UUID Optional public UUID identifying the worker
-     *      - defaultRate: float|int Optional default rate to set
-     *      - status: WorkerStatus|int|string Optional status value or enum
-     *
-     * @return bool True if processing completed without database errors
-     *
-     * @throws InvalidArgumentException If $projectId or a worker id is invalid or a worker lacks an identifier
-     * @throws DatabaseException If a PDOException occurs while executing an update
-     */
-	public function saveMultiple(int|UUID $projectId, array $workers): bool
-	{
-        if (\is_int($projectId) && $projectId < 1) throw new InvalidArgumentException('Invalid project ID provided');
-        
+        // Allow passing a single worker update item without wrapping
+        $isBatch = array_keys($worker) !== range(0, count($worker) - 1);
+        if (!$isBatch) $workers = [$worker];
+
         try {
-            foreach ($workers as $data) {
-                if (!isset($data['id']) && !isset($data['publicId'])) 
+            foreach ($workers as $item) {
+                if (!\is_array($item))
+                    throw new InvalidArgumentException('Each worker update item must be an array');
+
+                if (!isset($item['id']) && !isset($item['publicId']) && !isset($item['workerId']))
                     throw new InvalidArgumentException('Worker ID is required');
 
-                $id = $data['id'] 
-                    ? (int) $data['id']
-                    : UUID::fromString($data['publicId']);
-                if (\is_int($id) && $id < 1) {
-                    throw new InvalidArgumentException('Invalid worker ID provided');                    
-                }
+                // Determine worker ID (int or UUID)
+                $rawId = $item['id'] ?? $item['workerId'] ?? null;
+                $rawPublicId = $item['publicId'] ?? null;
+                $id = ($rawId !== null)
+                    ? (int) $rawId
+                    : ($rawPublicId instanceof UUID
+                        ? $rawPublicId
+                        : UUID::fromString($rawPublicId));
+                if (\is_int($id) && $id < 1)
+                    throw new InvalidArgumentException('Invalid worker ID provided');
 
                 $updateFields = [];
                 $params = [];
                 $whereParts = [];
 
+                // Build WHERE clause for project_id and worker_id
                 $whereParts[] = (\is_int($projectId))
                     ? 'project_id = :projectId'
                     : 'project_id = (SELECT id FROM `project` WHERE public_id = :projectId)';
@@ -1132,32 +838,38 @@ class ProjectWorkerModel extends Model
                 $params[':id'] = (\is_int($id))
                     ? $id
                     : UUID::toBinary($id);
-                
-                if (isset($data['defaultRate'])) {
+
+                if (isset($item['defaultRate']) || isset($item['default_rate'])) {
                     $updateFields[] = 'default_rate = :defaultRate';
-                    $params[':defaultRate'] = $data['defaultRate'];
+                    $params[':defaultRate'] = $item['defaultRate'] ?? $item['default_rate'];
                 }
 
-                if (isset($data['status'])) {
+                if (isset($item['status'])) {
                     $updateFields[] = 'status = :status';
-                    $params[':status'] = ($data['status'] instanceof WorkerStatus)
-                        ? $data['status']->value
-                        : $data['status'];
+                    $params[':status'] = ($item['status'] instanceof WorkerStatus)
+                        ? $item['status']->value
+                        : $item['status'];
                 }
 
-                // Nothing to update
                 if (empty($updateFields)) continue;
 
                 $where = implode(' AND ', $whereParts);
-                $query = 'UPDATE `project_worker` SET ' . implode(', ', $updateFields) . ' WHERE ' . $where;
+                $query = 
+                    'UPDATE 
+                        `project_worker` 
+                    SET 
+                        ' . implode(', ', $updateFields) . ' 
+                    WHERE 
+                        ' . $where;
                 $statement = $this->connection->prepare($query);
                 $statement->execute($params);
             }
+
             return true;
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
-	}
+    }
 
     /**
      * Deletes a worker associated from a given project.
@@ -1189,14 +901,14 @@ class ProjectWorkerModel extends Model
     public function delete(mixed $data): bool
     {
         if (!isset($data['projectId'])) throw new InvalidArgumentException('Project ID is required');
-        if (\is_int($data['projectId']) && $data['projectId'] < 1) 
+        if (\is_int($data['projectId']) && $data['projectId'] < 1)
             throw new InvalidArgumentException('Invalid project ID provided');
         if (!isset($data['workerId'])) throw new InvalidArgumentException('Worker ID is required');
-        if (\is_int($data['workerId']) && $data['workerId'] < 1) 
+        if (\is_int($data['workerId']) && $data['workerId'] < 1)
             throw new InvalidArgumentException('Invalid worker ID provided');
 
         try {
-            $query = 
+            $query =
                 "DELETE FROM
                     `project_worker`
                 WHERE 
@@ -1216,7 +928,7 @@ class ProjectWorkerModel extends Model
                         WHERE
                             public_id = :workerId)') . "";
 
-                $statement = $this->connection->prepare($query);
+            $statement = $this->connection->prepare($query);
             $statement->execute([
                 ':projectId'    => ($data['projectId'] instanceof UUID)
                     ? UUID::toBinary($data['projectId'])

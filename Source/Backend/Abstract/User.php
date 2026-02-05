@@ -8,6 +8,7 @@ use App\Enumeration\Gender;
 use App\Enumeration\Role;
 use App\Container\JobTitleContainer;
 use App\Exception\ValidationException;
+use App\Utility\TemporaryId;
 use App\Validator\UserValidator;
 use App\Validator\UuidValidator;
 use App\Validator\UrlValidator;
@@ -727,7 +728,7 @@ abstract class User implements Entity
 
         // Provide default values for required fields
         $defaults = [
-            'id'                        => $data['id'] ?? mt_rand(),
+            'id'                        => $data['id'] ?? TemporaryId::generate(),
             'publicId'                  => $data['publicId'] ?? UUID::get(),
             'firstName'                 => $data['firstName'] ?? 'Unknown',
             'middleName'                => $data['middleName'] ?? null,
