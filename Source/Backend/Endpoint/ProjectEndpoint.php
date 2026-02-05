@@ -302,7 +302,10 @@ class ProjectEndpoint extends Endpoint
                 new DateTime($project['completionDateTime']));
             $newProject = Project::createPartial($project);
 
-            $newProject = $instance->projectService->create($newProject);
+            $newProject = $instance->projectService->create($newProject, [
+                'phases'    => true,
+                'workers'   => true
+            ]);
 
             Response::success(
                 ['projectId' => UUID::toString($newProject->getPublicId())], 

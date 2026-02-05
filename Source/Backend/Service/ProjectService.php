@@ -48,10 +48,18 @@ class ProjectService
      * @return Project The persisted Project instance (including assigned ID)
      * @throws \Throwable Re-throws any exception or error encountered during creation
      */
-    public function create(Project|ProjectContainer $project): Project
-    {
+    public function create(
+        Project|ProjectContainer $project,
+        array $options = [
+            'phases'    => false,
+            'workers'   => false
+        ]
+    ): Project {
         $isBatch = $project instanceof ProjectContainer;
         $projects = $isBatch ? $project : new ProjectContainer([$project]);
+
+        $executePhases = $options['phases'] ?? false;
+        $executeWorkers = $options['workers'] ?? false;
 
         try {
             $this->connection->beginTransaction();
@@ -60,13 +68,17 @@ class ProjectService
                 $createProject = $this->projectModel->create($item);
                 $projectId = $createProject->getId();
 
-                $phases = $item->getPhases();
-                if ($phases && $phases->count() > 0)
-                    $this->phaseModel->create($projectId, $item->getPhases());
+                if ($executePhases) {
+                    $phases = $item->getPhases();
+                    if ($phases && $phases->count() > 0)
+                        $this->phaseModel->create($projectId, $item->getPhases());
+                }
 
-                $workers = $item->getWorkers();
-                if ($workers && $workers->count() > 0)
-                    $this->projectWorkerModel->create($projectId, $item->getWorkers());
+                if ($executeWorkers) {
+                    $workers = $item->getWorkers();
+                    if ($workers && $workers->count() > 0)
+                        $this->projectWorkerModel->create($projectId, $item->getWorkers());
+                }
             }
 
             $this->connection->commit();
