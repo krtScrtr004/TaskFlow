@@ -66,7 +66,7 @@ async function submit(e) {
         })
 
         Dialog.operationSuccess('Task Added', 'New task has been added')
-        setTimeout(() => window.location.href = `project/${projectId}/phase/${phaseId}/task/${data.id}`, 1500) 
+        setTimeout(() => window.location.href = `/project/${projectId}/phase/${phaseId}/task/${data.id}`, 1500) 
     } catch (error) {
         handleException(error)
     } finally {

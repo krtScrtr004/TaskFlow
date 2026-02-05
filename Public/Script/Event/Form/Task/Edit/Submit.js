@@ -4,7 +4,12 @@ import { debounceAsync } from '../../../../Utility/Debounce.js'
 import { handleException } from '../../../../Utility/HandleException.js'
 import { Http } from '../../../../Utility/Http.js'
 import { die } from '../../../../Utility/Utility.js'
-import { addedWorkerInfo, changedTaskInfo, changedWorkerInfo, removedWorkerInfo } from '../RecordChanges.js'
+import { 
+    addedWorkerInfo, 
+    changedTaskInfo, 
+    changedWorkerInfo, 
+    removedWorkerInfo 
+} from '../RecordChanges.js'
 
 let isLoading = false
 
@@ -67,7 +72,7 @@ async function submit(e) {
         })
 
         Dialog.operationSuccess('Task Edited', 'Task has been successfully updated')
-        setTimeout(() => window.location.href = `project/${projectId}/phase/${phaseId}/task/${taskId}`, 1500) 
+        setTimeout(() => window.location.href = `/project/${projectId}/phase/${phaseId}/task/${taskId}`, 1500) 
     } catch (error) {
         handleException(error)
     } finally {

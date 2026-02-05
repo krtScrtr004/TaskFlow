@@ -68,9 +68,11 @@ class TaskService
     public function create(
         Task|TaskContainer $task,
         array $execute = [
-            'task'      => true,
-            'worker'    => true,
-            'resource'  => true
+            'phaseId'   => null,
+
+            'task'      => false,
+            'worker'    => false,
+            'resource'  => false
         ]
     ): Task|TaskContainer {
         $isBatch = $task instanceof TaskContainer;
@@ -86,8 +88,13 @@ class TaskService
             $createdTasks = new TaskContainer();
             foreach ($tasks as $item) {
                 // Save new task entry
-                if ($executeTask)
-                    $createdTask = $this->taskModel->create($item);
+                if ($executeTask) {
+                    if (!isset($execute['phaseId']))
+                        throw new InvalidArgumentException('Phase ID is required');
+                    if (!\is_int($execute['phaseId']) && !($execute['phaseId'] instanceof UUID))
+                        throw new InvalidArgumentException('Phase ID must be an integer or UUID');
+                    $createdTask = $this->taskModel->create($execute['phaseId'], $item);
+                }
                 $taskId = $createdTask?->getID() ?? $item->getID();
 
                 // Save task workers

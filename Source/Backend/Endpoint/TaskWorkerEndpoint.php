@@ -336,7 +336,10 @@ class TaskWorkerEndpoint extends Endpoint
                 );
 
             $taskService = new TaskService();
-            $taskService->create($task, ['worker' => true]);
+            $taskService->create($task, [
+                'phaseId'   => $phase->getId() ?? $phaseId,
+                'worker'    => true
+            ]);
 
             Response::success([], 'Workers added successfully');
         } catch (Throwable $e) {

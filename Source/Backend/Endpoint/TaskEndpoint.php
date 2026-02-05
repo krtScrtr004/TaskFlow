@@ -32,7 +32,6 @@ use App\Validator\WorkValidator;
 use DateTime;
 use Exception;
 use Throwable;
-use ValueError;
 
 class TaskEndpoint extends Endpoint
 {
@@ -96,7 +95,7 @@ class TaskEndpoint extends Endpoint
             $phaseId = isset($args['phaseId'])
                 ? UUID::fromString($args['phaseId'])
                 : null;
-            if (isset($phaseId) && !$phaseId) throw new ForbiddenException('Phase ID is require');
+            if (isset($phaseId) && !$phaseId) throw new ForbiddenException('Phase ID is required');
 
             $phase = $instance->phaseModel->findById($phaseId);
             if (!$phase) throw new NotFoundException('Phase not found');
@@ -351,7 +350,13 @@ class TaskEndpoint extends Endpoint
                     $validator->getErrors()
                 );
 
-            $newTask = $instance->taskService->create($task);
+            $newTask = $instance->taskService->create($task, [
+                'phaseId' => $phase->getId() ?? $phaseId,
+
+                'task'      => true,
+                'worker'    => true,
+                'resource'  => true
+            ]);
             Response::success(
                 ['id' => UUID::toString($newTask->getPublicId())],
                 'Workers added successfully'
@@ -518,7 +523,7 @@ class TaskEndpoint extends Endpoint
                 $taskData['resources'][] = $resource;
             }
 
-            if ($taskData && count($taskData) > 1) {
+            if ($taskData && \count($taskData) > 1) {
                 // Validate date bounds if dates are being updated
                 $validator->validateDateBounds(
                     $taskData['startDateTime'] ?? $task->getStartDateTime(),

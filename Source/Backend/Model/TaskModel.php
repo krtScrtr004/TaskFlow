@@ -722,31 +722,15 @@ class TaskModel extends Model
         }
     }
 
-    /**
-     * Creates a new task / tasks in the database.
-     *
-     * This method supports both single and batch creation. For each Task, it inserts
-     * a record into `task` and creates its associated record in `task_budget`.
-     *
-     * Requirements per Task:
-     * - `additionalInfo['phaseId']` must be provided as an int ID or UUID.
-     *
-     * @param Task|TaskContainer $tasks A Task instance or a TaskContainer of Task instances.
-     *
-     * @throws InvalidArgumentException If invalid data is provided.
-     * @throws DatabaseException If a database error occurs during the creation process.
-     *
-     * @return Task|TaskContainer The created Task or TaskContainer with updated identifiers.
-     */
-    public function create(Task|TaskContainer $task): Task|TaskContainer
+    public function create(int|UUID $phaseId, Task|TaskContainer $task): Task|TaskContainer
     {
+        if (\is_int($phaseId) && $phaseId < 1)
+            throw new InvalidArgumentException('Invalid phase ID provided');
+
         $isBatch = $task instanceof TaskContainer;
         $tasks = $isBatch ? $task : new TaskContainer([$task]);
         if ($tasks->count() === 0) throw new InvalidArgumentException('TaskContainer cannot be empty');
 
-        $firstIntId = TemporaryId::isTemporary($tasks->first()->getId())
-            ? $tasks->first()->getPublicId()
-            : $tasks->first()->getId();
         try {
             $query =
                 "INSERT INTO `task` (
@@ -760,9 +744,9 @@ class TaskModel extends Model
                     completion_date_time
                 ) VALUES (
                     :publicId,
-                    " . ($firstIntId
-                    ? ":phaseId"
-                    : "(SELECT id FROM `phase` WHERE public_id = :phaseId)") . ",
+                    " . (\is_int($phaseId)
+                        ? ":phaseId"
+                        : "(SELECT id FROM `phase` WHERE public_id = :phaseId)") . ",
                     :name,
                     :description,
                     :priority,
@@ -782,8 +766,8 @@ class TaskModel extends Model
 
                 $taskPublicId = $task->getPublicId() ?? UUID::get();
                 $statement->execute([
-                    ':publicId'             => UUID::toString($taskPublicId),
-                    ':phaseId'              => $firstIntId
+                    ':publicId'             => UUID::toBinary($taskPublicId),
+                    ':phaseId'              => \is_int($phaseId)
                         ? $phaseId
                         : UUID::toBinary($phaseId),
                     ':name'                 => trimOrNull($task->getName()),
