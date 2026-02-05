@@ -11,6 +11,7 @@ use App\Core\UUID;
 use App\Entity\TaskResource;
 use App\Entity\TaskWorker;
 use App\Exception\ValidationException;
+use App\Utility\TemporaryId;
 use App\Validator\ResourceValidator;
 use App\Validator\UuidValidator;
 use App\Validator\WorkValidator;
@@ -607,7 +608,7 @@ class Task implements Entity
         $data = normalizeArrayKeysToCamelCase($data);
 
         $defaults = [
-            'id'                        => $data['id'] ?? mt_rand(),
+            'id'                        => $data['id'] ?? TemporaryId::generate(),
             'publicId'                  => $data['publicId'] ?? UUID::get(),
             'name'                      => $data['name'] ?? 'Untitled Task',
             'description'               => $data['description'] ?? null,

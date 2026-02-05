@@ -12,6 +12,7 @@ use App\Container\PhaseContainer;
 use App\Core\UUID;
 use App\Entity\ProjectManager;
 use App\Exception\ValidationException;
+use App\Utility\TemporaryId;
 use App\Validator\UuidValidator;
 use App\Validator\WorkValidator;
 use DateTime;
@@ -673,12 +674,12 @@ class Project implements Entity
 
         // Provide default values for required fields
         $defaults = [
-            'id'                            => $data['id'] ?? mt_rand(),
+            'id'                            => $data['id'] ?? TemporaryId::generate(),
             'publicId'                      => $data['publicId'] ?? UUID::get(),
             'name'                          => $data['name'] ?? 'Untitled Project',
             'description'                   => $data['description'] ?? 'No description provided',
             'manager'                       => $data['manager'] ?? ProjectManager::createPartial([]),
-            'maxWorkers'                    => $data['maxWorkers'] ?? WORKER_COUNT_MIN,
+            'maxWorkers'                    => $data['maxWorker'] ?? WORKER_COUNT_MIN,
             'budget'                        => $data['budget'] ?? BUDGET_MIN,
             'tasks'                         => $data['tasks'] ?? null,
             'workers'                       => $data['workers'] ?? null,

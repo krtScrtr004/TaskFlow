@@ -6,6 +6,7 @@ use App\Core\UUID;
 use App\Entity\ResourceType;
 use App\Exception\ValidationException;
 use App\Interface\Entity;
+use App\Utility\TemporaryId;
 use App\Validator\ResourceValidator;
 use DateTime;
 
@@ -366,7 +367,7 @@ class TaskResource implements Entity
         $data = normalizeArrayKeysToCamelCase($data);
         
         $defaults = [
-            'id'            => $data['id'] ?? mt_rand(),
+            'id'            => $data['id'] ?? TemporaryId::generate(),
             'publicId'      => $data['publicId'] ?? UUID::get(),
             'type'          => $data['type'] ?? ResourceType::createPartial([]),
             'quantity'      => $data['quantity'] ?? 0,

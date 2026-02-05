@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Exception\ValidationException;
 use App\Interface\Entity;
+use App\Utility\TemporaryId;
 use App\Validator\ResourceValidator;
 use DateTime;
 
@@ -235,7 +236,7 @@ class ResourceType implements Entity {
         $data = normalizeArrayKeysToCamelCase($data);
 
         $defaults = [
-            'id'            => $data['id'] ?? mt_rand(),
+            'id'            => $data['id'] ?? TemporaryId::generate(),
             'name'          => $data['name'] ?? 'Unknown Resource Type',
             'description'   => $data['description'] ?? '',
             'category'      => $data['category'] ?? 'General',

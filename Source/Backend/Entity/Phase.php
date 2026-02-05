@@ -8,6 +8,7 @@ use App\Container\TaskContainer;
 use App\Core\UUID;
 use App\Entity\Task;
 use App\Exception\ValidationException;
+use App\Utility\TemporaryId;
 use App\Validator\WorkValidator;
 use DateTime;
 
@@ -469,7 +470,7 @@ class Phase implements Entity
 
         // Provide default values for required fields
         $defaults = [
-            'id'                        => $data['id'] ?? mt_rand(),
+            'id'                        => $data['id'] ?? TemporaryId::generate(),
             'publicId'                  => $data['publicId'] ?? UUID::get(),
             'name'                      => $data['name'] ?? 'Untitled Phase',
             'description'               => $data['description'] ?? null,
