@@ -274,9 +274,13 @@ require_once COMPONENT_PATH . 'Template' . DS . 'AddWorkerTable.php';
                         <?php if ($taskData['recentTasks']->count() > 0): ?>
                             <!-- Recent Tasks Cards -->
                             <section>
-                                <?php foreach ($taskData['recentTasks'] as $task): ?>
+                                <?php foreach ($taskData['recentTasks'] as $task):
+                                    $publicId = htmlspecialchars(UUID::toString($task->getPublicId()));
+                                    $phaseId = htmlspecialchars(UUID::toString($task->getAdditionalInfo('phaseId')));
+                                    $redirectUrl = REDIRECT_PATH . 'project' . DS . $projectData['id'] . DS . 'phase' . DS . $phaseId . DS . 'task' . DS . $publicId;
+                                ?>
                                     <a class="recent-task-card black-bg flex-row flex-child-center-h"
-                                        href="<?= REDIRECT_PATH . 'project' . DS . $projectData['id'] . DS . 'task' . DS . UUID::toString($task->getPublicId()) ?>">
+                                        href="<?= $redirectUrl ?>">
                                         <section class="flex-col">
                                             <div class="flex-row">
                                                 <h3 class="name single-line-ellipsis">
