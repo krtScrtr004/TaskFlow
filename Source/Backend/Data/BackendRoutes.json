@@ -103,22 +103,22 @@
 		"/endpoint/projects": ["ProjectEndpoint", "create"],
 		"/endpoint/projects/{projectId:[\\w+_-]+}/workers": [
 			"ProjectWorkerEndpoint",
-			"add"
+			"create"
 		],
 
 		"/endpoint/projects/{projectId:[\\w+_-]+}/phases": [
 			"PhaseEndpoint",
-			"add"
+			"create"
 		],
 
 		"/endpoint/projects/{projectId:[\\w+_-]+}/phases/{phaseId:[\\w+_-]+}/tasks": [
 			"TaskEndpoint",
-			"add"
+			"create"
 		],
 		
 		"/endpoint/projects/{projectId:[\\w+_-]+}/phases/{phaseId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}/workers": [
 			"TaskWorkerEndpoint",
-			"add"
+			"create"
 		],
 
 		"/endpoint/about-us/concern": [
@@ -130,39 +130,39 @@
 	"PUT": {
 		"/endpoint/projects/{projectId:[\\w+_-]+}": [
 			"ProjectEndpoint",
-			"edit"
+			"save"
 		],
 		"/endpoint/projects/{projectId:[\\w+_-]+}/phases/{phaseId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}": [
 			"TaskEndpoint",
-			"edit"
+			"save"
 		],
 		"/endpoint/projects/{projectId:[\\w+_-]+}/workers/{workerId:[\\w+_-]+}": [
 			"ProjectWorkerEndpoint",
-			"edit"
+			"save"
 		],
 		"/endpoint/projects/{projectId:[\\w+_-]+}/phases/{phaseId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}/workers/{workerId:[\\w+_-]+}": [
 			"TaskWorkerEndpoint",
-			"edit"
+			"save"
 		]
 	},
 
 	"PATCH": {
 		"/endpoint/projects/{projectId:[\\w+_-]+}": [
 			"ProjectEndpoint",
-			"edit"
+			"save"
 		],
-		"/endpoint/users/{userId:[\\w+_-]+}": ["UserEndpoint", "edit"],
+		"/endpoint/users/{userId:[\\w+_-]+}": ["UserEndpoint", "save"],
 		"/endpoint/projects/{projectId:[\\w+_-]+}/phases/{phaseId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}": [
 			"TaskEndpoint",
-			"edit"
+			"save"
 		],
 		"/endpoint/projects/{projectId:[\\w+_-]+}/workers/{workerId:[\\w+_-]+}": [
 			"ProjectWorkerEndpoint",
-			"edit"
+			"save"
 		],
 		"/endpoint/projects/{projectId:[\\w+_-]+}/phases/{phaseId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}/workers/{workerId:[\\w+_-]+}": [
 			"TaskWorkerEndpoint",
-			"edit"
+			"save"
 		]
 	},
 
