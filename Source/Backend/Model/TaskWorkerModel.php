@@ -812,8 +812,8 @@ class TaskWorkerModel extends Model
         if (empty($taskWorkers))
             throw new InvalidArgumentException('Task worker array cannot be empty');
 
-        $isBatch = array_keys($taskWorkers) === range(0, count($taskWorkers) - 1);
-        if ($isBatch) $taskWorkers = [$taskWorkers];
+        $isBatch = isAssociativeArray($taskWorkers) ? false : true;
+        if (!$isBatch) $taskWorkers = [$taskWorkers];
 
         try {
             foreach ($taskWorkers as $item) {

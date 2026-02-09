@@ -484,7 +484,7 @@ class TaskEndpoint extends Endpoint
             // Validate and prepare Task Workers
             $userValidator = new UserValidator();
             $workerCategories = $data['workers'] ?? [];
-            if (!is_array($workerCategories)) throw new ValidationException('Invalid workers data format provided');
+            if (!\is_array($workerCategories)) throw new ValidationException('Invalid workers data format provided');
 
             foreach ($workerCategories as $category => &$workers) {
                 foreach ($workers as &$worker) {
@@ -538,7 +538,7 @@ class TaskEndpoint extends Endpoint
                     $userValidator->getErrors() ?? [],
                     $resourceValidator->getErrors() ?? []
                 );
-                if ($mergedErrors && count($mergedErrors) > 0) {
+                if ($mergedErrors && \count($mergedErrors) > 0) {
                     throw new ValidationException('Task Validation Failed', $mergedErrors);
                 }
 

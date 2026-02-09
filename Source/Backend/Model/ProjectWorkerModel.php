@@ -791,15 +791,15 @@ class ProjectWorkerModel extends Model
      *
      * @return bool Returns false as the method is not implemented.
      */
-    public function save(int|UUID $projectId, array $worker): bool
+    public function save(int|UUID $projectId, array $workers): bool
     {
         if (\is_int($projectId) && $projectId < 1)
             throw new InvalidArgumentException('Invalid project ID provided');
-        if (empty($worker)) throw new InvalidArgumentException('Worker array cannot be empty');
+        if (empty($workers)) throw new InvalidArgumentException('Worker array cannot be empty');
 
         // Allow passing a single worker update item without wrapping
-        $isBatch = array_keys($worker) !== range(0, count($worker) - 1);
-        if (!$isBatch) $workers = [$worker];
+        $isBatch = isAssociativeArray($workers) ? false : true;
+        if (!$isBatch) $workers = [$workers];
 
         try {
             foreach ($workers as $item) {

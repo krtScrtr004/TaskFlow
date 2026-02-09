@@ -853,7 +853,7 @@ class TaskModel extends Model
     {
         if (empty($tasks)) throw new InvalidArgumentException('Tasks array cannot be empty');
 
-        $isBatch = array_keys($tasks) === range(0, \count($tasks) - 1);
+        $isBatch = isAssociativeArray($tasks) ? false : true;
         if (!$isBatch) $tasks = [$tasks];
 
         try {

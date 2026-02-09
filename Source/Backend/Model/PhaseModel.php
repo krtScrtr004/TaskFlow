@@ -442,7 +442,7 @@ class PhaseModel extends Model
         if (empty($phases)) throw new InvalidArgumentException('Phases array cannot be empty');
 
         // Allow passing a single phase update item without wrapping
-        $isBatch = array_keys($phases) === range(0, \count($phases) - 1);
+        $isBatch = isAssociativeArray($phases) ? false : true;
         if (!$isBatch) $phases = [$phases];
 
         try {

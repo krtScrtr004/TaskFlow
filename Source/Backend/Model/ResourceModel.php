@@ -345,7 +345,7 @@ class ResourceModel extends Model
         if (empty($resources))
             throw new InvalidArgumentException('Resource data cannot be empty');
 
-        $isBatch = array_keys($resources) === range(0, \count($resources) - 1);
+        $isBatch = isAssociativeArray($resources) ? false : true;
         if (!$isBatch) $resources = [ $resources ];
 
         try {

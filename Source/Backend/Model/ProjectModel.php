@@ -759,7 +759,7 @@ class ProjectModel extends Model
         if (empty($projects)) throw new InvalidArgumentException('Project data cannot be empty');
 
         // Allow passing a single project update item without wrapping
-        $isBatch = array_keys($projects) === range(0, \count($projects) - 1);
+        $isBatch = isAssociativeArray($projects) ? false : true;
         if (!$isBatch) $projects = [$projects];
 
         try {

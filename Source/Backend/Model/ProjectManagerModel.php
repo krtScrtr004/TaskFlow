@@ -152,7 +152,7 @@ class ProjectManagerModel extends Model
 
             if ($projectId) {
                 $whereClause[] = 'p.id = :projectId';
-                $params[':projectId'] = is_int($projectId)
+                $params[':projectId'] = \is_int($projectId)
                     ? $projectId
                     : UUID::toBinary($projectId);
             }
