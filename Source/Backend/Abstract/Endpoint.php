@@ -14,7 +14,7 @@ abstract class Endpoint
 
     abstract public static function create(array $args = []);
 
-    abstract public static function edit(array $args = []);
+    abstract public static function save(array $args = []);
 
     abstract public static function delete(array $args = []);
 

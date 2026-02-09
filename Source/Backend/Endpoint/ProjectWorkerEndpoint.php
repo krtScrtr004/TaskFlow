@@ -245,7 +245,7 @@ class ProjectWorkerEndpoint extends Endpoint
      *
      * @return void
      */
-    public static function add(array $args = []): void
+    public static function create(array $args = []): void
     {
         try {
             if (!HttpAuth::isGETRequest()) throw new ForbiddenException('Invalid HTTP request method');
@@ -316,7 +316,7 @@ class ProjectWorkerEndpoint extends Endpoint
      *
      * @return void
      */
-    public static function edit(array $args = []): void
+    public static function save(array $args = []): void
     {
         try {
             if (!HttpAuth::isPATCHRequest() && !HttpAuth::isPOSTRequest()) 
@@ -434,9 +434,4 @@ class ProjectWorkerEndpoint extends Endpoint
             ResponseExceptionHandler::handle('Remove Worker Failed', $e);
         }
     }
-
-    /**
-     * Not implemented (No use case)
-     */
-    public static function create(array $args = []): void {}
 }

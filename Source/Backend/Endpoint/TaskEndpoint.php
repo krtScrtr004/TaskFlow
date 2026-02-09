@@ -272,7 +272,7 @@ class TaskEndpoint extends Endpoint
      *
      * @return void
      */
-    public static function add(array $args = []): void
+    public static function create(array $args = []): void
     {
         try {
             if (!HttpAuth::isPOSTRequest()) throw new ForbiddenException('Invalid HTTP request method');
@@ -400,7 +400,7 @@ class TaskEndpoint extends Endpoint
      * caller).
      * @return void
      */
-    public static function edit(array $args = []): void
+    public static function save(array $args = []): void
     {
         try {
             if (!HttpAuth::isPATCHRequest() && !HttpAuth::isPUTRequest()) 
@@ -553,11 +553,6 @@ class TaskEndpoint extends Endpoint
             ResponseExceptionHandler::handle('Edit Task Failed', $e);
         }
     }
-
-    /**
-     * Not implemented (No use case)
-     */
-    public static function create(array $args = []): void {}
 
     /**
      * Not implemented (No use case)

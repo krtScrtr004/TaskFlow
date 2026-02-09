@@ -521,7 +521,7 @@ class AuthEndpoint extends Endpoint
     /**
      * Not implemented (No use case)
      */
-    public static function edit(array $args = []): void {}
+    public static function save(array $args = []): void {}
 
     /**
      * Not implemented (No use case)

@@ -274,7 +274,7 @@ class TaskWorkerEndpoint extends Endpoint
      *
      * @return void Sends a JSON success response on completion or delegates error handling to the response exception handler.
      */
-    public static function add(array $args = []): void
+    public static function create(array $args = []): void
     {
         try {
             if (!HttpAuth::isPOSTRequest()) throw new ForbiddenException('Invalid HTTP request method');
@@ -383,7 +383,7 @@ class TaskWorkerEndpoint extends Endpoint
      *
      * @return void
      */
-    public static function edit(array $args = []): void
+    public static function save(array $args = []): void
     {
         try {
             if (!HttpAuth::isPATCHRequest() && !HttpAuth::isPUTRequest()) 
@@ -568,9 +568,4 @@ class TaskWorkerEndpoint extends Endpoint
             ResponseExceptionHandler::handle('Remove Worker Failed', $e);
         }
     }
-
-    /**
-     * Not implemented (No use case)
-     */
-    public static function create(array $args = []): void {}
 }

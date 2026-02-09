@@ -191,7 +191,7 @@ class UserEndpoint extends Endpoint
      *
      * @return void
      */
-    public static function edit(array $args = []): void
+    public static function save(array $args = []): void
     {
         try {
             if (!HttpAuth::isPATCHRequest() && !HttpAuth::isPUTRequest())
@@ -282,7 +282,7 @@ class UserEndpoint extends Endpoint
                     $validator->getErrors()
                 );
 
-            if (count($profileData) > 0) {
+            if (\count($profileData) > 0) {
                 $myId = Me::getInstance()->getId();
 
                 $profileData['id'] = $myId;

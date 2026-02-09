@@ -339,7 +339,7 @@ class ProjectEndpoint extends Endpoint
      * @response success JSON with projectId on successful edit
      * @response error JSON with error message and details on failure
      */
-    public static function edit(array $args = []): void
+    public static function save(array $args = []): void
     {
         try {
 
