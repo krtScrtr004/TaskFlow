@@ -9,8 +9,8 @@ use App\Core\UUID;
 use App\Exception\ForbiddenException;
 use App\Exception\NotFoundException;
 use App\Middleware\Response;
-use App\Model\ProjectManagerModel;
 use App\Model\ProjectModel;
+use App\Service\ProjectManagerService;
 use App\Utility\ProjectManagerPerformanceCalculator;
 use App\Utility\ResponseExceptionHandler;
 use Throwable;
@@ -68,12 +68,20 @@ class ProjectManagerEndpoint extends Endpoint
             if (isset($args['managerId']) && !$managerId) 
                 throw new ForbiddenException('Manager ID is required');
 
-            $projectManagerModel = new ProjectManagerModel();
+            $projectManagerService = new ProjectManagerService();
+            $historyParameterOption = [
+                'projectId' => $project->getId() ?? $projectId, 
+                
+                'projectHistory' => true,
+                'projectHistoryOptions' => [
+                    'phases' => true,
+                    'tasks'  => true,
+                ],
+            ];
+
             $manager = $managerId
-                ? $projectManagerModel->findById($managerId, $project->getId() ?? $projectId, true)
-                : $projectManagerModel->findById($project->getManager()->getId(), $project->getId() ?? $projectId, true);
-            if (!$manager)
-                throw new NotFoundException('Manager not found');
+                ? $projectManagerService->get($managerId, $historyParameterOption)
+                : $projectManagerService->get($project->getManager()->getId(), $historyParameterOption);
 
             $projectHistory = $manager->getAdditionalInfo('projectHistory');
             if ($projectHistory !== null || $projectHistory !== [])

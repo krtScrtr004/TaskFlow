@@ -14,6 +14,7 @@ use App\Enumeration\WorkerStatus;
 use App\Enumeration\WorkStatus;
 use App\Exception\DatabaseException;
 use App\Middleware\Csrf;
+use App\Service\ProjectManagerService;
 use App\Service\ProjectWorkerService;
 use DateTime;
 use Exception;
@@ -262,8 +263,14 @@ class UserModel extends Model
 
             // Delegate to appropriate model based on role
             if ($result['role'] === Role::PROJECT_MANAGER->value) {
-                $projectManagerModel = new ProjectManagerModel();
-                return $projectManagerModel->findById($userId, null, true);
+                $projectManagerService = new ProjectManagerService();
+                return $projectManagerService->get($userId, [
+                    'projectHistory'        => true,
+                    'projectHistoryOptions' => [
+                        'phases'    => true,
+                        'tasks'     => true,
+                    ],
+                ]);
             } else {
                 $projectWorkerService = new ProjectWorkerService();
                 return $projectWorkerService->get($userId, [

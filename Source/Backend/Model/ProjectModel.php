@@ -17,7 +17,6 @@ use App\Entity\Worker;
 use App\Core\Me;
 use App\Entity\ProjectManager;
 use App\Entity\ProjectReport;
-use App\Enumeration\Role;
 use App\Enumeration\WorkerStatus;
 use App\Exception\DatabaseException;
 use InvalidArgumentException;
@@ -295,6 +294,140 @@ class ProjectModel extends Model
         }
     }
 
+    public function findManagerHistory(
+        int|UUID|array $userId,  // Changed to accept array
+        array $options = [
+            'phases' => false,
+            'tasks'  => false,
+            'limit'  => 10,
+            'offset' => 0,
+        ]
+    ) {
+        $userIds = \is_array($userId) ? $userId : [$userId];
+        if (empty($userIds))
+            throw new InvalidArgumentException('At least one user ID must be provided');
+
+        $includePhases = (bool) ($options['phases'] ?? false);
+        $includeTasks = $includePhases && (bool) ($options['tasks'] ?? false);
+
+        $paramOptions = [
+            'limit'     => $options[':limit'] ?? $options['limit'] ?? 10,
+            'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
+            'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 'p.start_date_time DESC',
+        ];
+
+        try {
+            // Determine if we're using integer IDs or UUIDs
+            $isIntId = \is_int($userIds[0]);
+
+            // Build WHERE IN clause
+            $innerPlaceholders = []; // Placeholders for task subquery
+            $outerPlaceholders = []; // Placeholders for main query
+            $params = [];
+
+            foreach ($userIds as $index => $id) {
+                if (\is_int($id) && $id < 1)
+                    throw new InvalidArgumentException('Invalid user ID provided');
+
+                $innerPlaceholder = ":userIdInner{$index}";
+                $outerPlaceholder = ":userIdOuter{$index}";
+
+                $innerPlaceholders[] = $innerPlaceholder;
+                $outerPlaceholders[] = $outerPlaceholder;
+                $params[$outerPlaceholder] = $params[$innerPlaceholder] = $isIntId ? $id : UUID::toBinary($id);
+            }
+
+            $whereClause = $isIntId
+                ? 'u.id IN (' . implode(', ', $outerPlaceholders) . ')'
+                : 'u.public_id IN (' . implode(', ', $outerPlaceholders) . ')';
+
+            $taskSubquery = $includeTasks
+                ? "COALESCE((
+                    SELECT JSON_ARRAYAGG(
+                        JSON_OBJECT(
+                            'id', t2.id,
+                            'public_id', HEX(t2.public_id),
+                            'name', t2.name,
+                            'status', t2.status,
+                            'priority', t2.priority,
+                            'start_date_time', t2.start_date_time,
+                            'completion_date_time', t2.completion_date_time,
+                            'actual_completion_date_time', t2.actual_completion_date_time,
+                            'worker_status', tw.status
+                        )
+                    )
+                    FROM 
+                        `task` AS t2
+                    INNER JOIN 
+                        `task_worker` AS tw
+                    ON 
+                        tw.task_id = t2.id
+                    WHERE 
+                        t2.phase_id = ph2.id
+                    AND 
+                        tw.worker_id IN (" . implode(', ', $innerPlaceholders) . ")
+                ), JSON_ARRAY())"
+                : 'JSON_ARRAY()';
+
+            $phaseSelect = $includePhases
+                ? "COALESCE((
+                    SELECT JSON_ARRAYAGG(
+                        JSON_OBJECT(
+                            'id', ph2.id,
+                            'public_id', HEX(ph2.public_id),
+                            'name', ph2.name,
+                            'status', ph2.status,
+                            'start_date_time', ph2.start_date_time,
+                            'completion_date_time', ph2.completion_date_time,
+                            'actual_completion_date_time', ph2.actual_completion_date_time,
+                            'tasks', $taskSubquery
+                        )
+                    )
+                    FROM 
+                        `phase` AS ph2
+                    WHERE 
+                        ph2.project_id = p.id
+                ), JSON_ARRAY()) AS phases"
+                : 'NULL AS phases';
+
+            $queryString =
+                "SELECT
+                    u.public_id AS u_public_id,
+                    p.id,
+                    p.public_id,
+                    p.name,
+                    p.status,
+                    p.start_date_time,
+                    p.completion_date_time,
+                    p.actual_completion_date_time,
+                    $phaseSelect
+                FROM
+                    `project` AS p
+                INNER JOIN
+                    `user` AS u
+                ON
+                    u.id = p.manager_id";
+
+            $query = $this->appendOptionsToFindQuery(
+                $this->appendWhereClause($queryString, $whereClause),
+                $paramOptions
+            );
+
+            $statement = $this->connection->prepare($query);
+            $statement->execute($params);
+            $result = $statement->fetchAll();
+
+            if (!$this->hasData($result)) return null;
+
+            return $this->buildHistoryReturn($result, [
+                'phases' => $includePhases,
+                'tasks'  => $includeTasks,
+            ]);
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
+        }
+    }
+
     /**
      * Finds a worker's project history with optional phases and tasks.
      *
@@ -319,21 +452,14 @@ class ProjectModel extends Model
         int|UUID|array $userId,  // Changed to accept array
         array $options = [
             'phases' => false,
-            'tasks' => false,
-            'limit' => 10,
+            'tasks'  => false,
+            'limit'  => 10,
             'offset' => 0,
         ]
     ): ProjectContainer|null {
         // Normalize to array
         $userIds = \is_array($userId) ? $userId : [$userId];
-
-        // Validate all IDs
-        foreach ($userIds as $id) {
-            if (\is_int($id) && $id < 1) 
-                throw new InvalidArgumentException('Invalid user ID provided');
-        }
-
-        if (empty($userIds)) 
+        if (empty($userIds))
             throw new InvalidArgumentException('At least one user ID must be provided');
 
         $includePhases = (bool) ($options['phases'] ?? false);
@@ -355,9 +481,12 @@ class ProjectModel extends Model
             $params = [];
 
             foreach ($userIds as $index => $id) {
+                if (\is_int($id) && $id < 1)
+                    throw new InvalidArgumentException('Invalid user ID provided');
+
                 $innerPlaceholder = ":userIdInner{$index}";
                 $outerPlaceholder = ":userIdOuter{$index}";
-                
+
                 $innerPlaceholders[] = $innerPlaceholder;
                 $outerPlaceholders[] = $outerPlaceholder;
                 $params[$outerPlaceholder] = $params[$innerPlaceholder] = $isIntId ? $id : UUID::toBinary($id);
@@ -450,56 +579,73 @@ class ProjectModel extends Model
 
             if (!$this->hasData($result)) return null;
 
-            $projects = new ProjectContainer();
-            foreach ($result as $row) {
-                $phasesJson = $row['phases'] ?? null;
-                unset($row['phases']);
-
-                $project = Project::createPartial($row);
-                if (\array_key_exists('worker_status', $row))
-                    $project->addAdditionalInfo('workerStatus', $row['worker_status']);
-
-                if ($includePhases && \is_string($phasesJson)) {
-                    $phaseLists = json_decode($phasesJson, true);
-                    if (\is_array($phaseLists)) {
-                        foreach ($phaseLists as $phaseData) {
-                            $taskLists = $includeTasks
-                                ? ($phaseData['tasks'] ?? [])
-                                : [];
-
-                            unset($phaseData['tasks']);
-                            $phase = Phase::createPartial($phaseData);
-
-                            if ($includeTasks && \is_array($taskLists)) {
-                                $tasks = new TaskContainer();
-                                foreach ($taskLists as $taskData) {
-                                    if (!\is_array($taskData)) continue;
-
-                                    $workerStatus = $taskData['worker_status'] ?? null;
-                                    unset($taskData['worker_status']);
-
-                                    $task = Task::createPartial($taskData);
-                                    if ($workerStatus !== null)
-                                        $task->addAdditionalInfo('workerStatus', $workerStatus);
-
-                                    $tasks->add($task);
-                                }
-                                $phase->setTasks($tasks);
-                            }
-
-                            $project->addPhase($phase);
-                        }
-                    }
-                }
-                $project->addAdditionalInfo('userId', UUID::tryFromString($row['u_public_id']));
-                $projects->add($project);
-            }
-
-            return $projects;
+            return $this->buildHistoryReturn($result, [
+                'phases' => $includePhases,
+                'tasks'  => $includeTasks,
+            ]);
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
-    }   /**
+    }
+
+    private function buildHistoryReturn(
+        array $rawProjectHistory,
+        array $options = [
+            'phases' => false,
+            'tasks'  => false,
+        ]
+    ): ProjectContainer {
+        $includePhases = (bool) ($options['phases'] ?? false);
+        $includeTasks = $includePhases && (bool) ($options['tasks'] ?? false);
+
+        $projects = new ProjectContainer();
+        foreach ($rawProjectHistory as $row) {
+            $phasesJson = $row['phases'] ?? null;
+            unset($row['phases']);
+
+            $project = Project::createPartial($row);
+            if (\array_key_exists('worker_status', $row))
+                $project->addAdditionalInfo('workerStatus', $row['worker_status']);
+
+            if ($includePhases && \is_string($phasesJson)) {
+                $phaseLists = json_decode($phasesJson, true);
+                if (\is_array($phaseLists)) {
+                    foreach ($phaseLists as $phaseData) {
+                        $taskLists = $includeTasks
+                            ? ($phaseData['tasks'] ?? [])
+                            : [];
+
+                        unset($phaseData['tasks']);
+                        $phase = Phase::createPartial($phaseData);
+
+                        if ($includeTasks && \is_array($taskLists)) {
+                            $tasks = new TaskContainer();
+                            foreach ($taskLists as $taskData) {
+                                if (!\is_array($taskData)) continue;
+
+                                $workerStatus = $taskData['worker_status'] ?? null;
+                                unset($taskData['worker_status']);
+
+                                $task = Task::createPartial($taskData);
+                                if ($workerStatus !== null)
+                                    $task->addAdditionalInfo('workerStatus', $workerStatus);
+
+                                $tasks->add($task);
+                            }
+                            $phase->setTasks($tasks);
+                        }
+
+                        $project->addPhase($phase);
+                    }
+                }
+            }
+            $project->addAdditionalInfo('userId', UUID::tryFromString($row['u_public_id']));
+            $projects->add($project);
+        }
+        return $projects;
+    }
+
+    /**
      * Searches for projects based on provided criteria.
      *
      * This method allows searching for projects using a keyword, user ID (either integer or UUID),
@@ -1370,8 +1516,8 @@ class ProjectModel extends Model
         ]);
         $result = $statement->fetchAll();
 
-        return ($this->hasData($result)) ? $result : null; 
-   }
+        return ($this->hasData($result)) ? $result : null;
+    }
 
     /**
      * Retrieves the top workers for a given project based on a weighted scoring algorithm.
