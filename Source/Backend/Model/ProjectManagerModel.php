@@ -3,15 +3,8 @@
 namespace App\Model;
 
 use App\Abstract\Model;
-use App\Container\PhaseContainer;
-use App\Container\ProjectContainer;
-use App\Container\TaskContainer;
 use App\Core\UUID;
-use App\Entity\Phase;
 use App\Entity\ProjectManager;
-use App\Entity\Project;
-use App\Entity\Task;
-use App\Enumeration\Gender;
 use App\Enumeration\Role;
 use App\Enumeration\WorkStatus;
 use App\Exception\DatabaseException;
@@ -50,100 +43,19 @@ class ProjectManagerModel extends Model
         return null;
     }
 
-    /**
-     * Finds a project manager by their ID, optionally filtering by a specific project and including project history.
-     *
-     * This method retrieves a User this representing a project manager from the database. It can optionally
-     * filter the results to ensure the manager is associated with a specific project. If $includeHistory is true,
-     * it includes a detailed history of all projects managed by the user, including their phases and tasks.
-     * The returned User object includes additional information such as total projects and completed projects.
-     * If project history is included, it is added as a ProjectContainer in the additionalInfo array.
-     *
-     * @param int|UUID $managerId The ID of the project manager to find (integer or UUID object).
-     * @param int|UUID|null $projectId Optional project ID to filter the manager by (integer, UUID object, or null).
-     * @param bool $includeHistory Whether to include the project history with phases and tasks (default: false).
-     *
-     * @return ProjectManager|null The ProjectManager this representing the project manager, or null if not found.
-     *
-     * @throws DatabaseException If a database error occurs during the query execution.
-     */
     public function findById(
         int|UUID $managerId, 
         int|UUID|null $projectId = null, 
-        bool $includeHistory = false
     ): ?ProjectManager {
         try {
-            // TODO: Separate project history fetching into its own method to avoid complex queries
-            $projectHistory = $includeHistory
-                ? "SELECT
-                    JSON_ARRAYAGG(
-                        JSON_OBJECT(
-                            'id', p2.id,
-                            'public_id', HEX(p2.public_id),
-                            'name', p2.name,
-                            'status', p2.status,
-                            'start_date_time', p2.start_date_time,
-                            'completion_date_time', p2.completion_date_time,
-                            'actual_completion_date_time', p2.actual_completion_date_time,
-
-                            'phases', COALESCE(
-                                (
-                                    SELECT JSON_ARRAYAGG(
-                                        JSON_OBJECT(
-                                            'id', ph2.id,
-                                            'public_id', HEX(ph2.public_id),
-                                            'name', ph2.name,
-                                            'status', ph2.status,
-                                            'start_date_time', ph2.start_date_time,
-                                            'completion_date_time', ph2.completion_date_time,
-                                            'actual_completion_date_time', ph2.actual_completion_date_time,
-
-                                            'tasks', COALESCE(
-                                                (
-                                                    SELECT JSON_ARRAYAGG(
-                                                        JSON_OBJECT(
-                                                            'id', t2.id,
-                                                            'public_id', HEX(t2.public_id),
-                                                            'name', t2.name,
-                                                            'status', t2.status,
-                                                            'priority', t2.priority,
-                                                            'start_date_time', t2.start_date_time,
-                                                            'completion_date_time', t2.completion_date_time,
-                                                            'actual_completion_date_time', t2.actual_completion_date_time
-                                                        )
-                                                    )
-                                                    FROM 
-                                                        `task` AS t2
-                                                    WHERE 
-                                                        t2.phase_id = ph2.id
-                                                ),
-                                                JSON_ARRAY()
-                                            )
-                                        )
-                                    )
-                                    FROM 
-                                        `phase` AS ph2
-                                    WHERE 
-                                        ph2.project_id = p2.id
-                                ),
-                                JSON_ARRAY()
-                            )
-                        )
-                    )
-                FROM 
-                    `project` AS p2
-                WHERE 
-                    p2.manager_id = u.id"
-            : '';
-
             $whereClause = [];
             $params = [':completedStatus' => WorkStatus::COMPLETED->value];
 
-            $whereClause[] = is_int($managerId)
+            $whereClause[] = \is_int($managerId)
                 ? 'u.id = :managerId'
                 : 'u.public_id = :managerId';
 
-            $params[':managerId'] = is_int($managerId)
+            $params[':managerId'] = \is_int($managerId)
                 ? $managerId
                 : UUID::toBinary($managerId);
 
@@ -192,8 +104,7 @@ class ProjectManagerModel extends Model
                             p3.manager_id = u.id 
                         AND 
                             p3.status = :completedStatus
-                    ) AS completed_projects,
-                    COALESCE (($projectHistory), JSON_ARRAY()) AS project_history
+                    ) AS completed_projects
                 FROM 
                     `user` AS u
                 LEFT JOIN
@@ -218,46 +129,11 @@ class ProjectManagerModel extends Model
 
             $result['role'] = Role::PROJECT_MANAGER;
             $result['additionalInfo'] = [
-                'totalProjects' => (int)$result['total_projects'],
-                'completedProjects' => (int)$result['completed_projects'],
+                'totalProjects'     => (int) $result['total_projects'],
+                'completedProjects' => (int) $result['completed_projects'],
             ];
-            $projectManager = ProjectManager::createPartial($result);
 
-                        // Process project history if included
-            if ($includeHistory) {
-                $projectContainer = new ProjectContainer();
-                $projects = json_decode($result['project_history'], true);
-
-                // Process projects
-                foreach ($projects as $project) {
-                    $phaseContainer = new PhaseContainer();
-
-                    // Process phases
-                    $phases = $project['phases'];
-                    foreach ($phases as $phase) {
-                        $taskContainer = new TaskContainer();
-
-                        // Process tasks
-                        $tasks = $phase['tasks'];
-                        foreach ($tasks as $task) {
-                            $task['public_id'] = UUID::fromHex($task['public_id']);
-                            $taskContainer->add(Task::createPartial($task));
-                        }
-
-                        $phase['public_id'] = UUID::fromHex($phase['public_id']);
-                        $phase['tasks'] = $taskContainer;
-                        $phaseContainer->add(Phase::createPartial($phase));
-                    }
-
-                    $project['public_id'] = UUID::fromHex($project['public_id']);
-                    $project['phases'] = $phaseContainer;
-                    $projectContainer->add(Project::createPartial($project));
-                }
-                
-                $projectManager->addAdditionalInfo('projectHistory', $projectContainer);
-            }
-
-            return $projectManager;
+            return ProjectManager::createPartial($result);
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
