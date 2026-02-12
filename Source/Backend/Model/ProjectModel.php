@@ -307,88 +307,13 @@ class ProjectModel extends Model
         if (empty($userIds))
             throw new InvalidArgumentException('At least one user ID must be provided');
 
-        $includePhases = (bool) ($options['phases'] ?? false);
-        $includeTasks = $includePhases && (bool) ($options['tasks'] ?? false);
-
-        $paramOptions = [
-            'limit'     => $options[':limit'] ?? $options['limit'] ?? 10,
-            'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
-            'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 'p.start_date_time DESC',
-        ];
+        $historyOptions = $this->parseHistoryOptions($options);
+        $includePhases = $historyOptions['includePhases'];
+        $includeTasks = $historyOptions['includeTasks'];
+        $paramOptions = $historyOptions['paramOptions'];
 
         try {
-            // Determine if we're using integer IDs or UUIDs
-            $isIntId = \is_int($userIds[0]);
-
-            // Build WHERE IN clause
-            $innerPlaceholders = []; // Placeholders for task subquery
-            $outerPlaceholders = []; // Placeholders for main query
-            $params = [];
-
-            foreach ($userIds as $index => $id) {
-                if (\is_int($id) && $id < 1)
-                    throw new InvalidArgumentException('Invalid user ID provided');
-
-                $innerPlaceholder = ":userIdInner{$index}";
-                $outerPlaceholder = ":userIdOuter{$index}";
-
-                $innerPlaceholders[] = $innerPlaceholder;
-                $outerPlaceholders[] = $outerPlaceholder;
-                $params[$outerPlaceholder] = $params[$innerPlaceholder] = $isIntId ? $id : UUID::toBinary($id);
-            }
-
-            $whereClause = $isIntId
-                ? 'u.id IN (' . implode(', ', $outerPlaceholders) . ')'
-                : 'u.public_id IN (' . implode(', ', $outerPlaceholders) . ')';
-
-            $taskSubquery = $includeTasks
-                ? "COALESCE((
-                    SELECT JSON_ARRAYAGG(
-                        JSON_OBJECT(
-                            'id', t2.id,
-                            'public_id', HEX(t2.public_id),
-                            'name', t2.name,
-                            'status', t2.status,
-                            'priority', t2.priority,
-                            'start_date_time', t2.start_date_time,
-                            'completion_date_time', t2.completion_date_time,
-                            'actual_completion_date_time', t2.actual_completion_date_time,
-                            'worker_status', tw.status
-                        )
-                    )
-                    FROM 
-                        `task` AS t2
-                    INNER JOIN 
-                        `task_worker` AS tw
-                    ON 
-                        tw.task_id = t2.id
-                    WHERE 
-                        t2.phase_id = ph2.id
-                    AND 
-                        tw.worker_id IN (" . implode(', ', $innerPlaceholders) . ")
-                ), JSON_ARRAY())"
-                : 'JSON_ARRAY()';
-
-            $phaseSelect = $includePhases
-                ? "COALESCE((
-                    SELECT JSON_ARRAYAGG(
-                        JSON_OBJECT(
-                            'id', ph2.id,
-                            'public_id', HEX(ph2.public_id),
-                            'name', ph2.name,
-                            'status', ph2.status,
-                            'start_date_time', ph2.start_date_time,
-                            'completion_date_time', ph2.completion_date_time,
-                            'actual_completion_date_time', ph2.actual_completion_date_time,
-                            'tasks', $taskSubquery
-                        )
-                    )
-                    FROM 
-                        `phase` AS ph2
-                    WHERE 
-                        ph2.project_id = p.id
-                ), JSON_ARRAY()) AS phases"
-                : 'NULL AS phases';
+            $queryParts = $this->buildHistoryQueryParts($userIds, $includePhases, $includeTasks);
 
             $queryString =
                 "SELECT
@@ -400,7 +325,7 @@ class ProjectModel extends Model
                     p.start_date_time,
                     p.completion_date_time,
                     p.actual_completion_date_time,
-                    $phaseSelect
+                    {$queryParts['phaseSelect']}
                 FROM
                     `project` AS p
                 INNER JOIN
@@ -409,12 +334,12 @@ class ProjectModel extends Model
                     u.id = p.manager_id";
 
             $query = $this->appendOptionsToFindQuery(
-                $this->appendWhereClause($queryString, $whereClause),
+                $this->appendWhereClause($queryString, $queryParts['whereClause']),
                 $paramOptions
             );
 
             $statement = $this->connection->prepare($query);
-            $statement->execute($params);
+            $statement->execute($queryParts['params']);
             $result = $statement->fetchAll();
 
             if (!$this->hasData($result)) return null;
@@ -462,88 +387,13 @@ class ProjectModel extends Model
         if (empty($userIds))
             throw new InvalidArgumentException('At least one user ID must be provided');
 
-        $includePhases = (bool) ($options['phases'] ?? false);
-        $includeTasks = $includePhases && (bool) ($options['tasks'] ?? false);
-
-        $paramOptions = [
-            'limit'     => $options[':limit'] ?? $options['limit'] ?? 10,
-            'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
-            'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 'p.start_date_time DESC',
-        ];
+        $historyOptions = $this->parseHistoryOptions($options);
+        $includePhases = $historyOptions['includePhases'];
+        $includeTasks = $historyOptions['includeTasks'];
+        $paramOptions = $historyOptions['paramOptions'];
 
         try {
-            // Determine if we're using integer IDs or UUIDs
-            $isIntId = \is_int($userIds[0]);
-
-            // Build WHERE IN clause
-            $innerPlaceholders = []; // Placeholders for task subquery
-            $outerPlaceholders = []; // Placeholders for main query
-            $params = [];
-
-            foreach ($userIds as $index => $id) {
-                if (\is_int($id) && $id < 1)
-                    throw new InvalidArgumentException('Invalid user ID provided');
-
-                $innerPlaceholder = ":userIdInner{$index}";
-                $outerPlaceholder = ":userIdOuter{$index}";
-
-                $innerPlaceholders[] = $innerPlaceholder;
-                $outerPlaceholders[] = $outerPlaceholder;
-                $params[$outerPlaceholder] = $params[$innerPlaceholder] = $isIntId ? $id : UUID::toBinary($id);
-            }
-
-            $whereClause = $isIntId
-                ? 'u.id IN (' . implode(', ', $outerPlaceholders) . ')'
-                : 'u.public_id IN (' . implode(', ', $outerPlaceholders) . ')';
-
-            $taskSubquery = $includeTasks
-                ? "COALESCE((
-                    SELECT JSON_ARRAYAGG(
-                        JSON_OBJECT(
-                            'id', t2.id,
-                            'public_id', HEX(t2.public_id),
-                            'name', t2.name,
-                            'status', t2.status,
-                            'priority', t2.priority,
-                            'start_date_time', t2.start_date_time,
-                            'completion_date_time', t2.completion_date_time,
-                            'actual_completion_date_time', t2.actual_completion_date_time,
-                            'worker_status', tw.status
-                        )
-                    )
-                    FROM 
-                        `task` AS t2
-                    INNER JOIN 
-                        `task_worker` AS tw
-                    ON 
-                        tw.task_id = t2.id
-                    WHERE 
-                        t2.phase_id = ph2.id
-                    AND 
-                        tw.worker_id IN (" . implode(', ', $innerPlaceholders) . ")
-                ), JSON_ARRAY())"
-                : 'JSON_ARRAY()';
-
-            $phaseSelect = $includePhases
-                ? "COALESCE((
-                    SELECT JSON_ARRAYAGG(
-                        JSON_OBJECT(
-                            'id', ph2.id,
-                            'public_id', HEX(ph2.public_id),
-                            'name', ph2.name,
-                            'status', ph2.status,
-                            'start_date_time', ph2.start_date_time,
-                            'completion_date_time', ph2.completion_date_time,
-                            'actual_completion_date_time', ph2.actual_completion_date_time,
-                            'tasks', $taskSubquery
-                        )
-                    )
-                    FROM 
-                        `phase` AS ph2
-                    WHERE 
-                        ph2.project_id = p.id
-                ), JSON_ARRAY()) AS phases"
-                : 'NULL AS phases';
+            $queryParts = $this->buildHistoryQueryParts($userIds, $includePhases, $includeTasks);
 
             $queryString =
                 "SELECT
@@ -556,7 +406,7 @@ class ProjectModel extends Model
                     p.completion_date_time,
                     p.actual_completion_date_time,
                     pw.status AS worker_status,
-                    $phaseSelect
+                    {$queryParts['phaseSelect']}
                 FROM
                     `project` AS p
                 INNER JOIN
@@ -569,12 +419,12 @@ class ProjectModel extends Model
                     u.id = pw.worker_id";
 
             $query = $this->appendOptionsToFindQuery(
-                $this->appendWhereClause($queryString, $whereClause),
+                $this->appendWhereClause($queryString, $queryParts['whereClause']),
                 $paramOptions
             );
 
             $statement = $this->connection->prepare($query);
-            $statement->execute($params);
+            $statement->execute($queryParts['params']);
             $result = $statement->fetchAll();
 
             if (!$this->hasData($result)) return null;
@@ -586,6 +436,104 @@ class ProjectModel extends Model
         } catch (PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
+    }
+
+    private function parseHistoryOptions(array $options): array
+    {
+        $includePhases = (bool) ($options['phases'] ?? false);
+        $includeTasks = $includePhases && (bool) ($options['tasks'] ?? false);
+
+        return [
+            'includePhases' => $includePhases,
+            'includeTasks'  => $includeTasks,
+            'paramOptions'  => [
+                'limit'     => $options[':limit'] ?? $options['limit'] ?? 10,
+                'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
+                'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 'p.start_date_time DESC',
+            ],
+        ];
+    }
+
+    private function buildHistoryQueryParts(array $userIds, bool $includePhases, bool $includeTasks): array
+    {
+        // Determine if we're using integer IDs or UUIDs
+        $isIntId = \is_int($userIds[0]);
+
+        // Build WHERE IN clause
+        $innerPlaceholders = []; // Placeholders for task subquery
+        $outerPlaceholders = []; // Placeholders for main query
+        $params = [];
+
+        foreach ($userIds as $index => $id) {
+            if (\is_int($id) && $id < 1)
+                throw new InvalidArgumentException('Invalid user ID provided');
+
+            $innerPlaceholder = ":userIdInner{$index}";
+            $outerPlaceholder = ":userIdOuter{$index}";
+
+            $innerPlaceholders[] = $innerPlaceholder;
+            $outerPlaceholders[] = $outerPlaceholder;
+            $params[$outerPlaceholder] = $params[$innerPlaceholder] = $isIntId ? $id : UUID::toBinary($id);
+        }
+
+        $whereClause = $isIntId
+            ? 'u.id IN (' . implode(', ', $outerPlaceholders) . ')'
+            : 'u.public_id IN (' . implode(', ', $outerPlaceholders) . ')';
+
+        $taskSubquery = $includeTasks
+            ? "COALESCE((
+                SELECT JSON_ARRAYAGG(
+                    JSON_OBJECT(
+                        'id', t2.id,
+                        'public_id', HEX(t2.public_id),
+                        'name', t2.name,
+                        'status', t2.status,
+                        'priority', t2.priority,
+                        'start_date_time', t2.start_date_time,
+                        'completion_date_time', t2.completion_date_time,
+                        'actual_completion_date_time', t2.actual_completion_date_time,
+                        'worker_status', tw.status
+                    )
+                )
+                FROM 
+                    `task` AS t2
+                INNER JOIN 
+                    `task_worker` AS tw
+                ON 
+                    tw.task_id = t2.id
+                WHERE 
+                    t2.phase_id = ph2.id
+                AND 
+                    tw.worker_id IN (" . implode(', ', $innerPlaceholders) . ")
+            ), JSON_ARRAY())"
+            : 'JSON_ARRAY()';
+
+        $phaseSelect = $includePhases
+            ? "COALESCE((
+                SELECT JSON_ARRAYAGG(
+                    JSON_OBJECT(
+                        'id', ph2.id,
+                        'public_id', HEX(ph2.public_id),
+                        'name', ph2.name,
+                        'status', ph2.status,
+                        'start_date_time', ph2.start_date_time,
+                        'completion_date_time', ph2.completion_date_time,
+                        'actual_completion_date_time', ph2.actual_completion_date_time,
+                        'tasks', $taskSubquery
+                    )
+                )
+                FROM 
+                    `phase` AS ph2
+                WHERE 
+                    ph2.project_id = p.id
+            ), JSON_ARRAY()) AS phases"
+            : 'NULL AS phases';
+
+        return [
+            'whereClause' => $whereClause,
+            'params'      => $params,
+            'phaseSelect' => $phaseSelect,
+        ];
     }
 
     private function buildHistoryReturn(
