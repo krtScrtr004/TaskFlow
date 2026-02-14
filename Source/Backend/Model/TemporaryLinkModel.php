@@ -169,7 +169,7 @@ class TemporaryLinkModel extends Model
      * 
      * @return mixed Returns the list of temporary link records, or null if not implemented.
      */
-    public function all(int $offset = 0, int $limit = 10): mixed
+    public function all(array $options = []): mixed
     {
         // Not implemented (No use case)
         return null;

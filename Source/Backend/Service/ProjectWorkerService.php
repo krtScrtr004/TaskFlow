@@ -63,7 +63,9 @@ class ProjectWorkerService
         }
 
         // Fetch workers
-        $workers = $this->projectWorkerModel->findById($workerIds, $projectId);
+        $workers = $this->projectWorkerModel->findById($workerIds, [
+            'projectId' => $projectId
+        ]);
         if (!$workers) return null;
 
         $includeHistory = (bool) ($options['projectHistory'] ?? false);

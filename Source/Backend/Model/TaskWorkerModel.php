@@ -17,7 +17,6 @@ use PDOException;
 
 class TaskWorkerModel extends Model
 {
-
     /**
      * Finds and retrieves worker data based on specified conditions.
      *
@@ -40,8 +39,11 @@ class TaskWorkerModel extends Model
      * 
      * @throws DatabaseException If a database error occurs during query execution.
      */
-    protected function find(string $whereClause = '', array $params = [], array $options = []): WorkerContainer|null
-    {
+    protected function find(
+        string $whereClause = '', 
+        array $params = [], 
+        array $options = []
+    ): WorkerContainer|null {
         $paramOptions = [
             'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
             'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
@@ -151,6 +153,110 @@ class TaskWorkerModel extends Model
         }
     }
 
+        /**
+     * Shared ID-based worker lookup helper.
+     *
+     * Supports both single and multiple worker identifiers, in either internal int IDs
+     * or public UUIDs. Optional filters can be applied via options.
+     *
+     * @param int|UUID|array $workerIds A single worker id (int|UUID) or an array of ids.
+     * @param array $options Supported keys: taskId, phaseId, projectId
+     * @param array $queryOptions Options forwarded to find() (e.g., limit, offset, orderBy)
+     */
+    private function findByIdHelper(
+        int|UUID|array $workerIds,
+        array $options = [],
+        array $queryOptions = []
+    ): WorkerContainer|null {
+        $ids = \is_array($workerIds) ? $workerIds : [$workerIds];
+        if (empty($ids)) throw new InvalidArgumentException('Worker IDs array cannot be empty');
+
+        $taskId = $options['taskId'] ?? null;
+        if ($taskId !== null) {
+            if (!\is_int($taskId) && !($taskId instanceof UUID))
+                throw new InvalidArgumentException('Task ID must be an integer or UUID');
+            if (\is_int($taskId) && $taskId < 1)
+                throw new InvalidArgumentException('Invalid task_id provided');
+        }
+
+        $phaseId = $options['phaseId'] ?? null;
+        if ($phaseId !== null) {
+            if (!\is_int($phaseId) && !($phaseId instanceof UUID))
+                throw new InvalidArgumentException('Phase ID must be an integer or UUID');
+            if (\is_int($phaseId) && $phaseId < 1)
+                throw new InvalidArgumentException('Invalid phase_id provided');
+        }
+
+        $projectId = $options['projectId'] ?? null;
+        if ($projectId !== null) {
+            if (!\is_int($projectId) && !($projectId instanceof UUID))
+                throw new InvalidArgumentException('Project ID must be an integer or UUID');
+            if (\is_int($projectId) && $projectId < 1)
+                throw new InvalidArgumentException('Invalid project_id provided');
+        }
+
+        $allInt = true;
+        $allUuid = true;
+        foreach ($ids as $id) {
+            if (\is_int($id)) {
+                if ($id < 1) throw new InvalidArgumentException('Invalid worker_id provided');
+                $allUuid = false;
+            } elseif ($id instanceof UUID) {
+                $allInt = false;
+            } else {
+                throw new InvalidArgumentException('Worker ID must be an integer or UUID');
+            }
+        }
+        if (!$allInt && !$allUuid)
+            throw new InvalidArgumentException('Worker IDs must be all integers or all UUIDs');
+
+        $params = [];
+        if (\count($ids) === 1) {
+            $whereClause = $allInt
+                ? 'tw.worker_id = :workerId'
+                : 'u.public_id = :workerId';
+            $params[':workerId'] = $allInt
+                ? $ids[0]
+                : UUID::toBinary($ids[0]);
+        } else {
+            $placeholders = [];
+            foreach (array_values($ids) as $index => $id) {
+                $placeholder = ":workerId$index";
+                $placeholders[] = $placeholder;
+                $params[$placeholder] = $allInt
+                    ? $id
+                    : UUID::toBinary($id);
+            }
+
+            $workerIdColumn = $allInt ? 'tw.worker_id' : 'u.public_id';
+            $whereClause = "$workerIdColumn IN (" . implode(', ', $placeholders) . ')';
+        }
+
+        if ($taskId) {
+            $whereClause .= \is_int($taskId)
+                ? ' AND tw.task_id = :taskId'
+                : ' AND t.public_id = :taskId';
+            $params[':taskId'] = \is_int($taskId) ? $taskId : UUID::toBinary($taskId);
+        }
+
+        if ($phaseId) {
+            $whereClause .= \is_int($phaseId)
+                ? ' AND t.phase_id = :phaseId'
+                : ' AND t.phase_id IN (SELECT id FROM `phase` WHERE public_id = :phaseId)';
+            $params[':phaseId'] = \is_int($phaseId) ? $phaseId : UUID::toBinary($phaseId);
+        }
+
+        if ($projectId) {
+            $whereClause .= \is_int($projectId)
+                ? ' AND ph.project_id = :projectId'
+                : ' AND ph.project_id IN (SELECT id FROM `project` WHERE public_id = :projectId)';
+            $params[':projectId'] = \is_int($projectId) ? $projectId : UUID::toBinary($projectId);
+        }
+
+        return self::find($whereClause, $params, $queryOptions);
+    }
+
+    /* ------------------------------------------------------------------------------------------------ */
 
     /**
      * Finds a Worker instance by its identifier and optional related identifiers.
@@ -172,50 +278,14 @@ class TaskWorkerModel extends Model
      */
     public function findById(
         int|UUID $workerId,
-        int|UUID|null $taskId = null,
-        int|UUID|null $phaseId = null,
-        int|UUID|null $projectId = null
-    ): TaskWorker|null {
-        if (\is_int($workerId) && $workerId < 1)
-            throw new InvalidArgumentException('Invalid worker_id provided');
-        if (\is_int($phaseId) && $phaseId < 1)
-            throw new InvalidArgumentException('Invalid phase_id provided');
-        if ($projectId && \is_int($projectId) && $projectId < 1)
-            throw new InvalidArgumentException('Invalid project_id provided');
-        if ($taskId && \is_int($taskId) && $taskId < 1)
-            throw new InvalidArgumentException('Invalid task_id provided');
-
+        array $options = [
+            'taskId'    => null,
+            'phaseId'   => null,
+            'projectId' => null,
+    ]): TaskWorker|null {
         try {
-            $whereClause = \is_int($workerId)
-                ? 'tw.worker_id = :workerId'
-                : 'u.public_id = :workerId';
-            $params = [':workerId' => \is_int($workerId) ? $workerId : UUID::toBinary($workerId)];
-
-            if ($taskId) {
-                $whereClause .= \is_int($taskId)
-                    ? ' AND tw.task_id = :taskId'
-                    : ' AND t.public_id = :taskId';
-                $params[':taskId'] = \is_int($taskId) ? $taskId : UUID::toBinary($taskId);
-            }
-
-            if ($phaseId) {
-                $whereClause .= \is_int($phaseId)
-                    ? ' AND t.phase_id = :phaseId'
-                    : ' AND t.phase_id IN (SELECT id FROM `phase` WHERE public_id = :phaseId)';
-                $params[':phaseId'] = \is_int($phaseId) ? $phaseId : UUID::toBinary($phaseId);
-            }
-
-            if ($projectId) {
-                $whereClause .= \is_int($projectId)
-                    ? ' AND ph.project_id = :projectId'
-                    : ' AND ph.project_id IN (SELECT id FROM `project` WHERE public_id = :projectId)';
-                $params[':projectId'] = \is_int($projectId) ? $projectId : UUID::toBinary($projectId);
-            }
-
-            $paramOptions = ['limit' => 1];
-
-            $worker = self::find($whereClause, $params, $paramOptions);
-            return $worker->first() ?? null;
+            $workers = $this->findByIdHelper($workerId, $options, ['limit' => 1]);
+            return $workers?->first() ?? null;
         } catch (Exception $e) {
             throw $e;
         }
@@ -224,75 +294,21 @@ class TaskWorkerModel extends Model
     /**
      * Finds multiple workers by their IDs, optionally filtered by task, phase, or project.
      *
-     * This method retrieves worker records based on an array of worker IDs, which can be either integers or UUIDs.
-     * It supports additional filtering by task ID, phase ID, and project ID, each of which can be an integer or UUID.
-     * The method dynamically builds the SQL WHERE clause and parameter bindings according to the types of provided IDs.
-     * Throws an InvalidArgumentException if the worker IDs array is empty or if any provided integer ID is invalid.
-     *
      * @param array $workerIds Array of worker IDs (int|UUID) to search for. Must not be empty.
-     * @param int|UUID|null $taskId Optional task ID to filter by (int or UUID).
-     * @param int|UUID|null $phaseId Optional phase ID to filter by (int or UUID).
-     * @param int|UUID|null $projectId Optional project ID to filter by (int or UUID).
+     * @param array $options Supported keys: taskId, phaseId, projectId
      *
-     * @throws InvalidArgumentException If $workerIds is empty or if any provided integer ID is invalid.
-     * @throws Exception If an error occurs during query execution.
-     *
-     * @return WorkerContainer|null Container of found workers, or null if none found.
+     * @return WorkerContainer|null
      */
-    public function findMultipleById(
+    public function findByIds(
         array $workerIds,
-        int|UUID|null $taskId = null,
-        int|UUID|null $phaseId = null,
-        int|UUID|null $projectId = null
+        array $options = [
+            'taskId'    => null,
+            'phaseId'   => null,
+            'projectId' => null,
+        ]
     ): WorkerContainer|null {
-        if (empty($workerIds)) throw new InvalidArgumentException('Worker IDs array cannot be empty');
-        if ($taskId && \is_int($taskId) && $taskId < 1)
-            throw new InvalidArgumentException('Invalid task ID provided');
-        if ($projectId && \is_int($projectId) && $projectId < 1)
-            throw new InvalidArgumentException('Invalid project ID provided');
-
         try {
-            // Determine if workerIds are integers or UUIDs based on first element
-            $firstWorkerId = $workerIds[0];
-            $useIntId = is_int($firstWorkerId);
-
-            // Build WHERE clause for multiple worker IDs
-            $workerIdPlaceholders = [];
-            $params = [];
-
-            foreach ($workerIds as $index => $workerId) {
-                $placeholder = ":workerId$index";
-                $workerIdPlaceholders[] = $placeholder;
-                $params[$placeholder] = ($workerId instanceof UUID)
-                    ? UUID::toBinary($workerId)
-                    : $workerId;
-            }
-
-            $workerIdColumn = $useIntId ? "tw.worker_id" : "u.public_id";
-            $whereClause = "$workerIdColumn IN (" . implode(', ', $workerIdPlaceholders) . ")";
-
-            if ($taskId) {
-                $whereClause .= \is_int($taskId)
-                    ? ' AND tw.task_id = :taskId'
-                    : ' AND t.public_id = :taskId';
-                $params[':taskId'] = \is_int($taskId) ? $taskId : UUID::toBinary($taskId);
-            }
-
-            if ($phaseId) {
-                $whereClause .= \is_int($phaseId)
-                    ? ' AND t.phase_id = :phaseId'
-                    : ' AND t.phase_id IN (SELECT id FROM `phase` WHERE public_id = :phaseId)';
-                $params[':phaseId'] = \is_int($phaseId) ? $phaseId : UUID::toBinary($phaseId);
-            }
-
-            if ($projectId) {
-                $whereClause .= \is_int($projectId)
-                    ? ' AND ph.project_id = :projectId'
-                    : ' AND ph.project_id IN (SELECT id FROM `project` WHERE public_id = :projectId)';
-                $params[':projectId'] = \is_int($projectId) ? $projectId : UUID::toBinary($projectId);
-            }
-
-            return self::find($whereClause, $params);
+            return $this->findByIdHelper($workerIds, $options);
         } catch (Exception $e) {
             throw $e;
         }
@@ -595,22 +611,18 @@ class TaskWorkerModel extends Model
     }
 
     /**
-     * Retrieves a paginated list of all worker containers.
+     * Retrieves a paginated list of all workers.
      *
-     * This method fetches worker records from the data source with optional pagination and ordering.
-     * It validates the provided offset and limit parameters before querying.
-     *
-     * @param int $offset The starting index for the records to retrieve (must be >= 0).
-     * @param int $limit The maximum number of records to retrieve (must be >= 1).
-     *
-     * @throws InvalidArgumentException If the offset is negative or the limit is less than 1.
-     * @throws Exception If an error occurs during the retrieval process.
-     *
-     * @return WorkerContainer|null A container of worker records, or null if none found.
+     * @param array $options Supported keys: offset, limit
      */
-    public function all(int $offset = 0, int $limit = 10): WorkerContainer|null
-    {
+    public function all(array $options = [
+        'offset' => 0,
+        'limit'  => 10,
+    ]): WorkerContainer|null {
+        $offset = (int) ($options['offset'] ?? 0);
         if ($offset < 0) throw new InvalidArgumentException('Invalid offset value');
+
+        $limit = (int) ($options['limit'] ?? 10);
         if ($limit < 1) throw new InvalidArgumentException('Invalid limit value');
 
         try {
@@ -625,42 +637,24 @@ class TaskWorkerModel extends Model
         }
     }
 
-    /**
-     * Determines whether a given user currently works on a specific task (optionally within a project).
-     *
-     * This method accepts either integer IDs or UUID objects for task, user and project identifiers.
-     * It validates numeric IDs (must be >= 1) and converts UUID objects to their binary representation
-     * for use in the prepared SQL query. If a project_id is provided, additional JOINs are added to
-     * restrict the check to the specified project. The query checks the phaseTaskWorker record and
-     * ensures the worker's assignment status is not WorkerStatus::TERMINATED.
-     *
-     * Behavior details:
-     * - Validates that integer IDs are >= 1; if not, throws InvalidArgumentException.
-     * - Converts UUID instances to binary via UUID::toBinary() before binding to the statement.
-     * - Builds a query joining phaseTaskWorker -> phaseTask -> user and optionally projectPhase -> project.
-     * - Uses prepared statements and parameter binding to avoid SQL injection.
-     * - Treats "terminated" assignments (ptw.status == WorkerStatus::TERMINATED) as non-working.
-     *
-     * @param int|UUID $taskId    Task identifier (numeric primary ID) or public UUID.
-     * @param int|UUID $userId    User identifier (numeric primary ID) or public UUID.
-     * @param int|UUID|null $projectId Optional project identifier (numeric primary ID) or public UUID; pass null to ignore project constraint.
-     *
-     * @return bool True if the user has a non-terminated assignment on the task (and within the project if provided); false otherwise.
-     *
-     * @throws InvalidArgumentException If any provided integer ID is less than 1.
-     * @throws DatabaseException If a database error occurs while executing the query (wraps PDOException).
-     */
     public function worksOn(
         int|UUID $taskId,
         int|UUID $userId,
-        int|UUID|null $projectId = null
-    ): bool {
+        array $options = [
+            'projectId' => null,
+    ]): bool {
         if (\is_int($taskId) && $taskId < 1)
             throw new InvalidArgumentException('Invalid task ID provided');
         if (\is_int($userId) && $userId < 1)
             throw new InvalidArgumentException('Invalid user ID provided');
-        if (\is_int($projectId) && $projectId < 1)
-            throw new InvalidArgumentException('Invalid project ID provided');
+
+        $projectId = $options['projectId'] ?? null;
+        if ($projectId) {
+            if (!\is_int($projectId) && !($projectId instanceof UUID))
+                throw new InvalidArgumentException('Project ID must be an integer or UUID');
+            if (\is_int($projectId) && $projectId < 1)
+                throw new InvalidArgumentException('Invalid project ID provided');
+        }
 
         try {
             $params = [
@@ -729,8 +723,10 @@ class TaskWorkerModel extends Model
      *
      * Status is set to WorkerStatus::ASSIGNED for backward compatibility with createMultiple().
      */
-    public function create(int|UUID $taskId, TaskWorker|WorkerContainer $taskWorker): WorkerContainer
-    {
+    public function create(
+        int|UUID $taskId, 
+        TaskWorker|WorkerContainer $taskWorker
+    ): WorkerContainer {
         if (\is_int($taskId) && $taskId < 1)
             throw new InvalidArgumentException('Invalid task ID provided');
 
@@ -933,8 +929,11 @@ class TaskWorkerModel extends Model
         }
     }
 
-    private function saveUnitRateByTaskAndWorker(int|UUID $taskId, int|UUID $workerId, float $unitRate): bool
-    {
+    private function saveUnitRateByTaskAndWorker(
+        int|UUID $taskId, 
+        int|UUID $workerId, 
+        float $unitRate
+    ): bool {
         try {
             $taskIdClause = \is_int($taskId)
                 ? ':taskId'

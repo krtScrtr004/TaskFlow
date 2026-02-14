@@ -51,8 +51,11 @@ class ResourceModel extends Model
      *
      * @return ResourceContainer|null A ResourceContainer of TaskResource objects if rows found, or null if none
      */
-    protected function find(string $whereClause = '', array $params = [], array $options = []): ResourceContainer|null
-    {
+    protected function find(
+        string $whereClause = '', 
+        array $params = [], 
+        array $options = []
+    ): ResourceContainer|null {
         $paramOptions = [
             'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
             'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
@@ -150,8 +153,7 @@ class ResourceModel extends Model
         array $options = [
             'limit'     => 10,
             'offset'    => 0
-        ]
-    ): ResourceContainer|null {
+    ]): ResourceContainer|null {
         if ($taskId && \is_int($taskId) && $taskId < 1)
             throw new InvalidArgumentException('Invalid task ID');
 
@@ -194,17 +196,21 @@ class ResourceModel extends Model
      *
      * @return ResourceContainer|null   A container of resources for the requested page, or null
      */
-    public function all(int $offset = 0, int $limit = 10): ResourceContainer|null
-    {
+    public function all(array $options = [
+        'offset' => 0,
+        'limit'  => 10
+    ]): ResourceContainer|null {
+        $offset = (int) ($options['offset'] ?? 0);
         if ($offset < 0) throw new InvalidArgumentException('Invalid offset value');
+
+        $limit = (int) ($options['limit'] ?? 10);
         if ($limit < 1) throw new InvalidArgumentException('Invalid limit value');
 
         try {
-            $paramOptions = [
+            return self::find('', [], [
                 'offset'    => $offset,
                 'limit'     => $limit,
-            ];
-            return self::find('', [], $paramOptions);
+            ]);
         } catch (Exception $e) {
             throw $e;
         }
@@ -237,8 +243,10 @@ class ResourceModel extends Model
      *
      * @return ResourceContainer The same $resources container, with each Resource's ID updated to the DB-assigned value
      */
-    public function create(int|UUID $taskId, TaskResource|ResourceContainer $resource): ResourceContainer
-    {
+    public function create(
+        int|UUID $taskId, 
+        TaskResource|ResourceContainer $resource
+    ): ResourceContainer {
         if (\is_int($taskId) && $taskId < 1)
             throw new InvalidArgumentException('Invalid task ID provided');
 

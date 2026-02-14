@@ -8,7 +8,6 @@ use App\Container\TaskContainer;
 use App\Core\UUID;
 use App\Enumeration\WorkStatus;
 use App\Entity\Phase;
-use App\Entity\Task;
 use App\Exception\DatabaseException;
 use DateTime;
 use Exception;
@@ -36,8 +35,11 @@ class PhaseModel extends Model
      * @return PhaseContainer|null PhaseContainer containing matching Phase objects, or null if no results found
      * @throws DatabaseException If a database error occurs during the query
      */
-    protected function find(string $whereClause = '', array $params = [], array $options = []): PhaseContainer|null
-    {
+    protected function find(
+        string $whereClause = '',
+        array $params = [], 
+        array $options = []
+    ): PhaseContainer|null {
         $paramOptions = [
             'limit'     => $options[':limit'] ?? $options['limit'] ?? null,
             'offset'    => $options[':offset'] ?? $options['offset'] ?? null,
@@ -85,8 +87,7 @@ class PhaseModel extends Model
             return $phases;
         } catch (PDOException $th) {
             throw new DatabaseException($th->getMessage());
-        }
-    }
+        }}
 
     /**
      * Finds a Phase instance by its ID or public UUID.
@@ -242,7 +243,7 @@ class PhaseModel extends Model
      * @return PhaseContainer|null A container of Phase objects for the project, or null if no phases are found.
      */
     public function findByProjectId(
-        int|UUID $projectId, 
+        int|UUID $projectId,
         array $options = [
             'limit'   => 10,
             'offset'  => 0
@@ -307,43 +308,32 @@ class PhaseModel extends Model
         }
     }
 
-    /**
-     * Retrieves all phases with pagination support.
-     *
-     * This method fetches all phases from the database with optional pagination parameters.
-     * It validates the pagination parameters before executing the query and wraps any
-     * database errors in a DatabaseException.
-     *
-     * @param int $offset The number of records to skip (must be non-negative)
-     * @param int $limit The maximum number of records to return (must be at least 1)
-     * @return PhaseContainer|null A container with all Phase objects or null if none found
-     *
-     * @throws InvalidArgumentException When offset is negative or limit is less than 1
-     * @throws DatabaseException When a database error occurs during query execution
-     */
-    public function all(int $offset = 0, int $limit = 10): PhaseContainer|null
-    {
+    public function all(array $options = [
+        'offset' => 0,
+        'limit'  => 10,
+    ]): PhaseContainer|null {
+        $offset = (int) ($options['offset'] ?? 0);
         if ($offset < 0) throw new InvalidArgumentException('Invalid offset value');
+
+        $limit = (int) ($options['limit'] ?? 10);
         if ($limit < 1) throw new InvalidArgumentException('Invalid limit value');
 
         try {
-            $phases = self::find(
-                '',
-                [],
-                [
+            $phases = $this->find('', [], [
                     'offset'    => $offset,
                     'limit'     => $limit
-                ]
-            );
+            ]);
             return $phases;
         } catch (Exception $e) {
             throw $e;
         }
     }
 
-    public function create(int|UUID $projectId, Phase|PhaseContainer $phase): Phase|PhaseContainer
-    {
-        if (\is_int($projectId) && $projectId < 1) 
+    public function create(
+        int|UUID $projectId, 
+        Phase|PhaseContainer $phase
+    ): Phase|PhaseContainer {
+        if (\is_int($projectId) && $projectId < 1)
             throw new InvalidArgumentException('Invalid project ID provided');
 
         // Allow passing a single Phase without wrapping
@@ -362,9 +352,9 @@ class PhaseModel extends Model
                     completion_date_time,
                     status
                 ) VALUES (
-                    " . (\is_int($projectId) 
-                            ? ":projectId" 
-                            : "(SELECT id FROM project WHERE id = :projectId)") . ",
+                    " . (\is_int($projectId)
+                    ? ":projectId"
+                    : "(SELECT id FROM project WHERE id = :projectId)") . ",
                     :publicId,
                     :name,
                     :description,
@@ -375,8 +365,8 @@ class PhaseModel extends Model
             $phaseStatement = $this->connection->prepare($projectPhaseQuery);
             foreach ($phases as &$item) {
                 $phaseStatement->execute([
-                    ':projectId'            => \is_int($projectId) 
-                        ? $projectId 
+                    ':projectId'            => \is_int($projectId)
+                        ? $projectId
                         : UUID::toBinary($projectId),
                     ':publicId'             => UUID::toBinary($item->getPublicId()),
                     ':name'                 => $item->getName(),
@@ -415,9 +405,9 @@ class PhaseModel extends Model
                     contingency_rate,
                     note
                 ) VALUES (
-                    " . (\is_int($phaseId) 
-                            ? ":phaseId" 
-                            : "(SELECT id FROM `phase` WHERE public_id = :phaseId)") . ",
+                    " . (\is_int($phaseId)
+                    ? ":phaseId"
+                    : "(SELECT id FROM `phase` WHERE public_id = :phaseId)") . ",
                     :budget,
                     :contingencyRate,
                     :note
@@ -495,9 +485,9 @@ class PhaseModel extends Model
                         SET 
                             " . implode(', ', $phaseUpdateFields) . " 
                         WHERE 
-                            " . (isset($item['id']) 
-                                ? 'id' 
-                                : 'public_id') . " 
+                            " . (isset($item['id'])
+                        ? 'id'
+                        : 'public_id') . " 
                             = :id";
                     $statement = $this->connection->prepare($query);
                     $statement->execute($projectPhaseParams);
@@ -550,9 +540,9 @@ class PhaseModel extends Model
                         SET 
                             " . implode(', ', $phaseBudgetUpdateFields) . " 
                         WHERE 
-                            phase_id = " . (\is_int($phaseId) 
-                                ? ':id' 
-                                : '(SELECT id FROM `phase` WHERE public_id = :id)');
+                            phase_id = " . (\is_int($phaseId)
+                    ? ':id'
+                    : '(SELECT id FROM `phase` WHERE public_id = :id)');
                 $budgetStatement = $this->connection->prepare($budgetQuery);
                 $budgetStatement->execute($phaseBudgetParams);
             }
@@ -576,9 +566,20 @@ class PhaseModel extends Model
      * @throws InvalidArgumentException If the provided phase ID is invalid
      * @throws DatabaseException If a database error occurs
      */
-    public function getTasks(int|UUID $phaseId, array $options = []): ?TaskContainer
-    {
-        if (\is_int($phaseId) && $phaseId < 1) throw new InvalidArgumentException('Invalid phase ID provided');
+    public function getTasks(int|UUID $phaseId, array $options = [
+        'offset' => 0,
+        'limit'  => 10,
+    ]): TaskContainer|null {
+        if (\is_int($phaseId) && $phaseId < 1) 
+            throw new InvalidArgumentException('Invalid phase ID provided');
+
+        $options = [
+            'offset' => (int) ($options['offset'] ?? 0),
+            'limit'  => (int) ($options['limit'] ?? 10),
+        ];
+
+        if ($options['offset'] < 0) throw new InvalidArgumentException('Invalid offset value');
+        if ($options['limit'] < 1) throw new InvalidArgumentException('Invalid limit value');
 
         try {
             $taskModel = new TaskModel();

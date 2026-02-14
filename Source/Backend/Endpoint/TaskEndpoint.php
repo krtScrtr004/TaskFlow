@@ -105,7 +105,10 @@ class TaskEndpoint extends Endpoint
                 : null;
             if (!$taskId) throw new ForbiddenException('Task ID is required');
 
-            $task = $instance->taskModel->findById($taskId, $phaseId, $projectId);
+            $task = $instance->taskModel->findById($taskId, [
+                'phaseId'   => $phaseId, 
+                'projectId' => $projectId
+            ]);
             if (!$task) throw new NotFoundException('Task not found');
 
             Response::success([], 'Task fetched successfully');
@@ -441,7 +444,9 @@ class TaskEndpoint extends Endpoint
                 : null;
             if (!$taskId) throw new ForbiddenException('Task ID is required');
 
-            $task = $instance->taskModel->findById($taskId, $phaseId);
+            $task = $instance->taskModel->findById($taskId, [
+                'phaseId'   => $phaseId, 
+            ]);
             if (!$task) throw new NotFoundException('Task not found');
 
             $project = ($projectId)

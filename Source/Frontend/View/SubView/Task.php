@@ -37,7 +37,10 @@ $taskData = [
 $isTaskEditable = $task->getStatus() !== WorkStatus::COMPLETED 
     && $task->getStatus() !== WorkStatus::CANCELLED;
 $taskModel = new TaskWorkerModel();
-$worksOn = $taskModel->worksOn($task->getId(), Me::getInstance()->getId(), $project->getId());
+$worksOn = $taskModel->worksOn(
+    $task->getId(), 
+    Me::getInstance()->getId(), 
+    ['projectId' => $project->getId()]);
 ?>
 
 <!DOCTYPE html>

@@ -65,8 +65,11 @@ class UserModel extends Model
      *
      * @throws DatabaseException If a database error occurs during query execution
      */
-    protected function find(string $whereClause = '', array $params = [], array $options = []): array|null
-    {
+    protected function find(
+        string $whereClause = '', 
+        array $params = [], 
+        array $options = []
+    ): array|null {
         $paramOptions = [
             'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
             'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
@@ -413,19 +416,28 @@ class UserModel extends Model
      * @throws InvalidArgumentException If offset is negative or limit is less than 1
      * @throws DatabaseException When database query fails
      */
-    public function all(int $offset = 0, int $limit = 10, bool $includeDeleted = false): array|null
+    public function all(array $options = [
+        'offset'        => 0,
+        'limit'         => 10,
+        'includeDeleted'=> false
+    ]): array|null
     {
+        $offset = $options['offset'] ?? 0;
         if ($offset < 0) throw new InvalidArgumentException('Invalid offset value');
+
+        $limit = $options['limit'] ?? 10;
         if ($limit < 1) throw new InvalidArgumentException('Invalid limit value');
+
+        $includeDeleted = $options['includeDeleted'] ?? false;
+        if (!\is_bool($includeDeleted)) throw new InvalidArgumentException('Invalid includeDeleted value');
 
         try {
             $whereClause = $includeDeleted ? '' : 'deletedAt IS NULL';
-            $paramOptions = [
+
+            return self::find($whereClause, [], [
                 'limit'     => $limit,
                 'offset'    => $offset
-            ];
-
-            return self::find($whereClause, [], $paramOptions) ?: null;
+            ]) ?: null;
         } catch (Exception $e) {
             throw $e;
         }
@@ -935,7 +947,6 @@ class UserModel extends Model
             throw new DatabaseException($e->getMessage());
         }
     }
-
 
     /**
      * Deletes a User instance from the data source.

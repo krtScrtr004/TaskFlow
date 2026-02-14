@@ -43,8 +43,11 @@ class ProjectWorkerModel extends Model
      *
      * @throws DatabaseException If a database error occurs during query execution
      */
-    protected function find(string $whereClause = '', array $params = [], array $options = []): ?WorkerContainer
-    {
+    protected function find(
+        string $whereClause = '',
+        array $params = [],
+        array $options = []
+    ): WorkerContainer|null {
         $paramOptions = [
             'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
             'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
@@ -380,14 +383,21 @@ class ProjectWorkerModel extends Model
 
     public function findById(
         int|UUID|array $workerId,
-        int|UUID|null $projectId = null,
+        array $options = [
+            'projectId' => null,
+        ]
     ): Worker|WorkerContainer|null {
         $isBatch = \is_array($workerId);
         $workerIds = $isBatch ? array_values($workerId) : [$workerId];
-
         if (empty($workerIds)) throw new InvalidArgumentException('Worker IDs array cannot be empty');
-        if ($projectId && \is_int($projectId) && $projectId < 1)
-            throw new InvalidArgumentException('Invalid project ID provided');
+
+        $projectId = $options['projectId'] ?? null;
+        if ($projectId) {
+            if (!\is_int($projectId) && !($projectId instanceof UUID))
+                throw new InvalidArgumentException('Project ID must be an integer or UUID');
+            if (\is_int($projectId) && $projectId < 1)
+                throw new InvalidArgumentException('Invalid project ID provided');
+        }
 
         // Determine if workerIds are integers or UUIDs based on first element
         $firstIsInt = \is_int($workerIds[0]);
@@ -451,7 +461,7 @@ class ProjectWorkerModel extends Model
                         FROM 
                             `task_worker` AS tw
                         " . ($projectId ?
-                        "INNER JOIN 
+                    "INNER JOIN 
                             `task` AS t 
                         ON 
                             tw.task_id = t.id
@@ -463,7 +473,7 @@ class ProjectWorkerModel extends Model
                             tw.worker_id = u.id 
                         AND 
                             ph.project_id = :projectId1"
-                        : "WHERE 
+                    : "WHERE 
                             tw.worker_id = u.id") . "
                     ) AS total_tasks,
                     (
@@ -476,11 +486,11 @@ class ProjectWorkerModel extends Model
                         ON 
                             tw.task_id = t.id
                         " . ($projectId ?
-                        "INNER JOIN 
+                    "INNER JOIN 
                                 `phase` AS ph 
                         ON 
                             t.phase_id = ph.id"
-                            : "") . "
+                    : "") . "
                         WHERE 
                             tw.worker_id = u.id 
                         AND 
@@ -590,8 +600,7 @@ class ProjectWorkerModel extends Model
         array $options = [
             'limit' => 10,
             'offset' => 0
-        ]
-    ): ?WorkerContainer {
+    ]): WorkerContainer|null {
         if (\is_int($projectId) && $projectId < 1)
             throw new InvalidArgumentException('Invalid project ID provided');
 
@@ -627,15 +636,15 @@ class ProjectWorkerModel extends Model
      * `project` and `user` tables to ensure the existence and validity of the referenced entities. The worker is considered
      * active if their status is not equal to `TERMINATED`.
      *
-     * @param int|UUID $projectId The project identifier. Can be an integer ID or a UUID object.
      * @param int|UUID $workerId The worker identifier. Can be an integer ID or a UUID object.
+     * @param int|UUID $projectId The project identifier. Can be an integer ID or a UUID object.
      *
      * @return bool Returns true if the worker is actively assigned to the project and not terminated, false otherwise.
      *
      * @throws InvalidArgumentException If an invalid project ID or worker ID is provided.
      * @throws DatabaseException If a database error occurs during the query execution.
      */
-    public function worksOn(int|UUID $projectId, int|UUID $userId): bool
+    public function isWorkingOn(int|UUID $userId, int|UUID $projectId): bool
     {
         if (\is_int($projectId) && $projectId < 1) throw new InvalidArgumentException('Invalid project ID provided');
         if (\is_int($userId) && $userId < 1) throw new InvalidArgumentException('Invalid user ID provided');
@@ -696,19 +705,22 @@ class ProjectWorkerModel extends Model
      *
      * @return WorkerContainer|null A container with the retrieved workers, or null if no workers are found.
      */
-    public function all(int $offset = 0, int $limit = 10): ?WorkerContainer
-    {
+    public function all(array $options = [
+        'offset' => 0,
+        'limit'  => 10
+    ]): WorkerContainer|null {
+        $offset = $options['offset'] ?? 0;
         if ($offset < 0) throw new InvalidArgumentException('Invalid offset value');
+
+        $limit = $options['limit'] ?? 10;
         if ($limit < 1) throw new InvalidArgumentException('Invalid limit value');
 
         try {
-            $paramOptions = [
+            return $this->find('', [], [
                 'offset'    => $offset,
                 'limit'     => $limit,
                 'orderBy'   => 'u.last_name ASC',
-            ];
-
-            return self::find('', [], $paramOptions);
+            ]);
         } catch (Exception $e) {
             throw $e;
         }
@@ -725,8 +737,10 @@ class ProjectWorkerModel extends Model
      * Note: This method uses the worker public UUID to resolve the internal user ID.
      * Status is set to WorkerStatus::ASSIGNED for backward compatibility with createMultiple().
      */
-    public function create(int|UUID $projectId, Worker|WorkerContainer $worker): Worker|WorkerContainer
-    {
+    public function create(
+        int|UUID $projectId, 
+        Worker|WorkerContainer $worker
+    ): Worker|WorkerContainer {
         if (\is_int($projectId) && $projectId < 1)
             throw new InvalidArgumentException('Invalid project ID provided');
 
@@ -854,7 +868,7 @@ class ProjectWorkerModel extends Model
                 if (empty($updateFields)) continue;
 
                 $where = implode(' AND ', $whereParts);
-                $query = 
+                $query =
                     'UPDATE 
                         `project_worker` 
                     SET 

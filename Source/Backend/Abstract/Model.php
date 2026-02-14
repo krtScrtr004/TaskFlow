@@ -158,7 +158,10 @@ abstract class Model
 
     // abstract public function create(mixed $data): mixed;
 
-    abstract public function all(int $offset = 0, int $limit = 10): mixed;
+    abstract public function all(array $options = [
+        'offset' => 0,
+        'limit'  => 10,
+    ]): mixed;
 
     // abstract public function save(array $data): bool;
     

@@ -99,10 +99,17 @@ class TaskWorkerEndpoint extends Endpoint
                 : null;
             if (!$taskId) throw new ForbiddenException('Task ID is required');
 
-            $task = $instance->taskModel->findById($taskId, $phaseId);
+            $task = $instance->taskModel->findById($taskId, [
+                'phaseId'   => $phaseId, 
+                'projectId' => $projectId
+            ]);
             if (!$task) throw new NotFoundException('Task not found');
 
-            $worker = $instance->taskWorkerModel->findById($workerId, $task->getId() ?? null, null, $project->getId() ?? null);
+            $worker = $instance->taskWorkerModel->findById($workerId, [
+                'taskId' => $task->getId() ?? null, 
+                'phaseId' => null, 
+                'projectId' => $project->getId() ?? null
+            ]);
             if (!$worker) throw new NotFoundException('Worker not found');
 
             Response::success([$worker], 'Worker fetched successfully');
@@ -185,7 +192,9 @@ class TaskWorkerEndpoint extends Endpoint
                 throw new ForbiddenException('Task ID is required');
 
             $task = isset($args['taskId'])
-                ? $instance->taskModel->findById($taskId, $phase->getId())
+                ? $instance->taskModel->findById($taskId, [
+                    'phaseId'   => $phaseId, 
+                ])
                 : null;
             if (isset($args['taskId']) && !$task)
                 throw new NotFoundException('Task not found');
@@ -198,10 +207,13 @@ class TaskWorkerEndpoint extends Endpoint
                 foreach ($ids as $id) {
                     $uuids[] = UUID::fromString($id);
                 }
-                $workers = $instance->taskWorkerModel->findMultipleById(
+                $workers = $instance->taskWorkerModel->findByIds(
                     $uuids,
-                    $task?->getId() ?? null,
-                    $project?->getId() ?? null
+                    [
+                        'taskId'    => $task?->getId() ?? null,
+                        'phaseId'   => $phase?->getId() ?? null,
+                        'projectId' => $project?->getId() ?? null,
+                    ]
                 );
             } else {
                 // Search by key / status / etc.
@@ -311,7 +323,9 @@ class TaskWorkerEndpoint extends Endpoint
                 : null;
             if (!isset($taskId)) throw new ForbiddenException('Task ID is required');
 
-            $task = $instance->taskModel->findById($taskId, $phase->getId());
+            $task = $instance->taskModel->findById($taskId, [
+                'phaseId' => $phase->getId()
+            ]);
             if (!$task) throw new NotFoundException('Task not found');
 
             $workValidator = new WorkValidator();
@@ -410,18 +424,21 @@ class TaskWorkerEndpoint extends Endpoint
                 : null;
             if (!$taskId) throw new ForbiddenException('Task ID is required');
 
-            $task = $instance->taskModel->findById($taskId, $phaseId);
+            $task = $instance->taskModel->findById($taskId, [
+                'phaseId'   => $phaseId, 
+                'projectId' => $projectId
+            ]);
             if (!$task) throw new NotFoundException('Task not found');
 
             $workerId = $args['workerId'] ?? null;
             if (!isset($workerId)) throw new ForbiddenException('Worker ID is required');
 
             $worker = $instance->taskWorkerModel->findById(
-                UUID::fromString($workerId),
-                null,
-                null,
-                $instance->projectModel->findById($projectId)?->getId() ?? null
-            );
+                UUID::fromString($workerId), [
+                'taskId'    => null,
+                'phaseId'   => null,
+                'projectId' => $instance->projectModel->findById($projectId)?->getId() ?? null
+            ]);
             if (!$worker) throw new NotFoundException('Worker not found');
 
             $data = decodeData('php://input');
@@ -538,7 +555,9 @@ class TaskWorkerEndpoint extends Endpoint
                 : null;
             if (!isset($task)) throw new ForbiddenException('Task ID is required');
 
-            $task = $instance->taskModel->findById($task, $phase->getId());
+            $task = $instance->taskModel->findById($task, [
+                'phaseId' => $phase->getId()
+            ]);
             if (!$task) throw new NotFoundException('Task not found');
 
             $workerId = isset($args['workerId'])

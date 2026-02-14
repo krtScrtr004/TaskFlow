@@ -63,8 +63,11 @@ class ProjectModel extends Model
      *
      * @throws DatabaseException If a PDOException occurs during query preparation or execution (PDOException message is wrapped).
      */
-    protected function find(string $whereClause = '', array $params = [], array $options = []): ?ProjectContainer
-    {
+    protected function find(
+        string $whereClause = '', 
+        array $params = [], 
+        array $options = []
+    ): ProjectContainer|null {
         $paramOptions = [
             'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
             'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
@@ -142,7 +145,7 @@ class ProjectModel extends Model
      * @throws InvalidArgumentException If the provided $projectId is invalid (< 1)
      * @throws DatabaseException If a database error occurs (wraps the underlying PDOException)
      */
-    public function findById(int|UUID $projectId): ?Project
+    public function findById(int|UUID $projectId): Project|null
     {
         if (\is_int($projectId) && $projectId < 1) throw new InvalidArgumentException('Invalid project ID provided');
 
@@ -176,7 +179,7 @@ class ProjectModel extends Model
      * @throws InvalidArgumentException If manager_id is less than 1
      * @throws DatabaseException If a database error occurs during the query
      */
-    public function findManagerActiveProjectByManagerId(int|UUID $managerId): ?Project
+    public function findManagerActiveProjectByManagerId(int|UUID $managerId): Project|null
     {
         if (\is_int($managerId) && $managerId < 1)
             throw new InvalidArgumentException('Invalid manager ID provided');
@@ -223,7 +226,7 @@ class ProjectModel extends Model
      * @throws InvalidArgumentException If the worker ID is less than 1
      * @throws DatabaseException If a database error occurs during the query execution
      */
-    public function findWorkerActiveProjectByWorkerId(int $workerId): ?Project
+    public function findWorkerActiveProjectByWorkerId(int $workerId): Project|null
     {
         if ($workerId < 1) throw new InvalidArgumentException('Invalid worker ID provided');
 
@@ -301,8 +304,7 @@ class ProjectModel extends Model
             'tasks'  => false,
             'limit'  => 10,
             'offset' => 0,
-        ]
-    ) {
+    ]): ProjectContainer|null {
         $userIds = \is_array($userId) ? $userId : [$userId];
         if (empty($userIds))
             throw new InvalidArgumentException('At least one user ID must be provided');
@@ -313,7 +315,11 @@ class ProjectModel extends Model
         $paramOptions = $historyOptions['paramOptions'];
 
         try {
-            $queryParts = $this->buildHistoryQueryParts($userIds, $includePhases, $includeTasks);
+            $queryParts = $this->buildHistoryQueryParts(
+                $userIds,
+                $includePhases,
+                $includeTasks
+            );
 
             $queryString =
                 "SELECT
@@ -393,7 +399,11 @@ class ProjectModel extends Model
         $paramOptions = $historyOptions['paramOptions'];
 
         try {
-            $queryParts = $this->buildHistoryQueryParts($userIds, $includePhases, $includeTasks);
+            $queryParts = $this->buildHistoryQueryParts(
+                $userIds, 
+                $includePhases, 
+                $includeTasks
+            );
 
             $queryString =
                 "SELECT
@@ -541,8 +551,7 @@ class ProjectModel extends Model
         array $options = [
             'phases' => false,
             'tasks'  => false,
-        ]
-    ): ProjectContainer {
+    ]): ProjectContainer {
         $includePhases = (bool) ($options['phases'] ?? false);
         $includeTasks = $includePhases && (bool) ($options['tasks'] ?? false);
 
@@ -555,6 +564,7 @@ class ProjectModel extends Model
             if (\array_key_exists('worker_status', $row))
                 $project->addAdditionalInfo('workerStatus', $row['worker_status']);
 
+            // If phases are included, decode the JSON and build Phase and Task objects accordingly
             if ($includePhases && \is_string($phasesJson)) {
                 $phaseLists = json_decode($phasesJson, true);
                 if (\is_array($phaseLists)) {
@@ -566,6 +576,7 @@ class ProjectModel extends Model
                         unset($phaseData['tasks']);
                         $phase = Phase::createPartial($phaseData);
 
+                        // If tasks are included, decode and build Task objects, attaching worker status as additional info
                         if ($includeTasks && \is_array($taskLists)) {
                             $tasks = new TaskContainer();
                             foreach ($taskLists as $taskData) {
@@ -627,8 +638,7 @@ class ProjectModel extends Model
             'offset'    => 0,
             'limit'     => 10,
             'orderBy'   => 'p.start_date_time DESC',
-        ]
-    ): ?ProjectContainer {
+    ]): ProjectContainer|null {
         $userId = $options['userId'] ?? null;
         if ($userId) {
             if (!\is_int($userId) && !($userId instanceof UUID))
@@ -719,17 +729,21 @@ class ProjectModel extends Model
      * @throws InvalidArgumentException If $offset is negative or $limit is less than 1.
      * @throws DatabaseException If a database error occurs while fetching projects (wraps PDOException).
      */
-    public function all(int $offset = 0, int $limit = 10): ?ProjectContainer
-    {
+    public function all(array $options =[
+        'offset'    => 0,
+        'limit'     => 10
+    ]): ProjectContainer|null {
+        $offset = (int) ($options['offset'] ?? 0);
         if ($offset < 0) throw new InvalidArgumentException('Invalid offset value');
+
+        $limit = (int) ($options['limit'] ?? 10);
         if ($limit < 1) throw new InvalidArgumentException('Invalid limit value');
 
         try {
-            $options = [
+            return $this->find('', [], [
                 'offset'    => $offset,
                 'limit'     => $limit,
-            ];
-            return self::find('', [], $options);
+            ]);
         } catch (Exception $e) {
             throw $e;
         }
@@ -760,7 +774,6 @@ class ProjectModel extends Model
      */
     public function create(Project|ProjectContainer $project): Project|ProjectContainer
     {
-
         // Allow passing a single Project without wrapping
         $isBatch = $project instanceof ProjectContainer;
         $projects = $isBatch ? $project : new ProjectContainer([$project]);
@@ -1034,7 +1047,7 @@ class ProjectModel extends Model
      * @throws InvalidArgumentException When an integer project_id less than 1 is provided.
      * @throws DatabaseException        When a PDOException occurs while querying the database (wrapped).
      */
-    public function getReport(int|UUID $projectId): ?ProjectReport
+    public function getReport(int|UUID $projectId): ProjectReport|null
     {
         if (\is_int($projectId) && $projectId < 1)
             throw new InvalidArgumentException('Invalid project ID provided');

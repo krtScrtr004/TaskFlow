@@ -12,7 +12,6 @@ use App\Exception\DatabaseException;
 use App\Enumeration\WorkStatus;
 use App\Enumeration\Priority;
 use App\Entity\Task;
-use App\Utility\TemporaryId;
 use Exception;
 use InvalidArgumentException;
 use PDOException;
@@ -38,8 +37,11 @@ class TaskModel extends Model
      *
      * @throws DatabaseException If a database error occurs during the query execution.
      */
-    protected function find(string $whereClause = '', array $params = [], array $options = []): TaskContainer|null
-    {
+    protected function find(
+        string $whereClause = '',
+        array $params = [],
+        array $options = []
+    ): TaskContainer|null {
         $paramOptions = [
             'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
             'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
@@ -105,7 +107,6 @@ class TaskModel extends Model
             throw new DatabaseException($e->getMessage());
         }
     }
-
 
     /**
      * Searches for tasks based on various criteria.
@@ -275,13 +276,29 @@ class TaskModel extends Model
      */
     public function findById(
         int|UUID $taskId,
-        int|UUID|null $phaseId = null,
-        int|UUID|null $projectId = null
+        array $options = [
+            'phaseId'   => null,
+            'projectId' => null,
+        ]
     ): Task|null {
         if (\is_int($taskId) && $taskId < 1)
             throw new InvalidArgumentException('Invalid task ID');
-        if ($phaseId && \is_int($phaseId) && $phaseId < 1)
-            throw new InvalidArgumentException('Invalid phase ID');
+
+        $phaseId = $options['phaseId'] ?? null;
+        if ($phaseId) {
+            if (!\is_int($phaseId) && !($phaseId instanceof UUID))
+                throw new InvalidArgumentException('Phase ID must be an integer or UUID');
+            if (\is_int($phaseId) && $phaseId < 1)
+                throw new InvalidArgumentException('Invalid phase ID provided');
+        }
+
+        $projectId = $options['projectId'] ?? null;
+        if ($projectId) {
+            if (!\is_int($projectId) && !($projectId instanceof UUID))
+                throw new InvalidArgumentException('Project ID must be an integer or UUID');
+            if (\is_int($projectId) && $projectId < 1)
+                throw new InvalidArgumentException('Invalid project ID provided');
+        }
 
         try {
             $whereClause = \is_int($taskId)
@@ -502,17 +519,25 @@ class TaskModel extends Model
      */
     public function findAssignedToWorker(
         int|UUID $workerId,
-        int|UUID|null $projectId = null,
-        WorkStatus|Priority|null $filter = null,
         array $options = [
+            'projectId' => null,
+            'status'    => null,
+            'priority'  => null,
+
             'offset' => 0,
             'limit' => 10,
         ]
     ): TaskContainer|null {
         if (\is_int($workerId) && $workerId < 1)
             throw new InvalidArgumentException('Invalid worker ID');
-        if ($projectId && \is_int($projectId) && $projectId < 1)
-            throw new InvalidArgumentException('Invalid project ID');
+
+        $projectId = $options['projectId'] ?? null;
+        if ($projectId) {
+            if (!\is_int($projectId) && !($projectId instanceof UUID))
+                throw new InvalidArgumentException('Project ID must be an integer or UUID');
+            if (\is_int($projectId) && $projectId < 1)
+                throw new InvalidArgumentException('Invalid project ID provided');
+        }
 
         $paramOptions = [
             'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
@@ -538,12 +563,15 @@ class TaskModel extends Model
                     : UUID::toBinary($projectId);
             }
 
-            if ($filter instanceof WorkStatus) {
+            $status = $options['status'] ?? null;
+            if ($status instanceof WorkStatus) {
                 $whereClause .= ' AND t.status = :status';
-                $params[':status'] = $filter->value;
-            } elseif ($filter instanceof Priority) {
+                $params[':status'] = $status->value;
+            } 
+            $priority = $options['priority'] ?? null;
+            if ($priority instanceof Priority) {
                 $whereClause .= ' AND t.priority = :priority';
-                $params[':priority'] = $filter->value;
+                $params[':priority'] = $priority->value;
             }
 
             return self::find($whereClause, $params, $paramOptions);
@@ -706,17 +734,21 @@ class TaskModel extends Model
      * 
      * @return TaskContainer|null An array of task records or null if no records found
      */
-    public function all(int $offset = 0, int $limit = 10): TaskContainer|null
-    {
+    public function all(array $options = [
+        'offset' => 0,
+        'limit'  => 10,
+    ]): TaskContainer|null {
+        $offset = (int) ($options['offset'] ?? 0);
         if ($offset < 0) throw new InvalidArgumentException('Invalid offset value');
+
+        $limit = (int) ($options['limit'] ?? 10);
         if ($limit < 1) throw new InvalidArgumentException('Invalid limit value');
 
         try {
-            $paramOptions = [
+            return self::find('', [], [
                 'offset'    => $offset,
                 'limit'     => $limit,
-            ];
-            return self::find('', [], $paramOptions);
+            ]);
         } catch (Exception $e) {
             throw $e;
         }
@@ -745,8 +777,8 @@ class TaskModel extends Model
                 ) VALUES (
                     :publicId,
                     " . (\is_int($phaseId)
-                        ? ":phaseId"
-                        : "(SELECT id FROM `phase` WHERE public_id = :phaseId)") . ",
+                    ? ":phaseId"
+                    : "(SELECT id FROM `phase` WHERE public_id = :phaseId)") . ",
                     :name,
                     :description,
                     :priority,

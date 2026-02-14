@@ -61,7 +61,9 @@ class ProjectManagerService
 
         $projectManagers = [];
         foreach ($projectManagerIds as $managerId) {
-            $manager = $this->projectManagerModel->findById($managerId, $projectId);
+            $manager = $this->projectManagerModel->findById($managerId, [
+                'projectId' => $projectId
+            ]);
             if (!$manager) return null;
             $projectManagers[] = $manager;
         }

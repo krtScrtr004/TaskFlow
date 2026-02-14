@@ -176,7 +176,7 @@ class RateLimiterModel extends Model
     /**
     * Not implemented (No use case)
     */
-    public function all(int $offset = 0, int $limit = 10): mixed
+    public function all(array $options = []): mixed
     {
         return [];
     }

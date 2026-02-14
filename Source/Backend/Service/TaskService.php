@@ -282,7 +282,7 @@ class TaskService
             $includeWorkers = $options['workers'] ?? false;
             $includeResources = $options['resources'] ?? false;
 
-                $task = $this->taskModel->findById($item);
+            $task = $this->taskModel->findById($item);
             if (!$task) return null;
 
             // Load related entities based on options

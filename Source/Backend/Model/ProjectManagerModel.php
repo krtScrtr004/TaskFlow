@@ -9,6 +9,7 @@ use App\Enumeration\Role;
 use App\Enumeration\WorkStatus;
 use App\Exception\DatabaseException;
 use DateTime;
+use InvalidArgumentException;
 use PDOException;
 
 class ProjectManagerModel extends Model
@@ -37,16 +38,20 @@ class ProjectManagerModel extends Model
      *
      * @return array|null Array of result rows (each row as an associative array) or null if no results or the method is not implemented
      */
-    protected function find(string $whereClause = '', array $params = [], array $options = []): ?array
-    {
+    protected function find(
+        string $whereClause = '', 
+        array $params = [], 
+        array $options = []
+    ): array|null {
         // Not implemented (No use case)
         return null;
     }
 
     public function findById(
         int|UUID $managerId, 
-        int|UUID|null $projectId = null, 
-    ): ?ProjectManager {
+        array $options = [
+            'projectId' => null,
+    ]): ProjectManager|null {
         try {
             $whereClause = [];
             $params = [':completedStatus' => WorkStatus::COMPLETED->value];
@@ -62,7 +67,13 @@ class ProjectManagerModel extends Model
             $whereClause[] = 'u.role = :projectManagerRole';
             $params[':projectManagerRole'] = Role::PROJECT_MANAGER->value;
 
-            if ($projectId) {
+            $projectId = $options['projectId'] ?? null;
+            if ($projectId && !\is_int($projectId) && !($projectId instanceof UUID)) {
+                throw new InvalidArgumentException('Project ID must be an integer or UUID');
+            } else {
+                if (\is_int($projectId) && $projectId < 1) {
+                    throw new InvalidArgumentException('Invalid project ID provided');
+                }
                 $whereClause[] = 'p.id = :projectId';
                 $params[':projectId'] = \is_int($projectId)
                     ? $projectId
@@ -150,8 +161,10 @@ class ProjectManagerModel extends Model
      * 
      * @return array|null An array of project manager data or null if not implemented
      */
-    public function all(int $offset = 0, int $limit = 10): ?array
-    {
+    public function all(array $options = [
+        'offset' => 0,
+        'limit'  => 10,
+    ]): array|null {
         // Not implemented (No use case)
         return null;
     }
