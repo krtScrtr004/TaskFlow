@@ -277,3 +277,42 @@
 		width: 32px;
 	}
 }
+
+
+
+/*  */
+
+.heading .info  {
+	align-items: flex-start;
+}
+
+.heading .back-button {
+	width: fit-content;
+	margin-right: 1rem;
+}
+
+.heading .back-button:hover {
+	background-color: var(--opacity-white);
+}
+
+.heading .back-button > img {
+	margin-right: 0;
+}
+
+.heading .id {
+	font-size: 0.8rem;
+	font-weight: 100;
+}
+
+.heading .buttons  {
+	gap: 0.5rem;
+}
+
+.heading .buttons > button {
+	width: 18ch;
+	padding: 8px;
+}
+
+.heading .buttons > button h3 {
+	font-size: 1.2rem;
+}
