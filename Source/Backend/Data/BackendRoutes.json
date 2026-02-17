@@ -1,0 +1,180 @@
+{
+	"GET": {
+		"/endpoint/projects/{projectId:[\\w_-]+}/phases/{phaseId:[\\w_-]+}/tasks/{taskId:[\\w_-]+}/workers/{workerId:[\\w_-]+}": [
+			"TaskWorkerEndpoint",
+			"getById"
+		],
+		"/endpoint/projects/{projectId:[\\w_-]+}/phases/{phaseId:[\\w_-]+}/tasks/{taskId:[\\w_-]+}/workers(?:\\?[\\w\\s_=\\/%,&@.+-]+)?": [
+			"TaskWorkerEndpoint",
+			"getByKey"
+		],
+		"/endpoint/projects/{projectId:[\\w_-]+}/phases/{phaseId:[\\w_-]+}/tasks/workers(?:\\?[\\w\\s_=\\/%,&@.+-]+)?": [
+			"TaskWorkerEndpoint",
+			"getByKey"
+		],
+
+		"/endpoint/projects/{projectId:[\\w_-]+}/tasks/{taskId:[\\w_-]+}/workers/{workerId:[\\w_-]+}": [
+			"TaskWorkerEndpoint",
+			"getById"
+		],
+		"/endpoint/projects/{projectId:[\\w_-]+}/tasks/{taskId:[\\w_-]+}/workers(?:\\?[\\w\\s_=\\/%,&@.+-]+)?": [
+			"TaskWorkerEndpoint",
+			"getByKey"
+		],
+		"/endpoint/projects/{projectId:[\\w_-]+}/tasks/workers(?:\\?[\\w\\s_=\\/%,&@.+-]+)?": [
+			"TaskWorkerEndpoint",
+			"getByKey"
+		],
+
+
+		"/endpoint/projects/{projectId:[\\w_-]+}/tasks/{taskId:[\\w_-]+}": [
+			"TaskEndpoint",
+			"getById"
+		],
+		"/endpoint/projects/{projectId:[\\w+_-]+}/phases/{phaseId:[\\w+_-]+}/tasks/workers/{workerId:[\\w+_-]+}(?:\\?[\\w\\s_=\\/%,&.@-]+)?": [
+			"TaskEndpoint",
+			"getByKey"
+		],
+		"/endpoint/projects/{projectId:[\\w+_-]+}/tasks/workers/{workerId:[\\w+_-]+}(?:\\?[\\w\\s_=\\/%,&.@-]+)?": [
+			"TaskEndpoint",
+			"getByKey"
+		],
+		"/endpoint/projects/{projectId:[\\w_-]+}/tasks(?:\\?[\\w\\s_=\\/%,&.@-]+)?": [
+			"TaskEndpoint",
+			"getByKey"
+		],
+
+		"/endpoint/projects/{projectId:[\\w_-]+}/phases/{phaseId:[\\w_-]+}/tasks/{taskId:[\\w_-]+}": [
+			"TaskEndpoint",
+			"getById"
+		],
+		"/endpoint/projects/{projectId:[\\w_-]+}/phases/{phaseId:[\\w_-]+}/tasks(?:\\?[\\w\\s_=\\/%,&.@-]+)?": [
+			"TaskEndpoint",
+			"getByKey"
+		],
+
+		"/endpoint/projects/{projectId:[\\w_-]+}/workers/{workerId:[\\w_-]+}": [
+			"ProjectWorkerEndpoint",
+			"getById"
+		],
+		"/endpoint/projects/{projectId:[\\w_-]+}/workers(?:\\?[\\w\\s_=\\/%,&@.+-]+)?": [
+			"ProjectWorkerEndpoint",
+			"getByKey"
+		],
+
+		"/endpoint/projects/{projectId:[\\w_-]+}/manager/{managerId:[\\w_-]+}": [
+			"ProjectManagerEndpoint",
+			"getById"
+		],
+		"/endpoint/projects/{projectId:[\\w_-]+}/manager": [
+			"ProjectManagerEndpoint",
+			"getById"
+		],
+
+		"/endpoint/projects/{projectId:[\\w_-]+}": [
+			"ProjectEndpoint",
+			"getById"
+		],
+		"/endpoint/projects(?:\\?[\\w\\s_=\\/%,&@.+-]+)?": [
+			"ProjectEndpoint",
+			"getByKey"
+		],
+
+		"/endpoint/workers/{workerId:[\\w_-]+}": [
+			"ProjectWorkerEndpoint",
+			"getById"
+		],
+		"/endpoint/workers(?:\\?[\\w\\s_=\\/%,&@.+-]+)?": [
+			"ProjectWorkerEndpoint",
+			"getByKey"
+		],
+
+		"/endpoint/users/{userId:[\\w_-]+}": ["UserEndpoint", "getById"],
+		"/endpoint/users(?:\\?[\\w\\s_=\\/%,&@.+-]+)?": [
+			"UserEndpoint",
+			"getByKey"
+		]
+	},
+
+	"POST": {
+		"/endpoint/users/{userId:[\\w+_-]+}": ["UserEndpoint", "edit"],
+		"/endpoint/users": ["UserEndpoint", "create"],
+
+		"/endpoint/projects": ["ProjectEndpoint", "create"],
+		"/endpoint/projects/{projectId:[\\w+_-]+}/workers": [
+			"ProjectWorkerEndpoint",
+			"create"
+		],
+
+		"/endpoint/projects/{projectId:[\\w+_-]+}/phases": [
+			"PhaseEndpoint",
+			"create"
+		],
+
+		"/endpoint/projects/{projectId:[\\w+_-]+}/phases/{phaseId:[\\w+_-]+}/tasks": [
+			"TaskEndpoint",
+			"create"
+		],
+		
+		"/endpoint/projects/{projectId:[\\w+_-]+}/phases/{phaseId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}/workers": [
+			"TaskWorkerEndpoint",
+			"create"
+		],
+
+		"/endpoint/about-us/concern": [
+			"AboutUsEndpoint",
+			"sendConcern"
+		]
+	},
+
+	"PUT": {
+		"/endpoint/projects/{projectId:[\\w+_-]+}": [
+			"ProjectEndpoint",
+			"save"
+		],
+		"/endpoint/projects/{projectId:[\\w+_-]+}/phases/{phaseId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}": [
+			"TaskEndpoint",
+			"save"
+		],
+		"/endpoint/projects/{projectId:[\\w+_-]+}/workers/{workerId:[\\w+_-]+}": [
+			"ProjectWorkerEndpoint",
+			"save"
+		],
+		"/endpoint/projects/{projectId:[\\w+_-]+}/phases/{phaseId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}/workers/{workerId:[\\w+_-]+}": [
+			"TaskWorkerEndpoint",
+			"save"
+		]
+	},
+
+	"PATCH": {
+		"/endpoint/projects/{projectId:[\\w+_-]+}": [
+			"ProjectEndpoint",
+			"save"
+		],
+		"/endpoint/users/{userId:[\\w+_-]+}": ["UserEndpoint", "save"],
+		"/endpoint/projects/{projectId:[\\w+_-]+}/phases/{phaseId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}": [
+			"TaskEndpoint",
+			"save"
+		],
+		"/endpoint/projects/{projectId:[\\w+_-]+}/workers/{workerId:[\\w+_-]+}": [
+			"ProjectWorkerEndpoint",
+			"save"
+		],
+		"/endpoint/projects/{projectId:[\\w+_-]+}/phases/{phaseId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}/workers/{workerId:[\\w+_-]+}": [
+			"TaskWorkerEndpoint",
+			"save"
+		]
+	},
+
+	"DELETE": {
+		"/endpoint/users/{userId:[\\w+_-]+}": ["UserEndpoint", "delete"],
+		"/endpoint/projects/{projectId:[\\w+_-]+}/workers/{workerId:[\\w+_-]+}": [
+			"ProjectWorkerEndpoint",
+			"delete"
+		],
+		"/endpoint/projects/{projectId:[\\w+_-]+}/phases/{phaseId:[\\w+_-]+}/tasks/{taskId:[\\w+_-]+}/workers/{workerId:[\\w+_-]+}": [
+			"TaskWorkerEndpoint",
+			"delete"
+		]
+	}
+}

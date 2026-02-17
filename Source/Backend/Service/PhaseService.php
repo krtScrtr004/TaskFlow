@@ -1,0 +1,123 @@
+<?php
+
+namespace App\Service;
+
+use App\Container\PhaseContainer;
+use App\Core\UUID;
+use App\Entity\Phase;
+use App\Model\PhaseModel;
+use App\Model\TaskModel;
+
+use App\Container\TaskContainer;
+use InvalidArgumentException;
+
+class PhaseService
+{
+    private PhaseModel $phaseModel;
+    private TaskModel $taskModel;
+
+    public function __construct()
+    {
+        $this->phaseModel = new PhaseModel();
+        $this->taskModel = new TaskModel();
+    }
+
+    public function get(
+        int|UUID|array $phaseId,
+        array $options = [
+            'tasks' => true,
+        ]
+    ): Phase|null {
+        $isBatch = \is_array($phaseId);
+        $phaseIds = $isBatch ? array_values($phaseId) : [$phaseId];
+
+        $phases = new PhaseContainer();
+        foreach ($phaseIds as $item) {
+            if (!\is_int($item) && !($item instanceof UUID))
+                throw new InvalidArgumentException('Phase ID must be an integer or UUID');
+
+            if (\is_int($item) && $item < 1)
+                throw new InvalidArgumentException('Invalid phase ID provided');
+
+            $phase = $this->phaseModel->findById($item);
+            if (!$phase) return null;
+
+            $phaseId = $phase->getId();
+
+            $includeTasks = $options['tasks'] ?? true;
+            if ($includeTasks) {
+                $tasks = $this->taskModel->findByPhaseId($phaseId);
+                $phase->setTasks($tasks);
+            }
+            $phases->add($phase);
+        }
+
+        return $isBatch ? $phases : $phases->first();
+    }
+
+    /**
+     * Retrieves phases for a project with optional tasks attached.
+     *
+     * This method efficiently loads phases and their associated tasks in two queries
+     * instead of using a subquery or N+1 queries, improving performance.
+     *
+     * @param int|UUID $projectId The project identifier
+     * @param bool $includeTasks Whether to load tasks for each phase
+     * @param array $options Query options (limit, offset)
+     * 
+     * @return PhaseContainer|null Container with phases, or null if none found
+     * 
+     * @throws InvalidArgumentException If project ID is invalid
+     */
+    public function getByProjectId(
+        int|UUID $projectId,
+        array $options = ['tasks' => false]
+    ): PhaseContainer|null {
+        // Fetch phases without tasks
+        $phases = $this->phaseModel->findByProjectId($projectId, $options);
+
+        if (!$phases || $phases->count() === 0) return null;
+
+        // If tasks are needed, fetch all tasks for these phases in one query
+        $includeTasks = $options['tasks'] ?? false;
+        if ($includeTasks) {
+            $phaseIds = [];
+            foreach ($phases as $phase) {
+                $phaseIds[] = $phase->getId();
+            }
+
+            $allTasks = $this->taskModel->findByPhaseIds($phaseIds, ['limit' => null]);
+
+            if ($allTasks && $allTasks->count() > 0) {
+                // Group tasks by phase_id
+                $tasksByPhaseId = [];
+                foreach ($allTasks as $task) {
+                    $phaseId = $task->getAdditionalInfo('phaseId') ?? null;
+                    if ($phaseId) {
+                        // Find matching phase object to get internal ID
+                        foreach ($phases as $phase) {
+                            if (UUID::toString($phase->getPublicId()) === UUID::toString($phaseId)) {
+                                $internalPhaseId = $phase->getId();
+
+                                // Add task to the corresponding phase's task container
+                                if (!isset($tasksByPhaseId[$internalPhaseId]))
+                                    $tasksByPhaseId[$internalPhaseId] = new TaskContainer();
+                                $tasksByPhaseId[$internalPhaseId]->add($task);
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // Attach tasks to their respective phases
+                foreach ($phases as $phase) {
+                    $phaseId = $phase->getId();
+                    if (isset($tasksByPhaseId[$phaseId]))
+                        $phase->setTasks($tasksByPhaseId[$phaseId]);
+                }
+            }
+        }
+
+        return $phases;
+    }
+}

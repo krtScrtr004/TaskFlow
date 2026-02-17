@@ -1,0 +1,350 @@
+<?php
+
+namespace App\Validator;
+
+use App\Abstract\Validator;
+use App\Exception\ValidationException;
+use DateTime;
+use InvalidArgumentException;
+
+class WorkValidator extends Validator
+{
+    /**
+     * Validates a name and appends any validation error messages to $this->errors.
+     *
+     * This method performs the following checks:
+     * - Treats a null value or a string that is empty after trimming as invalid.
+     * - Ensures the trimmed name length is between the constants NAME_MIN and NAME_MAX.
+     * - Checks for the presence of three or more consecutive special characters using hasConsecutiveSpecialChars().
+     *
+     * On failure, the corresponding error messages are added to $this->errors:
+     * - "Name must be between {NAME_MIN} and {NAME_MAX} characters long." when the length check fails or name is null/empty.
+     * - "Name contains three or more consecutive special characters." when the consecutive-special-character check fails.
+     *
+     * @param string $name The name to validate.
+     *
+     * @return void
+     */
+    public function validateName(string $name): void
+    {
+        $this->iValidateName($name);
+    }
+
+    /**
+     * Validates a description string and records validation errors.
+     *
+     * This method performs validation only when a non-null description is provided:
+     * - Trims surrounding whitespace and ensures the resulting length is between LONG_TEXT_MIN and LONG_TEXT_MAX.
+     * - Verifies the description does not contain three or more consecutive special characters by delegating to hasConsecutiveSpecialChars().
+     *
+     * @param string $description The description to validate.
+     *
+     * @return void
+     *
+     * Side effects:
+     * - If the length check fails, an error message is appended to $this->errors:
+     *     "Description must be between {LONG_TEXT_MIN} and {LONG_TEXT_MAX} characters long."
+     * - If the consecutive-special-character check fails, an error message is appended to $this->errors:
+     *     "Description contains three or more consecutive special characters."
+     *
+     * Notes:
+     * - Length checks use strlen() on the trimmed string.
+     * - LONG_TEXT_MIN and LONG_TEXT_MAX are expected to be defined constants.
+     * - hasConsecutiveSpecialChars() is a class helper used to detect consecutive special characters.
+     */
+    public function validateDescription(string $description): void
+    {
+        $this->iValidateLongMessage($description, ['fieldLabel' => 'Description']);
+    }
+
+    /**
+     * Validates the maximum number of workers.
+     *
+     * This method checks if the provided workers count falls within the acceptable range
+     * defined by WORKER_COUNT_MIN and WORKER_COUNT_MAX constants. If the value is outside
+     * this range, an error message is added to the errors array.
+     *
+     * @param int $workersCount The number of workers to validate
+     *
+     * @return void
+     */
+    public function validateMaxWorkers(int $workersCount): void
+    {
+        if ($workersCount < WORKER_COUNT_MIN || $workersCount > WORKER_COUNT_MAX) 
+            $this->addError('Maximum number of workers must be between ' . WORKER_COUNT_MIN . ' and ' . WORKER_COUNT_MAX);
+    }
+
+    /**
+     * Validates the budget value for a work item.
+     *
+     * This method checks if the provided budget is a valid numeric value
+     * within the acceptable range defined by BUDGET_MIN and BUDGET_MAX constants.
+     * If validation fails, an error message is added to the errors array.
+     *
+     * @param float $budget The budget value to validate
+     *
+     * @return void
+     */
+    public function validateBudget(float $budget): void
+    {
+        if ($budget < BUDGET_MIN || $budget > BUDGET_MAX) 
+            $this->addError('Budget must be a number between ' . BUDGET_MIN . ' and ' . BUDGET_MAX);
+    }
+
+    /**
+     * Validates the contingency rate value.
+     *
+     * This method checks if the provided contingency rate falls within the acceptable
+     * range defined by CONTINGENCY_RATE_MIN and CONTINGENCY_RATE_MAX constants.
+     * If the rate is outside this range, an error message is added to the errors array.
+     *
+     * @param float $contingencyRate The contingency rate percentage to validate
+     *
+     * @return void
+     */
+    public function validateContingencyRate(float $contingencyRate): void
+    {
+        if ($contingencyRate < CONTINGENCY_RATE_MIN || $contingencyRate > CONTINGENCY_RATE_MAX)
+            $this->addError('Contingency rate must be between ' . CONTINGENCY_RATE_MIN . '% and ' . CONTINGENCY_RATE_MAX . '%');
+    }
+
+    /**
+     * Validates a budget note field.
+     *
+     * This method checks if the provided budget note meets the length requirements
+     * (between LONG_TEXT_MIN and LONG_TEXT_MAX characters) and ensures it does not
+     * contain three or more consecutive special characters. Validation is only
+     * performed when the budget note is not null.
+     *
+     * @param string|null $budgetNote The budget note text to validate, or null if not provided
+     *
+     * @return void Errors are added to the $this->errors array if validation fails
+     */
+    public function validateBudgetNote(?string $budgetNote): void
+    {
+        $this->iValidateLongMessage($budgetNote, ['fieldLabel' => 'Budget note']);
+    }
+
+    /**
+     * Validates a start date/time and appends any validation errors to $this->errors.
+     *
+     * This method performs the following checks:
+     * - Ensures a DateTime value is provided; if null, appends 'Invalid start date and time.'
+     * - Uses PHP's checkdate() on the month, day and year extracted from the DateTime to ensure the date is a real calendar date;
+     *   if not valid, appends 'Start date is not a valid date.'
+     * - Validates the year component using self::isValidYear(); if the year is not acceptable, appends 'Start date year is not valid.'
+     *
+     * Note: Errors are collected as plain strings in $this->errors and no exception is thrown by this method.
+     *
+     * @param DateTime $startDateTime DateTime instance representing the start date/time
+     * @return void
+     */
+    public function validateStartDateTime(DateTime $startDateTime): void
+    {
+        
+        if (checkdate((int) $startDateTime->format('m'), (int) $startDateTime->format('d'), (int) $startDateTime->format('Y')) === false)
+            $this->addError('Start date is not a valid date');
+
+        if (!self::isValidYear((int) $startDateTime->format('Y')))
+            $this->addError('Start date year is not valid');
+
+        $yearFormat = (int) $startDateTime->format('Y');
+        $min = YEAR_MIN;
+        $max = YEAR_MAX;
+        if ($yearFormat < $min || $yearFormat > $max)
+            $this->addError("Start date year must be between {$min} and {$max}");
+    }
+
+    /**
+     * Validates a completion DateTime ensuring it is present, represents a valid calendar date,
+     * its year is acceptable, and (when a start date is provided) that it occurs after the start date.
+     *
+     * This method performs the following checks and records validation errors in $this->errors:
+     * - Verifies that $completionDateTime is not null.
+     * - Uses checkdate(month, day, year) to ensure the date components form a valid calendar date.
+     * - Uses self::isValidYear(int $year) to ensure the year component is within allowed bounds.
+     * - If $startDateTime is provided, ensures $completionDateTime is strictly greater than $startDateTime.
+     *
+     * Possible error messages appended to $this->errors:
+     *  - 'Invalid completion date and time.'         when $completionDateTime is null
+     *  - 'Completion date is not a valid date.'      when checkdate(...) fails
+     *  - 'Completion date year is not valid.'        when self::isValidYear(...) returns false
+     *  - 'Completion date must be after the start date.' when $completionDateTime <= $startDateTime
+     *
+     * @param DateTime $completionDateTime The completion date/time to validate.
+     * @param DateTime|null $startDateTime Optional start date/time to compare against; if provided,
+     *                                      the completion date/time must be strictly after this value.
+     *
+     * @return void
+     */
+    public function validateCompletionDateTime(DateTime $completionDateTime, DateTime|null $startDateTime = null): void
+    {
+        if (checkdate((int) $completionDateTime->format('m'), (int) $completionDateTime->format('d'), (int) $completionDateTime->format('Y')) === false) 
+            $this->addError('Completion date is not a valid date');
+
+        $yearFormat = (int) $completionDateTime->format('Y');
+        $min = YEAR_MIN;
+        $max = YEAR_MAX;
+
+        if (!self::isValidYear($yearFormat))
+            $this->addError('Completion date year is not valid');
+
+        if ($startDateTime !== null && $completionDateTime <= $startDateTime)
+            $this->addError('Completion date must be after the start date');
+
+        if ($yearFormat < $min || $yearFormat > $max)
+            $this->addError("Completion date year must be between {$min} and {$max}");
+    }
+
+    /**
+     * Creates a budget boundary validator.
+     *
+     * Returns an associative array with two closures:
+     *  - 'addBudget' (callable(float)): increments an internal running total ($currentBudget,
+     *    captured by reference). If the new total exceeds $totalBudget, appends an error to $this->errors.
+     * - 'subtractBudget' (callable(float)): decrements the internal running total ($currentBudget, 
+     *   captured by reference). Ensures the total does not go below zero.
+     *  - 'validateTotal' (callable()): validates the final running total against $totalBudget
+     *    and appends an error to $this->errors if it exceeds the allowed limit.
+     *
+     * @param float $totalBudget Maximum allowed total budget
+     *
+     * @return array{
+     *     addBudget: callable(float): void,
+     *     subtractBudget: callable(float): void,
+     *     validateTotal: callable(): void
+     * } Associative array of validator closures. Closures update $currentBudget (by reference)
+     * and may add formatted error messages to $this->errors when the budget limit is exceeded.
+     */
+    public function createBudgetBoundaryValidator(float $totalBudget) {
+        $currentBudget = 0.0;
+        return [
+            'addBudget' => function (float $budget) use (&$currentBudget, $totalBudget) {
+                $currentBudget += $budget;
+                if ($currentBudget > $totalBudget)
+                    $this->addError('Total budget of ₱' . formatNumber($currentBudget) . ' exceeds the allowed budget of ₱' . formatNumber($totalBudget));
+            },
+
+            'subtractBudget' => function (float $budget) use (&$currentBudget) {
+                $currentBudget -= $budget;
+                if ($currentBudget < BUDGET_MIN) $currentBudget = 0.0;
+            },
+
+            'validateTotal' => function () use (&$currentBudget, $totalBudget) {
+                if ($currentBudget > $totalBudget)
+                    $this->addError('Total budget of ₱' . formatNumber($currentBudget) . ' exceeds the allowed budget of ₱' . formatNumber($totalBudget));
+            }
+        ];
+    }
+
+    /**
+     * Validates that a pair of start and completion DateTime values fall within given bounding dates.
+     *
+     * This method performs the following validations and appends human-readable error messages to $this->errors:
+     * - Ensures both $startDateTime and $completionDateTime are provided; otherwise records a generic required-fields error.
+     * - Ensures both $boundStartDateTime and $boundCompletionDateTime are provided; otherwise records a context-specific required-fields error.
+     * - Ensures the start date is not earlier than the bound start date.
+     * - Ensures the start date is not later than the bound completion date.
+     * - Ensures the completion date is not later than the bound completion date.
+     *
+     * Error messages include the formatted bound date (Y-m-d) and prefix the bound-related messages with the provided context
+     * (default "Project", normalized via ucwords and trim).
+     *
+     * @param DateTime|null $startDateTime The start date/time to validate.
+     * @param DateTime|null $completionDateTime The completion date/time to validate.
+     * @param DateTime|null $boundStartDateTime The earliest allowed start date/time (boundary).
+     * @param DateTime|null $boundCompletionDateTime The latest allowed completion date/time (boundary).
+     * @param string $context Optional context name used in messages (default "Project"). It will be trimmed and converted with ucwords.
+     *
+     * @return void
+     */
+    public function validateDateBounds(
+        DateTime|null $startDateTime,
+        DateTime|null $completionDateTime,
+        DateTime|null $boundStartDateTime,
+        DateTime|null $boundCompletionDateTime,
+        string $context = 'Project'
+    ): void {
+        $context = ucwords(trim($context));
+
+        if ($startDateTime === null || $completionDateTime === null) {
+            $this->addError('Start date and completion date are required');
+            return;
+        }
+
+        if ($boundStartDateTime === null || $boundCompletionDateTime === null) {
+            $this->addError($context . ' start date and completion date are required');
+            return;
+        }
+
+        if ($startDateTime < $boundStartDateTime)
+            $this->addError('Start date cannot be before ' . $context . ' start date (' . formatDateTime($boundStartDateTime, 'Y-m-d') . ')');
+
+        if ($startDateTime > $boundCompletionDateTime)
+            $this->addError('Start date cannot be after ' . $context . ' completion date (' . formatDateTime($boundCompletionDateTime, 'Y-m-d') . ')');
+
+        if ($completionDateTime > $boundCompletionDateTime)
+            $this->addError('Completion date cannot be after ' . $context . ' completion date (' . formatDateTime($boundCompletionDateTime, 'Y-m-d') . ')');
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------------------ //
+
+    /**
+     * Validates multiple work-related fields provided in an associative array.
+     *
+     * Only fields that are present in the input array are validated. This method:
+     * - Trims and validates the 'name' when present.
+     * - Trims and validates the 'description' when present.
+     * - Validates the 'budget' when present (expects a numeric/parsable amount).
+     * - Validates the 'maxWorkers' when present (expects an integer).
+     * - Validates the 'contingencyRate' when present (expects a float percentage).
+     * - Trims and validates the 'budgetNote' when present.
+     * - Validates the 'startDateTime' when present (expects a date/time string or DateTime-like value).
+     * - Validates the 'completionDateTime' when present and, if startDateTime is provided, validates that the
+     *   completion date/time is consistent relative to the start date/time.
+     *
+     * @param array $data Associative array containing work data with the following optional keys:
+     *      - name: string|null Name of the work (trimmed before validation)
+     *      - description: string|null Description of the work (trimmed before validation)
+     *      - budget: int|float|string|null Budget value (numeric or numeric-string)
+     *      - maxWorkers: int Maximum number of workers allowed
+     *      - contingencyRate: float Contingency rate percentage
+     *      - budgetNote: string|null Notes regarding the budget (trimmed before validation)
+     *      - startDateTime: string|\DateTime|null Start date/time of the work
+     *      - completionDateTime: string|\DateTime|null Completion date/time of the work (may be compared to startDateTime)
+     *
+     * @throws ValidationException If any provided field fails validation
+     *
+     * @return void
+     */
+    public function validateMultiple(array $data): void
+    {
+        if (isset($data['name']) && $data['name'] !== null && $data['name'] !== '')
+            $this->validateName(trim($data['name']) ?? null);
+
+        if (isset($data['description']) && $data['description'] !== null && $data['description'] !== '')
+            $this->validateDescription(trim($data['description']) ?? null);
+
+        if (isset($data['maxWorkers']) && $data['maxWorkers'] !== null)
+            $this->validateMaxWorkers((int) $data['maxWorkers']);
+
+        if (isset($data['budget']) && $data['budget'] !== null)
+            $this->validateBudget($data['budget'] ?? null);
+
+        if (isset($data['contingencyRate']) && $data['contingencyRate'] !== null)
+            $this->validateContingencyRate((float) $data['contingencyRate']);
+
+        if (isset($data['budgetNote']) && $data['budgetNote'] !== null && $data['budgetNote'] !== '')
+            $this->validateBudgetNote(trim($data['budgetNote']) ?? null);
+
+        if (isset($data['startDateTime']) && $data['startDateTime'] !== null)
+            $this->validateStartDateTime($data['startDateTime'] ?? null);
+
+        if (isset($data['completionDateTime']) && $data['completionDateTime'] !== null) {
+            $this->validateCompletionDateTime(
+                $data['completionDateTime'] ?? null,
+                $data['startDateTime'] ?? null
+            );
+        }
+    }
+}

@@ -1,0 +1,1681 @@
+<?php
+
+namespace App\Model;
+
+use App\Abstract\Model;
+use App\Container\PhaseContainer;
+use App\Container\TaskContainer;
+use App\Entity\Phase;
+use App\Enumeration\Priority;
+use App\Core\UUID;
+use App\Enumeration\WorkStatus;
+use App\Container\ProjectContainer;
+use App\Container\WorkerContainer;
+use App\Entity\Project;
+use App\Entity\Task;
+use App\Entity\Worker;
+use App\Core\Me;
+use App\Entity\ProjectManager;
+use App\Entity\ProjectReport;
+use App\Enumeration\WorkerStatus;
+use App\Exception\DatabaseException;
+use InvalidArgumentException;
+use DateTime;
+use Exception;
+use PDOException;
+
+class ProjectModel extends Model
+{
+    /**
+     * Find projects matching a SQL WHERE clause and return a ProjectContainer of results.
+     *
+     * Builds and executes a SELECT query on the `project` table using a provided WHERE clause
+     * and bound parameters. The method optionally supports pagination and ordering via the
+     * $options array. Each resulting row is converted to a Project object using Project::fromArray
+     * and added to a ProjectContainer which is returned. If no rows are found, null is returned.
+     *
+     * Notes and behavior details:
+     * - The base query is "SELECT * FROM `project` WHERE $whereClause". Therefore $whereClause
+     *   must be a valid SQL condition (e.g. "status = :status AND created_by = :userId") and
+     *   should not include the "WHERE" keyword itself.
+     * - $params are passed to PDOStatement::execute and should match the placeholders used in
+     *   $whereClause (named or positional).
+     * - $options may contain:
+     *      - 'limit'  => int Limits the number of returned rows (cast to int before use).
+     *      - 'offset' => int Offsets the result set (cast to int before use).
+     *      - 'orderBy'=> string An ORDER BY clause fragment (injected verbatim into SQL).
+     * - limit and offset are explicitly cast to integers before being appended to the query.
+     * - orderBy is appended directly into the SQL string — it must be trusted or sanitized
+     *   by the caller to avoid SQL injection.
+     *
+     * Return value:
+     * - Returns a ProjectContainer populated with Project instance when one or more rows are found.
+     * - Returns null if the query yields no rows.
+     *
+     * @param string $whereClause SQL condition fragment (without the "WHERE" keyword). Required to be valid SQL.
+     * @param array $params Positional or named parameters to bind to the prepared statement; values must correspond to placeholders in $whereClause.
+     * @param array $options Optional settings:
+     *      - limit: int (optional) Maximum number of rows to return.
+     *      - offset: int (optional) Number of rows to skip.
+     *      - orderBy: string (optional) ORDER BY clause fragment (e.g. "created_at DESC").
+     *
+     * @return ProjectContainer|null ProjectContainer with Project instance, or null if no rows found.
+     *
+     * @throws DatabaseException If a PDOException occurs during query preparation or execution (PDOException message is wrapped).
+     */
+    protected function find(
+        string $whereClause = '', 
+        array $params = [], 
+        array $options = []
+    ): ProjectContainer|null {
+        $paramOptions = [
+            'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
+            'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
+            'groupBy'   => $options[':groupBy'] ?? $options['groupBy'] ?? 'p.id',
+            'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 'p.start_date_time DESC',
+        ];
+
+        try {
+            $queryString =
+                "SELECT 
+                    p.*,
+                    u.id AS u_id,
+                    u.public_id AS u_public_id,
+                    u.first_name AS first_name,
+                    u.middle_name AS middle_name,
+                    u.last_name AS last_name,
+                    u.gender AS gender,
+                    u.email AS email,
+                    u.profile_link AS profile_link 
+                FROM 
+                    `project` AS p
+                INNER JOIN
+                    `user` AS u 
+                ON 
+                    p.manager_id = u.id";
+            $query = $this->appendOptionsToFindQuery(
+                $this->appendWhereClause($queryString, $whereClause),
+                $paramOptions
+            );
+
+            $statement = $this->connection->prepare($query);
+            $statement->execute($params);
+            $result = $statement->fetchAll();
+
+            if (!$this->hasData($result)) return null;
+
+            $projects = new ProjectContainer();
+            foreach ($result as $row) {
+                $row['manager'] = ProjectManager::createPartial([
+                    'id'            => $row['u_id'],
+                    'public_id'     => $row['u_public_id'],
+                    'first_name'    => $row['first_name'],
+                    'middle_name'   => $row['middle_name'],
+                    'last_name'     => $row['last_name'],
+                    'gender'        => $row['gender'],
+                    'email'         => $row['email'],
+                    'profile_link'  => $row['profile_link'],
+                ]);
+
+                $projects->add(Project::createPartial($row));
+            }
+
+            return $projects;
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
+        }
+    }
+
+    /**
+     * Retrieves a Project by its ID.
+     *
+     * Validates the provided project ID, performs a parameterized lookup, and returns the first matching
+     * Project this$this or null when no record is found.
+     *
+     * Behavior:
+     * - Throws InvalidArgumentException when $projectId is less than 1.
+     * - Uses a parameterized query (named parameter :projectId) to fetch the project, mitigating SQL injection.
+     * - Returns the first matching Project or null if none exists.
+     * - Catches low-level PDOException and rethrows it as a DatabaseException while preserving the original message.
+     *
+     * @param int|UUID $projectId The numeric ID or UUID of the project to retrieve.
+     *
+     * @return Project|null The matching Project this$this, or null if not found
+     *
+     * @throws InvalidArgumentException If the provided $projectId is invalid (< 1)
+     * @throws DatabaseException If a database error occurs (wraps the underlying PDOException)
+     */
+    public function findById(int|UUID $projectId): Project|null
+    {
+        if (\is_int($projectId) && $projectId < 1) throw new InvalidArgumentException('Invalid project ID provided');
+
+        try {
+            $whereClause = \is_int($projectId)
+                ? 'p.id = :projectId'
+                : 'p.public_id = :projectId';
+
+            $params['projectId'] = is_int($projectId)
+                ? $projectId
+                : UUID::toBinary($projectId);
+
+            $projects = self::find($whereClause, $params);
+            return $projects->first() ?? null;
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+
+    /**
+     * Finds all active projects managed by a specific manager.
+     *
+     * This method retrieves all projects where the manager ID matches the provided ID
+     * and the project status is not COMPLETED. Active projects include all statuses
+     * except for completed ones (e.g., pending, in progress, on hold, etc.).
+     *
+     * @param int $managerId The ID of the manager whose active projects to retrieve
+     * 
+     * @return Project|null Active Project, or null if none found
+     * 
+     * @throws InvalidArgumentException If manager_id is less than 1
+     * @throws DatabaseException If a database error occurs during the query
+     */
+    public function findManagerActiveProjectByManagerId(int|UUID $managerId): Project|null
+    {
+        if (\is_int($managerId) && $managerId < 1)
+            throw new InvalidArgumentException('Invalid manager ID provided');
+
+        try {
+            $whereClause =
+                "p.manager_id = " .
+                (\is_int($managerId)
+                    ? ':managerId'
+                    : '(SELECT id FROM `user` WHERE public_id = :managerId)'
+                ) .
+                " AND p.status != :completedStatus AND p.status != :cancelledStatus";
+            $param = [
+                ':managerId'        => \is_int($managerId)
+                    ? $managerId
+                    : UUID::toBinary($managerId),
+                ':completedStatus'  => WorkStatus::COMPLETED->value,
+                ':cancelledStatus'  => WorkStatus::CANCELLED->value,
+            ];
+            $options = [
+                'limit'     => 1,
+                'orderBy'   => 'created_at DESC',
+            ];
+
+            $projects = self::find($whereClause, $param, $options);
+            return $projects?->first() ?? null;
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+
+    /**
+     * Finds all active projects assigned to a specific worker.
+     *
+     * This method retrieves all projects where the worker is assigned and the project
+     * status is not completed. It performs a subquery to find all project IDs from the
+     * projectWorker table that are associated with the given worker ID, then filters
+     * out any projects with a COMPLETED status.
+     *
+     * @param int $workerId The ID of the worker whose active projects should be retrieved
+     * 
+     * @return Project|null Active Project, or null if none found
+     * 
+     * @throws InvalidArgumentException If the worker ID is less than 1
+     * @throws DatabaseException If a database error occurs during the query execution
+     */
+    public function findWorkerActiveProjectByWorkerId(int $workerId): Project|null
+    {
+        if ($workerId < 1) throw new InvalidArgumentException('Invalid worker ID provided');
+
+        try {
+            $query =
+                "SELECT
+                    p.*,
+                    u.id AS u_id,
+                    u.public_id AS u_public_id,
+                    u.first_name AS first_name,
+                    u.middle_name AS middle_name,
+                    u.last_name AS last_name,
+                    u.gender AS gender,
+                    u.email AS email,
+                    u.profile_link AS profile_link,
+                    u.created_at AS u_created_at,
+                    u.confirmed_at AS u_confirmed_at,
+                    u.deleted_at AS u_deleted_at
+                FROM
+                    `project` AS p
+                INNER JOIN 
+                    `user` AS u
+                ON
+                    p.manager_id = u.id
+                LEFT JOIN
+                    `project_worker` AS pw
+                ON	
+                    pw.project_id = p.id
+                WHERE	
+                    pw.worker_id = :workerId
+                AND
+                    p.status != :completedStatus
+                AND 
+                    p.status != :cancelledStatus
+                AND
+                    pw.status != :terminatedStatus
+                LIMIT 1
+            ";
+            $statement = $this->connection->prepare($query);
+            $statement->execute([
+                ':workerId'         => $workerId,
+                ':completedStatus'  => WorkStatus::COMPLETED->value,
+                ':cancelledStatus'  => WorkStatus::CANCELLED->value,
+                ':terminatedStatus' => WorkerStatus::TERMINATED->value,
+            ]);
+            $result = $statement->fetch();
+
+            if (!$this->hasData($result)) return null;
+
+            // Build manager object
+            $result['manager'] = ProjectManager::createPartial([
+                'id'            => $result['u_id'],
+                'publicId'      => UUID::fromBinary($result['u_public_id']),
+                'firstName'     => $result['first_name'],
+                'middleName'    => $result['middle_name'],
+                'lastName'      => $result['last_name'],
+                'gender'        => $result['gender'],
+                'email'         => $result['email'],
+                'profileLink'   => $result['profile_link'],
+                'createdAt'     => $result['u_created_at'],
+                'confirmedAt'   => $result['u_confirmed_at'],
+                'deletedAt'     => $result['u_deleted_at'],
+            ]);
+
+            return Project::createPartial($result);
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
+        }
+    }
+
+    public function findManagerHistory(
+        int|UUID|array $userId,  // Changed to accept array
+        array $options = [
+            'phases' => false,
+            'tasks'  => false,
+            'limit'  => 10,
+            'offset' => 0,
+    ]): ProjectContainer|null {
+        $userIds = \is_array($userId) ? $userId : [$userId];
+        if (empty($userIds))
+            throw new InvalidArgumentException('At least one user ID must be provided');
+
+        $historyOptions = $this->parseHistoryOptions($options);
+        $includePhases = $historyOptions['includePhases'];
+        $includeTasks = $historyOptions['includeTasks'];
+        $paramOptions = $historyOptions['paramOptions'];
+
+        try {
+            $queryParts = $this->buildHistoryQueryParts(
+                $userIds,
+                $includePhases,
+                $includeTasks
+            );
+
+            $queryString =
+                "SELECT
+                    u.public_id AS u_public_id,
+                    p.id,
+                    p.public_id,
+                    p.name,
+                    p.status,
+                    p.start_date_time,
+                    p.completion_date_time,
+                    p.actual_completion_date_time,
+                    {$queryParts['phaseSelect']}
+                FROM
+                    `project` AS p
+                INNER JOIN
+                    `user` AS u
+                ON
+                    u.id = p.manager_id";
+
+            $query = $this->appendOptionsToFindQuery(
+                $this->appendWhereClause($queryString, $queryParts['whereClause']),
+                $paramOptions
+            );
+
+            $statement = $this->connection->prepare($query);
+            $statement->execute($queryParts['params']);
+            $result = $statement->fetchAll();
+
+            if (!$this->hasData($result)) return null;
+
+            return $this->buildHistoryReturn($result, [
+                'phases' => $includePhases,
+                'tasks'  => $includeTasks,
+            ]);
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
+        }
+    }
+
+    /**
+     * Finds a worker's project history with optional phases and tasks.
+     *
+     * This method paginates projects (LIMIT/OFFSET) and can optionally include:
+     * - phases: phases for each project
+     * - tasks: tasks for each phase filtered to the given worker
+     *
+     * Notes:
+     * - LIMIT/OFFSET apply only to the project list.
+     * - When tasks are included, each task includes the worker's status as additional info.
+     *
+     * @param int|UUID $userId Worker identifier (internal id or public UUID)
+     * @param array $options
+     *      - phase: bool Include phases (default false)
+     *      - tasks: bool Include tasks on phases (default false; only when phase=true)
+     *      - limit: int Project limit (default 10)
+     *      - offset: int Project offset (default 0)
+     *
+     * @return ProjectContainer|null
+     */
+    public function findWorkerHistory(
+        int|UUID|array $userId,  // Changed to accept array
+        array $options = [
+            'phases' => false,
+            'tasks'  => false,
+            'limit'  => 10,
+            'offset' => 0,
+        ]
+    ): ProjectContainer|null {
+        // Normalize to array
+        $userIds = \is_array($userId) ? $userId : [$userId];
+        if (empty($userIds))
+            throw new InvalidArgumentException('At least one user ID must be provided');
+
+        $historyOptions = $this->parseHistoryOptions($options);
+        $includePhases = $historyOptions['includePhases'];
+        $includeTasks = $historyOptions['includeTasks'];
+        $paramOptions = $historyOptions['paramOptions'];
+
+        try {
+            $queryParts = $this->buildHistoryQueryParts(
+                $userIds, 
+                $includePhases, 
+                $includeTasks
+            );
+
+            $queryString =
+                "SELECT
+                    u.public_id AS u_public_id,
+                    p.id,
+                    p.public_id,
+                    p.name,
+                    p.status,
+                    p.start_date_time,
+                    p.completion_date_time,
+                    p.actual_completion_date_time,
+                    pw.status AS worker_status,
+                    {$queryParts['phaseSelect']}
+                FROM
+                    `project` AS p
+                INNER JOIN
+                    `project_worker` AS pw
+                ON
+                    pw.project_id = p.id
+                INNER JOIN
+                    `user` AS u
+                ON
+                    u.id = pw.worker_id";
+
+            $query = $this->appendOptionsToFindQuery(
+                $this->appendWhereClause($queryString, $queryParts['whereClause']),
+                $paramOptions
+            );
+
+            $statement = $this->connection->prepare($query);
+            $statement->execute($queryParts['params']);
+            $result = $statement->fetchAll();
+
+            if (!$this->hasData($result)) return null;
+
+            return $this->buildHistoryReturn($result, [
+                'phases' => $includePhases,
+                'tasks'  => $includeTasks,
+            ]);
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
+        }
+    }
+
+    private function parseHistoryOptions(array $options): array
+    {
+        $includePhases = (bool) ($options['phases'] ?? false);
+        $includeTasks = $includePhases && (bool) ($options['tasks'] ?? false);
+
+        return [
+            'includePhases' => $includePhases,
+            'includeTasks'  => $includeTasks,
+            'paramOptions'  => [
+                'limit'     => $options[':limit'] ?? $options['limit'] ?? 10,
+                'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
+                'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 'p.start_date_time DESC',
+            ],
+        ];
+    }
+
+    private function buildHistoryQueryParts(array $userIds, bool $includePhases, bool $includeTasks): array
+    {
+        // Determine if we're using integer IDs or UUIDs
+        $isIntId = \is_int($userIds[0]);
+
+        // Build WHERE IN clause
+        $innerPlaceholders = []; // Placeholders for task subquery
+        $outerPlaceholders = []; // Placeholders for main query
+        $params = [];
+
+        foreach ($userIds as $index => $id) {
+            if (\is_int($id) && $id < 1)
+                throw new InvalidArgumentException('Invalid user ID provided');
+
+            $innerPlaceholder = ":userIdInner{$index}";
+            $outerPlaceholder = ":userIdOuter{$index}";
+
+            $innerPlaceholders[] = $innerPlaceholder;
+            $outerPlaceholders[] = $outerPlaceholder;
+            $params[$outerPlaceholder] = $params[$innerPlaceholder] = $isIntId ? $id : UUID::toBinary($id);
+        }
+
+        $whereClause = $isIntId
+            ? 'u.id IN (' . implode(', ', $outerPlaceholders) . ')'
+            : 'u.public_id IN (' . implode(', ', $outerPlaceholders) . ')';
+
+        $taskSubquery = $includeTasks
+            ? "COALESCE((
+                SELECT JSON_ARRAYAGG(
+                    JSON_OBJECT(
+                        'id', t2.id,
+                        'public_id', HEX(t2.public_id),
+                        'name', t2.name,
+                        'status', t2.status,
+                        'priority', t2.priority,
+                        'start_date_time', t2.start_date_time,
+                        'completion_date_time', t2.completion_date_time,
+                        'actual_completion_date_time', t2.actual_completion_date_time,
+                        'worker_status', tw.status
+                    )
+                )
+                FROM 
+                    `task` AS t2
+                INNER JOIN 
+                    `task_worker` AS tw
+                ON 
+                    tw.task_id = t2.id
+                WHERE 
+                    t2.phase_id = ph2.id
+                AND 
+                    tw.worker_id IN (" . implode(', ', $innerPlaceholders) . ")
+            ), JSON_ARRAY())"
+            : 'JSON_ARRAY()';
+
+        $phaseSelect = $includePhases
+            ? "COALESCE((
+                SELECT JSON_ARRAYAGG(
+                    JSON_OBJECT(
+                        'id', ph2.id,
+                        'public_id', HEX(ph2.public_id),
+                        'name', ph2.name,
+                        'status', ph2.status,
+                        'start_date_time', ph2.start_date_time,
+                        'completion_date_time', ph2.completion_date_time,
+                        'actual_completion_date_time', ph2.actual_completion_date_time,
+                        'tasks', $taskSubquery
+                    )
+                )
+                FROM 
+                    `phase` AS ph2
+                WHERE 
+                    ph2.project_id = p.id
+            ), JSON_ARRAY()) AS phases"
+            : 'NULL AS phases';
+
+        return [
+            'whereClause' => $whereClause,
+            'params'      => $params,
+            'phaseSelect' => $phaseSelect,
+        ];
+    }
+
+    private function buildHistoryReturn(
+        array $rawProjectHistory,
+        array $options = [
+            'phases' => false,
+            'tasks'  => false,
+    ]): ProjectContainer {
+        $includePhases = (bool) ($options['phases'] ?? false);
+        $includeTasks = $includePhases && (bool) ($options['tasks'] ?? false);
+
+        $projects = new ProjectContainer();
+        foreach ($rawProjectHistory as $row) {
+            $phasesJson = $row['phases'] ?? null;
+            unset($row['phases']);
+
+            $project = Project::createPartial($row);
+            if (\array_key_exists('worker_status', $row))
+                $project->addAdditionalInfo('workerStatus', $row['worker_status']);
+
+            // If phases are included, decode the JSON and build Phase and Task objects accordingly
+            if ($includePhases && \is_string($phasesJson)) {
+                $phaseLists = json_decode($phasesJson, true);
+                if (\is_array($phaseLists)) {
+                    foreach ($phaseLists as $phaseData) {
+                        $taskLists = $includeTasks
+                            ? ($phaseData['tasks'] ?? [])
+                            : [];
+
+                        unset($phaseData['tasks']);
+                        $phase = Phase::createPartial($phaseData);
+
+                        // If tasks are included, decode and build Task objects, attaching worker status as additional info
+                        if ($includeTasks && \is_array($taskLists)) {
+                            $tasks = new TaskContainer();
+                            foreach ($taskLists as $taskData) {
+                                if (!\is_array($taskData)) continue;
+
+                                $workerStatus = $taskData['worker_status'] ?? null;
+                                unset($taskData['worker_status']);
+
+                                $task = Task::createPartial($taskData);
+                                if ($workerStatus !== null)
+                                    $task->addAdditionalInfo('workerStatus', $workerStatus);
+
+                                $tasks->add($task);
+                            }
+                            $phase->setTasks($tasks);
+                        }
+
+                        $project->addPhase($phase);
+                    }
+                }
+            }
+            $project->addAdditionalInfo('userId', UUID::tryFromString($row['u_public_id']));
+            $projects->add($project);
+        }
+        return $projects;
+    }
+
+    /**
+     * Searches for projects based on provided criteria.
+     *
+     * This method allows searching for projects using a keyword, user ID (either integer or UUID),
+     * project status, and additional options such as pagination and sorting. It constructs a dynamic SQL
+     * WHERE clause based on the provided parameters and delegates the actual data retrieval to the `find` method.
+     *
+     * - If a search key is provided, it performs a full-text search on project name and description.
+     * - If a user ID is provided, it filters projects managed by or assigned to the user (supports both integer and UUID).
+     * - If a status is provided, it filters projects by the specified status.
+     * - Additional options can be set for offset, limit, and order.
+     *
+     * @param string $key Optional search keyword for full-text search on project name and description.
+     * @param int|UUID|null $userId Optional user identifier (integer ID or UUID) to filter projects by manager or worker.
+     * @param WorkStatus|null $status Optional project status to filter results.
+     * @param array $options Optional associative array for query options:
+     *      - offset: int (default 0) Number of records to skip.
+     *      - limit: int (default 10) Maximum number of records to return.
+     *      - orderBy: string (default 'createdAt DESC') SQL ORDER BY clause.
+     *
+     * @throws InvalidArgumentException If an invalid user ID is provided.
+     * @throws DatabaseException If a database error occurs during the search.
+     *
+     * @return ProjectContainer|null A container of found projects, or null if no projects match the criteria.
+     */
+    public function search(
+        string $key = '',
+        array $options = [
+            'userId'   => null,
+            'status'   => null,
+
+            'offset'    => 0,
+            'limit'     => 10,
+            'orderBy'   => 'p.start_date_time DESC',
+    ]): ProjectContainer|null {
+        $userId = $options['userId'] ?? null;
+        if ($userId) {
+            if (!\is_int($userId) && !($userId instanceof UUID))
+                throw new InvalidArgumentException('User ID must be an integer or UUID');
+
+            if (\is_int($userId) && $userId < 1)
+                throw new InvalidArgumentException('Invalid user ID provided');
+        }
+
+        $status = $options['status'] ?? null;
+        if ($status && !($options['status'] instanceof WorkStatus))
+            throw new InvalidArgumentException('Status must be an instance of WorkStatus enum');
+
+        $paramOptions = [
+            'limit'     => $options[':limit'] ?? $options['limit'] ?? 50,
+            'offset'    => $options[':offset'] ?? $options['offset'] ?? 0,
+            'orderBy'   => $options[':orderBy'] ?? $options['orderBy'] ?? 'p.start_date_time DESC',
+        ];
+
+        try {
+            $whereClauses = [];
+            $params = [];
+
+            if (trimOrNull($key)) {
+                $whereClauses[] = 'MATCH(p.name, p.description) AGAINST (:searchKey IN NATURAL LANGUAGE MODE)';
+                $params[':searchKey'] = $key;
+            }
+
+            if ($userId) {
+                if (\is_int($userId)) {
+                    $whereClauses[] = '(p.manager_id = :userId1 
+                    OR p.id IN (
+                        SELECT 
+                            project_id 
+                        FROM 
+                            `project_worker` 
+                        WHERE 
+                            worker_id = :userId2
+                    ))';
+                    $params[':userId1'] = $userId;
+                    $params[':userId2'] = $userId;
+                } else {
+                    $whereClauses[] = '(p.manager_id = (SELECT id FROM user WHERE public_id = :userId1) 
+                    OR p.id IN (
+                        SELECT 
+                            project_id 
+                        FROM 
+                            `project_worker` 
+                        WHERE 
+                            worker_id = (SELECT id FROM `user` WHERE public_id = :userId2)
+                    ))';
+                    $params[':userId1'] = UUID::toBinary($userId);
+                    $params[':userId2'] = UUID::toBinary($userId);
+                }
+            }
+
+            if ($status) {
+                $whereClauses[] = 'p.status = :status';
+                $params[':status'] = $status->value;
+            }
+
+            $whereClause = implode(' AND ', $whereClauses);
+
+            return self::find($whereClause, $params, $paramOptions);
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+
+    /**
+     * Retrieves a paginated collection of Project entities.
+     *
+     * This method validates pagination parameters and delegates the actual data retrieval
+     * to the model's find mechanism. Behavior details:
+     * - Validates that $offset is >= 0; otherwise throws InvalidArgumentException.
+     * - Validates that $limit is >= 1; otherwise throws InvalidArgumentException.
+     * - Calls self::find with an empty filter and options including:
+     *      - offset => $offset
+     *      - limit  => $limit
+     *      - orderBy => 'createdAt DESC' (newest projects first)
+     * - Catches low-level PDOException and rethrows it as a DatabaseException preserving the message.
+     *
+     * @param int $offset Zero-based offset of the first record to return. Must be >= 0. Default: 0.
+     * @param int $limit  Maximum number of records to return. Must be >= 1. Default: 10.
+     *
+     * @return ProjectContainer|null Container of Project entities for the requested page, or null if none found.
+     *
+     * @throws InvalidArgumentException If $offset is negative or $limit is less than 1.
+     * @throws DatabaseException If a database error occurs while fetching projects (wraps PDOException).
+     */
+    public function all(array $options =[
+        'offset'    => 0,
+        'limit'     => 10
+    ]): ProjectContainer|null {
+        $offset = (int) ($options['offset'] ?? 0);
+        if ($offset < 0) throw new InvalidArgumentException('Invalid offset value');
+
+        $limit = (int) ($options['limit'] ?? 10);
+        if ($limit < 1) throw new InvalidArgumentException('Invalid limit value');
+
+        try {
+            return $this->find('', [], [
+                'offset'    => $offset,
+                'limit'     => $limit,
+            ]);
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+
+    /**
+     * Creates a new Project record in the database from the provided Project object.
+     *
+     * This method validates that the provided argument is an this$this of Project, begins
+     * a database transaction, prepares and executes an INSERT into the `project` table
+     * (converting the public ID to binary and formatting dates as required), and inserts
+     * any associated phases and workers via insertPhases() and insertWorkers() if present.
+     * If the Project has no public ID one is generated (UUID::get()), missing string fields
+     * are trimmed or normalized, numeric defaults are applied for budget and max workers,
+     * and the current user (Me::getthis$this()->getId()) is recorded as the manager.
+     * On success the transaction is committed and the Project this$this is updated with
+     * its newly assigned numeric id and public id before being returned.
+     *
+     * The method will roll back the transaction and rethrow a DatabaseException on any
+     * PDO error.
+     *
+     * @param mixed $project Project this$this to persist (must be an this$this of Project)
+     *
+     * @return Project The same Project this$this after persisting, populated with id and publicId
+     *
+     * @throws InvalidArgumentException If $project is not an this$this of Project
+     * @throws DatabaseException If a database error occurs while inserting the project or related entities
+     */
+    public function create(Project|ProjectContainer $project): Project|ProjectContainer
+    {
+        // Allow passing a single Project without wrapping
+        $isBatch = $project instanceof ProjectContainer;
+        $projects = $isBatch ? $project : new ProjectContainer([$project]);
+        if ($projects->count() === 0) throw new InvalidArgumentException('ProjectContainer cannot be empty');
+
+        $projectQuery =
+            "INSERT INTO `project` (
+                public_id,
+                name,
+                description,
+                budget,
+                status,
+                max_worker,
+                start_date_time,
+                completion_date_time,
+                manager_id
+            ) VALUES (
+                :publicId,
+                :name,
+                :description,
+                :budget,
+                :status,
+                :maxWorker,
+                :startDateTime,
+                :completionDateTime,
+                :managerId
+            )";
+
+        try {
+            $statement = $this->connection->prepare($projectQuery);
+            $managerId = Me::getInstance()->getId();
+
+            foreach ($projects as $oldId => &$project) {
+                $projectPublicId = $project->getPublicId() ?? UUID::get();
+                $project->setPublicId($projectPublicId);
+
+                $statement->execute([
+                    ':publicId'             => UUID::toBinary($projectPublicId),
+                    ':name'                 => trimOrNull($project->getName()),
+                    ':description'          => trimOrNull($project->getDescription()),
+                    ':budget'               => $project->getBudget() ?? 0.00,
+                    ':status'               => ($project->getStatus() ?? WorkStatus::PENDING)->value,
+                    ':maxWorker'            => $project->getMaxWorkers() ?? WORKER_COUNT_MIN,
+                    ':startDateTime'        => formatDateTime($project->getStartDateTime()),
+                    ':completionDateTime'   => formatDateTime($project->getCompletionDateTime()),
+                    ':managerId'            => $managerId,
+                ]);
+
+                $projectId = (int) $this->connection->lastInsertId();
+                $project->setId($projectId);
+
+                $projects->remove(Project::createPartial(['id' => $oldId]));
+                $projects->add($project);
+            }
+
+            return $isBatch ? $projects : $projects->first();
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
+        }
+    }
+
+    /**
+     * Saves or updates a project with its associated data in the database.
+     *
+     * This method performs a transactional update of project data. It dynamically builds
+     * an UPDATE query based on provided fields and handles various data conversions:
+     * - Trims string fields (name, description) or sets them to null
+     * - Converts status enum to its value
+     * - Handles nullable actual_completion_date_time field
+     * - Uses either 'id' or 'publicId' for identifying the project record
+     *
+     * @param array $data Associative array containing project data with following keys:
+     *      - id: int|UUID Project ID to identify the project to update
+     *      - name: string (optional) Project name
+     *      - description: string (optional) Project description
+     *      - budget: float|int (optional) Project budget amount
+     *      - status: ProjectStatus (optional) Project status enum
+     *      - maxWorkers: int (optional) Maximum number of workers allowed
+     *      - startDateTime: DateTime|string (optional) Project start date and time
+     *      - completionDateTime: DateTime|string (optional) Planned completion date and time
+     *      - actualCompletionDateTime: DateTime|string|null (optional) Actual completion date and time
+     * 
+     * @return bool Returns true if save operation was successful
+     * 
+     * @throws InvalidArgumentException If required fields are missing or invalid
+     * @throws DatabaseException If a database error occurs during the transaction
+     */
+    public function save(array $projects): bool
+    {
+        if (empty($projects)) throw new InvalidArgumentException('Project data cannot be empty');
+
+        // Allow passing a single project update item without wrapping
+        $isBatch = isAssociativeArray($projects) ? false : true;
+        if (!$isBatch) $projects = [$projects];
+
+        try {
+            foreach ($projects as $item) {
+                if (!\is_array($item))
+                    throw new InvalidArgumentException('Each project update item must be an array');
+
+                if (isset($item['id']) && \is_int($item['id']) && $item['id'] < 1)
+                    throw new InvalidArgumentException('Invalid Project ID provided');
+
+                $updateFields = [];
+                $params = [];
+
+                $params[':id'] = (isset($item['id']))
+                    ? $item['id']
+                    : ($item['publicId'] instanceof UUID
+                        ? UUID::toBinary($item['publicId'])
+                        : UUID::toBinary(UUID::fromString($item['publicId'])));
+                if (isset($item['name'])) {
+                    $updateFields[] = 'name = :name';
+                    $params[':name'] = trimOrNull($item['name']);
+                }
+
+                if (isset($item['description'])) {
+                    $updateFields[] = 'description = :description';
+                    $params[':description'] = trimOrNull($item['description']);
+                }
+
+                if (isset($item['budget'])) {
+                    $updateFields[] = 'budget = :budget';
+                    $params[':budget'] = $item['budget'];
+                }
+
+                if (isset($item['status'])) {
+                    $updateFields[] = 'status = :status';
+                    $params[':status'] = $item['status']->value;
+                }
+
+                if (isset($item['maxWorkers'])) {
+                    $updateFields[] = 'max_worker = :maxWorkers';
+                    $params[':maxWorkers'] = $item['maxWorkers'];
+                }
+
+                if (isset($item['startDateTime'])) {
+                    $updateFields[] = 'start_date_time = :startDateTime';
+                    $params[':startDateTime'] = formatDateTime($item['startDateTime']);
+                }
+
+                if (isset($item['completionDateTime'])) {
+                    $updateFields[] = 'completion_date_time = :completionDateTime';
+                    $params[':completionDateTime'] = formatDateTime($item['completionDateTime']);
+                }
+
+                if (\array_key_exists('actualCompletionDateTime', $item)) {
+                    $updateFields[] = 'actual_completion_date_time = :actualCompletionDateTime';
+                    $params[':actualCompletionDateTime'] = $item['actualCompletionDateTime'] !== null
+                        ? formatDateTime($item['actualCompletionDateTime'])
+                        : null;
+                }
+
+                if (!empty($updateFields)) {
+                    $projectQuery =
+                        "UPDATE `project` 
+                        SET " . implode(', ', $updateFields) .
+                        " WHERE " . (isset($item['id'])
+                            ? 'id'
+                            : 'public_id') . " = :id";
+                    $statement = $this->connection->prepare($projectQuery);
+                    $statement->execute($params);
+                }
+            }
+
+            return true;
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
+        }
+    }
+
+    /**
+     * Deletes a phase entity.
+     *
+     * This method is currently not implemented as there is no use case for deleting a phase.
+     * Always returns false.
+     * 
+     * @param mixed $data Data that would be used to delete a phase (unused)
+     *
+     * @return bool Always returns false to indicate deletion is not supported.
+     */
+    public function delete(mixed $data): bool
+    {
+        // Not implemented (No use case)
+        return false;
+    }
+
+    /** ------------------------------------------ TODO: MAJOR REFACTOR HERE ------------------------------------------ */
+
+    /**
+     * Generates a ProjectReport for the given project identifier.
+     *
+     * This method retrieves and aggregates multiple data sources to assemble a complete
+     * report object describing a project's overall status, phases, tasks, worker statistics,
+     * periodic task counts and top-performing workers.
+     *
+     * Main behaviors and conversions:
+     * - Validates integer project IDs (must be >= 1).
+     * - Fetches:
+     *     - project statistics (associative row containing project metadata and a JSON-encoded phases collection)
+     *     - worker counts by status (associative counts including a 'total' key)
+     *     - periodic task counts (rows with year, month, taskCount)
+     *     - top workers (rows with worker metadata and aggregated metrics)
+     * - Decodes JSON-encoded phase and task payloads via json_decode and iterates them to build containers:
+     *     - PhaseContainer populated with Phase objects created via Phase::createPartial()
+     *     - TaskContainer populated with Task objects created via Task::createPartial()
+     * - Converts identifiers and typed values:
+     *     - Task and Phase public IDs are converted from hex strings using UUID::fromHex()
+     *     - Project public ID is converted from binary using UUID::fromBinary()
+     *     - Priority and status values are converted to enums via Priority::from() and WorkStatus::from()
+     *     - Datetime strings are converted to DateTime instance; nullable actual completion timestamps are handled
+     * - Computes worker status breakdown:
+     *     - Builds per-status count and percentage (percentage computed as (count / total) * 100, or 0 when total is 0)
+     * - Aggregates periodic task counts into a nested array keyed by year and month
+     * - Builds a WorkerContainer of top workers; each Worker is created via Worker::createPartial() and given an
+     *   additionalInfo array with totalTasks, completedTasks and overallScore
+     * - Returns a ProjectReport constructed with the assembled data (id, publicId, name, datetimes, status,
+     *   workerCount breakdown, periodicTaskCount aggregation, phases container and topWorker container)
+     *
+     * Expected structure of fetched rows / JSON payloads:
+     * - projectStatistics (associative array):
+     *     - projectId: int
+     *     - projectPublicId: binary (converted via UUID::fromBinary)
+     *     - projectName: string
+     *     - projectStartDateTime: string (ISO datetime)
+     *     - projectCompletionDateTime: string (ISO datetime)
+     *     - projectActualCompletionDateTime: string|null
+     *     - projectStatus: string (value for WorkStatus::from)
+     *     - projectPhases: string (JSON array of phases)
+     * - projectPhases JSON array element (phase):
+     *     - phaseId: int
+     *     - phasePublicId: string (hex; converted via UUID::fromHex)
+     *     - phaseName: string
+     *     - phaseStartDateTime: string
+     *     - phaseCompletionDateTime: string
+     *     - phaseActualCompletionDateTime: string|null
+     *     - phaseStatus: string (value for WorkStatus::from)
+     *     - phaseTasks: string (JSON array of tasks)
+     * - phaseTasks JSON array element (task):
+     *     - taskId: int
+     *     - taskPublicId: string (hex; converted via UUID::fromHex)
+     *     - taskName: string
+     *     - Priority: string (value for Priority::from)
+     *     - taskStatus: string (value for WorkStatus::from)
+     *     - taskStartDateTime: string
+     *     - taskCompletionDateTime: string
+     *     - taskActualCompletionDateTime: string|null
+     * - workerCount (associative array):
+     *     - total: int
+     *     - <statusKey>: int (one or more status keys corresponding to WorkerStatus enum values)
+     * - periodicTaskCount (array of rows):
+     *     - year: int
+     *     - month: int
+     *     - taskCount: int
+     * - topWorkers (array of rows):
+     *     - id: int
+     *     - firstName: string
+     *     - lastName: string
+     *     - email: string
+     *     - totalTasks: int
+     *     - completedTasks: int
+     *     - overallScore: float|int
+     *
+     * Special cases:
+     * - If both project statistics and top workers are absent (no data), the method returns null.
+     *
+     * @param int|UUID $projectId Project identifier (integer ID or UUID instance). Integer IDs must be >= 1.
+     *
+     * @return ProjectReport|null The assembled ProjectReport instance, or null if no report data is available.
+     *
+     * @throws InvalidArgumentException When an integer project_id less than 1 is provided.
+     * @throws DatabaseException        When a PDOException occurs while querying the database (wrapped).
+     */
+    public function getReport(int|UUID $projectId): ProjectReport|null
+    {
+        if (\is_int($projectId) && $projectId < 1)
+            throw new InvalidArgumentException('Invalid project ID provided');
+
+        try {
+            $projectStatistics = self::projectStatistics($projectId);
+            $workerCount = self::workerCount($projectId);
+            $periodicTaskCount = self::periodicTaskCount($projectId);
+            $topWorkers = self::topWorkersQuery($projectId);
+
+            if (!$projectStatistics && !$topWorkers) return null;
+
+            // Build phases and tasks
+            $phases = new PhaseContainer();
+            $rawPhases = json_decode($projectStatistics['phases'], true);
+            foreach ($rawPhases as $phase) {
+                $tasks = new TaskContainer();
+
+                $rawTasks = json_decode($phase['tasks'], true);
+                foreach ($rawTasks as $task) {
+                    $tasks->add(Task::createPartial([
+                        'id'                        => $task['id'],
+                        'publicId'                  => UUID::fromHex($task['public_id']),
+                        'name'                      => $task['name'],
+                        'priority'                  => Priority::from($task['priority']),
+                        'status'                    => WorkStatus::from($task['status']),
+                        'startDateTime'             => new DateTime($task['start_date_time']),
+                        'completionDateTime'        => new DateTime($task['completion_date_time']),
+                        'actualCompletionDateTime'  => $task['actual_completion_date_time']
+                            ? new DateTime($task['actual_completion_date_time'])
+                            : null,
+                    ]));
+                }
+
+                $phases->add(Phase::createPartial([
+                    'id'                        => $phase['id'],
+                    'publicId'                  => UUID::fromHex($phase['public_id']),
+                    'name'                      => $phase['name'],
+                    'startDateTime'             => new DateTime($phase['start_date_time']),
+                    'completionDateTime'        => new DateTime($phase['completion_date_time']),
+                    'actualCompletionDateTime'  => $phase['actual_completion_date_time']
+                        ? new DateTime($phase['actual_completion_date_time'])
+                        : null,
+                    'status'                    => WorkStatus::from($phase['status']),
+                    'tasks'                     => $tasks
+                ]));
+            }
+
+            // Build Worker Count
+            $workerCounts = [];
+            $total = $workerCount['total'];
+            foreach ($workerCount as $status => $count) {
+                if ($status === 'total') continue;
+
+                $key = WorkerStatus::from($status);
+                $workerCounts[$key->value]['count'] = $count;
+                $workerCounts[$key->value]['percentage'] = $total > 0 ? ($count / $total) * 100 : 0;
+            }
+
+            $taskCounts = [];
+            foreach ($periodicTaskCount as $row) {
+                $year = (int) $row['year'];
+                $month = (int) $row['month'];
+                $count = (int) $row['task_count'];
+
+                $taskCounts[$year][$month] = ($taskCounts[$year][$month] ?? 0) + $count;
+            }
+
+            // Build top workers
+            $workers = new WorkerContainer();
+            foreach ($topWorkers as $worker) {
+                $workers->add(Worker::createPartial([
+                    'id'                => $worker['id'],
+                    'firstName'         => $worker['first_name'],
+                    'lastName'          => $worker['last_name'],
+                    'email'             => $worker['email'],
+                    'additionalInfo'    => [
+                        'totalTasks'        => $worker['total_tasks'],
+                        'completedTasks'    => $worker['completed_tasks'],
+                        'overallScore'      => $worker['overall_score'],
+                    ],
+                ]));
+            }
+
+            $report = new ProjectReport(
+                id: $projectStatistics['id'],
+                publicId: UUID::fromBinary($projectStatistics['public_id']),
+                name: $projectStatistics['name'],
+                startDateTime: new DateTime($projectStatistics['start_date_time']),
+                completionDateTime: new DateTime($projectStatistics['completion_date_time']),
+                actualCompletionDateTime: $projectStatistics['actual_completion_date_time']
+                    ? new DateTime($projectStatistics['actual_completion_date_time'])
+                    : null,
+                status: WorkStatus::from($projectStatistics['status']),
+                workerCount: $workerCounts,
+                periodicTaskCount: $taskCounts,
+                phases: $phases,
+                topWorker: $workers
+            );
+
+            return $report;
+        } catch (PDOException $e) {
+            throw new DatabaseException($e->getMessage());
+        }
+    }
+
+    /**
+     * Retrieves aggregated statistics for a project, including its phases and tasks.
+     *
+     * This private method executes a single SQL query that returns project-level
+     * fields and a nested JSON representation of phases and their tasks. The query:
+     * - Matches the project by numeric ID (p.id) when an int is provided, or by its
+     *   binary public_id when a UUID-like value is provided (the UUID is converted to
+     *   binary via UUID::toBinary for binding).
+     * - Aggregates phases into a JSON array (ordered by phase.start_date_time ASC).
+     * - For each phase, aggregates its tasks into a JSON array (ordered by task.start_date_time ASC).
+     *
+     * Note on returned formats:
+     * - Top-level project fields (project_id, projectName, projectStartDateTime, etc.) are
+     *   returned as selected from the database.
+     * - projectPublicId is returned as stored (binary UUID in the database) unless converted by the caller.
+     * - Inside the aggregated JSON:
+     *     - phasePublicId and taskPublicId are returned as hexadecimal strings (HEX(...)).
+     *     - All date/time fields are returned as stored by the database (typically string timestamps).
+     * - projectPhases is returned as a JSON string representing an array of phases. Each phase object contains:
+     *     - phaseId: int
+     *     - phasePublicId: string (hex representation)
+     *     - phaseName: string
+     *     - phaseStartDateTime: string|null
+     *     - phaseCompletionDateTime: string|null
+     *     - phaseActualCompletionDateTime: string|null
+     *     - phaseStatus: string
+     *     - phaseTasks: JSON string representing an array of tasks, where each task object contains:
+     *         - taskId: int
+     *         - taskPublicId: string (hex representation)
+     *         - taskName: string
+     *         - Priority: mixed (as stored)
+     *         - taskStatus: string
+     *         - taskStartDateTime: string|null
+     *         - taskCompletionDateTime: string|null
+     *         - taskActualCompletionDateTime: string|null
+     *
+     * Usage notes:
+     * - The method prepares and executes a PDO statement and returns the first fetched row.
+     * - If no project is found, the method returns null.
+     *
+     * @param int|UUID $projectId Project identifier; pass an int for internal ID or a UUID-like value for publicId.
+     *
+     * @return array|null Associative array of project fields with the following keys:
+     *      - projectId: int
+     *      - projectPublicId: string|binary (as stored in DB)
+     *      - projectName: string
+     *      - projectStartDateTime: string|null
+     *      - projectCompletionDateTime: string|null
+     *      - projectActualCompletionDateTime: string|null
+     *      - projectStatus: string
+     *      - projectPhases: string JSON array of phases (see structure described above)
+     *
+     */
+    private function projectStatistics(int|UUID $projectId)
+    {
+        $query =
+            "SELECT 
+                p.id AS id,
+                p.public_id AS public_id,
+                p.name AS name,
+                p.start_date_time AS start_date_time,
+                p.completion_date_time AS completion_date_time,
+                p.actual_completion_date_time AS actual_completion_date_time,
+                p.status AS status,
+                (
+                    SELECT CONCAT(
+                        '[', 
+                        GROUP_CONCAT(
+                            JSON_OBJECT(
+                                'id', pp.id,
+                                'public_id', HEX(pp.public_id),
+                                'name', pp.name,
+                                'start_date_time', pp.start_date_time,
+                                'completion_date_time', pp.completion_date_time,
+                                'actual_completion_date_time', pp.actual_completion_date_time,
+                                'status', pp.status,
+                                'tasks', (
+                                    SELECT CONCAT(
+                                        '[', 
+                                        GROUP_CONCAT(
+                                            JSON_OBJECT(
+                                                'id', pt.id,
+                                                'public_id', HEX(pt.public_id),
+                                                'name', pt.name,
+                                                'priority', pt.priority,
+                                                'status', pt.status,
+                                                'start_date_time', pt.start_date_time,
+                                                'completion_date_time', pt.completion_date_time,
+                                                'actual_completion_date_time', pt.actual_completion_date_time
+                                            )
+                                            ORDER BY pt.start_date_time ASC
+                                            SEPARATOR ','
+                                        ),
+                                        ']'
+                                    )
+                                    FROM 
+                                        `phase_task` AS pt
+                                    WHERE 
+                                        pt.phase_id = pp.id
+                                )
+                            )
+                            ORDER BY pp.start_date_time ASC SEPARATOR ','
+                        ),
+                        ']'
+                    )
+                    FROM 
+                        `project_phase` AS pp
+                    WHERE 
+                        pp.project_id = p.id
+                ) AS phases
+            FROM
+                `project` AS p
+            WHERE
+                " . (is_int($projectId) ? 'p.id = :projectId' : 'p.public_id = :projectId') . "
+            LIMIT 1";
+
+        $statement = $this->connection->prepare($query);
+        $statement->execute([
+            ':projectId'    => is_int($projectId)
+                ? $projectId
+                : UUID::toBinary($projectId),
+        ]);
+        $result = $statement->fetch();
+
+        return ($this->hasData($result)) ? $result : null;
+    }
+
+    /**
+     * Returns worker counts for a given project.
+     *
+     * Executes a single SQL query that produces three counts for the specified project:
+     *  - assigned:   Number of distinct phaseTaskWorker entries where the worker is assigned
+     *                to a task whose phase belongs to the project, the task status is not
+     *                'completed' or 'cancelled', and the projectWorker relation has status 'assigned'.
+     *  - terminated: Number of projectWorker records for the project with status 'terminated'.
+     *  - unassigned: Number of users with role 'worker' (confirmed and not deleted) who are
+     *                not currently assigned to any active task (status 'assigned' on phaseTaskWorker
+     *                and task not in ('completed','cancelled')) and who do not have a terminated
+     *                projectWorker record for this project.
+     *
+     * The method accepts either an integer project id or a UUID public id. When a UUID is provided,
+     * it is converted to the binary representation before being bound to the query.
+     *
+     * @param int|UUID $projectId Project identifier. Provide the numeric primary key (int) to query by p.id,
+     *                            or a UUID (string|UUID object) to query by p.public_id.
+     *
+     * @return array|null Associative array with keys:
+     *      - assigned: int Number of currently assigned workers on active tasks
+     *      - terminated: int Number of terminated project workers
+     *      - unassigned: int Number of available (not assigned, not terminated) workers
+     *      - total: int Total number of workers associated with the project
+     *      Returns null if the project was not found or no row was returned.
+     */
+    private function workerCount(int|UUID $projectId)
+    {
+        $query =
+            "SELECT 
+                (
+                    SELECT 
+                        COUNT(DISTINCT ptw.worker_id)
+                    FROM
+                        `phase_task_worker` AS ptw
+                    INNER JOIN 
+                        `phase_task` AS pt 
+                    ON 
+                        pt.id = ptw.task_id
+                    INNER JOIN 
+                        `project_phase` AS pp 
+                    ON 
+                        pp.id = pt.phase_id
+                    INNER JOIN 
+                        `project_worker` AS pw 
+                    ON 
+                        pw.worker_id = ptw.worker_id
+                    AND 
+                        pw.project_id = pp.project_id
+                    WHERE
+                        pp.project_id = p.id
+                    AND
+                        ptw.status = 'assigned'
+                    AND
+                        pt.status NOT IN ('completed', 'cancelled')
+                    AND
+                        pw.status = 'assigned'
+                ) AS assigned,
+                (
+                    SELECT
+                        COUNT(DISTINCT pw.worker_id)
+                    FROM
+                        `project_worker` AS pw
+                    INNER JOIN
+                        `project` AS p2
+                    ON
+                        p2.id = pw.project_id
+                    WHERE
+                        pw.status = 'terminated'
+                    AND 
+                        p2.id = p.id
+                ) AS 'terminated',
+                (
+                    SELECT
+                        COUNT(DISTINCT u.id)
+                    FROM
+                        `user` AS u
+                    WHERE
+                        u.role = 'worker' 
+                    AND 
+                        u.confirmed_at IS NOT NULL
+                    AND 
+                        u.deleted_at IS NULL 
+                    AND 
+                        NOT EXISTS(
+                            SELECT
+                                1
+                            FROM
+                                `phase_task_worker` AS ptw
+                            INNER JOIN 
+                                `phase_task` AS pt
+                            ON
+                                ptw.task_id = pt.id
+                            WHERE
+                                ptw.worker_id = u.id 
+                            AND
+                                ptw.status = 'assigned' 
+                            AND 
+                                pt.status NOT IN('completed', 'cancelled')
+                    ) AND NOT EXISTS(
+                        SELECT
+                            1
+                        FROM
+                            `project_worker` AS pw3
+                        WHERE
+                            pw3.worker_id = u.id 
+                        AND 
+                            pw3.project_id = p.id 
+                        AND 
+                            pw3.status = 'terminated'
+                    )
+                ) AS unassigned,
+                (
+                    SELECT 
+                        COUNT(DISTINCT pw.worker_id)
+                    FROM
+                        `project_worker` AS pw
+                    WHERE
+                        pw.project_id = p.id
+                ) AS total
+            FROM
+                `project` AS p
+            WHERE 
+            " . (is_int($projectId) ? 'p.id = :projectId' : 'p.public_id = :projectId') . "
+        ";
+
+        $statement = $this->connection->prepare($query);
+        $statement->execute([
+            ':projectId'    => is_int($projectId)
+                ? $projectId
+                : UUID::toBinary($projectId),
+        ]);
+        $result = $statement->fetch();
+
+        return ($this->hasData($result)) ? $result : null;
+    }
+
+    /**
+     * Retrieves counts of phase tasks for a project grouped by status and month.
+     *
+     * This method builds and executes an aggregate query that:
+     * - Joins phaseTask -> projectPhase -> project
+     * - Groups results by task status and by the YEAR/MONTH of pt.created_at
+     * - Orders results by year ASC, month ASC, and status ASC
+     *
+     * Parameter handling:
+     * - If $projectId is an int, the query filters on p.id
+     * - If $projectId is a UUID, the query filters on p.public_id and the UUID is converted to binary (UUID::toBinary)
+     *
+     * Returned data shape (each row is an associative array):
+     * - status: string Task status
+     * - year: int YEAR(pt.created_at)
+     * - month: int MONTH(pt.created_at)
+     * - taskCount: int Number of tasks for that status in the given month/year
+     *
+     * @param int|UUID $projectId Project identifier (database id when int, public UUID otherwise)
+     * 
+     * @return array|null Array of associative rows described above, or null when no matching data is found
+     *
+     * @throws \PDOException If the database query fails
+     */
+    private function periodicTaskCount(int|UUID $projectId)
+    {
+        $query =
+            "SELECT 
+                YEAR(pt.created_at) AS year,
+                MONTH(pt.created_at) AS month,
+                COUNT(*) AS task_count
+            FROM 
+                `phase_task` AS pt
+            INNER JOIN
+                `project_phase` AS pp
+            ON
+                pp.id = pt.phase_id
+            INNER JOIN
+                `project` AS p
+            ON 
+                p.id = pp.project_id
+            WHERE 
+                " . (is_int($projectId) ? 'p.id' : 'p.public_id') . " = :projectId
+            GROUP BY 
+                YEAR(pt.created_at),
+                MONTH(pt.created_at)
+            ORDER BY 
+                YEAR(pt.created_at) ASC,
+                MONTH(pt.created_at) ASC
+        ";
+
+        $statement = $this->connection->prepare($query);
+        $statement->execute([
+            ':projectId'    => is_int($projectId)
+                ? $projectId
+                : UUID::toBinary($projectId),
+        ]);
+        $result = $statement->fetchAll();
+
+        return ($this->hasData($result)) ? $result : null;
+    }
+
+    /**
+     * Retrieves the top workers for a given project based on a weighted scoring algorithm.
+     *
+     * This method builds and executes a SQL query that:
+     * - Joins users to projects, project phases, tasks and task assignments to compute per-worker metrics.
+     * - Filters out soft-deleted users (u.deleted_at IS NULL).
+     * - Accepts either an integer project ID or a public UUID (converted to binary) to identify the project.
+     * - Aggregates:
+     *     - totalTasks: distinct tasks assigned to the worker within the project
+     *     - totalProjects: distinct projects the worker is associated with (for the given project filter typically 1)
+     * - Computes overallScore as a percentage (rounded to 2 decimals) by:
+     *     - Assigning base weights to task priorities (high=5.0, medium=3.0, low=1.0).
+     *     - Adjusting completed tasks by timeliness (early: 1.2, on-time: 1.0, late: 0.8).
+     *     - Scaling on-going tasks by 0.5 and delayed tasks by 0.3.
+     *     - Normalizing by the maximum possible weighted sum (priority weight * 1.2) and multiplying by 100.
+     * - Only includes workers with totalTasks > 0.
+     * - Orders results by overallScore descending and limits to the top 10 workers.
+     *
+     * Notes:
+     * - If $projectId is not an integer, it is treated as a public UUID and converted to binary before binding.
+     * - The query returns null when no matching rows are found.
+     *
+     * @param int|UUID $projectId Project identifier: either numeric primary key (int) or public UUID this$this/string
+     *
+     * @return array|null Returns an indexed array of up to 10 associative arrays with the following keys on success:
+     *      - id: int|binary Worker identifier (DB type)
+     *      - firstName: string Worker's first name
+     *      - lastName: string Worker's last name
+     *      - email: string Worker's email address
+     *      - totalTasks: int Number of distinct tasks the worker is assigned in the project
+     *      - totalProjects: int Number of distinct projects counted for the worker (filtered by project)
+     *      - overallScore: float Percentage score (0.00 - 100.00) rounded to 2 decimal places
+     *    Returns null if no workers are found for the project.
+     *
+     * @access private
+     * 
+     */
+    private function topWorkersQuery(int|UUID $projectId): ?array
+    {
+        $query =
+            "SELECT 
+                ws.id,
+                ws.first_name,
+                ws.last_name,
+                ws.email,
+                ws.total_tasks,
+                ws.completed_tasks,
+                ws.base_score,
+                ws.task_terminations,
+                ws.project_terminations,
+                ws.total_penalty,
+                GREATEST(0, ws.base_score - ws.total_penalty) as overall_score
+            FROM (
+                SELECT 
+                    u.id,
+                    u.first_name,
+                    u.last_name,
+                    u.email,
+                    COUNT(DISTINCT ptw.task_id) as total_tasks,
+                    (
+                        SELECT COUNT(DISTINCT pt2.id)
+                        FROM `phase_task` AS pt2
+                        INNER JOIN `phase_task_worker` AS ptw2 
+                        ON pt2.id = ptw2.task_id
+                        WHERE pt2.status = '" . WorkStatus::COMPLETED->value . "'
+                        AND ptw2.worker_id = u.id
+                        AND ptw2.status != '" . WorkerStatus::TERMINATED->value . "'
+                        AND pt2.phase_id IN (
+                            SELECT pp2.id
+                            FROM `project_phase` AS pp2
+                            WHERE pp2.project_id = p.id
+                        )
+                    ) as completed_tasks,
+                    -- Base performance score (before penalties)
+                    ROUND(
+                        (SUM(
+                            CASE 
+                                WHEN pt.status = 'completed' THEN
+                                    CASE 
+                                        WHEN pt.priority = '" . Priority::HIGH->value . "' THEN 5.0
+                                        WHEN pt.priority = '" . Priority::MEDIUM->value . "' THEN 3.0
+                                        WHEN pt.priority = '" . Priority::LOW->value . "' THEN 1.0
+                                        ELSE 1.0
+                                    END *
+                                    CASE 
+                                        WHEN CAST(pt.actual_completion_date_time AS DATE) < CAST(pt.completion_date_time AS DATE) THEN 1.2
+                                        WHEN CAST(pt.actual_completion_date_time AS DATE) <= CAST(DATE_ADD(pt.completion_date_time, INTERVAL 1 DAY) AS DATE) THEN 1.0
+                                        ELSE 0.8
+                                    END
+                                WHEN pt.status = 'onGoing' THEN
+                                    CASE 
+                                        WHEN pt.priority = '" . Priority::HIGH->value . "' THEN 5.0 * 0.5
+                                        WHEN pt.priority = '" . Priority::MEDIUM->value . "' THEN 3.0 * 0.5
+                                        WHEN pt.priority = '" . Priority::LOW->value . "' THEN 1.0 * 0.5
+                                        ELSE 0.5
+                                    END
+                                WHEN pt.status = 'delayed' THEN
+                                    CASE 
+                                        WHEN pt.priority = '" . Priority::HIGH->value . "' THEN 5.0 * 0.3
+                                        WHEN pt.priority = '" . Priority::MEDIUM->value . "' THEN 3.0 * 0.3
+                                        WHEN pt.priority = '" . Priority::LOW->value . "' THEN 1.0 * 0.3
+                                        ELSE 0.3
+                                    END
+                                ELSE 0
+                            END
+                        ) / SUM(
+                            CASE 
+                                WHEN pt.priority = '" . Priority::HIGH->value . "' THEN 5.0 * 1.2
+                                WHEN pt.priority = '" . Priority::MEDIUM->value . "' THEN 3.0 * 1.2
+                                WHEN pt.priority = '" . Priority::LOW->value . "' THEN 1.0 * 1.2
+                                ELSE 1.2
+                            END
+                        )
+                    ) * 100, 2
+                    ) as base_score,
+                    -- Count task-level terminations
+                    (
+                        SELECT COUNT(*)
+                        FROM `phase_task_worker` AS ptw3
+                        INNER JOIN `phase_task` AS pt3 ON ptw3.task_id = pt3.id
+                        INNER JOIN `project_phase` AS pp3 ON pt3.phase_id = pp3.id
+                        WHERE ptw3.worker_id = u.id
+                        AND pp3.project_id = p.id
+                        AND ptw3.status = '" . WorkerStatus::TERMINATED->value . "'
+                    ) as task_terminations,
+                    -- Count project-level terminations
+                    (
+                        SELECT COUNT(*)
+                        FROM `project_worker` AS pw2
+                        WHERE pw2.worker_id = u.id
+                        AND pw2.project_id = p.id
+                        AND pw2.status = '" . WorkerStatus::TERMINATED->value . "'
+                    ) as project_terminations,
+                    -- Calculate total penalty (15% per task termination + 25% per project termination)
+                    (
+                        (
+                            SELECT COUNT(*)
+                            FROM `phase_task_worker` AS ptw3
+                            INNER JOIN `phase_task` AS pt3 ON ptw3.task_id = pt3.id
+                            INNER JOIN `project_phase` AS pp3 ON pt3.phase_id = pp3.id
+                            WHERE ptw3.worker_id = u.id
+                            AND pp3.project_id = p.id
+                            AND ptw3.status = '" . WorkerStatus::TERMINATED->value . "'
+                        ) * 15.0
+                    ) + (
+                        (
+                            SELECT COUNT(*)
+                            FROM `project_worker` AS pw2
+                            WHERE pw2.worker_id = u.id
+                            AND pw2.project_id = p.id
+                            AND pw2.status = '" . WorkerStatus::TERMINATED->value . "'
+                        ) * 25.0
+                    ) as total_penalty
+                FROM 
+                    `user` AS u
+                INNER JOIN 
+                    `project_worker` AS pw
+                ON 
+                    u.id = pw.worker_id
+                INNER JOIN 
+                    `project` AS p 
+                ON
+                    pw.project_id = p.id
+                INNER JOIN 
+                    `project_phase` AS pp 
+                ON 
+                    p.id = pp.project_id
+                INNER JOIN 
+                    `phase_task` AS pt 
+                ON 
+                    pp.id = pt.phase_id
+                INNER JOIN 
+                    `phase_task_worker` AS ptw 
+                ON 
+                    pt.id = ptw.task_id AND u.id = ptw.worker_id
+                WHERE 
+                    u.deleted_at IS NULL
+                AND 
+                    " . (is_int($projectId) ? 'p.id' : 'p.public_id') . " = :projectId
+                GROUP BY 
+                    u.id, u.first_name, u.last_name, u.email, p.id
+                HAVING 
+                    total_tasks > 0
+            ) AS ws
+            ORDER BY 
+                overall_score DESC
+            LIMIT 10";
+
+        $statement = $this->connection->prepare($query);
+        $statement->execute([
+            ':projectId'    => is_int($projectId)
+                ? $projectId
+                : UUID::toBinary($projectId),
+        ]);
+        $result = $statement->fetchAll();
+
+        return ($this->hasData($result)) ? $result : null;
+    }
+}

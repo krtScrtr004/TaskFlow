@@ -1,0 +1,391 @@
+/* Main Task Page */
+
+.task {
+	gap: var(--space);
+}
+
+.task-grid {
+	display: grid;
+	gap: 1rem;
+	align-items: start;
+	align-content: start;
+}
+
+.task-grid-card {
+	display: flex;
+	flex-direction: column;
+}
+
+.task-grid-card:hover {
+	opacity: 0.7;
+}
+
+.task-grid-card > a {
+	padding: 1rem;
+	gap: 0.7rem;
+}
+
+.task-grid-card .task-name {
+	max-width: 20ch;
+	font-size: 1.5rem;
+	font-weight: 600;
+}
+
+.task-grid-card .task-id {
+	margin-top: 0.3rem;
+	font-size: 0.8rem;
+	font-weight: 100;
+}
+
+.task-grid-card .task-description {
+	white-space: pre-wrap !important;
+	font-weight: 300;
+}
+
+.task-grid-card .task-schedule {
+	gap: 0.5rem;
+}
+
+.task-grid-card .task-schedule > div {
+	gap: 0.3rem;
+}
+
+
+.task-grid-card .task-schedule p {
+	height: 100%;
+}
+
+.task-grid-card .task-badge {
+	flex: 1;
+	gap: 0.3rem;
+}
+
+#add_task_button {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+}
+
+#add_task_button h3 {
+	font-size: 1.5rem;
+}
+
+.no-tasks-wall {
+	height: 100%;
+}
+
+.no-tasks-wall > img {
+	height: 10rem;
+}
+
+/* View Task Page */
+
+.view-task-info {
+	height: 100%;
+	gap: var(--space);
+	overflow: auto;
+}
+
+.view-task-info .heading h3 {
+	font-size: 1.5rem;
+	margin-right: 0.8rem;
+	max-width: 70ch;
+	overflow: hidden;
+	white-space: normal;
+}
+
+/* Worker Table Styles */
+
+.worker-table-container {
+	width: 100%;
+	overflow-x: auto;
+	box-shadow: var(--box-shadow);
+}
+
+.worker-table {
+	width: 100%;
+	border-collapse: collapse;
+	background-color: var(--black);
+	border-radius: var(--border-radius);
+	overflow: hidden;
+}
+
+.worker-table thead {
+	background-color: rgba(255, 255, 255, 0.05);
+}
+
+.worker-table th {
+	padding: 1rem;
+	text-align: left;
+	font-weight: 600;
+	font-size: 0.9rem;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.worker-table td {
+	padding: 1rem;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.worker-table tbody tr {
+	transition: background-color 0.2s ease;
+	cursor: pointer;
+}
+
+.worker-table tbody tr:hover {
+	background-color: rgba(255, 255, 255, 0.03);
+}
+
+.worker-table .user-profile {
+	display: block;
+}
+
+.worker-table .user-name {
+	display: block;
+	white-space: nowrap;
+}
+
+.worker-table .user-email,
+.worker-table .user-contact {
+	display: block;
+	max-width: 200px;
+}
+
+.worker-table .center-text {
+	text-align: center;
+}
+
+.worker-table tbody tr:last-child td {
+	border-bottom: none;
+}
+
+
+.task-info,
+.task-info .action-buttons {
+	gap: 0.5rem;
+}
+
+.task-info .back-button {
+	width: fit-content;
+	background-color: transparent;
+	margin-right: 1rem;
+}
+
+.task-info .task-id,
+.task-info .task-description {
+	font-weight: 300;
+}
+
+.task-info .task-description {
+	white-space: pre-wrap !important;
+}
+
+.task-info .task-schedule {
+	gap: 0.3rem;
+}
+
+.assigned-workers {
+	height: fit-content;
+	gap: 1rem;
+}
+
+
+
+#edit_task_form .task-secondary-info {
+	gap: 1rem;
+}
+
+#edit_task_form #task_priority {
+	width: 18ch;
+}
+
+@media (max-width: 768px) {
+	.add-task-button img {
+		height: 4rem;
+		margin-bottom: 0.5rem;
+	}
+
+	.task-info .main {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.8rem;
+	}
+
+	.task-info .main .back-button {
+		margin-right: 0;
+	}
+
+	.task-info .main .back-button > img {
+		height: 1rem;
+	}
+
+	.task-info .action-buttons {
+		margin-top: 1rem;
+	}
+
+	.task-info .action-buttons > button,
+	#add_worker_button {
+		width: 15ch;
+	}
+
+
+	/* Make table scrollable on mobile */
+	.worker-table-container {
+		overflow-x: auto;
+		-webkit-overflow-scrolling: touch;
+	}
+
+	.worker-table {
+		min-width: 800px;
+	}
+
+	.worker-table th,
+	.worker-table td {
+		padding: 0.75rem 0.5rem;
+		font-size: 0.9rem;
+	}
+}
+
+@media (max-width: 575px) {
+	.task-info .action-buttons > button {
+		width: 15ch;
+	}
+
+	.task-info .main > .name-and-status .text-w-icon > img {
+		display: none !important;
+	}
+
+	/* Compact table for very small screens */
+	.worker-table {
+		min-width: 700px;
+	}
+
+	.worker-table th,
+	.worker-table td {
+		padding: 0.5rem 0.4rem;
+		font-size: 0.85rem;
+	}
+
+	.worker-table .user-profile {
+		height: 32px;
+		width: 32px;
+	}
+}
+
+
+
+/*  */
+
+.heading .info  {
+	align-items: flex-start;
+}
+
+.heading .back-button {
+	width: fit-content;
+	margin-right: 1rem;
+}
+
+.heading .back-button:hover {
+	background-color: var(--opacity-white);
+}
+
+.heading .back-button > img {
+	margin-right: 0;
+}
+
+.heading .id {
+	font-size: 0.8rem;
+	font-weight: 100;
+}
+
+.heading .buttons  {
+	gap: 0.5rem;
+}
+
+.heading .buttons > button {
+	width: 18ch;
+	padding: 8px;
+}
+
+.heading .buttons > button h3 {
+	font-size: 1.2rem;
+}
+
+.content > section {
+	gap: var(--space);
+}
+
+.content .sub-section {
+	gap: 1rem;
+}
+
+.overview-section {
+	gap: 1rem;
+}
+
+.overview-section .text-w-icon > h3 {
+	font-size: 1.3rem;
+}
+
+.overview-section > p {
+	font-size: 1rem;
+	line-height: 1.3;
+}
+
+.overview-section .details {
+	padding: 1rem;
+	border-radius: var(--border-radius);
+}
+
+.overview-section .details > section,
+#add_subtask_form {
+	gap: 0.5rem;
+}
+
+#add_worker_button {
+	border: 1px solid var(--white);
+	border-style: dashed;
+}
+
+.assigned-workers-section > .table-container {
+	padding: 0;
+}
+
+#assigned_workers_table {
+	width: 100%;
+	border-collapse: collapse;
+	background-color: var(--black);
+	table-layout: fixed;
+}
+
+#assigned_workers_table col {
+	width: 20%;
+}
+
+#assigned_workers_table tr {
+	font-weight: 400;
+	font-size: 0.9rem;
+}
+
+#assigned_workers_table th,
+#assigned_workers_table td {
+	padding: 0.3rem;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+#assigned_workers_table > tbody > tr:hover {
+	cursor: pointer;
+	background-color: var(--opacity-black);
+}
+
+.task-worker-row .name-n-contact > .worker-name {
+	margin-bottom: 0.3rem;;
+}
+
+.task-worker-row .name-n-contact > .contact p {
+	font-size: 0.8rem;
+	font-weight: 300;
+}

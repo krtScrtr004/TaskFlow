@@ -7,7 +7,7 @@
             "request": "launch",
             "port": 9003,
             "pathMappings": {
-                "/var/www/html/TaskFlow": "${workspaceFolder}"
+                "/home/krtscrtr44/Workspace/TaskFlow": "${workspaceFolder}"
             },
             "log": true,
             "xdebugSettings": {

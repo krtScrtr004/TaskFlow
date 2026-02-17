@@ -1,0 +1,973 @@
+<?php
+
+namespace App\Abstract;
+
+use App\Core\UUID;
+use App\Interface\Entity;
+use App\Enumeration\Gender;
+use App\Enumeration\Role;
+use App\Container\JobTitleContainer;
+use App\Exception\ValidationException;
+use App\Utility\TemporaryId;
+use App\Validator\UserValidator;
+use App\Validator\UuidValidator;
+use App\Validator\UrlValidator;
+use DateTime;
+use Exception;
+
+require_once ENUM_PATH . 'Role.php';
+
+abstract class User implements Entity
+{
+    private int $id;
+    private UUID $publicId;
+    protected string $firstName;
+    protected string|null $middleName;
+    protected string $lastName;
+    protected Gender $gender;
+    protected DateTime|null $birthDate;
+    protected Role|null $role;
+    protected JobTitleContainer|null $jobTitles;
+    protected string|null $contactNumber;
+    protected string|null $email;
+    private string|null $password;
+    protected string|null $bio;
+    protected string|null $profileLink;
+    protected DateTime|null $createdAt;
+    protected DateTime|null $confirmedAt;
+    protected DateTime|null $deletedAt;
+    protected array $additionalInfo;
+
+    protected UserValidator $userValidator;
+
+    /**
+     * Constructs a User domain object and initializes its properties after validation.
+     *
+     * This constructor validates the provided data using a UserValidator instance, assigns
+     * validated and normalized values to the object's properties, and preserves any existing
+     * role on the object if no role is supplied. Optional fields may be null and are trimmed
+     * where applicable via the trimOrNull helper.
+     *
+     * Behavior and side effects:
+     * - Instantiates UserValidator and validates multiple fields; on validation errors a
+     *   ValidationException is thrown containing the validator errors.
+     * - Trims string inputs (firstName, middleName, lastName, contactNumber, email, bio,
+     *   profileLink) using trimOrNull, converting empty strings to null where applicable.
+     * - Assigns typed values (id, publicId, gender, birthDate, jobTitles, createdAt,
+     *   confirmedAt, deletedAt, password, additionalInfo) directly to the object's properties.
+     * - Only sets $this->role when a non-null $role is provided, avoiding overwriting any
+     *   pre-existing role on the object if null is passed.
+     * - Stores the provided password as-is (no hashing performed by this constructor).
+     * - No other external side effects occur (no persistence, no external I/O).
+     *
+     * @param int                 $id            Internal numeric identifier.
+     * @param UUID                $publicId      Public UUID identifier.
+     * @param string              $firstName     First name (required; trimmed).
+     * @param string              $lastName      Last name (required; trimmed).
+     * @param Gender              $gender        Gender value object.
+     * @param DateTime            $birthDate     Birth date value object.
+     * @param JobTitleContainer   $jobTitles     Container of job titles.
+     * @param string              $contactNumber Contact phone number (required; trimmed).
+     * @param string              $email         Email address (required; trimmed).
+     *
+     * @param string|null         $middleName    Optional middle name (trimmed or null).
+     * @param string|null         $bio           Optional biography (trimmed or null).
+     * @param string|null         $profileLink   Optional profile link (trimmed or null).
+     * @param DateTime|null       $createdAt     Optional creation timestamp.
+     * @param Role|null           $role          Optional role; only applied if non-null.
+     * @param DateTime|null       $confirmedAt   Optional confirmation timestamp.
+     * @param DateTime|null       $deletedAt     Optional deletion timestamp.
+     * @param string|null         $password      Optional password (stored as provided).
+     * @param array               $additionalInfo Optional associative array of extra info.
+     *
+     * @throws ValidationException If validation fails (contains validator error details).
+     *
+     * @return void
+     */
+    public function __construct(
+        int $id,
+        UUID $publicId,
+        string $firstName,
+        string $lastName,
+        Gender $gender,
+        DateTime $birthDate,
+        JobTitleContainer $jobTitles,
+        string $contactNumber,
+        string $email,
+
+        // Optional
+        string|null $middleName = null,
+        string|null $bio = null,
+        string|null $profileLink = null,
+        DateTime|null $createdAt = null,
+        Role|null $role = null,
+        DateTime|null $confirmedAt = null,
+        DateTime|null $deletedAt = null,
+        string|null $password = null,
+        array $additionalInfo = []
+    ) {
+        try {
+            $this->userValidator = new UserValidator();
+            $this->userValidator->validateMultiple([
+                'firstName'         => $firstName,
+                'middleName'        => $middleName,
+                'lastName'          => $lastName,
+                'gender'            => $gender,
+                'birthDate'         => $birthDate,
+                'role'              => $role,
+                'jobTitles'         => $jobTitles,
+                'contactNumber'     => $contactNumber,
+                'email'             => $email,
+                'bio'               => $bio,
+                'profileLink'       => $profileLink,
+                'createdAt'         => $createdAt,
+                'additionalInfo'    => $additionalInfo
+            ]);
+
+            if ($this->userValidator->hasErrors()) {
+                throw new ValidationException("User Validation Failed", $this->userValidator->getErrors());
+            }
+        } catch (ValidationException $th) {
+            throw $th;
+        }
+
+        $this->id               = $id;
+        $this->publicId         = $publicId;
+        $this->firstName        = trimOrNull($firstName);
+        $this->middleName       = trimOrNull($middleName);
+        $this->lastName         = trimOrNull($lastName);
+        $this->gender           = $gender;
+        $this->birthDate        = $birthDate;
+        $this->jobTitles        = $jobTitles;
+        $this->contactNumber    = trimOrNull($contactNumber);
+        $this->email            = trimOrNull($email);
+        $this->bio              = trimOrNull($bio);
+        $this->profileLink      = trimOrNull($profileLink);
+        $this->createdAt        = $createdAt;
+        $this->confirmedAt      = $confirmedAt;
+        $this->deletedAt        = $deletedAt;
+        $this->password         = $password;
+        $this->additionalInfo   = $additionalInfo;
+
+        if ($role !== null) $this->role = $role;  // Prevent overwriting role defined in the caller if not provided
+    }
+
+    // GETTERS
+
+    /**
+     * Gets the unique identifier of the user.
+     *
+     * @return int|null The internal ID of the user or null if not set
+     */
+    public function getId(): int
+    {
+        return $this->id;
+    }
+
+    /**
+     * Gets the public identifier of the user.
+     *
+     * @return UUID|null The UUID object representing the public ID or null if not set
+     */
+    public function getPublicId(): UUID
+    {
+        return $this->publicId;
+    }
+
+    /**
+     * Gets the first name of the user.
+     *
+     * @return string The user's first name
+     */
+    public function getFirstName(): string
+    {
+        return $this->firstName;
+    }
+
+    /**
+     * Gets the middle name of the user.
+     *
+     * @return string|null The user's middle name or null if not provided
+     */
+    public function getMiddleName(): string|null
+    {
+        return $this->middleName;
+    }
+
+    /**
+     * Gets the last name of the user.
+     *
+     * @return string The user's last name
+     */
+    public function getLastName(): string
+    {
+        return $this->lastName;
+    }
+
+    /**
+     * Gets the gender of the user.
+     *
+     * @return Gender|null The Gender enum representing the user's gender or null if not set
+     */
+    public function getGender(): Gender
+    {
+        return $this->gender;
+    }
+
+    /**
+     * Gets the birth date of the user.
+     *
+     * @return DateTime|null The DateTime object representing the user's birth date or null if not set
+     */
+
+    public function getBirthDate(): DateTime|null
+    {
+        return $this->birthDate;
+    }
+
+    /**
+     * Gets the role of the user.
+     *
+     * @return Role|null The Role enum representing the user's role or null if not set
+     */
+
+    public function getRole(): Role|null
+    {
+        return $this->role;
+    }
+
+    /**
+     * Gets the job titles associated with the user.
+     *
+     * @return JobTitleContainer|null The container with the user's job titles or null if not set
+     */
+    public function getJobTitles(): JobTitleContainer|null
+    {
+        return $this->jobTitles;
+    }
+
+    /**
+     * Gets the contact number of the user.
+     *
+     * @return string|null The user's contact number or null if not provided
+     */
+
+    public function getContactNumber(): string|null
+    {
+        return $this->contactNumber;
+    }
+
+    /**
+     * Gets the email address of the user.
+     *
+     * @return string|null The user's email address or null if not provided
+     */
+
+    public function getEmail(): string|null
+    {
+        return $this->email;
+    }
+
+    /**
+     * Gets the password of the user.
+     *
+     * @return string|null The user's password (likely hashed) or null if not set
+     */
+
+    public function getPassword(): string|null
+    {
+        return $this->password;
+    }
+
+    /**
+     * Gets the biography of the user.
+     *
+     * @return string|null The user's biography or null if not provided
+     */
+    public function getBio(): string|null
+    {
+        return $this->bio;
+    }
+
+    /**
+     * Gets the profile link of the user.
+     *
+     * @return string|null The user's profile link or null if not provided
+     */
+    public function getProfileLink(): string|null
+    {
+        return $this->profileLink;
+    }
+
+    /**
+     * Gets the creation timestamp of the user account.
+     *
+     * @return DateTime|null The DateTime object representing when the user was created, or null if not defined
+     */
+    public function getCreatedAt(): DateTime|null
+    {
+        return $this->createdAt;
+    }
+
+    /**
+     * Gets the confirmation timestamp of the user account.
+     *
+     * @return DateTime|null The DateTime object representing when the user was confirmed, or null if not confirmed
+     */
+    public function getConfirmedAt(): DateTime|null
+    {
+        return $this->confirmedAt;
+    }
+
+    /**
+     * Gets the deletion timestamp of the user account.
+     *
+     * @return DateTime|null The DateTime object representing when the user was deleted, or null if not deleted
+     */
+    public function getDeletedAt(): DateTime|null
+    {
+        return $this->deletedAt;
+    }
+
+    /**
+     * Gets the additional information associated with the user.
+     *
+     * @param string $key Optional key to retrieve specific additional info
+     * @return mixed Array containing all additional user information, specific info if key is provided, or null if key not found
+     */
+    public function getAdditionalInfo(string $key = ''): mixed
+    {
+        return trimOrNull($key)
+            ? ($this->additionalInfo[$key] ?? null)
+            : $this->additionalInfo ?? [];
+    }
+
+    // SETTERS
+
+    /**
+     * Sets the user ID.
+     *
+     * @param int $id The user ID to set
+     * @throws ValidationException If the ID is negative
+     * @return void
+     */
+    public function setId(int $id): void
+    {
+        if ($id < 0) throw new ValidationException("Invalid ID");
+        $this->id = $id;
+    }
+
+    /**
+     * Sets the user's public ID.
+     *
+     * @param UUID $publicId The UUID to set as public ID
+     * @throws ValidationException If the UUID is invalid
+     * @return void
+     */
+    public function setPublicId(UUID $publicId): void
+    {
+        $validator = new UuidValidator();
+
+        $validator->validateUuid($publicId);
+        if ($validator->hasErrors())
+            throw new ValidationException(
+                "Invalid Public ID",
+                $validator->getErrors()
+            );
+        $this->publicId = $publicId;
+    }
+
+    /**
+     * Sets the user's first name.
+     *
+     * @param string $firstName The first name to set (will be trimmed)
+     * @throws ValidationException If the first name is invalid
+     * @return void
+     */
+    public function setFirstName(string $firstName): void
+    {
+        $this->userValidator->validateFirstName(trimOrNull($firstName));
+        if ($this->userValidator->hasErrors())
+            throw new ValidationException(
+                "Invalid First Name",
+                $this->userValidator->getErrors()
+            );
+        $this->firstName = trimOrNull($firstName);
+    }
+
+    /**
+     * Sets the user's middle name.
+     *
+     * @param string|null $middleName The middle name to set (will be trimmed), or null to unset
+     * @throws ValidationException If the middle name is invalid
+     * @return void
+     */
+    public function setMiddleName(string|null $middleName): void
+    {
+        $tempMiddleName = $middleName ? trimOrNull($middleName) : $middleName;
+        if ($tempMiddleName) {
+            $this->userValidator->validateMiddleName(trimOrNull($tempMiddleName));
+            if ($this->userValidator->hasErrors())
+                throw new ValidationException(
+                    "Invalid Middle Name",
+                    $this->userValidator->getErrors()
+                );
+        }
+        $this->middleName = $tempMiddleName;
+    }
+
+    /**
+     * Sets the user's last name.
+     *
+     * @param string $lastName The last name to set
+     * @throws ValidationException If the last name is invalid
+     * @return void
+     */
+    public function setLastName(string $lastName): void
+    {
+        $this->userValidator->validateLastName($lastName);
+        if ($this->userValidator->hasErrors())
+            throw new ValidationException(
+                "Invalid Last Name",
+                $this->userValidator->getErrors()
+            );
+        $this->lastName = trimOrNull($lastName);
+    }
+
+    /**
+     * Sets the user's gender.
+     *
+     * @param Gender $gender The gender enum value to set
+     * @throws ValidationException If the gender is invalid
+     * @return void
+     */
+    public function setGender(Gender $gender): void
+    {
+        $this->userValidator->validateGender($gender);
+        if ($this->userValidator->hasErrors())
+            throw new ValidationException(
+                "Invalid Gender",
+                $this->userValidator->getErrors()
+            );
+        $this->gender = $gender;
+    }
+
+    /**
+     * Sets the user's birth date.
+     *
+     * @param DateTime $birthDate The birth date to set
+     * @throws ValidationException If the birth date is invalid
+     * @return void
+     */
+    public function setBirthDate(DateTime $birthDate): void
+    {
+        $this->userValidator->validateBirthDate($birthDate);
+        if ($this->userValidator->hasErrors())
+            throw new ValidationException(
+                "Invalid Birth Date",
+                $this->userValidator->getErrors()
+            );
+        $this->birthDate = $birthDate;
+    }
+
+    /**
+     * Sets the user's role.
+     *
+     * @param Role $role The role enum value to set
+     * @throws ValidationException If the role is invalid
+     * @return void
+     */
+    public function setRole(Role $role): void
+    {
+        $this->userValidator->validateRole($role);
+        if ($this->userValidator->hasErrors())
+            throw new ValidationException(
+                "Invalid Role",
+                $this->userValidator->getErrors()
+            );
+        $this->role = $role;
+    }
+
+    /**
+     * Sets the user's job titles.
+     *
+     * @param JobTitleContainer $jobTitles Container of job titles to set
+     * @throws ValidationException If the job titles are invalid
+     * @return void
+     */
+    public function setJobTitles(JobTitleContainer $jobTitles): void
+    {
+        $this->userValidator->validateJobTitles($jobTitles);
+        if ($this->userValidator->hasErrors())
+            throw new ValidationException(
+                "Invalid Job Titles",
+                $this->userValidator->getErrors()
+            );
+        $this->jobTitles = $jobTitles;
+    }
+
+    /**
+     * Sets the user's contact number.
+     *
+     * @param string $contactNumber The contact number to set (will be trimmed)
+     * @throws ValidationException If the contact number is invalid
+     * @return void
+     */
+    public function setContactNumber(string $contactNumber): void
+    {
+        $this->userValidator->validateContactNumber(trimOrNull($contactNumber));
+        if ($this->userValidator->hasErrors())
+            throw new ValidationException(
+                "Invalid Contact Number",
+                $this->userValidator->getErrors()
+            );
+        $this->contactNumber = trimOrNull($contactNumber);
+    }
+
+    /**
+     * Sets the user's email address.
+     *
+     * @param string $email The email address to set (will be trimmed)
+     * @throws ValidationException If the email is invalid
+     * @return void
+     */
+    public function setEmail(string $email): void
+    {
+        $this->userValidator->validateEmail(trimOrNull($email));
+        if ($this->userValidator->hasErrors())
+            throw new ValidationException(
+                "Invalid Email",
+                $this->userValidator->getErrors()
+            );
+        $this->email = trimOrNull($email);
+    }
+
+
+    /**
+     * Sets the user's password.
+     *
+     * @param string|null $password The password to set, or null to unset
+     * @throws ValidationException If the password is invalid
+     * @return void
+     */
+    public function setPassword(string|null $password): void
+    {
+        $tempPassword = $password ? trimOrNull($password) : $password;
+        if ($password !== null) {
+            $this->userValidator->validatePassword($tempPassword);
+            if ($this->userValidator->hasErrors())
+                throw new ValidationException(
+                    "Invalid Password",
+                    $this->userValidator->getErrors()
+                );
+        }
+        $this->password = $tempPassword;
+    }
+
+    /**
+     * Sets the user's biography.
+     *
+     * @param string|null $bio The biography to set (will be trimmed), or null to unset
+     * @throws ValidationException If the bio is invalid
+     * @return void
+     */
+    public function setBio(string|null $bio): void
+    {
+        $tempBio = $bio ? trimOrNull($bio) : $bio;
+        if ($tempBio !== null) {
+            $this->userValidator->validateBio(trimOrNull($tempBio));
+            if ($this->userValidator->hasErrors())
+                throw new ValidationException(
+                    "Invalid Bio",
+                    $this->userValidator->getErrors()
+                );
+        }
+        $this->bio = $tempBio;
+    }
+
+    /**
+     * Sets the user's profile link.
+     *
+     * @param string|null $profileLink The profile link to set (will be trimmed), or null to unset
+     * @throws ValidationException If the profile link is not a valid URL
+     * @return void
+     */
+    public function setProfileLink(string|null $profileLink): void
+    {
+        $tempProfileLink = $profileLink ? trimOrNull($profileLink) : $profileLink;
+        if ($tempProfileLink !== null) {
+            $validator = new UrlValidator();
+            $validator->validateUrl($tempProfileLink);
+            if ($validator->hasErrors())
+                throw new ValidationException(
+                    "Invalid Profile Link",
+                    $validator->getErrors()
+                );
+        }
+        $this->profileLink = $tempProfileLink;
+    }
+
+    /**
+     * Sets additional information for the user.
+     *
+     * @param array $additionalInfo Associative array of additional user information
+     * @return void
+     */
+    public function setAdditionalInfo(array $additionalInfo): void
+    {
+        $this->additionalInfo = $additionalInfo;
+    }
+
+    /**
+     * Sets the user creation timestamp.
+     *
+     * @param DateTime|null $createdAt The creation timestamp to set, or null if not set
+     * @throws ValidationException If the creation date is in the future
+     * @return void
+     */
+    public function setCreatedAt(DateTime|null $createdAt): void
+    {
+        if ($createdAt && $createdAt > new DateTime()) 
+            throw new ValidationException("Invalid Creation Date");
+        $this->createdAt = $createdAt;
+    }
+
+    /**
+     * Sets the user confirmation timestamp.
+     *
+     * @param DateTime|null $confirmedAt The confirmation timestamp to set, or null if not confirmed
+     * @throws ValidationException If the confirmation date is in the future
+     * @return void
+     */
+    public function setConfirmedAt(DateTime|null $confirmedAt): void
+    {
+        if ($confirmedAt && $confirmedAt > new DateTime())
+            throw new ValidationException("Invalid Confirmation Date");
+        $this->confirmedAt = $confirmedAt;
+    }
+
+    /**
+     * Sets the user deletion timestamp.
+     *
+     * @param DateTime|null $deletedAt The deletion timestamp to set, or null if not deleted
+     * @throws ValidationException If the deletion date is in the future
+     * @return void
+     */
+    public function setDeletedAt(DateTime|null $deletedAt): void
+    {
+        if ($deletedAt && $deletedAt > new DateTime())
+            throw new ValidationException("Invalid Deletion Date");
+        $this->deletedAt = $deletedAt;
+    }
+
+    // OTHER METHODS (UTILITY)
+
+    /**
+     * Adds or updates a key-value pair in the user's additional information.
+     *
+     * This method stores custom data in the additionalInfo array property,
+     * which can be used for storing user metadata or preferences that
+     * don't fit into the standard user properties.
+     *
+     * @param string $key The key identifier for the information
+     * @param mixed $value The value to store (can be any type that's serializable)
+     * @return void
+     */
+    public function addAdditionalInfo(string $key, $value): void
+    {
+        $this->additionalInfo[$key] = $value;
+    }
+
+    public function removeAdditionalInfo(string $key): void
+    {
+        if (isset($this->additionalInfo[$key]))
+            unset($this->additionalInfo[$key]);
+    }
+
+    /**
+     * Creates a User instance from an array of data with partial information.
+     *
+     * This method provides a flexible way to create a User instance without requiring
+     * all fields to be present, supplying default values where necessary. It also
+     * handles different data formats and converts them to appropriate types:
+     * - Converts publicId to UUID object
+     * - Ensures gender is a Gender enum
+     * - Converts birthDate string to DateTime
+     * - Ensures role is a Role enum
+     * - Ensures jobTitles is a JobTitleContainer object
+     * - Converts createdAt string to DateTime
+     *
+     * @param array $data Associative array containing user data with following possible keys:
+     *      - id: int|null User ID
+     *      - publicId: string|UUID|null Public identifier
+     *      - firstName: string User's first name
+     *      - middleName: string|null User's middle name
+     *      - lastName: string User's last name
+     *      - gender: string|Gender|null User's gender
+     *      - birthDate: string|DateTime|null User's birth date
+     *      - role: string|Role|null User's role
+     *      - jobTitles: array|JobTitleContainer|null User's job titles
+     *      - contactNumber: string|null User's contact number
+     *      - email: string|null User's email address
+     *      - bio: string|null User's biography
+     *      - profileLink: string|null User's profile link
+     *      - createdAt: string|DateTime|null User creation timestamp
+     *      - confirmedAt: string|DateTime|null User confirmation timestamp
+     *      - deletedAt: string|DateTime|null User deletion timestamp
+     *      - password: string|null User's password
+     *      - additionalInfo: array Additional user information
+     * 
+     * @return static New User instance created from provided data
+     * 
+     * @throws Exception If any data conversion fails
+     */
+    public static function createPartial(array $data): static
+    {
+        // Normalize input keys to camelCase to support both snake_case and camelCase input
+        $data = normalizeArrayKeysToCamelCase($data);
+
+        // Provide default values for required fields
+        $defaults = [
+            'id'                        => $data['id'] ?? TemporaryId::generate(),
+            'publicId'                  => $data['publicId'] ?? UUID::get(),
+            'firstName'                 => $data['firstName'] ?? 'Unknown',
+            'middleName'                => $data['middleName'] ?? null,
+            'lastName'                  => $data['lastName'] ?? 'User',
+            'gender'                    => $data['gender'] ?? Gender::MALE,
+            'birthDate'                 => $data['birthDate'] ?? new DateTime('2000-01-01'),
+            'role'                      => $data['role'] ?? Role::WORKER,
+            'jobTitles'                 => $data['jobTitles'] ?? new JobTitleContainer(),
+            'contactNumber'             => $data['contactNumber'] ?? '00000000000',
+            'email'                     => $data['email'] ?? 'unknown@user.com',
+            'bio'                       => $data['bio'] ?? null,
+            'profileLink'               => $data['profileLink'] ?? null,
+            'createdAt'                 => $data['createdAt'] ?? null,
+            'confirmedAt'               => $data['confirmedAt'] ?? null,
+            'deletedAt'                 => $data['deletedAt'] ?? null,
+            'password'                  => $data['password'] ?? null,
+            'additionalInfo'            => $data['additionalInfo'] ?? []
+        ];
+
+        // Handle UUID conversion
+        if (isset(($data['publicId'])) && !($data['publicId'] instanceof UUID))
+            $defaults['publicId'] = UUID::tryFromString(trimOrNull($data['publicId']));
+
+        // Handle DateTime conversions
+        if (isset($data['birthDate']) && !($data['birthDate'] instanceof DateTime))
+            $defaults['birthDate'] = new DateTime(trimOrNull($data['birthDate']));
+
+        if (isset($data['createdAt']) && !($data['createdAt'] instanceof DateTime))
+            $defaults['createdAt'] = new DateTime(trimOrNull($data['createdAt']));
+
+        if (isset($data['deletedAt']) && !($data['deletedAt'] instanceof DateTime))
+            $defaults['deletedAt'] = new DateTime(trimOrNull($data['deletedAt']));
+
+        if (isset($data['confirmedAt']) && !($data['confirmedAt'] instanceof DateTime))
+            $defaults['confirmedAt'] = new DateTime(trimOrNull($data['confirmedAt']));
+
+        // Handle enum conversions
+        if (isset($data['gender']) && !($data['gender'] instanceof Gender))
+            $defaults['gender'] = Gender::from(trimOrNull($data['gender']));
+
+        if (isset($data['role']) && !($data['role'] instanceof Role))
+            $defaults['role'] = Role::from(trimOrNull($data['role']));
+
+        // Handle JobTitleContainer conversion
+        if (isset($data['jobTitles']) && !($data['jobTitles'] instanceof JobTitleContainer)) {
+            if (is_array($data['jobTitles']))
+                $defaults['jobTitles'] = new JobTitleContainer($data['jobTitles']);
+            elseif (is_string($data['jobTitles']))
+                $defaults['jobTitles'] = new JobTitleContainer(explode(',', $data['jobTitles']));
+        }
+
+        // Create instance bypassing full constructor validation
+        $instance = new static(
+            id: $defaults['id'],
+            publicId: $defaults['publicId'],
+            firstName: $defaults['firstName'],
+            middleName: $defaults['middleName'],
+            lastName: $defaults['lastName'],
+            gender: $defaults['gender'],
+            birthDate: $defaults['birthDate'],
+            jobTitles: $defaults['jobTitles'],
+            contactNumber: $defaults['contactNumber'],
+            email: $defaults['email'],
+            bio: $defaults['bio'],
+            profileLink: $defaults['profileLink'],
+            createdAt: $defaults['createdAt'],
+            confirmedAt: $defaults['confirmedAt'],
+            deletedAt: $defaults['deletedAt'],
+            password: $defaults['password'],
+            additionalInfo: $defaults['additionalInfo']
+        );
+
+        return $instance;
+    }
+
+    /**
+     * Converts the User entity to an array representation.
+     *
+     * This method serializes the User object into an associative array format
+     * suitable for JSON responses or data transfer. It formats certain fields:
+     * - Converts UUID publicId to string representation
+     * - Extracts gender display name from Gender enum
+     * - Formats birthDate as 'Y-m-d' string
+     * - Converts role enum to string
+     * - Serializes jobTitles collection to array
+     * - Formats createdAt timestamp as 'Y-m-d H:i:s' string
+     *
+     * @return array Associative array containing user data with following keys:
+     *      - id: string Public user identifier
+     *      - firstName: string User's first name
+     *      - middleName: string User's middle name
+     *      - lastName: string User's last name
+     *      - gender: string User's gender display name
+     *      - birthDate: string User's birth date (Y-m-d format)
+     *      - role: string User's role
+     *      - jobTitles: array User's job titles as array
+     *      - contactNumber: string User's contact number
+     *      - email: string User's email address
+     *      - bio: string User's biography
+     *      - profileLink: string User's profile link
+     *      - createdAt: string User creation timestamp (Y-m-d H:i:s format)
+     *      - confirmedAt: string|null User confirmation timestamp (Y-m-d H:i:s format) or null if not confirmed
+     *      - deletedAt: string|null User deletion timestamp (Y-m-d H:i:s format) or null if not deleted
+     *      - additionalInfo: array Additional user information
+     * @param bool $useSnakeCase Whether to use snake_case keys (true) or camelCase keys (false, default)
+     */
+    public function toArray(bool $useSnakeCase = false): array
+    {
+        $data = [
+            'id'                => UUID::toString($this->publicId),
+            'firstName'         => $this->firstName,
+            'middleName'        => $this->middleName,
+            'lastName'          => $this->lastName,
+            'gender'            => $this->gender->getDisplayName(),
+            'birthDate'         => $this->birthDate->format('Y-m-d'),
+            'role'              => $this->role,
+            'jobTitles'         => $this->jobTitles->toArray(),
+            'contactNumber'     => $this->contactNumber,
+            'email'             => $this->email,
+            'bio'               => $this->bio,
+            'profileLink'       => $this->profileLink,
+            'createdAt'         => $this->createdAt
+                ? formatDateTime($this->createdAt, 'Y-m-d H:i:s')
+                : null,
+            'confirmedAt'       => $this->confirmedAt
+                ? formatDateTime($this->confirmedAt, 'Y-m-d H:i:s')
+                : null,
+            'deletedAt'         => $this->deletedAt
+                ? formatDateTime($this->deletedAt, 'Y-m-d H:i:s')
+                : null,
+            'additionalInfo'    => $this->additionalInfo
+        ];
+
+        return $useSnakeCase ? normalizeArrayKeysToSnakeCase($data) : $data;
+    }
+
+    /**
+     * Creates a User instance from an array of data.
+     *
+     * This method handles different data formats and converts them to appropriate types:
+     * - Converts publicId to UUID object
+     * - Ensures gender is a Gender enum
+     * - Converts birthDate string to DateTime
+     * - Ensures role is a Role enum
+     * - Ensures jobTitles is a JobTitleContainer object
+     * - Converts createdAt string to DateTime
+     *
+     * @param array $data Associative array containing user data with following keys:
+     *      - id: int User ID
+     *      - publicId: string|UUID|binary Public identifier
+     *      - firstName: string User's first name
+     *      - middleName: string User's middle name
+     *      - lastName: string User's last name
+     *      - gender: string|Gender User's gender
+     *      - birthDate: string|DateTime User's birth date
+     *      - role: string|Role User's role
+     *      - jobTitles: array|JobTitleContainer User's job titles
+     *      - contactNumber: string User's contact number
+     *      - email: string User's email address
+     *      - bio: string User's biography
+     *      - profileLink: string User's profile link
+     *      - createdAt: string|DateTime User creation timestamp
+     *      - confirmedAt: string|DateTime|null User confirmation timestamp (optional)
+     *      - deletedAt: string|DateTime|null User deletion timestamp (optional)
+     *      - additionalInfo: array (optional) Additional user information
+     *      - password: string|null (optional) User's password
+     * 
+     * @return static New User instance created from provided data
+     */
+    public static function fromArray(array $data): static
+    {
+        // Normalize input keys to camelCase to support both snake_case and camelCase input
+        $data = normalizeArrayKeysToCamelCase($data);
+
+        $publicId = null;
+        if (isset(($data['publicId'])) && !($data['publicId'] instanceof UUID))
+            $publicId = UUID::tryFromString(trimOrNull($data['publicId']));
+
+        $gender = (!($data['gender'] instanceof Gender))
+            ? Gender::from(trimOrNull($data['gender']))
+            : $data['gender'];
+
+        $birthDate = (is_string($data['birthDate']))
+            ? new DateTime(trimOrNull($data['birthDate']))
+            : $data['birthDate'];
+
+        $role = (!($data['role'] instanceof Role))
+            ? Role::tryFrom(trimOrNull($data['role']))
+            : $data['role'];
+
+        $jobTitles =  $data['jobTitles'];
+        if (is_array($data['jobTitles']) && !empty($data['jobTitles']))
+            $jobTitles = JobTitleContainer::fromArray($data['jobTitles']);
+        elseif (is_string($data['jobTitles']))
+            $jobTitles = new JobTitleContainer(explode(',', $data['jobTitles']));
+
+        $createdAt = (isset($data['createdAt']) && is_string($data['createdAt']))
+            ? new DateTime(trimOrNull($data['createdAt']))
+            : $data['createdAt'];
+
+        $confirmedAt = (isset($data['confirmedAt']) && is_string($data['confirmedAt']))
+            ? new DateTime(trimOrNull($data['confirmedAt']))
+            : ($data['confirmedAt'] ?? null);
+
+        $deletedAt = (isset($data['deletedAt']) && is_string($data['deletedAt']))
+            ? new DateTime(trimOrNull($data['deletedAt']))
+            : ($data['deletedAt'] ?? null);
+
+        return new static(
+            id: $data['id'],
+            publicId: $publicId,
+            firstName: trimOrNull($data['firstName']),
+            middleName: trimOrNull($data['middleName']),
+            lastName: trimOrNull($data['lastName']),
+            gender: $gender,
+            birthDate: $birthDate,
+            jobTitles: $jobTitles,
+            contactNumber: trimOrNull($data['contactNumber']),
+            email: trimOrNull($data['email']),
+            bio: trimOrNull($data['bio']),
+            profileLink: trimOrNull($data['profileLink']),
+            createdAt: $createdAt,
+            confirmedAt: $confirmedAt,
+            deletedAt: $deletedAt,
+            additionalInfo: $data['additionalInfo'] ?? [],
+            password: $data['password'] ?? null
+        );
+    }
+
+    /**
+     * Serializes the user object to JSON by converting it to an array.
+     * 
+     * This method implements the JsonSerializable interface, allowing the object
+     * to be properly encoded when using json_encode().
+     * 
+     * @return array The array representation of the user object
+     */
+    public function jsonSerialize(): array
+    {
+        return $this->toArray();
+    }
+}

@@ -1,0 +1,144 @@
+.task-form {
+    height: fit-content;
+    gap: var(--space);
+    /* padding: 2rem calc(var(--space) * 10) !important; */
+}
+
+#task_form {
+    border: var();
+    gap: var(--space);
+    padding: 0;
+}
+
+#task_form .back-button, 
+#task_form .back-container {
+    width: fit-content;
+}
+
+#task_form .back-container {
+    gap: 0.5rem;
+    opacity: 0.8;
+    cursor: pointer;
+}
+
+#task_form .back-container:hover {
+    opacity: 1;
+}
+
+#task_form  fieldset {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space);
+    padding: 2rem;
+}
+
+#task_form  .heading > p {
+    font-size: 0.9rem;
+}
+
+#task_form .multiple-input-row {
+    display: flex;
+    gap: 1rem;
+}
+
+#task_form .multiple-input-row > * {
+    flex: 1;
+    width: 100%;
+}
+
+#task_info .heading {
+    margin-bottom: var(--space);
+}
+
+#task_info .phase-info {
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    gap: 1rem !important;
+    box-shadow: 0 0 2px 3px var(--black);
+}
+
+#task_info .phase-header {
+    gap: 0.3rem;
+}
+
+#task_info .phase-header h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+#task_info .phase-header p {
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 1px;
+}
+
+#task_info .phase-info hr {
+    width: 100%;
+    margin: 0;
+}
+
+#task_info .phase-details {
+    gap: 1rem;
+}
+
+#task_info .phase-detail-item {
+    gap: 0.3rem;
+}
+
+#task_info .phase-detail-item p {
+    font-size: 0.85rem;
+    font-weight: 400;
+}
+
+#task_info .phase-detail-item h3,
+#task_info .phase-detail-item h4 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+#task_info #priority {
+    width: 100% !important;
+}
+
+#worker_info {
+    width: 50ch;
+    border-left: 1px solid var(--border-color);
+    border-radius: 0 var(--border-radius) var(--border-radius) 0;
+}
+
+#worker_info .selected-task-worker-form-card {
+    padding: 1rem;
+    gap: 0.8rem;
+    border-radius: var(--input-border-radius);
+}
+
+#worker_info .selected-worker-list {
+    max-height: 100vh;
+    gap: 1rem;
+    overflow-y: auto;
+}
+
+#worker_info .selected-task-worker-form label {
+    font-size: 0.9rem;
+}
+
+#worker_info .selected-task-worker-form input {
+    font-size: 0.8rem;
+}
+
+#worker_info .selected-task-worker-form-card .remove-worker-button {
+    margin: 0 auto;
+}
+
+#worker_info #add_worker_button {
+    border: 1px dashed var(--white);
+    background-color: transparent;
+    margin: 0 auto;
+}
+
+#worker_info .selected-task-worker-form-card .unit-rate-input.invalid,
+#worker_info .selected-task-worker-form-card .hours-assigned-input.invalid {
+    border-color: var(--red);
+}

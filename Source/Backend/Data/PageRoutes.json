@@ -1,0 +1,64 @@
+{
+	"GET": {
+		"/": "IndexController",
+		"/login": "IndexController",
+		"/register": "IndexController",
+		"/confirm-email(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": [
+			"IndexController",
+			"confirmEmail"
+		],
+
+		"/reset-password": "SingleFormController",
+		"/change-password(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": "SingleFormController",
+
+		"/create-project": ["ProjectController", "viewProjectForm"],
+		"/edit-project/{projectId:[\\w+_-]+}": [
+			"ProjectController",
+			"viewProjectForm"
+		],
+		"/add-task/{projectId:[\\w+_-]+}": ["TaskController", "viewTaskForm"],
+		"/edit-task/{taskId:[\\w+_-]+}": ["TaskController", "viewTaskForm"],
+
+		"/home": ["ProjectController", "viewHome"],
+		"/project/{projectId:[\\w+_-]+}": ["ProjectController", "viewOther"],
+		"/project/{projectId:[\\w+_-]+}/report": [
+			"ProjectController",
+			"viewReport"
+		],
+
+		"/project/{projectId:[\\w+_-]+}/task/worker/{workerId:[\\w+_-]+}(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": [
+			"TaskController",
+			"viewGrid"
+		],
+		"/project/{projectId:[\\w+_-]+}/task/worker/{workerId:[\\w+_-]+}": [
+			"TaskController",
+			"viewGrid"
+		],
+		"/project/{projectId:[\\w+_-]+}/task(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": [
+			"TaskController",
+			"viewGrid"
+		],
+		"/project/{projectId:[\\w+_-]+}/phase/{phaseId:[\\w+_-]+}/task/{taskId:[\\w+_-]+}": [
+			"TaskController",
+			"viewInfo"
+		],
+
+		"/projects(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": [
+			"ProjectController",
+			"viewGrid"
+		],
+
+		"/users(?:\\?[\\w+\\s_=\\/\\?,%&@-]+)?": "UserController",
+
+		"/profile": "ProfileController",
+
+		"/about-us": ["AboutUsController", "viewAboutUs"],
+		"/terms-and-conditions": [
+			"AboutUsController",
+			"viewTermsAndConditions"
+		],
+
+		"/not-found": ["ErrorController", "notFound"],
+		"/forbidden": ["ErrorController", "forbidden"]
+	}
+}

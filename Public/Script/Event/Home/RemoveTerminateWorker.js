@@ -1,0 +1,24 @@
+import { removeTerminateWorker } from '../../Utility/RemoveTerminateWorker.js'
+import { handleException } from '../../Utility/HandleException.js'
+
+(() => {
+    const removeWorkerButton = document.querySelector('#remove_worker_button')
+    if (!removeWorkerButton) return
+
+    const terminateWorkerButton = document.querySelector('#terminate_worker_button')
+    if (!terminateWorkerButton) return
+
+    try {
+        const projectContainer = document.querySelector('.project-container')
+        const projectId = projectContainer?.dataset.projectid
+        if (!projectId) throw new Error('Project ID not found')
+
+        const endpoint = `projects/${projectId}`
+        const workerContainer = projectContainer?.querySelector('.worker-list')
+        // Initialize terminate worker functionality
+        removeTerminateWorker(projectId, workerContainer, '.user-list-card', endpoint)
+    } catch (error) {
+        handleException(error)
+    }
+})()
+
