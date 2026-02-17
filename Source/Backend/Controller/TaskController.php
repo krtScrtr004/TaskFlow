@@ -230,7 +230,7 @@ class TaskController implements Controller
                 ]);
             }
 
-            require_once SUB_VIEW_PATH . 'Task.php';
+            require_once SUB_VIEW_PATH . 'NewTask.php';
         } catch (NotFoundException $e) {
             ErrorController::notFound();
         } catch (ForbiddenException $e) {

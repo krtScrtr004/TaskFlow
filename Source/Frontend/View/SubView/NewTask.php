@@ -1,5 +1,6 @@
 <?php
 
+use App\Container\WorkerContainer;
 use App\Core\Me;
 use App\Core\UUID;
 use App\Entity\Phase;
@@ -142,8 +143,141 @@ $buttonUiState = [
         </section>
 
         <!-- Content -->
-        <section class="content">
+        <section class="content flex-row">
+            <!-- Main -->
+            <section class="main flex-col">
 
+                <!-- Overview -->
+                <section class="overview-section content-section-block flex-col">
+                    <div class="text-w-icon">
+                        <img src="<?= ICON_PATH . 'about_bl.svg' ?>" alt="Overview" title="Overview" height="20">
+                        <h3 class="bold-text white-text">Overview</h3>
+                    </div>
+
+                    <p class="dark-white-text">
+                        <?= $taskData['description'] ?>
+                    </p>
+
+                    <section class="details flex-row flex-space-between black-bg">
+                        <!-- Start Date -->
+                        <section class="flex-col">
+                            <div class="text-w-icon">
+                                <img src="<?= ICON_PATH . 'start_dw.svg' ?>" alt="Start Date" title="Start Date" height="16">
+                                <p class="dark-white-text">Start Date</p>
+                            </div>
+
+                            <p class="bold-text"><?= dateToWords($taskData['startDateTime']) ?></p>
+                        </section>
+
+                        <!-- Completion Date -->
+                        <section class="flex-col">
+                            <div class="text-w-icon">
+                                <img src="<?= ICON_PATH . 'deadline_dw.svg' ?>" alt="Completion Date" title="Completion Date" height="16">
+                                <p class="dark-white-text">Completion Date</p>
+                            </div>
+
+                            <p class="bold-text"><?= dateToWords($taskData['completionDateTime']) ?></p>
+                        </section>
+
+                        <!-- Actual Completion Date -->
+                        <?php if ($taskData['actualCompletionDateTime']): ?>
+                            <section class="flex-col">
+                                <div class="text-w-icon">
+                                    <img src="<?= ICON_PATH . 'complete_dw.svg' ?>" alt="Completed At" title="Completed At" height="16">
+                                    <p class="dark-white-text">Completed At</p>
+                                </div>
+
+                                <p class="bold-text"><?= dateToWords($taskData['actualCompletionDateTime']) ?></p>
+                            </section>
+                        <?php endif; ?>
+
+                        <section class="flex-col">
+                            <div class="text-w-icon">
+                                <img src="<?= ICON_PATH . 'priority_dw.svg' ?>" alt="Priority" title="Priority" height="16">
+                                <p class="dark-white-text">Priority</p>
+                            </div>
+
+                            <p class="bold-text"><?= Priority::badge($taskData['priority']) ?></p>
+                        </section>
+                    </section>
+                </section>
+
+                <!-- TO-DO -->
+                <section class="todo-list-section flex-col sub-section">
+                    <div class="text-w-icon">
+                        <img src="<?= ICON_PATH . 'task_y.svg' ?>" alt="TODO List" title="TODO List" height="20">
+                        <h3 class="bold-text white-text">TO-DO List</h3>
+                    </div>
+
+                    <section class="content-section-block">
+                        <!-- Add TODO -->
+                        <form id="add_subtask_form" class="flex-row" method="POST" action="">
+                            <input class="black-bg" type="text" name="todo_name" id="todo_name" placeholder="Add a new subtask" required>
+                            <button id="add_subtask_button" class="blue-bg">
+                                <div class="text-w-icon">
+                                    <img src="<?= ICON_PATH . 'add_w.svg' ?>" alt="Add Subtask" title="Add Subtask" height="16">
+                                    <h3 class="white-text">Add</h3>
+                                </div>
+                            </button>
+                        </form>
+
+                        <section class="todo-list">
+                            <!-- TODO -->
+                        </section>
+                    </section>
+                </section>
+
+                <!-- Workers -->
+                <section class="assigned-workers-section flex-col sub-section">
+                    <section class="flex-row flex-space-between">
+                        <div class="text-w-icon">
+                            <img src="<?= ICON_PATH . 'worker_w.svg' ?>" alt="Assigned Workers" title="Assigned Workers" height="20">
+                            <h3 class="bold-text white-text">Assigned Workers</h3>
+                        </div>
+
+                        <button id="add_worker_button" class="transparent-bg" type="button">
+                            <div class="text-w-icon">
+                                <img src="<?= ICON_PATH . 'add_w.svg' ?>" alt="Add Worker" title="Add Worker" height="16">
+                                <h3 class="white-text">Add Worker</h3>
+                            </div>
+                        </button>
+                    </section>
+
+                    <!-- Table -->
+                    <section class="table-container content-section-block">
+                        <table id="assigned_workers_table">
+                            <thead>
+                                <tr>
+                                    <th class="dark-white-text">PROFILE</th>
+                                    <th class="dark-white-text">NAME & CONTACT</th>
+                                    <th class="dark-white-text">SUBTASKS</th>
+                                    <th class="dark-white-text">STATUS</th>
+                                    <th class="dark-white-text">ACTIONS</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                <?php foreach ($taskData['workers'] as $worker) {
+                                    echo taskWorkerRow($worker);
+                                } ?>
+                            </tbody>
+                        </table>
+                    </section>
+
+                </section>
+
+                <!-- TODO -->
+            </section>
+
+            <!-- Side -->
+            <section class="side flex-col">
+
+                <!-- Budget -->
+                <section class="budget-section content-block-section">
+
+                </section>
+
+            </section>
         </section>
 
     </main>
